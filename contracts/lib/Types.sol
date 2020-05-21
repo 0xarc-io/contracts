@@ -1,30 +1,25 @@
 pragma solidity ^0.6.6;
+pragma experimental ABIEncoderV2;
 
-import "../token/ISyntheticToken.sol";
 
+library Types {
 
-library Storage {
+    // ============ Structs ============
+
     struct GlobalParams {
         uint256 collateralRatio;
         uint256 syntheticRatio;
         uint256 liquidationSpread;
         uint256 originationFee;
-    }
-
-    struct Market {
-        uint256 supply;
-        uint256 borrow;
         address interestSetter;
+        address liquidityAsset;
     }
 
     struct State {
-        mapping(uint256 => Position) positions;
-        GlobalParams globalParams;
-    }
-
-    struct Synthetic {
-        ISyntheticToken tokenAddress;
-        address priceOracle;
+        uint256 supplyTotal;
+        uint256 supplyCompounded;
+        uint256 borrowTotal;
+        uint256 borrowCompounded;
     }
 
     struct Position {
@@ -32,5 +27,10 @@ library Storage {
         uint256 collateralAmount;
         address borrowedAsset;
         uint256 borrowedAmount;
+    }
+
+    struct Exchange {
+        uint256 liquiditySupplied;
+        mapping (address => uint256) liquidityToOwner;
     }
 }
