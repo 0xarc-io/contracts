@@ -1,6 +1,8 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
+import {console} from "@nomiclabs/buidler/console.sol";
+
 import {Storage} from "./Storage.sol";
 import {Types} from "../lib/Types.sol";
 

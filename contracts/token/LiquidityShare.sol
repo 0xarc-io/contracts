@@ -4,9 +4,8 @@ import {BaseERC20} from "./BaseERC20.sol";
 
 
 contract LiquidityShare is BaseERC20 {
-    // ============ Variables ============
 
-    mapping(address => bool) public approvedCollateral;
+    // ============ Variables ============
 
     // ============ Constructor ============
 
