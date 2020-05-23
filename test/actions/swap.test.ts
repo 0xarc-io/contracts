@@ -1,4 +1,4 @@
-describe('Actions.swap()', async () => {
+describe('Actions.swap()', () => {
 
   it('should be able to calculate the virtual reserves correctly', async () => {
 

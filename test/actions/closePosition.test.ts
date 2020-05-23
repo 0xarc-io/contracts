@@ -1,5 +1,7 @@
 describe("Actions.closePosition()", () => {
 
+  expect(false);
+
   it('should not be able to close an invalid position', async () => {
 
   });

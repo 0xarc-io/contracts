@@ -1,4 +1,4 @@
-describe('Actions.liquidatePosition()', async () => {
+describe('Actions.liquidatePosition()', () => {
 
   it('should not be able to liquidate an invalid position', async () => {
 

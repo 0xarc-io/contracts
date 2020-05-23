@@ -6,8 +6,8 @@
   "license": "MIT",
   "scripts": {
     "compile": "yarn buidler compile",
-    "clean": "rm -rf src/types && rm -rf typechain",
-    "generate-typings": "yarn clean && yarn buidler typechain",
+    "clean": "rm -rf src/types && rm -rf typechain && rm -rf artifacts && rm -rf cache",
+    "generate-typings": "yarn isaac artifacts -o typechain",
     "build": "yarn compile && yarn generate-typings",
     "coverage": "yarn run build && yarn buidler coverage --temp artifacts --network coverage",
     "test": "yarn buidler test"
@@ -38,7 +38,13 @@
     "typescript": "^3.7.5"
   },
   "dependencies": {
+    "@imtbl/isaac": "^0.0.15",
     "@openzeppelin/contracts": "^3.0.0",
-    "solc": "^0.6.6"
+    "chokidar": "^3.4.0",
+    "commander": "^5.1.0",
+    "jest-cli": "^26.0.1",
+    "node-run-cmd": "^1.0.1",
+    "solc": "^0.6.6",
+    "system-commands": "^1.1.7"
   }
 }

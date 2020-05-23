@@ -1,6 +1,14 @@
-describe('Actions.supply()', () => {
+import { generatedWallets } from '../../src/utils/generatedWallets';
 
-  it('should not be able to supply 0', async () => { });
+import { waffle } from '@nomiclabs/buidler';
+
+describe('Actions.supply()', () => {
+  const [ownerWallet, userWallet] = generatedWallets(waffle.provider);
+
+  it('should not be able to supply 0', async () => {
+    const currentBlock = await ownerWallet.provider.getBlockNumber()
+    console.log(currentBlock);
+   });
 
   it('should be able to supply', async () => { });
 
