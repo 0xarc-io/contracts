@@ -16,7 +16,10 @@ const HUNDRED_ETH = new BigNumber(100).pow(18).toString();
 const config: BuidlerConfig = {
   defaultNetwork: 'buidlerevm',
   solc: {
-    version: '0.6.6',
+    version: '0.6.8',
+    optimizer: {
+      runs: 200,
+    },
   },
   networks: {
     rinkeby: {

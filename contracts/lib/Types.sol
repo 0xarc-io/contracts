@@ -1,4 +1,4 @@
-pragma solidity ^0.6.6;
+pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
 
@@ -12,7 +12,7 @@ library Types {
         uint256 liquidationSpread;
         uint256 originationFee;
         address interestSetter;
-        address liquidityAsset;
+        address stableAsset;
     }
 
     struct State {
@@ -31,6 +31,5 @@ library Types {
 
     struct Exchange {
         uint256 liquiditySupplied;
-        mapping (address => uint256) liquidityToOwner;
     }
 }

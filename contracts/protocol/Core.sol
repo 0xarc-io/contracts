@@ -1,4 +1,4 @@
-pragma solidity ^0.6.6;
+pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
 import {console} from "@nomiclabs/buidler/console.sol";
@@ -10,11 +10,18 @@ import {Storage} from "./Storage.sol";
 import {Actions} from "./Actions.sol";
 
 
-contract Arc is Admin, Storage, Actions {
+contract Core is Admin, Storage, Actions {
 
     // ============ Constructor ============
 
-    constructor(Types.GlobalParams memory _globalParams) public {
+    constructor(
+        Types.GlobalParams memory _globalParams
+    )
+        public
+    {
         console.log('** ARC Deployed **');
+
+        params = _globalParams;
+
     }
 }

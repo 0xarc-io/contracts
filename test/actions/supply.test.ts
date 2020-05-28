@@ -1,16 +1,17 @@
 import 'jest';
 
-import { Arc } from '../../typechain/Arc';
+import Arc from '../../src/Arc';
+
 import { BigNumber } from 'ethers/utils';
 
 import { generatedWallets } from '../../src/utils/generatedWallets';
 import { Blockchain } from '../../src/utils/Blockchain';
-import { ethers } from 'ethers';
+import { ethers, Wallet } from 'ethers';
 import { expectRevert } from '../../src/utils/expectRevert';
 import { StableShare } from '../../typechain/StableShare';
 
-const ZERO = new BigNumber(0);
 const BASE = new BigNumber(10).pow(18);
+const TEN = BASE.mul(10);
 
 const provider = new ethers.providers.JsonRpcProvider();
 const blockchain = new Blockchain(provider);
@@ -19,30 +20,30 @@ describe('Actions.supply()', () => {
   const [ownerWallet, userWallet] = generatedWallets(provider);
 
   let arc: Arc;
-  let stableShare: StableShare;
 
   beforeEach(async () => {
-    stableShare = await StableShare.deploy(ownerWallet);
-    arc = await Arc.deploy(ownerWallet, {
-      collateralRatio: ZERO,
-      syntheticRatio: ZERO,
-      liquidationSpread: ZERO,
-      originationFee: ZERO,
-      interestSetter: ethers.constants.AddressZero,
-      liquidityAsset: stableShare.address,
-    });
+    arc = await Arc.init(ownerWallet);
+    await arc.deployTestArc();
   });
 
   it('should not be able to supply 0', async () => {
-    await expectRevert(arc.supply(0));
+    await expectRevert(arc.supply(ownerWallet, TEN));
   });
 
   it('should not be able to supply without enough funds', async () => {
-    await expectRevert(arc.supply(BASE.mul(10)));
+    await expectRevert(arc.supply(ownerWallet, TEN));
   });
 
   it('should be able to supply', async () => {
-    await arc.supply(new BigNumber(10));
+    await arc.stableShare.mintShare(ownerWallet.address, TEN);
+    await arc.stableShare.approve(arc.core.address, TEN);
+    await arc.supply(ownerWallet, TEN);
+
+    const state = await arc.core.state();
+    expect(state.supplyTotal).toEqual(TEN);
+
+    const supplyBalance = await arc.core.supplyBalances(ownerWallet.address);
+    expect(supplyBalance).toEqual(TEN);
   });
 
   it('should not accrue interest if there are no borrows', async () => {});

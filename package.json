@@ -33,7 +33,7 @@
     "mocha": "^7.1.1",
     "node-run-cmd": "^1.0.1",
     "prettier": "^2.0.5",
-    "solc": "^0.6.6",
+    "solc": "^0.6.8",
     "solidity-coverage": "^0.7.1",
     "system-commands": "^1.1.7",
     "ts-generator": "0.0.8",
