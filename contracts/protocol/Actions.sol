@@ -23,7 +23,7 @@ contract Actions is Storage {
     {
         require(
             amount > 0,
-            "Actions.supply(): Cannot supply 0"
+            "Actions.supply: Cannot supply 0"
         );
 
         SafeERC20.safeTransferFrom(
@@ -35,6 +35,8 @@ contract Actions is Storage {
 
         state.supplyTotal = state.supplyTotal.add(amount);
         supplyBalances[msg.sender] = supplyBalances[msg.sender].add(amount);
+
+        // @TODO: Update indexes
     }
 
     function withdraw(
@@ -46,18 +48,54 @@ contract Actions is Storage {
             amount > 0,
             "Actions.withdraw: Cannot withdraw 0"
         );
+
+        require(
+            supplyBalances[msg.sender] >= amount,
+            "Actions.withdraw: Cannot withdraw more than supplied"
+        );
+
+        SafeERC20.safeTransfer(
+            IERC20(params.stableAsset),
+            msg.sender,
+            amount
+        );
+
+        // @TODO: Calculate interest earned to withdraw
+
+        // @TODO: Ensure there's enough liquidity in the protocol
+
+        state.supplyTotal = state.supplyTotal.sub(amount);
+        supplyBalances[msg.sender] = supplyBalances[msg.sender].sub(amount);
+
+        // @TODO: Update indexes
     }
 
     function openPosition(
         address collateralAsset,
         uint256 collateralAmount,
         uint256 borrowAmount
-    ) public {}
+    )
+        public
+    {
+        require(
+            collateralAsset == address(this) || collateralAsset == params.stableAsset,
+            "Actions.openPosition: Can only use stable shares or the synthetic as collateral"
+        );
+
+        require(
+            borrowAmount > 0,
+            "Actions.openPosition: Cannot open a 0 position"
+        );
+    }
 
     function borrowPosition(
         uint256 positionId,
         uint256 borrowAmount
-    ) public {}
+    )
+        public
+    {
+
+    }
 
     function depositPosition(
         uint256 positionId,

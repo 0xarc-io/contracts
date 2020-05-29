@@ -1,17 +1,16 @@
 import 'jest';
 
-import Arc from '../../src/Arc';
+import Arc from '@src/Arc';
 
 import { BigNumber } from 'ethers/utils';
 
-import { generatedWallets } from '../../src/utils/generatedWallets';
-import { Blockchain } from '../../src/utils/Blockchain';
+import { generatedWallets } from '@utils/generatedWallets';
+import { Blockchain } from '@utils/Blockchain';
 import { ethers, Wallet } from 'ethers';
-import { expectRevert } from '../../src/utils/expectRevert';
-import { StableShare } from '../../typechain/StableShare';
+import { expectRevert } from '@utils/expectRevert';
+import ArcNumber from '@utils/ArcNumber';
 
-const BASE = new BigNumber(10).pow(18);
-const TEN = BASE.mul(10);
+const TEN = ArcNumber.new(10);
 
 const provider = new ethers.providers.JsonRpcProvider();
 const blockchain = new Blockchain(provider);
@@ -27,17 +26,17 @@ describe('Actions.supply()', () => {
   });
 
   it('should not be able to supply 0', async () => {
-    await expectRevert(arc.supply(ownerWallet, TEN));
+    await expectRevert(arc.supply(TEN));
   });
 
   it('should not be able to supply without enough funds', async () => {
-    await expectRevert(arc.supply(ownerWallet, TEN));
+    await expectRevert(arc.supply(TEN));
   });
 
   it('should be able to supply', async () => {
     await arc.stableShare.mintShare(ownerWallet.address, TEN);
     await arc.stableShare.approve(arc.core.address, TEN);
-    await arc.supply(ownerWallet, TEN);
+    await arc.supply(TEN);
 
     const state = await arc.core.state();
     expect(state.supplyTotal).toEqual(TEN);

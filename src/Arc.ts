@@ -4,6 +4,7 @@ import { Core } from '../typechain/Core';
 import { StableShare } from '../typechain/StableShare';
 
 const ZERO = new BigNumber(0);
+const BASE = new BigNumber(10).pow(18);
 
 export default class Arc {
   public wallet: Wallet;
@@ -18,7 +19,7 @@ export default class Arc {
   }
 
   async deployArc(stableShare: string) {
-    this.core = await Core.deploy(this.wallet, {
+    this.core = await Core.deploy(this.wallet, 'Synthetic BTC', 'arcBTC', {
       collateralRatio: ZERO,
       syntheticRatio: ZERO,
       liquidationSpread: ZERO,
@@ -33,8 +34,27 @@ export default class Arc {
     await this.deployArc(this.stableShare.address);
   }
 
-  async supply(caller: Wallet, amount: BigNumber) {
-    const contract = await Core.at(caller, this.core.address);
+  async supply(amount: BigNumber, caller?: Wallet) {
+    const contract = await this.getCore(caller);
     return await contract.supply(amount);
+  }
+
+  async withdraw(amount: BigNumber, caller?: Wallet) {
+    const contract = await this.getCore(caller);
+    return await contract.withdraw(amount);
+  }
+
+  async openPosition(
+    collateralAsset: string,
+    collateralAmount: BigNumber,
+    borrowAmount: BigNumber,
+    caller?: Wallet,
+  ) {
+    const contract = await this.getCore(caller);
+    return contract.openPosition(collateralAsset, collateralAmount, borrowAmount);
+  }
+
+  private async getCore(caller?: Wallet) {
+    return await Core.at(caller || this.wallet, this.core.address);
   }
 }
