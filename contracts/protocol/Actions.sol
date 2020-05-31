@@ -91,11 +91,7 @@ contract Actions is Storage {
     function borrowPosition(
         uint256 positionId,
         uint256 borrowAmount
-    )
-        public
-    {
-
-    }
+    ) public {}
 
     function depositPosition(
         uint256 positionId,
