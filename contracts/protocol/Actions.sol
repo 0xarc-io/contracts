@@ -204,8 +204,6 @@ contract Actions is Storage {
     function updateIndexes()
         public
     {
-        Decimal.D256 memory ratio = utilisationRatio();
-
         require(
             utilisationRatio().value <= params.maximumUtilisationRatio.value,
             "Arc: maximum utilisation ratio reached"

@@ -31,7 +31,7 @@ describe('#Actions.openPosition()', () => {
 
   let arc: Arc;
 
-  describe('synthetic', () => {
+  describe('with stable shares', () => {
     // Set the price of the synthetic at $100
     // Mint $200 worth of stable shares
     // Mint 1 synthetic asset from the $200
@@ -90,7 +90,7 @@ describe('#Actions.openPosition()', () => {
     });
   });
 
-  describe.only('stable', () => {
+  describe.only('with synthetics', () => {
     // Set the price of the synthetic at $100
     // Mint $2000 to the user, mint 10 synthetics
     // Mint $200 to the lender, lend to the protocol (0% utilised)
