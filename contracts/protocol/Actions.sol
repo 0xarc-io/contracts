@@ -184,29 +184,4 @@ contract Actions is Storage {
         uint256 positionId
     ) public {}
 
-    // ============ Helpers ============
-
-    function utilisationRatio()
-        public
-        view
-        returns (Decimal.D256 memory)
-    {
-        if (state.borrowTotal == 0) {
-            return Decimal.D256({ value: 0 });
-        }
-
-        uint256 invertedResult = state.supplyTotal.div(state.borrowTotal);
-        uint256 result = Decimal.BASE.div(invertedResult);
-
-        return Decimal.D256({ value: result });
-    }
-
-    function updateIndexes()
-        public
-    {
-        require(
-            utilisationRatio().value <= params.maximumUtilisationRatio.value,
-            "Arc: maximum utilisation ratio reached"
-        );
-    }
 }

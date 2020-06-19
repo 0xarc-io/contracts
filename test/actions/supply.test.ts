@@ -9,6 +9,7 @@ import { Blockchain } from '@utils/Blockchain';
 import { ethers, Wallet } from 'ethers';
 import { expectRevert } from '@utils/expectRevert';
 import ArcNumber from '@utils/ArcNumber';
+import { TestArc } from '../../src/TestArc';
 
 const TEN = ArcNumber.new(10);
 
@@ -18,12 +19,12 @@ const blockchain = new Blockchain(provider);
 describe('Actions.supply()', () => {
   const [ownerWallet, userWallet] = generatedWallets(provider);
 
-  let arc: Arc;
+  let arc: TestArc;
 
   beforeEach(async () => {
     await blockchain.resetAsync();
 
-    arc = await Arc.init(ownerWallet);
+    arc = await TestArc.init(ownerWallet);
     await arc.deployTestArc();
   });
 

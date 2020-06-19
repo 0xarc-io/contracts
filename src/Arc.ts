@@ -40,13 +40,6 @@ export default class Arc {
     this.synthetic = await SyntheticToken.at(this.wallet, sythAddress);
   }
 
-  async deployTestArc() {
-    this.stableShare = await StableShare.deploy(this.wallet);
-    this.oracle = await MockOracle.deploy(this.wallet);
-
-    await this.deployArc(this.stableShare.address, this.oracle.address);
-  }
-
   async supply(amount: BigNumber, caller?: Wallet) {
     const contract = await this.getCore(caller);
     return await contract.supply(amount);

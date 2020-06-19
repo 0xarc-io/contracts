@@ -21,11 +21,12 @@ library Types {
 
     struct State {
         uint256 supplyTotal;
-        uint256 supplyCompounded;
+        Decimal.D256 supplyCompounded;
         uint256 borrowTotal;
-        uint256 borrowCompounded;
+        Decimal.D256 borrowCompounded;
         Decimal.D256 supplyIndex;
         Decimal.D256 borrowIndex;
+        uint256 lastIndexUpdate;
     }
 
     struct Position {

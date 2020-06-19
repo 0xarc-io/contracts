@@ -16,6 +16,7 @@ import ArcNumber from '@utils/ArcNumber';
 import { StableShare } from '@typings/StableShare';
 import ArcDecimal from '../../src/utils/ArcDecimal';
 import Token from '@src/utils/Token';
+import { TestArc } from '../../src/TestArc';
 
 const provider = new ethers.providers.JsonRpcProvider();
 const blockchain = new Blockchain(provider);
@@ -29,7 +30,7 @@ jest.setTimeout(30000);
 describe('#Actions.openPosition()', () => {
   const [ownerWallet, userWallet, minterWallet, lenderWallet] = generatedWallets(provider);
 
-  let arc: Arc;
+  let arc: TestArc;
 
   describe('with stable shares', () => {
     // Set the price of the synthetic at $100
@@ -38,7 +39,7 @@ describe('#Actions.openPosition()', () => {
     beforeEach(async () => {
       await blockchain.resetAsync();
 
-      arc = await Arc.init(ownerWallet);
+      arc = await TestArc.init(ownerWallet);
       await arc.deployTestArc();
       await arc.oracle.setPrice(ArcDecimal.new(100.0));
       await Token.approve(
@@ -100,7 +101,7 @@ describe('#Actions.openPosition()', () => {
     beforeEach(async () => {
       await blockchain.resetAsync();
 
-      arc = await Arc.init(ownerWallet);
+      arc = await TestArc.init(ownerWallet);
       await arc.deployTestArc();
       await arc.oracle.setPrice(ArcDecimal.new(100.0));
 

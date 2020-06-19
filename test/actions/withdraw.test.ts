@@ -10,6 +10,7 @@ import { ethers, Wallet } from 'ethers';
 import { expectRevert } from '@src/utils/expectRevert';
 
 import ArcNumber from '@src/utils/ArcNumber';
+import { TestArc } from '../../src/TestArc';
 
 const provider = new ethers.providers.JsonRpcProvider();
 const blockchain = new Blockchain(provider);
@@ -19,11 +20,11 @@ const TEN = ArcNumber.new(10);
 describe('Actions.withdraw()', () => {
   const [ownerWallet, userWallet] = generatedWallets(provider);
 
-  let arc: Arc;
+  let arc: TestArc;
 
   beforeAll(async () => {
     await blockchain.resetAsync();
-    arc = await Arc.init(ownerWallet);
+    arc = await TestArc.init(ownerWallet);
     await arc.deployTestArc();
     await arc.stableShare.mintShare(ownerWallet.address, TEN);
     await arc.stableShare.approve(arc.core.address, TEN);
