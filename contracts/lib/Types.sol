@@ -1,18 +1,22 @@
 pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
+import {Decimal} from "./Decimal.sol";
+import {IOracle} from "../interfaces/IOracle.sol";
 
 library Types {
 
     // ============ Structs ============
 
     struct GlobalParams {
-        uint256 collateralRatio;
-        uint256 syntheticRatio;
-        uint256 liquidationSpread;
-        uint256 originationFee;
         address interestSetter;
         address stableAsset;
+        Decimal.D256 collateralRatio;
+        Decimal.D256 syntheticRatio;
+        Decimal.D256 liquidationSpread;
+        Decimal.D256 originationFee;
+        Decimal.D256 maximumUtilisationRatio;
+        IOracle oracle;
     }
 
     struct State {
@@ -20,6 +24,8 @@ library Types {
         uint256 supplyCompounded;
         uint256 borrowTotal;
         uint256 borrowCompounded;
+        Decimal.D256 supplyIndex;
+        Decimal.D256 borrowIndex;
     }
 
     struct Position {

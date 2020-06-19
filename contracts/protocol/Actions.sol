@@ -7,8 +7,11 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 
 import {console} from "@nomiclabs/buidler/console.sol";
 
-import {Storage} from "./Storage.sol";
 import {Types} from "../lib/Types.sol";
+import {Decimal} from "../lib/Decimal.sol";
+import {BaseERC20} from "../token/BaseERC20.sol";
+
+import {Storage} from "./Storage.sol";
 
 contract Actions is Storage {
 
@@ -36,7 +39,7 @@ contract Actions is Storage {
         state.supplyTotal = state.supplyTotal.add(amount);
         supplyBalances[msg.sender] = supplyBalances[msg.sender].add(amount);
 
-        // @TODO: Update indexes
+        updateIndexes();
     }
 
     function withdraw(
@@ -62,23 +65,22 @@ contract Actions is Storage {
 
         // @TODO: Calculate interest earned to withdraw
 
-        // @TODO: Ensure there's enough liquidity in the protocol
-
         state.supplyTotal = state.supplyTotal.sub(amount);
         supplyBalances[msg.sender] = supplyBalances[msg.sender].sub(amount);
 
-        // @TODO: Update indexes
+        updateIndexes();
     }
 
     function openPosition(
         address collateralAsset,
-        uint256 collateralAmount,
         uint256 borrowAmount
     )
         public
     {
+        address syntheticAsset = address(synthetic);
+
         require(
-            collateralAsset == address(this) || collateralAsset == params.stableAsset,
+            collateralAsset == syntheticAsset || collateralAsset == params.stableAsset,
             "Actions.openPosition: Can only use stable shares or the synthetic as collateral"
         );
 
@@ -86,6 +88,80 @@ contract Actions is Storage {
             borrowAmount > 0,
             "Actions.openPosition: Cannot open a 0 position"
         );
+
+        address assetToBorrow = collateralAsset == syntheticAsset ? params.stableAsset : syntheticAsset;
+
+        Decimal.D256 memory currentPrice = params.oracle.fetchCurrentPrice();
+
+        uint256 requiredCollateral = 0;
+        uint256 stableSharesInvolved = 0;
+
+        if (assetToBorrow == syntheticAsset) {
+            requiredCollateral = Decimal.mul(
+                borrowAmount,
+                currentPrice
+            );
+
+            requiredCollateral = Decimal.mul(
+                requiredCollateral,
+                params.collateralRatio
+            );
+
+            stableSharesInvolved = requiredCollateral;
+        }
+
+        if (assetToBorrow == params.stableAsset) {
+            requiredCollateral = Decimal.div(
+                borrowAmount,
+                currentPrice
+            );
+
+            requiredCollateral = Decimal.mul(
+                requiredCollateral,
+                params.syntheticRatio
+            );
+
+            stableSharesInvolved = requiredCollateral;
+        }
+
+        require(
+            IERC20(collateralAsset).balanceOf(msg.sender) >= requiredCollateral,
+            "Actions.openPosition: Not enough collateral provided"
+        );
+
+        SafeERC20.safeTransferFrom(
+            IERC20(collateralAsset),
+            msg.sender,
+            syntheticAsset,
+            requiredCollateral
+        );
+
+        Types.Position memory newPosition = Types.Position({
+            collateralAsset: collateralAsset,
+            collateralAmount: requiredCollateral,
+            borrowedAsset: assetToBorrow,
+            borrowedAmount: borrowAmount
+        });
+
+        positions[positionCount] = newPosition;
+
+        if (assetToBorrow == syntheticAsset) {
+            synthetic.mint(msg.sender, borrowAmount);
+        }
+
+        if (assetToBorrow == params.stableAsset) {
+            state.borrowTotal = state.borrowTotal.add(borrowAmount);
+
+            SafeERC20.safeTransfer(
+                IERC20(params.stableAsset),
+                msg.sender,
+                borrowAmount
+            );
+        }
+
+        positionCount = positionCount + 1;
+
+        updateIndexes();
     }
 
     function borrowPosition(
@@ -108,17 +184,31 @@ contract Actions is Storage {
         uint256 positionId
     ) public {}
 
-    function supplyAsLP(
-        uint256 amount
-    ) public {}
+    // ============ Helpers ============
 
-    function withdrawAsLP(
-        uint256 amount
-    ) public {}
+    function utilisationRatio()
+        public
+        view
+        returns (Decimal.D256 memory)
+    {
+        if (state.borrowTotal == 0) {
+            return Decimal.D256({ value: 0 });
+        }
 
-    function swap(
-        address input,
-        uint256 amount,
-        uint256 minimumOutput
-    ) public {}
+        uint256 invertedResult = state.supplyTotal.div(state.borrowTotal);
+        uint256 result = Decimal.BASE.div(invertedResult);
+
+        return Decimal.D256({ value: result });
+    }
+
+    function updateIndexes()
+        public
+    {
+        Decimal.D256 memory ratio = utilisationRatio();
+
+        require(
+            utilisationRatio().value <= params.maximumUtilisationRatio.value,
+            "Arc: maximum utilisation ratio reached"
+        );
+    }
 }

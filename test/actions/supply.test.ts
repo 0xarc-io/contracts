@@ -21,6 +21,8 @@ describe('Actions.supply()', () => {
   let arc: Arc;
 
   beforeEach(async () => {
+    await blockchain.resetAsync();
+
     arc = await Arc.init(ownerWallet);
     await arc.deployTestArc();
   });
@@ -43,6 +45,9 @@ describe('Actions.supply()', () => {
 
     const supplyBalance = await arc.core.supplyBalances(ownerWallet.address);
     expect(supplyBalance).toEqual(TEN);
+
+    const supplyTotal = (await arc.core.state()).borrowTotal;
+    expect(supplyTotal).toEqual(TEN);
   });
 
   it('should not accrue interest if there are no borrows', async () => {});

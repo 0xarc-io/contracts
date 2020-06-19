@@ -44,10 +44,10 @@
     "typechain": "^1.0.4",
     "typechain-target-truffle": "^1.0.2",
     "typechain-target-web3-v1": "^1.0.4",
+    "typechain-target-ethers": "^1.0.4",
     "typescript": "^3.7.5"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^3.0.0",
-    "typechain-target-ethers": "^1.0.4"
+    "@openzeppelin/contracts": "^3.0.0"
   }
 }
