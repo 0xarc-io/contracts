@@ -24,8 +24,7 @@ library Types {
         Decimal.D256 supplyCompounded;
         uint256 borrowTotal;
         Decimal.D256 borrowCompounded;
-        Decimal.D256 supplyIndex;
-        Decimal.D256 borrowIndex;
+        Decimal.D256 currentIndex;
         uint256 lastIndexUpdate;
     }
 

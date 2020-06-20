@@ -1,5 +1,5 @@
 import { Wallet, ethers } from 'ethers';
-import { BigNumber } from 'ethers/utils';
+import { BigNumber, BigNumberish } from 'ethers/utils';
 import { Core } from '../typechain/Core';
 import { StableShare } from '../typechain/StableShare';
 import { AddressZero } from 'ethers/constants';
@@ -40,17 +40,17 @@ export default class Arc {
     this.synthetic = await SyntheticToken.at(this.wallet, sythAddress);
   }
 
-  async supply(amount: BigNumber, caller?: Wallet) {
+  async supply(amount: BigNumberish, caller?: Wallet) {
     const contract = await this.getCore(caller);
     return await contract.supply(amount);
   }
 
-  async withdraw(amount: BigNumber, caller?: Wallet) {
+  async withdraw(amount: BigNumberish, caller?: Wallet) {
     const contract = await this.getCore(caller);
     return await contract.withdraw(amount);
   }
 
-  async openPosition(collateralAsset: string, borrowAmount: BigNumber, caller?: Wallet) {
+  async openPosition(collateralAsset: string, borrowAmount: BigNumberish, caller?: Wallet) {
     const contract = await this.getCore(caller);
     return contract.openPosition(collateralAsset, borrowAmount);
   }

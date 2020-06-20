@@ -1,7 +1,5 @@
 import 'jest';
 
-import Arc from '@src/Arc';
-
 import { BigNumber } from 'ethers/utils';
 
 import { generatedWallets } from '@utils/generatedWallets';
@@ -106,31 +104,14 @@ describe('#Actions.openPosition()', () => {
       await arc.oracle.setPrice(ArcDecimal.new(100.0));
 
       await Token.approve(
-        arc.stableShare.address,
-        minterWallet,
-        arc.core.address,
-        ArcNumber.new(10000),
-      );
-
-      await Token.approve(
-        arc.stableShare.address,
-        lenderWallet,
-        arc.core.address,
-        ArcNumber.new(10000),
-      );
-
-      await Token.approve(
         arc.synthetic.address,
         userWallet,
         arc.core.address,
         ArcNumber.new(10000),
       );
 
-      await arc.stableShare.mintShare(lenderWallet.address, ArcNumber.new(200));
-      await arc.supply(ArcNumber.new(200), lenderWallet);
-
-      await arc.stableShare.mintShare(minterWallet.address, ArcNumber.new(2000));
-      await arc.openPosition(arc.stableShare.address, ArcNumber.new(10), minterWallet);
+      await arc.sucessfullySupply(ArcNumber.new(200), lenderWallet);
+      await arc.sucessfullyMintSynthetic(ArcNumber.new(10), ArcNumber.new(2000), minterWallet);
     });
 
     // Maximum of 10 available as per above
