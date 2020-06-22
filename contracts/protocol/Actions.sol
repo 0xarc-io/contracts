@@ -37,9 +37,11 @@ contract Actions is Storage {
         );
 
         state.supplyTotal = state.supplyTotal.add(amount);
-        supplyBalances[msg.sender] = supplyBalances[msg.sender].add(amount);
+        supplyBalances[msg.sender].balance = supplyBalances[msg.sender].balance.add(amount);
 
         updateIndexes();
+
+        supplyBalances[msg.sender].lastIndex = state.index;
     }
 
     function withdraw(
@@ -53,7 +55,7 @@ contract Actions is Storage {
         );
 
         require(
-            supplyBalances[msg.sender] >= amount,
+            supplyBalances[msg.sender].balance >= amount,
             "Actions.withdraw: Cannot withdraw more than supplied"
         );
 
@@ -66,9 +68,11 @@ contract Actions is Storage {
         // @TODO: Calculate interest earned to withdraw
 
         state.supplyTotal = state.supplyTotal.sub(amount);
-        supplyBalances[msg.sender] = supplyBalances[msg.sender].sub(amount);
+        supplyBalances[msg.sender].balance = supplyBalances[msg.sender].balance.sub(amount);
 
         updateIndexes();
+
+        supplyBalances[msg.sender].lastIndex = state.index;
     }
 
     function openPosition(
@@ -129,21 +133,20 @@ contract Actions is Storage {
             "Actions.openPosition: Not enough collateral provided"
         );
 
+        Types.Position memory newPosition = Types.Position({
+            collateralAsset: collateralAsset,
+            collateralAmount: requiredCollateral,
+            borrowedAsset: assetToBorrow,
+            borrowedAmount: borrowAmount,
+            lastIndex: Decimal.D256({ value: 0 })
+        });
+
         SafeERC20.safeTransferFrom(
             IERC20(collateralAsset),
             msg.sender,
             syntheticAsset,
             requiredCollateral
         );
-
-        Types.Position memory newPosition = Types.Position({
-            collateralAsset: collateralAsset,
-            collateralAmount: requiredCollateral,
-            borrowedAsset: assetToBorrow,
-            borrowedAmount: borrowAmount
-        });
-
-        positions[positionCount] = newPosition;
 
         if (assetToBorrow == syntheticAsset) {
             synthetic.mint(msg.sender, borrowAmount);
@@ -159,9 +162,11 @@ contract Actions is Storage {
             );
         }
 
-        positionCount = positionCount + 1;
-
         updateIndexes();
+
+        newPosition.lastIndex = state.index;
+        positionCount = positionCount + 1;
+        positions[positionCount] = newPosition;
     }
 
     function borrowPosition(

@@ -5,11 +5,18 @@ import {Decimal} from "../lib/Decimal.sol";
 
 interface IInterestRate {
 
-    function calculateRate(
+    function calculateIndex(
         Decimal.D256 calldata utilisationRatio,
         uint256 lastIndexUpdate
     )
         external
+        view
         returns (Decimal.D256 memory);
 
+    function calculateRate(
+        Decimal.D256 calldata utilisationRatio
+    )
+        external
+        view
+        returns (Decimal.D256 memory);
 }

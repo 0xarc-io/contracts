@@ -22,8 +22,8 @@ export class TestArc extends Arc {
 
   async sucessfullySupply(amount: BigNumberish, from: Wallet) {
     await Token.approve(this.stableShare.address, from, this.core.address, amount);
-    await this.stableShare.mintShare(from.address, ArcNumber.new(200));
-    await this.supply(ArcNumber.new(200), from);
+    await this.stableShare.mintShare(from.address, amount);
+    await this.supply(amount, from);
   }
 
   async sucessfullyMintSynthetic(amount: BigNumberish, collateral: BigNumberish, from: Wallet) {

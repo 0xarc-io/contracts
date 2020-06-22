@@ -16,16 +16,35 @@ contract Storage {
 
     Types.GlobalParams public params;
     Types.State public state;
-    Types.Exchange public exchange;
 
     SyntheticToken public synthetic;
 
     uint256 public positionCount;
 
     mapping(uint256 => Types.Position) public positions;
+    mapping (address => Types.Balance) public supplyBalances;
 
-    mapping (address => uint256) public liquidityBalances;
-    mapping (address => uint256) public supplyBalances;
+    function updateIndexes()
+        public
+    {
+        require(
+            utilisationRatio().value <= params.maximumUtilisationRatio.value,
+            "Arc: maximum utilisation ratio reached"
+        );
+
+        Decimal.D256 memory newIndex = params.interestRateModel.calculateIndex(
+            utilisationRatio(),
+            state.lastIndexUpdate
+        );
+
+        newIndex = Decimal.mul(
+            newIndex,
+            state.index
+        );
+
+        state.index = newIndex;
+        state.lastIndexUpdate = block.timestamp;
+    }
 
     function utilisationRatio()
         public
@@ -42,12 +61,11 @@ contract Storage {
         return Decimal.D256({ value: result });
     }
 
-    function updateIndexes()
+    function supplyCompounded()
         public
+        view
+        returns (Decimal.D256 memory)
     {
-        require(
-            utilisationRatio().value <= params.maximumUtilisationRatio.value,
-            "Arc: maximum utilisation ratio reached"
-        );
+
     }
 }

@@ -14,6 +14,7 @@ import { expectRevert } from '@utils/expectRevert';
 
 import ArcNumber from '@utils/ArcNumber';
 import { StableShare } from '@typings/StableShare';
+import { TestArc } from '../src/TestArc';
 
 const provider = new ethers.providers.JsonRpcProvider();
 const blockchain = new Blockchain(provider);
@@ -25,12 +26,12 @@ use(solidity);
 describe('#Actions.openPosition()', () => {
   const [ownerWallet, userWallet] = generatedWallets(provider);
 
-  let arc: Arc;
+  let arc: TestArc;
 
   beforeAll(async () => {
     await blockchain.resetAsync();
-    arc = await Arc.init(ownerWallet);
-    await arc.deployTestArc();
+    arc = await TestArc.init(ownerWallet);
+    // await arc.deployArc();
     await blockchain.saveSnapshotAsync();
   });
 

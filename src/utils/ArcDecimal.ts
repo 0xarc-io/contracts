@@ -6,8 +6,11 @@ export default class ArcDecimal {
     const difference = 18 - decimalPlaces;
     const zeros = new BigNumber(10).pow(difference);
     const abs = new BigNumber(`${value.toString().replace('.', '')}`);
-
     return { value: abs.mul(zeros) };
+  }
+
+  static raw(value: number) {
+    return { value: new BigNumber(value) };
   }
 }
 

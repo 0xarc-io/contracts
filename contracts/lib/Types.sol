@@ -3,14 +3,15 @@ pragma experimental ABIEncoderV2;
 
 import {Decimal} from "./Decimal.sol";
 import {IOracle} from "../interfaces/IOracle.sol";
+import {IInterestRate} from "../interfaces/IInterestRate.sol";
 
 library Types {
 
     // ============ Structs ============
 
     struct GlobalParams {
-        address interestSetter;
         address stableAsset;
+        IInterestRate interestRateModel;
         Decimal.D256 collateralRatio;
         Decimal.D256 syntheticRatio;
         Decimal.D256 liquidationSpread;
@@ -21,10 +22,8 @@ library Types {
 
     struct State {
         uint256 supplyTotal;
-        Decimal.D256 supplyCompounded;
         uint256 borrowTotal;
-        Decimal.D256 borrowCompounded;
-        Decimal.D256 currentIndex;
+        Decimal.D256 index;
         uint256 lastIndexUpdate;
     }
 
@@ -33,9 +32,12 @@ library Types {
         uint256 collateralAmount;
         address borrowedAsset;
         uint256 borrowedAmount;
+        Decimal.D256 lastIndex;
     }
 
-    struct Exchange {
-        uint256 liquiditySupplied;
+    struct Balance {
+        uint256 balance;
+        Decimal.D256 lastIndex;
     }
+
 }

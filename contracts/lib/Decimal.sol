@@ -53,6 +53,17 @@ library Decimal {
         return Math.getPartial(target, d.value, BASE);
     }
 
+    function mul(
+        D256 memory d1,
+        D256 memory d2
+    )
+        internal
+        pure
+        returns (D256 memory)
+    {
+        return Decimal.D256({ value: Math.getPartial(d1.value, d2.value, BASE) });
+    }
+
     function div(
         uint256 target,
         D256 memory d
