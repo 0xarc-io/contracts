@@ -7,10 +7,10 @@ import {SyntheticToken} from "../token/SyntheticToken.sol";
 import {Types} from "../lib/Types.sol";
 
 import {Admin} from "./Admin.sol";
-import {Storage} from "./Storage.sol";
 import {Actions} from "./Actions.sol";
+import {Getters} from "./Getters.sol";
 
-contract Core is Admin, Storage, Actions {
+contract Core is Admin, Actions, Getters {
 
     // ============ Constructor ============
 

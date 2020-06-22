@@ -5,6 +5,7 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 
 import {Types} from "../lib/Types.sol";
 import {Decimal} from "../lib/Decimal.sol";
+import {Helpers} from "../lib/Helpers.sol";
 
 import {SyntheticToken} from "../token/SyntheticToken.sol";
 
@@ -27,13 +28,18 @@ contract Storage {
     function updateIndexes()
         public
     {
+        Decimal.D256 memory utilisationRatio = Helpers.utilisationRatio(
+            state.borrowTotal,
+            state.supplyTotal
+        );
+
         require(
-            utilisationRatio().value <= params.maximumUtilisationRatio.value,
+            utilisationRatio.value <= params.maximumUtilisationRatio.value,
             "Arc: maximum utilisation ratio reached"
         );
 
         Decimal.D256 memory newIndex = params.interestRateModel.calculateIndex(
-            utilisationRatio(),
+            utilisationRatio,
             state.lastIndexUpdate
         );
 
@@ -44,28 +50,5 @@ contract Storage {
 
         state.index = newIndex;
         state.lastIndexUpdate = block.timestamp;
-    }
-
-    function utilisationRatio()
-        public
-        view
-        returns (Decimal.D256 memory)
-    {
-        if (state.borrowTotal == 0) {
-            return Decimal.D256({ value: 0 });
-        }
-
-        uint256 invertedResult = state.supplyTotal.div(state.borrowTotal);
-        uint256 result = Decimal.BASE.div(invertedResult);
-
-        return Decimal.D256({ value: result });
-    }
-
-    function supplyCompounded()
-        public
-        view
-        returns (Decimal.D256 memory)
-    {
-
     }
 }
