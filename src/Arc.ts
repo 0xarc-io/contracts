@@ -6,6 +6,7 @@ import { AddressZero } from 'ethers/constants';
 import { MockOracle } from '../typechain/MockOracle';
 import ArcDecimal from './utils/ArcDecimal';
 import { SyntheticToken } from '../typechain/SyntheticToken';
+import { LinearInterestRate } from '../typechain/LinearInterestRate';
 
 const ZERO = new BigNumber(0);
 const BASE = new BigNumber(10).pow(18);
@@ -17,6 +18,7 @@ export default class Arc {
   public synthetic: SyntheticToken;
   public stableShare: StableShare;
   public oracle: MockOracle;
+  public interestModel: LinearInterestRate;
 
   static async init(wallet: Wallet): Promise<Arc> {
     let arc = new Arc();
@@ -24,14 +26,14 @@ export default class Arc {
     return arc;
   }
 
-  async deployArc(stableShare: string, oracle: string) {
+  async deployArc(interestRateMOdel: string, stableShare: string, oracle: string) {
     this.core = await Core.deploy(this.wallet, 'Synthetic BTC', 'arcBTC', {
       collateralRatio: ArcDecimal.new(2),
       syntheticRatio: ArcDecimal.new(2),
       liquidationSpread: ArcDecimal.new(0),
       originationFee: ArcDecimal.new(0),
       maximumUtilisationRatio: ArcDecimal.new(0.5),
-      interestSetter: ethers.constants.AddressZero,
+      interestRateModel: interestRateMOdel,
       stableAsset: stableShare,
       oracle: oracle,
     });

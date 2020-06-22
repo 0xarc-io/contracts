@@ -42,37 +42,37 @@ describe('LinearInterestRate', () => {
 
     test('at 0 seconds', async () => {
       await model.setTimestamp(0);
-      const rate = await model.calculateRate(utilisationRatio, 0);
+      const rate = await model.calculateIndex(utilisationRatio, 0);
       expect(rate.value).toEqual(new BigNumber(0));
     });
 
     test('at 1 minute', async () => {
       await model.setTimestamp(ONE_MINUTE);
-      const rate = await model.calculateRate(utilisationRatio, 0);
+      const rate = await model.calculateIndex(utilisationRatio, 0);
       expect(rate.value).toEqual(new BigNumber(0));
     });
 
     test('at 1 hour', async () => {
       await model.setTimestamp(ONE_HOUR);
-      const rate = await model.calculateRate(utilisationRatio, 0);
+      const rate = await model.calculateIndex(utilisationRatio, 0);
       expect(rate.value).toEqual(new BigNumber(0));
     });
 
     test('at 1 day', async () => {
       await model.setTimestamp(ONE_DAY);
-      const rate = await model.calculateRate(utilisationRatio, 0);
+      const rate = await model.calculateIndex(utilisationRatio, 0);
       expect(rate.value).toEqual(new BigNumber(0));
     });
 
     test('at 1 year', async () => {
       await model.setTimestamp(ONE_YEAR);
-      const rate = await model.calculateRate(utilisationRatio, 0);
+      const rate = await model.calculateIndex(utilisationRatio, 0);
       expect(rate.value).toEqual(new BigNumber(0));
     });
 
     test('at 10 year', async () => {
       await model.setTimestamp(TEN_YEARS);
-      const rate = await model.calculateRate(utilisationRatio, 0);
+      const rate = await model.calculateIndex(utilisationRatio, 0);
       expect(rate.value).toEqual(new BigNumber(0));
     });
   });
@@ -87,37 +87,37 @@ describe('LinearInterestRate', () => {
 
     test('at 0 seconds', async () => {
       await model.setTimestamp(0);
-      const rate = await model.calculateRate(utilisationRatio, 0);
+      const rate = await model.calculateIndex(utilisationRatio, 0);
       expect(rate.value).toEqual(new BigNumber(0));
     });
 
     test('at 1 minute', async () => {
       await model.setTimestamp(ONE_MINUTE);
-      const rate = await model.calculateRate(utilisationRatio, 0);
+      const rate = await model.calculateIndex(utilisationRatio, 0);
       expect(rate.value).toEqual(ArcDecimal.raw(46803652968).value);
     });
 
     test('at 1 hour', async () => {
       await model.setTimestamp(ONE_HOUR);
-      const rate = await model.calculateRate(utilisationRatio, 0);
+      const rate = await model.calculateIndex(utilisationRatio, 0);
       expect(rate.value).toEqual(ArcDecimal.raw(2808219178082).value);
     });
 
     test('at 1 day', async () => {
       await model.setTimestamp(ONE_DAY);
-      const rate = await model.calculateRate(utilisationRatio, 0);
+      const rate = await model.calculateIndex(utilisationRatio, 0);
       expect(rate.value).toEqual(ArcDecimal.raw(67397260273972).value);
     });
 
     test('at 1 year', async () => {
       await model.setTimestamp(ONE_YEAR);
-      const rate = await model.calculateRate(utilisationRatio, 0);
+      const rate = await model.calculateIndex(utilisationRatio, 0);
       expect(rate.value).toEqual(ArcDecimal.new(0.0246).value);
     });
 
     test('at 10 year', async () => {
       await model.setTimestamp(TEN_YEARS);
-      const rate = await model.calculateRate(utilisationRatio, 0);
+      const rate = await model.calculateIndex(utilisationRatio, 0);
       expect(rate.value).toEqual(ArcDecimal.new(0.246).value);
     });
   });
@@ -132,37 +132,37 @@ describe('LinearInterestRate', () => {
 
     test('at 0 seconds', async () => {
       await model.setTimestamp(0);
-      const rate = await model.calculateRate(utilisationRatio, 0);
+      const rate = await model.calculateIndex(utilisationRatio, 0);
       expect(rate.value).toEqual(new BigNumber(0));
     });
 
     test('at 1 minute', async () => {
       await model.setTimestamp(ONE_MINUTE);
-      const rate = await model.calculateRate(utilisationRatio, 0);
+      const rate = await model.calculateIndex(utilisationRatio, 0);
       expect(rate.value).toEqual(ArcDecimal.raw(256849315068).value);
     });
 
     test('at 1 hour', async () => {
       await model.setTimestamp(ONE_HOUR);
-      const rate = await model.calculateRate(utilisationRatio, 0);
+      const rate = await model.calculateIndex(utilisationRatio, 0);
       expect(rate.value).toEqual(ArcDecimal.raw(15410958904109).value);
     });
 
     test('at 1 day', async () => {
       await model.setTimestamp(ONE_DAY);
-      const rate = await model.calculateRate(utilisationRatio, 0);
+      const rate = await model.calculateIndex(utilisationRatio, 0);
       expect(rate.value).toEqual(ArcDecimal.raw(369863013698630).value);
     });
 
     test('at 1 year', async () => {
       await model.setTimestamp(ONE_YEAR);
-      const rate = await model.calculateRate(utilisationRatio, 0);
+      const rate = await model.calculateIndex(utilisationRatio, 0);
       expect(rate.value).toEqual(ArcDecimal.new(0.135).value);
     });
 
     test('at 10 year', async () => {
       await model.setTimestamp(TEN_YEARS);
-      const rate = await model.calculateRate(utilisationRatio, 0);
+      const rate = await model.calculateIndex(utilisationRatio, 0);
       expect(rate.value.toString()).toEqual(ArcDecimal.new(1.35).value.toString());
     });
   });
@@ -177,37 +177,37 @@ describe('LinearInterestRate', () => {
 
     test('at 0 seconds', async () => {
       await model.setTimestamp(0);
-      const rate = await model.calculateRate(utilisationRatio, 0);
+      const rate = await model.calculateIndex(utilisationRatio, 0);
       expect(rate.value).toEqual(new BigNumber(0));
     });
 
     test('at 1 minute', async () => {
       await model.setTimestamp(ONE_MINUTE);
-      const rate = await model.calculateRate(utilisationRatio, 0);
+      const rate = await model.calculateIndex(utilisationRatio, 0);
       expect(rate.value).toEqual(ArcDecimal.raw(475646879756).value);
     });
 
     test('at 1 hour', async () => {
       await model.setTimestamp(ONE_HOUR);
-      const rate = await model.calculateRate(utilisationRatio, 0);
+      const rate = await model.calculateIndex(utilisationRatio, 0);
       expect(rate.value).toEqual(ArcDecimal.raw(28538812785388).value);
     });
 
     test('at 1 day', async () => {
       await model.setTimestamp(ONE_DAY);
-      const rate = await model.calculateRate(utilisationRatio, 0);
+      const rate = await model.calculateIndex(utilisationRatio, 0);
       expect(rate.value).toEqual(ArcDecimal.raw(684931506849315).value);
     });
 
     test('at 1 year', async () => {
       await model.setTimestamp(ONE_YEAR);
-      const rate = await model.calculateRate(utilisationRatio, 0);
+      const rate = await model.calculateIndex(utilisationRatio, 0);
       expect(rate.value).toEqual(ArcDecimal.new(0.25).value);
     });
 
     test('at 10 year', async () => {
       await model.setTimestamp(TEN_YEARS);
-      const rate = await model.calculateRate(utilisationRatio, 0);
+      const rate = await model.calculateIndex(utilisationRatio, 0);
       expect(rate.value.toString()).toEqual(ArcDecimal.new(2.5).value.toString());
     });
   });

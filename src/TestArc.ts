@@ -5,6 +5,8 @@ import { Wallet } from 'ethers';
 import Token from './utils/Token';
 import ArcNumber from './utils/ArcNumber';
 import { BigNumberish } from 'ethers/utils';
+import { LinearInterestRate } from '../typechain/LinearInterestRate';
+import ArcDecimal from './utils/ArcDecimal';
 
 export class TestArc extends Arc {
   static async init(wallet: Wallet): Promise<TestArc> {
@@ -16,8 +18,13 @@ export class TestArc extends Arc {
   async deployTestArc() {
     this.stableShare = await StableShare.deploy(this.wallet);
     this.oracle = await MockOracle.deploy(this.wallet);
-
-    await this.deployArc(this.stableShare.address, this.oracle.address);
+    this.interestModel = await LinearInterestRate.deploy(
+      this.wallet,
+      ArcDecimal.new(0.02),
+      ArcDecimal.new(0.46),
+      ArcDecimal.new(0.25),
+    );
+    await this.deployArc(this.interestModel.address, this.stableShare.address, this.oracle.address);
   }
 
   async sucessfullySupply(amount: BigNumberish, from: Wallet) {

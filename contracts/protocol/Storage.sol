@@ -21,7 +21,7 @@ contract Storage {
 
     uint256 public positionCount;
 
-    mapping(uint256 => Types.Position) public positions;
+    mapping (uint256 => Types.Position) public positions;
     mapping (address => Types.Balance) public supplyBalances;
 
     function updateIndexes()

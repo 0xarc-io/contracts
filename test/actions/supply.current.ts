@@ -45,17 +45,25 @@ describe('Actions.supply()', () => {
     expect(state.supplyTotal).toEqual(TEN);
 
     const supplyBalance = await arc.core.supplyBalances(ownerWallet.address);
-    expect(supplyBalance).toEqual(TEN);
+    expect(supplyBalance.balance).toEqual(TEN);
 
-    const supplyTotal = (await arc.core.state()).borrowTotal;
+    const supplyTotal = (await arc.core.state()).supplyTotal;
     expect(supplyTotal).toEqual(TEN);
   });
 
-  it('should not accrue interest if there are no borrows', async () => {});
+  it.only('should not accrue interest if there are no borrows', async () => {
+    await arc.sucessfullySupply(ArcNumber.new(10), userWallet);
+    let block = await blockchain.getCurrentTimestamp();
+    console.log(block.timestamp);
+    await blockchain.setNextBlockTimestamp(block.timestamp + 100);
+    await blockchain.waitBlocksAsync(1);
+    block = await blockchain.getCurrentTimestamp();
+    console.log(block.timestamp);
+  });
 
-  it('should accrue the correct amount of interest after 1 block', async () => {});
+  it('should accrue the correct amount of interest after 1 minute', async () => {});
 
-  it('should accrue the correct amount of interest after 5 blocks', async () => {});
+  it('should accrue the correct amount of interest after 1 hour', async () => {});
 
-  it('should accrue the correct amount of interest after 10 blocks', async () => {});
+  it('should accrue the correct amount of interest after 1 day', async () => {});
 });
