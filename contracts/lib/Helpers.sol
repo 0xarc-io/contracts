@@ -27,39 +27,81 @@ library Helpers {
         return Decimal.D256({ value: result });
     }
 
-    function supplyCompounded()
+    function supplyCompounded(
+        uint256 supplyTotal,
+        Decimal.D256 memory currentIndex
+    )
         public
         view
         returns (Decimal.D256 memory)
     {
+        uint256 result = Decimal.mul(
+            supplyTotal,
+            currentIndex
+        );
 
+        return Decimal.D256({ value: result });
     }
 
-    function borrowsCompounded()
+    function borrowsCompounded(
+        uint256 borrowTotal,
+        Decimal.D256 memory currentIndex
+    )
         public
         view
         returns (Decimal.D256 memory)
     {
+        uint256 result = Decimal.mul(
+            borrowTotal,
+            currentIndex
+        );
 
+        return Decimal.D256({ value: result });
     }
 
-    function supplierCompoundedBalance(
-        address supplier
+    function supplierBalanceCompounded(
+        uint256 balance,
+        uint256 totalSupply,
+        uint256 totalBorrow,
+        Decimal.D256 memory currentIndex,
+        Decimal.D256 memory lastIndex
     )
         public
         view
         returns (Decimal.D256 memory compoundedBalance)
     {
 
+        uint256 portion = totalSupply.div(balance);
+        portion = Decimal.BASE.div(portion);
+
+        uint256 result = Decimal.mul(
+            portion.mul(totalBorrow),
+            Decimal.D256({ value: currentIndex.value.sub(Decimal.one().value) })
+        );
+
+        return Decimal.D256({ value: result.add(balance) });
     }
 
-    function borrowerCompoundedBalance(
-        address borrower
+    function borrowBalanceCompounded(
+        uint256 balance,
+        uint256 totalBorrow,
+        Decimal.D256 memory currentIndex,
+        Decimal.D256 memory lastIndex
     )
         public
         view
         returns (Decimal.D256 memory compoundedBalance)
     {
+
+        uint256 portion = totalBorrow.div(balance);
+        portion = Decimal.BASE.div(portion);
+
+        uint256 result = Decimal.mul(
+            portion.mul(totalBorrow),
+            Decimal.D256({ value: currentIndex.value.sub(Decimal.one().value) })
+        );
+
+        return Decimal.D256({ value: result.add(balance) });
 
     }
 }

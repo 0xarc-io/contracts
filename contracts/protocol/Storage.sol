@@ -23,32 +23,6 @@ contract Storage {
     uint256 public positionCount;
 
     mapping (uint256 => Types.Position) public positions;
-    mapping (address => Types.Balance) public supplyBalances;
+    mapping (address => Types.Par) public supplyBalances;
 
-    function updateIndexes()
-        public
-    {
-        Decimal.D256 memory utilisationRatio = Helpers.utilisationRatio(
-            state.borrowTotal,
-            state.supplyTotal
-        );
-
-        require(
-            utilisationRatio.value <= params.maximumUtilisationRatio.value,
-            "Arc: maximum utilisation ratio reached"
-        );
-
-        Decimal.D256 memory newIndex = params.interestRateModel.calculateIndex(
-            utilisationRatio,
-            state.lastIndexUpdate
-        );
-
-        newIndex = Decimal.mul(
-            newIndex,
-            state.index
-        );
-
-        state.index = newIndex;
-        state.lastIndexUpdate = block.timestamp;
-    }
 }

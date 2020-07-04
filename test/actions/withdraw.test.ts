@@ -22,37 +22,15 @@ describe('Actions.withdraw()', () => {
 
   let arc: TestArc;
 
-  beforeAll(async () => {
-    await blockchain.resetAsync();
-    arc = await TestArc.init(ownerWallet);
-    await arc.deployTestArc();
-    await arc.stableShare.mintShare(ownerWallet.address, TEN);
-    await arc.stableShare.approve(arc.core.address, TEN);
-    await arc.supply(TEN);
-    await blockchain.saveSnapshotAsync();
-  });
-
   beforeEach(async () => {
     await blockchain.resetAsync();
   });
 
-  it('should not be able to withdraw 0', async () => {
-    await expectRevert(arc.withdraw(new BigNumber(0)));
-  });
+  it('should not be able to withdraw 0', async () => {});
 
-  it('should not be able to withdraw more than they have deposited', async () => {
-    await expectRevert(arc.withdraw(ArcNumber.new(11)));
-  });
+  it('should not be able to withdraw more than they have deposited', async () => {});
 
-  it('should be able to withdraw the amount deposited', async () => {
-    await arc.withdraw(TEN);
-
-    const state = await arc.core.state();
-    expect(state.supplyTotal).toEqual(new BigNumber(0));
-
-    const supplyBalance = await arc.core.supplyBalances(ownerWallet.address);
-    expect(supplyBalance).toEqual(new BigNumber(0));
-  });
+  it('should be able to withdraw the amount deposited', async () => {});
 
   it('should be able withdraw the principal + interest accrued', async () => {});
 
