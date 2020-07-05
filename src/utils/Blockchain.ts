@@ -14,21 +14,22 @@ export class Blockchain {
     this._snapshotId = 0;
   }
 
-  public async saveSnapshotAsync(): Promise<void> {
+  public async saveSnapshotAsync(): Promise<string> {
     const response = await this.sendJSONRpcRequestAsync('evm_snapshot', []);
     this._snapshotId = Number(response);
+    return response;
   }
 
-  public async revertAsync(): Promise<void> {
-    await this.sendJSONRpcRequestAsync('evm_revert', [this._snapshotId]);
+  public async revertAsync(): Promise<string> {
+    return await this.sendJSONRpcRequestAsync('evm_revert', [this._snapshotId]);
   }
 
-  public async resetAsync(): Promise<void> {
-    await this.sendJSONRpcRequestAsync('evm_revert', ['0x1']);
+  public async resetAsync(snapshotId: string = '0x1'): Promise<string> {
+    return await this.sendJSONRpcRequestAsync('evm_revert', [snapshotId]);
   }
 
   public async increaseTimeAsync(duration: number): Promise<any> {
-    await this.sendJSONRpcRequestAsync('evm_increaseTime', [duration]);
+    return await this.sendJSONRpcRequestAsync('evm_increaseTime', [duration]);
   }
 
   public async getCurrentTimestamp(): Promise<any> {
@@ -36,7 +37,7 @@ export class Blockchain {
   }
 
   public async setNextBlockTimestamp(timestamp: number): Promise<any> {
-    await this.sendJSONRpcRequestAsync('evm_setNextBlockTimestamp', [timestamp]);
+    return await this.sendJSONRpcRequestAsync('evm_setNextBlockTimestamp', [timestamp]);
   }
 
   public async waitBlocksAsync(count: number) {

@@ -1,33 +1,23 @@
 import 'jest';
 
-import Arc from '@src/Arc';
-
-import { BigNumber } from 'ethers/utils';
-
 import { generatedWallets } from '@utils/generatedWallets';
-import { Blockchain } from '@utils/Blockchain';
-import { ethers, Wallet } from 'ethers';
-import { expectRevert } from '@utils/expectRevert';
-import ArcNumber from '@utils/ArcNumber';
-import { TestArc } from '../../src/TestArc';
+import arcDescribe from '../arcDescribe';
+import { ITestContext } from '../arcDescribe';
+import initializeArc from 'test/initializeArc';
+import { Wallet } from 'ethers';
 
-const TEN = ArcNumber.new(10);
+let ownerWallet: Wallet;
+let lenderWallet: Wallet;
+let borrowerWallet: Wallet;
 
-const provider = new ethers.providers.JsonRpcProvider();
-const blockchain = new Blockchain(provider);
+async function init(ctx: ITestContext): Promise<void> {
+  await initializeArc(ctx);
+  ownerWallet = ctx.wallets[0];
+  lenderWallet = ctx.wallets[1];
+  borrowerWallet = ctx.wallets[2];
+}
 
-describe('Actions.supply()', () => {
-  const [ownerWallet, userWallet] = generatedWallets(provider);
-
-  let arc: TestArc;
-
-  beforeEach(async () => {
-    await blockchain.resetAsync();
-
-    arc = await TestArc.init(ownerWallet);
-    await arc.deployTestArc();
-  });
-
+arcDescribe('Actions.supply()', init, (ctx: ITestContext) => {
   it('should not be able to supply 0', async () => {});
 
   it('should not be able to supply without enough funds', async () => {});
