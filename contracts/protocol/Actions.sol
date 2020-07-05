@@ -147,7 +147,7 @@ contract Actions is Storage {
         // EFFECTS:
         // 1. Update the new par values of the position based on how much is liquidated
         // 2. Update the global par and wei values
-        // 2. Update the global index based
+        // 3. Update the global index based
 
         // INTERACTIONS:
         // 1. If stable shares were being borrowed, transfer the synthetic to the liquidator
