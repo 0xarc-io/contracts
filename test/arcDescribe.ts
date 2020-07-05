@@ -1,7 +1,10 @@
+import 'jest';
+
 import { TestArc } from '../src/TestArc';
-import { Wallet, ethers } from 'ethers';
+import { Wallet, ethers, providers } from 'ethers';
 import { generatedWallets } from '../src/utils/generatedWallets';
 import { Blockchain } from '../src/utils/Blockchain';
+import { EVM } from './EVM';
 
 export interface ITestContext {
   arc?: TestArc;
@@ -12,7 +15,7 @@ export type initFunction = (ctx: ITestContext) => Promise<void>;
 export type testsFunction = (ctx: ITestContext) => void;
 
 const provider = new ethers.providers.JsonRpcProvider();
-const blockchain = new Blockchain(provider);
+const evm = new EVM(provider);
 
 export default function arcDescribe(name: string, init: initFunction, tests: testsFunction): void {
   // Note that the function passed into describe() should not be async.
@@ -23,31 +26,30 @@ export default function arcDescribe(name: string, init: initFunction, tests: tes
     let postInitSnapshotId: string;
 
     // Runs before any before() calls made within the arcDescribe() call.
-    before(async () => {
+    beforeAll(async () => {
       ctx.wallets = generatedWallets(provider);
 
-      const arc = await TestArc.init(ctx.wallets[0]);
-      await arc.deployTestArc();
-      ctx.arc = arc;
+      ctx.arc = await TestArc.init(ctx.wallets[0]);
+      await ctx.arc.deployTestArc();
 
-      preInitSnapshotId = await blockchain.saveSnapshotAsync();
+      preInitSnapshotId = await evm.snapshot();
 
       await init(ctx);
 
-      // force the index to update on the next call to the arc
-      await blockchain.waitBlocksAsync(1);
+      await evm.mineAvgBlock();
 
-      postInitSnapshotId = await blockchain.saveSnapshotAsync();
+      postInitSnapshotId = await evm.snapshot();
     });
 
     // Runs before any beforeEach() calls made within the arcDescribe() call.
     beforeEach(async () => {
-      await blockchain.resetAsync(postInitSnapshotId);
+      // console.log(`Current snapshot ID: ${await blockchain.saveSnapshotAsync()}`);
+      await evm.resetEVM(postInitSnapshotId);
     });
 
     // Runs before any after() calls made within the arcDescribe() call.
-    after(async () => {
-      await blockchain.resetAsync(preInitSnapshotId);
+    afterAll(async () => {
+      await evm.resetEVM(preInitSnapshotId);
     });
 
     // Runs before any afterEach() calls made within the arcDescribe() call.

@@ -26,7 +26,7 @@ contract Actions is Storage {
     {
         // CHECKS:
         // 1. `amount` > 0
-        // 2. user should have enough balance to deposit tokensß
+        // 2. user should have enough balance to deposit tokens
 
         // EFFECTS
         // 1. Calculate par value given current supply index
@@ -36,6 +36,44 @@ contract Actions is Storage {
 
         // INTERACTIONS:
         // 1. Transfer stable shares to this contract
+
+        // CHECKS:
+
+        require(
+            amount > 0,
+            "Actions.supply(): cannot supply 0"
+        );
+
+        require(
+            params.stableAsset.balanceOf(msg.sender) >= amount,
+            "Actions.supply(): must have enough balance"
+        );
+
+        // EFFECTS:
+
+        Types.Par memory existingPar = supplyBalances[msg.sender];
+
+        (Types.Par memory newPar, Types.Wei memory deltaWei) = getNewParAndDeltaWei(
+            existingPar,
+            Types.AssetAmount({
+                sign: true,
+                denomination: Types.AssetDenomination.Par,
+                ref: Types.AssetReference.Delta,
+                value: amount
+            })
+        );
+
+        updateTotalPar(existingPar, newPar);
+        supplyBalances[msg.sender] = newPar;
+
+        // INTERACTIONS:
+
+        params.stableAsset.transferFrom(
+            msg.sender,
+            address(this),
+            deltaWei.value
+        );
+
     }
 
     function withdraw(
@@ -88,6 +126,7 @@ contract Actions is Storage {
         //    If stable shares are the collateral, synthetic are the borrow.
         //    If synthetics are the collateral, stable shares are the borrow
         // 5. Determine if there's enough liquidity of the `borrowAsset`
+        // 6. Calculate the amount of collateral actually needed given the `collateralRatio`
 
         // EFFECTS:
         // 1. If synthetics are being borrowed, do nothing (skip to interactions).

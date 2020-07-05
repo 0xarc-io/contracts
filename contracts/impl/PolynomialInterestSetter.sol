@@ -83,6 +83,7 @@ contract PolynomialInterestSetter is
         uint256 supplyWei
     )
         external
+        override
         view
         returns (Interest.Rate memory)
     {

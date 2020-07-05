@@ -2,8 +2,9 @@ pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {Math} from "./Math.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+import {Math} from "./Math.sol";
 import {Decimal} from "./Decimal.sol";
 import {Interest} from "./Interest.sol";
 import {IOracle} from "../interfaces/IOracle.sol";
@@ -16,14 +17,13 @@ library Types {
     // ============ Structs ============
 
     struct GlobalParams {
-        address stableAsset;
+        IERC20 stableAsset;
         IInterestSetter interestRateModel;
         Decimal.D256 collateralRatio;
         Decimal.D256 syntheticRatio;
         Decimal.D256 liquidationSpread;
         Decimal.D256 originationFee;
         Decimal.D256 earningsRate;
-        Decimal.D256 maximumUtilisationRatio;
         IOracle oracle;
     }
 
@@ -33,8 +33,8 @@ library Types {
     }
 
     struct Position {
-        address collateralAsset;
-        address borrowedAsset;
+        IERC20 collateralAsset;
+        IERC20 borrowedAsset;
         Par collateralAmount;
         Par borrowedAmount;
     }
