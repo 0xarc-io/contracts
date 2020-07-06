@@ -8,6 +8,7 @@ import {Decimal} from "../lib/Decimal.sol";
 import {Helpers} from "../lib/Helpers.sol";
 import {Interest} from "../lib/Interest.sol";
 import {Math} from "../lib/Math.sol";
+import {Time} from "../lib/Time.sol";
 
 import {SyntheticToken} from "../token/SyntheticToken.sol";
 
@@ -62,6 +63,19 @@ contract Storage {
         state.totalPar = totalPar;
     }
 
+    function updateIndex()
+        internal
+        returns (Interest.Index memory)
+    {
+        Interest.Index memory index = state.index;
+
+        if (index.lastUpdate == Time.currentTime()) {
+            return index;
+        }
+
+        return state.index = fetchNewIndex(index);
+    }
+
     // ============ Getters ============
 
     function getNewParAndDeltaWei(
@@ -101,6 +115,46 @@ contract Storage {
         }
 
         return (newPar, deltaWei);
+    }
+
+    function fetchNewIndex(
+        Interest.Index memory index
+    )
+        internal
+        view
+        returns (Interest.Index memory)
+    {
+        Interest.Rate memory rate = fetchInterestRate(index);
+
+        return Interest.calculateNewIndex(
+            index,
+            rate,
+            state.totalPar,
+            params.earningsRate
+        );
+    }
+
+    function fetchInterestRate(
+        Interest.Index memory index
+    )
+        internal
+        view
+        returns (Interest.Rate memory)
+    {
+        Types.TotalPar memory totalPar = state.totalPar;
+
+        (
+            Types.Wei memory supplyWei,
+            Types.Wei memory borrowWei
+        ) = Interest.totalParToWei(totalPar, index);
+
+        Interest.Rate memory rate = params.interestSetter.getInterestRate(
+            address(synthetic),
+            borrowWei.value,
+            supplyWei.value
+        );
+
+        return rate;
     }
 
 }

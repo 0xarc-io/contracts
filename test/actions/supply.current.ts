@@ -39,6 +39,10 @@ arcDescribe('Actions.supply()', init, (ctx: ITestContext) => {
   });
 
   it('should be able to supply', async () => {
+    const supplyDate = await (
+      await ownerWallet.provider.getBlock(await ownerWallet.provider.getBlockNumber())
+    ).timestamp;
+
     await ctx.arc.supply(ArcNumber.new(100), lenderWallet);
 
     const state = await ctx.arc.core.state();
@@ -46,6 +50,7 @@ arcDescribe('Actions.supply()', init, (ctx: ITestContext) => {
     expect(state.totalPar.borrow).toEqual(ArcNumber.new(0));
     expect(state.index.borrow).toEqual(ArcNumber.new(0));
     expect(state.index.supply).toEqual(ArcNumber.new(0));
+    expect(state.index.lastUpdate).toBeCloseTo(supplyDate, 9);
 
     const balance = await ctx.arc.core.supplyBalances(lenderWallet.address);
     expect(balance.sign).toBeTruthy();

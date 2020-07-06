@@ -66,6 +66,8 @@ contract Actions is Storage {
         updateTotalPar(existingPar, newPar);
         supplyBalances[msg.sender] = newPar;
 
+        updateIndex();
+
         // INTERACTIONS:
 
         params.stableAsset.transferFrom(

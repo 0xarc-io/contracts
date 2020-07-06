@@ -26,10 +26,10 @@ export default class Arc {
     return arc;
   }
 
-  async deployArc(interestRateModel: string, stableShare: string, oracle: string) {
+  async deployArc(interestSetter: string, stableShare: string, oracle: string) {
     this.core = await Core.deploy(this.wallet, 'Synthetic BTC', 'arcBTC', {
       stableAsset: stableShare,
-      interestRateModel: interestRateModel,
+      interestSetter: interestSetter,
       collateralRatio: ArcDecimal.new(2),
       syntheticRatio: ArcDecimal.new(1.25),
       liquidationSpread: ArcDecimal.new(0.1),

@@ -18,7 +18,7 @@ library Types {
 
     struct GlobalParams {
         IERC20 stableAsset;
-        IInterestSetter interestRateModel;
+        IInterestSetter interestSetter;
         Decimal.D256 collateralRatio;
         Decimal.D256 syntheticRatio;
         Decimal.D256 liquidationSpread;
