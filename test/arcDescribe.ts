@@ -43,22 +43,12 @@ export default function arcDescribe(name: string, init: initFunction, tests: tes
 
     // Runs before any beforeEach() calls made within the arcDescribe() call.
     beforeEach(async () => {
-      // console.log(`Current snapshot ID: ${await blockchain.saveSnapshotAsync()}`);
       await evm.resetEVM(postInitSnapshotId);
     });
 
     // Runs before any after() calls made within the arcDescribe() call.
     afterAll(async () => {
       await evm.resetEVM(preInitSnapshotId);
-    });
-
-    // Runs before any afterEach() calls made within the arcDescribe() call.
-    afterEach(() => {
-      // // Output the gas used in each test case.
-      // for (const { gasUsed, name } of ctx.arc.contracts.getGasUsedByFunction()) {
-      //   const label = `${name}:`.padEnd(20, ' ');
-      //   printGasUsage(label, `${gasUsed}`.padStart(9, ' '));
-      // }
     });
 
     tests(ctx);
