@@ -31,7 +31,7 @@ export default class Arc {
       stableAsset: stableShare,
       interestSetter: interestSetter,
       collateralRatio: ArcDecimal.new(2),
-      syntheticRatio: ArcDecimal.new(1.25),
+      syntheticRatio: ArcDecimal.new(2),
       liquidationSpread: ArcDecimal.new(0.1),
       originationFee: ArcDecimal.new(0.01),
       earningsRate: ArcDecimal.new(0.1),
@@ -52,9 +52,14 @@ export default class Arc {
     return await contract.withdraw(amount);
   }
 
-  async openPosition(collateralAsset: string, borrowAmount: BigNumberish, caller?: Wallet) {
+  async openPosition(
+    collateralAsset: string,
+    collateralAmount: BigNumberish,
+    borrowAmount: BigNumberish,
+    caller?: Wallet,
+  ) {
     const contract = await this.getCore(caller);
-    return contract.openPosition(collateralAsset, borrowAmount);
+    return contract.openPosition(collateralAsset, collateralAmount, borrowAmount);
   }
 
   private async getCore(caller?: Wallet) {

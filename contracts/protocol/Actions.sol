@@ -57,7 +57,7 @@ contract Actions is Storage {
             existingPar,
             Types.AssetAmount({
                 sign: true,
-                denomination: Types.AssetDenomination.Par,
+                denomination: Types.AssetDenomination.Wei,
                 ref: Types.AssetReference.Delta,
                 value: amount
             })
@@ -70,7 +70,8 @@ contract Actions is Storage {
 
         // INTERACTIONS:
 
-        params.stableAsset.transferFrom(
+        SafeERC20.safeTransferFrom(
+            params.stableAsset,
             msg.sender,
             address(this),
             deltaWei.value
@@ -101,6 +102,7 @@ contract Actions is Storage {
 
     function openPosition(
         address collateralAsset,
+        uint256 collateralAmount,
         uint256 borrowAmount
     )
         public
@@ -108,14 +110,37 @@ contract Actions is Storage {
         // CHECKS:
         // 1. `collateralAsset` should be a valid asset
         // 2. Check the user has enough of the collateral asset
+        // 3. Figure out `borrowAsset` based on collateral assset
+        //    If stable shares are the collateral, synthetic are the borrow.
+        //    If synthetics are the collateral, stable shares are the borrow
 
         // EFFECTS:
         // 1. Create a new Position struct with the basic fields filled out and save it to storage
         // 2. Call `borrowPosition()`
+
+        require(
+            collateralAsset == address(synthetic) || collateralAsset == address(params.stableAsset),
+            "Actions.openPosition(): must be a synthetic or stable asset"
+        );
+
+        Types.Position memory newPosition = Types.Position({
+            owner: msg.sender,
+            collateralAsset: collateralAsset,
+            borrowedAsset: collateralAsset == address(synthetic) ? address(params.stableAsset) : address(synthetic),
+            collateralAmount: Types.positiveZeroPar(),
+            borrowedAmount: Types.zeroPar()
+        });
+
+        positions[positionCount] = newPosition;
+
+        borrowPosition(positionCount, collateralAmount, borrowAmount);
+
+        positionCount++;
     }
 
     function borrowPosition(
         uint256 positionId,
+        uint256 collateralAmount,
         uint256 borrowAmount
     )
         public
@@ -124,14 +149,12 @@ contract Actions is Storage {
         // 1. `borrowAmount` should be greater than 0
         // 2. Ensure that the position actually exists
         // 3. Ensure that msg.sender == owner of position
-        // 4. Figure out `borrowAsset` based on collateral assset
-        //    If stable shares are the collateral, synthetic are the borrow.
-        //    If synthetics are the collateral, stable shares are the borrow
-        // 5. Determine if there's enough liquidity of the `borrowAsset`
-        // 6. Calculate the amount of collateral actually needed given the `collateralRatio`
+        // 4. Determine if there's enough liquidity of the `borrowAsset`
+        // 5. Calculate the amount of collateral actually needed given the `collateralRatio`
+        // 6. Ensure the user has provided enough of the
 
         // EFFECTS:
-        // 1. If synthetics are being borrowed, do nothing (skip to interactions).
+        // 1. If synthetics are being borrowed, update the position and skip to interactions.
         // 2. If stable shares are being borrowed, calculate the proportional
         //    new par value based on the borrow amount and set that as the borrow par value.
         // 3. Update the global index with the increased borrow amount
@@ -139,6 +162,100 @@ contract Actions is Storage {
         // INTERACTIONS:
         // 1. If stable shares are being borrowed, transfer them to the user
         //    If synthetics are being borrowed, mint them and transfer collateral to synthetic contract
+
+        require(
+            borrowAmount > 0,
+            "Action.borrowPosition(): borrowAmount cannot be 0"
+        );
+
+        require(
+            positions[positionCount].owner == msg.sender,
+            "Action.borrowPosition(): must be a valid position"
+        );
+
+
+        Types.Position storage currentPosition = positions[positionId];
+        Decimal.D256 memory currentPrice = params.oracle.fetchCurrentPrice();
+
+        uint256 collateralRequired;
+
+        if (currentPosition.borrowedAsset == address(synthetic)) {
+            collateralRequired = Decimal.mul(
+                borrowAmount,
+                currentPrice
+            );
+
+            collateralRequired = Decimal.mul(
+                collateralRequired,
+                params.collateralRatio
+            );
+
+            require(
+                collateralAmount >= collateralRequired,
+                "Action.openPosition(): not enough stable collateral collateral provided"
+            );
+
+            currentPosition.borrowedAmount.value += borrowAmount.to128();
+
+            SafeERC20.safeTransferFrom(
+                params.stableAsset,
+                msg.sender,
+                address(synthetic),
+                collateralRequired
+            );
+
+            synthetic.mint(
+                msg.sender,
+                currentPosition.borrowedAmount.value
+            );
+        }
+
+        if (currentPosition.borrowedAsset == address(params.stableAsset)) {
+            collateralRequired = Decimal.div(
+                borrowAmount,
+                currentPrice
+            );
+
+            collateralRequired = Decimal.mul(
+                collateralRequired,
+                params.syntheticRatio
+            );
+
+            require(
+                collateralAmount >= collateralRequired,
+                "Action.openPosition(): not enough synthetic collateral provided"
+            );
+
+            (Types.Par memory newPar, ) = getNewParAndDeltaWei(
+                currentPosition.borrowedAmount,
+                Types.AssetAmount({
+                    sign: false,
+                    denomination: Types.AssetDenomination.Par,
+                    ref: Types.AssetReference.Delta,
+                    value: borrowAmount
+                })
+            );
+
+            updateTotalPar(currentPosition.borrowedAmount, newPar);
+            currentPosition.borrowedAmount = newPar;
+
+            SafeERC20.safeTransferFrom(
+                IERC20(address(synthetic)),
+                msg.sender,
+                address(this),
+                collateralAmount
+            );
+
+            SafeERC20.safeTransfer(
+                params.stableAsset,
+                msg.sender,
+                borrowAmount
+            );
+        }
+
+        currentPosition.collateralAmount.value += collateralAmount.to128();
+
+        updateIndex();
     }
 
     function depositPosition(

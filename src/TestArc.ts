@@ -18,8 +18,8 @@ export class TestArc extends Arc {
     this.stableShare = await StableShare.deploy(this.wallet);
     this.oracle = await MockOracle.deploy(this.wallet);
     this.interestModel = await PolynomialInterestSetter.deploy(this.wallet, {
-      maxAPR: ArcDecimal.new(1).value.div(2), // 50%
-      coefficients: [0, 20, 10, 0, 0, 0, 0, 0, 0, 0, 70],
+      maxAPR: ArcDecimal.new(1).value, // 100%
+      coefficients: [0, 10, 10, 0, 0, 80],
     });
     await this.deployArc(this.interestModel.address, this.stableShare.address, this.oracle.address);
   }
@@ -33,11 +33,11 @@ export class TestArc extends Arc {
   async _mintSynthetic(amount: BigNumberish, collateral: BigNumberish, from: Wallet) {
     await Token.approve(this.stableShare.address, from, this.core.address, collateral);
     await this.stableShare.mintShare(from.address, collateral);
-    await this.openPosition(this.stableShare.address, amount, from);
+    await this.openPosition(this.stableShare.address, collateral, amount, from);
   }
 
   async _borrowStableShares(amount: BigNumberish, collateral: BigNumberish, from: Wallet) {
     await Token.approve(this.synthetic.address, from, this.core.address, collateral);
-    await this.openPosition(this.synthetic.address, amount, from);
+    await this.openPosition(this.synthetic.address, amount, collateral, from);
   }
 }

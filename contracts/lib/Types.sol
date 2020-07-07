@@ -33,8 +33,9 @@ library Types {
     }
 
     struct Position {
-        IERC20 collateralAsset;
-        IERC20 borrowedAsset;
+        address owner;
+        address collateralAsset;
+        address borrowedAsset;
         Par collateralAmount;
         Par borrowedAmount;
     }
@@ -79,6 +80,17 @@ library Types {
     {
         return Par({
             sign: false,
+            value: 0
+        });
+    }
+
+    function positiveZeroPar()
+        internal
+        pure
+        returns (Par memory)
+    {
+        return Par({
+            sign: true,
             value: 0
         });
     }
