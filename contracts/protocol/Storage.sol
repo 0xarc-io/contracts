@@ -3,12 +3,15 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 
+import {console} from "@nomiclabs/buidler/console.sol";
+
 import {Types} from "../lib/Types.sol";
 import {Decimal} from "../lib/Decimal.sol";
 import {Helpers} from "../lib/Helpers.sol";
 import {Interest} from "../lib/Interest.sol";
 import {Math} from "../lib/Math.sol";
 import {Time} from "../lib/Time.sol";
+import {SignedMath} from "../lib/SignedMath.sol";
 
 import {SyntheticToken} from "../token/SyntheticToken.sol";
 
@@ -155,6 +158,142 @@ contract Storage {
         );
 
         return rate;
+    }
+
+    function getWei(
+        Types.Par memory par
+    )
+        internal
+        view
+        returns (Types.Wei memory)
+    {
+        if (par.isZero()) {
+            return Types.zeroWei();
+        }
+
+        return Interest.parToWei(par, state.index);
+    }
+
+    function convertCollateral(
+        address collateralAsset,
+        uint256 amount
+    )
+        public
+        view
+        returns (uint256)
+    {
+
+        Decimal.D256 memory currentPrice = params.oracle.fetchCurrentPrice();
+        uint256 borrowAvailable;
+
+        if (collateralAsset == address(params.stableAsset)) {
+            borrowAvailable = Decimal.div(
+                amount,
+                currentPrice
+            );
+        } else if (collateralAsset == address(synthetic)) {
+            borrowAvailable = Decimal.mul(
+                amount,
+                currentPrice
+            );
+        }
+
+        assert(borrowAvailable > 0);
+        return borrowAvailable;
+    }
+
+    function calculateCollateralRequired(
+        address borrowedAsset,
+        uint256 amount
+    )
+        public
+        view
+        returns (uint256)
+    {
+
+        Decimal.D256 memory currentPrice = params.oracle.fetchCurrentPrice();
+        uint256 collateralRequired;
+
+        if (borrowedAsset == address(params.stableAsset)) {
+            collateralRequired = Decimal.div(
+                amount,
+                currentPrice
+            );
+
+            collateralRequired = Decimal.mul(
+                collateralRequired,
+                params.syntheticRatio
+            );
+
+        } else if (borrowedAsset == address(synthetic)) {
+
+            collateralRequired = Decimal.mul(
+                amount,
+                currentPrice
+            );
+
+            collateralRequired = Decimal.mul(
+                collateralRequired,
+                params.collateralRatio
+            );
+        }
+
+        assert(collateralRequired > 0);
+
+        return collateralRequired;
+    }
+
+    function collateralAtRisk(
+        address borrowedAsset,
+        Types.Par memory parSupplyValue,
+        Types.Par memory parBorrowValue
+    )
+        public
+        view
+        returns (SignedMath.Int memory)
+    {
+        SignedMath.Int memory result;
+        uint256 collateralRequired;
+
+        console.log("parSupplyValue: %s", parSupplyValue.value);
+        console.log("parBorrowValue: %s", parBorrowValue.value);
+
+        if (borrowedAsset == address(synthetic)) {
+            console.log("borrowing synthetic");
+            Types.Wei memory weiBorrowValue = getWei(parBorrowValue);
+
+            // Stable shares required
+            collateralRequired = calculateCollateralRequired(
+                borrowedAsset,
+                weiBorrowValue.value
+            );
+        } else if (borrowedAsset == address(params.stableAsset)) {
+            console.log("borrowing stable");
+            // Synthetics required
+            collateralRequired = calculateCollateralRequired(
+                borrowedAsset,
+                parBorrowValue.value
+            );
+        }
+
+        console.log("collateralRequired: %s", collateralRequired);
+
+        // If the amount you've supplied is greater than the collateral needed
+        // given your borrow amount, then you're positive
+        if (parSupplyValue.value >= collateralRequired) {
+            result = SignedMath.Int({
+                isPositive: true,
+                value: uint256(parSupplyValue.value).sub(collateralRequired)
+            });
+        } else {
+            // If not, subtract the collateral needed from the amount supplied
+            result = SignedMath.Int({
+                isPositive: false,
+                value: collateralRequired.sub(uint256(parSupplyValue.value))
+            });
+        }
+
+        return result;
     }
 
 }

@@ -38,9 +38,20 @@ contract SyntheticToken is BaseERC20 {
     ) public {
         require(
             msg.sender == arcAddress,
-            "SyntheticToken: only arc can mint"
+            "SyntheticToken: only arc can burn"
         );
 
         _burn(to, value);
+    }
+
+    function transfer(
+        address token,
+        address to,
+        uint256 value
+    ) public {
+        BaseERC20(token).transfer(
+            to,
+            value
+        );
     }
 }

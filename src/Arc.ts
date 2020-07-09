@@ -62,6 +62,11 @@ export default class Arc {
     return contract.openPosition(collateralAsset, collateralAmount, borrowAmount);
   }
 
+  async liquidatePosition(positionId: number, caller?: Wallet) {
+    const contract = await this.getCore(caller);
+    return contract.liquidatePosition(positionId);
+  }
+
   private async getCore(caller?: Wallet) {
     return await Core.at(caller || this.wallet, this.core.address);
   }

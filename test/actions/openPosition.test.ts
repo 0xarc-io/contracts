@@ -142,6 +142,32 @@ arcDescribe('#Actions.openPosition()', init, (ctx: ITestContext) => {
       expect(position.borrowedAsset).toEqual(ctx.arc.stableShare.address);
     });
 
+    it('should be able to borrow and set the correct interest rates', async () => {
+      await ctx.arc._mintSynthetic(ArcNumber.new(1), ArcNumber.new(200), minterWallet);
+
+      await ctx.arc.openPosition(
+        ctx.arc.synthetic.address,
+        ArcNumber.new(1),
+        ArcNumber.new(50),
+        minterWallet,
+      );
+
+      const state1 = await ctx.arc.core.state();
+
+      await ctx.arc._mintSynthetic(ArcNumber.new(1), ArcNumber.new(200), otherWallet);
+      await ctx.arc._borrowStableShares(ArcNumber.new(1), ArcNumber.new(50), otherWallet);
+
+      const state2 = await ctx.arc.core.state();
+
+      expect(state2.totalPar.borrow).toEqual(state1.totalPar.borrow.mul(2));
+      expect(state2.totalPar.supply).toEqual(state1.totalPar.supply);
+
+      await ctx.arc._supply(ArcNumber.new(1000), otherWallet);
+
+      const newBalance = await ctx.arc.core.supplyBalances(otherWallet.address);
+      expect(newBalance.value).not.toEqual(ArcNumber.new(1000));
+    });
+
     it('should not be able to borrow without enough collateral provided', async () => {
       await ctx.arc._mintSynthetic(ArcNumber.new(1), ArcNumber.new(200), minterWallet);
       await expectRevert(

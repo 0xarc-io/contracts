@@ -38,6 +38,6 @@ export class TestArc extends Arc {
 
   async _borrowStableShares(amount: BigNumberish, collateral: BigNumberish, from: Wallet) {
     await Token.approve(this.synthetic.address, from, this.core.address, collateral);
-    await this.openPosition(this.synthetic.address, amount, collateral, from);
+    await this.openPosition(this.synthetic.address, collateral, amount, from);
   }
 }
