@@ -10,14 +10,18 @@ import {console} from "@nomiclabs/buidler/console.sol";
 import {Types} from "../lib/Types.sol";
 import {Decimal} from "../lib/Decimal.sol";
 import {SignedMath} from "../lib/SignedMath.sol";
-
-import {BaseERC20} from "../token/BaseERC20.sol";
+import {Settlement} from "../lib/Settlement.sol";
+import {ActionLib} from "../lib/ActionLib.sol";
 
 import {Storage} from "./Storage.sol";
 
 contract Actions is Storage {
 
     using SafeMath for uint256;
+    using Settlement for Settlement;
+    using ActionLib for ActionLib;
+    using SignedMath for SignedMath;
+    using Decimal for Decimal;
 
     // ============ Functions ============
 
@@ -39,6 +43,8 @@ contract Actions is Storage {
         // INTERACTIONS:
         // 1. Transfer stable shares to this contract
 
+        console.log("supply(amount: %s)", amount);
+
         require(
             amount > 0,
             "Actions.supply(): cannot supply 0"
@@ -51,8 +57,9 @@ contract Actions is Storage {
 
         Types.Par memory existingPar = supplyBalances[msg.sender];
 
-        (Types.Par memory newPar, Types.Wei memory deltaWei) = getNewParAndDeltaWei(
+        (Types.Par memory newPar, Types.Wei memory deltaWei) = Types.getNewParAndDeltaWei(
             existingPar,
+            state.index,
             Types.AssetAmount({
                 sign: true,
                 denomination: Types.AssetDenomination.Wei,
@@ -97,7 +104,7 @@ contract Actions is Storage {
     }
 
     function openPosition(
-        address collateralAsset,
+        Types.AssetType collateralAsset,
         uint256 collateralAmount,
         uint256 borrowAmount
     )
@@ -115,14 +122,14 @@ contract Actions is Storage {
         // 2. Call `borrowPosition()`
 
         require(
-            collateralAsset == address(synthetic) || collateralAsset == address(params.stableAsset),
+            collateralAsset <= Types.AssetType.Synthetic,
             "Actions.openPosition(): must be a synthetic or stable asset"
         );
 
         Types.Position memory newPosition = Types.Position({
             owner: msg.sender,
             collateralAsset: collateralAsset,
-            borrowedAsset: collateralAsset == address(synthetic) ? address(params.stableAsset) : address(synthetic),
+            borrowedAsset: Types.oppositeAsset(collateralAsset),
             collateralAmount: Types.positiveZeroPar(),
             borrowedAmount: Types.zeroPar()
         });
@@ -159,73 +166,39 @@ contract Actions is Storage {
         // 1. If stable shares are being borrowed, transfer them to the user
         //    If synthetics are being borrowed, mint them and transfer collateral to synthetic contract
 
-        require(
-            borrowAmount > 0,
-            "Action.borrowPosition(): borrowAmount cannot be 0"
-        );
-
-        require(
-            positions[positionCount].owner == msg.sender,
-            "Action.borrowPosition(): must be a valid position"
+        console.log(
+            "borrowPosition(positionId: %s, collateralAmount: %s, borrowAmount: %s)",
+            positionId,
+            collateralAmount,
+            borrowAmount
         );
 
         Types.Position storage currentPosition = positions[positionId];
 
-        uint256 collateralRequired = calculateCollateralRequired(
+        require(
+            isCollateralized(currentPosition) == true,
+            "Action.borrowPosition(): position is not collateralised"
+        );
+
+        (Types.Par memory newBorrow) = ActionLib.borrow(
+            currentPosition,
+            params,
+            collateralAmount,
+            borrowAmount,
+            getBorrowIndex(currentPosition.borrowedAsset)
+        );
+
+        if (currentPosition.borrowedAsset == Types.AssetType.Stable) {
+            updateTotalPar(currentPosition.borrowedAmount, newBorrow);
+        }
+
+        Settlement.borrow(
+            params,
+            synthetic,
             currentPosition.borrowedAsset,
+            collateralAmount,
             borrowAmount
         );
-
-        require(
-            collateralAmount >= collateralRequired,
-            "Action.openPosition(): not enough collateral provided"
-        );
-
-        if (currentPosition.borrowedAsset == address(synthetic)) {
-            currentPosition.borrowedAmount.value += borrowAmount.to128();
-
-            SafeERC20.safeTransferFrom(
-                params.stableAsset,
-                msg.sender,
-                address(synthetic),
-                collateralRequired
-            );
-
-            synthetic.mint(
-                msg.sender,
-                currentPosition.borrowedAmount.value
-            );
-        }
-
-        if (currentPosition.borrowedAsset == address(params.stableAsset)) {
-            (Types.Par memory newPar, ) = getNewParAndDeltaWei(
-                currentPosition.borrowedAmount,
-                Types.AssetAmount({
-                    sign: false,
-                    denomination: Types.AssetDenomination.Par,
-                    ref: Types.AssetReference.Delta,
-                    value: borrowAmount
-                })
-            );
-
-            updateTotalPar(currentPosition.borrowedAmount, newPar);
-            currentPosition.borrowedAmount = newPar;
-
-            SafeERC20.safeTransferFrom(
-                IERC20(address(synthetic)),
-                msg.sender,
-                address(this),
-                collateralAmount
-            );
-
-            SafeERC20.safeTransfer(
-                params.stableAsset,
-                msg.sender,
-                borrowAmount
-            );
-        }
-
-        currentPosition.collateralAmount.value += collateralAmount.to128();
 
         updateIndex();
     }
@@ -283,90 +256,44 @@ contract Actions is Storage {
         // 1. If stable shares were being borrowed, transfer the synthetic to the liquidator
         // 2. If synthetics were being borrowed, transfer stable shares to the liquidator
 
+        // console.log("liquidatePosition(positionId: %s)", positionId);
+
         Types.Position storage currentPosition = positions[positionId];
 
         require(
-            currentPosition.owner != address(0),
-            "Actions.liquidatePosition(): must be a valid position"
+            isCollateralized(currentPosition) == false,
+            "Action.borrowPosition(): position is collateralised"
         );
 
-        SignedMath.Int memory borrowDelta = collateralAtRisk(
-            currentPosition.borrowedAsset,
-            currentPosition.collateralAmount,
-            currentPosition.borrowedAmount
+        (
+            uint256 borrowToLiquidate,
+            uint256 collateralToLiquidate,
+            Types.Par memory newBorrow
+        ) = ActionLib.liquidate(
+            currentPosition,
+            params,
+            getBorrowIndex(currentPosition.borrowedAsset)
         );
 
-        console.log("sign: %s", borrowDelta.isPositive);
-        console.log("amount: %s", borrowDelta.value);
+        address borrowAddress = getAddress(currentPosition.borrowedAsset);
 
         require(
-            borrowDelta.isPositive == false,
-            "Action.liquidatePosition(): position is still healthy"
-        );
-
-        uint256 collateralToLiquidate = Decimal.div(
-            borrowDelta.value,
-            Decimal.D256({
-                value: params.liquidationSpread.value.add(Decimal.BASE)
-            })
-        );
-
-        uint256 borrowRequiredToLiquidate = convertCollateral(
-            currentPosition.collateralAsset,
-            borrowDelta.value
-        );
-
-        console.log("collat to liquidate %s", collateralToLiquidate);
-
-        require(
-            IERC20(currentPosition.borrowedAsset).balanceOf(msg.sender) >= borrowRequiredToLiquidate,
+            IERC20(borrowAddress).balanceOf(msg.sender) >= borrowToLiquidate,
             "Action.liquidatePosition(): msg.sender not enough of borrowed asset to liquidate"
         );
 
-        currentPosition.collateralAmount.value -= collateralToLiquidate.to128();
-
-        if (currentPosition.borrowedAsset == address(synthetic)) {
-            currentPosition.borrowedAmount.value -= borrowDelta.value.to128();
-
-            synthetic.burn(
-                msg.sender,
-                borrowRequiredToLiquidate
-            );
-
-            synthetic.transfer(
-                currentPosition.collateralAsset,
-                msg.sender,
-                collateralToLiquidate
-            );
+        if (currentPosition.borrowedAsset == Types.AssetType.Stable) {
+            updateTotalPar(currentPosition.borrowedAmount, newBorrow);
         }
 
-        if (currentPosition.borrowedAsset == address(params.stableAsset)) {
-            (Types.Par memory newPar, ) = getNewParAndDeltaWei(
-                currentPosition.borrowedAmount,
-                Types.AssetAmount({
-                    sign: true,
-                    denomination: Types.AssetDenomination.Par,
-                    ref: Types.AssetReference.Delta,
-                    value: borrowDelta.value
-                })
-            );
-
-            updateTotalPar(currentPosition.borrowedAmount, newPar);
-            currentPosition.borrowedAmount = newPar;
-
-            SafeERC20.safeTransferFrom(
-                params.stableAsset,
-                msg.sender,
-                address(this),
-                borrowRequiredToLiquidate
-            );
-
-            SafeERC20.safeTransfer(
-                IERC20(address(synthetic)),
-                msg.sender,
-                collateralToLiquidate
-            );
-        }
+        Settlement.liquidate(
+            params,
+            synthetic,
+            currentPosition.collateralAsset,
+            collateralToLiquidate,
+            currentPosition.borrowedAsset,
+            borrowToLiquidate
+        );
 
         updateIndex();
     }

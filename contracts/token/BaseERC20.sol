@@ -96,7 +96,7 @@ contract BaseERC20 {
     // ============ Token Functions ============
 
     function transfer(address to, uint256 value) public returns (bool) {
-        console.log("mint(to: %s, value: %s)", to, value);
+        console.log("transfer(to: %s, value: %s)", to, value);
 
         if (balances[msg.sender] >= value) {
             balances[msg.sender] = balances[msg.sender].sub(value);

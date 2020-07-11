@@ -1,8 +1,9 @@
 pragma solidity ^0.6.8;
 
 import {BaseERC20} from "./BaseERC20.sol";
+import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
 
-contract SyntheticToken is BaseERC20 {
+contract SyntheticToken is BaseERC20, ISyntheticToken {
 
     // ============ Variable ============
 
@@ -23,7 +24,10 @@ contract SyntheticToken is BaseERC20 {
     function mint(
         address to,
         uint256 value
-    ) public {
+    )
+        public
+        override
+    {
         require(
             msg.sender == arcAddress,
             "SyntheticToken: only arc can mint"
@@ -35,7 +39,10 @@ contract SyntheticToken is BaseERC20 {
     function burn(
         address to,
         uint256 value
-    ) public {
+    )
+        public
+        override
+    {
         require(
             msg.sender == arcAddress,
             "SyntheticToken: only arc can burn"
@@ -44,11 +51,14 @@ contract SyntheticToken is BaseERC20 {
         _burn(to, value);
     }
 
-    function transfer(
+    function transferCollateral(
         address token,
         address to,
         uint256 value
-    ) public {
+    )
+        public
+        override
+    {
         BaseERC20(token).transfer(
             to,
             value

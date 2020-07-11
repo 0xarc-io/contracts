@@ -6,6 +6,7 @@ import Token from './utils/Token';
 import { BigNumberish } from 'ethers/utils';
 import ArcDecimal from './utils/ArcDecimal';
 import { PolynomialInterestSetter } from '../typechain/PolynomialInterestSetter';
+import { AssetType } from './types';
 
 export class TestArc extends Arc {
   static async init(wallet: Wallet): Promise<TestArc> {
@@ -33,11 +34,11 @@ export class TestArc extends Arc {
   async _mintSynthetic(amount: BigNumberish, collateral: BigNumberish, from: Wallet) {
     await Token.approve(this.stableShare.address, from, this.core.address, collateral);
     await this.stableShare.mintShare(from.address, collateral);
-    await this.openPosition(this.stableShare.address, collateral, amount, from);
+    await this.openPosition(AssetType.Stable, collateral, amount, from);
   }
 
   async _borrowStableShares(amount: BigNumberish, collateral: BigNumberish, from: Wallet) {
     await Token.approve(this.synthetic.address, from, this.core.address, collateral);
-    await this.openPosition(this.synthetic.address, collateral, amount, from);
+    await this.openPosition(AssetType.Synthetic, collateral, amount, from);
   }
 }

@@ -7,6 +7,7 @@ import { MockOracle } from '../typechain/MockOracle';
 import ArcDecimal from './utils/ArcDecimal';
 import { SyntheticToken } from '../typechain/SyntheticToken';
 import { PolynomialInterestSetter } from '../typechain/PolynomialInterestSetter';
+import { AssetType } from './types';
 
 const ZERO = new BigNumber(0);
 const BASE = new BigNumber(10).pow(18);
@@ -53,7 +54,7 @@ export default class Arc {
   }
 
   async openPosition(
-    collateralAsset: string,
+    collateralAsset: AssetType,
     collateralAmount: BigNumberish,
     borrowAmount: BigNumberish,
     caller?: Wallet,

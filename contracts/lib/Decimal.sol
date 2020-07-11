@@ -96,4 +96,5 @@ library Decimal {
     {
         return D256({ value: d.value.sub(amount) });
     }
+
 }

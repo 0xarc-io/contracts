@@ -8,6 +8,7 @@ import arcDescribe from '../arcDescribe';
 import { expectRevert } from '../../src/utils/expectRevert';
 import ArcDecimal from '../../src/utils/ArcDecimal';
 import { stat } from 'fs';
+import { AssetType } from '@src/types';
 
 let ownerWallet: Wallet;
 let lenderWallet: Wallet;
@@ -45,7 +46,7 @@ arcDescribe('#Actions.openPosition()', init, (ctx: ITestContext) => {
       ).timestamp;
 
       await ctx.arc.openPosition(
-        ctx.arc.stableShare.address,
+        AssetType.Stable,
         ArcNumber.new(200),
         ArcNumber.new(1),
         minterWallet,
@@ -70,7 +71,7 @@ arcDescribe('#Actions.openPosition()', init, (ctx: ITestContext) => {
     it('should not be able to open a position with not enough collateral', async () => {
       await expectRevert(
         ctx.arc.openPosition(
-          ctx.arc.stableShare.address,
+          AssetType.Synthetic,
           ArcNumber.new(199),
           ArcNumber.new(1),
           minterWallet,
@@ -80,19 +81,14 @@ arcDescribe('#Actions.openPosition()', init, (ctx: ITestContext) => {
 
     it('should not be able to open a position with anything other than the liquidity asset', async () => {
       await expectRevert(
-        ctx.arc.openPosition(
-          otherWallet.address,
-          ArcNumber.new(200),
-          ArcNumber.new(1),
-          minterWallet,
-        ),
+        ctx.arc.openPosition(2, ArcNumber.new(200), ArcNumber.new(1), minterWallet),
       );
     });
 
     it('should not be able to open a position of 0', async () => {
       await expectRevert(
         ctx.arc.openPosition(
-          otherWallet.address,
+          AssetType.Synthetic,
           ArcNumber.new(200),
           ArcNumber.new(0),
           minterWallet,
@@ -120,7 +116,7 @@ arcDescribe('#Actions.openPosition()', init, (ctx: ITestContext) => {
       ).timestamp;
 
       await ctx.arc.openPosition(
-        ctx.arc.synthetic.address,
+        AssetType.Synthetic,
         ArcNumber.new(1),
         ArcNumber.new(50),
         minterWallet,
@@ -146,7 +142,7 @@ arcDescribe('#Actions.openPosition()', init, (ctx: ITestContext) => {
       await ctx.arc._mintSynthetic(ArcNumber.new(1), ArcNumber.new(200), minterWallet);
 
       await ctx.arc.openPosition(
-        ctx.arc.synthetic.address,
+        AssetType.Synthetic,
         ArcNumber.new(1),
         ArcNumber.new(50),
         minterWallet,
@@ -172,7 +168,7 @@ arcDescribe('#Actions.openPosition()', init, (ctx: ITestContext) => {
       await ctx.arc._mintSynthetic(ArcNumber.new(1), ArcNumber.new(200), minterWallet);
       await expectRevert(
         ctx.arc.openPosition(
-          ctx.arc.synthetic.address,
+          AssetType.Synthetic,
           ArcNumber.new(1),
           ArcNumber.new(51),
           minterWallet,
@@ -184,7 +180,7 @@ arcDescribe('#Actions.openPosition()', init, (ctx: ITestContext) => {
       await ctx.arc._mintSynthetic(ArcNumber.new(25), ArcNumber.new(5000), minterWallet);
       await expectRevert(
         ctx.arc.openPosition(
-          ctx.arc.synthetic.address,
+          AssetType.Synthetic,
           ArcNumber.new(25),
           ArcNumber.new(1001),
           minterWallet,
@@ -196,7 +192,7 @@ arcDescribe('#Actions.openPosition()', init, (ctx: ITestContext) => {
       await ctx.arc._mintSynthetic(ArcNumber.new(1), ArcNumber.new(200), minterWallet);
       await expectRevert(
         ctx.arc.openPosition(
-          ctx.arc.synthetic.address,
+          AssetType.Synthetic,
           ArcNumber.new(0),
           ArcNumber.new(100),
           minterWallet,

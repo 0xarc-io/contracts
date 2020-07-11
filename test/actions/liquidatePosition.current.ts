@@ -28,7 +28,7 @@ async function init(ctx: ITestContext): Promise<void> {
 jest.setTimeout(30000);
 
 arcDescribe('#Actions.liquidatePosition()', init, (ctx: ITestContext) => {
-  describe('synthetic', () => {
+  describe.only('synthetic', () => {
     it('should not be able to liquidate a collateralised position', async () => {
       await ctx.arc._mintSynthetic(ArcNumber.new(1), ArcNumber.new(200), syntheticMinterWallet);
       await expectRevert(ctx.arc.liquidatePosition(0, liquidatorWallet));
@@ -40,15 +40,16 @@ arcDescribe('#Actions.liquidatePosition()', init, (ctx: ITestContext) => {
       await expectRevert(ctx.arc.liquidatePosition(0, liquidatorWallet));
     });
 
-    it('should be able to liquidate', async () => {
+    it.only('should be able to liquidate and make the position healthy', async () => {
       await ctx.arc._mintSynthetic(ArcNumber.new(1), ArcNumber.new(200), syntheticMinterWallet);
       await ctx.arc.oracle.setPrice(ArcDecimal.new(150));
-      await ctx.arc._mintSynthetic(ArcDecimal.new(1).value, ArcNumber.new(300), liquidatorWallet);
+      await ctx.arc._mintSynthetic(ArcDecimal.new(2).value, ArcNumber.new(600), liquidatorWallet);
 
       await ctx.arc.liquidatePosition(0, liquidatorWallet);
+      await expectRevert(ctx.arc.liquidatePosition(0, liquidatorWallet));
 
       expect(await ctx.arc.stableShare.balanceOf(liquidatorWallet.address)).toEqual(
-        new BigNumber('90909090909090909090'),
+        ArcNumber.new(130),
       );
     });
   });
@@ -98,15 +99,17 @@ arcDescribe('#Actions.liquidatePosition()', init, (ctx: ITestContext) => {
       await expectRevert(ctx.arc.liquidatePosition(1, liquidatorWallet));
     });
 
-    it('should be able to liquidate', async () => {
+    it('should be able to liquidate and make the position healthy', async () => {
       await ctx.arc._borrowStableShares(
         ArcNumber.new(50),
         ArcNumber.new(1),
         stableShareMinterWallet,
       );
       await ctx.arc.oracle.setPrice(ArcDecimal.new(75));
+      // console.log((await ctx.arc.))
       await ctx.arc.stableShare.mintShare(liquidatorWallet.address, ArcNumber.new(100));
       await ctx.arc.liquidatePosition(1, liquidatorWallet);
+      await expectRevert(ctx.arc.liquidatePosition(1, liquidatorWallet));
     });
   });
 });

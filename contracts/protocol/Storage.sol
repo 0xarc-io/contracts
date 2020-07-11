@@ -13,12 +13,10 @@ import {Math} from "../lib/Math.sol";
 import {Time} from "../lib/Time.sol";
 import {SignedMath} from "../lib/SignedMath.sol";
 
-import {SyntheticToken} from "../token/SyntheticToken.sol";
+import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
 
 contract Storage {
 
-    using Types for Types.Par;
-    using Types for Types.Wei;
     using Math for uint256;
     using SafeMath for uint256;
 
@@ -27,7 +25,7 @@ contract Storage {
     Types.GlobalParams public params;
     Types.State public state;
 
-    SyntheticToken public synthetic;
+    ISyntheticToken public synthetic;
 
     uint256 public positionCount;
 
@@ -81,45 +79,6 @@ contract Storage {
 
     // ============ Getters ============
 
-    function getNewParAndDeltaWei(
-        Types.Par memory currentPar,
-        Types.AssetAmount memory amount
-    )
-        internal
-        view
-        returns (Types.Par memory, Types.Wei memory)
-    {
-        if (amount.value == 0 && amount.ref == Types.AssetReference.Delta) {
-            return (currentPar, Types.zeroWei());
-        }
-
-        Types.Wei memory oldWei = Interest.parToWei(currentPar, state.index);
-        Types.Par memory newPar;
-        Types.Wei memory deltaWei;
-
-        if (amount.denomination == Types.AssetDenomination.Wei) {
-            deltaWei = Types.Wei({
-                sign: amount.sign,
-                value: amount.value
-            });
-            if (amount.ref == Types.AssetReference.Target) {
-                deltaWei = deltaWei.sub(oldWei);
-            }
-            newPar = Interest.weiToPar(oldWei.add(deltaWei), state.index);
-        } else { // AssetDenomination.Par
-            newPar = Types.Par({
-                sign: amount.sign,
-                value: amount.value.to128()
-            });
-            if (amount.ref == Types.AssetReference.Delta) {
-                newPar = currentPar.add(newPar);
-            }
-            deltaWei = Interest.parToWei(newPar, state.index).sub(oldWei);
-        }
-
-        return (newPar, deltaWei);
-    }
-
     function fetchNewIndex(
         Interest.Index memory index
     )
@@ -160,140 +119,50 @@ contract Storage {
         return rate;
     }
 
-    function getWei(
-        Types.Par memory par
+    function getAddress(
+        Types.AssetType asset
     )
         internal
         view
-        returns (Types.Wei memory)
+        returns (address)
     {
-        if (par.isZero()) {
-            return Types.zeroWei();
-        }
-
-        return Interest.parToWei(par, state.index);
+        return asset == Types.AssetType.Stable ?
+            address(params.stableAsset) :
+            address(synthetic);
     }
 
-    function convertCollateral(
-        address collateralAsset,
-        uint256 amount
+    function getBorrowIndex(
+        Types.AssetType asset
     )
-        public
+        internal
         view
-        returns (uint256)
+        returns (Interest.Index memory)
     {
-
-        Decimal.D256 memory currentPrice = params.oracle.fetchCurrentPrice();
-        uint256 borrowAvailable;
-
-        if (collateralAsset == address(params.stableAsset)) {
-            borrowAvailable = Decimal.div(
-                amount,
-                currentPrice
-            );
-        } else if (collateralAsset == address(synthetic)) {
-            borrowAvailable = Decimal.mul(
-                amount,
-                currentPrice
-            );
-        }
-
-        assert(borrowAvailable > 0);
-        return borrowAvailable;
-    }
-
-    function calculateCollateralRequired(
-        address borrowedAsset,
-        uint256 amount
-    )
-        public
-        view
-        returns (uint256)
-    {
-
-        Decimal.D256 memory currentPrice = params.oracle.fetchCurrentPrice();
-        uint256 collateralRequired;
-
-        if (borrowedAsset == address(params.stableAsset)) {
-            collateralRequired = Decimal.div(
-                amount,
-                currentPrice
-            );
-
-            collateralRequired = Decimal.mul(
-                collateralRequired,
-                params.syntheticRatio
-            );
-
-        } else if (borrowedAsset == address(synthetic)) {
-
-            collateralRequired = Decimal.mul(
-                amount,
-                currentPrice
-            );
-
-            collateralRequired = Decimal.mul(
-                collateralRequired,
-                params.collateralRatio
-            );
-        }
-
-        assert(collateralRequired > 0);
-
-        return collateralRequired;
-    }
-
-    function collateralAtRisk(
-        address borrowedAsset,
-        Types.Par memory parSupplyValue,
-        Types.Par memory parBorrowValue
-    )
-        public
-        view
-        returns (SignedMath.Int memory)
-    {
-        SignedMath.Int memory result;
-        uint256 collateralRequired;
-
-        console.log("parSupplyValue: %s", parSupplyValue.value);
-        console.log("parBorrowValue: %s", parBorrowValue.value);
-
-        if (borrowedAsset == address(synthetic)) {
-            console.log("borrowing synthetic");
-            Types.Wei memory weiBorrowValue = getWei(parBorrowValue);
-
-            // Stable shares required
-            collateralRequired = calculateCollateralRequired(
-                borrowedAsset,
-                weiBorrowValue.value
-            );
-        } else if (borrowedAsset == address(params.stableAsset)) {
-            console.log("borrowing stable");
-            // Synthetics required
-            collateralRequired = calculateCollateralRequired(
-                borrowedAsset,
-                parBorrowValue.value
-            );
-        }
-
-        console.log("collateralRequired: %s", collateralRequired);
-
-        // If the amount you've supplied is greater than the collateral needed
-        // given your borrow amount, then you're positive
-        if (parSupplyValue.value >= collateralRequired) {
-            result = SignedMath.Int({
-                isPositive: true,
-                value: uint256(parSupplyValue.value).sub(collateralRequired)
-            });
+        if (asset == Types.AssetType.Stable) {
+            return state.index;
         } else {
-            // If not, subtract the collateral needed from the amount supplied
-            result = SignedMath.Int({
-                isPositive: false,
-                value: collateralRequired.sub(uint256(parSupplyValue.value))
-            });
+            return Interest.newIndex();
         }
-
-        return result;
     }
 
+    function isCollateralized(
+        Types.Position memory position
+    )
+        internal
+        view
+        returns (bool)
+    {
+        Decimal.D256 memory currentPrice = params.oracle.fetchCurrentPrice();
+
+        (SignedMath.Int memory collateralDelta) = Types.calculateCollateralDelta(
+            position.borrowedAsset,
+            params,
+            position.collateralAmount,
+            position.borrowedAmount,
+            getBorrowIndex(position.borrowedAsset),
+            currentPrice
+        );
+
+        return collateralDelta.isPositive;
+    }
 }

@@ -4,15 +4,22 @@ pragma experimental ABIEncoderV2;
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {Math} from "./Math.sol";
-import {Decimal} from "./Decimal.sol";
-import {Interest} from "./Interest.sol";
+import {console} from "@nomiclabs/buidler/console.sol";
+
 import {IOracle} from "../interfaces/IOracle.sol";
 import {IInterestSetter} from "../interfaces/IInterestSetter.sol";
 
+import {Math} from "./Math.sol";
+import {Decimal} from "./Decimal.sol";
+import {Interest} from "./Interest.sol";
+import {SignedMath} from "./SignedMath.sol";
+
 library Types {
 
+    using Types for Types.Par;
+    using Types for Types.Wei;
     using Math for uint256;
+    using SafeMath for uint256;
 
     // ============ Structs ============
 
@@ -34,13 +41,18 @@ library Types {
 
     struct Position {
         address owner;
-        address collateralAsset;
-        address borrowedAsset;
+        AssetType collateralAsset;
+        AssetType borrowedAsset;
         Par collateralAmount;
         Par borrowedAmount;
     }
 
     // ============ AssetAmount ============
+
+    enum AssetType {
+        Stable,
+        Synthetic
+    }
 
     enum AssetDenomination {
         Wei, // the amount is denominated in wei
@@ -57,6 +69,169 @@ library Types {
         AssetDenomination denomination;
         AssetReference ref;
         uint256 value;
+    }
+
+    // ============ ArcAsset ============
+
+    function oppositeAsset(
+        AssetType assetType
+    )
+        internal
+        pure
+        returns (AssetType)
+    {
+        return assetType == AssetType.Stable ? AssetType.Synthetic : AssetType.Stable;
+    }
+
+    function calculateInverseAmount(
+        AssetType asset,
+        uint256 amount,
+        Decimal.D256 memory price
+    )
+        internal
+        view
+        returns (uint256)
+    {
+        uint256 borrowRequired;
+
+        if (asset == AssetType.Stable) {
+            borrowRequired = Decimal.div(
+                amount,
+                price
+            );
+        } else if (asset == AssetType.Synthetic) {
+            borrowRequired = Decimal.mul(
+                amount,
+                price
+            );
+        }
+
+        return borrowRequired;
+    }
+
+    function calculateInverseRequired(
+        AssetType asset,
+        GlobalParams memory params,
+        uint256 amount,
+        Decimal.D256 memory price
+    )
+        internal
+        view
+        returns (uint256)
+    {
+
+        uint256 collateralRequired = calculateInverseAmount(
+            asset,
+            amount,
+            price
+        );
+
+        if (asset == AssetType.Stable) {
+            collateralRequired = Decimal.mul(
+                collateralRequired,
+                params.syntheticRatio
+            );
+
+        } else if (asset == AssetType.Synthetic) {
+            collateralRequired = Decimal.mul(
+                collateralRequired,
+                params.collateralRatio
+            );
+        }
+
+        return collateralRequired;
+    }
+
+    function calculateLiquidationPrice(
+        AssetType asset,
+        GlobalParams memory params
+    )
+        internal
+        view
+        returns (Decimal.D256 memory price)
+    {
+        Decimal.D256 memory result;
+        Decimal.D256 memory currentPrice = params.oracle.fetchCurrentPrice();
+
+        if (asset == AssetType.Stable) {
+            result = Decimal.add(
+                Decimal.one(),
+                params.liquidationSpread.value
+            );
+        } else if (asset == AssetType.Synthetic) {
+            result = Decimal.sub(
+                Decimal.one(),
+                params.liquidationSpread.value
+            );
+        }
+
+        result = Decimal.mul(
+            currentPrice,
+            result
+        );
+
+        return result;
+    }
+
+    function calculateCollateralDelta(
+        Types.AssetType borrowedAsset,
+        GlobalParams memory params,
+        Types.Par memory parSupply,
+        Types.Par memory parBorrow,
+        Interest.Index memory borrowIndex,
+        Decimal.D256 memory price
+    )
+        internal
+        view
+        returns (SignedMath.Int memory)
+    {
+        SignedMath.Int memory collateralDelta;
+
+        uint256 collateralRequired;
+
+        Types.Wei memory weiBorrow = getWei(
+            parBorrow,
+            borrowIndex
+        );
+
+        console.log("Wei borrow: %s", weiBorrow.value);
+
+        if (borrowedAsset == Types.AssetType.Stable) {
+            collateralRequired = Types.calculateInverseRequired(
+                borrowedAsset,
+                params,
+                weiBorrow.value,
+                price
+            );
+        } else if (borrowedAsset == Types.AssetType.Synthetic) {
+            collateralRequired = Types.calculateInverseRequired(
+                borrowedAsset,
+                params,
+                weiBorrow.value,
+                price
+            );
+        }
+
+        console.log("Par supply: %s", parSupply.value);
+
+        // If the amount you've supplied is greater than the collateral needed
+        // given your borrow amount, then you're positive
+        if (parSupply.value >= collateralRequired) {
+            collateralDelta = SignedMath.Int({
+                isPositive: true,
+                value: uint256(parSupply.value).sub(collateralRequired)
+            });
+        } else {
+            // If not, subtract the collateral needed from the amount supplied
+            collateralDelta = SignedMath.Int({
+                isPositive: false,
+                value: collateralRequired.sub(uint256(parSupply.value))
+            });
+        }
+
+        console.log("Collateral delta: %s %s", collateralDelta.isPositive, collateralDelta.value);
+
+        return collateralDelta;
     }
 
     // ============ Par (Principal Amount) ============
@@ -302,6 +477,61 @@ library Types {
         returns (bool)
     {
         return a.value == 0;
+    }
+
+    function getWei(
+        Par memory par,
+        Interest.Index memory index
+    )
+        internal
+        pure
+        returns (Types.Wei memory)
+    {
+        if (isZero(par)) {
+            return Types.zeroWei();
+        }
+
+        return Interest.parToWei(par, index);
+    }
+
+    function getNewParAndDeltaWei(
+        Types.Par memory currentPar,
+        Interest.Index memory index,
+        Types.AssetAmount memory amount
+    )
+        internal
+        view
+        returns (Types.Par memory, Types.Wei memory)
+    {
+        if (amount.value == 0 && amount.ref == Types.AssetReference.Delta) {
+            return (currentPar, Types.zeroWei());
+        }
+
+        Types.Wei memory oldWei = Interest.parToWei(currentPar, index);
+        Types.Par memory newPar;
+        Types.Wei memory deltaWei;
+
+        if (amount.denomination == Types.AssetDenomination.Wei) {
+            deltaWei = Types.Wei({
+                sign: amount.sign,
+                value: amount.value
+            });
+            if (amount.ref == Types.AssetReference.Target) {
+                deltaWei = deltaWei.sub(oldWei);
+            }
+            newPar = Interest.weiToPar(oldWei.add(deltaWei), index);
+        } else { // AssetDenomination.Par
+            newPar = Types.Par({
+                sign: amount.sign,
+                value: amount.value.to128()
+            });
+            if (amount.ref == Types.AssetReference.Delta) {
+                newPar = currentPar.add(newPar);
+            }
+            deltaWei = Interest.parToWei(newPar, index).sub(oldWei);
+        }
+
+        return (newPar, deltaWei);
     }
 
 }
