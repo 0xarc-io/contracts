@@ -28,7 +28,7 @@ async function init(ctx: ITestContext): Promise<void> {
 jest.setTimeout(30000);
 
 arcDescribe('#Actions.liquidatePosition()', init, (ctx: ITestContext) => {
-  describe.only('synthetic', () => {
+  describe('synthetic', () => {
     it('should not be able to liquidate a collateralised position', async () => {
       await ctx.arc._mintSynthetic(ArcNumber.new(1), ArcNumber.new(200), syntheticMinterWallet);
       await expectRevert(ctx.arc.liquidatePosition(0, liquidatorWallet));
@@ -40,7 +40,7 @@ arcDescribe('#Actions.liquidatePosition()', init, (ctx: ITestContext) => {
       await expectRevert(ctx.arc.liquidatePosition(0, liquidatorWallet));
     });
 
-    it.only('should be able to liquidate and make the position healthy', async () => {
+    it('should be able to liquidate and make the position healthy', async () => {
       await ctx.arc._mintSynthetic(ArcNumber.new(1), ArcNumber.new(200), syntheticMinterWallet);
       await ctx.arc.oracle.setPrice(ArcDecimal.new(150));
       await ctx.arc._mintSynthetic(ArcDecimal.new(2).value, ArcNumber.new(600), liquidatorWallet);

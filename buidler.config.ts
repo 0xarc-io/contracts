@@ -17,9 +17,9 @@ const config: BuidlerConfig = {
   defaultNetwork: 'buidlerevm',
   solc: {
     version: '0.6.8',
-    optimizer: {
-      runs: 200,
-    },
+    // optimizer: {
+    //   runs: 10000,
+    // },
   },
   networks: {
     rinkeby: {

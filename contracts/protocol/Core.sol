@@ -2,15 +2,15 @@ pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
 import {console} from "@nomiclabs/buidler/console.sol";
-import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
+import {SyntheticToken} from "../token/SyntheticToken.sol";
 
 import {Types} from "../lib/Types.sol";
 import {Interest} from "../lib/Interest.sol";
 
-import {Actions} from "./Actions.sol";
+import {Operation} from "./Operation.sol";
 import {Getters} from "./Getters.sol";
 
-contract Core is Actions, Getters {
+contract Core is Operation, Getters {
 
     // ============ Constructor ============
 
@@ -23,9 +23,9 @@ contract Core is Actions, Getters {
     {
         console.log('** ARC Deployed **');
 
-        params = _globalParams;
-        // synthetic = new SyntheticToken(name, symbol, address(this));
-        state.index = Interest.newIndex();
+        g_state.params = _globalParams;
+        g_state.synthetic = new SyntheticToken(name, symbol, address(this));
+        g_state.index = Interest.newIndex();
 
     }
 }

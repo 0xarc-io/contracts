@@ -84,17 +84,6 @@ arcDescribe('#Actions.openPosition()', init, (ctx: ITestContext) => {
         ctx.arc.openPosition(2, ArcNumber.new(200), ArcNumber.new(1), minterWallet),
       );
     });
-
-    it('should not be able to open a position of 0', async () => {
-      await expectRevert(
-        ctx.arc.openPosition(
-          AssetType.Synthetic,
-          ArcNumber.new(200),
-          ArcNumber.new(0),
-          minterWallet,
-        ),
-      );
-    });
   });
 
   describe('with synthetics', () => {

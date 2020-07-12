@@ -1,6 +1,8 @@
 pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
+import {console} from "@nomiclabs/buidler/console.sol";
+
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -50,12 +52,13 @@ library Settlement {
     function liquidate(
         Types.GlobalParams memory params,
         ISyntheticToken synthetic,
-        Types.AssetType collateralAsset,
-        uint256 collateralToLiquidate,
         Types.AssetType borrowedAsset,
+        uint256 collateralToLiquidate,
         uint256 borrowToLiquidate
-    ) internal {
-        if (collateralAsset == Types.AssetType.Synthetic) {
+    )
+        internal
+    {
+        if (borrowedAsset == Types.AssetType.Synthetic) {
             synthetic.burn(
                 msg.sender,
                 borrowToLiquidate
