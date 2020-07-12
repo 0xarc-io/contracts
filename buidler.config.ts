@@ -31,6 +31,7 @@ const config: BuidlerConfig = {
     },
     buidlerevm: {
       hardfork: 'istanbul',
+      blockGasLimit: 12500000,
       accounts: privateKeys.map((key) => {
         return {
           privateKey: key,

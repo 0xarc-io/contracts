@@ -6,6 +6,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {console} from "@nomiclabs/buidler/console.sol";
 
+import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
 import {IOracle} from "../interfaces/IOracle.sol";
 import {IInterestSetter} from "../interfaces/IInterestSetter.sol";
 
@@ -24,6 +25,7 @@ library Types {
 
     struct GlobalParams {
         IERC20 stableAsset;
+        ISyntheticToken syntheticAsset;
         IInterestSetter interestSetter;
         Decimal.D256 collateralRatio;
         Decimal.D256 syntheticRatio;

@@ -53,6 +53,7 @@ arcDescribe('#Actions.openPosition()', init, (ctx: ITestContext) => {
       );
 
       const state = await ctx.arc.core.state();
+
       expect(state.totalPar.supply).toEqual(ArcNumber.new(0));
       expect(state.totalPar.borrow).toEqual(ArcNumber.new(0));
       expect(state.index.borrow).toEqual(ArcNumber.new(1));

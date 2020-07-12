@@ -43,12 +43,13 @@
     "tsconfig-paths": "^3.9.0",
     "tsconfig-paths-jest": "^0.0.1",
     "typechain": "^1.0.4",
+    "typechain-target-ethers": "^1.0.4",
     "typechain-target-truffle": "^1.0.2",
     "typechain-target-web3-v1": "^1.0.4",
-    "typechain-target-ethers": "^1.0.4",
     "typescript": "^3.7.5"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^3.0.0"
+    "@openzeppelin/contracts": "^3.0.0",
+    "@openzeppelin/upgrades": "^2.8.0"
   }
 }
