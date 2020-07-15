@@ -91,7 +91,7 @@ contract State {
     function updatePositionAmount(
         uint256 id,
         Types.AssetType asset,
-        SignedMath.Int memory amount
+        Types.Par memory amount
     )
         public
         onlyCore
@@ -99,18 +99,10 @@ contract State {
     {
         Types.Position storage position = positions[id];
 
-        if (amount.isPositive == true) {
-            if (position.collateralAsset == asset) {
-                position.collateralAmount.value += amount.value.to128();
-            } else {
-                position.borrowedAmount.value += amount.value.to128();
-            }
+        if (position.collateralAsset == asset) {
+            position.collateralAmount = position.collateralAmount.add(amount);
         } else {
-            if (position.collateralAsset == asset) {
-                position.collateralAmount.value -= amount.value.to128();
-            } else {
-                position.borrowedAmount.value -= amount.value.to128();
-            }
+            position.collateralAmount = position.borrowedAmount.add(amount);
         }
 
         return position;
@@ -173,7 +165,7 @@ contract State {
         Types.AssetAmount memory amount
     )
         public
-        view
+        pure
         returns (Types.Par memory, Types.Wei memory)
     {
         if (amount.value == 0 && amount.ref == Types.AssetReference.Delta) {
@@ -322,9 +314,13 @@ contract State {
         view
         returns (bool)
     {
+        if (position.borrowedAmount.value == 0) {
+            return true;
+        }
+
         Decimal.D256 memory currentPrice = params.oracle.fetchCurrentPrice();
 
-        (SignedMath.Int memory collateralDelta) = calculateCollateralDelta(
+        (Types.Par memory collateralDelta) = calculateCollateralDelta(
             position.borrowedAsset,
             position.collateralAmount,
             position.borrowedAmount,
@@ -332,7 +328,7 @@ contract State {
             currentPrice
         );
 
-        return collateralDelta.isPositive;
+        return collateralDelta.sign;
     }
 
     function calculateInverseAmount(
@@ -341,7 +337,7 @@ contract State {
         Decimal.D256 memory price
     )
         public
-        view
+        pure
         returns (uint256)
     {
         uint256 borrowRequired;
@@ -368,9 +364,8 @@ contract State {
     )
         public
         view
-        returns (uint256)
+        returns (Types.Par memory)
     {
-
         uint256 collateralRequired = calculateInverseAmount(
             asset,
             amount,
@@ -390,7 +385,10 @@ contract State {
             );
         }
 
-        return collateralRequired;
+        return Types.Par({
+            sign: true,
+            value: collateralRequired.to128()
+        });
     }
 
     function calculateLiquidationPrice(
@@ -432,16 +430,19 @@ contract State {
     )
         public
         view
-        returns (SignedMath.Int memory)
+        returns (Types.Par memory)
     {
-        SignedMath.Int memory collateralDelta;
+        Types.Par memory collateralDelta;
 
-        uint256 collateralRequired;
+        Types.Par memory collateralRequired;
 
         Types.Wei memory weiBorrow = Types.getWei(
             parBorrow,
             borrowIndex
         );
+
+        console.log("Supplied amount: %s", parSupply.value);
+        console.log("Borrowed amount: %s", weiBorrow.value);
 
         if (borrowedAsset == Types.AssetType.Stable) {
             collateralRequired = calculateInverseRequired(
@@ -457,20 +458,11 @@ contract State {
             );
         }
 
-        // If the amount you've supplied is greater than the collateral needed
-        // given your borrow amount, then you're positive
-        if (parSupply.value >= collateralRequired) {
-            collateralDelta = SignedMath.Int({
-                isPositive: true,
-                value: uint256(parSupply.value).sub(collateralRequired)
-            });
-        } else {
-            // If not, subtract the collateral needed from the amount supplied
-            collateralDelta = SignedMath.Int({
-                isPositive: false,
-                value: collateralRequired.sub(uint256(parSupply.value))
-            });
-        }
+        console.log("Collateral required: %s", collateralRequired.value);
+
+        collateralDelta = parSupply.sub(collateralRequired);
+
+        console.log("Collateral delta: %s %s", collateralDelta.sign, collateralDelta.value);
 
         return collateralDelta;
     }

@@ -3,6 +3,7 @@ import { ITestContext } from '../arcDescribe';
 import initializeArc from '../initializeArc';
 import arcDescribe from '../arcDescribe';
 import ArcDecimal from '../../src/utils/ArcDecimal';
+import ArcNumber from '../../src/utils/ArcNumber';
 
 let ownerWallet: Wallet;
 let lenderWallet: Wallet;
@@ -25,8 +26,14 @@ jest.setTimeout(30000);
 
 arcDescribe('#Actions.borrowPosition()', init, (ctx: ITestContext) => {
   describe('synthetic', () => {
-    it('should not be able to borrow more than it is allowed');
+    beforeEach(async () => {
+      await ctx.arc._borrowSynthetic(ArcNumber.new(1), ArcNumber.new(400), syntheticMinterWallet);
+    });
+
+    it('should not be able to borrow more than it is allowed', async () => {});
+
     it('should not be able to borrow on behalf of someone else');
+    it('should be able to borrow more if it has collateral to be used');
     it('should be able to borrow more if the price decreases');
   });
 

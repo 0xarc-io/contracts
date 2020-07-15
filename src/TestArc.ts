@@ -31,7 +31,7 @@ export class TestArc extends Arc {
     await this.supply(amount, from);
   }
 
-  async _mintSynthetic(amount: BigNumberish, collateral: BigNumberish, from: Wallet) {
+  async _borrowSynthetic(amount: BigNumberish, collateral: BigNumberish, from: Wallet) {
     await Token.approve(this.stableShare.address, from, this.core.address, collateral);
     await this.stableShare.mintShare(from.address, collateral);
     await this.openPosition(AssetType.Stable, collateral, amount, from);

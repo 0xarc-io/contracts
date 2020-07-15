@@ -99,7 +99,7 @@ arcDescribe('#Actions.openPosition()', init, (ctx: ITestContext) => {
     });
 
     it('should be able to borrow by the exact amout of collateral provided', async () => {
-      await ctx.arc._mintSynthetic(ArcNumber.new(1), ArcNumber.new(200), minterWallet);
+      await ctx.arc._borrowSynthetic(ArcNumber.new(1), ArcNumber.new(200), minterWallet);
 
       const mintDate = await (
         await ownerWallet.provider.getBlock(await ownerWallet.provider.getBlockNumber())
@@ -129,7 +129,7 @@ arcDescribe('#Actions.openPosition()', init, (ctx: ITestContext) => {
     });
 
     it('should be able to borrow and set the correct interest rates', async () => {
-      await ctx.arc._mintSynthetic(ArcNumber.new(1), ArcNumber.new(200), minterWallet);
+      await ctx.arc._borrowSynthetic(ArcNumber.new(1), ArcNumber.new(200), minterWallet);
 
       await ctx.arc.openPosition(
         AssetType.Synthetic,
@@ -140,7 +140,7 @@ arcDescribe('#Actions.openPosition()', init, (ctx: ITestContext) => {
 
       const state1 = await ctx.arc.core.state();
 
-      await ctx.arc._mintSynthetic(ArcNumber.new(1), ArcNumber.new(200), otherWallet);
+      await ctx.arc._borrowSynthetic(ArcNumber.new(1), ArcNumber.new(200), otherWallet);
       await ctx.arc._borrowStableShares(ArcNumber.new(1), ArcNumber.new(50), otherWallet);
 
       const state2 = await ctx.arc.core.state();
@@ -155,7 +155,7 @@ arcDescribe('#Actions.openPosition()', init, (ctx: ITestContext) => {
     });
 
     it('should not be able to borrow without enough collateral provided', async () => {
-      await ctx.arc._mintSynthetic(ArcNumber.new(1), ArcNumber.new(200), minterWallet);
+      await ctx.arc._borrowSynthetic(ArcNumber.new(1), ArcNumber.new(200), minterWallet);
       await expectRevert(
         ctx.arc.openPosition(
           AssetType.Synthetic,
@@ -167,7 +167,7 @@ arcDescribe('#Actions.openPosition()', init, (ctx: ITestContext) => {
     });
 
     it('should not be able to borrow without enough liquidity (over collateralisation ratio)', async () => {
-      await ctx.arc._mintSynthetic(ArcNumber.new(25), ArcNumber.new(5000), minterWallet);
+      await ctx.arc._borrowSynthetic(ArcNumber.new(25), ArcNumber.new(5000), minterWallet);
       await expectRevert(
         ctx.arc.openPosition(
           AssetType.Synthetic,
@@ -179,7 +179,7 @@ arcDescribe('#Actions.openPosition()', init, (ctx: ITestContext) => {
     });
 
     it('should not be able to borrow 0', async () => {
-      await ctx.arc._mintSynthetic(ArcNumber.new(1), ArcNumber.new(200), minterWallet);
+      await ctx.arc._borrowSynthetic(ArcNumber.new(1), ArcNumber.new(200), minterWallet);
       await expectRevert(
         ctx.arc.openPosition(
           AssetType.Synthetic,
