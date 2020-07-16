@@ -1,4 +1,4 @@
-import { Wallet, ethers } from 'ethers';
+import { Wallet, ethers, ContractTransaction } from 'ethers';
 import { BigNumber, BigNumberish } from 'ethers/utils';
 import { StableShare } from '../typechain/StableShare';
 import { AddressZero } from 'ethers/constants';
@@ -6,10 +6,11 @@ import { MockOracle } from '../typechain/MockOracle';
 import ArcDecimal from './utils/ArcDecimal';
 import { SyntheticToken } from '../typechain/SyntheticToken';
 import { PolynomialInterestSetter } from '../typechain/PolynomialInterestSetter';
-import { AssetType, Operation, OperationParams } from './types';
+import { AssetType, Operation, OperationParams, ActionOperated } from './types';
 import { Storage } from '../typechain/Storage';
 import { State } from '../typechain/State';
 import { CoreV1 } from '../typechain/CoreV1';
+import { parseLogs } from './utils/parseLogs';
 
 const ZERO = new BigNumber(0);
 const BASE = new BigNumber(10).pow(18);
@@ -57,24 +58,26 @@ export default class Arc {
 
   async supply(amount: BigNumberish, caller?: Wallet) {
     const contract = await this.getCore(caller);
-    return await contract.operateAction(Operation.Supply, {
+    const tx = await contract.operateAction(Operation.Supply, {
       id: 0,
       assetOne: AssetType.Stable,
       amountOne: amount,
       assetTwo: '',
       amountTwo: 0,
     });
+    return await this.parseActionTx(tx);
   }
 
   async withdraw(amount: BigNumberish, caller?: Wallet) {
     const contract = await this.getCore(caller);
-    return await contract.operateAction(Operation.Withdraw, {
+    const tx = await contract.operateAction(Operation.Withdraw, {
       id: 0,
       assetOne: AssetType.Stable,
       amountOne: amount,
       assetTwo: '',
       amountTwo: 0,
     });
+    return await this.parseActionTx(tx);
   }
 
   async openPosition(
@@ -84,27 +87,69 @@ export default class Arc {
     caller?: Wallet,
   ) {
     const contract = await this.getCore(caller);
-    return contract.operateAction(Operation.Open, {
+    const tx = await contract.operateAction(Operation.Open, {
       id: 0,
       assetOne: collateralAsset,
       amountOne: collateralAmount,
       assetTwo: '',
       amountTwo: borrowAmount,
     });
+    return await this.parseActionTx(tx);
   }
 
-  async liquidatePosition(positionId: number, caller?: Wallet) {
+  async borrow(
+    positionId: BigNumberish,
+    collateralAsset: AssetType,
+    collateralAmount: BigNumberish,
+    borrowAmount: BigNumberish,
+    caller?: Wallet,
+  ) {
     const contract = await this.getCore(caller);
-    return contract.operateAction(Operation.Liquidate, {
+    const tx = await contract.operateAction(Operation.Borrow, {
+      id: positionId,
+      assetOne: collateralAsset,
+      amountOne: collateralAmount,
+      assetTwo: '',
+      amountTwo: borrowAmount,
+    });
+
+    return await this.parseActionTx(tx);
+  }
+
+  async liquidatePosition(positionId: BigNumberish, caller?: Wallet) {
+    const contract = await this.getCore(caller);
+    const tx = await contract.operateAction(Operation.Liquidate, {
       id: positionId,
       assetOne: '',
       amountOne: 0,
       assetTwo: '',
       amountTwo: 0,
     } as OperationParams);
+
+    return await this.parseActionTx(tx);
   }
 
-  private async getCore(caller?: Wallet) {
+  async parseActionTx(tx: ContractTransaction) {
+    const receipt = await tx.wait();
+    const logs = parseLogs(receipt.logs, CoreV1.ABI);
+    const log = logs[0];
+
+    const result = {
+      operation: log.values.operation,
+      params: {
+        id: log.values.params[0],
+        assetOne: log.values.params[1],
+        amountOne: log.values.params[2],
+        assetTwo: log.values.params[3],
+        amountTwo: log.values.params[4],
+      },
+      updatedPosition: log.values.updatedPosition,
+    } as ActionOperated;
+
+    return result;
+  }
+
+  async getCore(caller?: Wallet) {
     return await CoreV1.at(caller || this.wallet, this.core.address);
   }
 }

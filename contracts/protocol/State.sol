@@ -54,7 +54,19 @@ contract State {
         _;
     }
 
-    // ============ Setters ============
+    // ============ Public Setters ============
+
+    function updateIndex()
+        public
+        returns (Interest.Index memory)
+    {
+        if (globalIndex.lastUpdate == Time.currentTime()) {
+            return globalIndex;
+        }
+        return globalIndex = fetchNewIndex(globalIndex);
+    }
+
+    // ============ Permissioned Setters ============
 
     function savePosition(
         Types.Position memory position
@@ -125,6 +137,10 @@ contract State {
         public
         onlyCore
     {
+        console.log("updating par");
+        console.log("exisiting %s", existingPar.value);
+        console.log("new par %s", newPar.value);
+
         if (Types.equals(existingPar, newPar)) {
             return;
         }
@@ -142,19 +158,6 @@ contract State {
         } else {
             totalPar.borrow = uint256(totalPar.borrow).add(newPar.value).to128();
         }
-    }
-
-    function updateIndex()
-        public
-        onlyCore
-        returns (Interest.Index memory)
-    {
-
-        if (globalIndex.lastUpdate == Time.currentTime()) {
-            return globalIndex;
-        }
-
-        return globalIndex = fetchNewIndex(globalIndex);
     }
 
     // ============ Getters ============
@@ -229,7 +232,7 @@ contract State {
         ) = Interest.totalParToWei(totalPar, index);
 
         Interest.Rate memory rate = params.interestSetter.getInterestRate(
-            address(params.syntheticAsset),
+            address(params.stableAsset),
             borrowWei.value,
             supplyWei.value
         );
@@ -441,9 +444,6 @@ contract State {
             borrowIndex
         );
 
-        console.log("Supplied amount: %s", parSupply.value);
-        console.log("Borrowed amount: %s", weiBorrow.value);
-
         if (borrowedAsset == Types.AssetType.Stable) {
             collateralRequired = calculateInverseRequired(
                 borrowedAsset,
@@ -458,13 +458,19 @@ contract State {
             );
         }
 
-        console.log("Collateral required: %s", collateralRequired.value);
-
         collateralDelta = parSupply.sub(collateralRequired);
 
         console.log("Collateral delta: %s %s", collateralDelta.sign, collateralDelta.value);
 
         return collateralDelta;
+    }
+
+    function availableLiquidity()
+        public
+        view
+        returns (uint256)
+    {
+        return uint256(totalPar.supply).sub(uint256(totalPar.borrow));
     }
 
 }

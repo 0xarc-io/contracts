@@ -9,6 +9,7 @@ import { EVM } from './EVM';
 export interface ITestContext {
   arc?: TestArc;
   wallets?: Wallet[];
+  evm?: EVM;
 }
 
 export type initFunction = (ctx: ITestContext) => Promise<void>;
@@ -28,8 +29,9 @@ export default function arcDescribe(name: string, init: initFunction, tests: tes
     // Runs before any before() calls made within the arcDescribe() call.
     beforeAll(async () => {
       ctx.wallets = generatedWallets(provider);
-
+      ctx.evm = evm;
       ctx.arc = await TestArc.init(ctx.wallets[0]);
+
       await ctx.arc.deployTestArc();
 
       preInitSnapshotId = await evm.snapshot();

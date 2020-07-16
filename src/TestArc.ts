@@ -1,12 +1,16 @@
 import Arc from './Arc';
 import { StableShare } from '../typechain/StableShare';
 import { MockOracle } from '../typechain/MockOracle';
-import { Wallet } from 'ethers';
+import { Wallet, ContractTransaction } from 'ethers';
 import Token from './utils/Token';
 import { BigNumberish } from 'ethers/utils';
 import ArcDecimal from './utils/ArcDecimal';
 import { PolynomialInterestSetter } from '../typechain/PolynomialInterestSetter';
-import { AssetType } from './types';
+import { AssetType, ActionOperated } from './types';
+import { parseLogs } from './utils/parseLogs';
+import { Actions } from '../typechain/Actions';
+import { CoreV1 } from '../typechain/CoreV1';
+import { ContractReceipt } from 'ethers/contract';
 
 export class TestArc extends Arc {
   static async init(wallet: Wallet): Promise<TestArc> {
@@ -28,17 +32,38 @@ export class TestArc extends Arc {
   async _supply(amount: BigNumberish, from: Wallet) {
     await Token.approve(this.stableShare.address, from, this.core.address, amount);
     await this.stableShare.mintShare(from.address, amount);
-    await this.supply(amount, from);
+
+    return await this.supply(amount, from);
   }
 
-  async _borrowSynthetic(amount: BigNumberish, collateral: BigNumberish, from: Wallet) {
+  async _borrowSynthetic(
+    amount: BigNumberish,
+    collateral: BigNumberish,
+    from: Wallet,
+    positionId?: BigNumberish,
+  ) {
     await Token.approve(this.stableShare.address, from, this.core.address, collateral);
     await this.stableShare.mintShare(from.address, collateral);
-    await this.openPosition(AssetType.Stable, collateral, amount, from);
+
+    if (!positionId) {
+      return await this.openPosition(AssetType.Stable, collateral, amount, from);
+    } else {
+      return await this.borrow(positionId!, AssetType.Stable, collateral, amount, from);
+    }
   }
 
-  async _borrowStableShares(amount: BigNumberish, collateral: BigNumberish, from: Wallet) {
+  async _borrowStableShares(
+    amount: BigNumberish,
+    collateral: BigNumberish,
+    from: Wallet,
+    positionId?: BigNumberish,
+  ) {
     await Token.approve(this.synthetic.address, from, this.core.address, collateral);
-    await this.openPosition(AssetType.Synthetic, collateral, amount, from);
+
+    if (!positionId) {
+      return await this.openPosition(AssetType.Synthetic, collateral, amount, from);
+    } else {
+      return await this.borrow(positionId!, AssetType.Synthetic, collateral, amount, from);
+    }
   }
 }

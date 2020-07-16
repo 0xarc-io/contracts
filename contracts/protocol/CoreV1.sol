@@ -48,6 +48,12 @@ contract CoreV1 {
 
     State public state;
 
+    event ActionOperated(
+        uint8 operation,
+        OperationParams params,
+        Types.Position updatedPosition
+    );
+
     // ============ Constructor ============
 
     constructor()
@@ -63,7 +69,7 @@ contract CoreV1 {
     {
         require(
             Storage.load(ARC_V1_INITIALIZE_SLOT) == 0x0,
-            "PerpetualV1 already initialized"
+            "ARCV1 already initialized"
         );
 
         Storage.store(ARC_V1_INITIALIZE_SLOT, bytes32(uint256(1)));
@@ -79,6 +85,8 @@ contract CoreV1 {
     {
         // @TODO: Need to check validity of assets and position
 
+        Types.Position memory operatedPosition;
+
         if (operation == Operation.Supply) {
             supply(
                 params.amountOne
@@ -88,28 +96,39 @@ contract CoreV1 {
                 params.amountOne
             );
         } else if (operation == Operation.Open) {
-            openPosition(
+            (operatedPosition, params.id) = openPosition(
                 params.assetOne,
                 params.amountOne,
                 params.amountTwo
             );
         } else if (operation == Operation.Borrow) {
-            borrow(
+            operatedPosition = borrow(
                 params.id,
                 params.amountOne,
                 params.amountTwo
             );
         } else if (operation == Operation.Deposit) {
-            repay(
+            operatedPosition = repay(
                 params.id,
                 params.amountOne,
                 params.amountTwo
             );
         } else if (operation == Operation.Liquidate) {
-            liquidate(
+            operatedPosition = liquidate(
                 params.id
             );
         }
+
+        require(
+            state.isCollateralized(operatedPosition) == true,
+            "operateAction(): the operated position is undercollateralised"
+        );
+
+        emit ActionOperated(
+            uint8(operation),
+            params,
+            operatedPosition
+        );
 
         state.updateIndex();
     }
@@ -242,6 +261,7 @@ contract CoreV1 {
         uint256 borrowAmount
     )
         internal
+        returns (Types.Position memory returnedPosition, uint256 positionId)
     {
         // CHECKS:
         // 1. `collateralAsset` should be a valid asset
@@ -268,9 +288,9 @@ contract CoreV1 {
             borrowedAmount: Types.zeroPar()
         });
 
-        uint256 positionId = state.savePosition(newPosition);
+        positionId = state.savePosition(newPosition);
 
-        borrow(
+        returnedPosition = borrow(
             positionId,
             collateralAmount,
             borrowAmount
@@ -283,6 +303,7 @@ contract CoreV1 {
         uint256 borrowAmount
     )
         internal
+        returns (Types.Position memory)
     {
         // CHECKS:
         // 1. `borrowAmount` should be greater than 0
@@ -348,6 +369,16 @@ contract CoreV1 {
                 })
             );
 
+            // If the borrowed asset is stable, update the total borrowed amount
+            if (position.borrowedAsset == Types.AssetType.Stable) {
+                require(
+                    state.availableLiquidity() >= borrowAmount,
+                    "borrowPosition(): not enough stable asset liquidity"
+                );
+
+                state.updateTotalPar(position.borrowedAmount, newPar);
+            }
+
             // Update the position's borrow amount
             position = state.setAmount(
                 positionId,
@@ -362,19 +393,11 @@ contract CoreV1 {
                 currentPrice
             );
 
-            console.log("Collateral required: %s", collateralRequired.value);
-            console.log("Collateral value: %s", position.collateralAmount.value);
-
             // Ensure the user's collateral amount is greater than the collateral needed
             require(
                 position.collateralAmount.value >= collateralRequired.value,
                 "borrowPosition(): not enough collateral provided"
             );
-
-            // If the borrowed asset is stable, update the total borrowed amount
-            if (position.borrowedAsset == Types.AssetType.Stable) {
-                state.updateTotalPar(position.borrowedAmount, newPar);
-            }
         }
 
         address syntheticAsset = state.getAddress(Types.AssetType.Synthetic);
@@ -414,6 +437,8 @@ contract CoreV1 {
                 borrowAmount
             );
         }
+
+        return position;
     }
 
     function repay(
@@ -422,6 +447,7 @@ contract CoreV1 {
         uint256 withdrawAmount
     )
         private
+        returns (Types.Position memory)
     {
         // CHECKS:
         // 1. Ensure the position actually exists
@@ -473,14 +499,14 @@ contract CoreV1 {
             })
         );
 
-        // Update the position's new borrow amount
-        position = state.setAmount(positionId, position.borrowedAsset, newPar);
-
         // If stable coins were repaid, update the index and the total amount being borrowed
         if (position.borrowedAsset == Types.AssetType.Stable) {
             state.updateTotalPar(position.borrowedAmount, newPar);
             state.updateIndex();
         }
+
+        // Update the position's new borrow amount
+        position = state.setAmount(positionId, position.borrowedAsset, newPar);
 
         // Calculate how much the user is allowed to withdraw given their debt was repaid
         (Types.Par memory collateralDelta) = state.calculateCollateralDelta(
@@ -544,12 +570,14 @@ contract CoreV1 {
             );
         }
 
+        return position;
     }
 
     function liquidate(
         uint256 positionId
     )
         private
+        returns (Types.Position memory)
     {
         // CHECKS:
         // 1. Ensure that the position id is valid
@@ -685,5 +713,7 @@ contract CoreV1 {
                 collateralDelta.value
             );
         }
+
+        return position;
     }
 }
