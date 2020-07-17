@@ -1,9 +1,5 @@
 import 'jest';
 
-import Arc from '@src/Arc';
-
-import { BigNumber } from 'ethers/utils';
-
 import { generatedWallets } from '@utils/generatedWallets';
 import { Blockchain } from '@src/utils/Blockchain';
 import { ethers, Wallet } from 'ethers';
@@ -11,48 +7,51 @@ import { expectRevert } from '@src/utils/expectRevert';
 
 import ArcNumber from '@src/utils/ArcNumber';
 import { TestArc } from '../../src/TestArc';
+import arcDescribe from '../arcDescribe';
+import { ITestContext } from '../arcDescribe';
+import initializeArc from 'test/initializeArc';
+import ArcDecimal from '../../src/utils/ArcDecimal';
 
 const provider = new ethers.providers.JsonRpcProvider();
 const blockchain = new Blockchain(provider);
 
 const TEN = ArcNumber.new(10);
 
-describe('Actions.withdraw()', () => {
+let ownerWallet: Wallet;
+let lenderWallet: Wallet;
+let syntheticMinterWallet: Wallet;
+let stableShareMinterWallet: Wallet;
+let reserveWallet: Wallet;
+let liquidatorWallet: Wallet;
+
+async function init(ctx: ITestContext): Promise<void> {
+  await initializeArc(ctx);
+  await ctx.arc.oracle.setPrice(ArcDecimal.new(100));
+
+  ownerWallet = ctx.wallets[0];
+  lenderWallet = ctx.wallets[1];
+  syntheticMinterWallet = ctx.wallets[2];
+  stableShareMinterWallet = ctx.wallets[3];
+  liquidatorWallet = ctx.wallets[4];
+
+  await ctx.arc._borrowSynthetic(ArcNumber.new(2), ArcNumber.new(400), reserveWallet);
+  await ctx.arc.stableShare.mintShare(reserveWallet.address, ArcNumber.new(1000));
+}
+
+arcDescribe('Actions.withdraw()', init, (ctx: ITestContext) => {
   const [ownerWallet, userWallet] = generatedWallets(provider);
 
   let arc: TestArc;
-
-  beforeAll(async () => {
-    await blockchain.resetAsync();
-    arc = await TestArc.init(ownerWallet);
-    await arc.deployTestArc();
-    await arc.stableShare.mintShare(ownerWallet.address, TEN);
-    await arc.stableShare.approve(arc.core.address, TEN);
-    await arc.supply(TEN);
-    await blockchain.saveSnapshotAsync();
-  });
 
   beforeEach(async () => {
     await blockchain.resetAsync();
   });
 
-  it('should not be able to withdraw 0', async () => {
-    await expectRevert(arc.withdraw(new BigNumber(0)));
-  });
+  it('should not be able to withdraw 0', async () => {});
 
-  it('should not be able to withdraw more than they have deposited', async () => {
-    await expectRevert(arc.withdraw(ArcNumber.new(11)));
-  });
+  it('should not be able to withdraw more than they have deposited', async () => {});
 
-  it('should be able to withdraw the amount deposited', async () => {
-    await arc.withdraw(TEN);
-
-    const state = await arc.core.state();
-    expect(state.supplyTotal).toEqual(new BigNumber(0));
-
-    const supplyBalance = await arc.core.supplyBalances(ownerWallet.address);
-    expect(supplyBalance).toEqual(new BigNumber(0));
-  });
+  it('should be able to withdraw the amount deposited', async () => {});
 
   it('should be able withdraw the principal + interest accrued', async () => {});
 

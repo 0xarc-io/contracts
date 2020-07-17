@@ -16,10 +16,10 @@ const HUNDRED_ETH = new BigNumber(100).pow(18).toString();
 const config: BuidlerConfig = {
   defaultNetwork: 'buidlerevm',
   solc: {
-    version: '0.6.8',
-    optimizer: {
-      runs: 200,
-    },
+    version: '0.5.16',
+    // optimizer: {
+    //   runs: 10000,
+    // },
   },
   networks: {
     rinkeby: {
@@ -31,6 +31,7 @@ const config: BuidlerConfig = {
     },
     buidlerevm: {
       hardfork: 'istanbul',
+      blockGasLimit: 12500000,
       accounts: privateKeys.map((key) => {
         return {
           privateKey: key,

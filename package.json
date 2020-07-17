@@ -8,6 +8,7 @@
     "compile": "yarn buidler compile",
     "start": "node scripts/watcher.js",
     "clean": "rm -rf src/types && rm -rf typechain && rm -rf artifacts && rm -rf cache",
+    "chain": "ganache-cli --networkId 50 --accounts 20 -l 19000000 -e 10000000000 -m 'concert load couple harbor equip island argue ramp clarify fence smart topic'",
     "generate-typings": "yarn ts-node ./bindings-generator/main.ts artifacts -o typechain",
     "build": "yarn compile && yarn generate-typings",
     "coverage": "yarn run build && yarn buidler coverage --temp artifacts --network coverage",
@@ -33,7 +34,7 @@
     "mocha": "^7.1.1",
     "node-run-cmd": "^1.0.1",
     "prettier": "^2.0.5",
-    "solc": "^0.6.8",
+    "solc": "^0.5.16",
     "solidity-coverage": "^0.7.1",
     "system-commands": "^1.1.7",
     "ts-generator": "0.0.8",
@@ -42,12 +43,13 @@
     "tsconfig-paths": "^3.9.0",
     "tsconfig-paths-jest": "^0.0.1",
     "typechain": "^1.0.4",
+    "typechain-target-ethers": "^1.0.4",
     "typechain-target-truffle": "^1.0.2",
     "typechain-target-web3-v1": "^1.0.4",
-    "typechain-target-ethers": "^1.0.4",
     "typescript": "^3.7.5"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^3.0.0"
+    "@openzeppelin/contracts": "^2.5.0",
+    "@openzeppelin/upgrades": "^2.8.0"
   }
 }

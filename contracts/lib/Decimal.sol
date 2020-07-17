@@ -1,4 +1,4 @@
-pragma solidity 0.6.8;
+pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
@@ -96,4 +96,5 @@ library Decimal {
     {
         return D256({ value: d.value.sub(amount) });
     }
+
 }

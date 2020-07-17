@@ -2,6 +2,7 @@
 cache
 artifacts
 node_modules
+bin
 
 coverage
 dist

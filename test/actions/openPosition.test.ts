@@ -1,162 +1,193 @@
 import 'jest';
-
-import { BigNumber } from 'ethers/utils';
-
-import { generatedWallets } from '@utils/generatedWallets';
-import { use } from 'chai';
-import { solidity, MockProvider, getWallets, deployContract } from 'ethereum-waffle';
-import { Blockchain } from '@utils/Blockchain';
-
-import { ethers, Wallet } from 'ethers';
-import { expectRevert } from '@utils/expectRevert';
-
-import ArcNumber from '@utils/ArcNumber';
-import { StableShare } from '@typings/StableShare';
+import { Wallet, ethers } from 'ethers';
+import { ITestContext } from '../arcDescribe';
+import initializeArc from '../initializeArc';
+import ArcNumber from '../../src/utils/ArcNumber';
+import Token from '../../src/utils/Token';
+import arcDescribe from '../arcDescribe';
+import { expectRevert } from '../../src/utils/expectRevert';
 import ArcDecimal from '../../src/utils/ArcDecimal';
-import Token from '@src/utils/Token';
-import { TestArc } from '../../src/TestArc';
+import { stat } from 'fs';
+import { AssetType } from '@src/types';
 
-const provider = new ethers.providers.JsonRpcProvider();
-const blockchain = new Blockchain(provider);
+let ownerWallet: Wallet;
+let lenderWallet: Wallet;
+let minterWallet: Wallet;
+let otherWallet: Wallet;
 
-const TEN = ArcNumber.new(10);
+async function init(ctx: ITestContext): Promise<void> {
+  await initializeArc(ctx);
+  await ctx.arc.oracle.setPrice(ArcDecimal.new(100));
 
-use(solidity);
+  ownerWallet = ctx.wallets[0];
+  lenderWallet = ctx.wallets[1];
+  minterWallet = ctx.wallets[2];
+  otherWallet = ctx.wallets[3];
+}
 
 jest.setTimeout(30000);
 
-describe('#Actions.openPosition()', () => {
-  const [ownerWallet, userWallet, minterWallet, lenderWallet] = generatedWallets(provider);
-
-  let arc: TestArc;
-
+arcDescribe('#Actions.openPosition()', init, (ctx: ITestContext) => {
   describe('with stable shares', () => {
-    // Set the price of the synthetic at $100
-    // Mint $200 worth of stable shares
-    // Mint 1 synthetic asset from the $200
     beforeEach(async () => {
-      await blockchain.resetAsync();
+      await ctx.arc.stableShare.mintShare(minterWallet.address, ArcNumber.new(200));
 
-      arc = await TestArc.init(ownerWallet);
-      await arc.deployTestArc();
-      await arc.oracle.setPrice(ArcDecimal.new(100.0));
       await Token.approve(
-        arc.stableShare.address,
-        userWallet,
-        arc.core.address,
-        ArcNumber.new(10000),
+        ctx.arc.stableShare.address,
+        minterWallet,
+        ctx.arc.core.address,
+        ArcNumber.new(200),
       );
     });
 
     it('should be able to borrow by the exact amout of collateral provided', async () => {
-      await arc.stableShare.mintShare(userWallet.address, ArcNumber.new(200));
-      await arc.openPosition(arc.stableShare.address, ArcNumber.new(1), userWallet);
+      const mintDate = await (
+        await ownerWallet.provider.getBlock(await ownerWallet.provider.getBlockNumber())
+      ).timestamp;
 
-      const position = await arc.core.positions(0);
-      expect(position.collateralAsset).toEqual(arc.stableShare.address);
-      expect(position.collateralAmount).toEqual(ArcNumber.new(200));
-      expect(position.borrowedAsset).toEqual(arc.synthetic.address);
-      expect(position.borrowedAmount).toEqual(ArcNumber.new(1));
+      await ctx.arc.openPosition(
+        AssetType.Stable,
+        ArcNumber.new(200),
+        ArcNumber.new(1),
+        minterWallet,
+      );
 
-      const syntheticBalance = await arc.synthetic.balanceOf(userWallet.address);
-      expect(syntheticBalance).toEqual(ArcNumber.new(1));
+      const state = await ctx.arc.core.state();
 
-      const state = await arc.core.state();
-      expect(state.borrowTotal).toEqual(ArcNumber.new(0));
+      expect(state.totalPar.supply).toEqual(ArcNumber.new(0));
+      expect(state.totalPar.borrow).toEqual(ArcNumber.new(0));
+      expect(state.index.borrow).toEqual(ArcNumber.new(1));
+      expect(state.index.supply).toEqual(ArcNumber.new(1));
+      expect(state.index.lastUpdate).toBeGreaterThanOrEqual(mintDate);
 
-      const positionCount = await arc.core.positionCount();
-      expect(positionCount).toEqual(new BigNumber(1));
-
-      const collateralBalance = await arc.stableShare.balanceOf(arc.synthetic.address);
-      expect(collateralBalance).toEqual(ArcNumber.new(200));
+      const position = await ctx.arc.core.positions(0);
+      expect(position.collateralAmount.value).toEqual(ArcNumber.new(200));
+      expect(position.collateralAmount.sign).toEqual(true);
+      expect(position.borrowedAmount.value).toEqual(ArcNumber.new(1));
+      expect(position.borrowedAmount.sign).toEqual(false);
+      expect(position.collateralAsset).toEqual(ctx.arc.stableShare.address);
+      expect(position.borrowedAsset).toEqual(ctx.arc.synthetic.address);
     });
 
     it('should not be able to open a position with not enough collateral', async () => {
-      await arc.stableShare.mintShare(userWallet.address, ArcNumber.new(199));
-      await expectRevert(arc.openPosition(arc.stableShare.address, ArcNumber.new(1), userWallet));
+      await expectRevert(
+        ctx.arc.openPosition(
+          AssetType.Synthetic,
+          ArcNumber.new(199),
+          ArcNumber.new(1),
+          minterWallet,
+        ),
+      );
     });
 
     it('should not be able to open a position with anything other than the liquidity asset', async () => {
-      const newToken = await StableShare.deploy(userWallet);
-      await newToken.mintShare(userWallet.address, ArcNumber.new(200));
-      await newToken.approve(arc.core.address, ArcNumber.new(200));
-      await expectRevert(arc.openPosition(newToken.address, ArcNumber.new(1), userWallet));
-    });
-
-    it('should not be able to open a position of 0', async () => {
-      await arc.stableShare.mintShare(userWallet.address, ArcNumber.new(200));
-      await expectRevert(arc.openPosition(arc.stableShare.address, ArcNumber.new(0)));
+      await expectRevert(
+        ctx.arc.openPosition(2, ArcNumber.new(200), ArcNumber.new(1), minterWallet),
+      );
     });
   });
 
-  describe.only('with synthetics', () => {
-    // Set the price of the synthetic at $100
-    // Mint $2000 to the user, mint 10 synthetics
-    // Mint $200 to the lender, lend to the protocol (0% utilised)
-    // Borrow $100 worth of stable shares with 2 synthetics
-    // Remaining tests play around with the collateral ratio
-
+  describe('with synthetics', () => {
     beforeEach(async () => {
-      await blockchain.resetAsync();
-
-      arc = await TestArc.init(ownerWallet);
-      await arc.deployTestArc();
-      await arc.oracle.setPrice(ArcDecimal.new(100.0));
-
+      await ctx.arc._supply(ArcNumber.new(1000), lenderWallet);
       await Token.approve(
-        arc.synthetic.address,
-        userWallet,
-        arc.core.address,
-        ArcNumber.new(10000),
+        ctx.arc.synthetic.address,
+        minterWallet,
+        ctx.arc.core.address,
+        ArcNumber.new(10),
       );
-
-      await arc.sucessfullySupply(ArcNumber.new(200), lenderWallet);
-      await arc.sucessfullyMintSynthetic(ArcNumber.new(10), ArcNumber.new(2000), minterWallet);
     });
 
-    // Maximum of 10 available as per above
-    async function transferSynthetic(amount: number) {
-      return await Token.transfer(
-        arc.synthetic.address,
-        userWallet.address,
-        ArcNumber.new(amount),
+    it('should be able to borrow by the exact amout of collateral provided', async () => {
+      await ctx.arc._borrowSynthetic(ArcNumber.new(1), ArcNumber.new(200), minterWallet);
+
+      const mintDate = await (
+        await ownerWallet.provider.getBlock(await ownerWallet.provider.getBlockNumber())
+      ).timestamp;
+
+      await ctx.arc.openPosition(
+        AssetType.Synthetic,
+        ArcNumber.new(1),
+        ArcNumber.new(50),
         minterWallet,
       );
-    }
 
-    it('should be able to borrow by the exact amout of collateral provided', async () => {
-      await transferSynthetic(2);
-      await arc.openPosition(arc.synthetic.address, ArcNumber.new(100), userWallet);
+      const state = await ctx.arc.core.state();
+      expect(state.totalPar.supply).toEqual(ArcNumber.new(1000));
+      expect(state.totalPar.borrow).toEqual(ArcNumber.new(50));
+      expect(state.index.borrow).not.toEqual(ArcNumber.new(0));
+      expect(state.index.supply).not.toEqual(ArcNumber.new(0));
+      expect(state.index.lastUpdate).toBeGreaterThanOrEqual(mintDate);
 
-      const position = await arc.core.positions(1);
-      expect(position.collateralAsset).toEqual(arc.synthetic.address);
-      expect(position.collateralAmount).toEqual(ArcNumber.new(2));
-      expect(position.borrowedAsset).toEqual(arc.stableShare.address);
-      expect(position.borrowedAmount).toEqual(ArcNumber.new(100));
+      const position = await ctx.arc.core.positions(1);
+      expect(position.collateralAmount.value).toEqual(ArcNumber.new(1));
+      expect(position.collateralAmount.sign).toEqual(true);
+      expect(position.borrowedAmount.value).toEqual(ArcNumber.new(50));
+      expect(position.borrowedAmount.sign).toEqual(false);
+      expect(position.collateralAsset).toEqual(ctx.arc.synthetic.address);
+      expect(position.borrowedAsset).toEqual(ctx.arc.stableShare.address);
+    });
 
-      const userStableShareBalance = await arc.stableShare.balanceOf(userWallet.address);
-      expect(userStableShareBalance).toEqual(ArcNumber.new(100));
+    it('should be able to borrow and set the correct interest rates', async () => {
+      await ctx.arc._borrowSynthetic(ArcNumber.new(1), ArcNumber.new(200), minterWallet);
 
-      const state = await arc.core.state();
-      expect(state.borrowTotal).toEqual(ArcNumber.new(100));
+      await ctx.arc.openPosition(
+        AssetType.Synthetic,
+        ArcNumber.new(1),
+        ArcNumber.new(50),
+        minterWallet,
+      );
 
-      const utilisationRatio = await arc.core.utilisationRatio();
-      expect(utilisationRatio.value).toEqual(ArcDecimal.new(0.5).value);
+      const state1 = await ctx.arc.core.state();
+
+      await ctx.arc._borrowSynthetic(ArcNumber.new(1), ArcNumber.new(200), otherWallet);
+      await ctx.arc._borrowStableShares(ArcNumber.new(1), ArcNumber.new(50), otherWallet);
+
+      const state2 = await ctx.arc.core.state();
+
+      expect(state2.totalPar.borrow).toEqual(state1.totalPar.borrow.mul(2));
+      expect(state2.totalPar.supply).toEqual(state1.totalPar.supply);
+
+      await ctx.arc._supply(ArcNumber.new(1000), otherWallet);
+
+      const newBalance = await ctx.arc.core.supplyBalances(otherWallet.address);
+      expect(newBalance.value).not.toEqual(ArcNumber.new(1000));
     });
 
     it('should not be able to borrow without enough collateral provided', async () => {
-      await transferSynthetic(1);
-      await expectRevert(arc.openPosition(arc.synthetic.address, ArcNumber.new(51), userWallet));
+      await ctx.arc._borrowSynthetic(ArcNumber.new(1), ArcNumber.new(200), minterWallet);
+      await expectRevert(
+        ctx.arc.openPosition(
+          AssetType.Synthetic,
+          ArcNumber.new(1),
+          ArcNumber.new(51),
+          minterWallet,
+        ),
+      );
     });
 
     it('should not be able to borrow without enough liquidity (over collateralisation ratio)', async () => {
-      await transferSynthetic(3);
-      await expectRevert(arc.openPosition(arc.synthetic.address, ArcNumber.new(101), userWallet));
+      await ctx.arc._borrowSynthetic(ArcNumber.new(25), ArcNumber.new(5000), minterWallet);
+      await expectRevert(
+        ctx.arc.openPosition(
+          AssetType.Synthetic,
+          ArcNumber.new(25),
+          ArcNumber.new(1001),
+          minterWallet,
+        ),
+      );
     });
 
     it('should not be able to borrow 0', async () => {
-      await transferSynthetic(1);
-      await expectRevert(arc.openPosition(arc.synthetic.address, ArcNumber.new(0), userWallet));
+      await ctx.arc._borrowSynthetic(ArcNumber.new(1), ArcNumber.new(200), minterWallet);
+      await expectRevert(
+        ctx.arc.openPosition(
+          AssetType.Synthetic,
+          ArcNumber.new(0),
+          ArcNumber.new(100),
+          minterWallet,
+        ),
+      );
     });
   });
 });

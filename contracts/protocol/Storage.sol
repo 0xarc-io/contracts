@@ -1,54 +1,65 @@
-pragma solidity ^0.6.8;
+pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {StateV1} from "./StateV1.sol";
 
-import {Types} from "../lib/Types.sol";
-import {Decimal} from "../lib/Decimal.sol";
-import {Helpers} from "../lib/Helpers.sol";
+contract AdminStorage {
+    /**
+    * @notice Administrator for this contract
+    */
+    address public admin;
 
-import {SyntheticToken} from "../token/SyntheticToken.sol";
+    /**
+    * @notice Pending administrator for this contract
+    */
+    address public pendingAdmin;
 
-contract Storage {
+    /**
+    * @notice Active implementation of the asset
+    */
+    address public coreImplementation;
 
-    using SafeMath for uint256;
+    /**
+    * @notice Pending implementation of asset
+    */
+    address public pendingCoreImplementation;
 
-    // ============ Variables ============
+    /**
+      * @notice Emitted when pendingCoreImplementation is changed
+      */
+    event NewPendingImplementation(
+        address oldPendingImplementation,
+        address newPendingImplementation
+    );
 
-    Types.GlobalParams public params;
-    Types.State public state;
+    /**
+      * @notice Emitted when pendingCoreImplementation is accepted,
+      * which means comptroller implementation is updated
+      */
+    event NewImplementation(
+        address oldImplementation,
+        address newImplementation
+    );
 
-    SyntheticToken public synthetic;
+    /**
+      * @notice Emitted when pendingAdmin is changed
+      */
+    event NewPendingAdmin(
+        address oldPendingAdmin,
+        address newPendingAdmin
+    );
 
-    uint256 public positionCount;
+    /**
+      * @notice Emitted when pendingAdmin is accepted, which means admin is updated
+      */
+    event NewAdmin(
+        address oldAdmin,
+        address newAdmin
+    );
+}
 
-    mapping (uint256 => Types.Position) public positions;
-    mapping (address => Types.Balance) public supplyBalances;
+contract V1Storage {
 
-    function updateIndexes()
-        public
-    {
-        Decimal.D256 memory utilisationRatio = Helpers.utilisationRatio(
-            state.borrowTotal,
-            state.supplyTotal
-        );
+    StateV1 public state;
 
-        require(
-            utilisationRatio.value <= params.maximumUtilisationRatio.value,
-            "Arc: maximum utilisation ratio reached"
-        );
-
-        Decimal.D256 memory newIndex = params.interestRateModel.calculateIndex(
-            utilisationRatio,
-            state.lastIndexUpdate
-        );
-
-        newIndex = Decimal.mul(
-            newIndex,
-            state.index
-        );
-
-        state.index = newIndex;
-        state.lastIndexUpdate = block.timestamp;
-    }
 }
