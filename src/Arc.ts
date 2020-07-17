@@ -7,10 +7,10 @@ import ArcDecimal from './utils/ArcDecimal';
 import { SyntheticToken } from '../typechain/SyntheticToken';
 import { PolynomialInterestSetter } from '../typechain/PolynomialInterestSetter';
 import { AssetType, Operation, OperationParams, ActionOperated } from './types';
-import { Storage } from '../typechain/Storage';
-import { State } from '../typechain/State';
 import { CoreV1 } from '../typechain/CoreV1';
 import { parseLogs } from './utils/parseLogs';
+import { Proxy } from '../typechain/Proxy';
+import { StateV1 } from '../typechain/StateV1';
 
 const ZERO = new BigNumber(0);
 const BASE = new BigNumber(10).pow(18);
@@ -19,7 +19,7 @@ export default class Arc {
   public wallet: Wallet;
 
   public core: CoreV1;
-  public state: State;
+  public state: StateV1;
   public synthetic: SyntheticToken;
   public stableShare: StableShare;
   public oracle: MockOracle;
@@ -34,6 +34,12 @@ export default class Arc {
   async deployArc(interestSetter: string, stableShare: string, oracle: string) {
     this.core = await CoreV1.deploy(this.wallet);
 
+    const proxy = await Proxy.deploy(this.wallet);
+    await proxy.setPendingImplementation(this.core.address);
+    await proxy.acceptImplementation();
+
+    this.core = await CoreV1.at(this.wallet, proxy.address);
+
     this.synthetic = await SyntheticToken.deploy(
       this.wallet,
       this.core.address,
@@ -41,7 +47,7 @@ export default class Arc {
       'ARCBTC',
     );
 
-    this.state = await State.deploy(this.wallet, this.core.address, {
+    this.state = await StateV1.deploy(this.wallet, this.core.address, {
       syntheticAsset: this.synthetic.address,
       stableAsset: stableShare,
       interestSetter: interestSetter,
@@ -53,7 +59,7 @@ export default class Arc {
       oracle: oracle,
     });
 
-    await this.core.initializeV1(this.state.address);
+    await this.core.init(this.state.address);
   }
 
   async supply(amount: BigNumberish, caller?: Wallet) {

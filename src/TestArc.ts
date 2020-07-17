@@ -1,16 +1,12 @@
 import Arc from './Arc';
 import { StableShare } from '../typechain/StableShare';
 import { MockOracle } from '../typechain/MockOracle';
-import { Wallet, ContractTransaction } from 'ethers';
+import { Wallet } from 'ethers';
 import Token from './utils/Token';
 import { BigNumberish } from 'ethers/utils';
 import ArcDecimal from './utils/ArcDecimal';
 import { PolynomialInterestSetter } from '../typechain/PolynomialInterestSetter';
-import { AssetType, ActionOperated } from './types';
-import { parseLogs } from './utils/parseLogs';
-import { Actions } from '../typechain/Actions';
-import { CoreV1 } from '../typechain/CoreV1';
-import { ContractReceipt } from 'ethers/contract';
+import { AssetType } from './types';
 
 export class TestArc extends Arc {
   static async init(wallet: Wallet): Promise<TestArc> {

@@ -1,11 +1,9 @@
-pragma solidity ^0.6.8;
+pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
-import {console} from "@nomiclabs/buidler/console.sol";
 
 import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
 
@@ -51,11 +49,9 @@ contract CoreV1 is AdminStorage, V1Storage {
 
     // ============ Constructor ============
 
-    constructor(address _state)
+    function init(address _state)
         public
     {
-        console.log('** ARC Deployed **');
-
         state = StateV1(_state);
     }
 
@@ -132,7 +128,6 @@ contract CoreV1 is AdminStorage, V1Storage {
 
         // INTERACTIONS:
         // 1. Transfer stable shares to this contract
-        console.log("supply(amount: %s)", amount);
 
         require(
             amount > 0,
@@ -194,7 +189,6 @@ contract CoreV1 is AdminStorage, V1Storage {
 
         // INTERACTIONS:
         // 1. Transfer stable shares back to user
-        console.log("withdraw(amount: %s)", amount);
 
         require(
             amount > 0,
@@ -256,12 +250,6 @@ contract CoreV1 is AdminStorage, V1Storage {
         // 1. Create a new Position struct with the basic fields filled out and save it to storage
         // 2. Call `borrowPosition()`
 
-        console.log(
-            "openPosition(collatAmount: %s, borrowAmount: %s",
-            collateralAmount,
-            borrowAmount
-        );
-
         Types.Position memory newPosition = Types.Position({
             owner: msg.sender,
             collateralAsset: collateralAsset,
@@ -304,12 +292,6 @@ contract CoreV1 is AdminStorage, V1Storage {
         // INTERACTIONS:
         // 1. If stable shares are being borrowed, transfer them to the user
         //    If synthetics are being borrowed, mint them and transfer collateral to synthetic contract
-        console.log(
-            "borrow(id: %s, collateralAmount: %s, borrowAmount: %s",
-            positionId,
-            collateralAmount,
-            borrowAmount
-        );
 
         // Get the current position
         Types.Position memory position = state.getPosition(positionId);
@@ -451,8 +433,6 @@ contract CoreV1 is AdminStorage, V1Storage {
         //    and take the stable coins back from them
         // 2. If synthetics are being deposited, burn the synthetic from them and
         //    transfer the stable coins back to them
-        console.log("repay(id: %s, repay: %s, withdraw: %s)", positionId, repayAmount, withdrawAmount);
-
         Types.Position memory position = state.getPosition(positionId);
 
         Decimal.D256 memory currentPrice = state.getCurrentPrice();
@@ -579,8 +559,6 @@ contract CoreV1 is AdminStorage, V1Storage {
         // INTERACTIONS:
         // 1. If stable shares were being borrowed, transfer the synthetic to the liquidator
         // 2. If synthetics were being borrowed, transfer stable shares to the liquidator
-        console.log("liquidate(id: %s)", positionId);
-
         Types.Position memory position = state.getPosition(positionId);
 
         require(

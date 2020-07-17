@@ -1,4 +1,4 @@
-pragma solidity ^0.6.8;
+pragma solidity ^0.5.16;
 
 import {BaseERC20} from "../token/BaseERC20.sol";
 

@@ -1,4 +1,4 @@
-pragma solidity ^0.6.8;
+pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
@@ -83,7 +83,6 @@ contract PolynomialInterestSetter is
         uint256 supplyWei
     )
         external
-        override
         view
         returns (Interest.Rate memory)
     {

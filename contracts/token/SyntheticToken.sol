@@ -1,4 +1,4 @@
-pragma solidity ^0.6.8;
+pragma solidity ^0.5.16;
 
 import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
@@ -39,7 +39,6 @@ contract SyntheticToken is BaseERC20, ISyntheticToken {
         uint256 value
     )
         public
-        override
     {
         require(
             msg.sender == arcAddress,
@@ -54,7 +53,6 @@ contract SyntheticToken is BaseERC20, ISyntheticToken {
         uint256 value
     )
         public
-        override
     {
         require(
             msg.sender == arcAddress,
@@ -70,7 +68,6 @@ contract SyntheticToken is BaseERC20, ISyntheticToken {
         uint256 value
     )
         public
-        override
     {
         BaseERC20(token).transfer(
             to,

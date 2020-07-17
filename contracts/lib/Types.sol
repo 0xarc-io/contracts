@@ -1,10 +1,9 @@
-pragma solidity ^0.6.8;
+pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {console} from "@nomiclabs/buidler/console.sol";
 
 import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
 import {IOracle} from "../interfaces/IOracle.sol";
@@ -333,7 +332,7 @@ library Types {
         returns (Types.Wei memory)
     {
         if (isZero(par)) {
-            return Types.zeroWei();
+            return zeroWei();
         }
 
         return Interest.parToWei(par, index);

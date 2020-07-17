@@ -23,6 +23,7 @@ async function init(ctx: ITestContext): Promise<void> {
   syntheticMinterWallet = ctx.wallets[2];
   stableShareMinterWallet = ctx.wallets[3];
   liquidatorWallet = ctx.wallets[4];
+  reserveWallet = ctx.wallets[5];
 
   await ctx.arc._borrowSynthetic(ArcNumber.new(2), ArcNumber.new(400), reserveWallet);
   await ctx.arc.stableShare.mintShare(reserveWallet.address, ArcNumber.new(1000));
@@ -42,27 +43,28 @@ arcDescribe('#Actions.depositPosition()', init, (ctx: ITestContext) => {
       );
       positionId = result.params.id;
     });
-
-    it('should not be able to deposit an invalid position', async () => {});
-
-    it('should not be able to deposit 0', async () => {});
-
-    it('should not be able to deposit with an invalid asset', async () => {});
-
-    it('should be able to deposit the synthetic to decrease the collateral ratio', async () => {});
-
-    it('should be able to deposit liquidity to increase the collateral ratio', async () => {});
   });
 
-  describe('#stable asset', () => {
-    it('should not be able to deposit an invalid position', async () => {});
+  //   it('should not be able to deposit an invalid position', async () => {});
 
-    it('should not be able to deposit 0', async () => {});
+  //   it('should not be able to deposit 0', async () => {});
 
-    it('should not be able to deposit with an invalid asset', async () => {});
+  //   it('should not be able to deposit with an invalid asset', async () => {});
 
-    it('should be able to deposit the synthetic to decrease the collateral ratio', async () => {});
+  //   it('should be able to deposit the synthetic to decrease the collateral ratio', async () => {});
 
-    it('should be able to deposit liquidity to increase the collateral ratio', async () => {});
-  });
+  //   it('should be able to deposit liquidity to increase the collateral ratio', async () => {});
+  // });
+
+  // describe('#stable asset', () => {
+  //   it('should not be able to deposit an invalid position', async () => {});
+
+  //   it('should not be able to deposit 0', async () => {});
+
+  //   it('should not be able to deposit with an invalid asset', async () => {});
+
+  //   it('should be able to deposit the synthetic to decrease the collateral ratio', async () => {});
+
+  //   it('should be able to deposit liquidity to increase the collateral ratio', async () => {});
+  // });
 });

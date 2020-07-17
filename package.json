@@ -34,7 +34,7 @@
     "mocha": "^7.1.1",
     "node-run-cmd": "^1.0.1",
     "prettier": "^2.0.5",
-    "solc": "^0.6.8",
+    "solc": "^0.5.16",
     "solidity-coverage": "^0.7.1",
     "system-commands": "^1.1.7",
     "ts-generator": "0.0.8",
@@ -49,7 +49,7 @@
     "typescript": "^3.7.5"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^3.0.0",
+    "@openzeppelin/contracts": "^2.5.0",
     "@openzeppelin/upgrades": "^2.8.0"
   }
 }

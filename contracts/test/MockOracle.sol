@@ -1,4 +1,4 @@
-pragma solidity ^0.6.8;
+pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {Decimal} from "../lib/Decimal.sol";
@@ -15,7 +15,6 @@ contract MockOracle is IOracle {
 
     function fetchCurrentPrice()
         external
-        override
         view
         returns (Decimal.D256 memory)
     {

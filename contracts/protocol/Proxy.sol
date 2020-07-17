@@ -1,7 +1,7 @@
-pragma solidity ^0.6.8;
+pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
-import {Storage} from "./Storage.sol";
+import {AdminStorage} from "./Storage.sol";
 
 contract Proxy is AdminStorage {
 

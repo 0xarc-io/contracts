@@ -1,14 +1,11 @@
-pragma solidity ^0.6.8;
+pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {console} from "@nomiclabs/buidler/console.sol";
-
 import {Types} from "../lib/Types.sol";
 import {Decimal} from "../lib/Decimal.sol";
-import {Helpers} from "../lib/Helpers.sol";
 import {Interest} from "../lib/Interest.sol";
 import {Math} from "../lib/Math.sol";
 import {Time} from "../lib/Time.sol";
@@ -40,7 +37,9 @@ contract StateV1 {
     constructor(
         address _core,
         Types.GlobalParams memory _globalParams
-    ) public {
+    )
+        public
+    {
         core = _core;
         params = _globalParams;
         globalIndex = Interest.newIndex();
@@ -137,9 +136,6 @@ contract StateV1 {
         public
         onlyCore
     {
-        console.log("updating par");
-        console.log("exisiting %s", existingPar.value);
-        console.log("new par %s", newPar.value);
 
         if (Types.equals(existingPar, newPar)) {
             return;
@@ -459,8 +455,6 @@ contract StateV1 {
         }
 
         collateralDelta = parSupply.sub(collateralRequired);
-
-        console.log("Collateral delta: %s %s", collateralDelta.sign, collateralDelta.value);
 
         return collateralDelta;
     }
