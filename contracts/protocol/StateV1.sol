@@ -16,7 +16,7 @@ import {SignedMath} from "../lib/SignedMath.sol";
 
 import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
 
-contract State {
+contract StateV1 {
 
     using Types for Types.Par;
     using Types for Types.Wei;

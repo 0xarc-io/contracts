@@ -16,9 +16,10 @@ import {SignedMath} from "../lib/SignedMath.sol";
 import {Storage} from "../lib/Storage.sol";
 import {Math} from "../lib/Math.sol";
 
-import {State} from "./State.sol";
+import {StateV1} from "./StateV1.sol";
+import {AdminStorage, V1Storage} from "./Storage.sol";
 
-contract CoreV1 {
+contract CoreV1 is AdminStorage, V1Storage {
 
     using SafeMath for uint256;
     using Math for uint256;
@@ -42,12 +43,6 @@ contract CoreV1 {
         uint256 amountTwo;
     }
 
-    // Non-colliding storage slot.
-    bytes32 internal constant ARC_V1_INITIALIZE_SLOT =
-    bytes32(uint256(keccak256("Arc.CoreV1.initialize")) - 1);
-
-    State public state;
-
     event ActionOperated(
         uint8 operation,
         OperationParams params,
@@ -56,25 +51,12 @@ contract CoreV1 {
 
     // ============ Constructor ============
 
-    constructor()
+    constructor(address _state)
         public
     {
         console.log('** ARC Deployed **');
-    }
 
-    function initializeV1(
-        address _state
-    )
-        public
-    {
-        require(
-            Storage.load(ARC_V1_INITIALIZE_SLOT) == 0x0,
-            "ARCV1 already initialized"
-        );
-
-        Storage.store(ARC_V1_INITIALIZE_SLOT, bytes32(uint256(1)));
-
-        state = State(_state);
+        state = StateV1(_state);
     }
 
     function operateAction(
