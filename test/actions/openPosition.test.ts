@@ -52,13 +52,14 @@ arcDescribe('#Actions.openPosition()', init, (ctx: ITestContext) => {
         minterWallet,
       );
 
-      const state = await ctx.arc.core.state();
+      const totalPar = await ctx.arc.state.totalPar();
+      const index = await ctx.arc.state.getIndex();
 
-      expect(state.totalPar.supply).toEqual(ArcNumber.new(0));
-      expect(state.totalPar.borrow).toEqual(ArcNumber.new(0));
-      expect(state.index.borrow).toEqual(ArcNumber.new(1));
-      expect(state.index.supply).toEqual(ArcNumber.new(1));
-      expect(state.index.lastUpdate).toBeGreaterThanOrEqual(mintDate);
+      expect(totalPar.supply).toEqual(ArcNumber.new(0));
+      expect(totalPar.borrow).toEqual(ArcNumber.new(0));
+      expect(index.borrow).toEqual(ArcNumber.new(1));
+      expect(index.supply).toEqual(ArcNumber.new(1));
+      expect(index.lastUpdate).toBeGreaterThanOrEqual(mintDate);
 
       const position = await ctx.arc.core.positions(0);
       expect(position.collateralAmount.value).toEqual(ArcNumber.new(200));
@@ -112,12 +113,14 @@ arcDescribe('#Actions.openPosition()', init, (ctx: ITestContext) => {
         minterWallet,
       );
 
-      const state = await ctx.arc.core.state();
-      expect(state.totalPar.supply).toEqual(ArcNumber.new(1000));
-      expect(state.totalPar.borrow).toEqual(ArcNumber.new(50));
-      expect(state.index.borrow).not.toEqual(ArcNumber.new(0));
-      expect(state.index.supply).not.toEqual(ArcNumber.new(0));
-      expect(state.index.lastUpdate).toBeGreaterThanOrEqual(mintDate);
+      const totalPar = await ctx.arc.state.totalPar();
+      const index = await ctx.arc.state.getIndex();
+
+      expect(totalPar.supply).toEqual(ArcNumber.new(1000));
+      expect(totalPar.borrow).toEqual(ArcNumber.new(50));
+      expect(index.borrow).not.toEqual(ArcNumber.new(0));
+      expect(index.supply).not.toEqual(ArcNumber.new(0));
+      expect(index.lastUpdate).toBeGreaterThanOrEqual(mintDate);
 
       const position = await ctx.arc.core.positions(1);
       expect(position.collateralAmount.value).toEqual(ArcNumber.new(1));
@@ -138,15 +141,15 @@ arcDescribe('#Actions.openPosition()', init, (ctx: ITestContext) => {
         minterWallet,
       );
 
-      const state1 = await ctx.arc.core.state();
+      const state1 = await ctx.arc.state.totalPar();
 
       await ctx.arc._borrowSynthetic(ArcNumber.new(1), ArcNumber.new(200), otherWallet);
       await ctx.arc._borrowStableShares(ArcNumber.new(1), ArcNumber.new(50), otherWallet);
 
-      const state2 = await ctx.arc.core.state();
+      const state2 = await ctx.arc.state.totalPar();
 
-      expect(state2.totalPar.borrow).toEqual(state1.totalPar.borrow.mul(2));
-      expect(state2.totalPar.supply).toEqual(state1.totalPar.supply);
+      expect(state2.borrow).toEqual(state1.borrow.mul(2));
+      expect(state2.supply).toEqual(state1.supply);
 
       await ctx.arc._supply(ArcNumber.new(1000), otherWallet);
 

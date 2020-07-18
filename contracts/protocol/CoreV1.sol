@@ -31,7 +31,7 @@ contract CoreV1 is AdminStorage, V1Storage {
         Withdraw,
         Open,
         Borrow,
-        Deposit,
+        Repay,
         Liquidate
     }
 
@@ -107,7 +107,7 @@ contract CoreV1 is AdminStorage, V1Storage {
                 params.amountOne,
                 params.amountTwo
             );
-        } else if (operation == Operation.Deposit) {
+        } else if (operation == Operation.Repay) {
             operatedPosition = repay(
                 params.id,
                 params.amountOne,

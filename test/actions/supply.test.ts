@@ -45,12 +45,14 @@ arcDescribe('Actions.supply()', init, (ctx: ITestContext) => {
 
     await ctx.arc.supply(ArcNumber.new(100), lenderWallet);
 
-    const state = await ctx.arc.core.state();
-    expect(state.totalPar.supply).toEqual(ArcNumber.new(100));
-    expect(state.totalPar.borrow).toEqual(ArcNumber.new(0));
-    expect(state.index.borrow).toEqual(ArcNumber.new(0));
-    expect(state.index.supply).toEqual(ArcNumber.new(0));
-    expect(state.index.lastUpdate).toBeCloseTo(supplyDate, 9);
+    const totalPar = await ctx.arc.state.totalPar();
+    const index = await ctx.arc.state.getIndex();
+
+    expect(totalPar.supply).toEqual(ArcNumber.new(100));
+    expect(totalPar.borrow).toEqual(ArcNumber.new(0));
+    expect(index.borrow).toEqual(ArcNumber.new(0));
+    expect(index.supply).toEqual(ArcNumber.new(0));
+    expect(index.lastUpdate).toBeCloseTo(supplyDate, 9);
 
     const balance = await ctx.arc.core.supplyBalances(lenderWallet.address);
     expect(balance.sign).toBeTruthy();
