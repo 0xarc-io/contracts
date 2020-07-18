@@ -4,7 +4,6 @@ pragma experimental ABIEncoderV2;
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-
 import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
 import {IOracle} from "../interfaces/IOracle.sol";
 import {IInterestSetter} from "../interfaces/IInterestSetter.sol";

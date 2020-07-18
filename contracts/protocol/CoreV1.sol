@@ -54,7 +54,27 @@ contract CoreV1 is AdminStorage, V1Storage {
     function init(address _state)
         public
     {
+        require(
+            address(state) == address(0),
+            "CoreV1.init(): cannot recall init"
+        );
+
         state = StateV1(_state);
+    }
+
+    function setLimits(
+        uint256 _stableLimit,
+        uint256 _syntheticLimit
+    )
+        public
+    {
+        require(
+            msg.sender == admin,
+            "CoreV1.setLimits(): can only be set by the admin"
+        );
+
+        stableLimit = _stableLimit;
+        syntheticLimit = _syntheticLimit;
     }
 
     function operateAction(
@@ -98,6 +118,18 @@ contract CoreV1 is AdminStorage, V1Storage {
                 params.id
             );
         }
+
+        (uint256 supply,) = state.totalPar();
+
+        require(
+            supply <= stableLimit,
+            "CoreV1: supply limit reached"
+        );
+
+        require(
+            state.getSyntheticAsset().balanceOf(address(this)) <= syntheticLimit,
+            "CoreV1: synthetic limit reached"
+        );
 
         require(
             state.isCollateralized(operatedPosition) == true,

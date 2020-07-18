@@ -11,6 +11,7 @@ import { CoreV1 } from '../typechain/CoreV1';
 import { parseLogs } from './utils/parseLogs';
 import { Proxy } from '../typechain/Proxy';
 import { StateV1 } from '../typechain/StateV1';
+import ArcNumber from './utils/ArcNumber';
 
 const ZERO = new BigNumber(0);
 const BASE = new BigNumber(10).pow(18);
@@ -40,6 +41,8 @@ export default class Arc {
 
     this.core = await CoreV1.at(this.wallet, proxy.address);
 
+    await this.core.setLimits(ArcNumber.new(10000), ArcNumber.new(100));
+
     this.synthetic = await SyntheticToken.deploy(
       this.wallet,
       this.core.address,
@@ -47,7 +50,7 @@ export default class Arc {
       'ARCBTC',
     );
 
-    this.state = await StateV1.deploy(this.wallet, this.core.address, {
+    this.state = await StateV1.deploy(this.wallet, this.core.address, this.wallet.address, {
       syntheticAsset: this.synthetic.address,
       stableAsset: stableShare,
       interestSetter: interestSetter,

@@ -62,4 +62,8 @@ contract V1Storage {
 
     StateV1 public state;
 
+    uint256 public stableLimit;
+
+    uint256 public syntheticLimit;
+
 }

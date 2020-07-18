@@ -2,9 +2,14 @@ pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {console} from "@nomiclabs/buidler/console.sol";
+
+import {IOracle} from "../interfaces/IOracle.sol";
+import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
+import {IInterestSetter} from "../interfaces/IInterestSetter.sol";
 
 import {Types} from "../lib/Types.sol";
 import {Decimal} from "../lib/Decimal.sol";
@@ -12,8 +17,6 @@ import {Interest} from "../lib/Interest.sol";
 import {Math} from "../lib/Math.sol";
 import {Time} from "../lib/Time.sol";
 import {SignedMath} from "../lib/SignedMath.sol";
-
-import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
 
 contract StateV1 {
 
@@ -25,6 +28,7 @@ contract StateV1 {
     // ============ Variables ============
 
     address core;
+    address admin;
 
     Types.GlobalParams public params;
 
@@ -36,20 +40,34 @@ contract StateV1 {
     mapping (uint256 => Types.Position) public positions;
     mapping (address => Types.Par) public supplyBalances;
 
+    // ============ Constructor ============
+
     constructor(
         address _core,
+        address _admin,
         Types.GlobalParams memory _globalParams
     )
         public
     {
         core = _core;
+        admin = _admin;
         params = _globalParams;
         globalIndex = Interest.newIndex();
     }
 
+    // ============ Modifiers ============
+
     modifier onlyCore() {
         require(
             msg.sender == core,
+            "State: only core can call"
+        );
+        _;
+    }
+
+    modifier onlyAdmin() {
+        require(
+            msg.sender == admin,
             "State: only core can call"
         );
         _;
@@ -65,6 +83,85 @@ contract StateV1 {
             return globalIndex;
         }
         return globalIndex = fetchNewIndex(globalIndex);
+    }
+
+    // ============ Admin Setters ============
+
+    function setOracle(
+        address _oracle
+    )
+        public
+        onlyAdmin
+    {
+        params.oracle = IOracle(_oracle);
+    }
+
+    function setInterestSetter(
+        address _setter
+    )
+        public
+        onlyAdmin
+    {
+        params.interestSetter = IInterestSetter(_setter);
+    }
+
+    function setCollateralRatio(
+        Decimal.D256 memory ratio
+    )
+        public
+        onlyAdmin
+    {
+        params.collateralRatio = ratio;
+    }
+
+    function setSyntheticRatio(
+        Decimal.D256 memory ratio
+    )
+        public
+        onlyAdmin
+    {
+        params.syntheticRatio = ratio;
+    }
+
+    function setLiquidationSpread(
+        Decimal.D256 memory spread
+    )
+        public
+        onlyAdmin
+    {
+        params.liquidationSpread = spread;
+    }
+
+    function setOriginationFee(
+        Decimal.D256 memory fee
+    )
+        public
+        onlyAdmin
+    {
+        params.originationFee = fee;
+    }
+
+    function setEarningsRate(
+        Decimal.D256 memory rate
+    )
+        public
+        onlyAdmin
+    {
+        params.earningsRate = rate;
+    }
+
+    function removeExcessTokens(
+        address to
+    )
+        public
+        onlyAdmin
+    {
+        Types.Wei memory excessTokens = getExcessStableTokens();
+
+        params.stableAsset.transfer(
+            to,
+            excessTokens.value
+        );
     }
 
     // ============ Core Setters ============
@@ -158,7 +255,138 @@ contract StateV1 {
         }
     }
 
-    // ============ Getters ============
+    // ============ Public Getters ============
+
+    function getAddress(
+        Types.AssetType asset
+    )
+        public
+        view
+        returns (address)
+    {
+        return asset == Types.AssetType.Stable ?
+            address(params.stableAsset) :
+            address(params.syntheticAsset);
+    }
+
+    function getStableAsset()
+        public
+        view
+        returns (IERC20)
+    {
+        return params.stableAsset;
+    }
+
+    function getSyntheticAsset()
+        public
+        view
+        returns (IERC20)
+    {
+        return IERC20(address(params.syntheticAsset));
+    }
+
+    function getSupplyBalance(
+        address owner
+    )
+        public
+        view
+        returns (Types.Par memory)
+    {
+        return supplyBalances[owner];
+    }
+
+    function getTotalPar()
+        public
+        view
+        returns (uint256, uint256)
+    {
+        return (
+            totalPar.supply,
+            totalPar.borrow
+        );
+    }
+
+    function getIndex()
+        public
+        view
+        returns (Interest.Index memory)
+    {
+        return globalIndex;
+    }
+
+    function getPosition(
+        uint256 id
+    )
+        public
+        view
+        returns (Types.Position memory)
+    {
+        return positions[id];
+    }
+
+    function getCurrentPrice()
+        public
+        view
+        returns (Decimal.D256 memory)
+    {
+        return params.oracle.fetchCurrentPrice();
+    }
+
+    function getBorrowIndex(
+        Types.AssetType asset
+    )
+        public
+        view
+        returns (Interest.Index memory)
+    {
+        if (asset == Types.AssetType.Stable) {
+            return globalIndex;
+        } else {
+            return Interest.newIndex();
+        }
+    }
+
+    function fetchInterestRate(
+        Interest.Index memory index
+    )
+        public
+        view
+        returns (Interest.Rate memory)
+    {
+        (
+            Types.Wei memory supplyWei,
+            Types.Wei memory borrowWei
+        ) = Interest.totalParToWei(totalPar, index);
+
+        Interest.Rate memory rate = params.interestSetter.getInterestRate(
+            address(params.stableAsset),
+            borrowWei.value,
+            supplyWei.value
+        );
+
+        return rate;
+    }
+
+    function getExcessStableTokens()
+        internal
+        view
+        returns (Types.Wei memory)
+    {
+        Types.Wei memory balanceWei = Types.Wei({
+            sign: true,
+            value: params.stableAsset.balanceOf(address(this))
+        });
+
+        (
+            Types.Wei memory supplyWei,
+            Types.Wei memory borrowWei
+        ) = Interest.totalParToWei(totalPar, globalIndex);
+
+        // borrowWei is negative, so subtracting it makes the value more positive
+        return balanceWei.sub(borrowWei).sub(supplyWei);
+    }
+
+    // ============ Calculation Getters ============
 
     function getNewParAndDeltaWei(
         Types.Par memory currentPar,
@@ -215,97 +443,6 @@ contract StateV1 {
             totalPar,
             params.earningsRate
         );
-    }
-
-    function fetchInterestRate(
-        Interest.Index memory index
-    )
-        public
-        view
-        returns (Interest.Rate memory)
-    {
-        (
-            Types.Wei memory supplyWei,
-            Types.Wei memory borrowWei
-        ) = Interest.totalParToWei(totalPar, index);
-
-        Interest.Rate memory rate = params.interestSetter.getInterestRate(
-            address(params.stableAsset),
-            borrowWei.value,
-            supplyWei.value
-        );
-
-        return rate;
-    }
-
-    function getAddress(
-        Types.AssetType asset
-    )
-        public
-        view
-        returns (address)
-    {
-        return asset == Types.AssetType.Stable ?
-            address(params.stableAsset) :
-            address(params.syntheticAsset);
-    }
-
-    function getStableAsset()
-        public
-        view
-        returns (IERC20)
-    {
-        return params.stableAsset;
-    }
-
-    function getSupplyBalance(
-        address owner
-    )
-        public
-        view
-        returns (Types.Par memory)
-    {
-        return supplyBalances[owner];
-    }
-
-    function getIndex()
-        public
-        view
-        returns (Interest.Index memory)
-    {
-        return globalIndex;
-    }
-
-    function getPosition(
-        uint256 id
-    )
-        public
-        view
-        returns (Types.Position memory)
-    {
-        return positions[id];
-    }
-
-    function getCurrentPrice()
-        public
-        view
-        returns (Decimal.D256 memory)
-    {
-        return params.oracle.fetchCurrentPrice();
-    }
-
-    function getBorrowIndex(
-        Types.AssetType asset
-    )
-        public
-        view
-        returns (Interest.Index memory)
-    {
-        if (asset == Types.AssetType.Stable) {
-            return globalIndex;
-        } else {
-            return Interest.newIndex();
-        }
     }
 
     function isCollateralized(

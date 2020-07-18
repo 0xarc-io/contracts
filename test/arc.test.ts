@@ -1,41 +1,41 @@
 import 'jest';
 
-import Arc from '@src/Arc';
+import { ethers, Wallet } from 'ethers';
+import { expectRevert } from '@src/utils/expectRevert';
 
+import ArcNumber from '@src/utils/ArcNumber';
+import arcDescribe from './arcDescribe';
+import { ITestContext } from './arcDescribe';
+import initializeArc from './initializeArc';
+import ArcDecimal from '../src/utils/ArcDecimal';
 import { BigNumber } from 'ethers/utils';
 
-import { generatedWallets } from '@utils/generatedWallets';
-import { use, expect } from 'chai';
-import { solidity } from 'ethereum-waffle';
-import { Blockchain } from '@utils/Blockchain';
+let ownerWallet: Wallet;
+let otherWallet: Wallet;
 
-import { ethers, Wallet } from 'ethers';
-import { expectRevert } from '@utils/expectRevert';
+jest.setTimeout(30000);
 
-import ArcNumber from '@utils/ArcNumber';
-import { StableShare } from '@typings/StableShare';
-import { TestArc } from '../src/TestArc';
+async function init(ctx: ITestContext): Promise<void> {
+  await initializeArc(ctx);
 
-const provider = new ethers.providers.JsonRpcProvider();
-const blockchain = new Blockchain(provider);
+  ownerWallet = ctx.wallets[0];
+  otherWallet = ctx.wallets[1];
+}
 
-const TEN = ArcNumber.new(10);
+arcDescribe('Arc', init, (ctx: ITestContext) => {
+  describe('#setLimits', () => {
+    it('should not be able to set limits as non-admin', async () => {});
 
-use(solidity);
-
-describe('#Actions.openPosition()', () => {
-  const [ownerWallet, userWallet] = generatedWallets(provider);
-
-  let arc: TestArc;
-
-  beforeAll(async () => {
-    await blockchain.resetAsync();
-    arc = await TestArc.init(ownerWallet);
-    // await arc.deployArc();
-    await blockchain.saveSnapshotAsync();
+    it('should be able to set limits as the admin', async () => {});
   });
 
-  beforeEach(async () => {
-    await blockchain.resetAsync();
+  describe('#limits', () => {
+    it('should not be abe to lend more than the limit', async () => {});
+
+    it('should be able to lend the maximum amount', async () => {});
+
+    it('should not be able to mint more than the limit', async () => {});
+
+    it('should be able to mint the maximum amount', async () => {});
   });
 });

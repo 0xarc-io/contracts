@@ -44,7 +44,7 @@ arcDescribe('Actions.withdraw()', init, (ctx: ITestContext) => {
     await ctx.arc.withdraw(ArcNumber.new(1000), lenderWallet);
   });
 
-  it.only('should be able withdraw the principal + interest accrued', async () => {
+  it('should be able withdraw the principal + interest accrued', async () => {
     await ctx.arc._supply(ArcNumber.new(1000), lenderWallet);
     const position = await ctx.arc._borrowStableShares(
       ArcNumber.new(50),
