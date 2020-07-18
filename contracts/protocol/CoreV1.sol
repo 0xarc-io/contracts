@@ -7,6 +7,8 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
 
+import {console} from "@nomiclabs/buidler/console.sol";
+
 import {Types} from "../lib/Types.sol";
 import {Interest} from "../lib/Interest.sol";
 import {Decimal} from "../lib/Decimal.sol";
@@ -335,11 +337,6 @@ contract CoreV1 is AdminStorage, V1Storage {
 
             // If the borrowed asset is stable, update the total borrowed amount
             if (position.borrowedAsset == Types.AssetType.Stable) {
-                require(
-                    state.availableLiquidity() >= borrowAmount,
-                    "borrowPosition(): not enough stable asset liquidity"
-                );
-
                 state.updateTotalPar(position.borrowedAmount, newPar);
             }
 
@@ -489,7 +486,10 @@ contract CoreV1 is AdminStorage, V1Storage {
         position = state.updatePositionAmount(
             positionId,
             position.collateralAsset,
-            collateralDelta.negative()
+            Types.Par({
+                sign: false,
+                value: withdrawAmount.to128()
+            })
         );
 
         ISyntheticToken synthetic = ISyntheticToken(

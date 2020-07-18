@@ -19,7 +19,7 @@ export class TestArc extends Arc {
     this.stableShare = await StableShare.deploy(this.wallet);
     this.oracle = await MockOracle.deploy(this.wallet);
     this.interestModel = await PolynomialInterestSetter.deploy(this.wallet, {
-      maxAPR: ArcDecimal.new(1).value, // 100%
+      maxAPR: ArcDecimal.new(0.5).value, // 100%
       coefficients: [0, 10, 10, 0, 0, 80],
     });
     await this.deployArc(this.interestModel.address, this.stableShare.address, this.oracle.address);
@@ -61,5 +61,27 @@ export class TestArc extends Arc {
     } else {
       return await this.borrow(positionId!, AssetType.Synthetic, collateral, amount, from);
     }
+  }
+
+  async _repay(
+    positionId: BigNumberish,
+    repayAmount: BigNumberish,
+    withdrawAmount: BigNumberish,
+    from: Wallet,
+  ) {
+    const position = await this.state.getPosition(positionId);
+
+    if (position.borrowedAsset == AssetType.Stable) {
+      await this.stableShare.mintShare(from.address, repayAmount);
+      await Token.approve(this.stableShare.address, from, this.core.address, repayAmount);
+    } else if (position.borrowedAsset == AssetType.Synthetic) {
+      const price = await this.oracle.fetchCurrentPrice();
+      await this._borrowSynthetic(repayAmount, price.value.mul(repayAmount).mul(2), from);
+      await Token.approve(this.synthetic.address, from, this.core.address, repayAmount);
+    }
+
+    console.log('gonna repay' + repayAmount.toString());
+
+    return await this.repay(positionId, repayAmount, withdrawAmount, from);
   }
 }

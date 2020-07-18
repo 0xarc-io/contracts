@@ -4,6 +4,8 @@ pragma experimental ABIEncoderV2;
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+import {console} from "@nomiclabs/buidler/console.sol";
+
 import {Types} from "../lib/Types.sol";
 import {Decimal} from "../lib/Decimal.sol";
 import {Interest} from "../lib/Interest.sol";
@@ -65,7 +67,7 @@ contract StateV1 {
         return globalIndex = fetchNewIndex(globalIndex);
     }
 
-    // ============ Permissioned Setters ============
+    // ============ Core Setters ============
 
     function savePosition(
         Types.Position memory position
@@ -164,9 +166,11 @@ contract StateV1 {
         Types.AssetAmount memory amount
     )
         public
-        pure
+        view
         returns (Types.Par memory, Types.Wei memory)
     {
+        console.log("value: %s", amount.value);
+
         if (amount.value == 0 && amount.ref == Types.AssetReference.Delta) {
             return (currentPar, Types.zeroWei());
         }
@@ -454,17 +458,11 @@ contract StateV1 {
             );
         }
 
+        console.log("collat required: %s", collateralRequired.value);
+
         collateralDelta = parSupply.sub(collateralRequired);
 
         return collateralDelta;
-    }
-
-    function availableLiquidity()
-        public
-        view
-        returns (uint256)
-    {
-        return uint256(totalPar.supply).sub(uint256(totalPar.borrow));
     }
 
 }

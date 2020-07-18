@@ -1,4 +1,5 @@
 import { BigNumberish } from 'ethers/utils';
+
 export enum AssetType {
   Stable,
   Synthetic,
@@ -9,15 +10,21 @@ export enum Operation {
   Withdraw,
   Open,
   Borrow,
-  Deposit,
+  Repay,
   Liquidate,
 }
 
+export type Par = {
+  sign: boolean;
+  value: BigNumberish;
+};
+
 export type Position = {
+  owner: string;
   collateralAsset: AssetType;
-  collateralAmount: BigNumberish;
   borrowedAsset: AssetType;
-  borrowedAmount: AssetType;
+  collateralAmount: Par;
+  borrowedAmount: Par;
 };
 
 export type OperationParams = {
