@@ -169,8 +169,6 @@ contract StateV1 {
         view
         returns (Types.Par memory, Types.Wei memory)
     {
-        console.log("value: %s", amount.value);
-
         if (amount.value == 0 && amount.ref == Types.AssetReference.Delta) {
             return (currentPar, Types.zeroWei());
         }
@@ -457,8 +455,6 @@ contract StateV1 {
                 price
             );
         }
-
-        console.log("collat required: %s", collateralRequired.value);
 
         collateralDelta = parSupply.sub(collateralRequired);
 

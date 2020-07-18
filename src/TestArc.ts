@@ -80,8 +80,6 @@ export class TestArc extends Arc {
       await Token.approve(this.synthetic.address, from, this.core.address, repayAmount);
     }
 
-    console.log('gonna repay' + repayAmount.toString());
-
     return await this.repay(positionId, repayAmount, withdrawAmount, from);
   }
 }

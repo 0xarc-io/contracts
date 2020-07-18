@@ -137,8 +137,6 @@ export default class Arc {
       amountTwo: withdrawAmount,
     });
 
-    console.log('repaying' + repaymentAmount.toString());
-
     return await this.parseActionTx(tx);
   }
 
