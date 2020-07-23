@@ -232,12 +232,9 @@ contract CoreV1 is AdminStorage, V1Storage {
         // Get the user's existing principal balance
         Types.Par memory existingPar = state.getSupplyBalance(msg.sender);
 
-        // Convert the principal balance to the interest adjusted amount
-        Types.Wei memory weiBalance = existingPar.getWei(state.getIndex());
-
         // Ensure that the interest adjusted amount is not more than the withdraw amount
         require(
-            weiBalance.value >= amount,
+            state.getSupplyWei(msg.sender) >= amount,
             "withraw(): cannot withdraw more than you have supplied"
         );
 

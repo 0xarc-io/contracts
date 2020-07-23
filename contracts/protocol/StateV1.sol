@@ -332,6 +332,48 @@ contract StateV1 {
         return params.oracle.fetchCurrentPrice();
     }
 
+    function getSupplyWei(
+        address supplier
+    )
+        public
+        view
+        returns (uint256)
+    {
+        // Get the user's existing principal balance
+        Types.Par memory existingPar = getSupplyBalance(supplier);
+
+        // Convert the principal balance to the interest adjusted amount
+        Types.Wei memory weiBalance = existingPar.getWei(getIndex());
+
+        return weiBalance.value;
+    }
+
+    function getBorrowWei(
+        uint256 positionId
+    )
+        public
+        view
+        returns (uint256)
+    {
+        Types.Position memory position = state.getPosition(positionId);
+
+        Types.Wei memory borrowWei = position.borrowedAmount.getWei(
+            getBorrowIndex(position.borrowedAsset)
+        );
+
+        return borrowWei.value;
+    }
+
+    function getCollateralizationRatio(
+        uint256 positionId
+    )
+        public
+        view
+        returns (Decimal.D256 memory)
+    {
+        // @TODO
+    }
+
     function getBorrowIndex(
         Types.AssetType asset
     )
