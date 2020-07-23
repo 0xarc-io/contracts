@@ -24,7 +24,7 @@ export type PolynomialInterestSetterParams = {
   coefficients: number[];
 };
 
-const testingPolynomialInterestSetterParams: PolynomialInterestSetterParams = {
+export const defaultPolynomialInterestSetterParams: PolynomialInterestSetterParams = {
   maxAPR: ArcDecimal.new(0.5).value,
   coefficients: [0, 10, 10, 0, 0, 80],
 };
@@ -51,9 +51,9 @@ const NetworkConfig = {
     50: '',
   },
   INTEREST_MODEL_PARAMS: {
-    1: testingPolynomialInterestSetterParams,
-    3: testingPolynomialInterestSetterParams,
-    50: testingPolynomialInterestSetterParams,
+    1: defaultPolynomialInterestSetterParams,
+    3: defaultPolynomialInterestSetterParams,
+    50: defaultPolynomialInterestSetterParams,
   },
   COLLATERAL_RATIO: {
     1: ArcDecimal.new(2).value,

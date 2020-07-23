@@ -1,0 +1,49 @@
+{
+  "contracts": {
+    "AdminStorage": {
+      "hash": "adfef77e55a04c80d65cf3e9d433fcd6"
+    },
+    "BaseERC20": {
+      "hash": "6c3f5308feadd895b33282d6ed2d21c7"
+    },
+    "CoreV1": {
+      "hash": "0fc727248259c5bdfcdb25879e81035e"
+    },
+    "MockOracle": {
+      "hash": "62ce07621c5b1eaaa2ad535d1687efa5"
+    },
+    "PolynomialInterestSetter": {
+      "hash": "ff3d831e6659024582f5fd2e7a40f0ad"
+    },
+    "Proxy": {
+      "hash": "c4ee1e59a8ac4856bcbc8207b8898ed9"
+    },
+    "StableShare": {
+      "hash": "7390315b42ae91937dd8361ed1a68537"
+    },
+    "StableToken": {
+      "hash": "01e2f51c8c16c97fbd75a8e55720f836"
+    },
+    "StateV1": {
+      "hash": "ba20ef4882e790488d6006dd812ea56f"
+    },
+    "SyntheticToken": {
+      "hash": "7dfd4beaef00175b3d5faed63d0acf22"
+    },
+    "V1Storage": {
+      "hash": "14d9ff9f3e7f1eb65e69ced0410ef2f6"
+    },
+    "IERC20": {
+      "hash": "483568577c0e984f5852e274c707235d"
+    },
+    "IInterestSetter": {
+      "hash": "2e74286b084cef1983cfdb7364a658c5"
+    },
+    "IOracle": {
+      "hash": "2e74286b084cef1983cfdb7364a658c5"
+    },
+    "ISyntheticToken": {
+      "hash": "0ccf72cd1b1dd6053b74f8bdc3aef523"
+    }
+  }
+}

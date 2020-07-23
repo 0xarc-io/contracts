@@ -1,12 +1,16 @@
 import Arc from './Arc';
-import { StableShare } from '../typechain/StableShare';
-import { MockOracle } from '../typechain/MockOracle';
+import { StableShare } from './typings/StableShare';
+import { MockOracle } from './typings/MockOracle';
 import { Wallet } from 'ethers';
 import Token from './utils/Token';
 import { BigNumberish } from 'ethers/utils';
 import ArcDecimal from './utils/ArcDecimal';
-import { PolynomialInterestSetter } from '../typechain/PolynomialInterestSetter';
+import { PolynomialInterestSetter } from './typings/PolynomialInterestSetter';
 import { AssetType } from './types';
+import { Config } from './addresses';
+import config from 'buidler.config';
+import ArcNumber from './utils/ArcNumber';
+import { defaultPolynomialInterestSetterParams, getConfig } from './addresses/Config';
 
 export class TestArc extends Arc {
   static async init(wallet: Wallet): Promise<TestArc> {
@@ -18,11 +22,16 @@ export class TestArc extends Arc {
   async deployTestArc() {
     this.stableShare = await StableShare.deploy(this.wallet);
     this.oracle = await MockOracle.deploy(this.wallet);
-    this.interestModel = await PolynomialInterestSetter.deploy(this.wallet, {
-      maxAPR: ArcDecimal.new(0.5).value, // 100%
-      coefficients: [0, 10, 10, 0, 0, 80],
-    });
-    await this.deployArc(this.interestModel.address, this.stableShare.address, this.oracle.address);
+    this.interestModel = await PolynomialInterestSetter.deploy(
+      this.wallet,
+      defaultPolynomialInterestSetterParams,
+    );
+
+    const testConfig = getConfig(50);
+    testConfig.name = 'ARCxBTC';
+    testConfig.symbol = 'USDT-BTC';
+
+    await this.deployArc(testConfig);
   }
 
   async _supply(amount: BigNumberish, from: Wallet) {

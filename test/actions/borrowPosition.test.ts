@@ -1,3 +1,5 @@
+import 'jest';
+
 import { Wallet } from 'ethers';
 import { ITestContext } from '../arcDescribe';
 import initializeArc from '../initializeArc';

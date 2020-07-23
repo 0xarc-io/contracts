@@ -1,5 +1,5 @@
 import { BigNumberish } from 'ethers/utils';
-import { BaseERC20 } from '../../typechain/BaseERC20';
+import { BaseERC20 } from '../typings/BaseERC20';
 import { Wallet } from 'ethers';
 
 export default class Token {

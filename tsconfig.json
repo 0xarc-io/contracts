@@ -8,19 +8,19 @@
     "resolveJsonModule": true,
     "typeRoots": ["node_modules/@types"],
     "types": ["node", "jest"],
+    "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
       "@src/*": ["src/*"],
       "@utils/*": ["src/utils/*"],
-      "@typings/*": ["typechain/*"]
+      "@typings/*": ["src/typechain/*"]
     }
   },
-  "include": ["./src", "./scripts", "./test"],
+  "include": ["./src", "./scripts", "./test", "src/typechain"],
   "files": [
     "buidler.config.ts",
     "node_modules/@nomiclabs/buidler-ethers/src/type-extensions.d.ts",
     "node_modules/@nomiclabs/buidler-etherscan/src/type-extensions.d.ts",
-    "node_modules/@nomiclabs/buidler-waffle/src/type-extensions.d.ts",
     "node_modules/buidler-typechain/src/type-extensions.d.ts"
   ]
 }
