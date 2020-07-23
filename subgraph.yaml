@@ -1,0 +1,25 @@
+specVersion: 0.0.2
+description: ARC conracts
+repository: https://github.com/arcxio/contracts
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: ARC
+    network: mainnet
+    source:
+      address: '0x1D7022f5B17d2F8B695918FB48fa1089C9f85401'
+      abi: CoreV1
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      entities:
+        - Positions
+      abis:
+        - name: CoreV1
+          file: ./artifacts/CoreV1.json
+      eventHandlers:
+        - event: ActionOperated(uint8,(uint256,uint8,uint256,uint8,uint256),(address,uint8,uint8,(bool,uint128),(bool,uint128)))
+          handler: actionOperated
+      file: ./subgraph/mapping.ts

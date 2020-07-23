@@ -1,0 +1,15 @@
+enum AssetType {
+  StableAsset,
+  Synthetic
+}
+
+type Position @entity {
+  id: ID!
+  owner: Bytes!
+  collateralAsset: Int!
+  borrowedAsset: Int!
+  collateralAmountSign: Boolean!
+  collateralAmountValue: BigInt!
+  borrowedAmountSign: Boolean!
+  borrowedAmountValue: BigInt!
+}
