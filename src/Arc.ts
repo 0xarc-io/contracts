@@ -1,17 +1,19 @@
 import { Wallet, ethers, ContractTransaction } from 'ethers';
 import { BigNumber, BigNumberish } from 'ethers/utils';
-import { StableShare } from '../typechain/StableShare';
+import { StableShare } from './typings/StableShare';
 import { AddressZero } from 'ethers/constants';
-import { MockOracle } from '../typechain/MockOracle';
+import { IOracle } from './typings/IOracle';
 import ArcDecimal from './utils/ArcDecimal';
-import { SyntheticToken } from '../typechain/SyntheticToken';
-import { PolynomialInterestSetter } from '../typechain/PolynomialInterestSetter';
+import { SyntheticToken } from './typings/SyntheticToken';
+import { PolynomialInterestSetter } from './typings/PolynomialInterestSetter';
 import { AssetType, Operation, OperationParams, ActionOperated, Position } from './types';
-import { CoreV1 } from '../typechain/CoreV1';
+import { CoreV1 } from './typings/CoreV1';
 import { parseLogs } from './utils/parseLogs';
-import { Proxy } from '../typechain/Proxy';
-import { StateV1 } from '../typechain/StateV1';
+import { Proxy } from './typings/Proxy';
+import { StateV1 } from './typings/StateV1';
 import ArcNumber from './utils/ArcNumber';
+import { AddressBook } from './addresses/AddressBook';
+import { Config } from './addresses/Config';
 
 const ZERO = new BigNumber(0);
 const BASE = new BigNumber(10).pow(18);
@@ -23,16 +25,25 @@ export default class Arc {
   public state: StateV1;
   public synthetic: SyntheticToken;
   public stableShare: StableShare;
-  public oracle: MockOracle;
+  public oracle: IOracle;
   public interestModel: PolynomialInterestSetter;
 
-  static async init(wallet: Wallet): Promise<Arc> {
+  static async init(wallet: Wallet, addressBook?: AddressBook): Promise<Arc> {
     let arc = new Arc();
     arc.wallet = wallet;
+
+    if (addressBook) {
+      arc.core = await CoreV1.at(wallet, addressBook.proxy);
+      arc.state = await StateV1.at(wallet, addressBook.stateV1);
+      arc.synthetic = await SyntheticToken.at(wallet, addressBook.syntheticToken);
+      arc.stableShare = await StableShare.at(wallet, addressBook.stableAsset);
+      arc.oracle = await IOracle.at(wallet, addressBook.oracle);
+    }
+
     return arc;
   }
 
-  async deployArc(interestSetter: string, stableShare: string, oracle: string) {
+  async deployArc(config: Config) {
     this.core = await CoreV1.deploy(this.wallet);
 
     const proxy = await Proxy.deploy(this.wallet);
@@ -41,25 +52,25 @@ export default class Arc {
 
     this.core = await CoreV1.at(this.wallet, proxy.address);
 
-    await this.core.setLimits(ArcNumber.new(10000), ArcNumber.new(100));
+    await this.core.setLimits(config.stableAssetLimit, config.syntheticAssetLimit);
 
     this.synthetic = await SyntheticToken.deploy(
       this.wallet,
       this.core.address,
-      'ARCxBTC',
-      'ARCBTC',
+      config.name,
+      config.symbol,
     );
 
     this.state = await StateV1.deploy(this.wallet, this.core.address, this.wallet.address, {
       syntheticAsset: this.synthetic.address,
-      stableAsset: stableShare,
-      interestSetter: interestSetter,
-      collateralRatio: ArcDecimal.new(2),
-      syntheticRatio: ArcDecimal.new(2),
-      liquidationSpread: ArcDecimal.new(0.1),
-      originationFee: ArcDecimal.new(0.01),
-      earningsRate: ArcDecimal.new(1),
-      oracle: oracle,
+      stableAsset: config.stableShare,
+      interestSetter: config.interestModel,
+      collateralRatio: { value: config.collateralRatio },
+      syntheticRatio: { value: config.syntheticRatio },
+      liquidationSpread: { value: config.liquidationSpread },
+      originationFee: { value: config.originationFee },
+      earningsRate: { value: config.earningsRate },
+      oracle: config.oracle,
     });
 
     await this.core.init(this.state.address);

@@ -2,7 +2,6 @@ import { BuidlerConfig, usePlugin } from '@nomiclabs/buidler/config';
 import { privateKeys } from './src/utils/generatedWallets';
 import { BigNumber } from 'ethers/utils';
 
-usePlugin('@nomiclabs/buidler-waffle');
 usePlugin('@nomiclabs/buidler-etherscan');
 usePlugin('buidler-typechain');
 usePlugin('solidity-coverage');
