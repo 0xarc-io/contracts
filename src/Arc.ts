@@ -11,6 +11,7 @@ import { Proxy } from './typings/Proxy';
 import { StateV1 } from './typings/StateV1';
 import { AddressBook } from './addresses/AddressBook';
 import { Config } from './addresses/Config';
+import Token from '../dist/src/utils/Token';
 
 export default class Arc {
   public wallet: Signer;
@@ -73,6 +74,14 @@ export default class Arc {
     );
 
     await this.core.init(this.state.address);
+  }
+
+  async approveStableShare(amount: BigNumberish, caller?: Wallet) {
+    await Token.approve(this.stableShare.address, caller || this.wallet, this.core.address, amount);
+  }
+
+  async approveSynthetic(amount: BigNumberish, caller?: Wallet) {
+    await Token.approve(this.synthetic.address, caller || this.wallet, this.core.address, amount);
   }
 
   async supply(amount: BigNumberish, caller?: Wallet) {
