@@ -16,7 +16,7 @@
       "@typings/*": ["src/typechain/*"]
     }
   },
-  "include": ["./src", "./scripts", "./test", "src/typechain"],
+  "include": ["./src", "./scripts", "./test", "src/typechain", "src/addresses/*.json"],
   "files": [
     "buidler.config.ts",
     "node_modules/@nomiclabs/buidler-ethers/src/type-extensions.d.ts",

@@ -355,7 +355,7 @@ contract StateV1 {
         view
         returns (uint256)
     {
-        Types.Position memory position = state.getPosition(positionId);
+        Types.Position memory position = positions[positionId];
 
         Types.Wei memory borrowWei = position.borrowedAmount.getWei(
             getBorrowIndex(position.borrowedAsset)

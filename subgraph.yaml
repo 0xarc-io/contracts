@@ -8,7 +8,7 @@ dataSources:
     name: ARC
     network: mainnet
     source:
-      address: '0x1D7022f5B17d2F8B695918FB48fa1089C9f85401'
+      address: '0x10aDd991dE718a69DeC2117cB6aA28098836511B'
       abi: CoreV1
     mapping:
       kind: ethereum/events

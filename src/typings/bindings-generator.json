@@ -1,13 +1,13 @@
 {
   "contracts": {
     "AdminStorage": {
-      "hash": "adfef77e55a04c80d65cf3e9d433fcd6"
+      "hash": "bb654530a9f485bc363ad1ce4ef91d1e"
     },
     "BaseERC20": {
       "hash": "6c3f5308feadd895b33282d6ed2d21c7"
     },
     "CoreV1": {
-      "hash": "0fc727248259c5bdfcdb25879e81035e"
+      "hash": "1d1a7caf9f0266b8390ceb7c62e8415c"
     },
     "MockOracle": {
       "hash": "62ce07621c5b1eaaa2ad535d1687efa5"
@@ -16,7 +16,7 @@
       "hash": "ff3d831e6659024582f5fd2e7a40f0ad"
     },
     "Proxy": {
-      "hash": "c4ee1e59a8ac4856bcbc8207b8898ed9"
+      "hash": "a6a3b72590a03a631b4f468685ef8eda"
     },
     "StableShare": {
       "hash": "7390315b42ae91937dd8361ed1a68537"
@@ -25,13 +25,13 @@
       "hash": "01e2f51c8c16c97fbd75a8e55720f836"
     },
     "StateV1": {
-      "hash": "ba20ef4882e790488d6006dd812ea56f"
+      "hash": "e7319bd74cd0013a745c2b634de6bb07"
     },
     "SyntheticToken": {
       "hash": "7dfd4beaef00175b3d5faed63d0acf22"
     },
     "V1Storage": {
-      "hash": "14d9ff9f3e7f1eb65e69ced0410ef2f6"
+      "hash": "bbe536e300f0b0abae1ff3f7183f4c8b"
     },
     "IERC20": {
       "hash": "483568577c0e984f5852e274c707235d"
@@ -44,6 +44,9 @@
     },
     "ISyntheticToken": {
       "hash": "0ccf72cd1b1dd6053b74f8bdc3aef523"
+    },
+    "IChainLinkAggregator": {
+      "hash": "d6e6b4abfab22abf09abdbefd5db57bc"
     }
   }
 }

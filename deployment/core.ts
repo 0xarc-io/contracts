@@ -2,14 +2,13 @@ import { Wallet, ethers } from 'ethers';
 import { AddressBook } from '../src/addresses/AddressBook';
 import { Config } from '../src/addresses/Config';
 
-import { BigNumber } from 'ethers/utils';
-import { CoreV1 } from '../typechain/CoreV1';
-import { Proxy } from '../typechain';
-import { SyntheticToken } from '../typechain/SyntheticToken';
-import { StateV1 } from '../typechain/StateV1';
-import { StableShare } from '../typechain/StableShare';
-import { MockOracle } from '../typechain/MockOracle';
-import { PolynomialInterestSetter } from '../typechain/PolynomialInterestSetter';
+import { CoreV1 } from '../src/typings/CoreV1';
+import { Proxy } from '../src/typings/';
+import { SyntheticToken } from '../src/typings/SyntheticToken';
+import { StateV1 } from '../src/typings/StateV1';
+import { StableShare } from '../src/typings/StableShare';
+import { MockOracle } from '../src/typings/MockOracle';
+import { PolynomialInterestSetter } from '../src/typings/PolynomialInterestSetter';
 
 export class CoreStage {
   wallet: Wallet;
