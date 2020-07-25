@@ -4,6 +4,8 @@
     "module": "commonjs",
     "strict": false,
     "esModuleInterop": true,
+    "declaration": true,
+    "sourceMap": true,
     "outDir": "dist",
     "resolveJsonModule": true,
     "typeRoots": ["node_modules/@types"],
@@ -16,11 +18,11 @@
       "@typings/*": ["src/typechain/*"]
     }
   },
-  "include": ["./src", "./scripts", "./test", "src/typechain", "src/addresses/*.json"],
+  "include": ["./src", "./scripts", "./test", "src/addresses/*.json"],
+  "exclude": ["node_modules"],
   "files": [
     "buidler.config.ts",
     "node_modules/@nomiclabs/buidler-ethers/src/type-extensions.d.ts",
-    "node_modules/@nomiclabs/buidler-etherscan/src/type-extensions.d.ts",
-    "node_modules/buidler-typechain/src/type-extensions.d.ts"
+    "node_modules/@nomiclabs/buidler-etherscan/src/type-extensions.d.ts"
   ]
 }
