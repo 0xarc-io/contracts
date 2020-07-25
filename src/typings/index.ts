@@ -9,6 +9,7 @@ import { Signer, Contract } from "ethers";
 export { AdminStorage } from "./AdminStorage";
 export { BaseERC20 } from "./BaseERC20";
 export { CoreV1 } from "./CoreV1";
+export { IChainLinkAggregator } from "./IChainLinkAggregator";
 export { IERC20 } from "./IERC20";
 export { IInterestSetter } from "./IInterestSetter";
 export { IOracle } from "./IOracle";

@@ -1,4 +1,4 @@
-pragma solidity 0.5.17;
+pragma solidity ^0.5.16;
 
 interface IChainLinkAggregator {
   function latestAnswer() external view returns (int256);
