@@ -46,10 +46,6 @@ const config: BuidlerConfig = {
     // Obtain one at https://etherscan.io/
     apiKey: ETHERSCAN_API_KEY,
   },
-  typechain: {
-    outDir: 'typechain',
-    target: 'ethers',
-  },
 };
 
 export default config;

@@ -14,7 +14,7 @@
   "scripts": {
     "compile": "yarn buidler compile",
     "start": "node scripts/watcher.js",
-    "clean": "rm -rf src/types && rm -rf typechain && rm -rf artifacts && rm -rf cache",
+    "clean": "rm -rf src/types && rm -rf src/typings && rm -rf artifacts && rm -rf cache",
     "chain": "ganache-cli --networkId 50 --accounts 20 -l 19000000 -e 10000000000 -m 'concert load couple harbor equip island argue ramp clarify fence smart topic' -h 0.0.0.0",
     "generate-typings": "yarn ts-node ./bindings-generator/main.ts artifacts -o src/typings",
     "build": "yarn compile && yarn generate-typings",
@@ -38,7 +38,6 @@
     "@types/jest": "^25.2.1",
     "@types/mocha": "^8.0.0",
     "@types/node": "^13.7.0",
-    "buidler-typechain": "0.0.5",
     "chai": "^4.2.0",
     "chokidar": "^3.4.0",
     "commander": "^5.1.0",
@@ -54,19 +53,15 @@
     "ts-node": "^8.10.1",
     "tsconfig-paths": "^3.9.0",
     "tsconfig-paths-jest": "^0.0.1",
-    "typechain": "^1.0.4",
-    "typechain-target-ethers": "^1.0.4",
-    "typechain-target-truffle": "^1.0.2",
-    "typechain-target-web3-v1": "^1.0.4",
     "typescript": "^3.7.5"
   },
   "peerDependencies": {
     "fs-extra": "^9.0.1",
-    "dotenv": "^8.2.0",
-    "ethers": "^4.0.27"
+    "dotenv": "^8.2.0"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^2.5.0",
-    "@openzeppelin/upgrades": "^2.8.0"
+    "@openzeppelin/upgrades": "^2.8.0",
+    "ethers": "^4.0.27"
   }
 }
