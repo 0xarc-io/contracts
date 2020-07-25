@@ -1,4 +1,4 @@
-import { Wallet } from 'ethers';
+import { Wallet, Signer } from 'ethers';
 import { BigNumber, BigNumberish } from 'ethers/utils';
 import { StableShare } from './typings/StableShare';
 import { IOracle } from './typings/IOracle';
@@ -13,7 +13,7 @@ import { AddressBook } from './addresses/AddressBook';
 import { Config } from './addresses/Config';
 
 export default class Arc {
-  public wallet: Wallet;
+  public wallet: Signer;
 
   public core: CoreV1;
   public state: StateV1;
@@ -22,7 +22,7 @@ export default class Arc {
   public oracle: IOracle;
   public interestModel: PolynomialInterestSetter;
 
-  static async init(wallet: Wallet, addressBook?: AddressBook): Promise<Arc> {
+  static async init(wallet: Signer, addressBook?: AddressBook): Promise<Arc> {
     let arc = new Arc();
     arc.wallet = wallet;
 
@@ -55,17 +55,22 @@ export default class Arc {
       config.symbol,
     );
 
-    this.state = await StateV1.deploy(this.wallet, this.core.address, this.wallet.address, {
-      syntheticAsset: this.synthetic.address,
-      stableAsset: config.stableShare,
-      interestSetter: config.interestModel,
-      collateralRatio: { value: config.collateralRatio },
-      syntheticRatio: { value: config.syntheticRatio },
-      liquidationSpread: { value: config.liquidationSpread },
-      originationFee: { value: config.originationFee },
-      earningsRate: { value: config.earningsRate },
-      oracle: config.oracle,
-    });
+    this.state = await StateV1.deploy(
+      this.wallet,
+      this.core.address,
+      await this.wallet.getAddress(),
+      {
+        syntheticAsset: this.synthetic.address,
+        stableAsset: config.stableShare,
+        interestSetter: config.interestModel,
+        collateralRatio: { value: config.collateralRatio },
+        syntheticRatio: { value: config.syntheticRatio },
+        liquidationSpread: { value: config.liquidationSpread },
+        originationFee: { value: config.originationFee },
+        earningsRate: { value: config.earningsRate },
+        oracle: config.oracle,
+      },
+    );
 
     await this.core.init(this.state.address);
   }
