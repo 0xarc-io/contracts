@@ -1,15 +1,14 @@
 import Arc from './Arc';
+
+import { Wallet } from 'ethers';
 import { StableShare } from './typings/StableShare';
 import { MockOracle } from './typings/MockOracle';
-import { Wallet } from 'ethers';
 import Token from './utils/Token';
 import { BigNumberish } from 'ethers/utils';
-import ArcDecimal from './utils/ArcDecimal';
+
 import { PolynomialInterestSetter } from './typings/PolynomialInterestSetter';
 import { AssetType } from './types';
-import { Config } from './addresses';
-import config from 'buidler.config';
-import ArcNumber from './utils/ArcNumber';
+
 import { defaultPolynomialInterestSetterParams, getConfig } from './addresses/Config';
 
 export class TestArc extends Arc {
