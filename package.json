@@ -44,7 +44,6 @@
     "commander": "^5.1.0",
     "dotenv": "^8.2.0",
     "ethers": "^4.0.27",
-    "fs-extra": "^9.0.1",
     "jest": "^25.4.0",
     "jest-cli": "^26.0.1",
     "node-run-cmd": "^1.0.1",
@@ -65,6 +64,7 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^2.5.0",
-    "@openzeppelin/upgrades": "^2.8.0"
+    "@openzeppelin/upgrades": "^2.8.0",
+    "fs-extra": "^9.0.1"
   }
 }
