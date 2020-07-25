@@ -12,12 +12,3 @@ export type AddressBook = {
   interestSetter?: string;
   stableAsset?: string;
 };
-
-export async function retrieveAddressBookFrom(
-  path: string,
-  provider: Provider,
-): Promise<AddressBook> {
-  await fs.ensureFile(path);
-  const jsonFile = (await fs.readJson(path, { throws: false })) || {};
-  return returnValidAddresses(jsonFile, provider);
-}

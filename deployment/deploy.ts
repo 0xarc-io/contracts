@@ -2,8 +2,10 @@ import fs from 'fs-extra';
 
 import { CoreStage } from './core';
 import { ethers } from 'ethers';
-import { Config, getConfig } from '../src/addresses/Config';
-import { retrieveAddressBookFrom } from '../src/addresses/AddressBook';
+import { getConfig } from '../src/addresses/Config';
+import { AddressBook } from '../src/addresses/AddressBook';
+import { Provider } from 'ethers/providers';
+import { returnValidAddresses } from '../src/utils/returnValidAddresses';
 
 const config = require('dotenv').config({ path: '.env' }).parsed;
 
@@ -32,6 +34,15 @@ async function start() {
   addressBook = await coreStage.deployAll();
 
   await fs.writeFile(path, JSON.stringify(addressBook, null, 2));
+}
+
+export async function retrieveAddressBookFrom(
+  path: string,
+  provider: Provider,
+): Promise<AddressBook> {
+  await fs.ensureFile(path);
+  const jsonFile = (await fs.readJson(path, { throws: false })) || {};
+  return returnValidAddresses(jsonFile, provider);
 }
 
 start().catch((e: Error) => {

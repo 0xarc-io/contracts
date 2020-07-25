@@ -1,9 +1,7 @@
-import { Wallet, ethers, ContractTransaction } from 'ethers';
+import { Wallet } from 'ethers';
 import { BigNumber, BigNumberish } from 'ethers/utils';
 import { StableShare } from './typings/StableShare';
-import { AddressZero } from 'ethers/constants';
 import { IOracle } from './typings/IOracle';
-import ArcDecimal from './utils/ArcDecimal';
 import { SyntheticToken } from './typings/SyntheticToken';
 import { PolynomialInterestSetter } from './typings/PolynomialInterestSetter';
 import { AssetType, Operation, OperationParams, ActionOperated, Position } from './types';
@@ -11,12 +9,8 @@ import { CoreV1 } from './typings/CoreV1';
 import { parseLogs } from './utils/parseLogs';
 import { Proxy } from './typings/Proxy';
 import { StateV1 } from './typings/StateV1';
-import ArcNumber from './utils/ArcNumber';
 import { AddressBook } from './addresses/AddressBook';
 import { Config } from './addresses/Config';
-
-const ZERO = new BigNumber(0);
-const BASE = new BigNumber(10).pow(18);
 
 export default class Arc {
   public wallet: Wallet;
@@ -167,7 +161,7 @@ export default class Arc {
     return await this.parseActionTx(tx);
   }
 
-  async parseActionTx(tx: ContractTransaction) {
+  async parseActionTx(tx: any) {
     const receipt = await tx.wait();
     const logs = parseLogs(receipt.logs, CoreV1.ABI);
     const log = logs[0];
