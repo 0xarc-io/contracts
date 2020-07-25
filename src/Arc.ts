@@ -11,7 +11,7 @@ import { Proxy } from './typings/Proxy';
 import { StateV1 } from './typings/StateV1';
 import { AddressBook } from './addresses/AddressBook';
 import { Config } from './addresses/Config';
-import Token from '../dist/src/utils/Token';
+import Token from '../src/utils/Token';
 
 export default class Arc {
   public wallet: Signer;
