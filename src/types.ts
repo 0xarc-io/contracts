@@ -40,3 +40,14 @@ export type ActionOperated = {
   params: OperationParams;
   updatedPosition: Position;
 };
+
+export type GraphPosition = {
+  id: BigNumberish;
+  owner: string;
+  collateralAsset: AssetType;
+  borrowedAsset: AssetType;
+  collateralAmountSign: Boolean;
+  collateralAmountValue: BigNumberish;
+  borrowedAmountSign: Boolean;
+  borrowedAmountValue: Boolean;
+};
