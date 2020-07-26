@@ -49,5 +49,5 @@ export type GraphPosition = {
   collateralAmountSign: Boolean;
   collateralAmountValue: BigNumberish;
   borrowedAmountSign: Boolean;
-  borrowedAmountValue: Boolean;
+  borrowedAmountValue: BigNumberish;
 };
