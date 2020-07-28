@@ -1,9 +1,14 @@
 import { BigNumberish } from 'ethers/utils';
+import { IOracle } from './typings';
 
 export enum AssetType {
   Stable,
   Synthetic,
 }
+
+export type Decimal = {
+  value: BigNumberish;
+};
 
 export enum Operation {
   Supply,
@@ -50,4 +55,27 @@ export type GraphPosition = {
   collateralAmountValue: BigNumberish;
   borrowedAmountSign: Boolean;
   borrowedAmountValue: BigNumberish;
+};
+
+export type Index = {
+  borrow: BigNumberish;
+  supply: BigNumberish;
+  lastUpdate: BigNumberish;
+};
+
+export type GlobalParams = {
+  stableAsset: string;
+  syntheticAsset: string;
+  interestSetter: string;
+  collateralRatio: Decimal;
+  syntheticRatio: Decimal;
+  liquidationSpread: Decimal;
+  originationFee: Decimal;
+  earningsRate: Decimal;
+  oracle: string;
+};
+
+export type TotalPar = {
+  supply: BigNumberish;
+  borrow: BigNumberish;
 };
