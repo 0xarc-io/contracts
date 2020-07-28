@@ -5,10 +5,17 @@ import { BigNumber } from 'ethers/utils';
 usePlugin('@nomiclabs/buidler-etherscan');
 usePlugin('buidler-typechain');
 usePlugin('solidity-coverage');
+usePlugin('buidler-spdx-license-identifier');
 
-const INFURA_API_KEY = '';
-const RINKEBY_PRIVATE_KEY = '';
-const ETHERSCAN_API_KEY = '';
+require('dotenv').config({ path: '.env' }).parsed;
+
+export const params = {
+  private_key: process.env.PRIVATE_KEY,
+  network_id: parseInt(process.env.DEPLOYMENT_NETWORK_ID),
+  network_env: `${process.env.DEPLOYMENT_ENVIRONMENT}`,
+  rpc_url: process.env.RPC_ENDPOINT,
+  etherscan_key: process.env.ETHERSCAN_KEY,
+};
 
 const HUNDRED_ETH = new BigNumber(100).pow(18).toString();
 
@@ -22,8 +29,8 @@ const config: BuidlerConfig = {
   },
   networks: {
     rinkeby: {
-      url: `https://rinkeby.infura.io/v3/${INFURA_API_KEY}`,
-      accounts: [RINKEBY_PRIVATE_KEY],
+      url: params.rpc_url,
+      accounts: [params.private_key],
     },
     coverage: {
       url: 'http://127.0.0.1:8555', // Coverage launches its own ganache-cli client
@@ -44,7 +51,7 @@ const config: BuidlerConfig = {
     url: 'https://api-rinkeby.etherscan.io/api',
     // Your API key for Etherscan
     // Obtain one at https://etherscan.io/
-    apiKey: ETHERSCAN_API_KEY,
+    apiKey: params.etherscan_key,
   },
 };
 

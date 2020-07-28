@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
@@ -7,7 +9,7 @@ import {IOracle} from "../interfaces/IOracle.sol";
 import {IChainLinkAggregator} from "../interfaces/IChainLinkAggregator.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 
-contract MockOracle is IOracle {
+contract ChainLinkOracle is IOracle {
 
     using SafeMath for uint256;
 

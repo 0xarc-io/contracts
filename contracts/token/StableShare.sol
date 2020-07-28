@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.5.16;
 
 import {BaseERC20} from "./BaseERC20.sol";

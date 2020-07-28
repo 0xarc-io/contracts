@@ -6,6 +6,24 @@ import {
 } from "ethers/utils";
 import { Signer, Contract } from "ethers";
 
+export { AdminStorage } from "./AdminStorage";
+export { BaseERC20 } from "./BaseERC20";
+export { ChainLinkOracle } from "./ChainLinkOracle";
+export { CoreV1 } from "./CoreV1";
+export { IChainLinkAggregator } from "./IChainLinkAggregator";
+export { IERC20 } from "./IERC20";
+export { IInterestSetter } from "./IInterestSetter";
+export { IOracle } from "./IOracle";
+export { ISyntheticToken } from "./ISyntheticToken";
+export { MockOracle } from "./MockOracle";
+export { PolynomialInterestSetter } from "./PolynomialInterestSetter";
+export { Proxy } from "./Proxy";
+export { StableShare } from "./StableShare";
+export { StableToken } from "./StableToken";
+export { StateV1 } from "./StateV1";
+export { SyntheticToken } from "./SyntheticToken";
+export { V1Storage } from "./V1Storage";
+
 export interface TransactionOverrides {
   nonce?: BigNumberish | Promise<BigNumberish>;
   gasLimit?: BigNumberish | Promise<BigNumberish>;

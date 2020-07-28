@@ -3,11 +3,12 @@ import { AddressBook } from '../src/addresses/AddressBook';
 import { Config } from '../src/addresses/Config';
 
 import { CoreV1 } from '../src/typings/CoreV1';
-import { Proxy } from '../src/typings/';
+import { Proxy } from '../src/typings/Proxy';
 import { SyntheticToken } from '../src/typings/SyntheticToken';
 import { StateV1 } from '../src/typings/StateV1';
 import { StableShare } from '../src/typings/StableShare';
 import { MockOracle } from '../src/typings/MockOracle';
+import { ChainLinkOracle } from '../src/typings/ChainLinkOracle';
 import { PolynomialInterestSetter } from '../src/typings/PolynomialInterestSetter';
 
 export class CoreStage {
@@ -63,18 +64,25 @@ export class CoreStage {
   async transferOwnership() {}
 
   async deployCore() {
+    console.log('*** Deploying Core *** ');
     const contract = await CoreV1.awaitDeployment(this.wallet);
     this.addressBook.coreV1 = contract.address;
   }
 
   async deployProxy() {
+    console.log('*** Deploying Proxy *** ');
     const contract = await Proxy.awaitDeployment(this.wallet);
+    console.log('** Setting pending implementation **');
     await contract.setPendingImplementation(this.addressBook.coreV1);
-    await contract.acceptImplementation();
+    console.log('** Accepting pending implementation **');
+    await contract.acceptImplementation({
+      gasLimit: 5000000,
+    });
     this.addressBook.proxy = contract.address;
   }
 
   async deploySynthetic() {
+    console.log('*** Deploying Synthetic Asset *** ');
     const contract = await SyntheticToken.awaitDeployment(
       this.wallet,
       this.addressBook.proxy,
@@ -85,16 +93,27 @@ export class CoreStage {
   }
 
   async deployStableAsset() {
+    console.log('*** Deploying Stable Asset *** ');
     const contract = await StableShare.awaitDeployment(this.wallet);
     this.addressBook.stableAsset = contract.address;
   }
 
   async deployOracle() {
-    const contract = await MockOracle.awaitDeployment(this.wallet);
-    this.addressBook.oracle = contract.address;
+    console.log('*** Deploying Mock Oracle *** ');
+    if (this.config.chainlinkAggregator) {
+      const contract = await ChainLinkOracle.awaitDeployment(
+        this.wallet,
+        this.config.chainlinkAggregator,
+      );
+      this.addressBook.oracle = contract.address;
+    } else {
+      const contract = await MockOracle.awaitDeployment(this.wallet);
+      this.addressBook.oracle = contract.address;
+    }
   }
 
   async deployInterestSetter() {
+    console.log('*** Deploying Interest Setter *** ');
     const contract = await PolynomialInterestSetter.awaitDeployment(this.wallet, {
       maxAPR: this.config.interestModelParams.maxAPR,
       coefficients: this.config.interestModelParams.coefficients,
@@ -103,6 +122,7 @@ export class CoreStage {
   }
 
   async deployState() {
+    console.log('*** Deploying State *** ');
     const contract = await StateV1.deploy(this.wallet, this.addressBook.proxy, this.config.owner, {
       syntheticAsset: this.addressBook.syntheticToken,
       stableAsset: this.addressBook.stableAsset,
@@ -118,6 +138,7 @@ export class CoreStage {
   }
 
   async initState() {
+    console.log('*** Initing State *** ');
     const contract = await CoreV1.at(this.wallet, this.addressBook.proxy);
 
     if ((await contract.state()) == ethers.constants.AddressZero) {

@@ -7,7 +7,7 @@ import { AddressBook } from '../src/addresses/AddressBook';
 import { Provider } from 'ethers/providers';
 import { returnValidAddresses } from '../src/utils/returnValidAddresses';
 
-const config = require('dotenv').config({ path: '.env' }).parsed;
+require('dotenv').config({ path: '.env' }).parsed;
 
 export const params = {
   private_key: process.env.PRIVATE_KEY,
