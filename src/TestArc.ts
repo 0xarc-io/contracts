@@ -29,6 +29,9 @@ export class TestArc extends Arc {
     const testConfig = getConfig(50);
     testConfig.name = 'ARCxBTC';
     testConfig.symbol = 'USDT-BTC';
+    testConfig.stableShare = this.stableShare.address;
+    testConfig.interestModel = this.interestModel.address;
+    testConfig.oracle = this.oracle.address;
 
     await this.deployArc(testConfig);
   }
