@@ -390,7 +390,7 @@ contract CoreV1 is AdminStorage, V1Storage {
             );
         }
 
-        address syntheticAsset = state.getAddress(Types.AssetType.Synthetic);
+        IERC20 syntheticAsset = state.getSyntheticAsset();
         IERC20 stableAsset = state.getStableAsset();
 
         // If a synthetic asset was being borrowed
@@ -399,12 +399,12 @@ contract CoreV1 is AdminStorage, V1Storage {
             SafeERC20.safeTransferFrom(
                 stableAsset,
                 msg.sender,
-                syntheticAsset,
+                address(syntheticAsset),
                 collateralAmount
             );
 
             // Mint the synthetic token to user opening the borrow position
-            ISyntheticToken(syntheticAsset).mint(
+            ISyntheticToken(address(syntheticAsset)).mint(
                 msg.sender,
                 borrowAmount
             );
@@ -414,7 +414,7 @@ contract CoreV1 is AdminStorage, V1Storage {
         if (position.borrowedAsset == Types.AssetType.Stable) {
             // Transfer the synthetic asset from the user
             SafeERC20.safeTransferFrom(
-                IERC20(address(syntheticAsset)),
+                syntheticAsset,
                 msg.sender,
                 address(this),
                 collateralAmount

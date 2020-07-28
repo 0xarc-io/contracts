@@ -51,7 +51,7 @@ export default class Arc {
 
     this.synthetic = await SyntheticToken.deploy(
       this.wallet,
-      this.core.address,
+      proxy.address,
       config.name,
       config.symbol,
     );
