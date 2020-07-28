@@ -1,4 +1,5 @@
 import { BigNumberish } from 'ethers/utils';
+import { Signer } from 'ethers';
 
 export enum AssetType {
   Stable,
@@ -78,3 +79,12 @@ export type TotalPar = {
   supply: BigNumberish;
   borrow: BigNumberish;
 };
+
+export interface TransactionOverrides {
+  nonce?: BigNumberish | Promise<BigNumberish>;
+  gasLimit?: BigNumberish | Promise<BigNumberish>;
+  gasPrice?: BigNumberish | Promise<BigNumberish>;
+  value?: BigNumberish | Promise<BigNumberish>;
+  chainId?: number | Promise<number>;
+  from?: Signer;
+}
