@@ -1,37 +1,19 @@
 {
   "contracts": {
     "AdminStorage": {
-      "hash": "bb654530a9f485bc363ad1ce4ef91d1e"
+      "hash": "c220e1814ee5671777227004781da03d"
     },
     "BaseERC20": {
-      "hash": "6c3f5308feadd895b33282d6ed2d21c7"
+      "hash": "00a0a70faf4294b7cad805370c81accc"
+    },
+    "ChainLinkOracle": {
+      "hash": "d2abf0ec211720307b4f7bcafb702253"
     },
     "CoreV1": {
-      "hash": "1d1a7caf9f0266b8390ceb7c62e8415c"
+      "hash": "08f196a2458e27d4b11d976b7d105179"
     },
-    "MockOracle": {
-      "hash": "62ce07621c5b1eaaa2ad535d1687efa5"
-    },
-    "PolynomialInterestSetter": {
-      "hash": "ff3d831e6659024582f5fd2e7a40f0ad"
-    },
-    "Proxy": {
-      "hash": "a6a3b72590a03a631b4f468685ef8eda"
-    },
-    "StableShare": {
-      "hash": "7390315b42ae91937dd8361ed1a68537"
-    },
-    "StableToken": {
-      "hash": "01e2f51c8c16c97fbd75a8e55720f836"
-    },
-    "StateV1": {
-      "hash": "e7319bd74cd0013a745c2b634de6bb07"
-    },
-    "SyntheticToken": {
-      "hash": "7dfd4beaef00175b3d5faed63d0acf22"
-    },
-    "V1Storage": {
-      "hash": "bbe536e300f0b0abae1ff3f7183f4c8b"
+    "IChainLinkAggregator": {
+      "hash": "d6e6b4abfab22abf09abdbefd5db57bc"
     },
     "IERC20": {
       "hash": "483568577c0e984f5852e274c707235d"
@@ -45,8 +27,29 @@
     "ISyntheticToken": {
       "hash": "0ccf72cd1b1dd6053b74f8bdc3aef523"
     },
-    "IChainLinkAggregator": {
-      "hash": "d6e6b4abfab22abf09abdbefd5db57bc"
+    "MockOracle": {
+      "hash": "03a6614ebbc8947465f95c9fa20c1ba9"
+    },
+    "PolynomialInterestSetter": {
+      "hash": "33fa824ea8e294fee2f641550a378f07"
+    },
+    "Proxy": {
+      "hash": "c15262be25cca909b6b42c6316b07de6"
+    },
+    "StableShare": {
+      "hash": "871d8380a767d598d2832373d8e0623f"
+    },
+    "StableToken": {
+      "hash": "2903628d48bccfbcb17ec6bf1511aefd"
+    },
+    "StateV1": {
+      "hash": "d7668aea9953d0c9d4e040cb0c9f9fca"
+    },
+    "SyntheticToken": {
+      "hash": "b717c5bfdacb2d326c5b18ecc1d61ad6"
+    },
+    "V1Storage": {
+      "hash": "c924d566609737b40b172f326659bff2"
     }
   }
 }

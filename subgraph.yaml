@@ -6,9 +6,9 @@ schema:
 dataSources:
   - kind: ethereum/contract
     name: ARC
-    network: mainnet
+    network: rinkeby
     source:
-      address: '0x1D7022f5B17d2F8B695918FB48fa1089C9f85401'
+      address: '0x090f08FB28aB622DDbF41A7054a83352Ac1CA498'
       abi: CoreV1
     mapping:
       kind: ethereum/events
