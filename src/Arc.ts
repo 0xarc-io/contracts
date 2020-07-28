@@ -4,7 +4,14 @@ import { StableShare } from './typings/StableShare';
 import { IOracle } from './typings/IOracle';
 import { SyntheticToken } from './typings/SyntheticToken';
 import { PolynomialInterestSetter } from './typings/PolynomialInterestSetter';
-import { AssetType, Operation, OperationParams, ActionOperated, Position } from './types';
+import {
+  AssetType,
+  Operation,
+  OperationParams,
+  ActionOperated,
+  Position,
+  TransactionOverrides,
+} from './types';
 import { CoreV1 } from './typings/CoreV1';
 import { parseLogs } from './utils/parseLogs';
 import { Proxy } from './typings/Proxy';
@@ -76,35 +83,59 @@ export default class Arc {
     await this.core.init(this.state.address);
   }
 
-  async approveStableShare(amount: BigNumberish, caller?: Wallet) {
-    await Token.approve(this.stableShare.address, caller || this.wallet, this.core.address, amount);
+  async approveStableShare(
+    amount: BigNumberish,
+    caller?: Wallet,
+    overrides?: TransactionOverrides,
+  ) {
+    await Token.approve(
+      this.stableShare.address,
+      caller || this.wallet,
+      this.core.address,
+      amount,
+      overrides,
+    );
   }
 
-  async approveSynthetic(amount: BigNumberish, caller?: Wallet) {
-    await Token.approve(this.synthetic.address, caller || this.wallet, this.core.address, amount);
+  async approveSynthetic(amount: BigNumberish, caller?: Wallet, overrides?: TransactionOverrides) {
+    await Token.approve(
+      this.synthetic.address,
+      caller || this.wallet,
+      this.core.address,
+      amount,
+      overrides,
+    );
   }
 
-  async supply(amount: BigNumberish, caller?: Wallet) {
+  async supply(amount: BigNumberish, caller?: Wallet, overrides?: TransactionOverrides) {
     const contract = await this.getCore(caller);
-    const tx = await contract.operateAction(Operation.Supply, {
-      id: 0,
-      assetOne: AssetType.Stable,
-      amountOne: amount,
-      assetTwo: '',
-      amountTwo: 0,
-    });
+    const tx = await contract.operateAction(
+      Operation.Supply,
+      {
+        id: 0,
+        assetOne: AssetType.Stable,
+        amountOne: amount,
+        assetTwo: '',
+        amountTwo: 0,
+      },
+      overrides,
+    );
     return await this.parseActionTx(tx);
   }
 
-  async withdraw(amount: BigNumberish, caller?: Wallet) {
+  async withdraw(amount: BigNumberish, caller?: Wallet, overrides?: TransactionOverrides) {
     const contract = await this.getCore(caller);
-    const tx = await contract.operateAction(Operation.Withdraw, {
-      id: 0,
-      assetOne: AssetType.Stable,
-      amountOne: amount,
-      assetTwo: '',
-      amountTwo: 0,
-    });
+    const tx = await contract.operateAction(
+      Operation.Withdraw,
+      {
+        id: 0,
+        assetOne: AssetType.Stable,
+        amountOne: amount,
+        assetTwo: '',
+        amountTwo: 0,
+      },
+      overrides,
+    );
     return await this.parseActionTx(tx);
   }
 
@@ -113,15 +144,20 @@ export default class Arc {
     collateralAmount: BigNumberish,
     borrowAmount: BigNumberish,
     caller?: Wallet,
+    overrides?: TransactionOverrides,
   ) {
     const contract = await this.getCore(caller);
-    const tx = await contract.operateAction(Operation.Open, {
-      id: 0,
-      assetOne: collateralAsset,
-      amountOne: collateralAmount,
-      assetTwo: '',
-      amountTwo: borrowAmount,
-    });
+    const tx = await contract.operateAction(
+      Operation.Open,
+      {
+        id: 0,
+        assetOne: collateralAsset,
+        amountOne: collateralAmount,
+        assetTwo: '',
+        amountTwo: borrowAmount,
+      },
+      overrides,
+    );
     return await this.parseActionTx(tx);
   }
 
@@ -131,15 +167,20 @@ export default class Arc {
     collateralAmount: BigNumberish,
     borrowAmount: BigNumberish,
     caller?: Wallet,
+    overrides?: TransactionOverrides,
   ) {
     const contract = await this.getCore(caller);
-    const tx = await contract.operateAction(Operation.Borrow, {
-      id: positionId,
-      assetOne: collateralAsset,
-      amountOne: collateralAmount,
-      assetTwo: '',
-      amountTwo: borrowAmount,
-    });
+    const tx = await contract.operateAction(
+      Operation.Borrow,
+      {
+        id: positionId,
+        assetOne: collateralAsset,
+        amountOne: collateralAmount,
+        assetTwo: '',
+        amountTwo: borrowAmount,
+      },
+      overrides,
+    );
 
     return await this.parseActionTx(tx);
   }
@@ -149,28 +190,41 @@ export default class Arc {
     repaymentAmount: BigNumberish,
     withdrawAmount: BigNumberish,
     caller?: Wallet,
+    overrides?: TransactionOverrides,
   ) {
     const contract = await this.getCore(caller);
-    const tx = await contract.operateAction(Operation.Repay, {
-      id: positionId,
-      assetOne: '',
-      amountOne: repaymentAmount,
-      assetTwo: '',
-      amountTwo: withdrawAmount,
-    });
+    const tx = await contract.operateAction(
+      Operation.Repay,
+      {
+        id: positionId,
+        assetOne: '',
+        amountOne: repaymentAmount,
+        assetTwo: '',
+        amountTwo: withdrawAmount,
+      },
+      overrides,
+    );
 
     return await this.parseActionTx(tx);
   }
 
-  async liquidatePosition(positionId: BigNumberish, caller?: Wallet) {
+  async liquidatePosition(
+    positionId: BigNumberish,
+    caller?: Wallet,
+    overrides?: TransactionOverrides,
+  ) {
     const contract = await this.getCore(caller);
-    const tx = await contract.operateAction(Operation.Liquidate, {
-      id: positionId,
-      assetOne: '',
-      amountOne: 0,
-      assetTwo: '',
-      amountTwo: 0,
-    } as OperationParams);
+    const tx = await contract.operateAction(
+      Operation.Liquidate,
+      {
+        id: positionId,
+        assetOne: '',
+        amountOne: 0,
+        assetTwo: '',
+        amountTwo: 0,
+      } as OperationParams,
+      overrides,
+    );
 
     return await this.parseActionTx(tx);
   }
