@@ -1,5 +1,4 @@
 import { BigNumberish } from 'ethers/utils';
-import { IOracle } from './typings';
 
 export enum AssetType {
   Stable,
