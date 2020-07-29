@@ -19,6 +19,7 @@ import { StateV1 } from './typings/StateV1';
 import { AddressBook } from './addresses/AddressBook';
 import { Config } from './addresses/Config';
 import Token from '../src/utils/Token';
+import { LendShare } from './typings/LendShare';
 
 export default class Arc {
   public wallet: Signer;
@@ -29,6 +30,7 @@ export default class Arc {
   public stableShare: StableShare;
   public oracle: IOracle;
   public interestModel: PolynomialInterestSetter;
+  public lendAsset: LendShare;
 
   static async init(wallet: Signer, addressBook?: AddressBook): Promise<Arc> {
     let arc = new Arc();
@@ -63,11 +65,19 @@ export default class Arc {
       config.symbol,
     );
 
+    this.lendAsset = await LendShare.deploy(
+      this.wallet,
+      proxy.address,
+      `ARC-${config.name}`,
+      `ARC-${config.name}`,
+    );
+
     this.state = await StateV1.deploy(
       this.wallet,
       this.core.address,
       await this.wallet.getAddress(),
       {
+        lendAsset: this.lendAsset.address,
         syntheticAsset: this.synthetic.address,
         stableAsset: config.stableShare,
         interestSetter: config.interestModel,

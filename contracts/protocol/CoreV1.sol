@@ -194,7 +194,7 @@ contract CoreV1 is AdminStorage, V1Storage {
         state.updateTotalPar(existingPar, newPar);
 
         // Update the user's new par balance
-        state.setSupplyBalance(msg.sender, newPar);
+        state.updateSupplyBalance(msg.sender, true, newPar.sub(existingPar));
 
         // Transfer the delta wei amount
         SafeERC20.safeTransferFrom(
@@ -254,7 +254,7 @@ contract CoreV1 is AdminStorage, V1Storage {
 
         // Set the new decremented supply balance of the user
         state.updateTotalPar(existingPar, newPar);
-        state.setSupplyBalance(msg.sender, newPar);
+        state.updateSupplyBalance(msg.sender, false, newPar.sub(existingPar));
 
         // Transfer out the stable coins
         SafeERC20.safeTransfer(

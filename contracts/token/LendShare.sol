@@ -2,12 +2,9 @@
 
 pragma solidity ^0.5.16;
 
-import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
-
 import {BaseERC20} from "./BaseERC20.sol";
 
-contract SyntheticToken is BaseERC20, ISyntheticToken {
-
+contract LendShare is BaseERC20 {
 
     // ============ Variable ============
 
@@ -51,19 +48,6 @@ contract SyntheticToken is BaseERC20, ISyntheticToken {
         );
 
         _burn(to, value);
-    }
-
-    function transferCollateral(
-        address token,
-        address to,
-        uint256 value
-    )
-        public
-    {
-        BaseERC20(token).transfer(
-            to,
-            value
-        );
     }
 
 }

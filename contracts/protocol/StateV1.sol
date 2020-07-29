@@ -40,7 +40,10 @@ contract StateV1 {
     uint256 public positionCount;
 
     mapping (uint256 => Types.Position) public positions;
-    mapping (address => Types.Par) public supplyBalances;
+
+    event LogIndexUpdate(Interest.Index updatedIndex);
+
+    event GlobalParamsUpdate(Types.GlobalParams updatedParams);
 
     // ============ Constructor ============
 
@@ -84,7 +87,12 @@ contract StateV1 {
         if (globalIndex.lastUpdate == Time.currentTime()) {
             return globalIndex;
         }
-        return globalIndex = fetchNewIndex(globalIndex);
+
+        globalIndex = fetchNewIndex(globalIndex);
+
+        emit LogIndexUpdate(globalIndex);
+
+        return globalIndex;
     }
 
     // ============ Admin Setters ============
@@ -96,6 +104,7 @@ contract StateV1 {
         onlyAdmin
     {
         params.oracle = IOracle(_oracle);
+        emit GlobalParamsUpdate(params);
     }
 
     function setInterestSetter(
@@ -105,6 +114,7 @@ contract StateV1 {
         onlyAdmin
     {
         params.interestSetter = IInterestSetter(_setter);
+        emit GlobalParamsUpdate(params);
     }
 
     function setCollateralRatio(
@@ -114,6 +124,7 @@ contract StateV1 {
         onlyAdmin
     {
         params.collateralRatio = ratio;
+        emit GlobalParamsUpdate(params);
     }
 
     function setSyntheticRatio(
@@ -123,6 +134,7 @@ contract StateV1 {
         onlyAdmin
     {
         params.syntheticRatio = ratio;
+        emit GlobalParamsUpdate(params);
     }
 
     function setLiquidationSpread(
@@ -132,6 +144,7 @@ contract StateV1 {
         onlyAdmin
     {
         params.liquidationSpread = spread;
+        emit GlobalParamsUpdate(params);
     }
 
     function setOriginationFee(
@@ -141,6 +154,7 @@ contract StateV1 {
         onlyAdmin
     {
         params.originationFee = fee;
+        emit GlobalParamsUpdate(params);
     }
 
     function setEarningsRate(
@@ -150,6 +164,7 @@ contract StateV1 {
         onlyAdmin
     {
         params.earningsRate = rate;
+        emit GlobalParamsUpdate(params);
     }
 
     function removeExcessTokens(
@@ -220,14 +235,25 @@ contract StateV1 {
         return position;
     }
 
-    function setSupplyBalance(
+    function updateSupplyBalance(
         address owner,
-        Types.Par memory newPar
+        bool sign,
+        Types.Par memory deltaPar
     )
         public
         onlyCore
     {
-        supplyBalances[owner] = newPar;
+        if (sign) {
+            params.lendAsset.mint(
+                owner,
+                uint256(deltaPar.value)
+            );
+        } else {
+            params.lendAsset.burn(
+                owner,
+                uint256(deltaPar.value)
+            );
+        }
     }
 
     function updateTotalPar(
@@ -294,7 +320,10 @@ contract StateV1 {
         view
         returns (Types.Par memory)
     {
-        return supplyBalances[owner];
+        return Types.Par({
+            sign: true,
+            value: IERC20(address(params.lendAsset)).balanceOf(owner).to128()
+        });
     }
 
     function getTotalPar()
@@ -364,16 +393,6 @@ contract StateV1 {
         );
 
         return borrowWei.value;
-    }
-
-    function getCollateralizationRatio(
-        uint256 positionId
-    )
-        public
-        view
-        returns (Decimal.D256 memory)
-    {
-        // @TODO
     }
 
     function getBorrowIndex(

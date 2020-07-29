@@ -6,4 +6,5 @@ export type AddressBook = {
   oracle?: string;
   interestSetter?: string;
   stableAsset?: string;
+  lendAsset?: string;
 };
