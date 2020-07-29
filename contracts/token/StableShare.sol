@@ -4,7 +4,6 @@ pragma solidity ^0.5.16;
 
 import {BaseERC20} from "./BaseERC20.sol";
 
-
 contract StableShare is BaseERC20 {
     // ============ Variables ============
 
@@ -12,7 +11,7 @@ contract StableShare is BaseERC20 {
 
     // ============ Constructor ============
 
-    constructor() public BaseERC20("ARC Stable Share", "ALS") {}
+    constructor() public BaseERC20("ARC Stable Share", "STABLE") {}
 
     // ============ Functions ============
 

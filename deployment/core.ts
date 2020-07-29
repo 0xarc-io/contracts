@@ -4,6 +4,7 @@ import { Config } from '../src/addresses/Config';
 
 import { CoreV1 } from '../src/typings/CoreV1';
 import { Proxy } from '../src/typings/Proxy';
+import { LendShare } from '../src/typings/LendShare';
 import { SyntheticToken } from '../src/typings/SyntheticToken';
 import { StateV1 } from '../src/typings/StateV1';
 import { StableShare } from '../src/typings/StableShare';
@@ -35,17 +36,21 @@ export class CoreStage {
       await this.deploySynthetic();
     }
 
-    this.addressBook.stableAsset = this.config.stableShare;
+    this.addressBook.stableAsset = this.addressBook.stableAsset || this.config.stableShare;
     if (!this.addressBook.stableAsset) {
       await this.deployStableAsset();
     }
 
-    this.addressBook.oracle = this.config.oracle;
+    if (!this.addressBook.lendAsset) {
+      await this.deployLendAsset();
+    }
+
+    this.addressBook.oracle = this.addressBook.oracle || this.config.oracle;
     if (!this.addressBook.oracle) {
       await this.deployOracle();
     }
 
-    this.addressBook.interestSetter = this.config.interestModel;
+    this.addressBook.interestSetter = this.addressBook.interestSetter || this.config.interestModel;
     if (!this.addressBook.interestSetter) {
       await this.deployInterestSetter();
     }
@@ -121,9 +126,20 @@ export class CoreStage {
     this.addressBook.interestSetter = contract.address;
   }
 
+  async deployLendAsset() {
+    console.log('*** Deploying Lend Asset ***');
+    const contract = await LendShare.awaitDeployment(
+      this.wallet,
+      this.addressBook.proxy,
+      `ARC-${this.config.symbol}`,
+      `ARC-${this.config.symbol}`,
+    );
+  }
+
   async deployState() {
     console.log('*** Deploying State *** ');
     const contract = await StateV1.deploy(this.wallet, this.addressBook.proxy, this.config.owner, {
+      lendAsset: this.addressBook.lendAsset,
       syntheticAsset: this.addressBook.syntheticToken,
       stableAsset: this.addressBook.stableAsset,
       interestSetter: this.addressBook.interestSetter,
@@ -143,6 +159,14 @@ export class CoreStage {
 
     if ((await contract.state()) == ethers.constants.AddressZero) {
       await contract.init(this.addressBook.stateV1);
+    }
+
+    if (
+      (await contract.stableLimit()).toString() == '0' &&
+      (await contract.syntheticLimit()).toString() == '0'
+    ) {
+      console.log('** Setting Limits **');
+      await contract.setLimits(this.config.stableAssetLimit, this.config.syntheticAssetLimit);
     }
   }
 }

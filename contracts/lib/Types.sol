@@ -7,6 +7,7 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
+import {IMintableToken} from "../interfaces/IMintableToken.sol";
 import {IOracle} from "../interfaces/IOracle.sol";
 import {IInterestSetter} from "../interfaces/IInterestSetter.sol";
 
@@ -25,6 +26,7 @@ library Types {
 
     struct GlobalParams {
         IERC20 stableAsset;
+        IMintableToken lendAsset;
         ISyntheticToken syntheticAsset;
         IInterestSetter interestSetter;
         Decimal.D256 collateralRatio;

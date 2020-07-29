@@ -63,10 +63,4 @@ arcDescribe('Actions.supply()', init, (ctx: ITestContext) => {
     const balance = await ctx.arc.core.supplyBalances(lenderWallet.address);
     expect(balance.value).toEqual(ArcNumber.new(0));
   });
-
-  it('should accrue the correct amount of interest after 1 minute', async () => {});
-
-  it('should accrue the correct amount of interest after 1 hour', async () => {});
-
-  it('should accrue the correct amount of interest after 1 day', async () => {});
 });
