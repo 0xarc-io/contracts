@@ -30,6 +30,10 @@ async function start() {
   config.symbol = args.symbol;
   config.owner = args.owner || wallet.address;
 
+  if (!config.name || !config.symbol) {
+    throw 'Must provide a name and symbol for the token';
+  }
+
   const coreStage = new CoreStage(wallet, addressBook, config);
   addressBook = await coreStage.deployAll();
 

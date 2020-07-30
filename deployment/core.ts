@@ -134,6 +134,7 @@ export class CoreStage {
       `ARC-${this.config.symbol}`,
       `ARC-${this.config.symbol}`,
     );
+    this.addressBook.lendAsset = contract.address;
   }
 
   async deployState() {

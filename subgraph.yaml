@@ -1,14 +1,14 @@
 specVersion: 0.0.2
 description: ARC conracts
-repository: https://github.com/arcxio/contracts
+repository: https://github.com/arcxfinance/contracts
 schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum/contract
-    name: ARC
+    name: CoreV1
     network: rinkeby
     source:
-      address: '0x090f08FB28aB622DDbF41A7054a83352Ac1CA498'
+      address: '0xBf544F1Ce6079C3D11EADe6e791E93A4Be35F989'
       abi: CoreV1
     mapping:
       kind: ethereum/events
@@ -22,4 +22,27 @@ dataSources:
       eventHandlers:
         - event: ActionOperated(uint8,(uint256,uint8,uint256,uint8,uint256),(address,uint8,uint8,(bool,uint128),(bool,uint128)))
           handler: actionOperated
+      file: ./subgraph/mapping.ts
+  - kind: ethereum/contract
+    name: StateV1
+    network: rinkeby
+    source:
+      address: '0xeeE3399d437911D863F93c7Dd4736a1553B39BDA'
+      abi: StateV1
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      entities:
+        - Positions
+      abis:
+        - name: StateV1
+          file: ./artifacts/StateV1.json
+      eventHandlers:
+        - event: LogIndexUpdated((uint96,uint96,uint32))
+          handler: logIndexUpdated
+        - event: GlobalParamsUpdated((address,address,address,address,(uint256),(uint256),(uint256),(uint256),(uint256),address))
+          handler: globalParamsUpdated
+        - event: TotalParUpdated((uint128,uint128))
+          handler: totalParUpdated
       file: ./subgraph/mapping.ts
