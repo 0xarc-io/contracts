@@ -42,9 +42,11 @@ contract StateV1 {
 
     mapping (uint256 => Types.Position) public positions;
 
-    event LogIndexUpdate(Interest.Index updatedIndex);
+    event LogIndexUpdated(Interest.Index updatedIndex);
 
-    event GlobalParamsUpdate(Types.GlobalParams updatedParams);
+    event GlobalParamsUpdated(Types.GlobalParams updatedParams);
+
+    event TotalParUpdated(Types.TotalPar updatedPar);
 
     // ============ Constructor ============
 
@@ -91,7 +93,7 @@ contract StateV1 {
 
         globalIndex = fetchNewIndex(globalIndex);
 
-        emit LogIndexUpdate(globalIndex);
+        emit LogIndexUpdated(globalIndex);
 
         return globalIndex;
     }
@@ -105,7 +107,7 @@ contract StateV1 {
         onlyAdmin
     {
         params.oracle = IOracle(_oracle);
-        emit GlobalParamsUpdate(params);
+        emit GlobalParamsUpdated(params);
     }
 
     function setInterestSetter(
@@ -115,7 +117,7 @@ contract StateV1 {
         onlyAdmin
     {
         params.interestSetter = IInterestSetter(_setter);
-        emit GlobalParamsUpdate(params);
+        emit GlobalParamsUpdated(params);
     }
 
     function setCollateralRatio(
@@ -125,7 +127,7 @@ contract StateV1 {
         onlyAdmin
     {
         params.collateralRatio = ratio;
-        emit GlobalParamsUpdate(params);
+        emit GlobalParamsUpdated(params);
     }
 
     function setSyntheticRatio(
@@ -135,7 +137,7 @@ contract StateV1 {
         onlyAdmin
     {
         params.syntheticRatio = ratio;
-        emit GlobalParamsUpdate(params);
+        emit GlobalParamsUpdated(params);
     }
 
     function setLiquidationSpread(
@@ -145,7 +147,7 @@ contract StateV1 {
         onlyAdmin
     {
         params.liquidationSpread = spread;
-        emit GlobalParamsUpdate(params);
+        emit GlobalParamsUpdated(params);
     }
 
     function setOriginationFee(
@@ -155,7 +157,7 @@ contract StateV1 {
         onlyAdmin
     {
         params.originationFee = fee;
-        emit GlobalParamsUpdate(params);
+        emit GlobalParamsUpdated(params);
     }
 
     function setEarningsRate(
@@ -165,7 +167,7 @@ contract StateV1 {
         onlyAdmin
     {
         params.earningsRate = rate;
-        emit GlobalParamsUpdate(params);
+        emit GlobalParamsUpdated(params);
     }
 
     function removeExcessTokens(
@@ -261,6 +263,8 @@ contract StateV1 {
         } else {
             totalPar.borrow = uint256(totalPar.borrow).add(newPar.value).to128();
         }
+
+        emit TotalParUpdated(totalPar);
     }
 
     // ============ Public Getters ============
