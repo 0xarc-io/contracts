@@ -11,6 +11,7 @@ import {console} from "@nomiclabs/buidler/console.sol";
 
 import {IOracle} from "../interfaces/IOracle.sol";
 import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
+import {IMintableToken} from "../interfaces/IMintableToken.sol";
 import {IInterestSetter} from "../interfaces/IInterestSetter.sol";
 
 import {Types} from "../lib/Types.sol";
@@ -235,27 +236,6 @@ contract StateV1 {
         return position;
     }
 
-    function updateSupplyBalance(
-        address owner,
-        bool sign,
-        Types.Par memory deltaPar
-    )
-        public
-        onlyCore
-    {
-        if (sign) {
-            params.lendAsset.mint(
-                owner,
-                uint256(deltaPar.value)
-            );
-        } else {
-            params.lendAsset.burn(
-                owner,
-                uint256(deltaPar.value)
-            );
-        }
-    }
-
     function updateTotalPar(
         Types.Par memory existingPar,
         Types.Par memory newPar
@@ -295,6 +275,14 @@ contract StateV1 {
         return asset == Types.AssetType.Stable ?
             address(params.stableAsset) :
             address(params.syntheticAsset);
+    }
+
+    function getLendAsset()
+        public
+        view
+        returns (IMintableToken)
+    {
+        return params.lendAsset;
     }
 
     function getStableAsset()

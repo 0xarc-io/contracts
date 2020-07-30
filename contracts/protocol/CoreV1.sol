@@ -8,6 +8,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
+import {IMintableToken} from "../interfaces/IMintableToken.sol";
 
 import {console} from "@nomiclabs/buidler/console.sol";
 
@@ -194,7 +195,10 @@ contract CoreV1 is AdminStorage, V1Storage {
         state.updateTotalPar(existingPar, newPar);
 
         // Update the user's new par balance
-        state.updateSupplyBalance(msg.sender, true, newPar.sub(existingPar));
+        state.getLendAsset().mint(
+            msg.sender,
+            uint256(newPar.sub(existingPar).value)
+        );
 
         // Transfer the delta wei amount
         SafeERC20.safeTransferFrom(
@@ -254,7 +258,12 @@ contract CoreV1 is AdminStorage, V1Storage {
 
         // Set the new decremented supply balance of the user
         state.updateTotalPar(existingPar, newPar);
-        state.updateSupplyBalance(msg.sender, false, newPar.sub(existingPar));
+
+        // Burn the user's lend tokens
+        state.getLendAsset().burn(
+            msg.sender,
+            uint256(existingPar.sub(newPar).value)
+        );
 
         // Transfer out the stable coins
         SafeERC20.safeTransfer(

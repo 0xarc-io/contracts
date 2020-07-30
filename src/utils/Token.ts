@@ -11,7 +11,7 @@ export default class Token {
     owner: Signer,
     to: string,
     value: BigNumberish,
-    overrides?: TransactionOverrides,
+    overrides: TransactionOverrides = {},
   ) {
     const contract = BaseERC20.at(owner, token);
     return await contract.approve(to, value, overrides);
@@ -23,7 +23,7 @@ export default class Token {
     to: string,
     value: BigNumberish,
     caller: Signer,
-    overrides?: TransactionOverrides,
+    overrides: TransactionOverrides = {},
   ) {
     const contract = BaseERC20.at(caller, token);
     return await contract.transferFrom(from, to, value, overrides);
@@ -34,7 +34,7 @@ export default class Token {
     to: string,
     value: BigNumberish,
     caller: Signer,
-    overrides?: TransactionOverrides,
+    overrides: TransactionOverrides = {},
   ) {
     const contract = BaseERC20.at(caller, token);
     return await contract.transfer(to, value, overrides);

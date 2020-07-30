@@ -30,7 +30,7 @@ contract LendShare is BaseERC20 {
     {
         require(
             msg.sender == arcAddress,
-            "SyntheticToken: only arc can mint"
+            "LendShare: only arc can mint"
         );
 
         _mint(to, value);
@@ -44,7 +44,7 @@ contract LendShare is BaseERC20 {
     {
         require(
             msg.sender == arcAddress,
-            "SyntheticToken: only arc can burn"
+            "LendShare: only arc can burn"
         );
 
         _burn(to, value);

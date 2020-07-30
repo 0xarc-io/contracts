@@ -95,8 +95,8 @@ export default class Arc {
 
   async approveStableShare(
     amount: BigNumberish,
-    caller?: Signer,
-    overrides?: TransactionOverrides,
+    caller: Signer = this.wallet,
+    overrides: TransactionOverrides = {},
   ) {
     await Token.approve(
       this.stableShare.address,
@@ -107,7 +107,11 @@ export default class Arc {
     );
   }
 
-  async approveSynthetic(amount: BigNumberish, caller?: Signer, overrides?: TransactionOverrides) {
+  async approveSynthetic(
+    amount: BigNumberish,
+    caller: Signer = this.wallet,
+    overrides: TransactionOverrides = {},
+  ) {
     await Token.approve(
       this.synthetic.address,
       caller || this.wallet,
@@ -117,7 +121,11 @@ export default class Arc {
     );
   }
 
-  async supply(amount: BigNumberish, caller?: Signer, overrides?: TransactionOverrides) {
+  async supply(
+    amount: BigNumberish,
+    caller: Signer = this.wallet,
+    overrides: TransactionOverrides = {},
+  ) {
     const contract = await this.getCore(caller);
     const tx = await contract.operateAction(
       Operation.Supply,
@@ -133,7 +141,11 @@ export default class Arc {
     return await this.parseActionTx(tx);
   }
 
-  async withdraw(amount: BigNumberish, caller?: Signer, overrides?: TransactionOverrides) {
+  async withdraw(
+    amount: BigNumberish,
+    caller: Signer = this.wallet,
+    overrides: TransactionOverrides = {},
+  ) {
     const contract = await this.getCore(caller);
     const tx = await contract.operateAction(
       Operation.Withdraw,
@@ -153,8 +165,8 @@ export default class Arc {
     collateralAsset: AssetType,
     collateralAmount: BigNumberish,
     borrowAmount: BigNumberish,
-    caller?: Signer,
-    overrides?: TransactionOverrides,
+    caller: Signer = this.wallet,
+    overrides: TransactionOverrides = {},
   ) {
     const contract = await this.getCore(caller);
     const tx = await contract.operateAction(
@@ -176,8 +188,8 @@ export default class Arc {
     collateralAsset: AssetType,
     collateralAmount: BigNumberish,
     borrowAmount: BigNumberish,
-    caller?: Signer,
-    overrides?: TransactionOverrides,
+    caller: Signer = this.wallet,
+    overrides: TransactionOverrides = {},
   ) {
     const contract = await this.getCore(caller);
     const tx = await contract.operateAction(
@@ -199,8 +211,8 @@ export default class Arc {
     positionId: BigNumberish,
     repaymentAmount: BigNumberish,
     withdrawAmount: BigNumberish,
-    caller?: Signer,
-    overrides?: TransactionOverrides,
+    caller: Signer = this.wallet,
+    overrides: TransactionOverrides = {},
   ) {
     const contract = await this.getCore(caller);
     const tx = await contract.operateAction(

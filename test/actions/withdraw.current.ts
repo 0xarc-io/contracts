@@ -41,11 +41,14 @@ arcDescribe('Actions.withdraw()', init, (ctx: ITestContext) => {
 
   it('should be able to withdraw the amount deposited', async () => {
     await ctx.arc._supply(ArcNumber.new(1000), lenderWallet);
+    expect(await ctx.arc.lendAsset.balanceOf(lenderWallet.address)).toEqual(ArcNumber.new(1000));
     await ctx.arc.withdraw(ArcNumber.new(1000), lenderWallet);
+    expect(await ctx.arc.lendAsset.balanceOf(lenderWallet.address)).toEqual(new BigNumber(0));
   });
 
   it('should be able withdraw the principal + interest accrued', async () => {
     await ctx.arc._supply(ArcNumber.new(1000), lenderWallet);
+
     const position = await ctx.arc._borrowStableShares(
       ArcNumber.new(50),
       ArcNumber.new(2),
@@ -66,7 +69,6 @@ arcDescribe('Actions.withdraw()', init, (ctx: ITestContext) => {
     await ctx.arc._repay(position.params.id, borrowBalance, ArcNumber.new(2), minterWallet);
 
     const withdrawAmount = ArcNumber.new(999).add(borrowBalance).sub(ArcNumber.new(50));
-
     await ctx.arc.withdraw(withdrawAmount, lenderWallet);
   });
 });
