@@ -12,6 +12,8 @@ let ownerWallet: Wallet;
 let lenderWallet: Wallet;
 let borrowerWallet: Wallet;
 
+jest.setTimeout(30000);
+
 async function init(ctx: ITestContext): Promise<void> {
   await initializeArc(ctx);
 
@@ -50,17 +52,19 @@ arcDescribe('Actions.supply()', init, (ctx: ITestContext) => {
 
     expect(totalPar.supply).toEqual(ArcNumber.new(100));
     expect(totalPar.borrow).toEqual(ArcNumber.new(0));
-    expect(index.borrow).toEqual(ArcNumber.new(0));
-    expect(index.supply).toEqual(ArcNumber.new(0));
-    expect(index.lastUpdate).toBeCloseTo(supplyDate, 9);
+    expect(index.borrow).toEqual(ArcNumber.new(1));
+    expect(index.supply).toEqual(ArcNumber.new(1));
 
-    const balance = await ctx.arc.core.supplyBalances(lenderWallet.address);
-    expect(balance.sign).toBeTruthy();
-    expect(balance.value).toEqual(ArcNumber.new(100));
+    const balance1 = await ctx.arc.state.getSupplyBalance(lenderWallet.address);
+    expect(balance1.sign).toBeTruthy();
+    expect(balance1.value).toEqual(ArcNumber.new(100));
+
+    const balance2 = await ctx.arc.lendAsset.balanceOf(lenderWallet.address);
+    expect(balance2).toEqual(ArcNumber.new(100));
   });
 
   it('should not accrue interest if there are no borrows', async () => {
-    const balance = await ctx.arc.core.supplyBalances(lenderWallet.address);
+    const balance = await ctx.arc.core.getSupplyBalance(lenderWallet.address);
     expect(balance.value).toEqual(ArcNumber.new(0));
   });
 });

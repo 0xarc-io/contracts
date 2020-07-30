@@ -49,8 +49,8 @@ export default function arcDescribe(name: string, init: initFunction, tests: tes
     });
 
     // Runs before any after() calls made within the arcDescribe() call.
-    afterAll(async () => {
-      await evm.resetEVM(preInitSnapshotId);
+    afterEach(async () => {
+      await evm.resetEVM(postInitSnapshotId);
     });
 
     tests(ctx);
