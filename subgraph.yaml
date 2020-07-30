@@ -8,7 +8,7 @@ dataSources:
     name: CoreV1
     network: rinkeby
     source:
-      address: '0xBf544F1Ce6079C3D11EADe6e791E93A4Be35F989'
+      address: '0x3eD3DA147e690254056875159C36693B72019B45'
       abi: CoreV1
     mapping:
       kind: ethereum/events
@@ -27,14 +27,16 @@ dataSources:
     name: StateV1
     network: rinkeby
     source:
-      address: '0xeeE3399d437911D863F93c7Dd4736a1553B39BDA'
+      address: '0x3ba644cFea7c527De80440C10aeBB5F9Dc15141C'
       abi: StateV1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
       language: wasm/assemblyscript
       entities:
-        - Positions
+        - GlobalIndex
+        - GlobalParams
+        - TotalPar
       abis:
         - name: StateV1
           file: ./artifacts/StateV1.json
