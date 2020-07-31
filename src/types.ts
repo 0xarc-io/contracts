@@ -1,6 +1,5 @@
 import { BigNumberish } from 'ethers/utils';
 import { Signer } from 'ethers';
-import { string } from '@nomiclabs/buidler/internal/core/params/argumentTypes';
 
 export enum AssetType {
   Stable,
