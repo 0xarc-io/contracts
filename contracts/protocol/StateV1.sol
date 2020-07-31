@@ -61,6 +61,10 @@ contract StateV1 {
         admin = _admin;
         params = _globalParams;
         globalIndex = Interest.newIndex();
+
+        emit LogIndexUpdated(globalIndex);
+        emit GlobalParamsUpdated(params);
+        emit TotalParUpdated(totalPar);
     }
 
     // ============ Modifiers ============

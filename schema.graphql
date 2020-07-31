@@ -21,7 +21,7 @@ type GlobalIndex @entity {
   lastUpdate: BigInt!
 }
 
-type GlobalParams @entity {
+type GlobalParam @entity {
   id: ID!
   stableAsset: Bytes!
   lendAsset: Bytes!
