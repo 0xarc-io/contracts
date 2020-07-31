@@ -1,9 +1,9 @@
 import { ActionOperated } from '../generated/ARC/CoreV1';
-import { Position, GlobalIndex, GlobalParams, TotalPar } from '../generated/schema';
+import { Position, GlobalIndex, GlobalParam, TotalPar } from '../generated/schema';
 import {
   LogIndexUpdated,
-  GlobalParamsUpdated,
   TotalParUpdated,
+  GlobalParamsUpdated,
 } from '../generated/StateV1/StateV1';
 import { log } from '@graphprotocol/graph-ts';
 
@@ -27,7 +27,7 @@ export function actionOperated(event: ActionOperated): void {
 }
 
 export function logIndexUpdated(event: LogIndexUpdated): void {
-  let index = new GlobalIndex(event.params.updatedIndex.lastUpdate.toHex());
+  let index = new GlobalIndex(event.params.updatedIndex.lastUpdate.toString());
   index.supply = event.params.updatedIndex.supply;
   index.borrow = event.params.updatedIndex.borrow;
   index.lastUpdate = event.params.updatedIndex.lastUpdate;
@@ -35,7 +35,7 @@ export function logIndexUpdated(event: LogIndexUpdated): void {
 }
 
 export function globalParamsUpdated(event: GlobalParamsUpdated): void {
-  let globalParams = new GlobalParams(event.block.timestamp.toHex());
+  let globalParams = new GlobalParam(event.block.timestamp.toString());
   globalParams.stableAsset = event.params.updatedParams.stableAsset;
   globalParams.lendAsset = event.params.updatedParams.lendAsset;
   globalParams.syntheticAsset = event.params.updatedParams.syntheticAsset;
@@ -50,7 +50,7 @@ export function globalParamsUpdated(event: GlobalParamsUpdated): void {
 }
 
 export function totalParUpdated(event: TotalParUpdated): void {
-  let total = new TotalPar(event.block.timestamp.toHex());
+  let total = new TotalPar(event.block.timestamp.toString());
   total.supply = event.params.updatedPar.supply;
   total.borrow = event.params.updatedPar.borrow;
   total.save();

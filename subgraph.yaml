@@ -35,7 +35,7 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - GlobalIndex
-        - GlobalParams
+        - GlobalParam
         - TotalPar
       abis:
         - name: StateV1
