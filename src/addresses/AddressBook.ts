@@ -4,7 +4,5 @@ export type AddressBook = {
   coreV1?: string;
   syntheticToken?: string;
   oracle?: string;
-  interestSetter?: string;
-  stableAsset?: string;
-  lendAsset?: string;
+  collateralAsset?: string;
 };

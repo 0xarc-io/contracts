@@ -36,23 +36,14 @@ export class CoreStage {
       await this.deploySynthetic();
     }
 
-    this.addressBook.stableAsset = this.addressBook.stableAsset || this.config.stableShare;
-    if (!this.addressBook.stableAsset) {
-      await this.deployStableAsset();
-    }
-
-    if (!this.addressBook.lendAsset) {
-      await this.deployLendAsset();
+    this.addressBook.collateralAsset = this.addressBook.collateralAsset || this.config.stableShare;
+    if (!this.addressBook.collateralAsset) {
+      await this.deployCollateralAsset();
     }
 
     this.addressBook.oracle = this.addressBook.oracle || this.config.oracle;
     if (!this.addressBook.oracle) {
       await this.deployOracle();
-    }
-
-    this.addressBook.interestSetter = this.addressBook.interestSetter || this.config.interestModel;
-    if (!this.addressBook.interestSetter) {
-      await this.deployInterestSetter();
     }
 
     if (!this.addressBook.stateV1) {
@@ -97,10 +88,10 @@ export class CoreStage {
     this.addressBook.syntheticToken = contract.address;
   }
 
-  async deployStableAsset() {
+  async deployCollateralAsset() {
     console.log('*** Deploying Stable Asset *** ');
     const contract = await StableShare.awaitDeployment(this.wallet);
-    this.addressBook.stableAsset = contract.address;
+    this.addressBook.collateralAsset = contract.address;
   }
 
   async deployOracle() {
@@ -117,38 +108,15 @@ export class CoreStage {
     }
   }
 
-  async deployInterestSetter() {
-    console.log('*** Deploying Interest Setter *** ');
-    const contract = await PolynomialInterestSetter.awaitDeployment(this.wallet, {
-      maxAPR: this.config.interestModelParams.maxAPR,
-      coefficients: this.config.interestModelParams.coefficients,
-    });
-    this.addressBook.interestSetter = contract.address;
-  }
-
-  async deployLendAsset() {
-    console.log('*** Deploying Lend Asset ***');
-    const contract = await LendShare.awaitDeployment(
-      this.wallet,
-      this.addressBook.proxy,
-      `ARC-${this.config.symbol}`,
-      `ARC-${this.config.symbol}`,
-    );
-    this.addressBook.lendAsset = contract.address;
-  }
-
   async deployState() {
     console.log('*** Deploying State *** ');
     const contract = await StateV1.deploy(this.wallet, this.addressBook.proxy, this.config.owner, {
-      lendAsset: this.addressBook.lendAsset,
       syntheticAsset: this.addressBook.syntheticToken,
-      stableAsset: this.addressBook.stableAsset,
-      interestSetter: this.addressBook.interestSetter,
+      collateralAsset: this.addressBook.collateralAsset,
       collateralRatio: { value: this.config.collateralRatio },
       syntheticRatio: { value: this.config.syntheticRatio },
       liquidationSpread: { value: this.config.liquidationSpread },
       originationFee: { value: this.config.originationFee },
-      earningsRate: { value: this.config.earningsRate },
       oracle: this.addressBook.oracle,
     });
     this.addressBook.stateV1 = contract.address;
