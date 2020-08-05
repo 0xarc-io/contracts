@@ -55,28 +55,15 @@ export type GraphPosition = {
   borrowedAmountValue: BigNumberish;
 };
 
-export type Index = {
-  borrow: BigNumberish;
-  supply: BigNumberish;
-  lastUpdate: BigNumberish;
-};
-
 export type GlobalParams = {
-  lendAsset: string;
-  stableAsset: string;
+  collateralAsset: string;
   syntheticAsset: string;
-  interestSetter: string;
   collateralRatio: Decimal;
   syntheticRatio: Decimal;
   liquidationSpread: Decimal;
   originationFee: Decimal;
   earningsRate: Decimal;
   oracle: string;
-};
-
-export type TotalPar = {
-  supply: BigNumberish;
-  borrow: BigNumberish;
 };
 
 export interface TransactionOverrides {
