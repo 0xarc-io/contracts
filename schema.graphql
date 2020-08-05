@@ -14,29 +14,13 @@ type Position @entity {
   borrowedAmountValue: BigInt!
 }
 
-type GlobalIndex @entity {
-  id: ID!
-  supply: BigInt!
-  borrow: BigInt!
-  lastUpdate: BigInt!
-}
-
 type GlobalParam @entity {
   id: ID!
-  stableAsset: Bytes!
-  lendAsset: Bytes!
+  collateralAsset: Bytes!
   syntheticAsset: Bytes!
-  interestSetter: Bytes!
   collateralRatio: BigInt!
   syntheticRatio: BigInt!
   liquidationSpread: BigInt!
   originationFee: BigInt!
-  earningsRate: BigInt!
   oracle: Bytes!
-}
-
-type TotalPar @entity {
-  id: ID!
-  supply: BigInt!
-  borrow: BigInt!
 }

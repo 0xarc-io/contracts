@@ -41,8 +41,6 @@ contract StateV1 {
 
     event GlobalParamsUpdated(Types.GlobalParams updatedParams);
 
-    event TotalSuppliedUpdated(uint256 updatedSupply);
-
     // ============ Constructor ============
 
     constructor(
@@ -57,7 +55,6 @@ contract StateV1 {
         params = _globalParams;
 
         emit GlobalParamsUpdated(params);
-        emit TotalSuppliedUpdated(0);
     }
 
     // ============ Modifiers ============
@@ -151,8 +148,6 @@ contract StateV1 {
         onlyCore
     {
         totalSupplied = totalSupplied.add(amount);
-
-        emit TotalSuppliedUpdated(totalSupplied);
     }
 
     function savePosition(
