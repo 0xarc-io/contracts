@@ -1,13 +1,13 @@
 import Arc from './Arc';
 
 import { Wallet } from 'ethers';
-import { StableShare } from './typings/StableShare';
 import { MockOracle } from './typings/MockOracle';
 import Token from './utils/Token';
 import { BigNumberish } from 'ethers/utils';
 import { AssetType } from './types';
 
 import { getConfig } from './addresses/Config';
+import { TestToken } from './typings';
 
 export class TestArc extends Arc {
   static async init(wallet: Wallet): Promise<TestArc> {
@@ -17,7 +17,7 @@ export class TestArc extends Arc {
   }
 
   async deployTestArc() {
-    this.collateralAsset = await StableShare.deploy(this.wallet);
+    this.collateralAsset = await TestToken.deploy(this.wallet, 'TEST', 'TEST');
     this.oracle = await MockOracle.deploy(this.wallet);
 
     const testConfig = getConfig(50);

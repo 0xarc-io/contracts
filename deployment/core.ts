@@ -7,10 +7,9 @@ import { Proxy } from '../src/typings/Proxy';
 import { LendShare } from '../src/typings/LendShare';
 import { SyntheticToken } from '../src/typings/SyntheticToken';
 import { StateV1 } from '../src/typings/StateV1';
-import { StableShare } from '../src/typings/StableShare';
 import { MockOracle } from '../src/typings/MockOracle';
 import { ChainLinkOracle } from '../src/typings/ChainLinkOracle';
-import { PolynomialInterestSetter } from '../src/typings/PolynomialInterestSetter';
+import { TestToken } from '../src/typings';
 
 export class CoreStage {
   wallet: Wallet;
@@ -77,8 +76,14 @@ export class CoreStage {
     this.addressBook.proxy = contract.address;
   }
 
-  async deploySynthetic() {
+  async deployCollateralAsset() {
     console.log('*** Deploying Synthetic Asset *** ');
+    const contract = await TestToken.awaitDeployment(this.wallet, 'LINK', 'LINK');
+    this.addressBook.collateralAsset = contract.address;
+  }
+
+  async deploySynthetic() {
+    console.log('*** Deploying Collateral Asset *** ');
     const contract = await SyntheticToken.awaitDeployment(
       this.wallet,
       this.addressBook.proxy,
@@ -86,12 +91,6 @@ export class CoreStage {
       this.config.symbol,
     );
     this.addressBook.syntheticToken = contract.address;
-  }
-
-  async deployCollateralAsset() {
-    console.log('*** Deploying Stable Asset *** ');
-    const contract = await StableShare.awaitDeployment(this.wallet);
-    this.addressBook.collateralAsset = contract.address;
   }
 
   async deployOracle() {

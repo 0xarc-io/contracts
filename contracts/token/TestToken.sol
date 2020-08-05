@@ -4,14 +4,20 @@ pragma solidity ^0.5.16;
 
 import {BaseERC20} from "./BaseERC20.sol";
 
-contract StableShare is BaseERC20 {
+contract TestToken is BaseERC20 {
     // ============ Variables ============
 
     mapping(address => bool) public approvedCollateral;
 
     // ============ Constructor ============
 
-    constructor() public BaseERC20("ARC Stable Share", "STABLE") {}
+    constructor(
+        string memory _name,
+        string memory _symbol
+    )
+        public
+        BaseERC20(_name, _symbol)
+    {}
 
     // ============ Functions ============
 

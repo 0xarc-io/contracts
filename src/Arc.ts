@@ -1,9 +1,8 @@
 import { Wallet, Signer } from 'ethers';
 import { BigNumber, BigNumberish } from 'ethers/utils';
-import { StableShare } from './typings/StableShare';
 import { IOracle } from './typings/IOracle';
 import { SyntheticToken } from './typings/SyntheticToken';
-import { PolynomialInterestSetter } from './typings/PolynomialInterestSetter';
+
 import {
   AssetType,
   Operation,
@@ -19,14 +18,15 @@ import { StateV1 } from './typings/StateV1';
 import { AddressBook } from './addresses/AddressBook';
 import { Config } from './addresses/Config';
 import Token from '../src/utils/Token';
+import { BaseERC20, IERC20 } from './typings';
 
 export default class Arc {
   public wallet: Signer;
 
   public core: CoreV1;
   public state: StateV1;
-  public syntheticAsset: SyntheticToken;
-  public collateralAsset: StableShare;
+  public syntheticAsset: IERC20;
+  public collateralAsset: IERC20;
   public oracle: IOracle;
 
   static async init(wallet: Signer, addressBook?: AddressBook): Promise<Arc> {
@@ -37,7 +37,7 @@ export default class Arc {
       arc.core = await CoreV1.at(wallet, addressBook.proxy);
       arc.state = await StateV1.at(wallet, addressBook.stateV1);
       arc.syntheticAsset = await SyntheticToken.at(wallet, addressBook.syntheticToken);
-      arc.collateralAsset = await StableShare.at(wallet, addressBook.collateralAsset);
+      arc.collateralAsset = await IERC20.at(wallet, addressBook.collateralAsset);
       arc.oracle = await IOracle.at(wallet, addressBook.oracle);
     }
 
