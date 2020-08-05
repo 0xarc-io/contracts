@@ -23,12 +23,12 @@
     "coverage": "yarn run build && yarn buidler coverage --temp artifacts --network coverage",
     "test": "yarn buidler test",
     "deploy": "yarn ts-node deployment/deploy.ts",
-    "graph:create": "graph create arcxfinance/contracts-v1 --node https://api.thegraph.com/deploy/",
-    "graph:create-local": "graph create arcxfinance/contracts-v1 --node http://127.0.0.1:8020",
+    "graph:create": "graph create arcxfinance/contracts-v15 --node https://api.thegraph.com/deploy/",
+    "graph:create-local": "graph create arcxfinance/contracts-v15 --node http://127.0.0.1:8020",
     "graph:codegen": "graph codegen",
     "graph:build": "graph build",
-    "graph:deploy": "graph deploy arcxfinance/contracts-v1 --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
-    "graph:deploy-local": "graph deploy arcxfinance/contracts-v1 --ipfs http://localhost:5001 --node http://127.0.0.1:8020"
+    "graph:deploy": "graph deploy arcxfinance/contracts-v15 --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
+    "graph:deploy-local": "graph deploy arcxfinance/contracts-v15 --ipfs http://localhost:5001 --node http://127.0.0.1:8020"
   },
   "devDependencies": {
     "@graphprotocol/graph-cli": "^0.18.0",

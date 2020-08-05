@@ -1,7 +1,7 @@
 {
   "contracts": {
     "AdminStorage": {
-      "hash": "2cdc646607c871d55a699ff6618c7789"
+      "hash": "f3d260baf3d9673ae40d60550687b626"
     },
     "BaseERC20": {
       "hash": "00a0a70faf4294b7cad805370c81accc"
@@ -10,7 +10,7 @@
       "hash": "d2abf0ec211720307b4f7bcafb702253"
     },
     "CoreV1": {
-      "hash": "d6fb95d5e7c1ce165b7a26836cb65987"
+      "hash": "921b93cfd57c22408cf21724ee9e40ff"
     },
     "IChainLinkAggregator": {
       "hash": "d6e6b4abfab22abf09abdbefd5db57bc"
@@ -18,8 +18,8 @@
     "IERC20": {
       "hash": "483568577c0e984f5852e274c707235d"
     },
-    "IInterestSetter": {
-      "hash": "2e74286b084cef1983cfdb7364a658c5"
+    "IMintableToken": {
+      "hash": "7d69c30f76d3642283cadbdb5d57a014"
     },
     "IOracle": {
       "hash": "2e74286b084cef1983cfdb7364a658c5"
@@ -27,35 +27,29 @@
     "ISyntheticToken": {
       "hash": "0ccf72cd1b1dd6053b74f8bdc3aef523"
     },
+    "LendShare": {
+      "hash": "5eaa372f60cea7894ff4e24e3cd22311"
+    },
     "MockOracle": {
       "hash": "03a6614ebbc8947465f95c9fa20c1ba9"
     },
-    "PolynomialInterestSetter": {
-      "hash": "aafd875af7d2ef0e82010a0d57264bd1"
-    },
     "Proxy": {
-      "hash": "414f141c99d88694308165f327512f2f"
-    },
-    "StableShare": {
-      "hash": "e12c0027f87f438ddc952c522b552691"
+      "hash": "d0119c2078bccbf5559b98e1561fc6c5"
     },
     "StableToken": {
       "hash": "2903628d48bccfbcb17ec6bf1511aefd"
     },
     "StateV1": {
-      "hash": "d4f46468e579e0edd5bd57c052bedffc"
+      "hash": "aa827bd2b3f6e1480b8caaa267c46d85"
     },
     "SyntheticToken": {
       "hash": "0c71c66535a2e106e8fed506fc4b574c"
     },
+    "TestToken": {
+      "hash": "22d335e73742445babf95440892bf9fa"
+    },
     "V1Storage": {
-      "hash": "774d0d056c7a21df901193c9c527ada7"
-    },
-    "IMintableToken": {
-      "hash": "7d69c30f76d3642283cadbdb5d57a014"
-    },
-    "LendShare": {
-      "hash": "5eaa372f60cea7894ff4e24e3cd22311"
+      "hash": "0b1d8365387d4ededd660942dee5f6ee"
     }
   }
 }
