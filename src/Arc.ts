@@ -19,18 +19,15 @@ import { StateV1 } from './typings/StateV1';
 import { AddressBook } from './addresses/AddressBook';
 import { Config } from './addresses/Config';
 import Token from '../src/utils/Token';
-import { LendShare } from './typings/LendShare';
 
 export default class Arc {
   public wallet: Signer;
 
   public core: CoreV1;
   public state: StateV1;
-  public synthetic: SyntheticToken;
-  public stableShare: StableShare;
+  public syntheticAsset: SyntheticToken;
+  public collateralAsset: StableShare;
   public oracle: IOracle;
-  public interestModel: PolynomialInterestSetter;
-  public lendAsset: LendShare;
 
   static async init(wallet: Signer, addressBook?: AddressBook): Promise<Arc> {
     let arc = new Arc();
@@ -39,8 +36,8 @@ export default class Arc {
     if (addressBook) {
       arc.core = await CoreV1.at(wallet, addressBook.proxy);
       arc.state = await StateV1.at(wallet, addressBook.stateV1);
-      arc.synthetic = await SyntheticToken.at(wallet, addressBook.syntheticToken);
-      arc.stableShare = await StableShare.at(wallet, addressBook.stableAsset);
+      arc.syntheticAsset = await SyntheticToken.at(wallet, addressBook.syntheticToken);
+      arc.collateralAsset = await StableShare.at(wallet, addressBook.collateralAsset);
       arc.oracle = await IOracle.at(wallet, addressBook.oracle);
     }
 
@@ -58,18 +55,11 @@ export default class Arc {
 
     await this.core.setLimits(config.stableAssetLimit, config.syntheticAssetLimit);
 
-    this.synthetic = await SyntheticToken.deploy(
+    this.syntheticAsset = await SyntheticToken.deploy(
       this.wallet,
       proxy.address,
       config.name,
       config.symbol,
-    );
-
-    this.lendAsset = await LendShare.deploy(
-      this.wallet,
-      proxy.address,
-      `ARC-${config.name}`,
-      `ARC-${config.name}`,
     );
 
     this.state = await StateV1.deploy(
@@ -77,15 +67,12 @@ export default class Arc {
       this.core.address,
       await this.wallet.getAddress(),
       {
-        lendAsset: this.lendAsset.address,
-        syntheticAsset: this.synthetic.address,
-        stableAsset: config.stableShare,
-        interestSetter: config.interestModel,
+        syntheticAsset: this.syntheticAsset.address,
+        collateralAsset: config.stableShare,
         collateralRatio: { value: config.collateralRatio },
         syntheticRatio: { value: config.syntheticRatio },
         liquidationSpread: { value: config.liquidationSpread },
         originationFee: { value: config.originationFee },
-        earningsRate: { value: config.earningsRate },
         oracle: config.oracle,
       },
     );
@@ -99,7 +86,7 @@ export default class Arc {
     overrides: TransactionOverrides = {},
   ) {
     await Token.approve(
-      this.stableShare.address,
+      this.collateralAsset.address,
       caller || this.wallet,
       this.core.address,
       amount,
@@ -113,52 +100,12 @@ export default class Arc {
     overrides: TransactionOverrides = {},
   ) {
     await Token.approve(
-      this.synthetic.address,
+      this.syntheticAsset.address,
       caller || this.wallet,
       this.core.address,
       amount,
       overrides,
     );
-  }
-
-  async supply(
-    amount: BigNumberish,
-    caller: Signer = this.wallet,
-    overrides: TransactionOverrides = {},
-  ) {
-    const contract = await this.getCore(caller);
-    const tx = await contract.operateAction(
-      Operation.Supply,
-      {
-        id: 0,
-        assetOne: AssetType.Stable,
-        amountOne: amount,
-        assetTwo: '',
-        amountTwo: 0,
-      },
-      overrides,
-    );
-    return await this.parseActionTx(tx);
-  }
-
-  async withdraw(
-    amount: BigNumberish,
-    caller: Signer = this.wallet,
-    overrides: TransactionOverrides = {},
-  ) {
-    const contract = await this.getCore(caller);
-    const tx = await contract.operateAction(
-      Operation.Withdraw,
-      {
-        id: 0,
-        assetOne: AssetType.Stable,
-        amountOne: amount,
-        assetTwo: '',
-        amountTwo: 0,
-      },
-      overrides,
-    );
-    return await this.parseActionTx(tx);
   }
 
   async openPosition(
@@ -232,8 +179,8 @@ export default class Arc {
 
   async liquidatePosition(
     positionId: BigNumberish,
-    caller?: Signer,
-    overrides?: TransactionOverrides,
+    caller: Signer = this.wallet,
+    overrides: TransactionOverrides = {},
   ) {
     const contract = await this.getCore(caller);
     const tx = await contract.operateAction(
@@ -261,11 +208,11 @@ export default class Arc {
       collateralAsset: log.values.updatedPosition[1],
       borrowedAsset: log.values.updatedPosition[2],
       collateralAmount: {
-        sign: log.values.updatedPosition[3][0],
+        isPositive: log.values.updatedPosition[3][0],
         value: log.values.updatedPosition[3][1],
       },
       borrowedAmount: {
-        sign: log.values.updatedPosition[4][0],
+        isPositive: log.values.updatedPosition[4][0],
         value: log.values.updatedPosition[4][1],
       },
     } as Position;

@@ -5,11 +5,9 @@ import { StableShare } from './typings/StableShare';
 import { MockOracle } from './typings/MockOracle';
 import Token from './utils/Token';
 import { BigNumberish } from 'ethers/utils';
-
-import { PolynomialInterestSetter } from './typings/PolynomialInterestSetter';
 import { AssetType } from './types';
 
-import { defaultPolynomialInterestSetterParams, getConfig } from './addresses/Config';
+import { getConfig } from './addresses/Config';
 
 export class TestArc extends Arc {
   static async init(wallet: Wallet): Promise<TestArc> {
@@ -19,28 +17,16 @@ export class TestArc extends Arc {
   }
 
   async deployTestArc() {
-    this.stableShare = await StableShare.deploy(this.wallet);
+    this.collateralAsset = await StableShare.deploy(this.wallet);
     this.oracle = await MockOracle.deploy(this.wallet);
-    this.interestModel = await PolynomialInterestSetter.deploy(
-      this.wallet,
-      defaultPolynomialInterestSetterParams,
-    );
 
     const testConfig = getConfig(50);
     testConfig.name = 'ARCxBTC';
     testConfig.symbol = 'USDT-BTC';
-    testConfig.stableShare = this.stableShare.address;
-    testConfig.interestModel = this.interestModel.address;
+    testConfig.stableShare = this.collateralAsset.address;
     testConfig.oracle = this.oracle.address;
 
     await this.deployArc(testConfig);
-  }
-
-  async _supply(amount: BigNumberish, from: Wallet) {
-    await Token.approve(this.stableShare.address, from, this.core.address, amount);
-    await this.stableShare.mintShare(from.address, amount);
-
-    return await this.supply(amount, from);
   }
 
   async _borrowSynthetic(
@@ -49,13 +35,13 @@ export class TestArc extends Arc {
     from: Wallet,
     positionId?: BigNumberish,
   ) {
-    await Token.approve(this.stableShare.address, from, this.core.address, collateral);
-    await this.stableShare.mintShare(from.address, collateral);
+    await Token.approve(this.syntheticAsset.address, from, this.core.address, collateral, {});
+    await this.collateralAsset.mintShare(from.address, collateral, {});
 
     if (!positionId) {
-      return await this.openPosition(AssetType.Stable, collateral, amount, from);
+      return await this.openPosition(AssetType.Collateral, collateral, amount, from, {});
     } else {
-      return await this.borrow(positionId!, AssetType.Stable, collateral, amount, from);
+      return await this.borrow(positionId!, AssetType.Collateral, collateral, amount, from, {});
     }
   }
 
@@ -65,12 +51,12 @@ export class TestArc extends Arc {
     from: Wallet,
     positionId?: BigNumberish,
   ) {
-    await Token.approve(this.synthetic.address, from, this.core.address, collateral);
+    await Token.approve(this.syntheticAsset.address, from, this.core.address, collateral, {});
 
     if (!positionId) {
-      return await this.openPosition(AssetType.Synthetic, collateral, amount, from);
+      return await this.openPosition(AssetType.Synthetic, collateral, amount, from, {});
     } else {
-      return await this.borrow(positionId!, AssetType.Synthetic, collateral, amount, from);
+      return await this.borrow(positionId!, AssetType.Synthetic, collateral, amount, from, {});
     }
   }
 
@@ -82,15 +68,15 @@ export class TestArc extends Arc {
   ) {
     const position = await this.state.getPosition(positionId);
 
-    if (position.borrowedAsset == AssetType.Stable) {
-      await this.stableShare.mintShare(from.address, repayAmount);
-      await Token.approve(this.stableShare.address, from, this.core.address, repayAmount);
+    if (position.borrowedAsset == AssetType.Collateral) {
+      await this.collateralAsset.mintShare(from.address, repayAmount, {});
+      await Token.approve(this.collateralAsset.address, from, this.core.address, repayAmount, {});
     } else if (position.borrowedAsset == AssetType.Synthetic) {
       const price = await this.oracle.fetchCurrentPrice();
       await this._borrowSynthetic(repayAmount, price.value.mul(repayAmount).mul(2), from);
-      await Token.approve(this.synthetic.address, from, this.core.address, repayAmount);
+      await Token.approve(this.syntheticAsset.address, from, this.core.address, repayAmount, {});
     }
 
-    return await this.repay(positionId, repayAmount, withdrawAmount, from);
+    return await this.repay(positionId, repayAmount, withdrawAmount, from, {});
   }
 }

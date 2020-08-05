@@ -13,7 +13,6 @@ import {IMintableToken} from "../interfaces/IMintableToken.sol";
 import {console} from "@nomiclabs/buidler/console.sol";
 
 import {Types} from "../lib/Types.sol";
-import {Interest} from "../lib/Interest.sol";
 import {Decimal} from "../lib/Decimal.sol";
 import {SignedMath} from "../lib/SignedMath.sol";
 import {Storage} from "../lib/Storage.sol";
@@ -26,12 +25,9 @@ contract CoreV1 is AdminStorage, V1Storage {
 
     using SafeMath for uint256;
     using Math for uint256;
-    using Types for Types.Par;
-    using Types for Types.Wei;
+    using SignedMath for SignedMath.Int;
 
     enum Operation {
-        Supply,
-        Withdraw,
         Open,
         Borrow,
         Repay,
@@ -90,17 +86,8 @@ contract CoreV1 is AdminStorage, V1Storage {
 
         Types.Position memory operatedPosition;
 
-        if (operation == Operation.Supply) {
-            supply(
-                params.amountOne
-            );
-        } else if (operation == Operation.Withdraw) {
-            withdraw(
-                params.amountOne
-            );
-        } else if (operation == Operation.Open) {
+        if (operation == Operation.Open) {
             (operatedPosition, params.id) = openPosition(
-                params.assetOne,
                 params.amountOne,
                 params.amountTwo
             );
@@ -122,12 +109,11 @@ contract CoreV1 is AdminStorage, V1Storage {
             );
         }
 
-        (uint256 supply,) = state.totalPar();
-
-        require(
-            supply <= stableLimit,
-            "CoreV1: supply limit reached"
-        );
+        // @TODO: Fix this up
+        // require(
+        //     supply <= stableLimit,
+        //     "CoreV1: supply limit reached"
+        // );
 
         require(
             state.getSyntheticAsset().balanceOf(address(this)) <= syntheticLimit,
@@ -144,137 +130,9 @@ contract CoreV1 is AdminStorage, V1Storage {
             params,
             operatedPosition
         );
-
-        state.updateIndex();
-    }
-
-    function supply(
-        uint256 amount
-    )
-        internal
-    {
-        // CHECKS:
-        // 1. `amount` > 0
-        // 2. user should have enough balance to deposit tokens
-
-        // EFFECTS
-        // 1. Calculate par value given current supply index
-        // 2. Update par balance of user
-        // 3. Update total par balance of state
-        // 4. Update index given new supplies
-
-        // INTERACTIONS:
-        // 1. Transfer stable shares to this contract
-
-        require(
-            amount > 0,
-            "supply(): cannot supply 0"
-        );
-
-        require(
-            state.getStableAsset().balanceOf(msg.sender) >= amount,
-            "supply(): must have enough balance"
-        );
-
-        // Get the exising par balance of the user
-        Types.Par memory existingPar = state.getSupplyBalance(msg.sender);
-
-        // Get the new par balance and delta wei after depositing
-        (Types.Par memory newPar, Types.Wei memory deltaWei) = state.getNewParAndDeltaWei(
-            existingPar,
-            state.getIndex(),
-            Types.AssetAmount({
-                sign: true,
-                denomination: Types.AssetDenomination.Wei,
-                ref: Types.AssetReference.Delta,
-                value: amount
-            })
-        );
-
-        // Update the total par based on the deposit
-        state.updateTotalPar(existingPar, newPar);
-
-        // Update the user's new par balance
-        state.getLendAsset().mint(
-            msg.sender,
-            uint256(newPar.sub(existingPar).value)
-        );
-
-        // Transfer the delta wei amount
-        SafeERC20.safeTransferFrom(
-            state.getStableAsset(),
-            msg.sender,
-            address(this),
-            deltaWei.value
-        );
-    }
-
-    function withdraw(
-        uint256 amount
-    )
-        internal
-    {
-
-        // CHECKS:
-        // 1. `amount` > 0
-        // 2. Calculate wei balance of user given current supply index
-        // 3. `amount` > wei balance of user
-        // 4. Check that there's enough available liquidity
-
-        // EFFECTS:
-        // 1. Calculate new par value given withdrawl
-        // 2. Update par balance of user
-        // 3. Update total par balance of state
-        // 4. Update index given new supplies
-
-        // INTERACTIONS:
-        // 1. Transfer stable shares back to user
-
-        require(
-            amount > 0,
-            "withdraw(): cannot withdraw 0"
-        );
-
-        // Get the user's existing principal balance
-        Types.Par memory existingPar = state.getSupplyBalance(msg.sender);
-
-        // Ensure that the interest adjusted amount is not more than the withdraw amount
-        require(
-            state.getSupplyWei(msg.sender) >= amount,
-            "withraw(): cannot withdraw more than you have supplied"
-        );
-
-        // Calcuate the new prinipal value after the withdrawal and the delta
-        (Types.Par memory newPar, Types.Wei memory deltaWei) = state.getNewParAndDeltaWei(
-            existingPar,
-            state.getIndex(),
-            Types.AssetAmount({
-                sign: false,
-                denomination: Types.AssetDenomination.Wei,
-                ref: Types.AssetReference.Delta,
-                value: amount
-            })
-        );
-
-        // Set the new decremented supply balance of the user
-        state.updateTotalPar(existingPar, newPar);
-
-        // Burn the user's lend tokens
-        state.getLendAsset().burn(
-            msg.sender,
-            uint256(existingPar.sub(newPar).value)
-        );
-
-        // Transfer out the stable coins
-        SafeERC20.safeTransfer(
-            state.getStableAsset(),
-            msg.sender,
-            deltaWei.value
-        );
     }
 
     function openPosition(
-        Types.AssetType collateralAsset,
         uint256 collateralAmount,
         uint256 borrowAmount
     )
@@ -294,10 +152,10 @@ contract CoreV1 is AdminStorage, V1Storage {
 
         Types.Position memory newPosition = Types.Position({
             owner: msg.sender,
-            collateralAsset: collateralAsset,
-            borrowedAsset: Types.oppositeAsset(collateralAsset),
-            collateralAmount: Types.positiveZeroPar(),
-            borrowedAmount: Types.zeroPar()
+            collateralAsset: Types.AssetType.Collateral,
+            borrowedAsset: Types.AssetType.Synthetic,
+            collateralAmount: SignedMath.zero(),
+            borrowedAmount: SignedMath.zero()
         });
 
         positionId = state.savePosition(newPosition);
@@ -355,40 +213,28 @@ contract CoreV1 is AdminStorage, V1Storage {
         position = state.updatePositionAmount(
             positionId,
             position.collateralAsset,
-            Types.Par({
-                sign: true,
-                value: collateralAmount.to128()
+            SignedMath.Int({
+                isPositive: true,
+                value: collateralAmount
             })
         );
+
+        state.updateTotalSupplied(collateralAmount);
 
         // Only if they're borrowing
         if (borrowAmount > 0) {
             // Calculate the new borrow amount
-            (Types.Par memory newPar, ) = state.getNewParAndDeltaWei(
-                position.borrowedAmount,
-                state.getBorrowIndex(position.borrowedAsset),
-                Types.AssetAmount({
-                    sign: false,
-                    denomination: Types.AssetDenomination.Wei,
-                    ref: Types.AssetReference.Delta,
-                    value: borrowAmount
-                })
-            );
-
-            // If the borrowed asset is stable, update the total borrowed amount
-            if (position.borrowedAsset == Types.AssetType.Stable) {
-                state.updateTotalPar(position.borrowedAmount, newPar);
-            }
+            SignedMath.Int memory newBorrow = position.borrowedAmount.add(borrowAmount);
 
             // Update the position's borrow amount
             position = state.setAmount(
                 positionId,
                 position.borrowedAsset,
-                newPar
+                newBorrow
             );
 
             // Check how much collateral they need based on their new position details
-            Types.Par memory collateralRequired = state.calculateInverseRequired(
+            SignedMath.Int memory collateralRequired = state.calculateInverseRequired(
                 position.borrowedAsset,
                 position.borrowedAmount.value,
                 currentPrice
@@ -402,13 +248,13 @@ contract CoreV1 is AdminStorage, V1Storage {
         }
 
         IERC20 syntheticAsset = state.getSyntheticAsset();
-        IERC20 stableAsset = state.getStableAsset();
+        IERC20 collateralAsset = state.getcollateralAsset();
 
         // If a synthetic asset was being borrowed
         if (position.borrowedAsset == Types.AssetType.Synthetic) {
             // Transfer the stable asset to the synthetic contract
             SafeERC20.safeTransferFrom(
-                stableAsset,
+                collateralAsset,
                 msg.sender,
                 address(syntheticAsset),
                 collateralAmount
@@ -422,7 +268,7 @@ contract CoreV1 is AdminStorage, V1Storage {
         }
 
         // If stable coins are being borrowed
-        if (position.borrowedAsset == Types.AssetType.Stable) {
+        if (position.borrowedAsset == Types.AssetType.Collateral) {
             // Transfer the synthetic asset from the user
             SafeERC20.safeTransferFrom(
                 syntheticAsset,
@@ -433,7 +279,7 @@ contract CoreV1 is AdminStorage, V1Storage {
 
             // Transfer the stable asset to the user
             SafeERC20.safeTransfer(
-                stableAsset,
+                collateralAsset,
                 msg.sender,
                 borrowAmount
             );
@@ -487,32 +333,16 @@ contract CoreV1 is AdminStorage, V1Storage {
 
         // Calculate the user's new borrow requirements after decreasing their debt
         // An positive wei value will reduce the negative wei borrow value
-        (Types.Par memory newPar, Types.Wei memory deltaWei) = state.getNewParAndDeltaWei(
-            position.borrowedAmount,
-            state.getBorrowIndex(position.borrowedAsset),
-            Types.AssetAmount({
-                sign: true,
-                denomination: Types.AssetDenomination.Wei,
-                ref: Types.AssetReference.Delta,
-                value: repayAmount
-            })
-        );
-
-        // If stable coins were repaid, update the index and the total amount being borrowed
-        if (position.borrowedAsset == Types.AssetType.Stable) {
-            state.updateTotalPar(position.borrowedAmount, newPar);
-            state.updateIndex();
-        }
+        SignedMath.Int memory newBorrow = position.borrowedAmount.sub(repayAmount);
 
         // Update the position's new borrow amount
-        position = state.setAmount(positionId, position.borrowedAsset, newPar);
+        position = state.setAmount(positionId, position.borrowedAsset, newBorrow);
 
         // Calculate how much the user is allowed to withdraw given their debt was repaid
-        (Types.Par memory collateralDelta) = state.calculateCollateralDelta(
+        (SignedMath.Int memory collateralDelta) = state.calculateCollateralDelta(
             position.borrowedAsset,
             position.collateralAmount,
             position.borrowedAmount,
-            state.getBorrowIndex(position.borrowedAsset),
             currentPrice
         );
 
@@ -526,9 +356,9 @@ contract CoreV1 is AdminStorage, V1Storage {
         position = state.updatePositionAmount(
             positionId,
             position.collateralAsset,
-            Types.Par({
-                sign: false,
-                value: withdrawAmount.to128()
+            SignedMath.Int({
+                isPositive: false,
+                value: withdrawAmount
             })
         );
 
@@ -536,41 +366,20 @@ contract CoreV1 is AdminStorage, V1Storage {
             state.getAddress(Types.AssetType.Synthetic)
         );
 
-        IERC20 stableAsset = state.getStableAsset();
+        IERC20 collateralAsset = state.getcollateralAsset();
 
-        // If a synthetic asset was being borrowed
-        if (position.borrowedAsset == Types.AssetType.Synthetic) {
-            // Burn the synthetic asset from the user
-            synthetic.burn(
-                msg.sender,
-                repayAmount
-            );
+        // Burn the synthetic asset from the user
+        synthetic.burn(
+            msg.sender,
+            repayAmount
+        );
 
-            // Transfer stable coin collateral back to the user
-            synthetic.transferCollateral(
-                address(stableAsset),
-                msg.sender,
-                withdrawAmount
-            );
-        }
-
-        // If stable coins were being borrowed
-        if (position.borrowedAsset == Types.AssetType.Stable) {
-            // Transfer stable coins from the user back to ARC
-            SafeERC20.safeTransferFrom(
-                stableAsset,
-                msg.sender,
-                address(this),
-                deltaWei.value
-            );
-
-            // Transfer their synthetic back to them
-            SafeERC20.safeTransfer(
-                IERC20(address(synthetic)),
-                msg.sender,
-                withdrawAmount
-            );
-        }
+        // Transfer stable coin collateral back to the user
+        synthetic.transferCollateral(
+            address(collateralAsset),
+            msg.sender,
+            withdrawAmount
+        );
 
         return position;
     }
@@ -612,6 +421,8 @@ contract CoreV1 is AdminStorage, V1Storage {
             "liquidatePosition(): position is collateralised"
         );
 
+        console.log("position is liquidatable");
+
         // Get the liquidation price of the asset (discount for liquidator)
         Decimal.D256 memory liquidationPrice = state.calculateLiquidationPrice(
             position.collateralAsset
@@ -619,14 +430,12 @@ contract CoreV1 is AdminStorage, V1Storage {
 
         // Get the borrow index based on the asset
         // Synthetics have a borrow/supply index == 1
-        Interest.Index memory borrowIndex = state.getBorrowIndex(position.borrowedAsset);
 
         // Calculate how much the user is in debt by to be whole again
-        (Types.Par memory collateralDelta) = state.calculateCollateralDelta(
+        (SignedMath.Int memory collateralDelta) = state.calculateCollateralDelta(
             position.borrowedAsset,
             position.collateralAmount,
             position.borrowedAmount,
-            borrowIndex,
             liquidationPrice
         );
 
@@ -644,19 +453,10 @@ contract CoreV1 is AdminStorage, V1Storage {
 
         // Decrease the user's debt obligation
         // This amount is denominated in par since collateralDelta uses the borrow index
-        (Types.Par memory newPar, ) = state.getNewParAndDeltaWei(
-            position.borrowedAmount,
-            borrowIndex,
-            Types.AssetAmount({
-                sign: true,
-                denomination: Types.AssetDenomination.Par,
-                ref: Types.AssetReference.Delta,
-                value: borrowToLiquidate
-            })
-        );
+        SignedMath.Int memory newBorrow = position.borrowedAmount.sub(borrowToLiquidate);
 
         // Set the user's new borrow amount
-        position = state.setAmount(positionId, position.borrowedAsset, newPar);
+        position = state.setAmount(positionId, position.borrowedAsset, newBorrow);
 
         // Decrease their collateral amount by the amount they were missing
         position = state.updatePositionAmount(positionId, position.collateralAsset, collateralDelta);
@@ -668,51 +468,24 @@ contract CoreV1 is AdminStorage, V1Storage {
             "liquidatePosition(): msg.sender not enough of borrowed asset to liquidate"
         );
 
-        // If they were borrowing stable coins, decrease the total borrow amount
-        if (position.borrowedAsset == Types.AssetType.Stable) {
-            state.updateTotalPar(position.borrowedAmount, newPar);
-        }
-
         ISyntheticToken synthetic = ISyntheticToken(
             state.getAddress(Types.AssetType.Synthetic)
         );
 
-        IERC20 stableAsset = state.getStableAsset();
+        IERC20 collateralAsset = state.getcollateralAsset();
 
-        // If synthetics were being borrowed
-        if (position.borrowedAsset == Types.AssetType.Synthetic) {
-            // Burn the synthetic asset from the liquidator
-            synthetic.burn(
-                msg.sender,
-                borrowToLiquidate
-            );
+        // Burn the synthetic asset from the liquidator
+        synthetic.burn(
+            msg.sender,
+            borrowToLiquidate
+        );
 
-
-            // Transfer them the stable assets they acquired at a discount
-            synthetic.transferCollateral(
-                address(stableAsset),
-                msg.sender,
-                collateralDelta.value
-            );
-        }
-
-        // If stable coins were being borrowed
-        if (position.borrowedAsset == Types.AssetType.Stable) {
-            // Transfer the stable assets from the liquidator to ARC
-            SafeERC20.safeTransferFrom(
-                stableAsset,
-                msg.sender,
-                address(this),
-                borrowToLiquidate
-            );
-
-            // Transfer the synthetic to the liquidator (acq at a discount)
-            SafeERC20.safeTransfer(
-                IERC20(address(synthetic)),
-                msg.sender,
-                collateralDelta.value
-            );
-        }
+        // Transfer them the stable assets they acquired at a discount
+        synthetic.transferCollateral(
+            address(collateralAsset),
+            msg.sender,
+            collateralDelta.value
+        );
 
         return position;
     }

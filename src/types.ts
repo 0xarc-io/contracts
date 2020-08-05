@@ -2,7 +2,7 @@ import { BigNumberish } from 'ethers/utils';
 import { Signer } from 'ethers';
 
 export enum AssetType {
-  Stable,
+  Collateral,
   Synthetic,
 }
 
@@ -11,16 +11,14 @@ export type Decimal = {
 };
 
 export enum Operation {
-  Supply,
-  Withdraw,
   Open,
   Borrow,
   Repay,
   Liquidate,
 }
 
-export type Par = {
-  sign: boolean;
+export type Int = {
+  isPositive: boolean;
   value: BigNumberish;
 };
 
@@ -28,8 +26,8 @@ export type Position = {
   owner: string;
   collateralAsset: AssetType;
   borrowedAsset: AssetType;
-  collateralAmount: Par;
-  borrowedAmount: Par;
+  collateralAmount: Int;
+  borrowedAmount: Int;
 };
 
 export type OperationParams = {

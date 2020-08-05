@@ -13,7 +13,9 @@ import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
  * @dev SignedMath library for doing math with signed integers.
  */
 library SignedMath {
+
     using SafeMath for uint256;
+    using SignedMath for SignedMath.Int;
 
     // ============ Structs ============
 
@@ -23,6 +25,32 @@ library SignedMath {
     }
 
     // ============ Functions ============
+
+    function zero()
+        internal
+        pure
+        returns (Int memory)
+    {
+        return Int({
+            value: 0,
+            isPositive: true
+        });
+    }
+
+    function combine(
+        Int memory sint1,
+        Int memory sint2
+    )
+        internal
+        pure
+        returns (Int memory)
+    {
+        if (sint2.isPositive) {
+            return sint1.add(sint2.value);
+        } else {
+            return sint1.sub(sint2.value);
+        }
+    }
 
     /**
      * @dev Returns a new signed integer equal to a signed integer plus an unsigned integer.

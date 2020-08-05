@@ -12,21 +12,18 @@ import {console} from "@nomiclabs/buidler/console.sol";
 import {IOracle} from "../interfaces/IOracle.sol";
 import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
 import {IMintableToken} from "../interfaces/IMintableToken.sol";
-import {IInterestSetter} from "../interfaces/IInterestSetter.sol";
 
 import {Types} from "../lib/Types.sol";
 import {Decimal} from "../lib/Decimal.sol";
-import {Interest} from "../lib/Interest.sol";
 import {Math} from "../lib/Math.sol";
 import {Time} from "../lib/Time.sol";
 import {SignedMath} from "../lib/SignedMath.sol";
 
 contract StateV1 {
 
-    using Types for Types.Par;
-    using Types for Types.Wei;
     using Math for uint256;
     using SafeMath for uint256;
+    using SignedMath for SignedMath.Int;
 
     // ============ Variables ============
 
@@ -35,18 +32,16 @@ contract StateV1 {
 
     Types.GlobalParams public params;
 
-    Types.TotalPar public totalPar;
-    Interest.Index public globalIndex;
-
     uint256 public positionCount;
+    uint256 public totalSupplied;
 
     mapping (uint256 => Types.Position) public positions;
 
-    event LogIndexUpdated(Interest.Index updatedIndex);
+    // ============ Events ============
 
     event GlobalParamsUpdated(Types.GlobalParams updatedParams);
 
-    event TotalParUpdated(Types.TotalPar updatedPar);
+    event TotalSuppliedUpdated(uint256 updatedSupply);
 
     // ============ Constructor ============
 
@@ -60,11 +55,9 @@ contract StateV1 {
         core = _core;
         admin = _admin;
         params = _globalParams;
-        globalIndex = Interest.newIndex();
 
-        emit LogIndexUpdated(globalIndex);
         emit GlobalParamsUpdated(params);
-        emit TotalParUpdated(totalPar);
+        emit TotalSuppliedUpdated(0);
     }
 
     // ============ Modifiers ============
@@ -85,23 +78,6 @@ contract StateV1 {
         _;
     }
 
-    // ============ Public Setters ============
-
-    function updateIndex()
-        public
-        returns (Interest.Index memory)
-    {
-        if (globalIndex.lastUpdate == Time.currentTime()) {
-            return globalIndex;
-        }
-
-        globalIndex = fetchNewIndex(globalIndex);
-
-        emit LogIndexUpdated(globalIndex);
-
-        return globalIndex;
-    }
-
     // ============ Admin Setters ============
 
     function setOracle(
@@ -111,16 +87,6 @@ contract StateV1 {
         onlyAdmin
     {
         params.oracle = IOracle(_oracle);
-        emit GlobalParamsUpdated(params);
-    }
-
-    function setInterestSetter(
-        address _setter
-    )
-        public
-        onlyAdmin
-    {
-        params.interestSetter = IInterestSetter(_setter);
         emit GlobalParamsUpdated(params);
     }
 
@@ -164,31 +130,30 @@ contract StateV1 {
         emit GlobalParamsUpdated(params);
     }
 
-    function setEarningsRate(
-        Decimal.D256 memory rate
-    )
-        public
-        onlyAdmin
-    {
-        params.earningsRate = rate;
-        emit GlobalParamsUpdated(params);
-    }
-
     function removeExcessTokens(
         address to
     )
         public
         onlyAdmin
     {
-        Types.Wei memory excessTokens = getExcessStableTokens();
-
-        params.stableAsset.transfer(
+        params.collateralAsset.transfer(
             to,
-            excessTokens.value
+           getExcessStableTokens()
         );
     }
 
     // ============ Core Setters ============
+
+    function updateTotalSupplied(
+        uint256 amount
+    )
+        public
+        onlyCore
+    {
+        totalSupplied = totalSupplied.add(amount);
+
+        emit TotalSuppliedUpdated(totalSupplied);
+    }
 
     function savePosition(
         Types.Position memory position
@@ -205,7 +170,7 @@ contract StateV1 {
     function setAmount(
         uint256 id,
         Types.AssetType asset,
-        Types.Par memory amount
+        SignedMath.Int memory amount
     )
         public
         onlyCore
@@ -225,7 +190,7 @@ contract StateV1 {
     function updatePositionAmount(
         uint256 id,
         Types.AssetType asset,
-        Types.Par memory amount
+        SignedMath.Int memory amount
     )
         public
         onlyCore
@@ -234,41 +199,12 @@ contract StateV1 {
         Types.Position storage position = positions[id];
 
         if (position.collateralAsset == asset) {
-            position.collateralAmount = position.collateralAmount.add(amount);
+            position.collateralAmount = position.collateralAmount.combine(amount);
         } else {
-            position.collateralAmount = position.borrowedAmount.add(amount);
+            position.borrowedAmount = position.borrowedAmount.combine(amount);
         }
 
         return position;
-    }
-
-    function updateTotalPar(
-        Types.Par memory existingPar,
-        Types.Par memory newPar
-    )
-        public
-        onlyCore
-    {
-
-        if (Types.equals(existingPar, newPar)) {
-            return;
-        }
-
-        // roll-back oldPar
-        if (existingPar.sign) {
-            totalPar.supply = uint256(totalPar.supply).sub(existingPar.value).to128();
-        } else {
-            totalPar.borrow = uint256(totalPar.borrow).sub(existingPar.value).to128();
-        }
-
-        // roll-forward newPar
-        if (newPar.sign) {
-            totalPar.supply = uint256(totalPar.supply).add(newPar.value).to128();
-        } else {
-            totalPar.borrow = uint256(totalPar.borrow).add(newPar.value).to128();
-        }
-
-        emit TotalParUpdated(totalPar);
     }
 
     // ============ Public Getters ============
@@ -280,25 +216,17 @@ contract StateV1 {
         view
         returns (address)
     {
-        return asset == Types.AssetType.Stable ?
-            address(params.stableAsset) :
+        return asset == Types.AssetType.Collateral ?
+            address(params.collateralAsset) :
             address(params.syntheticAsset);
     }
 
-    function getLendAsset()
-        public
-        view
-        returns (IMintableToken)
-    {
-        return params.lendAsset;
-    }
-
-    function getStableAsset()
+    function getcollateralAsset()
         public
         view
         returns (IERC20)
     {
-        return params.stableAsset;
+        return params.collateralAsset;
     }
 
     function getSyntheticAsset()
@@ -314,31 +242,12 @@ contract StateV1 {
     )
         public
         view
-        returns (Types.Par memory)
+        returns (SignedMath.Int memory)
     {
-        return Types.Par({
-            sign: true,
-            value: IERC20(address(params.lendAsset)).balanceOf(owner).to128()
+        return SignedMath.Int({
+            isPositive: true,
+            value: IERC20(address(params.collateralAsset)).balanceOf(owner).to128()
         });
-    }
-
-    function getTotalPar()
-        public
-        view
-        returns (uint256, uint256)
-    {
-        return (
-            totalPar.supply,
-            totalPar.borrow
-        );
-    }
-
-    function getIndex()
-        public
-        view
-        returns (Interest.Index memory)
-    {
-        return globalIndex;
     }
 
     function getPosition(
@@ -359,150 +268,15 @@ contract StateV1 {
         return params.oracle.fetchCurrentPrice();
     }
 
-    function getSupplyWei(
-        address supplier
-    )
-        public
-        view
-        returns (uint256)
-    {
-        // Get the user's existing principal balance
-        Types.Par memory existingPar = getSupplyBalance(supplier);
-
-        // Convert the principal balance to the interest adjusted amount
-        Types.Wei memory weiBalance = existingPar.getWei(getIndex());
-
-        return weiBalance.value;
-    }
-
-    function getBorrowWei(
-        uint256 positionId
-    )
-        public
-        view
-        returns (uint256)
-    {
-        Types.Position memory position = positions[positionId];
-
-        Types.Wei memory borrowWei = position.borrowedAmount.getWei(
-            getBorrowIndex(position.borrowedAsset)
-        );
-
-        return borrowWei.value;
-    }
-
-    function getBorrowIndex(
-        Types.AssetType asset
-    )
-        public
-        view
-        returns (Interest.Index memory)
-    {
-        if (asset == Types.AssetType.Stable) {
-            return globalIndex;
-        } else {
-            return Interest.newIndex();
-        }
-    }
-
-    function fetchInterestRate(
-        Interest.Index memory index
-    )
-        public
-        view
-        returns (Interest.Rate memory)
-    {
-        (
-            Types.Wei memory supplyWei,
-            Types.Wei memory borrowWei
-        ) = Interest.totalParToWei(totalPar, index);
-
-        Interest.Rate memory rate = params.interestSetter.getInterestRate(
-            address(params.stableAsset),
-            borrowWei.value,
-            supplyWei.value
-        );
-
-        return rate;
-    }
-
     function getExcessStableTokens()
         internal
         view
-        returns (Types.Wei memory)
+        returns (uint256)
     {
-        Types.Wei memory balanceWei = Types.Wei({
-            sign: true,
-            value: params.stableAsset.balanceOf(address(this))
-        });
-
-        (
-            Types.Wei memory supplyWei,
-            Types.Wei memory borrowWei
-        ) = Interest.totalParToWei(totalPar, globalIndex);
-
-        // borrowWei is negative, so subtracting it makes the value more positive
-        return balanceWei.sub(borrowWei).sub(supplyWei);
+        return params.collateralAsset.balanceOf(address(this)).sub(totalSupplied);
     }
 
     // ============ Calculation Getters ============
-
-    function getNewParAndDeltaWei(
-        Types.Par memory currentPar,
-        Interest.Index memory index,
-        Types.AssetAmount memory amount
-    )
-        public
-        view
-        returns (Types.Par memory, Types.Wei memory)
-    {
-        if (amount.value == 0 && amount.ref == Types.AssetReference.Delta) {
-            return (currentPar, Types.zeroWei());
-        }
-
-        Types.Wei memory oldWei = Interest.parToWei(currentPar, index);
-        Types.Par memory newPar;
-        Types.Wei memory deltaWei;
-
-        if (amount.denomination == Types.AssetDenomination.Wei) {
-            deltaWei = Types.Wei({
-                sign: amount.sign,
-                value: amount.value
-            });
-            if (amount.ref == Types.AssetReference.Target) {
-                deltaWei = deltaWei.sub(oldWei);
-            }
-            newPar = Interest.weiToPar(oldWei.add(deltaWei), index);
-        } else { // AssetDenomination.Par
-            newPar = Types.Par({
-                sign: amount.sign,
-                value: amount.value.to128()
-            });
-            if (amount.ref == Types.AssetReference.Delta) {
-                newPar = currentPar.add(newPar);
-            }
-            deltaWei = Interest.parToWei(newPar, index).sub(oldWei);
-        }
-
-        return (newPar, deltaWei);
-    }
-
-    function fetchNewIndex(
-        Interest.Index memory index
-    )
-        public
-        view
-        returns (Interest.Index memory)
-    {
-        Interest.Rate memory rate = fetchInterestRate(index);
-
-        return Interest.calculateNewIndex(
-            index,
-            rate,
-            totalPar,
-            params.earningsRate
-        );
-    }
 
     function isCollateralized(
         Types.Position memory position
@@ -517,15 +291,14 @@ contract StateV1 {
 
         Decimal.D256 memory currentPrice = params.oracle.fetchCurrentPrice();
 
-        (Types.Par memory collateralDelta) = calculateCollateralDelta(
+        (SignedMath.Int memory collateralDelta) = calculateCollateralDelta(
             position.borrowedAsset,
             position.collateralAmount,
             position.borrowedAmount,
-            getBorrowIndex(position.borrowedAsset),
             currentPrice
         );
 
-        return collateralDelta.sign;
+        return collateralDelta.isPositive || collateralDelta.value == 0;
     }
 
     function calculateInverseAmount(
@@ -539,13 +312,13 @@ contract StateV1 {
     {
         uint256 borrowRequired;
 
-        if (asset == Types.AssetType.Stable) {
-            borrowRequired = Decimal.div(
+        if (asset == Types.AssetType.Collateral) {
+            borrowRequired = Decimal.mul(
                 amount,
                 price
             );
         } else if (asset == Types.AssetType.Synthetic) {
-            borrowRequired = Decimal.mul(
+            borrowRequired = Decimal.div(
                 amount,
                 price
             );
@@ -561,7 +334,7 @@ contract StateV1 {
     )
         public
         view
-        returns (Types.Par memory)
+        returns (SignedMath.Int memory)
     {
         uint256 collateralRequired = calculateInverseAmount(
             asset,
@@ -569,7 +342,7 @@ contract StateV1 {
             price
         );
 
-        if (asset == Types.AssetType.Stable) {
+        if (asset == Types.AssetType.Collateral) {
             collateralRequired = Decimal.mul(
                 collateralRequired,
                 params.syntheticRatio
@@ -582,9 +355,9 @@ contract StateV1 {
             );
         }
 
-        return Types.Par({
-            sign: true,
-            value: collateralRequired.to128()
+        return SignedMath.Int({
+            isPositive: true,
+            value: collateralRequired
         });
     }
 
@@ -598,7 +371,7 @@ contract StateV1 {
         Decimal.D256 memory result;
         Decimal.D256 memory currentPrice = params.oracle.fetchCurrentPrice();
 
-        if (asset == Types.AssetType.Stable) {
+        if (asset == Types.AssetType.Collateral) {
             result = Decimal.add(
                 Decimal.one(),
                 params.liquidationSpread.value
@@ -620,39 +393,32 @@ contract StateV1 {
 
     function calculateCollateralDelta(
         Types.AssetType borrowedAsset,
-        Types.Par memory parSupply,
-        Types.Par memory parBorrow,
-        Interest.Index memory borrowIndex,
+        SignedMath.Int memory supply,
+        SignedMath.Int memory borrow,
         Decimal.D256 memory price
     )
         public
         view
-        returns (Types.Par memory)
+        returns (SignedMath.Int memory)
     {
-        Types.Par memory collateralDelta;
+        SignedMath.Int memory collateralDelta;
+        SignedMath.Int memory collateralRequired;
 
-        Types.Par memory collateralRequired;
-
-        Types.Wei memory weiBorrow = Types.getWei(
-            parBorrow,
-            borrowIndex
-        );
-
-        if (borrowedAsset == Types.AssetType.Stable) {
+        if (borrowedAsset == Types.AssetType.Collateral) {
             collateralRequired = calculateInverseRequired(
                 borrowedAsset,
-                weiBorrow.value,
+                borrow.value,
                 price
             );
         } else if (borrowedAsset == Types.AssetType.Synthetic) {
             collateralRequired = calculateInverseRequired(
                 borrowedAsset,
-                weiBorrow.value,
+                borrow.value,
                 price
             );
         }
 
-        collateralDelta = parSupply.sub(collateralRequired);
+        collateralDelta = supply.sub(collateralRequired.value);
 
         return collateralDelta;
     }
