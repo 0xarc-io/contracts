@@ -12,7 +12,8 @@
   "license": "MIT",
   "private": false,
   "scripts": {
-    "push-new": "yarn tsc && npm version minor && npm publish",
+    "push-patch": "yarn tsc && npm version patch && npm publish",
+    "push-minor": "yarn tsc && npm version minor && npm publish",
     "compile": "yarn buidler compile",
     "start": "node scripts/watcher.js",
     "clean": "rm -rf src/types && rm -rf src/typings && rm -rf artifacts && rm -rf cache",
