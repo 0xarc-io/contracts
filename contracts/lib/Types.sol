@@ -46,6 +46,13 @@ library Types {
         SignedMath.Int borrowedAmount;
     }
 
+    struct RiskParams {
+        uint256 collateralLimit;
+        uint256 syntheticLimit;
+        uint256 positionCollateralMinimum;
+        uint256 positionCollateralMaximum;
+    }
+
     // ============ ArcAsset ============
 
     function oppositeAsset(
