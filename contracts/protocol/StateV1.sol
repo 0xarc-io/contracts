@@ -31,6 +31,7 @@ contract StateV1 {
     address admin;
 
     Types.GlobalParams public params;
+    Types.RiskParams public risk;
 
     uint256 public positionCount;
     uint256 public totalSupplied;
@@ -46,13 +47,15 @@ contract StateV1 {
     constructor(
         address _core,
         address _admin,
-        Types.GlobalParams memory _globalParams
+        Types.GlobalParams memory _globalParams,
+        Types.RiskParams memory _riskParams
     )
         public
     {
         core = _core;
         admin = _admin;
         params = _globalParams;
+        risk = _riskParams;
 
         emit GlobalParamsUpdated(params);
     }
