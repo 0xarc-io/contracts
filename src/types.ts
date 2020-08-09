@@ -18,7 +18,7 @@ export enum Operation {
 }
 
 export type Int = {
-  isPositive: boolean;
+  sign: boolean;
   value: BigNumberish;
 };
 

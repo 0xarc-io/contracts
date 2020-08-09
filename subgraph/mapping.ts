@@ -14,9 +14,9 @@ export function actionOperated(event: ActionOperated): void {
     position.owner = event.params.updatedPosition.owner;
     position.collateralAsset = event.params.updatedPosition.collateralAsset;
     position.borrowedAsset = event.params.updatedPosition.borrowedAsset;
-    position.collateralAmountSign = event.params.updatedPosition.collateralAmount.isPositive;
+    position.collateralAmountSign = event.params.updatedPosition.collateralAmount.sign;
     position.collateralAmountValue = event.params.updatedPosition.collateralAmount.value;
-    position.borrowedAmountSign = event.params.updatedPosition.borrowedAmount.isPositive;
+    position.borrowedAmountSign = event.params.updatedPosition.borrowedAmount.sign;
     position.borrowedAmountValue = event.params.updatedPosition.borrowedAmount.value;
     position.save();
   }

@@ -71,7 +71,7 @@ export default class Arc {
         collateralRatio: { value: config.collateralRatio },
         liquidationArcFee: { value: config.liquidationArcFee },
         liquidationUserFee: { value: config.liquidationUserFee },
-        originationFee: { value: config.originationFee },
+        interestRate: { value: config.interestRate },
       },
       {
         collateralLimit: '',
@@ -211,11 +211,11 @@ export default class Arc {
       collateralAsset: log.values.updatedPosition[1],
       borrowedAsset: log.values.updatedPosition[2],
       collateralAmount: {
-        isPositive: log.values.updatedPosition[3][0],
+        sign: log.values.updatedPosition[3][0],
         value: log.values.updatedPosition[3][1],
       },
       borrowedAmount: {
-        isPositive: log.values.updatedPosition[4][0],
+        sign: log.values.updatedPosition[4][0],
         value: log.values.updatedPosition[4][1],
       },
     } as Position;

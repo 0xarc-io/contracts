@@ -16,6 +16,7 @@ import {IMintableToken} from "../interfaces/IMintableToken.sol";
 import {Types} from "../lib/Types.sol";
 import {Decimal} from "../lib/Decimal.sol";
 import {Math} from "../lib/Math.sol";
+import {Interest} from "../lib/Interest.sol";
 import {Time} from "../lib/Time.sol";
 import {SignedMath} from "../lib/SignedMath.sol";
 
@@ -23,19 +24,22 @@ contract StateV1 {
 
     using Math for uint256;
     using SafeMath for uint256;
-    using SignedMath for SignedMath.Int;
+    using Types for Types.Par;
+    using Types for Types.Wei;
 
     // ============ Variables ============
 
     address core;
     address admin;
 
-    Types.GlobalParams public params;
+    Types.MarketParams public market;
     Types.RiskParams public risk;
 
+    IOracle public oracle;
     address public collateralAsset;
     address public syntheticAsset;
-    IOracle public oracle;
+
+    Interest.Index public globalIndex;
 
     uint256 public positionCount;
     uint256 public totalSupplied;
@@ -44,7 +48,9 @@ contract StateV1 {
 
     // ============ Events ============
 
-    event GlobalParamsUpdated(Types.GlobalParams updatedParams);
+    event LogIndexUpdated(Interest.Index updatedIndex);
+    event MarketParamsUpdated(Types.MarketParams updatedMarket);
+    event GlobalIndexUpdated(Interest.Index updatedIndex);
     event RiskParamsUpdated(Types.RiskParams updatedParams);
 
     // ============ Constructor ============
@@ -55,7 +61,7 @@ contract StateV1 {
         address _collateralAsset,
         address _syntheticAsset,
         address _oracle,
-        Types.GlobalParams memory _globalParams,
+        Types.MarketParams memory _marketParams,
         Types.RiskParams memory _riskParams
     )
         public
@@ -65,12 +71,10 @@ contract StateV1 {
         collateralAsset = _collateralAsset;
         syntheticAsset = _syntheticAsset;
 
-        oracle = IOracle(_oracle);
-        params = _globalParams;
-        risk = _riskParams;
-
-        emit GlobalParamsUpdated(params);
-        emit RiskParamsUpdated(risk);
+        updateIndex();
+        setOracle(_oracle);
+        setMarketParams(_marketParams);
+        setRiskParams(_riskParams);
     }
 
     // ============ Modifiers ============
@@ -100,17 +104,17 @@ contract StateV1 {
         onlyAdmin
     {
         oracle = IOracle(_oracle);
-        emit GlobalParamsUpdated(params);
+        emit MarketParamsUpdated(market);
     }
 
-    function setGlobalParams(
-        Types.GlobalParams memory _globalParams
+    function setMarketParams(
+        Types.MarketParams memory _marketParams
     )
         public
         onlyAdmin
     {
-        params = _globalParams;
-        emit GlobalParamsUpdated(params);
+        market = _marketParams;
+        emit MarketParamsUpdated(market);
     }
 
     function setRiskParams(
@@ -121,6 +125,35 @@ contract StateV1 {
     {
         risk = _riskParams;
         emit RiskParamsUpdated(risk);
+    }
+
+    // ============ Public Setters  ============
+
+    function updateIndex()
+        public
+        returns (Interest.Index memory)
+    {
+        if (globalIndex.lastUpdate == 0) {
+            globalIndex = Interest.newIndex();
+            return globalIndex;
+        }
+
+        if (globalIndex.lastUpdate == Time.currentTime()) {
+            return globalIndex;
+        }
+
+        console.log("old index: %s", globalIndex.borrow);
+
+        globalIndex = Interest.calculateNewIndex(
+            globalIndex,
+            market.interestRate
+        );
+
+        console.log("new index: %s", globalIndex.borrow);
+
+        emit LogIndexUpdated(globalIndex);
+
+        return globalIndex;
     }
 
     // ============ Core Setters ============
@@ -149,7 +182,7 @@ contract StateV1 {
     function setAmount(
         uint256 id,
         Types.AssetType asset,
-        SignedMath.Int memory amount
+        Types.Par memory amount
     )
         public
         onlyCore
@@ -169,7 +202,7 @@ contract StateV1 {
     function updatePositionAmount(
         uint256 id,
         Types.AssetType asset,
-        SignedMath.Int memory amount
+        Types.Par memory amount
     )
         public
         onlyCore
@@ -178,9 +211,9 @@ contract StateV1 {
         Types.Position storage position = positions[id];
 
         if (position.collateralAsset == asset) {
-            position.collateralAmount = position.collateralAmount.combine(amount);
+            position.collateralAmount = position.collateralAmount.add(amount);
         } else {
-            position.borrowedAmount = position.borrowedAmount.combine(amount);
+            position.borrowedAmount = position.borrowedAmount.add(amount);
         }
 
         return position;
@@ -220,6 +253,51 @@ contract StateV1 {
 
     // ============ Calculation Getters ============
 
+    function getNewParAndDeltaWei(
+        Types.Par memory currentPar,
+        Types.AssetAmount memory amount
+    )
+        public
+        view
+        returns (Types.Par memory, Types.Wei memory)
+    {
+        console.log("*** getNewParAndDeltaWei ***");
+        if (amount.value == 0 && amount.ref == Types.AssetReference.Delta) {
+            return (currentPar, Types.zeroWei());
+        }
+
+        console.log("   borrow index: %s", globalIndex.borrow);
+        console.log("   currentPar: %s", currentPar.value);
+
+        Types.Wei memory oldWei = Interest.parToWei(currentPar, globalIndex);
+        console.log("   oldWei: %s", oldWei.value);
+        Types.Par memory newPar;
+        Types.Wei memory deltaWei;
+
+        if (amount.denomination == Types.AssetDenomination.Wei) {
+            deltaWei = Types.Wei({
+                sign: amount.sign,
+                value: amount.value
+            });
+            if (amount.ref == Types.AssetReference.Target) {
+                deltaWei = deltaWei.sub(oldWei);
+            }
+            newPar = Interest.weiToPar(oldWei.add(deltaWei), globalIndex);
+        } else { // AssetDenomination.Par
+            newPar = Types.Par({
+                sign: amount.sign,
+                value: amount.value.to128()
+            });
+            if (amount.ref == Types.AssetReference.Delta) {
+                newPar = currentPar.add(newPar);
+            }
+            deltaWei = Interest.parToWei(newPar, globalIndex).sub(oldWei);
+        }
+        console.log("   newPar: %s", newPar.value);
+
+        return (newPar, deltaWei);
+    }
+
     function isCollateralized(
         Types.Position memory position
     )
@@ -233,14 +311,14 @@ contract StateV1 {
 
         Decimal.D256 memory currentPrice = oracle.fetchCurrentPrice();
 
-        (SignedMath.Int memory collateralDelta) = calculateCollateralDelta(
+        (Types.Par memory collateralDelta) = calculateCollateralDelta(
             position.borrowedAsset,
             position.collateralAmount,
             position.borrowedAmount,
             currentPrice
         );
 
-        return collateralDelta.isPositive || collateralDelta.value == 0;
+        return collateralDelta.sign || collateralDelta.value == 0;
     }
 
     function calculateInverseAmount(
@@ -276,30 +354,39 @@ contract StateV1 {
     )
         public
         view
-        returns (SignedMath.Int memory)
+        returns (Types.Par memory)
     {
-        uint256 collateralRequired = calculateInverseAmount(
+        console.log("*** calculateInverseRequired ***");
+
+        console.log("   amount: %s", amount);
+        console.log("   price: %s", price.value);
+
+        uint256 inverseRequired = calculateInverseAmount(
             asset,
             amount,
             price
         );
 
+        console.log("   inverse amount: %s", inverseRequired);
+
         if (asset == Types.AssetType.Collateral) {
-            collateralRequired = Decimal.mul(
-                collateralRequired,
-                params.collateralRatio
+            inverseRequired = Decimal.div(
+                inverseRequired,
+                market.collateralRatio
             );
 
         } else if (asset == Types.AssetType.Synthetic) {
-            collateralRequired = Decimal.mul(
-                collateralRequired,
-                params.collateralRatio
+            inverseRequired = Decimal.mul(
+                inverseRequired,
+                market.collateralRatio
             );
         }
 
-        return SignedMath.Int({
-            isPositive: true,
-            value: collateralRequired
+        console.log("   inverse required: %s", inverseRequired);
+
+        return Types.Par({
+            sign: true,
+            value: inverseRequired.to128()
         });
     }
 
@@ -310,20 +397,26 @@ contract StateV1 {
         view
         returns (Decimal.D256 memory price)
     {
+        console.log("*** calculateLiquidationPrice ***");
+
         Decimal.D256 memory result;
         Decimal.D256 memory currentPrice = oracle.fetchCurrentPrice();
 
-        uint256 totalSpread = params.liquidationUserFee.value.add(
-            params.liquidationArcFee.value
+        console.log("   current price: %s", currentPrice.value);
+
+        uint256 totalSpread = market.liquidationUserFee.value.add(
+            market.liquidationArcFee.value
         );
 
+        console.log("   total spread: %s", totalSpread);
+
         if (asset == Types.AssetType.Collateral) {
-            result = Decimal.add(
+            result = Decimal.sub(
                 Decimal.one(),
                 totalSpread
             );
         } else if (asset == Types.AssetType.Synthetic) {
-            result = Decimal.sub(
+            result = Decimal.add(
                 Decimal.one(),
                 totalSpread
             );
@@ -339,34 +432,84 @@ contract StateV1 {
 
     function calculateCollateralDelta(
         Types.AssetType borrowedAsset,
-        SignedMath.Int memory supply,
-        SignedMath.Int memory borrow,
+        Types.Par memory parSupply,
+        Types.Par memory parBorrow,
         Decimal.D256 memory price
     )
         public
         view
-        returns (SignedMath.Int memory)
+        returns (Types.Par memory)
     {
-        SignedMath.Int memory collateralDelta;
-        SignedMath.Int memory collateralRequired;
+        console.log("*** calculateCollateralDelta ***");
+
+        Types.Par memory collateralDelta;
+        Types.Par memory collateralRequired;
+
+        console.log("   original borrow: %s", parBorrow.value);
+
+        Types.Wei memory weiBorrow = Types.getWei(
+            parBorrow,
+            globalIndex
+        );
+
+        console.log("   wei borrow: %s", weiBorrow.value);
 
         if (borrowedAsset == Types.AssetType.Collateral) {
             collateralRequired = calculateInverseRequired(
                 borrowedAsset,
-                borrow.value,
+                weiBorrow.value,
                 price
             );
         } else if (borrowedAsset == Types.AssetType.Synthetic) {
             collateralRequired = calculateInverseRequired(
                 borrowedAsset,
-                borrow.value,
+                weiBorrow.value,
                 price
             );
         }
 
-        collateralDelta = supply.sub(collateralRequired.value);
+        collateralDelta = parSupply.sub(collateralRequired);
 
         return collateralDelta;
+    }
+
+    function totalLiquidationSpread()
+        public
+        view
+        returns (Decimal.D256 memory)
+    {
+        return Decimal.D256({
+            value: market.liquidationUserFee.value.add(
+                market.liquidationArcFee.value
+            )
+        });
+    }
+
+    function calculateLiquidationSplit()
+        public
+        view
+        returns (
+            Decimal.D256 memory userRatio,
+            Decimal.D256 memory arcRatio
+        )
+    {
+        Decimal.D256 memory total = Decimal.D256({
+            value: market.liquidationUserFee.value.add(
+                market.liquidationArcFee.value
+            )
+        });
+
+        userRatio = Decimal.D256({
+            value: Decimal.div(
+                market.liquidationUserFee.value,
+                total
+            )
+        });
+
+        arcRatio = Decimal.sub(
+            Decimal.one(),
+            userRatio.value
+        );
     }
 
 }

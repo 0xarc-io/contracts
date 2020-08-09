@@ -1,10 +1,10 @@
 import 'jest';
 import { Wallet, ethers } from 'ethers';
-import { ITestContext } from '../arcDescribe';
-import initializeArc from '../initializeArc';
+import { ITestContext } from '../helpers/arcDescribe';
+import initializeArc from '../helpers/initializeArc';
+import arcDescribe from '../helpers/arcDescribe';
 import ArcNumber from '../../src/utils/ArcNumber';
 import Token from '../../src/utils/Token';
-import arcDescribe from '../arcDescribe';
 import { expectRevert } from '../../src/utils/expectRevert';
 import ArcDecimal from '../../src/utils/ArcDecimal';
 import { stat } from 'fs';
@@ -53,9 +53,9 @@ arcDescribe('#Actions.openPosition()', init, (ctx: ITestContext) => {
 
       const position = await ctx.arc.state.positions(0);
       expect(position.collateralAmount.value).toEqual(ArcNumber.new(200));
-      expect(position.collateralAmount.isPositive).toEqual(true);
+      expect(position.collateralAmount.sign).toEqual(true);
       expect(position.borrowedAmount.value).toEqual(ArcNumber.new(1));
-      expect(position.borrowedAmount.isPositive).toEqual(true);
+      expect(position.borrowedAmount.sign).toEqual(true);
       expect(position.collateralAsset).toEqual(AssetType.Collateral);
       expect(position.borrowedAsset).toEqual(AssetType.Synthetic);
     });

@@ -3,7 +3,7 @@ import Arc from './Arc';
 import { Wallet } from 'ethers';
 import { MockOracle } from './typings/MockOracle';
 import Token from './utils/Token';
-import { BigNumberish } from 'ethers/utils';
+import { BigNumberish, BigNumber } from 'ethers/utils';
 import { AssetType } from './types';
 
 import { getConfig } from './addresses/Config';
@@ -45,21 +45,6 @@ export class TestArc extends Arc {
     }
   }
 
-  async _borrowStableShares(
-    amount: BigNumberish,
-    collateral: BigNumberish,
-    from: Wallet,
-    positionId?: BigNumberish,
-  ) {
-    await Token.approve(this.syntheticAsset.address, from, this.core.address, collateral, {});
-
-    if (!positionId) {
-      return await this.openPosition(AssetType.Synthetic, collateral, amount, from, {});
-    } else {
-      return await this.borrow(positionId!, AssetType.Synthetic, collateral, amount, from, {});
-    }
-  }
-
   async _repay(
     positionId: BigNumberish,
     repayAmount: BigNumberish,
@@ -73,7 +58,16 @@ export class TestArc extends Arc {
       await Token.approve(this.collateralAsset.address, from, this.core.address, repayAmount, {});
     } else if (position.borrowedAsset == AssetType.Synthetic) {
       const price = await this.oracle.fetchCurrentPrice();
-      await this._borrowSynthetic(repayAmount, price.value.mul(repayAmount).mul(2), from);
+      const market = await this.state.market();
+      await this._borrowSynthetic(
+        repayAmount,
+        price.value
+          .mul(repayAmount)
+          .div(new BigNumber(10).pow(18))
+          .mul(market.collateralRatio.value)
+          .div(new BigNumber(10).pow(18)),
+        from,
+      );
       await Token.approve(this.syntheticAsset.address, from, this.core.address, repayAmount, {});
     }
 

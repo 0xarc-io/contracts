@@ -2,9 +2,9 @@ import 'jest';
 
 import { Wallet } from 'ethers';
 
-import arcDescribe from './arcDescribe';
-import { ITestContext } from './arcDescribe';
-import initializeArc from './initializeArc';
+import arcDescribe from './helpers/arcDescribe';
+import { ITestContext } from './helpers/arcDescribe';
+import initializeArc from './helpers/initializeArc';
 
 let ownerWallet: Wallet;
 let otherWallet: Wallet;

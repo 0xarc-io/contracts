@@ -26,7 +26,8 @@ contract CoreV1 is V1Storage, Adminable {
 
     using SafeMath for uint256;
     using Math for uint256;
-    using SignedMath for SignedMath.Int;
+    using Types for Types.Par;
+    using Types for Types.Wei;
 
     enum Operation {
         Open,
@@ -47,6 +48,12 @@ contract CoreV1 is V1Storage, Adminable {
         uint8 operation,
         OperationParams params,
         Types.Position updatedPosition
+    );
+
+    event ExcessTokensWithdrawn(
+        address token,
+        uint256 amount,
+        address destination
     );
 
     // ============ Constructor ============
@@ -100,6 +107,8 @@ contract CoreV1 is V1Storage, Adminable {
             "operateAction(): the operated position is undercollateralised"
         );
 
+        state.updateIndex();
+
         emit ActionOperated(
             uint8(operation),
             params,
@@ -129,8 +138,8 @@ contract CoreV1 is V1Storage, Adminable {
             owner: msg.sender,
             collateralAsset: Types.AssetType.Collateral,
             borrowedAsset: Types.AssetType.Synthetic,
-            collateralAmount: SignedMath.zero(),
-            borrowedAmount: SignedMath.zero()
+            collateralAmount: Types.positiveZeroPar(),
+            borrowedAmount: Types.zeroPar()
         });
 
         positionId = state.savePosition(newPosition);
@@ -188,9 +197,9 @@ contract CoreV1 is V1Storage, Adminable {
         position = state.updatePositionAmount(
             positionId,
             position.collateralAsset,
-            SignedMath.Int({
-                isPositive: true,
-                value: collateralAmount
+            Types.Par({
+                sign: true,
+                value: collateralAmount.to128()
             })
         );
 
@@ -199,17 +208,27 @@ contract CoreV1 is V1Storage, Adminable {
         // Only if they're borrowing
         if (borrowAmount > 0) {
             // Calculate the new borrow amount
-            SignedMath.Int memory newBorrow = position.borrowedAmount.add(borrowAmount);
+            (Types.Par memory newPar, ) = state.getNewParAndDeltaWei(
+                position.borrowedAmount,
+                Types.AssetAmount({
+                    sign: false,
+                    denomination: Types.AssetDenomination.Wei,
+                    ref: Types.AssetReference.Delta,
+                    value: borrowAmount
+                })
+            );
+
+            console.log("borrow new par: %s", newPar.value);
 
             // Update the position's borrow amount
             position = state.setAmount(
                 positionId,
                 position.borrowedAsset,
-                newBorrow
+                newPar
             );
 
             // Check how much collateral they need based on their new position details
-            SignedMath.Int memory collateralRequired = state.calculateInverseRequired(
+            Types.Par memory collateralRequired = state.calculateInverseRequired(
                 position.borrowedAsset,
                 position.borrowedAmount.value,
                 currentPrice
@@ -287,13 +306,21 @@ contract CoreV1 is V1Storage, Adminable {
 
         // Calculate the user's new borrow requirements after decreasing their debt
         // An positive wei value will reduce the negative wei borrow value
-        SignedMath.Int memory newBorrow = position.borrowedAmount.sub(repayAmount);
+        (Types.Par memory newPar, Types.Wei memory deltaWei) = state.getNewParAndDeltaWei(
+            position.borrowedAmount,
+            Types.AssetAmount({
+                sign: true,
+                denomination: Types.AssetDenomination.Wei,
+                ref: Types.AssetReference.Delta,
+                value: repayAmount
+            })
+        );
 
         // Update the position's new borrow amount
-        position = state.setAmount(positionId, position.borrowedAsset, newBorrow);
+        position = state.setAmount(positionId, position.borrowedAsset, newPar);
 
         // Calculate how much the user is allowed to withdraw given their debt was repaid
-        (SignedMath.Int memory collateralDelta) = state.calculateCollateralDelta(
+        (Types.Par memory collateralDelta) = state.calculateCollateralDelta(
             position.borrowedAsset,
             position.collateralAmount,
             position.borrowedAmount,
@@ -310,9 +337,9 @@ contract CoreV1 is V1Storage, Adminable {
         position = state.updatePositionAmount(
             positionId,
             position.collateralAsset,
-            SignedMath.Int({
-                isPositive: false,
-                value: withdrawAmount
+            Types.Par({
+                sign: false,
+                value: withdrawAmount.to128()
             })
         );
 
@@ -322,7 +349,7 @@ contract CoreV1 is V1Storage, Adminable {
         // Burn the synthetic asset from the user
         synthetic.burn(
             msg.sender,
-            repayAmount
+            deltaWei.value
         );
 
         // Transfer stable coin collateral back to the user
@@ -361,6 +388,10 @@ contract CoreV1 is V1Storage, Adminable {
         // 2. If synthetics were being borrowed, transfer stable shares to the liquidator
         Types.Position memory position = state.getPosition(positionId);
 
+        console.log("*** liquidate ***");
+        console.log("   starting collat: %s", position.collateralAmount.value);
+        console.log("   starting borrow: %s", position.borrowedAmount.value);
+
         require(
             position.owner != address(0),
             "liquidatePosition(): must be a valid position"
@@ -372,23 +403,31 @@ contract CoreV1 is V1Storage, Adminable {
             "liquidatePosition(): position is collateralised"
         );
 
-        console.log("position is liquidatable");
-
         // Get the liquidation price of the asset (discount for liquidator)
         Decimal.D256 memory liquidationPrice = state.calculateLiquidationPrice(
             position.collateralAsset
         );
 
-        // Get the borrow index based on the asset
-        // Synthetics have a borrow/supply index == 1
+        console.log("   liquidation price", liquidationPrice.value);
 
         // Calculate how much the user is in debt by to be whole again
-        (SignedMath.Int memory collateralDelta) = state.calculateCollateralDelta(
+        (Types.Par memory collateralDelta) = state.calculateCollateralDelta(
             position.borrowedAsset,
             position.collateralAmount,
             position.borrowedAmount,
             liquidationPrice
         );
+
+        // Liquidate a slight bit more to ensure the user is guarded against futher price drops
+        collateralDelta.value = Decimal.mul(
+            collateralDelta.value,
+            Decimal.add(
+                state.totalLiquidationSpread(),
+                Decimal.one().value
+            )
+        ).to128();
+
+        console.log("   collateral delta: %s %s", collateralDelta.sign, collateralDelta.value);
 
         // If the maximum they're down by is greater than their collateral, bound to the maximum
         if (collateralDelta.value > position.collateralAmount.value) {
@@ -402,12 +441,22 @@ contract CoreV1 is V1Storage, Adminable {
             liquidationPrice
         );
 
+        console.log("   borrow to liquidate: %s", borrowToLiquidate);
+
         // Decrease the user's debt obligation
         // This amount is denominated in par since collateralDelta uses the borrow index
-        SignedMath.Int memory newBorrow = position.borrowedAmount.sub(borrowToLiquidate);
+        (Types.Par memory newPar, ) = state.getNewParAndDeltaWei(
+            position.borrowedAmount,
+            Types.AssetAmount({
+                sign: true,
+                denomination: Types.AssetDenomination.Par,
+                ref: Types.AssetReference.Delta,
+                value: borrowToLiquidate
+            })
+        );
 
         // Set the user's new borrow amount
-        position = state.setAmount(positionId, position.borrowedAsset, newBorrow);
+        position = state.setAmount(positionId, position.borrowedAsset, newPar);
 
         // Decrease their collateral amount by the amount they were missing
         position = state.updatePositionAmount(positionId, position.collateralAsset, collateralDelta);
@@ -425,6 +474,11 @@ contract CoreV1 is V1Storage, Adminable {
 
         IERC20 collateralAsset = IERC20(state.collateralAsset());
 
+        (
+            Decimal.D256 memory userSplit,
+            Decimal.D256 memory arcSplit
+        ) = state.calculateLiquidationSplit();
+
         // Burn the synthetic asset from the liquidator
         synthetic.burn(
             msg.sender,
@@ -435,7 +489,20 @@ contract CoreV1 is V1Storage, Adminable {
         synthetic.transferCollateral(
             address(collateralAsset),
             msg.sender,
-            collateralDelta.value
+            Decimal.mul(
+                collateralDelta.value,
+                userSplit
+            )
+        );
+
+        // Transfer them the stable assets they acquired at a discount
+        synthetic.transferCollateral(
+            address(collateralAsset),
+            address(this),
+            Decimal.mul(
+                collateralDelta.value,
+                arcSplit
+            )
         );
 
         return position;

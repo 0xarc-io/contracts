@@ -35,7 +35,8 @@ export class CoreStage {
       await this.deploySynthetic();
     }
 
-    this.addressBook.collateralAsset = this.addressBook.collateralAsset || this.config.stableShare;
+    this.addressBook.collateralAsset =
+      this.addressBook.collateralAsset || this.config.collateralAsset;
     if (!this.addressBook.collateralAsset) {
       await this.deployCollateralAsset();
     }
@@ -66,13 +67,16 @@ export class CoreStage {
 
   async deployProxy() {
     console.log('*** Deploying Proxy *** ');
-    const contract = await Proxy.awaitDeployment(this.wallet);
-    console.log('** Setting pending implementation **');
-    await contract.setPendingImplementation(this.addressBook.coreV1);
-    console.log('** Accepting pending implementation **');
-    await contract.acceptImplementation({
-      gasLimit: 5000000,
-    });
+    const address = await this.wallet.getAddress();
+    const contract = await Proxy.awaitDeployment(
+      this.wallet,
+      this.addressBook.coreV1,
+      address,
+      [],
+      {
+        gasLimit: 5000000,
+      },
+    );
     this.addressBook.proxy = contract.address;
   }
 
@@ -109,15 +113,25 @@ export class CoreStage {
 
   async deployState() {
     console.log('*** Deploying State *** ');
-    const contract = await StateV1.deploy(this.wallet, this.addressBook.proxy, this.config.owner, {
-      syntheticAsset: this.addressBook.syntheticToken,
-      collateralAsset: this.addressBook.collateralAsset,
-      collateralRatio: { value: this.config.collateralRatio },
-      syntheticRatio: { value: this.config.syntheticRatio },
-      liquidationSpread: { value: this.config.liquidationSpread },
-      originationFee: { value: this.config.originationFee },
-      oracle: this.addressBook.oracle,
-    });
+    const contract = await StateV1.deploy(
+      this.wallet,
+      this.addressBook.proxy,
+      this.config.owner,
+      this.addressBook.collateralAsset,
+      this.addressBook.syntheticToken,
+      this.addressBook.oracle,
+      {
+        collateralRatio: { value: this.config.collateralRatio },
+        liquidationArcFee: { value: this.config.liquidationArcFee },
+        liquidationUserFee: { value: this.config.liquidationUserFee },
+        interestRate: { value: this.config.interestRate },
+      },
+      {
+        collateralLimit: this.config.collateralLimit,
+        syntheticLimit: this.config.syntheticAssetLimit,
+        positionCollateralMinimum: this.config.positionCollateralMinimum,
+      },
+    );
     this.addressBook.stateV1 = contract.address;
   }
 
@@ -127,14 +141,6 @@ export class CoreStage {
 
     if ((await contract.state()) == ethers.constants.AddressZero) {
       await contract.init(this.addressBook.stateV1);
-    }
-
-    if (
-      (await contract.stableLimit()).toString() == '0' &&
-      (await contract.syntheticLimit()).toString() == '0'
-    ) {
-      console.log('** Setting Limits **');
-      await contract.setLimits(this.config.stableAssetLimit, this.config.syntheticAssetLimit);
     }
   }
 }

@@ -1,12 +1,11 @@
 import { Wallet } from 'ethers';
-import { ITestContext } from '../arcDescribe';
-import initializeArc from '../initializeArc';
+import { ITestContext } from '../helpers/arcDescribe';
+import initializeArc from '../helpers/initializeArc';
+import arcDescribe from '../helpers/arcDescribe';
 import ArcDecimal from '../../src/utils/ArcDecimal';
-import arcDescribe from '../arcDescribe';
 import ArcNumber from '../../src/utils/ArcNumber';
 import { expectRevert } from '../../src/utils/expectRevert';
-import { getConfig } from '../../src/addresses/Config';
-import ArcDecimal from '../../dist/src/utils/ArcDecimal';
+import { BigNumber } from 'ethers/utils';
 
 let ownerWallet: Wallet;
 let lenderWallet: Wallet;
@@ -28,39 +27,75 @@ jest.setTimeout(30000);
 
 arcDescribe('#Actions.liquidatePosition()', init, (ctx: ITestContext) => {
   beforeEach(async () => {
-    await ctx.arc.oracle.setPrice(ArcDecimal.new(100));
-    const testConfig = getConfig(50);
-    testConfig.liquidationArcFee = ArcDecimal.new(5).value;
-    testConfig.liquidationUserFee = ArcDecimal.new(10).value;
-    await ctx.arc.state.setGlobalParams({
+    await ctx.arc.oracle.setPrice(ArcDecimal.new(400));
+
+    // The total liquidation premium is 10% in this case
+    // 5% is the liquidator reward, 5% is the arc fee
+    await ctx.arc.state.setMarketParams({
       collateralRatio: { value: ArcNumber.new(2) },
-      liquidationUserFee: { value: ArcNumber.new(5) },
-      liquidationArcFee: { value: ArcNumber.new(5) },
-      originationFee: { value: ArcNumber.new(5) },
+      liquidationUserFee: { value: ArcDecimal.new(0.05).value },
+      liquidationArcFee: { value: ArcDecimal.new(0.05).value },
+      interestRate: { value: ArcNumber.new(0) },
     });
   });
 
   it('should not be able to liquidate a collateralised position', async () => {
-    await ctx.arc._borrowSynthetic(ArcNumber.new(1), ArcNumber.new(200), syntheticMinterWallet);
-    await expectRevert(ctx.arc.liquidatePosition(0, liquidatorWallet));
+    const result = await ctx.arc._borrowSynthetic(
+      ArcNumber.new(200),
+      ArcNumber.new(1),
+      syntheticMinterWallet,
+    );
+    await expectRevert(ctx.arc.liquidatePosition(result.params.id, liquidatorWallet));
   });
 
   it('should not be able to liquidate a position without a synthetic', async () => {
-    await ctx.arc._borrowSynthetic(ArcNumber.new(1), ArcNumber.new(200), syntheticMinterWallet);
-    await ctx.arc.oracle.setPrice(ArcDecimal.new(150));
-    await expectRevert(ctx.arc.liquidatePosition(0, liquidatorWallet));
+    const result = await ctx.arc._borrowSynthetic(
+      ArcNumber.new(200),
+      ArcNumber.new(1),
+      syntheticMinterWallet,
+    );
+    await ctx.arc.oracle.setPrice(ArcDecimal.new(300));
+    await expectRevert(ctx.arc.liquidatePosition(result.params.id, liquidatorWallet));
   });
 
   it('should be able to liquidate and make the position healthy', async () => {
-    await ctx.arc._borrowSynthetic(ArcNumber.new(1), ArcNumber.new(200), syntheticMinterWallet);
-    await ctx.arc.oracle.setPrice(ArcDecimal.new(150));
-    await ctx.arc._borrowSynthetic(ArcDecimal.new(2).value, ArcNumber.new(600), liquidatorWallet);
+    const result = await ctx.arc._borrowSynthetic(
+      ArcNumber.new(200),
+      ArcNumber.new(1),
+      syntheticMinterWallet,
+    );
 
-    await ctx.arc.liquidatePosition(0, liquidatorWallet);
-    await expectRevert(ctx.arc.liquidatePosition(0, liquidatorWallet));
+    await ctx.arc.oracle.setPrice(ArcDecimal.new(300));
+    await ctx.arc._borrowSynthetic(ArcNumber.new(300), ArcNumber.new(2), liquidatorWallet);
+
+    await ctx.arc.liquidatePosition(result.params.id, liquidatorWallet);
+    await expectRevert(ctx.arc.liquidatePosition(result.params.id, liquidatorWallet));
+
+    const expectedReward = new BigNumber('529629629629629628');
 
     expect(await ctx.arc.collateralAsset.balanceOf(liquidatorWallet.address)).toEqual(
-      ArcNumber.new(130),
+      expectedReward.div(2),
     );
+
+    expect(await ctx.arc.collateralAsset.balanceOf(ctx.arc.core.address)).toEqual(
+      expectedReward.div(2),
+    );
+  });
+
+  it('should be able to liquidate a position if the price drops again', async () => {
+    const result = await ctx.arc._borrowSynthetic(
+      ArcNumber.new(200),
+      ArcNumber.new(1),
+      syntheticMinterWallet,
+    );
+
+    await ctx.arc.oracle.setPrice(ArcDecimal.new(300));
+    await ctx.arc._borrowSynthetic(ArcNumber.new(300), ArcNumber.new(2), liquidatorWallet);
+
+    await ctx.arc.liquidatePosition(result.params.id, liquidatorWallet);
+
+    await ctx.arc.oracle.setPrice(ArcDecimal.new(200));
+    await ctx.arc.liquidatePosition(result.params.id, liquidatorWallet);
+    await expectRevert(ctx.arc.liquidatePosition(result.params.id, liquidatorWallet));
   });
 });
