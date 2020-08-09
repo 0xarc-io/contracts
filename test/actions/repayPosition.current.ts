@@ -1,7 +1,7 @@
 import { Wallet } from 'ethers';
-import { ITestContext } from '../arcDescribe';
-import initializeArc from '../initializeArc';
-import arcDescribe from '../arcDescribe';
+import { ITestContext } from '../helpers/arcDescribe';
+import initializeArc from '../helpers/initializeArc';
+import arcDescribe from '../helpers/arcDescribe';
 import ArcDecimal from '../../src/utils/ArcDecimal';
 import ArcNumber from '../../src/utils/ArcNumber';
 import { BigNumberish } from 'ethers/utils';
@@ -45,7 +45,7 @@ arcDescribe('#Actions.repayPosition()', init, (ctx: ITestContext) => {
     await expectRevert(ctx.arc._repay(positionId, ArcDecimal.new(0.5).value, 0, reserveWallet));
   });
 
-  it.only('should be able to repay the synthetic and withdraw an equal amount', async () => {
+  it('should be able to repay the synthetic and withdraw an equal amount', async () => {
     await ctx.arc._repay(
       positionId,
       ArcNumber.new(100),

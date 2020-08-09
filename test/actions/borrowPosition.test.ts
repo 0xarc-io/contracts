@@ -1,9 +1,9 @@
 import 'jest';
 
 import { Wallet } from 'ethers';
-import { ITestContext } from '../arcDescribe';
-import initializeArc from '../initializeArc';
-import arcDescribe from '../arcDescribe';
+import { ITestContext } from '../helpers/arcDescribe';
+import initializeArc from '../helpers/initializeArc';
+import arcDescribe from '../helpers/arcDescribe';
 import ArcDecimal from '../../src/utils/ArcDecimal';
 import ArcNumber from '../../src/utils/ArcNumber';
 import { BigNumberish, BigNumber } from 'ethers/utils';
@@ -34,6 +34,15 @@ arcDescribe('#Actions.borrowPosition()', init, (ctx: ITestContext) => {
     beforeEach(async () => {
       await ctx.arc.oracle.setPrice(ArcDecimal.new(1000));
 
+      // The total liquidation premium is 10% in this case
+      // 5% is the liquidator reward, 5% is the arc fee
+      await ctx.arc.state.setMarketParams({
+        collateralRatio: { value: ArcNumber.new(2) },
+        liquidationUserFee: { value: ArcDecimal.new(0.05).value },
+        liquidationArcFee: { value: ArcDecimal.new(0.05).value },
+        interestRate: { value: '1585489599' },
+      });
+
       const result = await ctx.arc._borrowSynthetic(
         ArcNumber.new(300),
         ArcNumber.new(1),
@@ -41,6 +50,14 @@ arcDescribe('#Actions.borrowPosition()', init, (ctx: ITestContext) => {
       );
 
       positionId = result.params.id;
+    });
+
+    it.only('should accrue interest after 1 year at 5%', async () => {
+      await ctx.evm.increaseTime(60 * 60 * 24 * 365);
+      await ctx.evm.mineBlock();
+      await ctx.arc.state.updateIndex();
+      const borrowIndex = (await ctx.arc.state.globalIndex()).borrow;
+      expect(borrowIndex.gt(ArcDecimal.new(1.05).value)).toBeTruthy();
     });
 
     it('should not be able to borrow more than it is allowed', async () => {
@@ -55,7 +72,7 @@ arcDescribe('#Actions.borrowPosition()', init, (ctx: ITestContext) => {
     it('should not be able to borrow on behalf of someone else', async () => {
       await expectRevert(
         ctx.arc._borrowSynthetic(
-          ArcNumber.new(200),
+          ArcNumber.new(199),
           ArcNumber.new(1),
           stableShareMinterWallet,
           positionId,
@@ -65,7 +82,7 @@ arcDescribe('#Actions.borrowPosition()', init, (ctx: ITestContext) => {
 
     it('should be able to borrow more if it has collateral to be used', async () => {
       await ctx.arc._borrowSynthetic(
-        ArcNumber.new(200),
+        ArcNumber.new(199),
         ArcNumber.new(0),
         syntheticMinterWallet,
         positionId,

@@ -4,9 +4,9 @@ import { ethers, Wallet } from 'ethers';
 import { expectRevert } from '@src/utils/expectRevert';
 
 import ArcNumber from '@src/utils/ArcNumber';
-import arcDescribe from './arcDescribe';
-import { ITestContext } from './arcDescribe';
-import initializeArc from './initializeArc';
+import arcDescribe from './helpers/arcDescribe';
+import { ITestContext } from './helpers/arcDescribe';
+import initializeArc from './helpers/initializeArc';
 import { StateV1 } from '@src/typings';
 import { AddressZero } from 'ethers/constants';
 
@@ -32,12 +32,8 @@ arcDescribe('Arc', init, (ctx: ITestContext) => {
   });
 
   describe('#withdrawExcessTokens', async () => {
-    it('cannot withdraw depositors funds', async () => {});
+    it('cannot withdraw as a non-admin', async () => {});
 
-    it('cannot withdraw as a non-adming', async () => {});
-
-    it('can withdraw any excess collateral tokens', async () => {});
-
-    it('can withdraw any misc tokens', async () => {});
+    it('can withdraw any tokens', async () => {});
   });
 });

@@ -1,9 +1,8 @@
 import 'jest';
 
-import { TestArc } from '../src/TestArc';
+import { TestArc } from '../../src/TestArc';
 import { Wallet, ethers, providers } from 'ethers';
-import { generatedWallets } from '../src/utils/generatedWallets';
-import { Blockchain } from '../src/utils/Blockchain';
+import { generatedWallets } from '../../src/utils/generatedWallets';
 import { EVM } from './EVM';
 
 export interface ITestContext {

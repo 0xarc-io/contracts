@@ -12,7 +12,7 @@ export type Config = {
   collateralRatio: BigNumberish;
   liquidationUserFee: BigNumberish;
   liquidationArcFee: BigNumberish;
-  originationFee: BigNumberish;
+  interestRate: BigNumberish;
   collateralLimit: BigNumberish;
   syntheticAssetLimit: BigNumberish;
   positionCollateralMinimum: BigNumberish;
@@ -49,7 +49,7 @@ const NetworkConfig = {
     4: ArcDecimal.new(0.1).value,
     50: ArcDecimal.new(0.1).value,
   },
-  ORIGINATION_FEE: {
+  INTEREST_RATE: {
     1: ArcDecimal.new(0).value,
     4: ArcDecimal.new(0).value,
     50: ArcDecimal.new(0).value,
@@ -78,7 +78,7 @@ export function getConfig(network: number): Config {
     collateralRatio: NetworkConfig.COLLATERAL_RATIO[network],
     liquidationUserFee: NetworkConfig.LIQUIDATION_USER_FEE[network],
     liquidationArcFee: NetworkConfig.LIQUIDATION_ARC_FEE[network],
-    originationFee: NetworkConfig.ORIGINATION_FEE[network],
+    interestRate: NetworkConfig.INTEREST_RATE[network],
     chainlinkAggregator: NetworkConfig.CHAIN_LINK_AGGREGATOR[network],
     collateralLimit: NetworkConfig.COLLATERAL_LIMIT[network],
     syntheticAssetLimit: NetworkConfig.SYNTHETIC_ASSET_LIMIT[network],
