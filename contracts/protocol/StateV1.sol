@@ -33,6 +33,10 @@ contract StateV1 {
     Types.GlobalParams public params;
     Types.RiskParams public risk;
 
+    address public collateralAsset;
+    address public syntheticAsset;
+    IOracle public oracle;
+
     uint256 public positionCount;
     uint256 public totalSupplied;
 
@@ -41,12 +45,16 @@ contract StateV1 {
     // ============ Events ============
 
     event GlobalParamsUpdated(Types.GlobalParams updatedParams);
+    event RiskParamsUpdated(Types.RiskParams updatedParams);
 
     // ============ Constructor ============
 
     constructor(
         address _core,
         address _admin,
+        address _collateralAsset,
+        address _syntheticAsset,
+        address _oracle,
         Types.GlobalParams memory _globalParams,
         Types.RiskParams memory _riskParams
     )
@@ -54,10 +62,15 @@ contract StateV1 {
     {
         core = _core;
         admin = _admin;
+        collateralAsset = _collateralAsset;
+        syntheticAsset = _syntheticAsset;
+
+        oracle = IOracle(_oracle);
         params = _globalParams;
         risk = _riskParams;
 
         emit GlobalParamsUpdated(params);
+        emit RiskParamsUpdated(risk);
     }
 
     // ============ Modifiers ============
@@ -86,60 +99,28 @@ contract StateV1 {
         public
         onlyAdmin
     {
-        params.oracle = IOracle(_oracle);
+        oracle = IOracle(_oracle);
         emit GlobalParamsUpdated(params);
     }
 
-    function setCollateralRatio(
-        Decimal.D256 memory ratio
+    function setGlobalParams(
+        Types.GlobalParams memory _globalParams
     )
         public
         onlyAdmin
     {
-        params.collateralRatio = ratio;
+        params = _globalParams;
         emit GlobalParamsUpdated(params);
     }
 
-    function setSyntheticRatio(
-        Decimal.D256 memory ratio
+    function setRiskParams(
+        Types.RiskParams memory _riskParams
     )
         public
         onlyAdmin
     {
-        params.syntheticRatio = ratio;
-        emit GlobalParamsUpdated(params);
-    }
-
-    function setLiquidationSpread(
-        Decimal.D256 memory spread
-    )
-        public
-        onlyAdmin
-    {
-        params.liquidationSpread = spread;
-        emit GlobalParamsUpdated(params);
-    }
-
-    function setOriginationFee(
-        Decimal.D256 memory fee
-    )
-        public
-        onlyAdmin
-    {
-        params.originationFee = fee;
-        emit GlobalParamsUpdated(params);
-    }
-
-    function removeExcessTokens(
-        address to
-    )
-        public
-        onlyAdmin
-    {
-        params.collateralAsset.transfer(
-            to,
-           getExcessStableTokens()
-        );
+        risk = _riskParams;
+        emit RiskParamsUpdated(risk);
     }
 
     // ============ Core Setters ============
@@ -215,37 +196,8 @@ contract StateV1 {
         returns (address)
     {
         return asset == Types.AssetType.Collateral ?
-            address(params.collateralAsset) :
-            address(params.syntheticAsset);
-    }
-
-    function getcollateralAsset()
-        public
-        view
-        returns (IERC20)
-    {
-        return params.collateralAsset;
-    }
-
-    function getSyntheticAsset()
-        public
-        view
-        returns (IERC20)
-    {
-        return IERC20(address(params.syntheticAsset));
-    }
-
-    function getSupplyBalance(
-        address owner
-    )
-        public
-        view
-        returns (SignedMath.Int memory)
-    {
-        return SignedMath.Int({
-            isPositive: true,
-            value: IERC20(address(params.collateralAsset)).balanceOf(owner).to128()
-        });
+            address(collateralAsset) :
+            address(syntheticAsset);
     }
 
     function getPosition(
@@ -263,15 +215,7 @@ contract StateV1 {
         view
         returns (Decimal.D256 memory)
     {
-        return params.oracle.fetchCurrentPrice();
-    }
-
-    function getExcessStableTokens()
-        internal
-        view
-        returns (uint256)
-    {
-        return params.collateralAsset.balanceOf(address(this)).sub(totalSupplied);
+        return oracle.fetchCurrentPrice();
     }
 
     // ============ Calculation Getters ============
@@ -287,7 +231,7 @@ contract StateV1 {
             return true;
         }
 
-        Decimal.D256 memory currentPrice = params.oracle.fetchCurrentPrice();
+        Decimal.D256 memory currentPrice = oracle.fetchCurrentPrice();
 
         (SignedMath.Int memory collateralDelta) = calculateCollateralDelta(
             position.borrowedAsset,
@@ -343,7 +287,7 @@ contract StateV1 {
         if (asset == Types.AssetType.Collateral) {
             collateralRequired = Decimal.mul(
                 collateralRequired,
-                params.syntheticRatio
+                params.collateralRatio
             );
 
         } else if (asset == Types.AssetType.Synthetic) {
@@ -367,17 +311,21 @@ contract StateV1 {
         returns (Decimal.D256 memory price)
     {
         Decimal.D256 memory result;
-        Decimal.D256 memory currentPrice = params.oracle.fetchCurrentPrice();
+        Decimal.D256 memory currentPrice = oracle.fetchCurrentPrice();
+
+        uint256 totalSpread = params.liquidationUserFee.value.add(
+            params.liquidationArcFee.value
+        );
 
         if (asset == Types.AssetType.Collateral) {
             result = Decimal.add(
                 Decimal.one(),
-                params.liquidationSpread.value
+                totalSpread
             );
         } else if (asset == Types.AssetType.Synthetic) {
             result = Decimal.sub(
                 Decimal.one(),
-                params.liquidationSpread.value
+                totalSpread
             );
         }
 

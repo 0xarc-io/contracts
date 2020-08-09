@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.5.16;
+pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
@@ -23,22 +23,6 @@ contract BaseERC20 is IERC20 {
 
     mapping (address => uint256) private  _balances;
     mapping (address => mapping(address => uint256)) private _allowances;
-
-    // ============ Events ============
-
-    event Transfer(
-        address token,
-        address from,
-        address to,
-        uint256 value
-    );
-
-    event Approval(
-        address token,
-        address owner,
-        address spender,
-        uint256 value
-    );
 
     // ============ Constructor ============
 
@@ -115,7 +99,7 @@ contract BaseERC20 is IERC20 {
         _balances[to] = _balances[to].add(value);
         _supply = _supply.add(value);
 
-        emit Transfer(address(this), address(0), to, value);
+        emit Transfer(address(0), to, value);
     }
 
     function _burn(address from, uint256 value) internal {
@@ -124,7 +108,7 @@ contract BaseERC20 is IERC20 {
         _balances[from] = _balances[from].sub(value);
         _supply = _supply.sub(value);
 
-        emit Transfer(address(this), from, address(0), value);
+        emit Transfer(from, address(0), value);
     }
 
     // ============ Token Functions ============
@@ -139,7 +123,7 @@ contract BaseERC20 is IERC20 {
         if (_balances[msg.sender] >= value) {
             _balances[msg.sender] = _balances[msg.sender].sub(value);
             _balances[to] = _balances[to].add(value);
-            emit Transfer(address(this), msg.sender, to, value);
+            emit Transfer(msg.sender, to, value);
             return true;
         } else {
             return false;
@@ -163,7 +147,7 @@ contract BaseERC20 is IERC20 {
             _allowances[from][msg.sender] = _allowances[from][msg.sender].sub(
                 value
             );
-            emit Transfer(address(this), from, to, value);
+            emit Transfer(from, to, value);
             return true;
         } else {
             return false;
@@ -191,7 +175,6 @@ contract BaseERC20 is IERC20 {
         _allowances[owner][spender] = value;
 
         emit Approval(
-            address(this),
             owner,
             spender,
             value

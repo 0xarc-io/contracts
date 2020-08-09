@@ -23,7 +23,7 @@ export class TestArc extends Arc {
     const testConfig = getConfig(50);
     testConfig.name = 'ARCxBTC';
     testConfig.symbol = 'USDT-BTC';
-    testConfig.stableShare = this.collateralAsset.address;
+    testConfig.collateralAsset = this.collateralAsset.address;
     testConfig.oracle = this.oracle.address;
 
     await this.deployArc(testConfig);
@@ -35,7 +35,7 @@ export class TestArc extends Arc {
     from: Wallet,
     positionId?: BigNumberish,
   ) {
-    await Token.approve(this.syntheticAsset.address, from, this.core.address, collateral, {});
+    await Token.approve(this.collateralAsset.address, from, this.core.address, collateral, {});
     await this.collateralAsset.mintShare(from.address, collateral, {});
 
     if (!positionId) {

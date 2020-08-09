@@ -6,20 +6,20 @@ export type Config = {
   owner: string;
   name: string;
   symbol: string;
-  stableShare: string;
+  collateralAsset: string;
   oracle: string;
   chainlinkAggregator: string;
   collateralRatio: BigNumberish;
-  syntheticRatio: BigNumberish;
-  liquidationSpread: BigNumberish;
-  earningsRate: BigNumberish;
+  liquidationUserFee: BigNumberish;
+  liquidationArcFee: BigNumberish;
   originationFee: BigNumberish;
-  stableAssetLimit: BigNumberish;
+  collateralLimit: BigNumberish;
   syntheticAssetLimit: BigNumberish;
+  positionCollateralMinimum: BigNumberish;
 };
 
 const NetworkConfig = {
-  STABLE_SHARE: {
+  COLLATERAL_ASSET: {
     1: '',
     4: '',
     50: '',
@@ -39,27 +39,22 @@ const NetworkConfig = {
     4: ArcDecimal.new(2).value,
     50: ArcDecimal.new(2).value,
   },
-  SYNTHETIC_RATIO: {
-    1: ArcDecimal.new(2).value,
-    4: ArcDecimal.new(2).value,
-    50: ArcDecimal.new(2).value,
-  },
-  LIQUIDATION_SPREAD: {
+  LIQUIDATION_USER_FEE: {
     1: ArcDecimal.new(0.1).value,
     4: ArcDecimal.new(0.1).value,
     50: ArcDecimal.new(0.1).value,
   },
-  EARNINGS_RATE: {
-    1: ArcDecimal.new(1).value,
-    4: ArcDecimal.new(1).value,
-    50: ArcDecimal.new(1).value,
+  LIQUIDATION_ARC_FEE: {
+    1: ArcDecimal.new(0.1).value,
+    4: ArcDecimal.new(0.1).value,
+    50: ArcDecimal.new(0.1).value,
   },
   ORIGINATION_FEE: {
     1: ArcDecimal.new(0).value,
     4: ArcDecimal.new(0).value,
     50: ArcDecimal.new(0).value,
   },
-  STABLE_ASSET_LIMIT: {
+  COLLATERAL_LIMIT: {
     1: ArcNumber.new(1000),
     4: ArcNumber.new(10000000),
     50: ArcNumber.new(10000000),
@@ -69,19 +64,24 @@ const NetworkConfig = {
     4: ArcNumber.new(1000),
     50: ArcNumber.new(1000),
   },
+  POSITION_COLLATERAL_MINIMUM: {
+    1: ArcNumber.new(1),
+    4: ArcNumber.new(1),
+    50: ArcNumber.new(1),
+  },
 };
 
 export function getConfig(network: number): Config {
   return {
-    stableShare: NetworkConfig.STABLE_SHARE[network],
+    collateralAsset: NetworkConfig.COLLATERAL_ASSET[network],
     oracle: NetworkConfig.ORACLE[network],
     collateralRatio: NetworkConfig.COLLATERAL_RATIO[network],
-    syntheticRatio: NetworkConfig.SYNTHETIC_RATIO[network],
-    liquidationSpread: NetworkConfig.LIQUIDATION_SPREAD[network],
+    liquidationUserFee: NetworkConfig.LIQUIDATION_USER_FEE[network],
+    liquidationArcFee: NetworkConfig.LIQUIDATION_ARC_FEE[network],
     originationFee: NetworkConfig.ORIGINATION_FEE[network],
-    earningsRate: NetworkConfig.EARNINGS_RATE[network],
     chainlinkAggregator: NetworkConfig.CHAIN_LINK_AGGREGATOR[network],
-    stableAssetLimit: NetworkConfig.STABLE_ASSET_LIMIT[network],
+    collateralLimit: NetworkConfig.COLLATERAL_LIMIT[network],
     syntheticAssetLimit: NetworkConfig.SYNTHETIC_ASSET_LIMIT[network],
+    positionCollateralMinimum: NetworkConfig.POSITION_COLLATERAL_MINIMUM[network],
   } as Config;
 }
