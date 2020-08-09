@@ -5,6 +5,8 @@ import ArcDecimal from '../../src/utils/ArcDecimal';
 import arcDescribe from '../arcDescribe';
 import ArcNumber from '../../src/utils/ArcNumber';
 import { expectRevert } from '../../src/utils/expectRevert';
+import { getConfig } from '../../src/addresses/Config';
+import ArcDecimal from '../../dist/src/utils/ArcDecimal';
 
 let ownerWallet: Wallet;
 let lenderWallet: Wallet;
@@ -27,6 +29,15 @@ jest.setTimeout(30000);
 arcDescribe('#Actions.liquidatePosition()', init, (ctx: ITestContext) => {
   beforeEach(async () => {
     await ctx.arc.oracle.setPrice(ArcDecimal.new(100));
+    const testConfig = getConfig(50);
+    testConfig.liquidationArcFee = ArcDecimal.new(5).value;
+    testConfig.liquidationUserFee = ArcDecimal.new(10).value;
+    await ctx.arc.state.setGlobalParams({
+      collateralRatio: { value: ArcNumber.new(2) },
+      liquidationUserFee: { value: ArcNumber.new(5) },
+      liquidationArcFee: { value: ArcNumber.new(5) },
+      originationFee: { value: ArcNumber.new(5) },
+    });
   });
 
   it('should not be able to liquidate a collateralised position', async () => {
