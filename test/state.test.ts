@@ -19,22 +19,29 @@ async function init(ctx: ITestContext): Promise<void> {
 }
 
 arcDescribe('StateV1', init, (ctx: ITestContext) => {
-  describe('#onlyAdmin', () => {
-    it('should not be able to set the oracle as non-admin');
-    it('should not be able to set the interest setter as non-admin');
-    it('should not be able to set the collateral ratio as non-admin');
-    it('should not be able to set the synthetic ratio as non-admin');
-    it('should not be able to set the liquidation spread as non-admin');
-    it('should not be able to set the origination fee as non-admin');
-    it('should not be able to set the earnings rate as non-admin');
+  describe('#setLimits', () => {
+    it.only('should not be able to set limits as non-admin', async () => {});
 
+    it('should be able to set limits as the admin', async () => {});
+  });
+
+  describe('#limits', () => {
+    it('should not be able to mint less than the minimum position amount', async () => {});
+
+    it('should not be able to mint more than the limit', async () => {});
+
+    it('should be able to mint the maximum amount', async () => {});
+  });
+
+  describe('#onlyAdmin', () => {
+    it('should not be able to set the global params as non-admin');
+    it('should be able to set the global as admin');
+
+    it('should not be able to set the risk params as non-admin');
+    it('should be able to set the risk params as admin');
+
+    it('should not be able to set the oracle as non-admin');
     it('should be able to set the oracle as admin');
-    it('should be able to set the interest setter as admin');
-    it('should be able to set the collateral ratio as admin');
-    it('should be able to set the synthetic ratio as admin');
-    it('should be able to set the liquidation spread as admin');
-    it('should be able to set the origination fee as admin');
-    it('should be able to set the earnings rate as admin');
   });
 
   describe('#onlyCore', () => {
