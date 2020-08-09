@@ -19,6 +19,7 @@ import { AddressBook } from './addresses/AddressBook';
 import { Config } from './addresses/Config';
 import Token from '../src/utils/Token';
 import { BaseERC20, IERC20 } from './typings';
+import config from '../dist/buidler.config';
 
 export default class Arc {
   public wallet: Signer;
@@ -47,13 +48,10 @@ export default class Arc {
   async deployArc(config: Config) {
     this.core = await CoreV1.deploy(this.wallet);
 
-    const proxy = await Proxy.deploy(this.wallet);
-    await proxy.setPendingImplementation(this.core.address);
-    await proxy.acceptImplementation();
+    const address = await this.wallet.getAddress();
+    const proxy = await Proxy.deploy(this.wallet, this.core.address, address, []);
 
     this.core = await CoreV1.at(this.wallet, proxy.address);
-
-    await this.core.setLimits(config.stableAssetLimit, config.syntheticAssetLimit);
 
     this.syntheticAsset = await SyntheticToken.deploy(
       this.wallet,
@@ -66,14 +64,19 @@ export default class Arc {
       this.wallet,
       this.core.address,
       await this.wallet.getAddress(),
+      config.collateralAsset,
+      this.syntheticAsset.address,
+      config.oracle,
       {
-        syntheticAsset: this.syntheticAsset.address,
-        collateralAsset: config.stableShare,
         collateralRatio: { value: config.collateralRatio },
-        syntheticRatio: { value: config.syntheticRatio },
-        liquidationSpread: { value: config.liquidationSpread },
+        liquidationArcFee: { value: config.liquidationArcFee },
+        liquidationUserFee: { value: config.liquidationUserFee },
         originationFee: { value: config.originationFee },
-        oracle: config.oracle,
+      },
+      {
+        collateralLimit: '',
+        syntheticLimit: '',
+        positionCollateralMinimum: '',
       },
     );
 

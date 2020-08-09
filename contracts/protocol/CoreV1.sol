@@ -17,11 +17,12 @@ import {Decimal} from "../lib/Decimal.sol";
 import {SignedMath} from "../lib/SignedMath.sol";
 import {Storage} from "../lib/Storage.sol";
 import {Math} from "../lib/Math.sol";
+import {Adminable} from "../lib/Adminable.sol";
 
 import {StateV1} from "./StateV1.sol";
-import {AdminStorage, V1Storage} from "./Storage.sol";
+import {V1Storage} from "./Storage.sol";
 
-contract CoreV1 is AdminStorage, V1Storage {
+contract CoreV1 is V1Storage, Adminable {
 
     using SafeMath for uint256;
     using Math for uint256;
@@ -61,21 +62,6 @@ contract CoreV1 is AdminStorage, V1Storage {
         state = StateV1(_state);
     }
 
-    function setLimits(
-        uint256 _stableLimit,
-        uint256 _syntheticLimit
-    )
-        public
-    {
-        require(
-            msg.sender == admin,
-            "CoreV1.setLimits(): can only be set by the admin"
-        );
-
-        stableLimit = _stableLimit;
-        syntheticLimit = _syntheticLimit;
-    }
-
     function operateAction(
         Operation operation,
         OperationParams memory params
@@ -108,17 +94,6 @@ contract CoreV1 is AdminStorage, V1Storage {
                 params.id
             );
         }
-
-        // @TODO: Fix this up
-        // require(
-        //     supply <= stableLimit,
-        //     "CoreV1: supply limit reached"
-        // );
-
-        require(
-            state.getSyntheticAsset().balanceOf(address(this)) <= syntheticLimit,
-            "CoreV1: synthetic limit reached"
-        );
 
         require(
             state.isCollateralized(operatedPosition) == true,
@@ -247,43 +222,22 @@ contract CoreV1 is AdminStorage, V1Storage {
             );
         }
 
-        IERC20 syntheticAsset = state.getSyntheticAsset();
-        IERC20 collateralAsset = state.getcollateralAsset();
+        IERC20 syntheticAsset = IERC20(state.syntheticAsset());
+        IERC20 collateralAsset = IERC20(state.collateralAsset());
 
-        // If a synthetic asset was being borrowed
-        if (position.borrowedAsset == Types.AssetType.Synthetic) {
-            // Transfer the stable asset to the synthetic contract
-            SafeERC20.safeTransferFrom(
-                collateralAsset,
-                msg.sender,
-                address(syntheticAsset),
-                collateralAmount
-            );
+        // Transfer the stable asset to the synthetic contract
+        SafeERC20.safeTransferFrom(
+            collateralAsset,
+            msg.sender,
+            address(syntheticAsset),
+            collateralAmount
+        );
 
-            // Mint the synthetic token to user opening the borrow position
-            ISyntheticToken(address(syntheticAsset)).mint(
-                msg.sender,
-                borrowAmount
-            );
-        }
-
-        // If stable coins are being borrowed
-        if (position.borrowedAsset == Types.AssetType.Collateral) {
-            // Transfer the synthetic asset from the user
-            SafeERC20.safeTransferFrom(
-                syntheticAsset,
-                msg.sender,
-                address(this),
-                collateralAmount
-            );
-
-            // Transfer the stable asset to the user
-            SafeERC20.safeTransfer(
-                collateralAsset,
-                msg.sender,
-                borrowAmount
-            );
-        }
+        // Mint the synthetic token to user opening the borrow position
+        ISyntheticToken(address(syntheticAsset)).mint(
+            msg.sender,
+            borrowAmount
+        );
 
         return position;
     }
@@ -362,11 +316,8 @@ contract CoreV1 is AdminStorage, V1Storage {
             })
         );
 
-        ISyntheticToken synthetic = ISyntheticToken(
-            state.getAddress(Types.AssetType.Synthetic)
-        );
-
-        IERC20 collateralAsset = state.getcollateralAsset();
+        ISyntheticToken synthetic = ISyntheticToken(state.syntheticAsset());
+        IERC20 collateralAsset = IERC20(state.collateralAsset());
 
         // Burn the synthetic asset from the user
         synthetic.burn(
@@ -472,7 +423,7 @@ contract CoreV1 is AdminStorage, V1Storage {
             state.getAddress(Types.AssetType.Synthetic)
         );
 
-        IERC20 collateralAsset = state.getcollateralAsset();
+        IERC20 collateralAsset = IERC20(state.collateralAsset());
 
         // Burn the synthetic asset from the liquidator
         synthetic.burn(
@@ -488,5 +439,16 @@ contract CoreV1 is AdminStorage, V1Storage {
         );
 
         return position;
+    }
+
+    function withdrawExcessTokens(
+        address token,
+        uint256 amount,
+        address destination
+    )
+        public
+        onlyAdmin
+    {
+
     }
 }

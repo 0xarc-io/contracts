@@ -29,13 +29,10 @@ library Types {
     // ============ Structs ============
 
     struct GlobalParams {
-        IERC20 collateralAsset;
-        ISyntheticToken syntheticAsset;
         Decimal.D256 collateralRatio;
-        Decimal.D256 syntheticRatio;
-        Decimal.D256 liquidationSpread;
+        Decimal.D256 liquidationUserFee;
+        Decimal.D256 liquidationArcFee;
         Decimal.D256 originationFee;
-        IOracle oracle;
     }
 
     struct Position {
@@ -50,7 +47,6 @@ library Types {
         uint256 collateralLimit;
         uint256 syntheticLimit;
         uint256 positionCollateralMinimum;
-        uint256 positionCollateralMaximum;
     }
 
     // ============ ArcAsset ============
