@@ -5,6 +5,8 @@ import { Wallet } from 'ethers';
 import arcDescribe from './helpers/arcDescribe';
 import { ITestContext } from './helpers/arcDescribe';
 import initializeArc from './helpers/initializeArc';
+import { StateV1 } from '@src/typings';
+import { expectRevert } from '../src/utils/expectRevert';
 
 let ownerWallet: Wallet;
 let otherWallet: Wallet;
@@ -20,9 +22,25 @@ async function init(ctx: ITestContext): Promise<void> {
 
 arcDescribe('StateV1', init, (ctx: ITestContext) => {
   describe('#setLimits', () => {
-    it.only('should not be able to set limits as non-admin', async () => {});
+    it('should not be able to set limits as non-admin', async () => {
+      const contract = await StateV1.at(otherWallet, ctx.arc.state.address);
+      await expectRevert(
+        contract.setRiskParams({
+          collateralLimit: '',
+          syntheticLimit: '',
+          positionCollateralMinimum: '',
+        }),
+      );
+    });
 
-    it('should be able to set limits as the admin', async () => {});
+    it('should be able to set limits as the admin', async () => {
+      const contract = await StateV1.at(ownerWallet, ctx.arc.state.address);
+      await contract.setRiskParams({
+        collateralLimit: '',
+        syntheticLimit: '',
+        positionCollateralMinimum: '',
+      });
+    });
   });
 
   describe('#limits', () => {

@@ -34,6 +34,8 @@ arcDescribe('Arc', init, (ctx: ITestContext) => {
   describe('#withdrawExcessTokens', async () => {
     it('cannot withdraw as a non-admin', async () => {});
 
-    it('can withdraw any tokens', async () => {});
+    it('cannot withdraw depositors funds', async () => {});
+
+    it('can withdraw any other tokens', async () => {});
   });
 });
