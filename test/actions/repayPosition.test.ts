@@ -45,7 +45,7 @@ arcDescribe('#Actions.repayPosition()', init, (ctx: ITestContext) => {
     await expectRevert(ctx.arc._repay(positionId, ArcDecimal.new(0.5).value, 0, reserveWallet));
   });
 
-  it('should be able to repay the synthetic and withdraw an equal amount', async () => {
+  it.only('should be able to repay the synthetic and withdraw an equal amount', async () => {
     await ctx.arc._repay(
       positionId,
       ArcNumber.new(100),
