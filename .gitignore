@@ -11,3 +11,4 @@ typings
 build
 generated
 50.json
+.env
