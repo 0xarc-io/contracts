@@ -38,9 +38,7 @@ contract CoreV1 is V1Storage, Adminable {
 
     struct OperationParams {
         uint256 id;
-        Types.AssetType assetOne;
         uint256 amountOne;
-        Types.AssetType assetTwo;
         uint256 amountTwo;
     }
 
@@ -75,15 +73,25 @@ contract CoreV1 is V1Storage, Adminable {
     )
         public
     {
-        // @TODO: Need to check validity of assets and position
-
         Types.Position memory operatedPosition;
+
+        (
+            uint256 collateralLimit,
+            uint256 syntheticLimit,
+            uint256 collateralMinimum
+        ) = state.risk();
 
         if (operation == Operation.Open) {
             (operatedPosition, params.id) = openPosition(
                 params.amountOne,
                 params.amountTwo
             );
+
+            require(
+                params.amountOne >= collateralMinimum,
+                "operateAction(): must exceed minimum collateral amount"
+            );
+
         } else if (operation == Operation.Borrow) {
             operatedPosition = borrow(
                 params.id,
@@ -101,6 +109,19 @@ contract CoreV1 is V1Storage, Adminable {
                 params.id
             );
         }
+
+        IERC20 synthetic = IERC20(state.syntheticAsset());
+        IERC20 collateralAsset = IERC20(state.collateralAsset());
+
+        require(
+            synthetic.totalSupply() <= syntheticLimit,
+            "operateAction(): synthetic supply cannot be greater than limit"
+        );
+
+        require(
+            collateralAsset.balanceOf(address(synthetic)) <= collateralLimit,
+            "operateAction(): collateral locked cannot be greater than limit"
+        );
 
         require(
             state.isCollateralized(operatedPosition) == true,
@@ -124,11 +145,7 @@ contract CoreV1 is V1Storage, Adminable {
         returns (Types.Position memory returnedPosition, uint256 positionId)
     {
         // CHECKS:
-        // 1. `collateralAsset` should be a valid asset
-        // 2. Check the user has enough of the collateral asset
-        // 3. Figure out `borrowAsset` based on collateral assset
-        //    If stable shares are the collateral, synthetic are the borrow.
-        //    If synthetics are the collateral, stable shares are the borrow
+        // 1. No checks required as it's all processed in borrow()
 
         // EFFECTS:
         // 1. Create a new Position struct with the basic fields filled out and save it to storage
@@ -160,22 +177,24 @@ contract CoreV1 is V1Storage, Adminable {
         returns (Types.Position memory)
     {
         // CHECKS:
-        // 1. `borrowAmount` should be greater than 0
-        // 2. Ensure that the position actually exists
+        // 1. Ensure that the position actually exists
+        // 2. Ensure the position is collateralised before borrowing against it
         // 3. Ensure that msg.sender == owner of position
         // 4. Determine if there's enough liquidity of the `borrowAsset`
         // 5. Calculate the amount of collateral actually needed given the `collateralRatio`
         // 6. Ensure the user has provided enough of the
 
         // EFFECTS:
-        // 1. If synthetics are being borrowed, update the position and skip to interactions.
-        // 2. If stable shares are being borrowed, calculate the proportional
-        //    new par value based on the borrow amount and set that as the borrow par value.
-        // 3. Update the global index with the increased borrow amount
+        // 1. Increase the collateral amount to calculate the maximum the amount the user can borrow
+        // 2. Calculate the proportional new par value based on the borrow amount
+        // 3. Update the total supplied collateral amount
+        // 4. Calculate the collateral needed and ensuring the position has that much
 
         // INTERACTIONS:
-        // 1. If stable shares are being borrowed, transfer them to the user
-        //    If synthetics are being borrowed, mint them and transfer collateral to synthetic contract
+        // 1. Mint the synthetic asset
+        // 2. Transfer the collateral to the synthetic token itself.
+        //    This ensures on Etherscan people can see how much collateral is backing
+        //    the synthetic
 
         // Get the current position
         Types.Position memory position = state.getPosition(positionId);
@@ -270,25 +289,18 @@ contract CoreV1 is V1Storage, Adminable {
         returns (Types.Position memory)
     {
         // CHECKS:
-        // 1. Ensure the position actually exists
-        // 2. `depositAmount` is greater than 0
-        // 3. Determine the asset being deposited based on the position
-        // 4. Ensure user has enough balance of deposit asset
-        // 5. Calculate the wei debt value of the position (assuming stable shares were borrowed)
-        // 6. If the user has set the deposit amount more than or equal to the deposit amount
-        //    then `canClose` should be set to true (assuming `shouldClose` == true)
+        // 1. Ensure the position actually exists by ensuring the owner == msg.sender
+        // 2. Ensure the position is sufficiently collateralized
 
         // EFFECTS:
         // 1. Calculate the new par value of the position based on the amount paid back
-        // 2. Update the position's borrow amount based on the amount paid back
-        // 3. Update the global par and wei values
-        // 4. Update the global index
+        // 2. Update the position's new borrow amount
+        // 3. Calculate how much collateral you need based on your current position balance
+        // 4. If the amount being withdrawn is less than or equal to amount withdrawn you're good
 
         // INTERACTIONS:
-        // 1. If stable shares are being deposited, transfer the synthetic from them
-        //    and take the stable coins back from them
-        // 2. If synthetics are being deposited, burn the synthetic from them and
-        //    transfer the stable coins back to them
+        // 1. Burn the synthetic asset directly from their wallet
+        // 2.Transfer the stable coins back to the user
         Types.Position memory position = state.getPosition(positionId);
 
         Decimal.D256 memory currentPrice = state.getCurrentPrice();
@@ -370,22 +382,23 @@ contract CoreV1 is V1Storage, Adminable {
     {
         // CHECKS:
         // 1. Ensure that the position id is valid
-        // 2. Check the status of the position, only if it's in trouble
-        //    can this function be called
-        // 3. Determine which asset is the user under in
-        // 4. Calculate how much the user is down by
-        //    - If synthetics are being borrowed then they need to cover the user's synthetic position
-        //    - If stable share are being borrowed, then they need to cover the user's stable position
-        // 5. Ensure the liquidator (msg.sender) has enough of the asset they're attacking the user for
+        // 2. Check the status of the position, only if it's undercollateralized you can call this
 
         // EFFECTS:
-        // 1. Update the new par values of the position based on how much is liquidated
-        // 2. Update the global par and wei values
-        // 3. Update the global index based
+        // 1. Calculate the liquidation price price based on the liquidation penalty
+        // 2. Calculate how much the user is in debt by
+        // 3. Add the liquidation penalty on to the liquidation amount so they have some
+        //    margin of safety to make sure they don't get liquidated again
+        // 4. If the collateral to liquidate is greater than the collatera, bound it.
+        // 5. Calculate how much of the borrowed asset is to be liquidated based on the collateral delta
+        // 6. Decrease the user's debt obligation by that amount
+        // 7. Update the new borrow and collateral amounts
 
         // INTERACTIONS:
-        // 1. If stable shares were being borrowed, transfer the synthetic to the liquidator
-        // 2. If synthetics were being borrowed, transfer stable shares to the liquidator
+        // 1. Burn the synthetic asset from the liquidator
+        // 2. Transfer the collateral from the synthetic token to the liquidator
+        // 3. Transfer a portion to the ARC Core contract as a fee
+
         Types.Position memory position = state.getPosition(positionId);
 
         console.log("*** liquidate ***");

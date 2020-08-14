@@ -123,9 +123,7 @@ export default class Arc {
       Operation.Open,
       {
         id: 0,
-        assetOne: collateralAsset,
         amountOne: collateralAmount,
-        assetTwo: '',
         amountTwo: borrowAmount,
       },
       overrides,
@@ -146,9 +144,7 @@ export default class Arc {
       Operation.Borrow,
       {
         id: positionId,
-        assetOne: collateralAsset,
         amountOne: collateralAmount,
-        assetTwo: '',
         amountTwo: borrowAmount,
       },
       overrides,
@@ -169,9 +165,7 @@ export default class Arc {
       Operation.Repay,
       {
         id: positionId,
-        assetOne: '',
         amountOne: repaymentAmount,
-        assetTwo: '',
         amountTwo: withdrawAmount,
       },
       overrides,

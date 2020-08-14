@@ -6,6 +6,7 @@ import ArcDecimal from '../../src/utils/ArcDecimal';
 import ArcNumber from '../../src/utils/ArcNumber';
 import { expectRevert } from '../../src/utils/expectRevert';
 import { BigNumber } from 'ethers/utils';
+import { MockOracle } from '@src/typings';
 
 let ownerWallet: Wallet;
 let lenderWallet: Wallet;
@@ -27,7 +28,8 @@ jest.setTimeout(30000);
 
 arcDescribe('#Actions.liquidatePosition()', init, (ctx: ITestContext) => {
   beforeEach(async () => {
-    await ctx.arc.oracle.setPrice(ArcDecimal.new(400));
+    const oracle = await MockOracle.at(ownerWallet, ctx.arc.oracle.address);
+    await oracle.setPrice(ArcDecimal.new(1000));
 
     // The total liquidation premium is 10% in this case
     // 5% is the liquidator reward, 5% is the arc fee
