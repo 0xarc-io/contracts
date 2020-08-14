@@ -20,6 +20,7 @@ import { Config } from './addresses/Config';
 import Token from '../src/utils/Token';
 import { BaseERC20, IERC20 } from './typings';
 import config from '../dist/buidler.config';
+import { RiskParams, MarketParams } from './types';
 
 export default class Arc {
   public wallet: Signer;
@@ -195,6 +196,24 @@ export default class Arc {
     return await this.parseActionTx(tx);
   }
 
+  async setRiskParams(
+    params: RiskParams,
+    caller: Signer = this.wallet,
+    overrides: TransactionOverrides = {},
+  ) {
+    const contract = await this.getState(caller);
+    return await contract.setRiskParams(params, overrides);
+  }
+
+  async setMarketParams(
+    params: MarketParams,
+    caller: Signer = this.wallet,
+    overrides: TransactionOverrides = {},
+  ) {
+    const contract = await this.getState(caller);
+    return await contract.setMarketParams(params, overrides);
+  }
+
   async parseActionTx(tx: any) {
     const receipt = await tx.wait();
     const logs = parseLogs(receipt.logs, CoreV1.ABI);
@@ -229,7 +248,11 @@ export default class Arc {
     return result;
   }
 
-  async getCore(caller?: Signer) {
+  public async getCore(caller?: Signer) {
     return await CoreV1.at(caller || this.wallet, this.core.address);
+  }
+
+  public async getState(caller?: Signer) {
+    return await StateV1.at(caller || this.wallet, this.state.address);
   }
 }

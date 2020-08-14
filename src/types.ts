@@ -55,15 +55,17 @@ export type GraphPosition = {
   borrowedAmountValue: BigNumberish;
 };
 
-export type GlobalParams = {
-  collateralAsset: string;
-  syntheticAsset: string;
+export type MarketParams = {
   collateralRatio: Decimal;
-  syntheticRatio: Decimal;
-  liquidationSpread: Decimal;
-  originationFee: Decimal;
-  earningsRate: Decimal;
-  oracle: string;
+  liquidationUserFee: Decimal;
+  liquidationArcFee: Decimal;
+  interestRate: Decimal;
+};
+
+export type RiskParams = {
+  collateralLimit: BigNumberish;
+  syntheticLimit: BigNumberish;
+  positionCollateralMinimum: BigNumberish;
 };
 
 export interface TransactionOverrides {
