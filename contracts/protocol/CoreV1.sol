@@ -114,12 +114,12 @@ contract CoreV1 is V1Storage, Adminable {
         IERC20 collateralAsset = IERC20(state.collateralAsset());
 
         require(
-            synthetic.totalSupply() <= syntheticLimit,
+            synthetic.totalSupply() <= syntheticLimit || syntheticLimit == 0,
             "operateAction(): synthetic supply cannot be greater than limit"
         );
 
         require(
-            collateralAsset.balanceOf(address(synthetic)) <= collateralLimit,
+            collateralAsset.balanceOf(address(synthetic)) <= collateralLimit || collateralLimit == 0,
             "operateAction(): collateral locked cannot be greater than limit"
         );
 
@@ -263,7 +263,7 @@ contract CoreV1 is V1Storage, Adminable {
         IERC20 syntheticAsset = IERC20(state.syntheticAsset());
         IERC20 collateralAsset = IERC20(state.collateralAsset());
 
-        // Transfer the stable asset to the synthetic contract
+        // Transfer the collateral asset to the synthetic contract
         SafeERC20.safeTransferFrom(
             collateralAsset,
             msg.sender,
@@ -364,7 +364,7 @@ contract CoreV1 is V1Storage, Adminable {
             deltaWei.value
         );
 
-        // Transfer stable coin collateral back to the user
+        // Transfer collateral back to the user
         synthetic.transferCollateral(
             address(collateralAsset),
             msg.sender,
@@ -498,7 +498,7 @@ contract CoreV1 is V1Storage, Adminable {
             borrowToLiquidate
         );
 
-        // Transfer them the stable assets they acquired at a discount
+        // Transfer them the collateral assets they acquired at a discount
         synthetic.transferCollateral(
             address(collateralAsset),
             msg.sender,
@@ -508,7 +508,7 @@ contract CoreV1 is V1Storage, Adminable {
             )
         );
 
-        // Transfer them the stable assets they acquired at a discount
+        // Transfer them the collateral assets they acquired at a discount
         synthetic.transferCollateral(
             address(collateralAsset),
             address(this),
@@ -521,14 +521,41 @@ contract CoreV1 is V1Storage, Adminable {
         return position;
     }
 
-    function withdrawExcessTokens(
+    function claimFees()
+        public
+    {
+        IERC20 collateralAsset = IERC20(state.collateralAsset());
+        ISyntheticToken syntheticAsset = ISyntheticToken(state.syntheticAsset());
+
+        uint256 totalSupplied = state.totalSupplied();
+        uint256 totalBalance = collateralAsset.balanceOf(address(syntheticAsset));
+
+        console.log("total supplied: %s", totalSupplied);
+        console.log("total balance: %s", totalBalance);
+
+        if (totalBalance >= totalSupplied) {
+            uint256 feeBalance = totalBalance.sub(totalSupplied);
+
+            syntheticAsset.transferCollateral(
+                address(collateralAsset),
+                address(this),
+                feeBalance
+            );
+        }
+    }
+
+    function withdrawTokens(
         address token,
-        uint256 amount,
-        address destination
+        address destination,
+        uint256 amount
     )
         public
         onlyAdmin
     {
-
+        SafeERC20.safeTransfer(
+            IERC20(token),
+            destination,
+            amount
+        );
     }
 }
