@@ -8,6 +8,7 @@ import ArcDecimal from '../../src/utils/ArcDecimal';
 import ArcNumber from '../../src/utils/ArcNumber';
 import { BigNumberish, BigNumber } from 'ethers/utils';
 import { expectRevert } from '../../src/utils/expectRevert';
+import { MockOracle } from '@src/typings';
 
 let ownerWallet: Wallet;
 let lenderWallet: Wallet;
@@ -32,7 +33,8 @@ arcDescribe('#Actions.borrowPosition()', init, (ctx: ITestContext) => {
     let positionId: BigNumberish;
 
     beforeEach(async () => {
-      await ctx.arc.oracle.setPrice(ArcDecimal.new(1000));
+      const oracle = await MockOracle.at(ownerWallet, ctx.arc.oracle.address);
+      await oracle.setPrice(ArcDecimal.new(1000));
 
       // The total liquidation premium is 10% in this case
       // 5% is the liquidator reward, 5% is the arc fee
