@@ -27,7 +27,6 @@ contract CoreV1 is V1Storage, Adminable {
     using SafeMath for uint256;
     using Math for uint256;
     using Types for Types.Par;
-    using Types for Types.Wei;
 
     enum Operation {
         Open,
@@ -128,8 +127,6 @@ contract CoreV1 is V1Storage, Adminable {
             "operateAction(): the operated position is undercollateralised"
         );
 
-        state.updateIndex();
-
         emit ActionOperated(
             uint8(operation),
             params,
@@ -227,13 +224,10 @@ contract CoreV1 is V1Storage, Adminable {
         // Only if they're borrowing
         if (borrowAmount > 0) {
             // Calculate the new borrow amount
-            (Types.Par memory newPar, ) = state.getNewParAndDeltaWei(
-                position.borrowedAmount,
-                Types.AssetAmount({
+            Types.Par memory newPar = position.borrowedAmount.add(
+                Types.Par({
                     sign: false,
-                    denomination: Types.AssetDenomination.Wei,
-                    ref: Types.AssetReference.Delta,
-                    value: borrowAmount
+                    value: borrowAmount.to128()
                 })
             );
 
@@ -318,13 +312,10 @@ contract CoreV1 is V1Storage, Adminable {
 
         // Calculate the user's new borrow requirements after decreasing their debt
         // An positive wei value will reduce the negative wei borrow value
-        (Types.Par memory newPar, Types.Wei memory deltaWei) = state.getNewParAndDeltaWei(
-            position.borrowedAmount,
-            Types.AssetAmount({
+        Types.Par memory newPar = position.borrowedAmount.add(
+            Types.Par({
                 sign: true,
-                denomination: Types.AssetDenomination.Wei,
-                ref: Types.AssetReference.Delta,
-                value: repayAmount
+                value: repayAmount.to128()
             })
         );
 
@@ -361,7 +352,7 @@ contract CoreV1 is V1Storage, Adminable {
         // Burn the synthetic asset from the user
         synthetic.burn(
             msg.sender,
-            deltaWei.value
+            repayAmount
         );
 
         // Transfer collateral back to the user
@@ -458,13 +449,10 @@ contract CoreV1 is V1Storage, Adminable {
 
         // Decrease the user's debt obligation
         // This amount is denominated in par since collateralDelta uses the borrow index
-        (Types.Par memory newPar, ) = state.getNewParAndDeltaWei(
-            position.borrowedAmount,
-            Types.AssetAmount({
+        Types.Par memory newPar = position.borrowedAmount.add(
+            Types.Par({
                 sign: true,
-                denomination: Types.AssetDenomination.Par,
-                ref: Types.AssetReference.Delta,
-                value: borrowToLiquidate
+                value: borrowToLiquidate.to128()
             })
         );
 
@@ -521,29 +509,15 @@ contract CoreV1 is V1Storage, Adminable {
         return position;
     }
 
-    function claimFees()
-        public
-    {
-        IERC20 collateralAsset = IERC20(state.collateralAsset());
-        ISyntheticToken syntheticAsset = ISyntheticToken(state.syntheticAsset());
-
-        uint256 totalSupplied = state.totalSupplied();
-        uint256 totalBalance = collateralAsset.balanceOf(address(syntheticAsset));
-
-        console.log("total supplied: %s", totalSupplied);
-        console.log("total balance: %s", totalBalance);
-
-        if (totalBalance >= totalSupplied) {
-            uint256 feeBalance = totalBalance.sub(totalSupplied);
-
-            syntheticAsset.transferCollateral(
-                address(collateralAsset),
-                address(this),
-                feeBalance
-            );
-        }
-    }
-
+    /**
+     * @dev Withdraw tokens owned by the proxy. This will never include depositor funds
+     *      since all the collateral is held by the synthetic token itself. The only funds
+     *      that will accrue based on CoreV1 & StateV1 is the liquidation fees.
+     *
+     * @param token Address of the token to withdraw
+     * @param destination Destination to withdraw to
+     * @param amount The total amount of tokens withdraw
+     */
     function withdrawTokens(
         address token,
         address destination,

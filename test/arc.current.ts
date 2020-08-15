@@ -25,7 +25,6 @@ async function init(ctx: ITestContext): Promise<void> {
     collateralRatio: { value: ArcNumber.new(2) },
     liquidationUserFee: { value: ArcDecimal.new(0.05).value },
     liquidationArcFee: { value: ArcDecimal.new(0.05).value },
-    interestRate: { value: '1585489599' },
   });
 
   ownerWallet = ctx.wallets[0];
@@ -68,10 +67,19 @@ arcDescribe('Arc', init, (ctx: ITestContext) => {
   });
 
   describe('#withdrawTokens', () => {
-    it('cannot withdraw as a non-admin', async () => {});
+    beforeEach(async () => {
+      await ctx.arc.collateralAsset.mintShare(ctx.arc.core.address, 5, {});
+    });
+    it('cannot withdraw as a non-admin', async () => {
+      const core = await ctx.arc.getCore(otherWallet);
+      await expectRevert(
+        core.withdrawTokens(ctx.arc.collateralAsset.address, otherWallet.address, 1),
+      );
+    });
 
-    it('cannot withdraw depositors funds', async () => {});
-
-    it('can withdraw any other tokens', async () => {});
+    it('can withdraw tokens as an admin', async () => {
+      const core = await ctx.arc.getCore(ownerWallet);
+      await core.withdrawTokens(ctx.arc.collateralAsset.address, otherWallet.address, 1);
+    });
   });
 });
