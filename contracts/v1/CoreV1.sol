@@ -56,7 +56,7 @@ contract CoreV1 is StorageV1, Adminable {
     // ============ Constructor ============
 
     function init(address _state)
-        public
+        external
     {
         require(
             address(state) == address(0),
@@ -523,7 +523,7 @@ contract CoreV1 is StorageV1, Adminable {
         address destination,
         uint256 amount
     )
-        public
+        external
         onlyAdmin
     {
         SafeERC20.safeTransfer(
