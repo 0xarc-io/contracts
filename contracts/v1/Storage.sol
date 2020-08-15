@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import {StateV1} from "./StateV1.sol";
 
-contract V1Storage {
+contract StorageV1 {
 
     StateV1 public state;
 

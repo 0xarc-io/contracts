@@ -6,15 +6,15 @@ pragma experimental ABIEncoderV2;
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
-import {IMintableToken} from "../interfaces/IMintableToken.sol";
-import {IOracle} from "../interfaces/IOracle.sol";
+import {ISyntheticToken} from "../../interfaces/ISyntheticToken.sol";
+import {IMintableToken} from "../../interfaces/IMintableToken.sol";
+import {IOracle} from "../../interfaces/IOracle.sol";
 
-import {Math} from "./Math.sol";
-import {Decimal} from "./Decimal.sol";
-import {SignedMath} from "./SignedMath.sol";
+import {Math} from "../../lib/Math.sol";
+import {Decimal} from "../../lib/Decimal.sol";
+import {SignedMath} from "../../lib/SignedMath.sol";
 
-library Types {
+library TypesV1 {
 
     using Math for uint256;
     using SafeMath for uint256;

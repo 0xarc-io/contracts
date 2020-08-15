@@ -12,7 +12,7 @@ import {IMintableToken} from "../interfaces/IMintableToken.sol";
 
 import {console} from "@nomiclabs/buidler/console.sol";
 
-import {Types} from "../lib/Types.sol";
+import {TypesV1} from "./TypesV1.sol";
 import {Decimal} from "../lib/Decimal.sol";
 import {SignedMath} from "../lib/SignedMath.sol";
 import {Storage} from "../lib/Storage.sol";
@@ -20,13 +20,13 @@ import {Math} from "../lib/Math.sol";
 import {Adminable} from "../lib/Adminable.sol";
 
 import {StateV1} from "./StateV1.sol";
-import {V1Storage} from "./Storage.sol";
+import {StorageV1} from "./Storage.sol";
 
-contract CoreV1 is V1Storage, Adminable {
+contract CoreV1 is StorageV1, Adminable {
 
     using SafeMath for uint256;
     using Math for uint256;
-    using Types for Types.Par;
+    using TypesV1 for TypesV1.Par;
 
     enum Operation {
         Open,
@@ -44,7 +44,7 @@ contract CoreV1 is V1Storage, Adminable {
     event ActionOperated(
         uint8 operation,
         OperationParams params,
-        Types.Position updatedPosition
+        TypesV1.Position updatedPosition
     );
 
     event ExcessTokensWithdrawn(
@@ -72,7 +72,7 @@ contract CoreV1 is V1Storage, Adminable {
     )
         public
     {
-        Types.Position memory operatedPosition;
+        TypesV1.Position memory operatedPosition;
 
         (
             uint256 collateralLimit,
@@ -139,7 +139,7 @@ contract CoreV1 is V1Storage, Adminable {
         uint256 borrowAmount
     )
         internal
-        returns (Types.Position memory returnedPosition, uint256 positionId)
+        returns (TypesV1.Position memory returnedPosition, uint256 positionId)
     {
         // CHECKS:
         // 1. No checks required as it's all processed in borrow()
@@ -148,12 +148,12 @@ contract CoreV1 is V1Storage, Adminable {
         // 1. Create a new Position struct with the basic fields filled out and save it to storage
         // 2. Call `borrowPosition()`
 
-        Types.Position memory newPosition = Types.Position({
+        TypesV1.Position memory newPosition = TypesV1.Position({
             owner: msg.sender,
-            collateralAsset: Types.AssetType.Collateral,
-            borrowedAsset: Types.AssetType.Synthetic,
-            collateralAmount: Types.positiveZeroPar(),
-            borrowedAmount: Types.zeroPar()
+            collateralAsset: TypesV1.AssetType.Collateral,
+            borrowedAsset: TypesV1.AssetType.Synthetic,
+            collateralAmount: TypesV1.positiveZeroPar(),
+            borrowedAmount: TypesV1.zeroPar()
         });
 
         positionId = state.savePosition(newPosition);
@@ -171,7 +171,7 @@ contract CoreV1 is V1Storage, Adminable {
         uint256 borrowAmount
     )
         internal
-        returns (Types.Position memory)
+        returns (TypesV1.Position memory)
     {
         // CHECKS:
         // 1. Ensure that the position actually exists
@@ -194,7 +194,7 @@ contract CoreV1 is V1Storage, Adminable {
         //    the synthetic
 
         // Get the current position
-        Types.Position memory position = state.getPosition(positionId);
+        TypesV1.Position memory position = state.getPosition(positionId);
 
         // Ensure it's collateralized
         require(
@@ -213,7 +213,7 @@ contract CoreV1 is V1Storage, Adminable {
         position = state.updatePositionAmount(
             positionId,
             position.collateralAsset,
-            Types.Par({
+            TypesV1.Par({
                 sign: true,
                 value: collateralAmount.to128()
             })
@@ -224,8 +224,8 @@ contract CoreV1 is V1Storage, Adminable {
         // Only if they're borrowing
         if (borrowAmount > 0) {
             // Calculate the new borrow amount
-            Types.Par memory newPar = position.borrowedAmount.add(
-                Types.Par({
+            TypesV1.Par memory newPar = position.borrowedAmount.add(
+                TypesV1.Par({
                     sign: false,
                     value: borrowAmount.to128()
                 })
@@ -241,7 +241,7 @@ contract CoreV1 is V1Storage, Adminable {
             );
 
             // Check how much collateral they need based on their new position details
-            Types.Par memory collateralRequired = state.calculateInverseRequired(
+            TypesV1.Par memory collateralRequired = state.calculateInverseRequired(
                 position.borrowedAsset,
                 position.borrowedAmount.value,
                 currentPrice
@@ -280,7 +280,7 @@ contract CoreV1 is V1Storage, Adminable {
         uint256 withdrawAmount
     )
         private
-        returns (Types.Position memory)
+        returns (TypesV1.Position memory)
     {
         // CHECKS:
         // 1. Ensure the position actually exists by ensuring the owner == msg.sender
@@ -295,7 +295,7 @@ contract CoreV1 is V1Storage, Adminable {
         // INTERACTIONS:
         // 1. Burn the synthetic asset directly from their wallet
         // 2.Transfer the stable coins back to the user
-        Types.Position memory position = state.getPosition(positionId);
+        TypesV1.Position memory position = state.getPosition(positionId);
 
         Decimal.D256 memory currentPrice = state.getCurrentPrice();
 
@@ -312,8 +312,8 @@ contract CoreV1 is V1Storage, Adminable {
 
         // Calculate the user's new borrow requirements after decreasing their debt
         // An positive wei value will reduce the negative wei borrow value
-        Types.Par memory newPar = position.borrowedAmount.add(
-            Types.Par({
+        TypesV1.Par memory newPar = position.borrowedAmount.add(
+            TypesV1.Par({
                 sign: true,
                 value: repayAmount.to128()
             })
@@ -323,7 +323,7 @@ contract CoreV1 is V1Storage, Adminable {
         position = state.setAmount(positionId, position.borrowedAsset, newPar);
 
         // Calculate how much the user is allowed to withdraw given their debt was repaid
-        (Types.Par memory collateralDelta) = state.calculateCollateralDelta(
+        (TypesV1.Par memory collateralDelta) = state.calculateCollateralDelta(
             position.borrowedAsset,
             position.collateralAmount,
             position.borrowedAmount,
@@ -340,7 +340,7 @@ contract CoreV1 is V1Storage, Adminable {
         position = state.updatePositionAmount(
             positionId,
             position.collateralAsset,
-            Types.Par({
+            TypesV1.Par({
                 sign: false,
                 value: withdrawAmount.to128()
             })
@@ -369,7 +369,7 @@ contract CoreV1 is V1Storage, Adminable {
         uint256 positionId
     )
         private
-        returns (Types.Position memory)
+        returns (TypesV1.Position memory)
     {
         // CHECKS:
         // 1. Ensure that the position id is valid
@@ -390,7 +390,7 @@ contract CoreV1 is V1Storage, Adminable {
         // 2. Transfer the collateral from the synthetic token to the liquidator
         // 3. Transfer a portion to the ARC Core contract as a fee
 
-        Types.Position memory position = state.getPosition(positionId);
+        TypesV1.Position memory position = state.getPosition(positionId);
 
         console.log("*** liquidate ***");
         console.log("   starting collat: %s", position.collateralAmount.value);
@@ -415,7 +415,7 @@ contract CoreV1 is V1Storage, Adminable {
         console.log("   liquidation price", liquidationPrice.value);
 
         // Calculate how much the user is in debt by to be whole again
-        (Types.Par memory collateralDelta) = state.calculateCollateralDelta(
+        (TypesV1.Par memory collateralDelta) = state.calculateCollateralDelta(
             position.borrowedAsset,
             position.collateralAmount,
             position.borrowedAmount,
@@ -449,8 +449,8 @@ contract CoreV1 is V1Storage, Adminable {
 
         // Decrease the user's debt obligation
         // This amount is denominated in par since collateralDelta uses the borrow index
-        Types.Par memory newPar = position.borrowedAmount.add(
-            Types.Par({
+        TypesV1.Par memory newPar = position.borrowedAmount.add(
+            TypesV1.Par({
                 sign: true,
                 value: borrowToLiquidate.to128()
             })
@@ -470,7 +470,7 @@ contract CoreV1 is V1Storage, Adminable {
         );
 
         ISyntheticToken synthetic = ISyntheticToken(
-            state.getAddress(Types.AssetType.Synthetic)
+            state.getAddress(TypesV1.AssetType.Synthetic)
         );
 
         IERC20 collateralAsset = IERC20(state.collateralAsset());
