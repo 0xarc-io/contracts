@@ -9,14 +9,14 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {console} from "@nomiclabs/buidler/console.sol";
 
-import {IOracle} from "../../interfaces/IOracle.sol";
-import {ISyntheticToken} from "../../interfaces/ISyntheticToken.sol";
-import {IMintableToken} from "../../interfaces/IMintableToken.sol";
+import {IOracle} from "../interfaces/IOracle.sol";
+import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
+import {IMintableToken} from "../interfaces/IMintableToken.sol";
 
 import {TypesV1} from "./TypesV1.sol";
-import {Decimal} from "../../lib/Decimal.sol";
-import {Math} from "../../lib/Math.sol";
-import {SignedMath} from "../../lib/SignedMath.sol";
+import {Decimal} from "../lib/Decimal.sol";
+import {Math} from "../lib/Math.sol";
+import {SignedMath} from "../lib/SignedMath.sol";
 
 contract StateV1 {
 
