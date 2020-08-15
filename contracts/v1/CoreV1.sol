@@ -20,7 +20,7 @@ import {Math} from "../lib/Math.sol";
 import {Adminable} from "../lib/Adminable.sol";
 
 import {StateV1} from "./StateV1.sol";
-import {StorageV1} from "./Storage.sol";
+import {StorageV1} from "./StorageV1.sol";
 
 contract CoreV1 is StorageV1, Adminable {
 

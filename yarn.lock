@@ -677,12 +677,12 @@
     "@nodelib/fs.scandir" "2.1.3"
     fastq "^1.6.0"
 
-"@nomiclabs/buidler-ethers@^1.4.2":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@nomiclabs/buidler-ethers/-/buidler-ethers-2.0.0.tgz#f972df98a5d9f32fce974749f3ba9d964f057f2a"
-  integrity sha512-Lf5XLClEeWYo6jVrGAqGBAcKTOP6IAChAR4qcDS36BkQnWakoRKcoSbwhr2YmTNTRAvgDWTmjQYbV17udJ+Alw==
+"@nomiclabs/buidler-ethers@^1.3.1":
+  version "1.3.4"
+  resolved "https://registry.yarnpkg.com/@nomiclabs/buidler-ethers/-/buidler-ethers-1.3.4.tgz#3f200e1ef5843f844a356fe00d1d11685218817c"
+  integrity sha512-kz2YtkQl/eUuNkYpZqj1xtkDpzy+2AdUNc9xfmvU/zEf0HL0eOsj+a9Ltvl2xhL86eTaYbfrIzJvWGmpIJndNA==
 
-"@nomiclabs/buidler-etherscan@^1.4.2":
+"@nomiclabs/buidler-etherscan@^1.3.1":
   version "1.3.3"
   resolved "https://registry.yarnpkg.com/@nomiclabs/buidler-etherscan/-/buidler-etherscan-1.3.3.tgz#a7cbba220c7ad88ae04f26440e1f7236569db145"
   integrity sha512-Pmo890t8ZvO9/9Q+9uxQl7SLai6Sqp8m5CdUc4MWO/YIIsv6dt1+68VaUDOhkF5+xwUDgp89Cdu0fJp4PODsxw==
@@ -4035,6 +4035,11 @@ follow-redirects@1.5.10:
   integrity sha512-0V5l4Cizzvqt5D44aTXbFZz+FtyXV1vrDN6qrelxtfYQKW0KO0W2T/hkE8xvGa/540LkZlkaUjO4ailYTFtHVQ==
   dependencies:
     debug "=3.1.0"
+
+follow-redirects@^1.12.1:
+  version "1.13.0"
+  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.13.0.tgz#b42e8d93a2a7eea5ed88633676d6597bc8e384db"
+  integrity sha512-aq6gF1BEKje4a9i9+5jimNFIpq4Q1WiwBToeRK5NvZBd/TRsmW8BsJfOEGkr76TbOyPVD3OVDN910EcUNtRYEA==
 
 for-in@^1.0.2:
   version "1.0.2"
@@ -8930,13 +8935,14 @@ solc@0.6.8:
     semver "^5.5.0"
     tmp "0.0.33"
 
-solc@^0.5.16:
-  version "0.5.17"
-  resolved "https://registry.yarnpkg.com/solc/-/solc-0.5.17.tgz#8a76c50e98d49ca7610cca2fdc78ff3016540c67"
-  integrity sha512-qpX+PGaU0Q3c6lh2vDzMoIbhv6bIrecI4bYsx+xUs01xsGFnY6Nr0L8y/QMyutTnrHN6Lb/Yl672ZVRqxka96w==
+solc@^0.7.0:
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/solc/-/solc-0.7.0.tgz#f242ba1888a0b7fe3070a82cd9fd09fcea3e15ad"
+  integrity sha512-4mpz0XimxHpR7X/YIpM2C4hX+wGTenACJX8Vch6I1jgwwQoZElqnaKHD/f2z9/B8jdU5eim5NGcgg3XEY5rcrA==
   dependencies:
     command-exists "^1.2.8"
     commander "3.0.2"
+    follow-redirects "^1.12.1"
     fs-extra "^0.30.0"
     js-sha3 "0.8.0"
     memorystream "^0.3.1"
