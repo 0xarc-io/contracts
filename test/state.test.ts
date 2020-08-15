@@ -92,7 +92,6 @@ arcDescribe('StateV1', init, (ctx: ITestContext) => {
           collateralRatio: ArcDecimal.new(0),
           liquidationArcFee: ArcDecimal.new(0),
           liquidationUserFee: ArcDecimal.new(0),
-          interestRate: ArcDecimal.new(0),
         }),
       );
     });
@@ -104,14 +103,12 @@ arcDescribe('StateV1', init, (ctx: ITestContext) => {
         collateralRatio: ArcDecimal.new(1),
         liquidationArcFee: ArcDecimal.new(1),
         liquidationUserFee: ArcDecimal.new(1),
-        interestRate: ArcDecimal.new(1),
       });
 
       const currentMarket = await state.market();
       expect(currentMarket.collateralRatio.value).toEqual(ArcNumber.new(1));
       expect(currentMarket.liquidationArcFee.value).toEqual(ArcNumber.new(1));
       expect(currentMarket.liquidationUserFee.value).toEqual(ArcNumber.new(1));
-      expect(currentMarket.interestRate.value).toEqual(ArcNumber.new(1));
     });
 
     it('should not be able to set the risk params as non-admin', async () => {
@@ -166,7 +163,6 @@ arcDescribe('StateV1', init, (ctx: ITestContext) => {
           collateralRatio: ArcDecimal.new(1),
           liquidationUserFee: ArcDecimal.new(1),
           liquidationArcFee: ArcDecimal.new(1),
-          interestRate: ArcDecimal.new(1),
         },
         {
           syntheticLimit: 0,

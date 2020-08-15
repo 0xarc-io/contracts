@@ -37,7 +37,6 @@ arcDescribe('#Actions.liquidatePosition()', init, (ctx: ITestContext) => {
       collateralRatio: { value: ArcNumber.new(2) },
       liquidationUserFee: { value: ArcDecimal.new(0.05).value },
       liquidationArcFee: { value: ArcDecimal.new(0.05).value },
-      interestRate: { value: ArcNumber.new(0) },
     });
   });
 

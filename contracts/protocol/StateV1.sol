@@ -16,7 +16,6 @@ import {IMintableToken} from "../interfaces/IMintableToken.sol";
 import {Types} from "../lib/Types.sol";
 import {Decimal} from "../lib/Decimal.sol";
 import {Math} from "../lib/Math.sol";
-import {Interest} from "../lib/Interest.sol";
 import {Time} from "../lib/Time.sol";
 import {SignedMath} from "../lib/SignedMath.sol";
 
@@ -25,7 +24,6 @@ contract StateV1 {
     using Math for uint256;
     using SafeMath for uint256;
     using Types for Types.Par;
-    using Types for Types.Wei;
 
     // ============ Variables ============
 
@@ -39,8 +37,6 @@ contract StateV1 {
     address public collateralAsset;
     address public syntheticAsset;
 
-    Interest.Index public globalIndex;
-
     uint256 public positionCount;
     uint256 public totalSupplied;
 
@@ -48,9 +44,7 @@ contract StateV1 {
 
     // ============ Events ============
 
-    event LogIndexUpdated(Interest.Index updatedIndex);
     event MarketParamsUpdated(Types.MarketParams updatedMarket);
-    event GlobalIndexUpdated(Interest.Index updatedIndex);
     event RiskParamsUpdated(Types.RiskParams updatedParams);
 
     // ============ Constructor ============
@@ -71,7 +65,6 @@ contract StateV1 {
         collateralAsset = _collateralAsset;
         syntheticAsset = _syntheticAsset;
 
-        updateIndex();
         setOracle(_oracle);
         setMarketParams(_marketParams);
         setRiskParams(_riskParams);
@@ -125,35 +118,6 @@ contract StateV1 {
     {
         risk = _riskParams;
         emit RiskParamsUpdated(risk);
-    }
-
-    // ============ Public Setters  ============
-
-    function updateIndex()
-        public
-        returns (Interest.Index memory)
-    {
-        if (globalIndex.lastUpdate == 0) {
-            globalIndex = Interest.newIndex();
-            return globalIndex;
-        }
-
-        if (globalIndex.lastUpdate == Time.currentTime()) {
-            return globalIndex;
-        }
-
-        console.log("old index: %s", globalIndex.borrow);
-
-        globalIndex = Interest.calculateNewIndex(
-            globalIndex,
-            market.interestRate
-        );
-
-        console.log("new index: %s", globalIndex.borrow);
-
-        emit LogIndexUpdated(globalIndex);
-
-        return globalIndex;
     }
 
     // ============ Core Setters ============
@@ -252,51 +216,6 @@ contract StateV1 {
     }
 
     // ============ Calculation Getters ============
-
-    function getNewParAndDeltaWei(
-        Types.Par memory currentPar,
-        Types.AssetAmount memory amount
-    )
-        public
-        view
-        returns (Types.Par memory, Types.Wei memory)
-    {
-        console.log("*** getNewParAndDeltaWei ***");
-        if (amount.value == 0 && amount.ref == Types.AssetReference.Delta) {
-            return (currentPar, Types.zeroWei());
-        }
-
-        console.log("   borrow index: %s", globalIndex.borrow);
-        console.log("   currentPar: %s", currentPar.value);
-
-        Types.Wei memory oldWei = Interest.parToWei(currentPar, globalIndex);
-        console.log("   oldWei: %s", oldWei.value);
-        Types.Par memory newPar;
-        Types.Wei memory deltaWei;
-
-        if (amount.denomination == Types.AssetDenomination.Wei) {
-            deltaWei = Types.Wei({
-                sign: amount.sign,
-                value: amount.value
-            });
-            if (amount.ref == Types.AssetReference.Target) {
-                deltaWei = deltaWei.sub(oldWei);
-            }
-            newPar = Interest.weiToPar(oldWei.add(deltaWei), globalIndex);
-        } else { // AssetDenomination.Par
-            newPar = Types.Par({
-                sign: amount.sign,
-                value: amount.value.to128()
-            });
-            if (amount.ref == Types.AssetReference.Delta) {
-                newPar = currentPar.add(newPar);
-            }
-            deltaWei = Interest.parToWei(newPar, globalIndex).sub(oldWei);
-        }
-        console.log("   newPar: %s", newPar.value);
-
-        return (newPar, deltaWei);
-    }
 
     function isCollateralized(
         Types.Position memory position
@@ -447,23 +366,18 @@ contract StateV1 {
 
         console.log("   original borrow: %s", parBorrow.value);
 
-        Types.Wei memory weiBorrow = Types.getWei(
-            parBorrow,
-            globalIndex
-        );
-
-        console.log("   wei borrow: %s", weiBorrow.value);
+        console.log("   wei borrow: %s", parBorrow.value);
 
         if (borrowedAsset == Types.AssetType.Collateral) {
             collateralRequired = calculateInverseRequired(
                 borrowedAsset,
-                weiBorrow.value,
+                parBorrow.value,
                 price
             );
         } else if (borrowedAsset == Types.AssetType.Synthetic) {
             collateralRequired = calculateInverseRequired(
                 borrowedAsset,
-                weiBorrow.value,
+                parBorrow.value,
                 price
             );
         }

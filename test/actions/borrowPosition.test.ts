@@ -42,7 +42,6 @@ arcDescribe('#Actions.borrowPosition()', init, (ctx: ITestContext) => {
         collateralRatio: { value: ArcNumber.new(2) },
         liquidationUserFee: { value: ArcDecimal.new(0.05).value },
         liquidationArcFee: { value: ArcDecimal.new(0.05).value },
-        interestRate: { value: '1585489599' },
       });
 
       const result = await ctx.arc._borrowSynthetic(
@@ -52,14 +51,6 @@ arcDescribe('#Actions.borrowPosition()', init, (ctx: ITestContext) => {
       );
 
       positionId = result.params.id;
-    });
-
-    it.only('should accrue interest after 1 year at 5%', async () => {
-      await ctx.evm.increaseTime(60 * 60 * 24 * 365);
-      await ctx.evm.mineBlock();
-      await ctx.arc.state.updateIndex();
-      const borrowIndex = (await ctx.arc.state.globalIndex()).borrow;
-      expect(borrowIndex.gt(ArcDecimal.new(1.05).value)).toBeTruthy();
     });
 
     it('should not be able to borrow more than it is allowed', async () => {

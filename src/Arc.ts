@@ -72,7 +72,6 @@ export default class Arc {
         collateralRatio: { value: config.collateralRatio },
         liquidationArcFee: { value: config.liquidationArcFee },
         liquidationUserFee: { value: config.liquidationUserFee },
-        interestRate: { value: config.interestRate },
       },
       {
         collateralLimit: '',
