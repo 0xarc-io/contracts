@@ -29,7 +29,7 @@ contract SyntheticToken is BaseERC20, ISyntheticToken {
         address to,
         uint256 value
     )
-        public
+        external
     {
         require(
             msg.sender == arcAddress,
@@ -43,7 +43,7 @@ contract SyntheticToken is BaseERC20, ISyntheticToken {
         address to,
         uint256 value
     )
-        public
+        external
     {
         require(
             msg.sender == arcAddress,
@@ -58,9 +58,10 @@ contract SyntheticToken is BaseERC20, ISyntheticToken {
         address to,
         uint256 value
     )
-        public
+        external
+        returns (bool)
     {
-        BaseERC20(token).transfer(
+        return BaseERC20(token).transfer(
             to,
             value
         );

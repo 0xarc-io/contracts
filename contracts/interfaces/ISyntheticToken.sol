@@ -22,6 +22,7 @@ interface ISyntheticToken {
         address to,
         uint256 value
     )
-        external;
+        external
+        returns (bool);
 
 }
