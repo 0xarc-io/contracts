@@ -4,26 +4,38 @@ pragma solidity ^0.5.16;
 
 import {BaseERC20} from "../token/BaseERC20.sol";
 
-
-contract StableToken is BaseERC20 {
+contract TestToken is BaseERC20 {
     // ============ Variables ============
 
-    address public owner;
     mapping(address => bool) public approvedCollateral;
-
-    // ============ Modifier ============
-
-    modifier onlyOwner() {
-        _;
-    }
 
     // ============ Constructor ============
 
-    constructor() public BaseERC20("Stable Token", "ST") {}
+    constructor(
+        string memory _name,
+        string memory _symbol
+    )
+        public
+        BaseERC20(_name, _symbol)
+    {}
 
     // ============ Functions ============
 
-    function mintShare() public onlyOwner {}
+    function mintShare(
+        address to,
+        uint256 value
+    )
+        public
+    {
+        _mint(to, value);
+    }
 
-    function redeemShare() public onlyOwner {}
+    function redeemShare(
+        address from,
+        uint256 value
+    )
+        public
+    {
+        _burn(from, value);
+    }
 }
