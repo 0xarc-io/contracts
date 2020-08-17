@@ -6,7 +6,7 @@ module.exports = {
   transform: {
     '^.+\\.ts$': 'ts-jest',
   },
-  testRegex: 'test\\/.*\\.current\\.ts$',
+  testRegex: 'test\\/.*\\.test\\.ts$',
   moduleFileExtensions: ['ts', 'js', 'json', 'node'],
   setupFilesAfterEnv: [],
   testEnvironment: 'node',

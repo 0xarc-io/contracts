@@ -7,8 +7,8 @@ import { ITestContext } from '../helpers/arcDescribe';
 import initializeArc from '../helpers/initializeArc';
 import { StateV1, MockOracle } from '@src/typings';
 import { expectRevert } from '../../src/utils/expectRevert';
-import ArcNumber from '../../dist/src/utils/ArcNumber';
-import ArcDecimal from '../../dist/src/utils/ArcDecimal';
+import ArcNumber from '../../src/utils/ArcNumber';
+import ArcDecimal from '../../src/utils/ArcDecimal';
 import { AddressZero } from 'ethers/constants';
 
 let ownerWallet: Wallet;
