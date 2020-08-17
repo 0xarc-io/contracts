@@ -20,6 +20,9 @@ jobs:
           name: Lint Contracts
           command: yarn run lint:sol
       - run:
+        name: Build repo
+        command: yarn build
+      - run:
           name: Test Contracts
           command: yarn test
       # NOTE -> This requires a paid CircleCI plan to increase the RAM size up to 6/8GB. Fails at current
