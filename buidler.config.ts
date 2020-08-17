@@ -9,11 +9,11 @@ usePlugin('buidler-spdx-license-identifier');
 require('dotenv').config({ path: '.env' }).parsed;
 
 export const params = {
-  private_key: process.env.PRIVATE_KEY,
-  network_id: parseInt(process.env.DEPLOYMENT_NETWORK_ID),
-  network_env: `${process.env.DEPLOYMENT_ENVIRONMENT}`,
-  rpc_url: process.env.RPC_ENDPOINT,
-  etherscan_key: process.env.ETHERSCAN_KEY,
+  private_key: process.env.PRIVATE_KEY || '',
+  network_id: parseInt(process.env.DEPLOYMENT_NETWORK_ID) || 50,
+  network_env: `${process.env.DEPLOYMENT_ENVIRONMENT}` || '0.0.0.0:8545',
+  rpc_url: process.env.RPC_ENDPOINT || '',
+  etherscan_key: process.env.ETHERSCAN_KEY || '',
 };
 
 const HUNDRED_ETH = new BigNumber(100).pow(18).toString();
