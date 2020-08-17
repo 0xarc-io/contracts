@@ -17,8 +17,8 @@ When thinking about a synthetic pool you have the following contracts:
 4. Synthetic Token - the actual synthetic asset which is minted. All collateral is stored inside here.
 
 Users can only interact with the `operateAction` function inside `CoreV1`. That is the main way the state machine can be modified.
-Each time the function is called it will ensure that the position that was modified is collateralised and the system is within it's limits at the moment.
 
+Each time the function is called it will ensure that the position that was modified is collateralised and the system is within it's limits at the moment.
 
 ### Staking Contracts
 
