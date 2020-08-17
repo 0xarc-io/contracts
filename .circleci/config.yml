@@ -4,7 +4,7 @@ version: 2.1
 #  coveralls: coveralls/coveralls@1.0.4
 jobs:
   build:
-    working_directory: ~/optionsprotocol
+    working_directory: ~/contracts
     docker:
       - image: circleci/node:10.18.0
       - image: trufflesuite/ganache-cli:v6.7.0
@@ -19,22 +19,13 @@ jobs:
       - run:
           name: Lint Contracts
           command: yarn run lint:sol
-      - run:
-          name: Build repo
-          command: yarn build
-      - run:
-          name: Test Contracts
-          command: yarn test
-      # NOTE -> This requires a paid CircleCI plan to increase the RAM size up to 6/8GB. Fails at current
-      #- run:
-      #    name: Produce Coverage Report
-      #    command: npm run coverage
-      #- coveralls/upload
-      #- store_artifacts:
-      #    path: /coverage
-      #- store_artifacts:
-      #    path: /.coverage.json
-      - save_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
-          paths:
-            - node_modules
+      # - run:
+      #     name: Build repo
+      #     command: yarn build
+      # - run:
+      #     name: Test Contracts
+      #     command: yarn test
+      # - save_cache:
+      #     key: dependency-cache-{{ checksum "package.json" }}
+      #     paths:
+      #       - node_modules
