@@ -7,6 +7,8 @@ import {StateV1} from "./StateV1.sol";
 
 contract StorageV1 {
 
+    bool public paused;
+
     StateV1 public state;
 
 }

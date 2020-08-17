@@ -20,7 +20,6 @@ Users can only interact with the `operateAction` function inside `CoreV1`. That 
 Each time the function is called it will ensure that the position that was modified is collateralised and the system is within it's limits at the moment.
 
 
-
 ### Staking Contracts
 
 The second component of the ARC contracts are the Staking contracts which will be used to actually distribute the tokens. ARC tokens will need to be earned by users of the protocol itself. The main contracts are outlined here and their functions.
