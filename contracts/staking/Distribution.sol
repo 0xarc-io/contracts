@@ -63,6 +63,7 @@ contract Distribution is Ownable, TokenAccrual {
         uint256 value
     )
         public
+        onlyOwner
     {
         require(to != address(0), "Cannot mint to zero address");
 
@@ -75,6 +76,7 @@ contract Distribution is Ownable, TokenAccrual {
         uint256 value
     )
         public
+        onlyOwner
     {
         require(from != address(0), "Cannot burn to zero");
 
