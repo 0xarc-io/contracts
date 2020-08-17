@@ -39,7 +39,7 @@ export class TestArc extends Arc {
     await this.collateralAsset.mintShare(from.address, collateral, {});
 
     if (!positionId) {
-      return await this.openPosition(AssetType.Collateral, collateral, amount, from, {});
+      return await this.openPosition(collateral, amount, from, {});
     } else {
       return await this.borrow(positionId!, AssetType.Collateral, collateral, amount, from, {});
     }
