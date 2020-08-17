@@ -18,8 +18,7 @@ import { StateV1 } from './typings/StateV1';
 import { AddressBook } from './addresses/AddressBook';
 import { Config } from './addresses/Config';
 import Token from '../src/utils/Token';
-import { BaseERC20, IERC20 } from './typings';
-import config from '../dist/buidler.config';
+import { IERC20 } from './typings';
 import { RiskParams, MarketParams } from './types';
 
 export default class Arc {

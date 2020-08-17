@@ -5,9 +5,9 @@ import { TestToken } from '@src/typings';
 import simpleDescribe from '../helpers/simpleDescribe';
 import { ITestContext } from '../helpers/simpleDescribe';
 import { Wallet } from 'ethers';
-import Token from '../../dist/src/utils/Token';
+import Token from '../../src/utils/Token';
 import { BigNumber, BigNumberish } from 'ethers/utils';
-import ArcNumber from '../../dist/src/utils/ArcNumber';
+import ArcNumber from '../../src/utils/ArcNumber';
 
 let ownerWallet: Wallet;
 let userWallet: Wallet;

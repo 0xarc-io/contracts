@@ -9,7 +9,7 @@ import { ITestContext } from '../helpers/arcDescribe';
 import initializeArc from '../helpers/initializeArc';
 import { StateV1 } from '@src/typings';
 import { AddressZero } from 'ethers/constants';
-import ArcDecimal from '../../dist/src/utils/ArcDecimal';
+import ArcDecimal from '../../src/utils/ArcDecimal';
 import { BigNumber } from 'ethers/utils';
 
 let ownerWallet: Wallet;
