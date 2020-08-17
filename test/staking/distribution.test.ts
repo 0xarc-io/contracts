@@ -1,12 +1,12 @@
-import { TestToken } from '@src/typings';
 import simpleDescribe from '../helpers/simpleDescribe';
 import { ITestContext } from '../helpers/simpleDescribe';
 import { Wallet } from 'ethers';
 import { BigNumber } from 'ethers/utils';
-import { Distribution } from '@src/typings/Distribution';
 import ArcDecimal from '../../src/utils/ArcDecimal';
-import ArcNumber from '../../dist/src/utils/ArcNumber';
+import ArcNumber from '../../src/utils/ArcNumber';
 import { expectRevert } from '../../src/utils/expectRevert';
+import { Distribution } from '../../src/typings/Distribution';
+import { TestToken } from '../../src/typings/TestToken';
 
 let ownerWallet: Wallet;
 let investorWallet: Wallet;
