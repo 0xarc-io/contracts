@@ -112,7 +112,6 @@ export default class Arc {
   }
 
   async openPosition(
-    collateralAsset: AssetType,
     collateralAmount: BigNumberish,
     borrowAmount: BigNumberish,
     caller: Signer = this.wallet,

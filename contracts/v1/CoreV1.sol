@@ -161,12 +161,17 @@ contract CoreV1 is StorageV1, Adminable {
             borrowedAmount: TypesV1.zeroPar()
         });
 
-        positionId = state.savePosition(newPosition);
+        uint256 positionId = state.savePosition(newPosition);
 
-        returnedPosition = borrow(
+        newPosition = borrow(
             positionId,
             collateralAmount,
             borrowAmount
+        );
+
+        return (
+            newPosition,
+            positionId
         );
     }
 
@@ -251,6 +256,9 @@ contract CoreV1 is StorageV1, Adminable {
                 position.borrowedAmount.value,
                 currentPrice
             );
+
+            console.log("collateral required: %s", collateralRequired.value);
+            console.log("current collateral amount: %s", position.collateralAmount.value);
 
             // Ensure the user's collateral amount is greater than the collateral needed
             require(

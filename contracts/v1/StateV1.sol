@@ -428,7 +428,7 @@ contract StateV1 {
 
         return (
             userRatio,
-            arcRatio = Decimal.sub(
+            Decimal.sub(
                 Decimal.one(),
                 userRatio.value
             )
