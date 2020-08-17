@@ -18,6 +18,12 @@ import {Decimal} from "../lib/Decimal.sol";
 import {Math} from "../lib/Math.sol";
 import {SignedMath} from "../lib/SignedMath.sol";
 
+/**
+ * @title StateV1
+ * @author Kerman Kohli
+ * @notice This contract holds all the state regarding a sythetic asset protocol.
+ *         The contract has an owner and core address which can call certain functions.
+ */
 contract StateV1 {
 
     using Math for uint256;
@@ -89,6 +95,11 @@ contract StateV1 {
 
     // ============ Admin Setters ============
 
+    /**
+     * @dev Set the address of the oracle
+     *
+     * @param _oracle Address of the oracle to set
+     */
     function setOracle(
         address _oracle
     )
@@ -99,6 +110,11 @@ contract StateV1 {
         emit MarketParamsUpdated(market);
     }
 
+    /**
+     * @dev Set the parameters of the market
+     *
+     * @param _marketParams Set the new market params
+     */
     function setMarketParams(
         TypesV1.MarketParams memory _marketParams
     )
@@ -109,6 +125,11 @@ contract StateV1 {
         emit MarketParamsUpdated(market);
     }
 
+    /**
+     * @dev Set the risk parameters of the market
+     *
+     * @param _riskParams Set the risk levels of the market
+     */
     function setRiskParams(
         TypesV1.RiskParams memory _riskParams
     )
@@ -241,6 +262,13 @@ contract StateV1 {
         return collateralDelta.sign || collateralDelta.value == 0;
     }
 
+    /**
+     * @dev Given an asset, calculate the inverse amount of that asset
+     *
+     * @param asset The asset in question here
+     * @param amount The amount of this asset
+     * @param price What price do you want to calculate the inverse at
+     */
     function calculateInverseAmount(
         TypesV1.AssetType asset,
         uint256 amount,
@@ -267,6 +295,14 @@ contract StateV1 {
         return borrowRequired;
     }
 
+    /**
+     * @dev Similar to calculateInverseAmount although the difference being
+     *      that this factors in the collateral ratio.
+     *
+     * @param asset The asset in question here
+     * @param amount The amount of this asset
+     * @param price What price do you want to calculate the inverse at
+     */
     function calculateInverseRequired(
         TypesV1.AssetType asset,
         uint256 amount,
@@ -310,6 +346,13 @@ contract StateV1 {
         });
     }
 
+    /**
+     * @dev When executing a liqudation, the price of the asset has to be calculated
+     *      at a discount in order for it to be profitable for the liquidator. This function
+     *      will get the current oracle price for the asset and find the discounted price.
+     *
+     * @param asset The asset in question here
+     */
     function calculateLiquidationPrice(
         TypesV1.AssetType asset
     )
@@ -350,6 +393,16 @@ contract StateV1 {
         return result;
     }
 
+    /**
+     * @dev Given an asset being borrowed, figure out how much collateral can this still borrow or
+     *      is in the red by. This function is used to check if a position is undercolalteralised and
+     *      also to calculate how much can a position be liquidated by.
+     *
+     * @param borrowedAsset The asset which is being borrowed
+     * @param parSupply The amount being supplied
+     * @param parBorrow The amount being borrowed
+     * @param price The price to calculate this difference by
+     */
     function calculateCollateralDelta(
         TypesV1.AssetType borrowedAsset,
         TypesV1.Par memory parSupply,
@@ -388,6 +441,9 @@ contract StateV1 {
         return collateralDelta;
     }
 
+    /**
+     * @dev Add the user liqudation fee with the arc liquidation fee
+     */
     function totalLiquidationSpread()
         public
         view

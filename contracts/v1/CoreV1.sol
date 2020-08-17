@@ -22,11 +22,26 @@ import {Adminable} from "../lib/Adminable.sol";
 import {StateV1} from "./StateV1.sol";
 import {StorageV1} from "./StorageV1.sol";
 
+/**
+ * @title CoreV1
+ * @author Kerman Kohli
+ * @notice This contract holds the core logic for manipulating ARC state. Ideally
+        both state and logic could be in one or as libraries however the bytecode
+        size is too large for this to occur. The core can be replaced via a new
+        proxy implementation for upgrade purposes. Important to note that NO user
+        funds are held in this contract. All funds are held inside the synthetic
+        asset itself. This was done to show transparency around how much collateral
+        is always backing a synth via Etherscan.
+ */
 contract CoreV1 is StorageV1, Adminable {
+
+    // ============ Libraries ============
 
     using SafeMath for uint256;
     using Math for uint256;
     using TypesV1 for TypesV1.Par;
+
+    // ============ Types ============
 
     enum Operation {
         Open,
@@ -40,6 +55,8 @@ contract CoreV1 is StorageV1, Adminable {
         uint256 amountOne;
         uint256 amountTwo;
     }
+
+    // ============ Events ============
 
     event ActionOperated(
         uint8 operation,
@@ -65,6 +82,8 @@ contract CoreV1 is StorageV1, Adminable {
 
         state = StateV1(_state);
     }
+
+    // ============ Public Functions ============
 
     /**
      * @dev This is the only function that can be called by user's of the system
@@ -130,6 +149,7 @@ contract CoreV1 is StorageV1, Adminable {
             "operateAction(): collateral locked cannot be greater than limit"
         );
 
+        // Ensure that the operated action is collateralised again
         require(
             state.isCollateralized(operatedPosition) == true,
             "operateAction(): the operated position is undercollateralised"
@@ -141,6 +161,32 @@ contract CoreV1 is StorageV1, Adminable {
             operatedPosition
         );
     }
+
+    /**
+     * @dev Withdraw tokens owned by the proxy. This will never include depositor funds
+     *      since all the collateral is held by the synthetic token itself. The only funds
+     *      that will accrue based on CoreV1 & StateV1 is the liquidation fees.
+     *
+     * @param token Address of the token to withdraw
+     * @param destination Destination to withdraw to
+     * @param amount The total amount of tokens withdraw
+     */
+    function withdrawTokens(
+        address token,
+        address destination,
+        uint256 amount
+    )
+        external
+        onlyAdmin
+    {
+        SafeERC20.safeTransfer(
+            IERC20(token),
+            destination,
+            amount
+        );
+    }
+
+    // ============ Internal Functions ============
 
     /**
      * @dev Open a new position.
@@ -184,7 +230,7 @@ contract CoreV1 is StorageV1, Adminable {
     }
 
     /**
-     * @dev Borrow against an existing position
+     * @dev Borrow against an existing position.
      *
      * @param positionId ID of the position you'd like to borrow against
      * @param collateralAmount Collateral deposit amount
@@ -303,9 +349,10 @@ contract CoreV1 is StorageV1, Adminable {
     }
 
     /**
-     * @dev Repay money against a borrowed position
+     * @dev Repay money against a borrowed position. When this process occurs the position's
+     *      debt will be reduced and in turn will allow them to withdraw their collateral should they choose.
      *
-     * @param positionID ID of the position to repay
+     * @param positionId ID of the position to repay
      * @param repayAmount Amount of collateral to repay
      * @param withdrawAmount Amount of collateral to withdraw
      */
@@ -401,9 +448,11 @@ contract CoreV1 is StorageV1, Adminable {
     }
 
     /**
-     * @dev Liquidate a user's position
+     * @dev Liquidate a user's position. When this process occurs you're essentially
+     *      purchasing the users's debt at a discount (liquidation spread) in exchange
+     *      for the collateral they have deposited inside their position.
      *
-     * @param positionID ID of the position to liquidate
+     * @param positionId ID of the position to liquidate
      */
     function liquidate(
         uint256 positionId
@@ -553,27 +602,4 @@ contract CoreV1 is StorageV1, Adminable {
         return position;
     }
 
-    /**
-     * @dev Withdraw tokens owned by the proxy. This will never include depositor funds
-     *      since all the collateral is held by the synthetic token itself. The only funds
-     *      that will accrue based on CoreV1 & StateV1 is the liquidation fees.
-     *
-     * @param token Address of the token to withdraw
-     * @param destination Destination to withdraw to
-     * @param amount The total amount of tokens withdraw
-     */
-    function withdrawTokens(
-        address token,
-        address destination,
-        uint256 amount
-    )
-        external
-        onlyAdmin
-    {
-        SafeERC20.safeTransfer(
-            IERC20(token),
-            destination,
-            amount
-        );
-    }
 }
