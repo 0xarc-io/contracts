@@ -135,11 +135,13 @@ contract StateV1 {
     )
         public
         onlyCore
-        returns (uint256 id)
+        returns (uint256)
     {
-        id = positionCount;
+        uint256 idToAllocate = positionCount;
         positions[positionCount] = position;
         positionCount++;
+
+        return idToAllocate;
     }
 
     function setAmount(
@@ -313,7 +315,7 @@ contract StateV1 {
     )
         public
         view
-        returns (Decimal.D256 memory price)
+        returns (Decimal.D256 memory)
     {
         console.log("*** calculateLiquidationPrice ***");
 
@@ -398,12 +400,17 @@ contract StateV1 {
         });
     }
 
+    /**
+     * @dev Calculate the liquidation ratio between the user and ARC.
+     *
+     * @return First parameter it the user ratio, second is ARC's ratio
+     */
     function calculateLiquidationSplit()
         public
         view
         returns (
-            Decimal.D256 memory userRatio,
-            Decimal.D256 memory arcRatio
+            Decimal.D256 memory,
+            Decimal.D256 memory
         )
     {
         Decimal.D256 memory total = Decimal.D256({
@@ -412,16 +419,19 @@ contract StateV1 {
             )
         });
 
-        userRatio = Decimal.D256({
+        Decimal.D256 memory userRatio = Decimal.D256({
             value: Decimal.div(
                 market.liquidationUserFee.value,
                 total
             )
         });
 
-        arcRatio = Decimal.sub(
-            Decimal.one(),
-            userRatio.value
+        return (
+            userRatio,
+            arcRatio = Decimal.sub(
+                Decimal.one(),
+                userRatio.value
+            )
         );
     }
 

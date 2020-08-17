@@ -134,12 +134,17 @@ contract CoreV1 is StorageV1, Adminable {
         );
     }
 
+    /**
+     * @dev Open a new position.
+     *
+     * @return The new position and the ID of the opened position
+     */
     function openPosition(
         uint256 collateralAmount,
         uint256 borrowAmount
     )
         internal
-        returns (TypesV1.Position memory returnedPosition, uint256 positionId)
+        returns (TypesV1.Position memory, uint256)
     {
         // CHECKS:
         // 1. No checks required as it's all processed in borrow()
@@ -460,7 +465,11 @@ contract CoreV1 is StorageV1, Adminable {
         position = state.setAmount(positionId, position.borrowedAsset, newPar);
 
         // Decrease their collateral amount by the amount they were missing
-        position = state.updatePositionAmount(positionId, position.collateralAsset, collateralDelta);
+        position = state.updatePositionAmount(
+            positionId,
+            position.collateralAsset,
+            collateralDelta
+        );
 
         address borrowAddress = state.getAddress(position.borrowedAsset);
 
