@@ -70,7 +70,15 @@ contract CoreV1 is StorageV1, Adminable {
         address destination
     );
 
+    event PauseStatusUpdated(
+        bool value
+    );
+
     // ============ Constructor ============
+
+    constructor() public {
+        paused = true;
+    }
 
     function init(address _state)
         external
@@ -81,6 +89,7 @@ contract CoreV1 is StorageV1, Adminable {
         );
 
         state = StateV1(_state);
+        paused = false;
     }
 
     // ============ Public Functions ============
@@ -99,6 +108,11 @@ contract CoreV1 is StorageV1, Adminable {
     )
         public
     {
+        require(
+            paused == false,
+            "operateAction(): contracts cannot be paused"
+        );
+
         TypesV1.Position memory operatedPosition;
 
         (
@@ -184,6 +198,15 @@ contract CoreV1 is StorageV1, Adminable {
             destination,
             amount
         );
+    }
+
+    function setPause(bool value)
+        external
+        onlyAdmin
+    {
+        paused = value;
+
+        emit PauseStatusUpdated(value);
     }
 
     // ============ Internal Functions ============
