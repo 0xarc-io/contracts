@@ -4,7 +4,6 @@ import { BigNumber } from 'ethers/utils';
 
 usePlugin('@nomiclabs/buidler-etherscan');
 usePlugin('buidler-typechain');
-usePlugin('solidity-coverage');
 usePlugin('buidler-spdx-license-identifier');
 
 require('dotenv').config({ path: '.env' }).parsed;
