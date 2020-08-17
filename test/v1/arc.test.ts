@@ -40,6 +40,20 @@ arcDescribe('Arc', init, (ctx: ITestContext) => {
     });
   });
 
+  describe('#setPause', () => {
+    it('cannot call operate action if contracts are paused', async () => {
+      await ctx.arc.core.setPause(true);
+      expect(await ctx.arc.core.paused()).toBeTruthy();
+      await expectRevert(ctx.arc._borrowSynthetic(1, 5, ownerWallet));
+    });
+
+    it('can unpause contracts', async () => {
+      await ctx.arc.core.setPause(false);
+      expect(await ctx.arc.core.paused()).toBeFalsy();
+      await await ctx.arc._borrowSynthetic(1, 5, ownerWallet);
+    });
+  });
+
   describe('#withdrawTokens', () => {
     beforeEach(async () => {
       await ctx.arc.collateralAsset.mintShare(ctx.arc.core.address, 5, {});
