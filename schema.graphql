@@ -6,6 +6,7 @@ enum AssetType {
 type Position @entity {
   id: ID!
   owner: Bytes!
+  createdAt: Int!
   collateralAsset: Int!
   borrowedAsset: Int!
   collateralAmountSign: Boolean!
@@ -14,13 +15,16 @@ type Position @entity {
   borrowedAmountValue: BigInt!
 }
 
-type GlobalParam @entity {
+type GlobalMarket @entity {
   id: ID!
-  collateralAsset: Bytes!
-  syntheticAsset: Bytes!
   collateralRatio: BigInt!
-  syntheticRatio: BigInt!
-  liquidationSpread: BigInt!
-  originationFee: BigInt!
-  oracle: Bytes!
+  liquidationUserFee: BigInt!
+  liquidationArcFee: BigInt!
+}
+
+type GlobalRisk @entity {
+  id: ID!
+  collateralLimit: BigInt!
+  syntheticLimit: BigInt!
+  positionCollateralMinimum: BigInt!
 }

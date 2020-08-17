@@ -21,7 +21,7 @@ dataSources:
         - name: CoreV1
           file: ./artifacts/CoreV1.json
       eventHandlers:
-        - event: ActionOperated(uint8,(uint256,uint8,uint256,uint8,uint256),(address,uint8,uint8,(uint256,bool),(uint256,bool)))
+        - event: ActionOperated(uint8,(uint256,uint256,uint256),(address,uint8,uint8,(bool,uint128),(bool,uint128)))
           handler: actionOperated
       file: ./subgraph/mapping.ts
   - kind: ethereum/contract
@@ -36,11 +36,14 @@ dataSources:
       apiVersion: 0.0.4
       language: wasm/assemblyscript
       entities:
-        - GlobalParam
+        - GlobalMarket
+        - GlobalRisk
       abis:
         - name: StateV1
           file: ./artifacts/StateV1.json
       eventHandlers:
-        - event: GlobalParamsUpdated((address,address,(uint256),(uint256),(uint256),(uint256),address))
-          handler: globalParamsUpdated
+        - event: MarketParamsUpdated(((uint256),(uint256),(uint256)))
+          handler: marketParamsUpdated
+        - event: RiskParamsUpdated((uint256,uint256,uint256))
+          handler: riskParamsUpdated
       file: ./subgraph/mapping.ts
