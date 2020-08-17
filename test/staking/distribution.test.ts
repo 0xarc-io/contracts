@@ -1,3 +1,5 @@
+import 'jest';
+
 import simpleDescribe from '../helpers/simpleDescribe';
 import { ITestContext } from '../helpers/simpleDescribe';
 import { Wallet } from 'ethers';
