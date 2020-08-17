@@ -45,7 +45,43 @@ contract TokenAccrual {
         view
         returns (uint256);
 
-    function claimFees() public {
+    function updateFees()
+        public
+    {
+        if (getTotalBalance() == 0) {
+            return;
+        }
+
+        uint256 contractBalance = accrualToken.balanceOf(address(this));
+
+        if (contractBalance == 0) {
+            return;
+        }
+
+        // Find the difference since the last balance stored in the contract
+        uint256 difference = contractBalance.sub(accruedBalance);
+
+        if (difference == 0) {
+            return;
+        }
+
+        // Use the difference to calculate a ratio
+        uint256 ratio = difference.mul(1e18).div(getTotalBalance());
+
+        if (ratio == 0) {
+            return;
+        }
+
+        // Update the index by adding the existing index to the ratio index
+        accruedIndex = accruedIndex.add(ratio);
+
+        // Update the accrued balance
+        accruedBalance = contractBalance;
+    }
+
+    function claimFees()
+        public
+    {
         claimFor(msg.sender);
     }
 
@@ -86,38 +122,6 @@ contract TokenAccrual {
 
         // Update the accrued balance
         accruedBalance = accrualToken.balanceOf(address(this));
-    }
-
-    function updateFees() public {
-        if (getTotalBalance() == 0) {
-            return;
-        }
-
-        uint256 contractBalance = accrualToken.balanceOf(address(this));
-
-        if (contractBalance == 0) {
-            return;
-        }
-
-        // Find the difference since the last balance stored in the contract
-        uint256 difference = contractBalance.sub(accruedBalance);
-
-        if (difference == 0) {
-            return;
-        }
-
-        // Use the difference to calculate a ratio
-        uint256 ratio = difference.mul(1e18).div(getTotalBalance());
-
-        if (ratio == 0) {
-            return;
-        }
-
-        // Update the index by adding the existing index to the ratio index
-        accruedIndex = accruedIndex.add(ratio);
-
-        // Update the accrued balance
-        accruedBalance = contractBalance;
     }
 
 }

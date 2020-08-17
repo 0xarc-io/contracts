@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-// Copied directly from https://github.com/iearn-finance/audit/blob/master/contracts/yGov/YearnGovernanceBPT.sol
 
 pragma solidity ^0.5.16;
 

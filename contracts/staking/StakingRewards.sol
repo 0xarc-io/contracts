@@ -172,7 +172,7 @@ contract StakingRewards is IStakingRewards, RewardsDistributionRecipient {
     }
 
     function getRewardForDuration()
-        external
+        public
         view
         returns (uint256)
     {
@@ -297,7 +297,7 @@ contract StakingRewards is IStakingRewards, RewardsDistributionRecipient {
     {
         require(
             periodFinish == 0 || block.timestamp > periodFinish,
-            "Previous rewards period must be complete before changing the duration for the new period"
+            "Prev period must be complete before changing duration for new period"
         );
         rewardsDuration = _rewardsDuration;
         emit RewardsDurationUpdated(rewardsDuration);
