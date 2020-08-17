@@ -8,7 +8,6 @@ import {BaseERC20} from "./BaseERC20.sol";
 
 contract SyntheticToken is BaseERC20, ISyntheticToken {
 
-
     // ============ Variable ============
 
     address public arcAddress;
