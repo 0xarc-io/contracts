@@ -4,12 +4,12 @@ import { ethers, Wallet } from 'ethers';
 import { expectRevert } from '@src/utils/expectRevert';
 
 import ArcNumber from '@src/utils/ArcNumber';
-import arcDescribe from './helpers/arcDescribe';
-import { ITestContext } from './helpers/arcDescribe';
-import initializeArc from './helpers/initializeArc';
+import arcDescribe from '../helpers/arcDescribe';
+import { ITestContext } from '../helpers/arcDescribe';
+import initializeArc from '../helpers/initializeArc';
 import { StateV1 } from '@src/typings';
 import { AddressZero } from 'ethers/constants';
-import ArcDecimal from '../dist/src/utils/ArcDecimal';
+import ArcDecimal from '../../dist/src/utils/ArcDecimal';
 import { BigNumber } from 'ethers/utils';
 
 let ownerWallet: Wallet;
@@ -37,32 +37,6 @@ arcDescribe('Arc', init, (ctx: ITestContext) => {
       const stateAddress = await ctx.arc.core.state();
       expect(stateAddress).not.toEqual(AddressZero);
       await expectRevert(ctx.arc.core.init(AddressZero));
-    });
-  });
-
-  describe('#claimFees', () => {
-    it.only('can claim fees', async () => {
-      const core = await ctx.arc.getCore(ownerWallet);
-
-      const params = await ctx.arc._borrowSynthetic(
-        ArcNumber.new(1),
-        ArcNumber.new(200),
-        ownerWallet,
-      );
-
-      await ctx.evm.increaseTime(60 * 60 * 24 * 365);
-      await ctx.evm.mineBlock();
-      await ctx.arc.state.updateIndex();
-
-      await ctx.arc._repay(params.params.id, ArcNumber.new(1), ArcNumber.new(210), ownerWallet);
-
-      const preBalance = await ctx.arc.collateralAsset.balanceOf(ctx.arc.core.address);
-      expect(preBalance).toEqual(ArcNumber.new(0));
-
-      await core.claimFees();
-
-      const postBalance = await ctx.arc.collateralAsset.balanceOf(ctx.arc.core.address);
-      expect(postBalance.gt(ArcNumber.new(10))).toBeTruthy();
     });
   });
 
