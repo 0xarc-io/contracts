@@ -22,9 +22,9 @@ jobs:
       - run:
           name: Build repo
           command: yarn build
-      # - run:
-      #     name: Test Contracts
-      #     command: yarn test
+      - run:
+          name: Test Contracts
+          command: yarn test
       # - save_cache:
       #     key: dependency-cache-{{ checksum "package.json" }}
       #     paths:
