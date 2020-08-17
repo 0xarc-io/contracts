@@ -66,6 +66,14 @@ contract CoreV1 is StorageV1, Adminable {
         state = StateV1(_state);
     }
 
+    /**
+     * @dev This is the only function that can be called by user's of the system
+     *      and uses an enum and struct to parse the args. This structure guarantees
+     *      the state machine will always meet certain properties
+     *
+     * @param operation An enum of the operation to execute
+     * @param params Parameters to exceute the operation against
+     */
     function operateAction(
         Operation operation,
         OperationParams memory params
@@ -175,6 +183,13 @@ contract CoreV1 is StorageV1, Adminable {
         );
     }
 
+    /**
+     * @dev Borrow against an existing position
+     *
+     * @param positionId ID of the position you'd like to borrow against
+     * @param collateralAmount Collateral deposit amount
+     * @param borrowAmount How much would you'd like to borrow/mint
+     */
     function borrow(
         uint256 positionId,
         uint256 collateralAmount,
@@ -287,6 +302,13 @@ contract CoreV1 is StorageV1, Adminable {
         return position;
     }
 
+    /**
+     * @dev Repay money against a borrowed position
+     *
+     * @param positionID ID of the position to repay
+     * @param repayAmount Amount of collateral to repay
+     * @param withdrawAmount Amount of collateral to withdraw
+     */
     function repay(
         uint256 positionId,
         uint256 repayAmount,
@@ -378,6 +400,11 @@ contract CoreV1 is StorageV1, Adminable {
         return position;
     }
 
+    /**
+     * @dev Liquidate a user's position
+     *
+     * @param positionID ID of the position to liquidate
+     */
     function liquidate(
         uint256 positionId
     )
