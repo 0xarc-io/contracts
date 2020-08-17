@@ -1,3 +1,5 @@
+import 'jest';
+
 import { StakingRewards } from '@src/typings/StakingRewards';
 import { TestToken } from '@src/typings';
 import simpleDescribe from '../helpers/simpleDescribe';

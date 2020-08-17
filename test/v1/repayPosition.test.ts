@@ -1,3 +1,5 @@
+import 'jest';
+
 import { Wallet } from 'ethers';
 import { ITestContext } from '../helpers/arcDescribe';
 import initializeArc from '../helpers/initializeArc';
@@ -6,7 +8,6 @@ import ArcDecimal from '../../src/utils/ArcDecimal';
 import ArcNumber from '../../src/utils/ArcNumber';
 import { BigNumberish } from 'ethers/utils';
 import { expectRevert } from '../../src/utils/expectRevert';
-import Token from '../../src/utils/Token';
 
 let ownerWallet: Wallet;
 let lenderWallet: Wallet;
