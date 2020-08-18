@@ -59,7 +59,6 @@ export type MarketParams = {
   collateralRatio: Decimal;
   liquidationUserFee: Decimal;
   liquidationArcFee: Decimal;
-  interestRate: Decimal;
 };
 
 export type RiskParams = {
