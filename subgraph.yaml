@@ -8,7 +8,7 @@ dataSources:
     name: CoreV1
     network: rinkeby
     source:
-      address: '0xe8ced36D56B7753c41e1f5FbcE7C4F1D397de079'
+      address: '0x22E03bff4ECd40a76709391Ae6318a9f58999149'
       abi: CoreV1
       startBlock: 6965000
     mapping:
@@ -28,7 +28,7 @@ dataSources:
     name: StateV1
     network: rinkeby
     source:
-      address: '0xC35475d6F84fd8119Ff9636D4d0943C9Ef5AC4f9'
+      address: '0x385ADFfe0cc27355b32D2e2E56D8223C0E568Ffd'
       abi: StateV1
       startBlock: 6965000
     mapping:

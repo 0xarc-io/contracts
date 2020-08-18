@@ -14,7 +14,7 @@ export function actionOperated(event: ActionOperated): void {
 
     if (position == null) {
       position = new Position(event.params.params.id.toHex());
-      position.createdAt = event.block.timestamp;
+      position.createdAt = event.block.timestamp.toI32();
     }
 
     position.owner = event.params.updatedPosition.owner;
