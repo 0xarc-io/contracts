@@ -56,12 +56,12 @@ const NetworkConfig = {
   },
   COLLATERAL_LIMIT: {
     1: ArcNumber.new(1000),
-    4: ArcNumber.new(10000000),
+    4: ArcNumber.new(1000000000),
     50: 0,
   },
   SYNTHETIC_ASSET_LIMIT: {
     1: ArcNumber.new(1),
-    4: ArcNumber.new(1000),
+    4: ArcNumber.new(1000000000),
     50: 0,
   },
   POSITION_COLLATERAL_MINIMUM: {
