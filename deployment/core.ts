@@ -124,7 +124,6 @@ export class CoreStage {
         collateralRatio: { value: this.config.collateralRatio },
         liquidationArcFee: { value: this.config.liquidationArcFee },
         liquidationUserFee: { value: this.config.liquidationUserFee },
-        interestRate: { value: this.config.interestRate },
       },
       {
         collateralLimit: this.config.collateralLimit,
