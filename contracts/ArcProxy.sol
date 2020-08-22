@@ -6,7 +6,7 @@ pragma experimental ABIEncoderV2;
 /* solium-disable-next-line */
 import { AdminUpgradeabilityProxy } from "@openzeppelin/upgrades/contracts/upgradeability/AdminUpgradeabilityProxy.sol";
 
-contract Proxy is
+contract ArcProxy is
     AdminUpgradeabilityProxy
 {
     /**
