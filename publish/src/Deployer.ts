@@ -67,8 +67,25 @@ export default class Deployer {
     this.network = network;
     this.contractDeploymentGasLimit = contractDeploymentGasLimit;
 
+    let networkId = 31337;
+
+    switch (network) {
+      case 'mainnet':
+        networkId = 1;
+        break;
+      case 'ropsten':
+        networkId = 3;
+        break;
+      case 'rinkeby':
+        networkId = 4;
+        break;
+      case 'goerli':
+        networkId = 5;
+        break;
+    }
+
     // Configure Web3 so we can sign transactions and connect to the network.
-    this.provider = new ethers.providers.JsonRpcProvider(providerUrl, 31337);
+    this.provider = new ethers.providers.JsonRpcProvider(providerUrl, networkId);
     this.account = new ethers.Wallet(privateKey, this.provider);
 
     this.deployedContracts = {};
