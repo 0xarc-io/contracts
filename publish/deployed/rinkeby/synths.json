@@ -1,17 +1,15 @@
 [
 	{
 		"name": "LINKUSD",
-		"collateral": "LINK",
-		"synthetic": "USD",
 		"collateral_address": "",
-		"oracle": "",
+		"oracle_source_address": "",
 		"config": {
-			"collateral_ratio": "",
-			"liquidation_user_fee": "",
-			"liquidation_arc_fee": "",
-			"collateral_limit": "",
-			"synthetic_limit": "",
-			"position_minimum_collateral" : ""
+			"collateral_ratio": "1",
+			"liquidation_user_fee": "1",
+			"liquidation_arc_fee": "1",
+			"collateral_limit": "1",
+			"synthetic_limit": "1",
+			"position_minimum_collateral" : "1"
 		}
 	}
 ]

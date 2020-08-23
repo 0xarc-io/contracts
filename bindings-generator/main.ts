@@ -20,7 +20,7 @@ import { generate } from './core';
 
 function main() {
   // let pattern = patterns[0];
-  generate({ pattern: 'artifacts/**/*.json', outDir: './src/typings' });
+  generate({ pattern: 'build/contracts/**/*.json', outDir: './src/typings' });
 }
 
 main();

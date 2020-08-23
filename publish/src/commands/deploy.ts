@@ -1,16 +1,15 @@
 'use strict';
 
 import Deployer from '../Deployer';
-import {
-  CoreV1,
-  StateV1,
-  IOracle,
-  ChainLinkOracle,
-  MockOracle,
-  SyntheticToken,
-  TestToken,
-} from '../../../src/typings';
+
+import { CoreV1 } from '../../../src/typings/CoreV1';
+import { StateV1 } from '../../../src/typings/StateV1';
+import { ChainLinkOracle } from '../../../src/typings/ChainLinkOracle';
 import { ArcProxy } from '../../../src/typings/ArcProxy';
+import { MockOracle } from '../../../src/typings/MockOracle';
+import { SyntheticToken } from '../../../src/typings/SyntheticToken';
+import { TestToken } from '../../../src/typings/TestToken';
+
 import { ethers } from 'ethers';
 import { asyncForEach } from '../../../src/utils/asyncForEach';
 
