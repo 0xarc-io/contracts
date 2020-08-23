@@ -20,6 +20,7 @@ import { Config } from './addresses/Config';
 import Token from '../src/utils/Token';
 import { IERC20 } from './typings';
 import { RiskParams, MarketParams } from './types';
+import { ArcProxy } from './typings/ArcProxy';
 
 export default class Arc {
   public wallet: Signer;
@@ -49,7 +50,7 @@ export default class Arc {
     this.core = await CoreV1.deploy(this.wallet);
 
     const address = await this.wallet.getAddress();
-    const proxy = await Proxy.deploy(this.wallet, this.core.address, address, []);
+    const proxy = await ArcProxy.deploy(this.wallet, this.core.address, address, []);
 
     this.core = await CoreV1.at(this.wallet, proxy.address);
 
