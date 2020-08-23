@@ -42,6 +42,7 @@
     "@typechain/truffle-v5": "^2.0.2",
     "@typechain/web3-v1": "^1.0.0",
     "@types/chai": "^4.2.8",
+    "@types/fs-extra": "^9.0.1",
     "@types/jest": "^25.2.1",
     "@types/mocha": "^8.0.0",
     "@types/node": "^13.7.0",
