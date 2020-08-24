@@ -9,9 +9,11 @@ import { ArcProxy } from '../../../src/typings/ArcProxy';
 import { MockOracle } from '../../../src/typings/MockOracle';
 import { SyntheticToken } from '../../../src/typings/SyntheticToken';
 import { TestToken } from '../../../src/typings/TestToken';
+import { ArcxToken } from '../../../src/typings/ArcxToken';
 
 import { ethers } from 'ethers';
 import { asyncForEach } from '../../../src/utils/asyncForEach';
+import { AddressAccrual } from '../../../src/typings/AddressAccrual';
 
 const path = require('path');
 const { gray, green, yellow, redBright, red } = require('chalk');
@@ -244,6 +246,33 @@ const deploy = async ({
       dryRun,
     });
 
+  // ----------------
+  // Core
+  // ----------------
+
+  let arcToken: ethers.Contract = getExistingContract({ contract: 'ArcxToken' });
+
+  if (!arcToken) {
+    arcToken = await deployer.deployContract({
+      name: 'ArcxToken',
+      source: 'ArcxToken',
+      deployData: ArcxToken.getDeployTransaction(deployer.account).data,
+    });
+  }
+
+  let distribution: ethers.Contract = getExistingContract({ contract: 'ArcDAO' });
+
+  if (!distribution) {
+    distribution = await deployer.deployContract({
+      name: 'ArcDAO',
+      source: 'AddressAccrual',
+      deployData: AddressAccrual.getDeployTransaction(deployer.account, arcToken.address).data,
+    });
+  }
+
+  // ----------------
+  // Synths
+  // ----------------
   await asyncForEach(synths, async (synth) => {
     let { name, collateral_address, oracle_source_address, config } = synth;
     let synthConfig = synth.config;
@@ -267,7 +296,7 @@ const deploy = async ({
     // An oracle has actually been deployed
     if (oracle_source_address && !oracle) {
       // An oracle wasn't found but a chainlink address was passed
-      oracle = await deployer.deploySynth({
+      oracle = await deployer.deployContract({
         name: name,
         dependency: 'Oracle',
         source: 'ChainLinkOracle',
@@ -276,7 +305,7 @@ const deploy = async ({
       });
     } else if (!oracle_source_address && !oracle) {
       // We don't know anything so just deploy a dumb mock oracle
-      oracle = await deployer.deploySynth({
+      oracle = await deployer.deployContract({
         name: name,
         dependency: 'Oracle',
         source: 'MockOracle',
@@ -286,7 +315,7 @@ const deploy = async ({
 
     if (!collateralToken) {
       collateralToken = (
-        await deployer.deploySynth({
+        await deployer.deployContract({
           name: name,
           dependency: 'CollateralToken',
           source: 'TestToken',
@@ -296,7 +325,7 @@ const deploy = async ({
     }
 
     if (!coreV1) {
-      coreV1 = await deployer.deploySynth({
+      coreV1 = await deployer.deployContract({
         name: name,
         dependency: 'CoreV1',
         source: 'CoreV1',
@@ -305,7 +334,7 @@ const deploy = async ({
     }
 
     if (!proxy) {
-      proxy = await deployer.deploySynth({
+      proxy = await deployer.deployContract({
         name: name,
         dependency: 'Proxy',
         source: 'ArcProxy',
@@ -319,7 +348,7 @@ const deploy = async ({
     }
 
     if (!syntheticToken) {
-      syntheticToken = await deployer.deploySynth({
+      syntheticToken = await deployer.deployContract({
         name: name,
         dependency: 'SyntheticToken',
         source: 'SyntheticToken',
@@ -329,7 +358,7 @@ const deploy = async ({
     }
 
     if (!stateV1) {
-      stateV1 = await deployer.deploySynth({
+      stateV1 = await deployer.deployContract({
         name: name,
         dependency: 'StateV1',
         source: 'StateV1',
@@ -361,7 +390,7 @@ const deploy = async ({
     }
 
     const proxiedCore = await CoreV1.at(account, proxy.address);
-    if (!deployment.targets[name].implementation) {
+    if ((await proxiedCore.state()) != stateV1.address) {
       const data = proxiedCore.interface.functions.init.encode([stateV1.address]);
       await runStep({
         data: data,
