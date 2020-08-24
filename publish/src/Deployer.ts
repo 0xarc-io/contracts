@@ -109,14 +109,17 @@ export default class Deployer {
   async _deploy({ name, source, dependency, deployData, force = false, dryRun = this.dryRun }) {
     if (!this.config[name] && !force) {
       console.log(yellow(`Skipping ${name} as it is NOT in contract flags file for deployment.`));
-      return;
+      return {
+        deployedContract: null,
+        hash: null,
+      };
     }
 
     // by default, we deploy if force tells us to
     let deploy = force;
 
     if (this.config[name]) {
-      if (dependency == 'Proxy' || !dependency) {
+      if (!dependency || dependency == 'Proxy') {
         deploy = this.config[name].deploy;
       } else {
         deploy = this.config[name].dependencies.hasOwnProperty(dependency)
@@ -130,7 +133,7 @@ export default class Deployer {
     let existingAddress;
 
     if (this.deployment.targets.hasOwnProperty(name)) {
-      if (dependency == 'Proxy' || !dependency) {
+      if (!dependency || dependency == 'Proxy') {
         existingAddress = this.deployment.targets[name]
           ? this.deployment.targets[name].address
           : '';
@@ -222,8 +225,16 @@ export default class Deployer {
       timestamp = this.deployment.targets[name].timestamp;
     }
 
+    let dependencyValue = {};
+
+    if (this.deployment.targets.hasOwnProperty(name)) {
+      if (this.deployment.targets[name].hasOwnProperty('dependencies')) {
+        dependencyValue = this.deployment.targets[name].dependencies;
+      }
+    }
+
     // If a proxy is being deployed, set it as the root object
-    if (dependency == 'Proxy') {
+    if (!dependency || dependency == 'Proxy') {
       this.deployment.targets[name] = {
         name,
         address,
@@ -234,7 +245,7 @@ export default class Deployer {
         timestamp,
         txn,
         network: this.network,
-        dependencies: this.deployment.targets[name].dependencies || {},
+        dependencies: dependencyValue,
       };
     } else {
       if (!this.deployment.targets.hasOwnProperty(name)) {
@@ -286,17 +297,15 @@ export default class Deployer {
     }
   }
 
-  async deploySynth({
+  async deployContract({
     name,
-    source = 'ArcProxy',
+    source = '',
     deployData,
-    dependency,
-    args = [],
+    dependency = '',
     force = false,
     dryRun = this.dryRun,
   }) {
     // Deploys contract according to configuration
-
     const { deployedContract, hash } = await this._deploy({
       name,
       source,
