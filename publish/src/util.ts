@@ -1,9 +1,10 @@
 import path = require('path');
+
 import { ethers, Wallet } from 'ethers';
+import { gray, cyan, yellow, redBright, green } from 'chalk';
 
 const fs = require('fs');
 const readline = require('readline');
-const { gray, cyan, yellow, redBright, green } = require('chalk');
 const w3utils = require('web3-utils');
 
 const {
