@@ -4,16 +4,18 @@ pragma solidity ^0.5.16;
 
 import {Ownable} from "@openzeppelin/contracts/ownership/Ownable.sol";
 
-import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
+import {IMintableToken} from "../interfaces/IMintableToken.sol";
 
 import {BaseERC20} from "./BaseERC20.sol";
 
-contract ArcToken is BaseERC20, ISyntheticToken, Ownable {
-
+contract ArcxToken is BaseERC20, IMintableToken, Ownable {
 
     // ============ Constructor ============
 
-    constructor() public BaseERC20("ARC Governance Token", "ARC") {}
+    constructor()
+        public
+        BaseERC20("ARC Governance Token", "ARCX")
+    { }
 
     // ============ Core Functions ============
 
