@@ -1,1 +1,42 @@
-{}
+{
+	"v0.0.1": {
+		"tag": "v0.0.1",
+		"fulltag": "v0.0.1",
+		"release": "linkusd",
+		"network": "local",
+		"date": "2020-08-23T11:55:45+10:00",
+		"commit": "0fe6a23d49cce85c71bb7cee4b6ae4d7e0bba933",
+		"contracts": {
+			"ArcxToken": {
+				"address": "0xE86bB98fcF9BFf3512C74589B78Fb168200CC546",
+				"status": "current",
+				"keccak256": "0x9f82689a76dd9ea9ad5a85d176ec50e4cc009d0194d07166c47a0ebf1a6db377"
+			},
+			"LINKUSD": {
+				"address": "0x8726C7414ac023D23348326B47AF3205185Fd035",
+				"status": "current",
+				"keccak256": "0x071e4c72480f71d95b4ac4fed3a11462e242a0819e62a557eae47e55dcec5d26"
+			},
+			"ArcDAO": {
+				"address": "0x371b13d97f4bF77d724E78c16B7dC74099f40e84",
+				"status": "current",
+				"keccak256": "0x327a49a2cd145517ec747ba0a0097adb4de493e163d04d3427a772568c417d24"
+			},
+			"StakingRewards-Balancer/LINKUSD-USDC/50-50": {
+				"address": "0x1941ff73d1154774d87521d2D0AaAD5d19C8Df60",
+				"status": "current",
+				"keccak256": "0x81fbf2b50de5e230f0f94adaa3adfa338c0e7a87a1ded9836d8a5356c2eb0123"
+			},
+			"StakingRewards-Balancer/ARC-DAI/2-98": {
+				"address": "0x0D8b0Dd11f5D34Ed41D556Def5f841900d5B1c6B",
+				"status": "current",
+				"keccak256": "0x81fbf2b50de5e230f0f94adaa3adfa338c0e7a87a1ded9836d8a5356c2eb0123"
+			},
+			"StakingRewards-KermanRewards": {
+				"address": "0x38ef19fDf8E8415f18c307Ed71967e19Aac28Ba1",
+				"status": "current",
+				"keccak256": "0xf8288ae4640d735620c4b2890a9104af0afae59000c5dad8094e8c8b43b6e89f"
+			}
+		}
+	}
+}
