@@ -10,10 +10,10 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {console} from "@nomiclabs/buidler/console.sol";
 
 /**
- * @title TokenAccrual is an abstract contract which allows users of some
+ * @title Accrual is an abstract contract which allows users of some
  *        distribution to claim a portion of tokens based on their share.
  */
-contract TokenAccrual {
+contract Accrual {
 
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -88,7 +88,7 @@ contract TokenAccrual {
     function claimFor(
         address recipient
     )
-        internal
+        public
     {
         updateFees();
 
