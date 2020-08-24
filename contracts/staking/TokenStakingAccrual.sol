@@ -21,7 +21,7 @@ contract TokenStakingAccrual is Accrual {
     event Staked(address owner, uint256 amount);
     event Unstaked(address owner, uint256 amount);
 
-   constructor(
+    constructor(
         address _stakingToken,
         address _earningToken
     )
