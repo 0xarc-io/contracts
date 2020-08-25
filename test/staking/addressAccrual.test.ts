@@ -7,7 +7,7 @@ import { BigNumber } from 'ethers/utils';
 import ArcDecimal from '../../src/utils/ArcDecimal';
 import ArcNumber from '../../src/utils/ArcNumber';
 import { expectRevert } from '../../src/utils/expectRevert';
-import { Distribution } from '../../src/typings/Distribution';
+import { AddressAccrual } from '../../src/typings/AddressAccrual';
 import { TestToken } from '../../src/typings/TestToken';
 
 let ownerWallet: Wallet;
@@ -17,7 +17,7 @@ let arcWallet: Wallet;
 
 jest.setTimeout(30000);
 
-let distribution: Distribution;
+let distribution: AddressAccrual;
 let rewardToken: TestToken;
 
 const BASE = new BigNumber(10).pow(18);
@@ -36,7 +36,7 @@ async function init(ctx: ITestContext): Promise<void> {
 simpleDescribe('Distribution', init, (ctx: ITestContext) => {
   beforeEach(async () => {
     rewardToken = await TestToken.deploy(ownerWallet, 'ARC', 'ARC');
-    distribution = await Distribution.deploy(ownerWallet, rewardToken.address);
+    distribution = await AddressAccrual.deploy(ownerWallet, rewardToken.address);
 
     await rewardToken.mintShare(distribution.address, ArcNumber.new(100));
 
@@ -46,7 +46,7 @@ simpleDescribe('Distribution', init, (ctx: ITestContext) => {
   });
 
   async function claimAs(caller: Wallet) {
-    const contract = await Distribution.at(caller, distribution.address);
+    const contract = await AddressAccrual.at(caller, distribution.address);
     return await contract.claimFees();
   }
 

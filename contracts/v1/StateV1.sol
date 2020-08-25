@@ -7,8 +7,6 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {console} from "@nomiclabs/buidler/console.sol";
-
 import {IOracle} from "../interfaces/IOracle.sol";
 import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
 import {IMintableToken} from "../interfaces/IMintableToken.sol";
@@ -312,18 +310,12 @@ contract StateV1 {
         view
         returns (TypesV1.Par memory)
     {
-        console.log("*** calculateInverseRequired ***");
-
-        console.log("   amount: %s", amount);
-        console.log("   price: %s", price.value);
 
         uint256 inverseRequired = calculateInverseAmount(
             asset,
             amount,
             price
         );
-
-        console.log("   inverse amount: %s", inverseRequired);
 
         if (asset == TypesV1.AssetType.Collateral) {
             inverseRequired = Decimal.div(
@@ -337,8 +329,6 @@ contract StateV1 {
                 market.collateralRatio
             );
         }
-
-        console.log("   inverse required: %s", inverseRequired);
 
         return TypesV1.Par({
             sign: true,
@@ -360,18 +350,12 @@ contract StateV1 {
         view
         returns (Decimal.D256 memory)
     {
-        console.log("*** calculateLiquidationPrice ***");
-
         Decimal.D256 memory result;
         Decimal.D256 memory currentPrice = oracle.fetchCurrentPrice();
-
-        console.log("   current price: %s", currentPrice.value);
 
         uint256 totalSpread = market.liquidationUserFee.value.add(
             market.liquidationArcFee.value
         );
-
-        console.log("   total spread: %s", totalSpread);
 
         if (asset == TypesV1.AssetType.Collateral) {
             result = Decimal.sub(
@@ -413,14 +397,8 @@ contract StateV1 {
         view
         returns (TypesV1.Par memory)
     {
-        console.log("*** calculateCollateralDelta ***");
-
         TypesV1.Par memory collateralDelta;
         TypesV1.Par memory collateralRequired;
-
-        console.log("   original borrow: %s", parBorrow.value);
-
-        console.log("   wei borrow: %s", parBorrow.value);
 
         if (borrowedAsset == TypesV1.AssetType.Collateral) {
             collateralRequired = calculateInverseRequired(

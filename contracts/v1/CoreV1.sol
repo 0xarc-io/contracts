@@ -10,8 +10,6 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
 import {IMintableToken} from "../interfaces/IMintableToken.sol";
 
-import {console} from "@nomiclabs/buidler/console.sol";
-
 import {TypesV1} from "./TypesV1.sol";
 import {Decimal} from "../lib/Decimal.sol";
 import {SignedMath} from "../lib/SignedMath.sol";
@@ -330,8 +328,6 @@ contract CoreV1 is StorageV1, Adminable {
                 })
             );
 
-            console.log("borrow new par: %s", newPar.value);
-
             // Update the position's borrow amount
             position = state.setAmount(
                 positionId,
@@ -345,9 +341,6 @@ contract CoreV1 is StorageV1, Adminable {
                 position.borrowedAmount.value,
                 currentPrice
             );
-
-            console.log("collateral required: %s", collateralRequired.value);
-            console.log("current collateral amount: %s", position.collateralAmount.value);
 
             // Ensure the user's collateral amount is greater than the collateral needed
             require(
@@ -509,10 +502,6 @@ contract CoreV1 is StorageV1, Adminable {
 
         TypesV1.Position memory position = state.getPosition(positionId);
 
-        console.log("*** liquidate ***");
-        console.log("   starting collat: %s", position.collateralAmount.value);
-        console.log("   starting borrow: %s", position.borrowedAmount.value);
-
         require(
             position.owner != address(0),
             "liquidatePosition(): must be a valid position"
@@ -528,8 +517,6 @@ contract CoreV1 is StorageV1, Adminable {
         Decimal.D256 memory liquidationPrice = state.calculateLiquidationPrice(
             position.collateralAsset
         );
-
-        console.log("   liquidation price", liquidationPrice.value);
 
         // Calculate how much the user is in debt by to be whole again
         (TypesV1.Par memory collateralDelta) = state.calculateCollateralDelta(
@@ -548,8 +535,6 @@ contract CoreV1 is StorageV1, Adminable {
             )
         ).to128();
 
-        console.log("   collateral delta: %s %s", collateralDelta.sign, collateralDelta.value);
-
         // If the maximum they're down by is greater than their collateral, bound to the maximum
         if (collateralDelta.value > position.collateralAmount.value) {
             collateralDelta.value = position.collateralAmount.value;
@@ -561,8 +546,6 @@ contract CoreV1 is StorageV1, Adminable {
             collateralDelta.value,
             liquidationPrice
         );
-
-        console.log("   borrow to liquidate: %s", borrowToLiquidate);
 
         // Decrease the user's debt obligation
         // This amount is denominated in par since collateralDelta uses the borrow index

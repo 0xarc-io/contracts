@@ -1,7 +1,7 @@
 import 'jest';
 
 import { StakingRewards } from '@src/typings/StakingRewards';
-import { TestToken } from '@src/typings';
+import { TestToken } from '@src/typings/TestToken';
 import simpleDescribe from '../helpers/simpleDescribe';
 import { ITestContext } from '../helpers/simpleDescribe';
 import { Wallet } from 'ethers';

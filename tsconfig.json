@@ -18,7 +18,7 @@
       "@typings/*": ["src/typechain/*"]
     }
   },
-  "include": ["./src", "./scripts", "./test", "src/addresses/*.json"],
+  "include": ["./src", "./scripts", "./test", "src/addresses/*.json", "./publish"],
   "exclude": ["node_modules"],
   "files": [
     "buidler.config.ts",
