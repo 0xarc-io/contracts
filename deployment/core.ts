@@ -3,8 +3,7 @@ import { AddressBook } from '../src/addresses/AddressBook';
 import { Config } from '../src/addresses/Config';
 
 import { CoreV1 } from '../src/typings/CoreV1';
-import { Proxy } from '../src/typings/Proxy';
-import { LendShare } from '../src/typings/LendShare';
+import { ArcProxy } from '../src/typings/ArcProxy';
 import { SyntheticToken } from '../src/typings/SyntheticToken';
 import { StateV1 } from '../src/typings/StateV1';
 import { MockOracle } from '../src/typings/MockOracle';
@@ -68,7 +67,7 @@ export class CoreStage {
   async deployProxy() {
     console.log('*** Deploying Proxy *** ');
     const address = await this.wallet.getAddress();
-    const contract = await Proxy.awaitDeployment(
+    const contract = await ArcProxy.awaitDeployment(
       this.wallet,
       this.addressBook.coreV1,
       address,

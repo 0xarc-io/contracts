@@ -5,9 +5,9 @@ pragma solidity ^0.5.16;
 import {Ownable} from "@openzeppelin/contracts/ownership/Ownable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {TokenAccrual} from "./TokenAccrual.sol";
+import {Accrual} from "./Accrual.sol";
 
-contract Distribution is Ownable, TokenAccrual {
+contract AddressAccrual is Ownable, Accrual {
 
     IERC20 public claimableToken;
 
@@ -19,7 +19,7 @@ contract Distribution is Ownable, TokenAccrual {
         address _claimableToken
     )
         public
-        TokenAccrual(_claimableToken)
+        Accrual(_claimableToken)
     {}
 
     function totalSupply()

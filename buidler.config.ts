@@ -22,9 +22,15 @@ const config: BuidlerConfig = {
   defaultNetwork: 'buidlerevm',
   solc: {
     version: '0.5.16',
-    // optimizer: {
-    //   runs: 10000,
-    // },
+    optimizer: {
+      runs: 200,
+    },
+  },
+  paths: {
+    sources: './contracts',
+    tests: './test',
+    cache: './cache',
+    artifacts: './artifacts',
   },
   networks: {
     rinkeby: {
