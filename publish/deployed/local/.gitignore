@@ -2,3 +2,4 @@
 # so no need to persist them in source control
 deployment.json
 owner-actions.json
+# versions.json
