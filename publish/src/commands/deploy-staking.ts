@@ -256,7 +256,6 @@ const deployStakingRewards = async ({
         source: type,
         deployData: StakingRewardAccrual.getDeployTransaction(
           account,
-          owner,
           revenue,
           distributor,
           rewardsToken,

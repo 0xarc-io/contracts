@@ -10,7 +10,6 @@ import {Accrual} from "./Accrual.sol";
 contract StakingRewardAccrual is StakingRewards, Accrual {
 
     constructor(
-        address _owner,
         address _arcDAO,
         address _rewardsDistribution,
         address _rewardsToken,
@@ -19,7 +18,6 @@ contract StakingRewardAccrual is StakingRewards, Accrual {
     )
         public
         StakingRewards(
-            _owner,
             _arcDAO,
             _rewardsDistribution,
             _rewardsToken,

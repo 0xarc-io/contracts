@@ -40,7 +40,7 @@ contract BaseERC20 is IERC20 {
     // ============ Public Functions ============
 
     function symbol()
-        public
+        external
         view
         returns (string memory)
     {
@@ -48,7 +48,7 @@ contract BaseERC20 is IERC20 {
     }
 
     function name()
-        public
+        external
         view
         returns (string memory)
     {
@@ -56,7 +56,7 @@ contract BaseERC20 is IERC20 {
     }
 
     function decimals()
-        public
+        external
         view
         returns (uint8)
     {
@@ -64,7 +64,7 @@ contract BaseERC20 is IERC20 {
     }
 
     function totalSupply()
-        public
+        external
         view
         returns (uint256)
     {
@@ -74,7 +74,7 @@ contract BaseERC20 is IERC20 {
     function balanceOf(
         address who
     )
-        public
+        external
         view returns (uint256)
     {
         return _balances[who];
@@ -84,7 +84,7 @@ contract BaseERC20 is IERC20 {
         address owner,
         address spender
     )
-        public
+        external
         view
         returns (uint256)
     {
