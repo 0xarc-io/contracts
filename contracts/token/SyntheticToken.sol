@@ -12,14 +12,30 @@ contract SyntheticToken is BaseERC20, ISyntheticToken {
 
     address public arcAddress;
 
+    bytes32 private _symbolKey;
+
     // ============ Constructor ============
 
     constructor(
         address _arcAddress,
         string memory _name,
         string memory _symbol
-    ) public BaseERC20(_name, _symbol) {
+    )
+        public
+        BaseERC20(_name, _symbol)
+    {
         arcAddress = _arcAddress;
+        _symbolKey = keccak256(
+            abi.encode(_symbol)
+        );
+    }
+
+    function symbolKey()
+        external
+        view
+        returns (bytes32)
+    {
+        _symbolKey;
     }
 
     // ============ Core Functions ============
