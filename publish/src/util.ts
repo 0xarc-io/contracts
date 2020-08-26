@@ -58,7 +58,8 @@ const loadAndCheckRequiredSources = ({ deploymentPath, network }) => {
   const config = JSON.parse(fs.readFileSync(configFile));
 
   const versionsFile = path.join(deploymentPath, VERSIONS_FILENAME);
-  const versions = network !== 'local' ? JSON.parse(fs.readFileSync(versionsFile)) : {};
+  // const versions = network !== 'local' ? JSON.parse(fs.readFileSync(versionsFile)) : {};
+  const versions = JSON.parse(fs.readFileSync(versionsFile)) || {};
 
   console.log(
     gray(`Loading the list of contracts already deployed for ${network.toUpperCase()}...`),
