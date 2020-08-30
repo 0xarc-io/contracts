@@ -19,22 +19,29 @@ contract KYF {
 
     function verify(
         address _user,
-	    uint8 _v,
-	    bytes32 _r,
-	    bytes32 _s
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
     )
         public
         returns (bool)
     {
-        bytes32 sigHash = keccak256(abi.encodePacked(
-            _user
-        ));
+        bytes32 sigHash = keccak256(
+            abi.encodePacked(
+                _user
+            )
+        );
 
         bytes32 recoveryHash = keccak256(
             abi.encodePacked("\x19Ethereum Signed Message:\n32", sigHash)
         );
 
-        address recoveredAddress = ecrecover(recoveryHash, _v, _r, _s);
+        address recoveredAddress = ecrecover(
+            recoveryHash,
+            _v,
+            _r,
+            _s
+        );
 
         require(
             recoveredAddress == verifier,
