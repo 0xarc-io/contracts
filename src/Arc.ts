@@ -18,7 +18,7 @@ import { StateV1 } from './typings/StateV1';
 import { AddressBook } from './addresses/AddressBook';
 import { Config } from './addresses/Config';
 import Token from '../src/utils/Token';
-import { IERC20 } from './typings';
+import { IERC20 } from './typings/IERC20';
 import { RiskParams, MarketParams } from './types';
 import { ArcProxy } from './typings/ArcProxy';
 

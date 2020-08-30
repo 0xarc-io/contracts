@@ -193,7 +193,7 @@ const deployStakingRewards = async ({
   // ----------------
   // Staking Rewards
   // ----------------
-  for (const { name, type, rewardsToken, stakingToken, feeToken } of stakingRewards) {
+  for (const { name, type, rewardsToken, stakingToken, accrualToken } of stakingRewards) {
     const stakingRewardNameFixed = `StakingRewards-${name}`;
     const stakingRewardsConfig = config[stakingRewardNameFixed] || {};
 
@@ -256,12 +256,11 @@ const deployStakingRewards = async ({
         source: type,
         deployData: StakingRewardAccrual.getDeployTransaction(
           account,
-          owner,
           revenue,
           distributor,
           rewardsToken,
           stakingToken,
-          feeToken,
+          accrualToken,
         ).data,
       });
     }
@@ -271,7 +270,7 @@ const deployStakingRewards = async ({
       await deployer.deployContract({
         name: stakingRewardNameFixed,
         source: type,
-        deployData: TokenStakingAccrual.getDeployTransaction(account, stakingToken, rewardsToken)
+        deployData: TokenStakingAccrual.getDeployTransaction(account, stakingToken, accrualToken)
           .data,
       });
     }

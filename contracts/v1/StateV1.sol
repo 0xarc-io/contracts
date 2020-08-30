@@ -14,7 +14,6 @@ import {IMintableToken} from "../interfaces/IMintableToken.sol";
 import {TypesV1} from "./TypesV1.sol";
 import {Decimal} from "../lib/Decimal.sol";
 import {Math} from "../lib/Math.sol";
-import {SignedMath} from "../lib/SignedMath.sol";
 
 /**
  * @title StateV1
@@ -30,8 +29,8 @@ contract StateV1 {
 
     // ============ Variables ============
 
-    address core;
-    address admin;
+    address public core;
+    address public admin;
 
     TypesV1.MarketParams public market;
     TypesV1.RiskParams public risk;

@@ -5,6 +5,11 @@ pragma experimental ABIEncoderV2;
 
 interface ISyntheticToken {
 
+    function symbolKey()
+        external
+        view
+        returns (bytes32);
+
     function mint(
         address to,
         uint256 value
@@ -24,5 +29,6 @@ interface ISyntheticToken {
     )
         external
         returns (bool);
+
 
 }
