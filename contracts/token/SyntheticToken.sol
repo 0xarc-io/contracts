@@ -35,7 +35,7 @@ contract SyntheticToken is BaseERC20, ISyntheticToken {
         view
         returns (bytes32)
     {
-        _symbolKey;
+        return _symbolKey;
     }
 
     // ============ Core Functions ============
