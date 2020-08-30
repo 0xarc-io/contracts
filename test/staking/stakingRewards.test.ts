@@ -37,7 +37,6 @@ simpleDescribe('StakingRewards', init, (ctx: ITestContext) => {
     ownerRewards = await StakingRewards.deploy(
       ownerWallet,
       ownerWallet.address,
-      ownerWallet.address,
       distributionWallet.address,
       rewardToken.address,
       stakingToken.address,
