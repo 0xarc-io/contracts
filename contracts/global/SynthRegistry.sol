@@ -25,9 +25,6 @@ contract SynthRegistry is Ownable {
     event SynthAdded(bytes32 currencyKey, address synth);
     event SynthRemoved(bytes32 currencyKey, address synth);
 
-    /* ========== CONSTRUCTOR ========== */
-
-    constructor() public {}
 
     /* ========== VIEW FUNCTIONS ========== */
 
