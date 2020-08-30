@@ -14,6 +14,8 @@
     "baseUrl": ".",
     "paths": {
       "@src/*": ["src/*"],
+      "@test/*": ["test/*"],
+      "@test/helpers/*": ["test/helpers/*"],
       "@utils/*": ["src/utils/*"],
       "@typings/*": ["src/typechain/*"]
     }

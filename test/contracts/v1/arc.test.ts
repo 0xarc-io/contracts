@@ -4,13 +4,11 @@ import { ethers, Wallet } from 'ethers';
 import { expectRevert } from '@src/utils/expectRevert';
 
 import ArcNumber from '@src/utils/ArcNumber';
-import arcDescribe from '../helpers/arcDescribe';
-import { ITestContext } from '../helpers/arcDescribe';
-import initializeArc from '../helpers/initializeArc';
-import { StateV1 } from '@src/typings';
+import arcDescribe from '@test/helpers/arcDescribe';
+import { ITestContext } from '@test/helpers/arcDescribe';
+import initializeArc from '@test/helpers/initializeArc';
 import { AddressZero } from 'ethers/constants';
-import ArcDecimal from '../../src/utils/ArcDecimal';
-import { BigNumber } from 'ethers/utils';
+import ArcDecimal from '@src/utils/ArcDecimal';
 
 let ownerWallet: Wallet;
 let otherWallet: Wallet;

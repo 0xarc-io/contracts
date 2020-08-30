@@ -2,12 +2,12 @@ import 'jest';
 
 import { StakingRewards } from '@src/typings/StakingRewards';
 import { TestToken } from '@src/typings/TestToken';
-import simpleDescribe from '../helpers/simpleDescribe';
-import { ITestContext } from '../helpers/simpleDescribe';
+import simpleDescribe from '@test/helpers/simpleDescribe';
+import { ITestContext } from '@test/helpers/simpleDescribe';
 import { Wallet } from 'ethers';
-import Token from '../../src/utils/Token';
+import Token from '@src/utils/Token';
 import { BigNumber, BigNumberish } from 'ethers/utils';
-import ArcNumber from '../../src/utils/ArcNumber';
+import ArcNumber from '@src/utils/ArcNumber';
 
 let ownerWallet: Wallet;
 let userWallet: Wallet;

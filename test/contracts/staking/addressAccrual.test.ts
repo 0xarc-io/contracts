@@ -1,14 +1,14 @@
 import 'jest';
 
-import simpleDescribe from '../helpers/simpleDescribe';
-import { ITestContext } from '../helpers/simpleDescribe';
+import simpleDescribe from '@test/helpers/simpleDescribe';
+import { ITestContext } from '@test/helpers/simpleDescribe';
 import { Wallet } from 'ethers';
 import { BigNumber } from 'ethers/utils';
-import ArcDecimal from '../../src/utils/ArcDecimal';
-import ArcNumber from '../../src/utils/ArcNumber';
-import { expectRevert } from '../../src/utils/expectRevert';
-import { AddressAccrual } from '../../src/typings/AddressAccrual';
-import { TestToken } from '../../src/typings/TestToken';
+import ArcDecimal from '@src/utils/ArcDecimal';
+import ArcNumber from '@src/utils/ArcNumber';
+import { expectRevert } from '@src/utils/expectRevert';
+import { AddressAccrual } from '@src/typings/AddressAccrual';
+import { TestToken } from '@src/typings/TestToken';
 
 let ownerWallet: Wallet;
 let investorWallet: Wallet;
