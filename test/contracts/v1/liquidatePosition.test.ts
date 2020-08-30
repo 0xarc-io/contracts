@@ -1,12 +1,12 @@
 import 'jest';
 
 import { Wallet } from 'ethers';
-import { ITestContext } from '../helpers/arcDescribe';
-import initializeArc from '../helpers/initializeArc';
-import arcDescribe from '../helpers/arcDescribe';
-import ArcDecimal from '../../src/utils/ArcDecimal';
-import ArcNumber from '../../src/utils/ArcNumber';
-import { expectRevert } from '../../src/utils/expectRevert';
+import { ITestContext } from '@test/helpers/arcDescribe';
+import initializeArc from '@test/helpers/initializeArc';
+import arcDescribe from '@test/helpers/arcDescribe';
+import ArcDecimal from '@src/utils/ArcDecimal';
+import ArcNumber from '@src/utils/ArcNumber';
+import { expectRevert } from '@src/utils/expectRevert';
 import { BigNumber } from 'ethers/utils';
 import { MockOracle } from '@src/typings';
 

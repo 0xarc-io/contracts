@@ -1,13 +1,13 @@
 import 'jest';
 
 import { Wallet } from 'ethers';
-import { ITestContext } from '../helpers/arcDescribe';
-import initializeArc from '../helpers/initializeArc';
-import arcDescribe from '../helpers/arcDescribe';
-import ArcDecimal from '../../src/utils/ArcDecimal';
-import ArcNumber from '../../src/utils/ArcNumber';
+import { ITestContext } from '@test/helpers/arcDescribe';
+import initializeArc from '@test/helpers/initializeArc';
+import arcDescribe from '@test/helpers/arcDescribe';
+import ArcDecimal from '@src/utils/ArcDecimal';
+import ArcNumber from '@src/utils/ArcNumber';
 import { BigNumberish, BigNumber } from 'ethers/utils';
-import { expectRevert } from '../../src/utils/expectRevert';
+import { expectRevert } from '@src/utils/expectRevert';
 import { MockOracle } from '@src/typings';
 
 let ownerWallet: Wallet;

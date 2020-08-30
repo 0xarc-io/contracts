@@ -2,13 +2,13 @@ import 'jest';
 
 import { Wallet } from 'ethers';
 
-import arcDescribe from '../helpers/arcDescribe';
-import { ITestContext } from '../helpers/arcDescribe';
-import initializeArc from '../helpers/initializeArc';
+import arcDescribe from '@test/helpers/arcDescribe';
+import { ITestContext } from '@test/helpers/arcDescribe';
+import initializeArc from '@test/helpers/initializeArc';
 import { StateV1, MockOracle } from '@src/typings';
-import { expectRevert } from '../../src/utils/expectRevert';
-import ArcNumber from '../../src/utils/ArcNumber';
-import ArcDecimal from '../../src/utils/ArcDecimal';
+import { expectRevert } from '@src/utils/expectRevert';
+import ArcNumber from '@src/utils/ArcNumber';
+import ArcDecimal from '@src/utils/ArcDecimal';
 import { AddressZero } from 'ethers/constants';
 
 let ownerWallet: Wallet;

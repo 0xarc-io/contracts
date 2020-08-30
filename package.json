@@ -23,7 +23,7 @@
     "generate-typings": "yarn ts-node ./bindings-generator/main.ts artifacts -o src/typings",
     "build": "yarn compile && yarn generate-typings",
     "coverage": "yarn run build && yarn buidler coverage --temp artifacts --network coverage",
-    "test": "yarn jest test --runInBand",
+    "test": "yarn jest test/contracts --runInBand",
     "deploy": "yarn ts-node deployment/deploy.ts",
     "graph:create": "graph create arcxgame/contracts-v16 --node https://api.thegraph.com/deploy/",
     "graph:create-local": "graph create arcxgame/contracts-v16 --node http://127.0.0.1:8020",
