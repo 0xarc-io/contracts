@@ -17,6 +17,12 @@
 	"KermanRewards": {
 		"deploy": true
 	},
+	"KYF": {
+		"deploy": true
+	},
+	"SynthRegistry": {
+		"deploy": true
+	},
 	"LINKUSD": {
 		"deploy": true,
 		"dependencies": {

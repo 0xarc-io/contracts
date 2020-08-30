@@ -29,8 +29,8 @@ contract StateV1 {
 
     // ============ Variables ============
 
-    address core;
-    address admin;
+    address public core;
+    address public admin;
 
     TypesV1.MarketParams public market;
     TypesV1.RiskParams public risk;

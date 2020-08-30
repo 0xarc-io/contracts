@@ -7,12 +7,18 @@ import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
 
 contract SynthRegistry is Ownable {
 
+    struct Synth {
+        bytes32 symbolKey;
+        address proxyAddress;
+        address syntheticAddress;
+    }
+
     // Available Synths which can be used with the system
     address[] public availableSynths;
 
     mapping(bytes32 => address) public synths;
 
-    mapping(address => bytes32) public synthsByAddress;
+    mapping(address => Synth) public synthsByAddress;
 
     /* ========== EVENTS ========== */
 
@@ -23,51 +29,66 @@ contract SynthRegistry is Ownable {
 
     constructor() public {}
 
+    /* ========== VIEW FUNCTIONS ========== */
+
+    function getAllSynths()
+        public
+        view
+        returns (address[] memory)
+    {
+        return availableSynths;
+    }
+
     /* ========== MUTATIVE FUNCTIONS ========== */
 
     function addSynth(
+        address proxy,
         address synth
     )
         external
         onlyOwner
     {
-        bytes32 currencyKey = ISyntheticToken(synth).symbolKey();
+        bytes32 symbolKey = ISyntheticToken(synth).symbolKey();
 
         require(
-            synths[currencyKey] == address(0),
+            synths[symbolKey] == address(0),
             "Synth already exists"
         );
 
         require(
-            synthsByAddress[address(synth)] == bytes32(0),
+            synthsByAddress[address(synth)].symbolKey == bytes32(0),
             "Synth address already exists"
         );
 
         availableSynths.push(synth);
-        synths[currencyKey] = synth;
-        synthsByAddress[address(synth)] = currencyKey;
+        synths[symbolKey] = synth;
+        synthsByAddress[address(synth)] = Synth({
+            symbolKey: symbolKey,
+            proxyAddress: proxy,
+            syntheticAddress: synth
+        });
 
-        emit SynthAdded(currencyKey, address(synth));
+        emit SynthAdded(symbolKey, address(synth));
     }
 
     function removeSynth(
-        bytes32 currencyKey
+        bytes32 symbolKey
     )
         external
         onlyOwner
     {
         require(
-            address(synths[currencyKey]) != address(0),
+            address(synths[symbolKey]) != address(0),
             "Synth does not exist"
         );
 
         require(
-            IERC20(address(synths[currencyKey])).totalSupply() == 0,
+            IERC20(address(synths[symbolKey])).totalSupply() == 0,
             "Synth supply exists"
         );
 
         // Save the address we're removing for emitting the event at the end.
-        address synthToRemove = address(synths[currencyKey]);
+        address synthToRemove = address(synths[symbolKey]);
 
         // Remove the synth from the availableSynths array.
         for (uint i = 0; i < availableSynths.length; i++) {
@@ -87,9 +108,9 @@ contract SynthRegistry is Ownable {
         }
 
         // And remove it from the synths mapping
-        delete synthsByAddress[address(synths[currencyKey])];
-        delete synths[currencyKey];
+        delete synthsByAddress[address(synths[symbolKey])];
+        delete synths[symbolKey];
 
-        emit SynthRemoved(currencyKey, synthToRemove);
+        emit SynthRemoved(symbolKey, synthToRemove);
     }
 }
