@@ -61,7 +61,6 @@ contract StakingRewards is IStakingRewards, RewardsDistributionRecipient {
     /* ========== CONSTRUCTOR ========== */
 
     constructor(
-        address _owner,
         address _arcDAO,
         address _rewardsDistribution,
         address _rewardsToken,
@@ -73,8 +72,6 @@ contract StakingRewards is IStakingRewards, RewardsDistributionRecipient {
         rewardsToken = IERC20(_rewardsToken);
         stakingToken = IERC20(_stakingToken);
         rewardsDistribution = _rewardsDistribution;
-
-        transferOwnership(_owner);
     }
 
     /* ========== VIEWS ========== */

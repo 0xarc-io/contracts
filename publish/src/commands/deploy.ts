@@ -10,10 +10,13 @@ import { MockOracle } from '../../../src/typings/MockOracle';
 import { SyntheticToken } from '../../../src/typings/SyntheticToken';
 import { TestToken } from '../../../src/typings/TestToken';
 import { ArcxToken } from '../../../src/typings/ArcxToken';
+import { KYF } from '../../../src/typings/KYF';
+import { SynthRegistry } from '../../../src/typings';
 
 import { ethers } from 'ethers';
 import { asyncForEach } from '../../../src/utils/asyncForEach';
 import { AddressAccrual } from '../../../src/typings/AddressAccrual';
+import { AddressZero } from 'ethers/constants';
 
 const path = require('path');
 const { gray, green, yellow, redBright, red } = require('chalk');
@@ -251,6 +254,9 @@ const deploy = async ({
   // ----------------
 
   let arcToken: ethers.Contract = getExistingContract({ contract: 'ArcxToken' });
+  let distribution: ethers.Contract = getExistingContract({ contract: 'ArcDAO' });
+  let kyf: ethers.Contract = getExistingContract({ contract: 'KYF' });
+  let synthRegistry: ethers.Contract = getExistingContract({ contract: 'SynthRegistry' });
 
   if (!arcToken) {
     arcToken = await deployer.deployContract({
@@ -260,13 +266,27 @@ const deploy = async ({
     });
   }
 
-  let distribution: ethers.Contract = getExistingContract({ contract: 'ArcDAO' });
-
   if (!distribution) {
     distribution = await deployer.deployContract({
       name: 'ArcDAO',
       source: 'AddressAccrual',
       deployData: AddressAccrual.getDeployTransaction(deployer.account, arcToken.address).data,
+    });
+  }
+
+  if (!kyf) {
+    kyf = await deployer.deployContract({
+      name: 'KYF',
+      source: 'KYF',
+      deployData: KYF.getDeployTransaction(deployer.account).data,
+    });
+  }
+
+  if (!synthRegistry) {
+    synthRegistry = await deployer.deployContract({
+      name: 'SynthRegistry',
+      source: 'SynthRegistry',
+      deployData: SynthRegistry.getDeployTransaction(deployer.account).data,
     });
   }
 
@@ -364,7 +384,7 @@ const deploy = async ({
         source: 'StateV1',
         deployData: StateV1.getDeployTransaction(
           deployer.account,
-          coreV1.address,
+          proxy.address,
           await deployer.account.getAddress(),
           collateralToken,
           syntheticToken.address,
@@ -397,6 +417,14 @@ const deploy = async ({
         name: 'CoreV1',
         contract: proxiedCore,
       });
+    }
+
+    const synthRegistryBinded = SynthRegistry.at(deployer.account, synthRegistry.address);
+    if (
+      (await synthRegistryBinded.synthsByAddress(syntheticToken.address)).proxyAddress !=
+      proxy.address
+    ) {
+      synthRegistryBinded.addSynth(proxy.address, syntheticToken.address);
     }
   });
 };

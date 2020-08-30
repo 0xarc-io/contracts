@@ -61,14 +61,9 @@ const versionsUpdate = async ({ versionTag, release }) => {
           let pushElement: any = element;
           pushElement.name = `${item.name}-${element['dependency']}`;
           deploymentTargetValues.push(pushElement);
-          // console.log(Object.values(item.dependencies));
         });
-
-        // deploymentTargetValues.push(Object.values(item.dependencies));
       }
     });
-
-    // return;
 
     for (const { name, address, source } of deploymentTargetValues) {
       // if the address is already in the version file, skip it

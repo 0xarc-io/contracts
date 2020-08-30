@@ -1,14 +1,13 @@
 import 'jest';
 
 import { Wallet, ethers } from 'ethers';
-import { ITestContext } from '../helpers/arcDescribe';
-import initializeArc from '../helpers/initializeArc';
-import arcDescribe from '../helpers/arcDescribe';
-import ArcNumber from '../../src/utils/ArcNumber';
-import Token from '../../src/utils/Token';
-import { expectRevert } from '../../src/utils/expectRevert';
-import ArcDecimal from '../../src/utils/ArcDecimal';
-import { stat } from 'fs';
+import { ITestContext } from '@test/helpers/arcDescribe';
+import initializeArc from '@test/helpers/initializeArc';
+import arcDescribe from '@test/helpers/arcDescribe';
+import ArcNumber from '@src/utils/ArcNumber';
+import Token from '@src/utils/Token';
+import { expectRevert } from '@src/utils/expectRevert';
+import ArcDecimal from '@src/utils/ArcDecimal';
 import { AssetType } from '@src/types';
 
 let ownerWallet: Wallet;
