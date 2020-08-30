@@ -12,7 +12,6 @@ import {IOracle} from "../interfaces/IOracle.sol";
 
 import {Math} from "../lib/Math.sol";
 import {Decimal} from "../lib/Decimal.sol";
-import {SignedMath} from "../lib/SignedMath.sol";
 
 library TypesV1 {
 
