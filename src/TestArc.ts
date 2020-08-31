@@ -4,10 +4,10 @@ import { Wallet } from 'ethers';
 import { MockOracle } from './typings/MockOracle';
 import Token from './utils/Token';
 import { BigNumberish, BigNumber } from 'ethers/utils';
-import { AssetType } from './types';
+import { AssetType, DeploymentConfig } from './types';
 
-import { getConfig } from './addresses/Config';
 import { TestToken } from './typings';
+import ArcDecimal from './utils/ArcDecimal';
 
 export class TestArc extends Arc {
   static async init(wallet: Wallet): Promise<TestArc> {
@@ -20,11 +20,20 @@ export class TestArc extends Arc {
     this.collateralAsset = await TestToken.deploy(this.wallet, 'TEST', 'TEST');
     this.oracle = await MockOracle.deploy(this.wallet);
 
-    const testConfig = getConfig(50);
-    testConfig.name = 'ARCxBTC';
-    testConfig.symbol = 'USDT-BTC';
-    testConfig.collateralAsset = this.collateralAsset.address;
-    testConfig.oracle = this.oracle.address;
+    const testConfig: DeploymentConfig = {
+      owner: await this.wallet.getAddress(),
+      name: 'LINKUSD',
+      symbol: 'LINKUSD',
+      collateralAsset: this.collateralAsset.address,
+      oracle: this.oracle.address,
+      collateralRatio: ArcDecimal.new(2).value,
+      liquidationArcFee: ArcDecimal.new(0.1).value,
+      liquidationUserFee: ArcDecimal.new(0.05).value,
+      chainlinkAggregator: '',
+      collateralLimit: '',
+      syntheticAssetLimit: '',
+      positionCollateralMinimum: '',
+    };
 
     await this.deployArc(testConfig);
   }

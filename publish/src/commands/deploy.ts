@@ -424,7 +424,9 @@ const deploy = async ({
       (await synthRegistryBinded.synthsByAddress(syntheticToken.address)).proxyAddress !=
       proxy.address
     ) {
-      synthRegistryBinded.addSynth(proxy.address, syntheticToken.address);
+      console.log(yellow(`Attempting to add ${name} to Synth Registry`));
+      await synthRegistryBinded.addSynth(proxy.address, syntheticToken.address);
+      console.log(green(`Successfully added ${name} to Synth Registry`));
     }
   });
 };

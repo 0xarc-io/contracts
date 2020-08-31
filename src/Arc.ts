@@ -10,16 +10,14 @@ import {
   ActionOperated,
   Position,
   TransactionOverrides,
+  SynthAddressBook,
 } from './types';
 import { CoreV1 } from './typings/CoreV1';
 import { parseLogs } from './utils/parseLogs';
-import { Proxy } from './typings/Proxy';
 import { StateV1 } from './typings/StateV1';
-import { AddressBook } from './addresses/AddressBook';
-import { Config } from './addresses/Config';
 import Token from '../src/utils/Token';
 import { IERC20 } from './typings/IERC20';
-import { RiskParams, MarketParams } from './types';
+import { RiskParams, MarketParams, DeploymentConfig } from './types';
 import { ArcProxy } from './typings/ArcProxy';
 
 export default class Arc {
@@ -31,7 +29,7 @@ export default class Arc {
   public collateralAsset: IERC20;
   public oracle: IOracle;
 
-  static async init(wallet: Signer, addressBook?: AddressBook): Promise<Arc> {
+  static async init(wallet: Signer, addressBook?: SynthAddressBook): Promise<Arc> {
     let arc = new Arc();
     arc.wallet = wallet;
 
@@ -46,7 +44,7 @@ export default class Arc {
     return arc;
   }
 
-  async deployArc(config: Config) {
+  async deployArc(config: DeploymentConfig) {
     this.core = await CoreV1.deploy(this.wallet);
 
     const address = await this.wallet.getAddress();
