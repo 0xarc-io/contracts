@@ -82,13 +82,13 @@ workflows:
       - test:
           requires:
             - compile_contracts
-      - publish:
-          requires:
-            - lint
-            - test
-            - build
-          filters:
-            branches:
-              only:
-                - master
-                - staging
+    #   - publish:
+    #       requires:
+    #         - lint
+    #         - test
+    #         - build
+    #       filters:
+    #         branches:
+    #           only:
+    #             - master
+    #             - staging
