@@ -26,7 +26,7 @@
     "./scripts",
     "./test",
     "src/addresses/*.json",
-    "./publish/**/*.json",
+    "./publish/**/*.json"
   ],
   "exclude": ["node_modules"],
   "files": [
