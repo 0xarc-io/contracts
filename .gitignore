@@ -1,0 +1,15 @@
+#Buidler files
+cache
+artifacts
+node_modules
+bin
+
+coverage
+dist
+typechain
+typings
+build
+generated
+50.json
+.env
+.coverage_contracts

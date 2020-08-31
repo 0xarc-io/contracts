@@ -1,0 +1,15 @@
+[
+	{
+		"name": "LINKUSD",
+		"collateral_address": "",
+		"oracle_source_address": "0x0853E36EeAd0eAA08D61E94237168696383869DD",
+		"config": {
+			"collateral_ratio": "2000000000000000000",
+			"liquidation_user_fee": "100000000000000000",
+			"liquidation_arc_fee": "50000000000000000",
+			"collateral_limit": "",
+			"synthetic_limit": "",
+			"position_minimum_collateral" : ""
+		}
+	}
+]

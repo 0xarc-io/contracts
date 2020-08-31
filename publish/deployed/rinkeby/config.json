@@ -1,0 +1,26 @@
+{
+	"ArcxToken": {
+		"deploy": false
+	},
+	"ArcDAO": {
+		"deploy": false
+	},
+	"KYF": {
+		"deploy": false
+	},
+	"SynthRegistry": {
+		"deploy": false
+	},
+	"LINKUSD": {
+		"deploy": false
+	},
+	"Balancer/LINKUSD-USDC/50-50": {
+		"deploy": true
+	},
+	"Balancer/ARC-DAI/2-98": {
+		"deploy": true
+	},
+	"KermanRewards": {
+		"deploy": true
+	}
+}

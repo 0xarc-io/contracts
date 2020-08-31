@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "strict": false,
+    "allowJs": true,
+    "esModuleInterop": true,
+    "declaration": true,
+    "sourceMap": true,
+    "outDir": "dist",
+    "resolveJsonModule": true,
+    "typeRoots": ["node_modules/@types"],
+    "types": ["node", "jest"],
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@src/*": ["src/*"],
+      "@test/*": ["test/*"],
+      "@test/helpers/*": ["test/helpers/*"],
+      "@utils/*": ["src/utils/*"],
+      "@typings/*": ["src/typechain/*"]
+    }
+  },
+  "include": [
+    "./src",
+    "./scripts",
+    "./test",
+    "src/addresses/*.json",
+    "./publish/**/*.json",
+  ],
+  "exclude": ["node_modules"],
+  "files": [
+    "./index.js",
+    "buidler.config.ts",
+    "node_modules/@nomiclabs/buidler-ethers/src/type-extensions.d.ts",
+    "node_modules/@nomiclabs/buidler-etherscan/src/type-extensions.d.ts"
+  ]
+}

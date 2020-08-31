@@ -1,0 +1,30 @@
+enum AssetType {
+  StableAsset,
+  Synthetic
+}
+
+type Position @entity {
+  id: ID!
+  owner: Bytes!
+  createdAt: Int!
+  collateralAsset: Int!
+  borrowedAsset: Int!
+  collateralAmountSign: Boolean!
+  collateralAmountValue: BigInt!
+  borrowedAmountSign: Boolean!
+  borrowedAmountValue: BigInt!
+}
+
+type GlobalMarket @entity {
+  id: ID!
+  collateralRatio: BigInt!
+  liquidationUserFee: BigInt!
+  liquidationArcFee: BigInt!
+}
+
+type GlobalRisk @entity {
+  id: ID!
+  collateralLimit: BigInt!
+  syntheticLimit: BigInt!
+  positionCollateralMinimum: BigInt!
+}
