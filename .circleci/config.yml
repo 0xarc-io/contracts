@@ -3,12 +3,10 @@ version: 2.1
 #orbs:
 #  coveralls: coveralls/coveralls@1.0.4
 jobs:
-  build:
+  checkout_and_install:
     working_directory: ~/contracts
     docker:
       - image: circleci/node:10.18.0
-      - image: trufflesuite/ganache-cli:v6.7.0
-        command: ganache-cli --networkId 50 --accounts 20 -l 19000000 -e 10000000000 -m 'concert load couple harbor equip island argue ramp clarify fence smart topic' -h 0.0.0.0
     steps:
       - checkout
       - restore_cache:
@@ -16,19 +14,81 @@ jobs:
       - run:
           name: Install packages
           command: yarn
-      - run:
+
+  lint:
+    working_directory: ~/contracts
+    docker:
+      - image: circleci/node:10.18.0
+    steps:
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
           name: Lint Contracts
           command: yarn run lint:sol
+
+  build:
+    working_directory: ~/contracts
+    docker:
+      - image: circleci/node:10.18.0
+    steps:
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
       - run:
           name: Build repo
           command: yarn build
       - run:
           name: Transpile Typescript
           command: yarn tsc
+
+  test:
+    working_directory: ~/contracts
+    docker:
+      - image: circleci/node:10.18.0
+      - image: trufflesuite/ganache-cli:v6.7.0
+        command: ganache-cli --networkId 50 --accounts 20 -l 19000000 -e 10000000000 -m 'concert load couple harbor equip island argue ramp clarify fence smart topic' -h 0.0.0.0
+    steps:
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
       - run:
           name: Test Contracts
           command: yarn test
-      # - save_cache:
-      #     key: dependency-cache-{{ checksum "package.json" }}
-      #     paths:
-      #       - node_modules
+
+  publish:
+    docker:
+      - image: circleci/node:10.18.0
+    working_directory: ~/contracts
+    steps:
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+      - add_ssh_keys:
+          fingerprints:
+            - "1d:9d:cb:8e:ea:7e:ba:9c:80:c3:60:1f:c1:ae:cb:67"
+      - run:
+          name: Authenticate with registry
+          command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/build/.npmrc
+      - run:
+          command: sh scripts/publish_if_not_exists.sh
+
+workflows:
+  version: 1
+  build_and_test:
+    jobs:
+      - checkout_and_install
+      - compile_contracts:
+          requires:
+            - checkout_and_install
+      - lint:
+          requires:
+            - checkout_and_install
+      - test:
+          requires:
+            - compile_contracts
+      - publish:
+          requires:
+            - lint
+            - test
+            - build
+          filters:
+            branches:
+              only:
+                - master
+                - staging
