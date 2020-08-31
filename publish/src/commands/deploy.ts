@@ -92,8 +92,6 @@ const deploy = async ({
     gray('Checking all contracts not flagged for deployment have addresses in this network...'),
   );
 
-  console.log(config);
-
   const missingDeployments = Object.keys(config).filter((name) => {
     return !config[name].deploy && (!deployment.targets[name] || !deployment.targets[name].address);
   });
