@@ -1,6 +1,36 @@
 import { BigNumberish } from 'ethers/utils';
 import { Signer } from 'ethers';
 
+export type SynthAddressBook = {
+  stateV1?: string;
+  proxy?: string;
+  coreV1?: string;
+  syntheticToken?: string;
+  oracle?: string;
+  collateralAsset?: string;
+};
+
+export type DeploymentConfig = {
+  owner: string;
+  name: string;
+  symbol: string;
+  collateralAsset: string;
+  oracle: string;
+  chainlinkAggregator: string;
+  collateralRatio: BigNumberish;
+  liquidationUserFee: BigNumberish;
+  liquidationArcFee: BigNumberish;
+  collateralLimit: BigNumberish;
+  syntheticAssetLimit: BigNumberish;
+  positionCollateralMinimum: BigNumberish;
+};
+
+export type AddressBook = {
+  arcToken?: string;
+  kyf?: string;
+  synthRegistry?: string;
+};
+
 export enum AssetType {
   Collateral,
   Synthetic,
