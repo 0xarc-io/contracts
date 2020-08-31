@@ -10,10 +10,20 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          keys:
+            - dependency-cache-{{ .Environment.DEP_CACHE_VERSION }}-{{ .Branch }}-{{ checksum "package-lock.json" }}
+            - dependency-cache-{{ .Environment.DEP_CACHE_VERSION }}-{{ .Branch }}-
+            - dependency-cache-{{ .Environment.DEP_CACHE_VERSION }}-
       - run:
           name: Install packages
           command: yarn
+      - save_cache:
+          key: dependency-cache-{{ .Environment.DEP_CACHE_VERSION }}-{{ .Branch }}-{{ checksum "package-lock.json" }}
+          paths:
+            - "$HOME/.npm"
+      - save_cache:
+          key: cache-{{ .Environment.CIRCLE_SHA1 }}
+          paths:
 
   lint:
     working_directory: ~/contracts
@@ -21,7 +31,7 @@ jobs:
       - image: circleci/node:10.18.0
     steps:
       - restore_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: cache-{{ .Environment.CIRCLE_SHA1 }}
           name: Lint Contracts
           command: yarn run lint:sol
 
@@ -31,7 +41,7 @@ jobs:
       - image: circleci/node:10.18.0
     steps:
       - restore_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: cache-{{ .Environment.CIRCLE_SHA1 }}
       - run:
           name: Build repo
           command: yarn build
@@ -47,7 +57,7 @@ jobs:
         command: ganache-cli --networkId 50 --accounts 20 -l 19000000 -e 10000000000 -m 'concert load couple harbor equip island argue ramp clarify fence smart topic' -h 0.0.0.0
     steps:
       - restore_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: cache-{{ .Environment.CIRCLE_SHA1 }}
       - run:
           name: Test Contracts
           command: yarn test
@@ -58,7 +68,7 @@ jobs:
     working_directory: ~/contracts
     steps:
       - restore_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: cache-{{ .Environment.CIRCLE_SHA1 }}
       - add_ssh_keys:
           fingerprints:
             - "1d:9d:cb:8e:ea:7e:ba:9c:80:c3:60:1f:c1:ae:cb:67"
