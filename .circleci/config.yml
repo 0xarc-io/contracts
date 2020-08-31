@@ -73,7 +73,7 @@ workflows:
   build_and_test:
     jobs:
       - checkout_and_install
-      - compile_contracts:
+      - build:
           requires:
             - checkout_and_install
       - lint:
