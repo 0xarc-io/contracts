@@ -1,10 +1,10 @@
 pragma solidity ^0.5.16;
 
-contract KYF {
+import {Ownable} from "@openzeppelin/contracts/ownership/Ownable.sol";
+
+contract KYF is Ownable {
 
     address public verifier;
-
-    address public owner;
 
     uint256 public count;
 
@@ -12,10 +12,7 @@ contract KYF {
 
     event Verified (address _user, address _verified);
     event Removed (address _user);
-
-    constructor() public {
-        owner = msg.sender;
-    }
+    event VerifierSet (address _verifier);
 
     function verify(
         address _user,
@@ -26,6 +23,11 @@ contract KYF {
         public
         returns (bool)
     {
+        require(
+            isVerified[_user] == false,
+            "User has already been verified"
+        );
+
         bytes32 sigHash = keccak256(
             abi.encodePacked(
                 _user
@@ -62,7 +64,6 @@ contract KYF {
     {
         for (uint256 i = 0; i < _users.length; i++) {
             remove(_users[i]);
-            count--;
         }
     }
 
@@ -70,13 +71,10 @@ contract KYF {
         address _user
     )
         public
+        onlyOwner
     {
-        require (
-            msg.sender == owner,
-            "Only callable by owner"
-        );
-
         delete isVerified[_user];
+        count--;
 
         emit Removed(_user);
     }
@@ -85,13 +83,10 @@ contract KYF {
         address _verifier
     )
         public
+        onlyOwner
     {
-        require(
-            msg.sender == owner,
-            "Only callable by owner"
-        );
-
         verifier = _verifier;
+        emit VerifierSet(_verifier);
     }
 
 }
