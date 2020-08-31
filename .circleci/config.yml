@@ -81,7 +81,7 @@ workflows:
             - checkout_and_install
       - test:
           requires:
-            - compile_contracts
+            - build
     #   - publish:
     #       requires:
     #         - lint
