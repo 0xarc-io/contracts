@@ -264,7 +264,7 @@ const deploy = async ({
     });
   }
 
-  if (!distribution) {
+  if (!distribution && arcToken) {
     distribution = await deployer.deployContract({
       name: 'ArcDAO',
       source: 'AddressAccrual',
