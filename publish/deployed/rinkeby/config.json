@@ -1,12 +1,18 @@
 {
 	"ArcxToken": {
-		"deploy": true
+		"deploy": false
 	},
 	"ArcDAO": {
-		"deploy": true
+		"deploy": false
 	},
-	"AddressResolver": {
-		"deploy": true
+	"KYF": {
+		"deploy": false
+	},
+	"SynthRegistry": {
+		"deploy": false
+	},
+	"LINKUSD": {
+		"deploy": false
 	},
 	"Balancer/LINKUSD-USDC/50-50": {
 		"deploy": true
@@ -16,15 +22,5 @@
 	},
 	"KermanRewards": {
 		"deploy": true
-	},
-	"LINKUSD": {
-		"deploy": true,
-		"dependencies": {
-			"CoreV1": true,
-			"StateV1": true,
-			"Oracle": true,
-			"CollateralToken": true,
-			"SyntheticToken": true
-		}
 	}
 }

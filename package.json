@@ -4,9 +4,12 @@
   "main": "dist/src/index.js",
   "typings": "dist/src/index.d.ts",
   "files": [
-    "src",
-    "contracts",
-    "dist"
+    "index.js",
+    "dist",
+    "publish/deployed/kovan/*.json",
+		"publish/deployed/rinkeby/*.json",
+		"publish/deployed/ropsten/*.json",
+    "publish/deployed/mainnet/*.json"
   ],
   "author": "Kerman Kohli <kermankohli@gmail.com>",
   "license": "MIT",
