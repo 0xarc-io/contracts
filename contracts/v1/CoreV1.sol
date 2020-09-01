@@ -239,7 +239,10 @@ contract CoreV1 is StorageV1, Adminable {
             borrowedAmount: TypesV1.zeroPar()
         });
 
-        // SUGGESTION: Talk about why this was done
+        // This position is saved to storage to make the logic around borrowing
+        // uniform. This is slightly gas inefficient but ok given the ability to
+        // ensure no diverging logic.
+
         uint256 positionId = state.savePosition(newPosition);
 
         newPosition = borrow(
