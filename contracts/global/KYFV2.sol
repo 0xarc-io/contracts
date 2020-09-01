@@ -1,8 +1,9 @@
 pragma solidity ^0.5.16;
 
 import {Ownable} from "@openzeppelin/contracts/ownership/Ownable.sol";
+import {IKYFV2} from "../interfaces/IKYFV2.sol";
 
-contract KYFV2 is Ownable {
+contract KYFV2 is Ownable, IKYFV2 {
 
     address public verifier;
 
@@ -16,6 +17,16 @@ contract KYFV2 is Ownable {
     event Removed (address _user);
     event VerifierSet (address _verifier);
     event HardCapSet (uint256 _hardCap);
+
+    function checkVerified(
+        address _user
+    )
+        external
+        view
+        returns (bool)
+    {
+        return isVerified[_user];
+    }
 
     function verify(
         address _user,
