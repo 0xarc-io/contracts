@@ -78,7 +78,7 @@ contract StateV1 {
     modifier onlyCore() {
         require(
             msg.sender == core,
-            "State: only core can call"
+            "StateV1: only core can call"
         );
         _;
     }
@@ -86,7 +86,7 @@ contract StateV1 {
     modifier onlyAdmin() {
         require(
             msg.sender == admin,
-            "State: only core can call"
+            "StateV1: only core can call"
         );
         _;
     }
@@ -104,6 +104,11 @@ contract StateV1 {
         public
         onlyAdmin
     {
+        require(
+            _oracle != address(0),
+            "StateV1: cannot set 0 for oracle address"
+        );
+
         oracle = IOracle(_oracle);
         emit OracleUpdated(_oracle);
     }
