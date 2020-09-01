@@ -11,6 +11,7 @@ import { SyntheticToken } from '../../../src/typings/SyntheticToken';
 import { TestToken } from '../../../src/typings/TestToken';
 import { ArcxToken } from '../../../src/typings/ArcxToken';
 import { KYF } from '../../../src/typings/KYF';
+import { KYFV2 } from '../../../src/typings/KYFV2';
 import { SynthRegistry } from '../../../src/typings';
 
 import { ethers } from 'ethers';
@@ -254,6 +255,7 @@ const deploy = async ({
   let arcToken: ethers.Contract = getExistingContract({ contract: 'ArcxToken' });
   let distribution: ethers.Contract = getExistingContract({ contract: 'ArcDAO' });
   let kyf: ethers.Contract = getExistingContract({ contract: 'KYF' });
+  let kyfv2: ethers.Contract = getExistingContract({ contract: 'KYFV2' });
   let synthRegistry: ethers.Contract = getExistingContract({ contract: 'SynthRegistry' });
 
   if (!arcToken) {
@@ -277,6 +279,14 @@ const deploy = async ({
       name: 'KYF',
       source: 'KYF',
       deployData: KYF.getDeployTransaction(deployer.account).data,
+    });
+  }
+
+  if (!kyfv2) {
+    kyfv2 = await deployer.deployContract({
+      name: 'KYFV2',
+      source: 'KYFV2',
+      deployData: KYFV2.getDeployTransaction(deployer.account).data,
     });
   }
 

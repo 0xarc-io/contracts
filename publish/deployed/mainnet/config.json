@@ -1,5 +1,8 @@
 {
 	"KYF": {
 		"deploy": false
+	},
+	"KYFV2": {
+		"deploy": false
 	}
 }
