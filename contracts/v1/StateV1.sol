@@ -157,7 +157,7 @@ contract StateV1 {
     {
         uint256 idToAllocate = positionCount;
         positions[positionCount] = position;
-        positionCount++;
+        positionCount = positionCount.add(1);
 
         return idToAllocate;
     }
