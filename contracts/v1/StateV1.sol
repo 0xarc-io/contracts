@@ -48,6 +48,7 @@ contract StateV1 {
 
     event MarketParamsUpdated(TypesV1.MarketParams updatedMarket);
     event RiskParamsUpdated(TypesV1.RiskParams updatedParams);
+    event OracleUpdated(address updatedOracle);
 
     // ============ Constructor ============
 
@@ -104,7 +105,7 @@ contract StateV1 {
         onlyAdmin
     {
         oracle = IOracle(_oracle);
-        emit MarketParamsUpdated(market);
+        emit OracleUpdated(_oracle);
     }
 
     /**
