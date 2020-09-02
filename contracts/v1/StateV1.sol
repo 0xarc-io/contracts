@@ -48,6 +48,7 @@ contract StateV1 {
 
     event MarketParamsUpdated(TypesV1.MarketParams updatedMarket);
     event RiskParamsUpdated(TypesV1.RiskParams updatedParams);
+    event OracleUpdated(address updatedOracle);
 
     // ============ Constructor ============
 
@@ -77,7 +78,7 @@ contract StateV1 {
     modifier onlyCore() {
         require(
             msg.sender == core,
-            "State: only core can call"
+            "StateV1: only core can call"
         );
         _;
     }
@@ -85,7 +86,7 @@ contract StateV1 {
     modifier onlyAdmin() {
         require(
             msg.sender == admin,
-            "State: only core can call"
+            "StateV1: only core can call"
         );
         _;
     }
@@ -103,8 +104,13 @@ contract StateV1 {
         public
         onlyAdmin
     {
+        require(
+            _oracle != address(0),
+            "StateV1: cannot set 0 for oracle address"
+        );
+
         oracle = IOracle(_oracle);
-        emit MarketParamsUpdated(market);
+        emit OracleUpdated(_oracle);
     }
 
     /**
@@ -157,7 +163,7 @@ contract StateV1 {
     {
         uint256 idToAllocate = positionCount;
         positions[positionCount] = position;
-        positionCount++;
+        positionCount = positionCount.add(1);
 
         return idToAllocate;
     }

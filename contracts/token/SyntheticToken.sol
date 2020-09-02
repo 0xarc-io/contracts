@@ -14,6 +14,16 @@ contract SyntheticToken is BaseERC20, ISyntheticToken {
 
     bytes32 private _symbolKey;
 
+    // ============ Modifier ============
+
+    modifier onlyArc() {
+        require(
+            msg.sender == arcAddress,
+            "SyntheticToken: only callable by ARC"
+        );
+        _;
+    }
+
     // ============ Constructor ============
 
     constructor(
@@ -45,12 +55,8 @@ contract SyntheticToken is BaseERC20, ISyntheticToken {
         uint256 value
     )
         external
+        onlyArc
     {
-        require(
-            msg.sender == arcAddress,
-            "SyntheticToken: only arc can mint"
-        );
-
         _mint(to, value);
     }
 
@@ -59,6 +65,7 @@ contract SyntheticToken is BaseERC20, ISyntheticToken {
         uint256 value
     )
         external
+        onlyArc
     {
         require(
             msg.sender == arcAddress,
@@ -74,6 +81,7 @@ contract SyntheticToken is BaseERC20, ISyntheticToken {
         uint256 value
     )
         external
+        onlyArc
         returns (bool)
     {
         return BaseERC20(token).transfer(
