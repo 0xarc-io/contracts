@@ -239,7 +239,10 @@ contract CoreV1 is StorageV1, Adminable {
             borrowedAmount: TypesV1.zeroPar()
         });
 
-        // SUGGESTION: Talk about why this was done
+        // This position is saved to storage to make the logic around borrowing
+        // uniform. This is slightly gas inefficient but ok given the ability to
+        // ensure no diverging logic.
+
         uint256 positionId = state.savePosition(newPosition);
 
         newPosition = borrow(
@@ -458,10 +461,15 @@ contract CoreV1 is StorageV1, Adminable {
         );
 
         // Transfer collateral back to the user
-        synthetic.transferCollateral(
+        bool transferResult = synthetic.transferCollateral(
             address(collateralAsset),
             msg.sender,
             withdrawAmount
+        );
+
+        require(
+            transferResult == true,
+            "repay(): collateral failed to transfer"
         );
 
         return position;
@@ -590,7 +598,7 @@ contract CoreV1 is StorageV1, Adminable {
         );
 
         // Transfer them the collateral assets they acquired at a discount
-        synthetic.transferCollateral(
+        bool userTransferResult = synthetic.transferCollateral(
             address(collateralAsset),
             msg.sender,
             Decimal.mul(
@@ -599,14 +607,24 @@ contract CoreV1 is StorageV1, Adminable {
             )
         );
 
-        // Transfer them the collateral assets they acquired at a discount
-        synthetic.transferCollateral(
+        require(
+            userTransferResult == true,
+            "liquidate(): collateral failed to transfer to user"
+        );
+
+        // Transfer ARC the collateral asset acquired at a discount
+        bool arcTransferResult = synthetic.transferCollateral(
             address(collateralAsset),
             address(this),
             Decimal.mul(
                 collateralDelta.value,
                 arcSplit
             )
+        );
+
+        require(
+            arcTransferResult == true,
+            "liquidate(): collateral failed to transfer to arc"
         );
 
         return position;
