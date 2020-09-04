@@ -181,7 +181,7 @@ contract StakingRewards is IStakingRewards, RewardsDistributionRecipient {
     function stake(
         uint256 amount
     )
-        external
+        public
         updateReward(msg.sender)
     {
         require(
@@ -191,6 +191,7 @@ contract StakingRewards is IStakingRewards, RewardsDistributionRecipient {
 
         _totalSupply = _totalSupply.add(amount);
         _balances[msg.sender] = _balances[msg.sender].add(amount);
+
         stakingToken.safeTransferFrom(msg.sender, address(this), amount);
 
         emit Staked(msg.sender, amount);

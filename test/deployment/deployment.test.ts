@@ -10,11 +10,10 @@ import {
   CoreV1,
   StateV1,
   SyntheticToken,
-  StakingRewards,
   TokenStakingAccrual,
-  StakingRewardAccrual,
+  StakingRewardsAccrual,
 } from '@src/typings';
-import { generatedWallets } from '../../src/utils/generatedWallets';
+
 import { ethers } from 'ethers';
 import { AddressZero } from 'ethers/constants';
 import { SynthRegistry } from '@src/typings';
@@ -22,7 +21,7 @@ import { SynthRegistry } from '@src/typings';
 require('dotenv').config();
 
 const { loadConnections } = require('../../publish/src/util');
-const { toBytes32, wrap, networks } = require('../..');
+const { wrap, networks } = require('../..');
 
 describe('deployments', () => {
   networks
@@ -129,8 +128,8 @@ describe('deployments', () => {
 
               expect(stakingRewardsContractAddress).not.toBeNull();
 
-              if (type == 'StakingRewardAccrual') {
-                const stakingRewardsContract = StakingRewardAccrual.at(
+              if (type == 'StakingRewardsAccrual') {
+                const stakingRewardsContract = StakingRewardsAccrual.at(
                   wallet,
                   stakingRewardsContractAddress,
                 );

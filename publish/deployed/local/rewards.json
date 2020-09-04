@@ -1,22 +1,9 @@
 [
 	{
-    "name": "Balancer/LINKUSD-USDC/50-50",
-    "type": "StakingRewardAccrual",
+    "name": "KYF1/LINKUSD-USDC/50-50",
+    "type": "StakingRewardsAccrualCapped",
     "stakingToken": "",
     "rewardsToken": "",
     "accrualToken": ""
-	},
-	{
-    "name": "Balancer/ARC-DAI/2-98",
-    "type": "StakingRewardAccrual",
-    "stakingToken": "",
-    "rewardsToken": "",
-    "accrualToken": ""
-  },
-  {
-    "name": "KermanRewards",
-    "type": "TokenStakingAccrual",
-    "stakingToken": "",
-    "accrualToken": ""
-  }
+	}
 ]

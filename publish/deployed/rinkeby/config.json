@@ -5,7 +5,7 @@
 	"ArcDAO": {
 		"deploy": false
 	},
-	"KYF": {
+	"KYFV2": {
 		"deploy": false
 	},
 	"SynthRegistry": {
@@ -13,14 +13,5 @@
 	},
 	"LINKUSD": {
 		"deploy": false
-	},
-	"Balancer/LINKUSD-USDC/50-50": {
-		"deploy": true
-	},
-	"Balancer/ARC-DAI/2-98": {
-		"deploy": true
-	},
-	"KermanRewards": {
-		"deploy": true
 	}
 }
