@@ -2,9 +2,9 @@
 
 import Deployer from '../Deployer';
 
-import { StakingRewards } from '../../../src/typings/StakingRewards';
+import { StakingRewardsAccrualCapped } from '../../../src/typings/StakingRewardsAccrualCapped';
 import { TokenStakingAccrual } from '../../../src/typings/TokenStakingAccrual';
-import { StakingRewardAccrual } from '../../../src/typings/StakingRewardAccrual';
+import { StakingRewardsAccrual } from '../../../src/typings/StakingRewardsAccrual';
 
 const path = require('path');
 const { gray, green, yellow } = require('chalk');
@@ -246,15 +246,15 @@ const deployStakingRewards = async ({
     }
 
     const owner = await account.getAddress();
-    const revenue = owner;
+    const revenue = deployment.targets['ArcDAO'].address;
     const distributor = owner;
 
-    if (type == 'StakingRewardAccrual') {
+    if (type == 'StakingRewardsAccrual') {
       // Deploy contract
       await deployer.deployContract({
         name: stakingRewardNameFixed,
         source: type,
-        deployData: StakingRewardAccrual.getDeployTransaction(
+        deployData: StakingRewardsAccrual.getDeployTransaction(
           account,
           revenue,
           distributor,
@@ -272,6 +272,22 @@ const deployStakingRewards = async ({
         source: type,
         deployData: TokenStakingAccrual.getDeployTransaction(account, stakingToken, accrualToken)
           .data,
+      });
+    }
+
+    if (type == 'StakingRewardsAccrualCapped') {
+      // Deploy contract
+      await deployer.deployContract({
+        name: stakingRewardNameFixed,
+        source: type,
+        deployData: StakingRewardsAccrualCapped.getDeployTransaction(
+          account,
+          revenue,
+          distributor,
+          rewardsToken,
+          stakingToken,
+          accrualToken,
+        ).data,
       });
     }
   }

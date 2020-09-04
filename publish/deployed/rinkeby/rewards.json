@@ -1,1 +1,9 @@
-[]
+[
+	{
+    "name": "KYF1/LINKUSD-USDC/50-50",
+    "type": "StakingRewardsAccrualCapped",
+    "stakingToken": "0x1004f41193dFB1f9910Aac1550F45bAc614e0303",
+    "rewardsToken": "0x40aa87891b9571579Fc3cf990084520b2363355B",
+    "accrualToken": "0x0000000000000000000000000000000000000000"
+	}
+]
