@@ -128,7 +128,7 @@ describe('deployments', () => {
 
               expect(stakingRewardsContractAddress).not.toBeNull();
 
-              if (type == 'StakingRewardsAccrual') {
+              if (type == 'StakingRewardsAccrual || StakingRewardsAccrualCapped') {
                 const stakingRewardsContract = StakingRewardsAccrual.at(
                   wallet,
                   stakingRewardsContractAddress,
