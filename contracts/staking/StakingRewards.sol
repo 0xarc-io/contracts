@@ -226,7 +226,7 @@ contract StakingRewards is IStakingRewards, RewardsDistributionRecipient {
             rewards[msg.sender] = 0;
 
             rewardsToken.safeTransfer(msg.sender, reward.mul(2).div(3));
-            rewardsToken.safeTransfer(arcDAO, reward.div(3));
+            rewardsToken.safeTransfer(arcDAO, reward.sub(reward.mul(2).div(3)));
 
             emit RewardPaid(msg.sender, reward);
         }

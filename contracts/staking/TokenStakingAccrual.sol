@@ -14,7 +14,7 @@ contract TokenStakingAccrual is Accrual {
 
     IERC20 public stakingToken;
 
-    mapping (address => uint256) stakedBalance;
+    mapping (address => uint256) public stakedBalance;
 
     uint256 public stakedTotal;
 
