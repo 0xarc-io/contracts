@@ -100,13 +100,17 @@ simpleDescribe('StakingRewards', init, (ctx: ITestContext) => {
 
     const rewardPerToken = await rewardContract.rewardPerToken();
 
-    expect((await rewardToken.balanceOf(userWallet.address)).toNumber()).toBeGreaterThanOrEqual(
-      rewardPerToken.mul(DEPOSIT_AMOUNT).mul(2).div(3).div(BASE).toNumber(),
-    );
+    expect(
+      (await rewardToken.balanceOf(userWallet.address)).gte(
+        rewardPerToken.mul(DEPOSIT_AMOUNT).mul(2).div(3).div(BASE).toNumber(),
+      ),
+    ).toBeTruthy();
 
-    expect((await rewardToken.balanceOf(ownerWallet.address)).toNumber()).toBeGreaterThanOrEqual(
-      rewardPerToken.mul(DEPOSIT_AMOUNT).div(3).div(BASE).toNumber(),
-    );
+    expect(
+      (await rewardToken.balanceOf(ownerWallet.address)).gte(
+        rewardPerToken.mul(DEPOSIT_AMOUNT).div(3).div(BASE).toNumber(),
+      ),
+    ).toBeTruthy();
   });
 
   it('should be able to exit', async () => {
