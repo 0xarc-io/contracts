@@ -1,12 +1,12 @@
 {
 	"targets": {
 		"KYF": {
-			"name": "KYF",
-			"address": "0x404789fD049f56bd9924419F12aFBA1b2573fc20",
-			"source": "KYF",
-			"link": "https://etherscan.io/address/0x404789fD049f56bd9924419F12aFBA1b2573fc20",
+			"name": "KYFV2-T1",
+			"address": "0x1f10ff148a0ad63a57f98530ab472568e90a72c5",
+			"source": "KYFV2",
+			"link": "https://etherscan.io/address/0x1f10ff148a0ad63a57f98530ab472568e90a72c5",
 			"timestamp": "2020-08-31T07:58:25.262Z",
-			"txn": "0x179ccce6c3da4e92c5545a1d6fece8707d4b703ee2b1e831932aded3e32d592b",
+			"txn": "0x2ec44b1141940d1934fcab14e33af07aafcef651f845608b84c0b1e9140c9c7b",
 			"network": "mainnet",
 			"dependencies": {}
 		},
