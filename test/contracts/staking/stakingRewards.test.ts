@@ -102,13 +102,13 @@ simpleDescribe('StakingRewards', init, (ctx: ITestContext) => {
 
     expect(
       (await rewardToken.balanceOf(userWallet.address)).gte(
-        rewardPerToken.mul(DEPOSIT_AMOUNT).mul(2).div(3).div(BASE).toNumber(),
+        rewardPerToken.mul(DEPOSIT_AMOUNT).mul(2).div(3).div(BASE),
       ),
     ).toBeTruthy();
 
     expect(
       (await rewardToken.balanceOf(ownerWallet.address)).gte(
-        rewardPerToken.mul(DEPOSIT_AMOUNT).div(3).div(BASE).toNumber(),
+        rewardPerToken.mul(DEPOSIT_AMOUNT).div(3).div(BASE),
       ),
     ).toBeTruthy();
   });
