@@ -156,6 +156,7 @@ contract StakingRewardsAccrualCapped is StakingRewardsAccrual {
 
     function getReward()
         public
+        updateReward(msg.sender)
     {
         require(
             tokensClaimable == true,
