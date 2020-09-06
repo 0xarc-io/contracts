@@ -76,16 +76,6 @@
 				}
 			}
 		},
-		"StakingRewards-KYF1/LINKUSD-USDC/50-50": {
-			"name": "StakingRewards-KYF1/LINKUSD-USDC/50-50",
-			"address": "0x1C77fCF3204f7E34a9b9c3956e0f6e88A562C454",
-			"source": "StakingRewardsAccrualCapped",
-			"link": "https://rinkeby.etherscan.io/address/0x1C77fCF3204f7E34a9b9c3956e0f6e88A562C454",
-			"timestamp": "2020-09-04T11:21:41.973Z",
-			"txn": "0x880154e5d00686e31ea6ff06c386d320f50f13842d7b4ae73b65d7f6d821844e",
-			"network": "rinkeby",
-			"dependencies": {}
-		},
 		"KYFV2": {
 			"name": "KYFV2",
 			"address": "0x8b35bdDfB497baCeb140fFBbc6FE40EB943E2De9",
@@ -103,6 +93,16 @@
 			"link": "https://rinkeby.etherscan.io/address/0xc8f851A10De8822cC61f18fA0Dcef90AA7058e47",
 			"timestamp": "2020-09-04T11:47:27.419Z",
 			"txn": "0xf816f0b757c4f02d07695eb242b1f49e67beb0eb266b19fc57db730c59b97c92",
+			"network": "rinkeby",
+			"dependencies": {}
+		},
+		"StakingRewards-KYF1/LINKUSD-USDC/50-50": {
+			"name": "StakingRewards-KYF1/LINKUSD-USDC/50-50",
+			"address": "0xD4AA6c7415f387A36977866F3354f5999D064960",
+			"source": "StakingRewardsAccrualCapped",
+			"link": "https://rinkeby.etherscan.io/address/0xD4AA6c7415f387A36977866F3354f5999D064960",
+			"timestamp": "2020-09-06T07:36:47.564Z",
+			"txn": "0xba68b5c19e2fff6bacb72cbd243c8f9a87709b8222df3be5d1fa37f15db29fd1",
 			"network": "rinkeby",
 			"dependencies": {}
 		}
