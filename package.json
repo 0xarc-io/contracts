@@ -7,8 +7,8 @@
     "index.js",
     "dist",
     "publish/deployed/kovan/*.json",
-		"publish/deployed/rinkeby/*.json",
-		"publish/deployed/ropsten/*.json",
+    "publish/deployed/rinkeby/*.json",
+    "publish/deployed/ropsten/*.json",
     "publish/deployed/mainnet/*.json"
   ],
   "author": "Kerman Kohli <kermankohli@gmail.com>",
@@ -82,5 +82,7 @@
     "@openzeppelin/contracts": "^2.5.0",
     "@openzeppelin/upgrades": "^2.8.0",
     "ethers": "^4.0.27"
-  }
+  },
+  "description": "Contracts for the Synthetic Asset Game",
+  "repository": "git@github.com:arcxio/contracts.git"
 }
