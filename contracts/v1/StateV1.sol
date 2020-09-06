@@ -86,7 +86,7 @@ contract StateV1 {
     modifier onlyAdmin() {
         require(
             msg.sender == admin,
-            "StateV1: only core can call"
+            "StateV1: only admin can call"
         );
         _;
     }

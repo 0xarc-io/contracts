@@ -278,7 +278,7 @@ contract CoreV1 is StorageV1, Adminable {
         // 3. Ensure that msg.sender == owner of position
         // 4. Determine if there's enough liquidity of the `borrowAsset`
         // 5. Calculate the amount of collateral actually needed given the `collateralRatio`
-        // 6. Ensure the user has provided enough of the
+        // 6. Ensure the user has provided enough of the collateral asset
 
         // EFFECTS:
         // 1. Increase the collateral amount to calculate the maximum the amount the user can borrow
@@ -497,7 +497,7 @@ contract CoreV1 is StorageV1, Adminable {
         // 2. Calculate how much the user is in debt by
         // 3. Add the liquidation penalty on to the liquidation amount so they have some
         //    margin of safety to make sure they don't get liquidated again
-        // 4. If the collateral to liquidate is greater than the collatera, bound it.
+        // 4. If the collateral to liquidate is greater than the collateral, bound it.
         // 5. Calculate how much of the borrowed asset is to be liquidated based on the collateral delta
         // 6. Decrease the user's debt obligation by that amount
         // 7. Update the new borrow and collateral amounts

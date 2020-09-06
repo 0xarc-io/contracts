@@ -30,25 +30,6 @@ library Math {
         return target.mul(numerator).div(denominator);
     }
 
-    /*
-     * Return target * (numerator / denominator), but rounded up.
-     */
-    function getPartialRoundUp(
-        uint256 target,
-        uint256 numerator,
-        uint256 denominator
-    )
-        internal
-        pure
-        returns (uint256)
-    {
-        if (target == 0 || numerator == 0) {
-            // SafeMath will check for zero denominator
-            return SafeMath.div(0, denominator);
-        }
-        return target.mul(numerator).sub(1).div(denominator).add(1);
-    }
-
     function to128(
         uint256 number
     )

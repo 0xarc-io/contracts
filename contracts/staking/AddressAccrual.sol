@@ -65,7 +65,7 @@ contract AddressAccrual is Ownable, Accrual {
         public
         onlyOwner
     {
-        require(to != address(0), "Cannot mint to zero address");
+        require(to != address(0), "Cannot add zero address");
 
         balances[to] = balances[to].add(value);
         _supply = _supply.add(value);
@@ -78,7 +78,7 @@ contract AddressAccrual is Ownable, Accrual {
         public
         onlyOwner
     {
-        require(from != address(0), "Cannot burn to zero");
+        require(from != address(0), "Cannot remove zero address");
 
         balances[from] = balances[from].sub(value);
         _supply = _supply.sub(value);
