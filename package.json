@@ -33,7 +33,8 @@
     "graph:codegen": "graph codegen",
     "graph:build": "graph build",
     "graph:deploy": "graph deploy arcxgame/contracts-v16 --access-token ff3f054dd82446549e745475ef50391d --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
-    "graph:deploy-local": "graph deploy arcxgame/contracts-v16 --ipfs http://localhost:5001 --node http://127.0.0.1:8020"
+    "graph:deploy-local": "graph deploy arcxgame/contracts-v16 --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
+    "release": "rm -rf dist && yarn tsc && release-it"
   },
   "devDependencies": {
     "@graphprotocol/graph-cli": "^0.18.0",
@@ -82,6 +83,9 @@
     "@openzeppelin/contracts": "^2.5.0",
     "@openzeppelin/upgrades": "^2.8.0",
     "ethers": "^4.0.27"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
   },
   "description": "Contracts for the Synthetic Asset Game",
   "repository": "git@github.com:arcxio/contracts.git"
