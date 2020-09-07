@@ -7,8 +7,6 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
-import {console} from "@nomiclabs/buidler/console.sol";
-
 /**
  * @title Accrual is an abstract contract which allows users of some
  *        distribution to claim a portion of tokens based on their share.

@@ -392,7 +392,6 @@ const deploy = async ({
         deployData: StateV1.getDeployTransaction(
           deployer.account,
           proxy.address,
-          await deployer.account.getAddress(),
           collateralToken,
           syntheticToken.address,
           oracle.address,

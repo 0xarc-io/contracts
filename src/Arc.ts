@@ -59,7 +59,6 @@ export default class Arc {
     this.state = await StateV1.deploy(
       this.wallet,
       this.core.address,
-      await this.wallet.getAddress(),
       config.collateralAsset,
       this.syntheticAsset.address,
       config.oracle,
