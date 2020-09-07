@@ -52,12 +52,9 @@ export default class Arc {
 
     this.core = await CoreV1.at(this.wallet, proxy.address);
 
-    this.syntheticAsset = await SyntheticToken.deploy(
-      this.wallet,
-      proxy.address,
-      config.name,
-      config.symbol,
-    );
+    this.syntheticAsset = await SyntheticToken.deploy(this.wallet, config.name, config.symbol);
+
+    await SyntheticToken.at(this.wallet, this.syntheticAsset.address).addMinter(this.core.address);
 
     this.state = await StateV1.deploy(
       this.wallet,
