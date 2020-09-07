@@ -158,7 +158,6 @@ arcDescribe('StateV1', init, (ctx: ITestContext) => {
         ownerWallet.address,
         ownerWallet.address,
         ownerWallet.address,
-        ownerWallet.address,
         {
           collateralRatio: ArcDecimal.new(1),
           liquidationUserFee: ArcDecimal.new(1),

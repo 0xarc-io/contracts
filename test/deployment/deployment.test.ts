@@ -23,6 +23,8 @@ require('dotenv').config();
 const { loadConnections } = require('../../publish/src/util');
 const { wrap, networks } = require('../..');
 
+jest.setTimeout(30000);
+
 describe('deployments', () => {
   networks
     .filter((n) => n !== 'local')
@@ -55,8 +57,8 @@ describe('deployments', () => {
         const provider = new ethers.providers.JsonRpcProvider(connections.providerUrl);
         const wallet = new ethers.Wallet(connections.privateKey, provider);
 
-        const intendedOwner = wallet.address;
-        const intendedRewarder = wallet.address;
+        const intendedOwner = '0x62F31E08e279f3091d9755a09914DF97554eAe0b';
+        const intendedRewarder = '0x62F31E08e279f3091d9755a09914DF97554eAe0b';
         let contracts = {
           arcxToken: ArcxToken.at(wallet, getContract('ArcxToken')),
           arcDAO: AddressAccrual.at(wallet, getContract('ArcDAO')),
@@ -88,32 +90,30 @@ describe('deployments', () => {
                   syntheticToken.address,
                 );
 
-                expect(synthValue.proxyAddress).toEqual(synthProxy.address);
-                expect(synthValue.syntheticAddress).toEqual(syntheticToken.address);
+                expect(synthValue.proxyAddress).toBe(synthProxy.address);
+                expect(synthValue.syntheticAddress).toBe(syntheticToken.address);
 
                 // @TODO: Make this more accurate
-                expect(synthValue.symbolKey).not.toEqual(AddressZero);
+                expect(synthValue.symbolKey).not.toBe(AddressZero);
               });
 
               it('should have the correct configuration', async () => {
-                expect(await coreV1.getAdmin()).toEqual(intendedOwner);
-                expect(await coreV1.state()).toEqual(stateV1.address);
+                expect(await coreV1.getAdmin()).toBe(intendedOwner);
+                expect(await coreV1.state()).toBe(stateV1.address);
                 expect(await syntheticToken.isValidMinter(synthProxy.address)).toBeTruthy();
-                expect((await syntheticToken.getAllMinters()).length).toEqual(1);
+                expect((await syntheticToken.getAllMinters()).length).toBe(1);
               });
 
               it('should have the correct owners set', async () => {
-                expect(await stateV1.admin()).toEqual(intendedOwner);
-                expect(await stateV1.core()).toEqual(synthProxy.address);
-                expect(await syntheticToken.owner()).toEqual(intendedOwner);
+                expect(await stateV1.owner()).toBe(intendedOwner);
+                expect(await stateV1.core()).toBe(synthProxy.address);
+                expect(await syntheticToken.owner()).toBe(intendedOwner);
               });
 
               it('should have the correct state addresses', async () => {
-                expect(await stateV1.oracle()).toEqual(dependencies.Oracle.address);
-                expect(await stateV1.syntheticAsset()).toEqual(dependencies.SyntheticToken.address);
-                expect(await stateV1.collateralAsset()).toEqual(
-                  dependencies.CollateralToken.address,
-                );
+                expect(await stateV1.oracle()).toBe(dependencies.Oracle.address);
+                expect(await stateV1.syntheticAsset()).toBe(dependencies.SyntheticToken.address);
+                expect(await stateV1.collateralAsset()).toBe(dependencies.CollateralToken.address);
               });
             });
         });

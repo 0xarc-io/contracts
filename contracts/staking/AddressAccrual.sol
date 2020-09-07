@@ -9,8 +9,6 @@ import {Accrual} from "./Accrual.sol";
 
 contract AddressAccrual is Ownable, Accrual {
 
-    IERC20 public claimableToken;
-
     uint256 public _supply = 0;
 
     mapping(address => uint256) public balances;

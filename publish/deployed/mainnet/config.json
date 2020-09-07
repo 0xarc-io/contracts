@@ -4,5 +4,24 @@
 	},
 	"KYFV2": {
 		"deploy": false
+	},
+	"ArcxToken": {
+		"deploy": false
+	},
+	"ArcDAO": {
+		"deploy": false
+	},
+	"SynthRegistry": {
+		"deploy": false
+	},
+	"LINKUSD": {
+		"deploy": false,
+		"dependencies": {
+			"CoreV1": false,
+			"StateV1": false,
+			"Oracle": false,
+			"CollateralToken": false,
+			"SyntheticToken": false
+		}
 	}
 }

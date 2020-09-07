@@ -292,7 +292,10 @@ export default class Deployer {
     // now update the flags to indicate it no longer needs deployment,
     // ignoring this step for local, which wants a full deployment by default
     if (this.configFile && this.network !== 'local' && !this.dryRun) {
-      this.updatedConfig[name] = { deploy: false };
+      this.updatedConfig[name] = {
+        ...this.updatedConfig[name],
+        deploy: false,
+      };
       await fs.writeFileSync(this.configFile, stringify(this.updatedConfig));
     }
   }

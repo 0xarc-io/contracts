@@ -6,6 +6,7 @@ pragma experimental ABIEncoderV2;
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Ownable} from "@openzeppelin/contracts/ownership/Ownable.sol";
 
 import {IOracle} from "../interfaces/IOracle.sol";
 import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
@@ -21,7 +22,7 @@ import {Math} from "../lib/Math.sol";
  * @notice This contract holds all the state regarding a sythetic asset protocol.
  *         The contract has an owner and core address which can call certain functions.
  */
-contract StateV1 {
+contract StateV1 is Ownable {
 
     using Math for uint256;
     using SafeMath for uint256;
@@ -30,7 +31,6 @@ contract StateV1 {
     // ============ Variables ============
 
     address public core;
-    address public admin;
 
     TypesV1.MarketParams public market;
     TypesV1.RiskParams public risk;
@@ -54,7 +54,6 @@ contract StateV1 {
 
     constructor(
         address _core,
-        address _admin,
         address _collateralAsset,
         address _syntheticAsset,
         address _oracle,
@@ -64,7 +63,6 @@ contract StateV1 {
         public
     {
         core = _core;
-        admin = _admin;
         collateralAsset = _collateralAsset;
         syntheticAsset = _syntheticAsset;
 
@@ -83,14 +81,6 @@ contract StateV1 {
         _;
     }
 
-    modifier onlyAdmin() {
-        require(
-            msg.sender == admin,
-            "StateV1: only admin can call"
-        );
-        _;
-    }
-
     // ============ Admin Setters ============
 
     /**
@@ -102,7 +92,7 @@ contract StateV1 {
         address _oracle
     )
         public
-        onlyAdmin
+        onlyOwner
     {
         require(
             _oracle != address(0),
@@ -122,7 +112,7 @@ contract StateV1 {
         TypesV1.MarketParams memory _marketParams
     )
         public
-        onlyAdmin
+        onlyOwner
     {
         market = _marketParams;
         emit MarketParamsUpdated(market);
@@ -137,7 +127,7 @@ contract StateV1 {
         TypesV1.RiskParams memory _riskParams
     )
         public
-        onlyAdmin
+        onlyOwner
     {
         risk = _riskParams;
         emit RiskParamsUpdated(risk);
