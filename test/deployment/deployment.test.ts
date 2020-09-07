@@ -95,15 +95,17 @@ describe('deployments', () => {
                 expect(synthValue.symbolKey).not.toEqual(AddressZero);
               });
 
-              it('should have the correct proxy configuration', async () => {
+              it('should have the correct configuration', async () => {
                 expect(await coreV1.getAdmin()).toEqual(intendedOwner);
                 expect(await coreV1.state()).toEqual(stateV1.address);
+                expect(await syntheticToken.isValidMinter(synthProxy.address)).toBeTruthy();
+                expect((await syntheticToken.getAllMinters()).length).toEqual(1);
               });
 
               it('should have the correct owners set', async () => {
                 expect(await stateV1.admin()).toEqual(intendedOwner);
                 expect(await stateV1.core()).toEqual(synthProxy.address);
-                expect(await syntheticToken.arcAddress()).toEqual(synthProxy.address);
+                expect(await syntheticToken.owner()).toEqual(intendedOwner);
               });
 
               it('should have the correct state addresses', async () => {
