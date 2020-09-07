@@ -5,18 +5,6 @@
 	"ArcDAO": {
 		"deploy": true
 	},
-	"AddressResolver": {
-		"deploy": true
-	},
-	"Balancer/LINKUSD-USDC/50-50": {
-		"deploy": true
-	},
-	"Balancer/ARC-DAI/2-98": {
-		"deploy": true
-	},
-	"KermanRewards": {
-		"deploy": true
-	},
 	"KYF": {
 		"deploy": true
 	},

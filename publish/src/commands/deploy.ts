@@ -380,8 +380,7 @@ const deploy = async ({
         name: name,
         dependency: 'SyntheticToken',
         source: 'SyntheticToken',
-        deployData: SyntheticToken.getDeployTransaction(deployer.account, proxy.address, name, name)
-          .data,
+        deployData: SyntheticToken.getDeployTransaction(deployer.account, name, name).data,
       });
     }
 
@@ -424,6 +423,16 @@ const deploy = async ({
         data: data,
         name: 'CoreV1',
         contract: proxiedCore,
+      });
+    }
+
+    const typedSynthicToken = await SyntheticToken.at(deployer.account, syntheticToken.address);
+    if (!(await typedSynthicToken.isValidMinter(proxy.address))) {
+      const data = typedSynthicToken.interface.functions.addMinter.encode([proxy.address]);
+      await runStep({
+        data: data,
+        name: 'SyntheticToken',
+        contract: typedSynthicToken,
       });
     }
 
