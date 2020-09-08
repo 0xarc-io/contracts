@@ -113,7 +113,7 @@ simpleDescribe('StakingRewards', init, (ctx: ITestContext) => {
     ).toBeTruthy();
   });
 
-  it('should be able to exit', async () => {
+  it('should be able to exit and stil retain rewards', async () => {
     const DEPOSIT_AMOUNT = ArcNumber.new(100);
 
     const rewardContract = await getStakingContractAs(userWallet);
@@ -121,10 +121,25 @@ simpleDescribe('StakingRewards', init, (ctx: ITestContext) => {
     const preBalance = await stakingToken.balanceOf(userWallet.address);
 
     await stakeTokens(rewardContract, DEPOSIT_AMOUNT);
+
+    await rewardToken.mintShare(rewardContract.address, DEPOSIT_AMOUNT);
+    await ownerRewards.notifyRewardAmount(DEPOSIT_AMOUNT);
+
+    await ctx.evm.increaseTime(10);
+    await ctx.evm.mineBlock();
+
     await rewardContract.withdraw(DEPOSIT_AMOUNT);
 
     expect(await stakingToken.balanceOf(userWallet.address)).toEqual(
       DEPOSIT_AMOUNT.add(preBalance),
+    );
+
+    const rewardPerToken = await rewardContract.rewardPerToken();
+
+    expect(
+      await (await rewardContract.earned(userWallet.address)).gte(
+        rewardPerToken.mul(DEPOSIT_AMOUNT).mul(2).div(3).div(BASE),
+      ),
     );
   });
 });

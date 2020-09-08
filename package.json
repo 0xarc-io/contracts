@@ -1,6 +1,6 @@
 {
   "name": "@arcxgame/contracts",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "main": "dist/src/index.js",
   "typings": "dist/src/index.d.ts",
   "files": [
@@ -28,12 +28,12 @@
     "coverage": "yarn run build && yarn buidler coverage --temp artifacts --network coverage",
     "test": "yarn jest test/contracts --runInBand",
     "deploy": "yarn ts-node deployment/deploy.ts",
-    "graph:create": "graph create arcxgame/contracts-v16 --node https://api.thegraph.com/deploy/",
-    "graph:create-local": "graph create arcxgame/contracts-v16 --node http://127.0.0.1:8020",
+    "graph:create": "graph create arcxgame/linkusd --node https://api.thegraph.com/deploy/",
+    "graph:create-local": "graph create arcxgame/linkusd --node http://127.0.0.1:8020",
     "graph:codegen": "graph codegen",
     "graph:build": "graph build",
-    "graph:deploy": "graph deploy arcxgame/contracts-v16 --access-token ff3f054dd82446549e745475ef50391d --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
-    "graph:deploy-local": "graph deploy arcxgame/contracts-v16 --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
+    "graph:deploy": "graph deploy arcxgame/linkusd --access-token ff3f054dd82446549e745475ef50391d --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
+    "graph:deploy-local": "graph deploy arcxgame/linkusd --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
     "release": "rm -rf dist && yarn tsc && release-it"
   },
   "devDependencies": {
