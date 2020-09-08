@@ -6,9 +6,9 @@ schema:
 dataSources:
   - kind: ethereum/contract
     name: CoreV1
-    network: rinkeby
+    network: mainnet
     source:
-      address: '0x1004f41193dFB1f9910Aac1550F45bAc614e0303'
+      address: '0x5568Df89AF6Bc835B876fDc3B2d44ef63530e419'
       abi: CoreV1
       startBlock: 6965000
     mapping:
@@ -26,9 +26,9 @@ dataSources:
       file: ./subgraph/mapping.ts
   - kind: ethereum/contract
     name: StateV1
-    network: rinkeby
+    network: mainnet
     source:
-      address: '0x73BF545Ec09f72d73f79D1Ff73b4104c221d3369'
+      address: '0x94F40fD4018586AaFb8A6AD95441e0b58cc4c058'
       abi: StateV1
       startBlock: 6965000
     mapping:
