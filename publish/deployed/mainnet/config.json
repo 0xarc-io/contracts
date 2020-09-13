@@ -23,5 +23,8 @@
 			"CollateralToken": false,
 			"SyntheticToken": false
 		}
+	},
+	"KYFToken": {
+		"deploy": false
 	}
 }
