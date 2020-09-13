@@ -12,6 +12,13 @@
 		"deploy": false
 	},
 	"LINKUSD": {
-		"deploy": false
+		"deploy": false,
+		"dependencies": {
+			"CoreV1": true,
+			"StateV1": true,
+			"Oracle": true,
+			"CollateralToken": true,
+			"SyntheticToken": true
+		}
 	}
 }
