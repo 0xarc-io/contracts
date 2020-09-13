@@ -154,7 +154,7 @@ describe('Arc Integration', () => {
     expect(await arc.syntheticAsset.totalSupply()).toEqual(ArcNumber.new(200));
   });
 
-  it('should not be able to be liquidate when the price decreases', async () => {
+  it('should be able to be liquidate when the price decreases', async () => {
     // The price of LINK is $20, the user has $200 of debt and
     // currently has $1000 of debt giving a 500% c-ratio.
 
