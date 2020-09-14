@@ -6,7 +6,6 @@ pragma solidity ^0.5.16;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import {Math} from "@openzeppelin/contracts/math/Math.sol";
 
 import {RewardsDistributionRecipient} from "./RewardsDistributionRecipient.sol";
 
@@ -97,7 +96,7 @@ contract StakingRewards is RewardsDistributionRecipient {
         view
         returns (uint256)
     {
-        return Math.min(block.timestamp, periodFinish);
+        return block.timestamp < periodFinish ? block.timestamp : periodFinish;
     }
 
     function actualRewardPerToken()
