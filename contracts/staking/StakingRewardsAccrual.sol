@@ -46,4 +46,36 @@ contract StakingRewardsAccrual is StakingRewards, Accrual {
         return totalSupply();
     }
 
+    function stake(
+        uint256 amount
+    )
+        updateReward(msg.sender)
+        external
+    {
+        _stake(amount);
+    }
+
+    function withdraw(
+        uint256 amount
+    )
+        updateReward(msg.sender)
+        external
+    {
+        _withdraw(amount);
+    }
+
+    function getReward()
+        updateReward(msg.sender)
+        external
+    {
+        _getReward();
+    }
+
+    function exit()
+        updateReward(msg.sender)
+        external
+    {
+        _exit();
+    }
+
 }

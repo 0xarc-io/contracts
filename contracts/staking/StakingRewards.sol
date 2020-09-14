@@ -8,11 +8,9 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/math/Math.sol";
 
-import {IStakingRewards} from "../interfaces/IStakingRewards.sol";
-
 import {RewardsDistributionRecipient} from "./RewardsDistributionRecipient.sol";
 
-contract StakingRewards is IStakingRewards, RewardsDistributionRecipient {
+contract StakingRewards is RewardsDistributionRecipient {
 
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -178,11 +176,10 @@ contract StakingRewards is IStakingRewards, RewardsDistributionRecipient {
 
     /* ========== MUTATIVE FUNCTIONS ========== */
 
-    function stake(
+    function _stake(
         uint256 amount
     )
-        public
-        updateReward(msg.sender)
+        internal
     {
         require(
             amount > 0,
@@ -197,11 +194,10 @@ contract StakingRewards is IStakingRewards, RewardsDistributionRecipient {
         emit Staked(msg.sender, amount);
     }
 
-    function withdraw(
+    function _withdraw(
         uint256 amount
     )
-        public
-        updateReward(msg.sender)
+        internal
     {
         require(
             amount > 0,
@@ -216,9 +212,8 @@ contract StakingRewards is IStakingRewards, RewardsDistributionRecipient {
         emit Withdrawn(msg.sender, amount);
     }
 
-    function getReward()
-        public
-        updateReward(msg.sender)
+    function _getReward()
+        internal
     {
         uint256 reward = rewards[msg.sender];
 
@@ -232,9 +227,9 @@ contract StakingRewards is IStakingRewards, RewardsDistributionRecipient {
         }
     }
 
-    function exit() external {
-        withdraw(_balances[msg.sender]);
-        getReward();
+    function _exit() internal {
+        _withdraw(_balances[msg.sender]);
+        _getReward();
     }
 
     /* ========== RESTRICTED FUNCTIONS ========== */
