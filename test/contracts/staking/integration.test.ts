@@ -17,7 +17,8 @@ import { EVM } from '../../helpers/EVM';
 import { generatedWallets } from '../../../src/utils/generatedWallets';
 import { expectRevert } from '../../../src/utils/expectRevert';
 import ArcNumber from '@src/utils/ArcNumber';
-import { BigNumber } from 'ethers/utils';
+import { BigNumber, BigNumberish } from 'ethers/utils';
+import { TestArc } from '../../../src/TestArc';
 
 let ownerWallet: Wallet;
 let userWallet: Wallet;
@@ -34,6 +35,7 @@ let arcDAO: AddressAccrual;
 let rewardPool: StakingRewardsAccrualCapped;
 let kermanStaking: TokenStakingAccrual;
 let kyf: KYFV2;
+let arc: TestArc;
 
 jest.setTimeout(30000);
 
@@ -41,6 +43,7 @@ const provider = new ethers.providers.JsonRpcProvider();
 const evm = new EVM(provider);
 
 let wallets = generatedWallets(provider);
+let positionId: BigNumberish;
 
 describe('Staking Integration', () => {
   ownerWallet = wallets[0];
@@ -74,14 +77,21 @@ describe('Staking Integration', () => {
 
     kyf = await KYFV2.deploy(ownerWallet);
 
+    arc = await TestArc.init(ownerWallet);
+    await arc.deployTestArc();
+
+    const result = await arc._borrowSynthetic(100, 1000, userWallet);
+    positionId = result.params.id;
+
     await kyf.setVerifier(ownerWallet.address);
     await kyf.setHardCap(10);
 
     await rewardPool.setApprovedKYFInstance(kyf.address, true);
     await rewardPool.setStakeHardCap(100);
-
     await rewardPool.setRewardsDistribution(ownerWallet.address);
     await rewardPool.setRewardsDuration(100);
+    await rewardPool.setStateContract(arc.state.address);
+    await rewardPool.setDebtToStake(10);
   });
 
   it('should be able to get verified', async () => {
@@ -99,7 +109,7 @@ describe('Staking Integration', () => {
     await Token.approve(stakingToken.address, userWallet, rewardPool.address, 100);
 
     const userRewardPool = await StakingRewardsAccrualCapped.at(userWallet, rewardPool.address);
-    await userRewardPool.stake(100);
+    await userRewardPool.stake(100, positionId);
 
     expect((await userRewardPool.balanceOf(userWallet.address)).toNumber()).toEqual(100);
   });
@@ -110,9 +120,9 @@ describe('Staking Integration', () => {
     await stakingToken.mintShare(userWallet.address, 100);
     await Token.approve(stakingToken.address, userWallet, rewardPool.address, 100);
 
-    await expectRevert(userRewardPool.stake(100));
+    await expectRevert(userRewardPool.stake(100, positionId));
     await rewardPool.setStakeHardCap(200);
-    await userRewardPool.stake(100);
+    await userRewardPool.stake(100, positionId);
 
     expect((await userRewardPool.balanceOf(userWallet.address)).toNumber()).toEqual(200);
   });
