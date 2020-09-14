@@ -1,22 +1,33 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.5.16;
+pragma experimental ABIEncoderV2;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {StakingRewardsAccrual} from "./StakingRewardsAccrual.sol";
+import {StakingRewards} from "./StakingRewards.sol";
+import {Accrual} from "./Accrual.sol";
+
+import {TypesV1} from "../v1/TypesV1.sol";
 
 import {IKYFV2} from "../interfaces/IKYFV2.sol";
+import {IStateV1} from "../interfaces/IStateV1.sol";
 
-contract StakingRewardsAccrualCapped is StakingRewardsAccrual {
+contract StakingRewardsAccrualCapped is StakingRewards, Accrual {
 
     /* ========== Variables ========== */
+
+    IStateV1 public state;
+
+    uint256 public debtToStake;
 
     uint256 public hardCap;
 
     bool public tokensClaimable;
 
     mapping (address => bool) public kyfInstances;
+
+    mapping (address => uint256) public stakedPosition;
 
     address[] public kyfInstancesArray;
 
@@ -25,8 +36,11 @@ contract StakingRewardsAccrualCapped is StakingRewardsAccrual {
     event HardCapSet(uint256 _cap);
 
     event KyfStatusUpdated(address _address, bool _status);
+    event PositionStaked(address _address, uint256 _positionId);
 
     event ClaimableStatusUpdated(bool _status);
+
+    event UserSlashed(address _user, address _slasher, uint256 _amount);
 
     /* ========== Constructor ========== */
 
@@ -38,18 +52,36 @@ contract StakingRewardsAccrualCapped is StakingRewardsAccrual {
         address _feesToken
     )
         public
-        StakingRewardsAccrual(
+        StakingRewards(
             _arcDAO,
             _rewardsDistribution,
             _rewardsToken,
-            _stakingToken,
+            _stakingToken
+        )
+        Accrual(
             _feesToken
         )
-    {
-
-    }
+    { }
 
     /* ========== Public View Functions ========== */
+
+    function getUserBalance(
+        address owner
+    )
+        public
+        view
+        returns (uint256)
+    {
+        return balanceOf(owner);
+    }
+
+    function getTotalBalance()
+        public
+        view
+        returns (uint256)
+    {
+        return totalSupply();
+    }
 
     function getApprovedKyfInstancesArray()
         public
@@ -57,6 +89,27 @@ contract StakingRewardsAccrualCapped is StakingRewardsAccrual {
         returns (address[] memory)
     {
         return kyfInstancesArray;
+    }
+
+    function isMinter(
+        address _user,
+        uint256 _stakeAmount,
+        uint256 _positionId
+    )
+        public
+        view
+        returns (bool)
+    {
+        TypesV1.Position memory position = state.getPosition(_positionId);
+
+        if (position.owner != _user) {
+            return false;
+        }
+
+        // You've staked 50 and the debtToStake = 10, so you need at least $5 of debt
+        uint256 requiredDebt = _stakeAmount.div(debtToStake);
+
+        return uint256(position.borrowedAmount.value) >= requiredDebt;
     }
 
     function isVerified(
@@ -131,15 +184,34 @@ contract StakingRewardsAccrualCapped is StakingRewardsAccrual {
         emit KyfStatusUpdated(_kyfContract, false);
     }
 
+    function setDebtToStake(
+        uint256 _debtToStake
+    )
+        public
+        onlyOwner
+    {
+        debtToStake = _debtToStake;
+    }
+
+    function setStateContract(
+        address _state
+    )
+        public
+        onlyOwner
+    {
+        state = IStateV1(_state);
+    }
+
     /* ========== Public Functions ========== */
 
     function stake(
-        uint256 _amount
+        uint256 amount,
+        uint256 positionId
     )
-        public
+        external
         updateReward(msg.sender)
     {
-        uint256 totalBalance = balanceOf(msg.sender).add(_amount);
+        uint256 totalBalance = balanceOf(msg.sender).add(amount);
 
         require(
             totalBalance <= hardCap,
@@ -151,11 +223,42 @@ contract StakingRewardsAccrualCapped is StakingRewardsAccrual {
             "Must be KYF registered to participate"
         );
 
-        super.stake(_amount);
+        require(
+            isMinter(msg.sender, amount, positionId),
+            "Must be a valid minter"
+        );
+
+        stakedPosition[msg.sender] = positionId;
+
+        _stake(amount);
+
+        emit PositionStaked(msg.sender, positionId);
+    }
+
+    function slash(
+        address user
+    )
+        external
+        updateReward(user)
+    {
+        require(
+            isMinter(
+                user,
+                balanceOf(user),
+                stakedPosition[user]
+            ) == false,
+            "You cant slash a user who has staked"
+        );
+
+        uint256 reward = rewards[user];
+        rewards[msg.sender] = rewards[msg.sender].add(reward);
+        rewards[user] = 0;
+
+        emit UserSlashed(user, msg.sender, reward);
     }
 
     function getReward()
-        public
+        external
         updateReward(msg.sender)
     {
         require(
@@ -163,7 +266,23 @@ contract StakingRewardsAccrualCapped is StakingRewardsAccrual {
             "Tokens cannnot be claimed yet"
         );
 
-        super.getReward();
+        _getReward();
+    }
+
+    function withdraw(
+        uint256 amount
+    )
+        updateReward(msg.sender)
+        external
+    {
+        _withdraw(amount);
+    }
+
+    function exit()
+        updateReward(msg.sender)
+        external
+    {
+        _exit();
     }
 
 }

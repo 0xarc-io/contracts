@@ -11,14 +11,18 @@ import ArcNumber from '@src/utils/ArcNumber';
 import { StakingRewardsAccrualCapped, KYFV2, KYF } from '@src/typings';
 import { AddressZero } from 'ethers/constants';
 import { expectRevert } from '../../../src/utils/expectRevert';
+import { TestArc } from '../../../src/TestArc';
 
 let ownerWallet: Wallet;
 let userWallet: Wallet;
 let arcWallet: Wallet;
+let slasherWallet: Wallet;
 let distributionWallet: Wallet;
 let otherWallet: Wallet;
 
 jest.setTimeout(30000);
+
+let arc: TestArc;
 
 let stakingRewards: StakingRewardsAccrualCapped;
 let stakingToken: TestToken;
@@ -35,6 +39,7 @@ async function init(ctx: ITestContext): Promise<void> {
   arcWallet = ctx.wallets[2];
   distributionWallet = ctx.wallets[3];
   otherWallet = ctx.wallets[4];
+  slasherWallet = ctx.wallets[5];
 }
 
 simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
@@ -45,7 +50,10 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
     kyfTranche1 = await KYFV2.deploy(ownerWallet);
     kyfTranche2 = await KYFV2.deploy(ownerWallet);
 
-    stakingRewards = await StakingRewardsAccrualCapped.deploy(
+    arc = await TestArc.init(ownerWallet);
+    await arc.deployTestArc();
+
+    stakingRewards = await StakingRewardsAccrualCapped.awaitDeployment(
       ownerWallet,
       ownerWallet.address,
       distributionWallet.address,
@@ -54,6 +62,8 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
       AddressZero,
     );
 
+    await stakingRewards.setStateContract(arc.state.address);
+    await stakingRewards.setDebtToStake(10);
     await stakingRewards.setRewardsDistribution(ownerWallet.address);
     await stakingRewards.setRewardsDuration(100);
   });
@@ -69,6 +79,32 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
   async function approve(kyf: KYFV2) {
     await stakingRewards.setApprovedKYFInstance(kyf.address, true);
   }
+
+  describe('#setDebtToStake', () => {
+    it('should not be able to set the ratio as a non-owner', async () => {
+      const contract = await getContract(otherWallet);
+      await expectRevert(contract.setDebtToStake(100));
+    });
+
+    it('should be able to set the ratio as the owner', async () => {
+      const contract = await getContract(ownerWallet);
+      await contract.setDebtToStake(100);
+      expect(await (await contract.debtToStake()).toNumber()).toEqual(100);
+    });
+  });
+
+  describe('#setStateContract', () => {
+    it('should not be able to set the hard cap as a non-owner', async () => {
+      const contract = await getContract(otherWallet);
+      await expectRevert(contract.setStateContract(otherWallet.address));
+    });
+
+    it('should be able to set the hard cap as the owner', async () => {
+      const contract = await getContract(ownerWallet);
+      await contract.setStateContract(ownerWallet.address);
+      expect(await await contract.state()).toEqual(ownerWallet.address);
+    });
+  });
 
   describe('#setStakeHardCap', () => {
     it('should not be able to set the hard cap as a non-owner', async () => {
@@ -130,6 +166,7 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
 
   describe('#stake', () => {
     let signature;
+    let positionId: BigNumberish;
 
     beforeEach(async () => {
       await stakingRewards.setStakeHardCap(50);
@@ -142,6 +179,9 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
       const hash = ethers.utils.solidityKeccak256(['address'], [userWallet.address]);
       const signedMessage = await ownerWallet.signMessage(ethers.utils.arrayify(hash));
       signature = ethers.utils.splitSignature(signedMessage);
+
+      const result = await arc._borrowSynthetic(10, 100, userWallet);
+      positionId = result.params.id;
     });
 
     it('should not be able to stake over the hard cap', async () => {
@@ -151,7 +191,8 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
       const userStaking = await getContract(userWallet);
       await stakingToken.mintShare(userWallet.address, 51);
       await Token.approve(stakingToken.address, userWallet, stakingRewards.address, 50);
-      await expectRevert(userStaking.stake(51));
+
+      await expectRevert(userStaking.stake(51, positionId));
     });
 
     it('should not be able to stake over the hard cap in total', async () => {
@@ -161,9 +202,9 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
       const userStaking = await getContract(userWallet);
       await stakingToken.mintShare(userWallet.address, 75);
       await Token.approve(stakingToken.address, userWallet, stakingRewards.address, 75);
-      await userStaking.stake(25);
-      await userStaking.stake(25);
-      await expectRevert(userStaking.stake(25));
+      await userStaking.stake(25, positionId);
+      await userStaking.stake(25, positionId);
+      await expectRevert(userStaking.stake(25, positionId));
     });
 
     it('should not be able to staking without v1 verification', async () => {
@@ -172,7 +213,7 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
       const userStaking = await getContract(userWallet);
       await stakingToken.mintShare(userWallet.address, 50);
       await Token.approve(stakingToken.address, userWallet, stakingRewards.address, 50);
-      await expectRevert(userStaking.stake(50));
+      await expectRevert(userStaking.stake(50, positionId));
     });
 
     it('should not be able to staking without v1 being added', async () => {
@@ -181,7 +222,7 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
       const userStaking = await getContract(userWallet);
       await stakingToken.mintShare(userWallet.address, 50);
       await Token.approve(stakingToken.address, userWallet, stakingRewards.address, 50);
-      await expectRevert(userStaking.stake(50));
+      await expectRevert(userStaking.stake(50, positionId));
     });
 
     it('should not be able to staking without v2 verification', async () => {
@@ -191,7 +232,30 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
       const userStaking = await getContract(userWallet);
       await stakingToken.mintShare(userWallet.address, 50);
       await Token.approve(stakingToken.address, userWallet, stakingRewards.address, 50);
-      await expectRevert(userStaking.stake(50));
+      await expectRevert(userStaking.stake(50, positionId));
+    });
+
+    it('should not able to stake with an invalid position', async () => {
+      await verifyUserIn(kyfTranche1, signature);
+      await approve(kyfTranche1);
+
+      const userStaking = await getContract(userWallet);
+      await stakingToken.mintShare(userWallet.address, 50);
+      await Token.approve(stakingToken.address, userWallet, stakingRewards.address, 50);
+      await expectRevert(userStaking.stake(50, 90));
+    });
+
+    it('should not able to stake without enough debt', async () => {
+      await verifyUserIn(kyfTranche1, signature);
+      await approve(kyfTranche1);
+
+      const userStaking = await getContract(userWallet);
+      await stakingToken.mintShare(userWallet.address, 50);
+      await Token.approve(stakingToken.address, userWallet, stakingRewards.address, 50);
+
+      // To stake 50, you need at least $5 in debt (10 debt to stake ratio)
+      await arc._repay(positionId, 9, 0, userWallet);
+      await expectRevert(userStaking.stake(50, positionId));
     });
 
     it('should able to stake the hard cap', async () => {
@@ -201,7 +265,7 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
       const userStaking = await getContract(userWallet);
       await stakingToken.mintShare(userWallet.address, 50);
       await Token.approve(stakingToken.address, userWallet, stakingRewards.address, 50);
-      await userStaking.stake(50);
+      await userStaking.stake(50, positionId);
       expect(await (await userStaking.balanceOf(userWallet.address)).toNumber()).toEqual(50);
     });
 
@@ -212,9 +276,98 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
       const userStaking = await getContract(userWallet);
       await stakingToken.mintShare(userWallet.address, 50);
       await Token.approve(stakingToken.address, userWallet, stakingRewards.address, 50);
-      await userStaking.stake(25);
-      await userStaking.stake(25);
+      await userStaking.stake(25, positionId);
+      await userStaking.stake(25, positionId);
       expect(await (await userStaking.balanceOf(userWallet.address)).toNumber()).toEqual(50);
+    });
+  });
+
+  describe('#slash', () => {
+    let positionId: BigNumberish;
+    const expectedReward = new BigNumber(50).mul(2).div(3);
+
+    beforeEach(async () => {
+      await stakingRewards.setStakeHardCap(50);
+
+      await kyfTranche1.setVerifier(ownerWallet.address);
+      await kyfTranche1.setHardCap(10);
+
+      const hash = ethers.utils.solidityKeccak256(['address'], [userWallet.address]);
+      const signedMessage = await ownerWallet.signMessage(ethers.utils.arrayify(hash));
+      const signature = ethers.utils.splitSignature(signedMessage);
+
+      await verifyUserIn(kyfTranche1, signature);
+      await approve(kyfTranche1);
+
+      await rewardToken.mintShare(stakingRewards.address, 100);
+      await stakingRewards.notifyRewardAmount(100);
+
+      const userStaking = await getContract(userWallet);
+      await stakingToken.mintShare(userWallet.address, 50);
+      await Token.approve(stakingToken.address, userWallet, stakingRewards.address, 50);
+
+      const result = await arc._borrowSynthetic(10, 100, userWallet);
+      positionId = result.params.id;
+      await userStaking.stake(50, result.params.id);
+
+      // 100 Rewards, in half the time with the 100% stake == 50 tokens
+      await ctx.evm.increaseTime(50);
+      await ctx.evm.mineBlock();
+
+      expect(
+        await (await stakingRewards.earned(userWallet.address)).toNumber(),
+      ).toBeGreaterThanOrEqual(expectedReward.toNumber());
+
+      expect(
+        await (await stakingRewards.earned(userWallet.address)).toNumber(),
+      ).toBeLessThanOrEqual(expectedReward.toNumber());
+
+      await stakingRewards.setTokensClaimable(true);
+    });
+
+    it('should not be able to slash a user with enough debt', async () => {
+      const contract = await getContract(slasherWallet);
+      await expectRevert(contract.slash(userWallet.address));
+    });
+
+    it('should be able to slash if the user does not have debt', async () => {
+      const contract = await getContract(slasherWallet);
+      // The sneaky user repays their debt
+      await arc.repay(positionId, 10, 0, userWallet);
+
+      const preSlashBalance = await stakingRewards.balanceOf(userWallet.address);
+
+      // A good slasher catches them and slashes their balance
+      await contract.slash(userWallet.address);
+
+      const postSlashBlaance = await stakingRewards.balanceOf(userWallet.address);
+
+      // We ensure that the user didn't actually lose any funds
+      expect(preSlashBalance).toEqual(postSlashBlaance);
+
+      // The slasher's earnings should be good
+      expect(
+        await (await stakingRewards.earned(slasherWallet.address)).toNumber(),
+      ).toBeGreaterThanOrEqual(expectedReward.toNumber());
+
+      // The user should not have no earnings
+      expect(await (await stakingRewards.earned(userWallet.address)).toNumber()).toEqual(0);
+
+      // We now try to slash the user again
+      await contract.slash(userWallet.address);
+      await contract.getReward();
+
+      // The slasher should still be good
+      expect(
+        await (await rewardToken.balanceOf(slasherWallet.address)).toNumber(),
+      ).toBeGreaterThanOrEqual(expectedReward.toNumber());
+
+      // Let's make sure the slashed user doesnt lose their funds
+      const userBalance = await stakingRewards.balanceOf(userWallet.address);
+      await (await getContract(userWallet)).exit();
+
+      // Hooray, they got their funds back
+      expect(await stakingToken.balanceOf(userWallet.address)).toEqual(userBalance);
     });
   });
 
@@ -238,7 +391,9 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
       const userStaking = await getContract(userWallet);
       await stakingToken.mintShare(userWallet.address, 50);
       await Token.approve(stakingToken.address, userWallet, stakingRewards.address, 50);
-      await userStaking.stake(50);
+
+      const result = await arc._borrowSynthetic(10, 100, userWallet);
+      await userStaking.stake(50, result.params.id);
 
       // 100 Rewards, in half the time with the 100% stake == 50 tokens
       await ctx.evm.increaseTime(50);
