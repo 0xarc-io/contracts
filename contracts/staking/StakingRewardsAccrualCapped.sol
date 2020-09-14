@@ -272,15 +272,15 @@ contract StakingRewardsAccrualCapped is StakingRewards, Accrual {
     function withdraw(
         uint256 amount
     )
-        updateReward(msg.sender)
         external
+        updateReward(msg.sender)
     {
         _withdraw(amount);
     }
 
     function exit()
-        updateReward(msg.sender)
         external
+        updateReward(msg.sender)
     {
         _exit();
     }
