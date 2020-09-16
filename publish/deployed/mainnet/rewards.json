@@ -1,9 +1,16 @@
 [
 	{
-    "name": "KYF1/LINKUSD-USDC/50-50",
-    "type": "StakingRewardsAccrualCapped",
-    "stakingToken": "0x5dcb5baa17a5af85aaec5d2b422cab13c0141bce",
-    "rewardsToken": "0xED30Dd7E50EdF3581AD970eFC5D9379Ce2614AdB",
-    "accrualToken": "0xba100000625a3754423978a60c9317c58a424e3d"
+        "name": "KYF1/LINKUSD-USDC/50-50",
+        "type": "StakingRewardsAccrualCapped",
+        "stakingToken": "0x5dcb5baa17a5af85aaec5d2b422cab13c0141bce",
+        "rewardsToken": "0xED30Dd7E50EdF3581AD970eFC5D9379Ce2614AdB",
+        "accrualToken": "0xba100000625a3754423978a60c9317c58a424e3d"
+    },
+    {
+        "name": "KYF1.1/LINKUSD-USDC/50-50",
+        "type": "StakingRewardsAccrualCapped",
+        "stakingToken": "0x5dcb5baa17a5af85aaec5d2b422cab13c0141bce",
+        "rewardsToken": "0xED30Dd7E50EdF3581AD970eFC5D9379Ce2614AdB",
+        "accrualToken": "0xba100000625a3754423978a60c9317c58a424e3d"
 	}
 ]
