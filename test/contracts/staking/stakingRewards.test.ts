@@ -1,6 +1,5 @@
 import 'jest';
 
-import { StakingRewards } from '@src/typings/StakingRewards';
 import { TestToken } from '@src/typings/TestToken';
 import simpleDescribe from '@test/helpers/simpleDescribe';
 import { ITestContext } from '@test/helpers/simpleDescribe';
@@ -8,6 +7,8 @@ import { Wallet } from 'ethers';
 import Token from '@src/utils/Token';
 import { BigNumber, BigNumberish } from 'ethers/utils';
 import ArcNumber from '@src/utils/ArcNumber';
+import { StakingRewardsAccrual } from '@src/typings';
+import { AddressZero } from 'ethers/constants';
 
 let ownerWallet: Wallet;
 let userWallet: Wallet;
@@ -16,7 +17,7 @@ let distributionWallet: Wallet;
 
 jest.setTimeout(30000);
 
-let ownerRewards: StakingRewards;
+let ownerRewards: StakingRewardsAccrual;
 let stakingToken: TestToken;
 let rewardToken: TestToken;
 
@@ -34,12 +35,13 @@ simpleDescribe('StakingRewards', init, (ctx: ITestContext) => {
     stakingToken = await TestToken.deploy(ownerWallet, 'LINKUSD/USDC 50/50', 'BPT');
     rewardToken = await TestToken.deploy(ownerWallet, 'Arc Token', 'ARC');
 
-    ownerRewards = await StakingRewards.deploy(
+    ownerRewards = await StakingRewardsAccrual.deploy(
       ownerWallet,
       ownerWallet.address,
       distributionWallet.address,
       rewardToken.address,
       stakingToken.address,
+      AddressZero,
     );
 
     await ownerRewards.setRewardsDistribution(ownerWallet.address);
@@ -47,10 +49,10 @@ simpleDescribe('StakingRewards', init, (ctx: ITestContext) => {
   });
 
   async function getStakingContractAs(caller: Wallet) {
-    return await StakingRewards.at(caller, ownerRewards.address);
+    return await StakingRewardsAccrual.at(caller, ownerRewards.address);
   }
 
-  async function stakeTokens(contract: StakingRewards, tokens: BigNumberish) {
+  async function stakeTokens(contract: StakingRewardsAccrual, tokens: BigNumberish) {
     await stakingToken.mintShare(userWallet.address, tokens);
     await Token.approve(stakingToken.address, userWallet, contract.address, tokens);
     await contract.stake(tokens);
