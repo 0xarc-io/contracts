@@ -19,7 +19,9 @@ contract StakingRewardsAccrualCapped is StakingRewards, Accrual {
 
     IStateV1 public state;
 
-    uint256 public debtToStake;
+    uint256 public debtRequirement;
+
+    uint256 public debtDeadline;
 
     uint256 public hardCap;
 
@@ -106,10 +108,7 @@ contract StakingRewardsAccrualCapped is StakingRewards, Accrual {
             return false;
         }
 
-        // You've staked 50 and the debtToStake = 10, so you need at least $5 of debt
-        uint256 requiredDebt = _stakeAmount.div(debtToStake);
-
-        return uint256(position.borrowedAmount.value) >= requiredDebt;
+        return uint256(position.borrowedAmount.value) >= debtRequirement;
     }
 
     function isVerified(
@@ -184,13 +183,22 @@ contract StakingRewardsAccrualCapped is StakingRewards, Accrual {
         emit KyfStatusUpdated(_kyfContract, false);
     }
 
-    function setDebtToStake(
-        uint256 _debtToStake
+    function setDebtRequirement(
+        uint256 _debtRequirement
     )
         public
         onlyOwner
     {
-        debtToStake = _debtToStake;
+        debtRequirement = _debtRequirement;
+    }
+
+    function setDebtDeadline(
+        uint256 _debtDeadline
+    )
+        public
+        onlyOwner
+    {
+        debtDeadline = _debtDeadline;
     }
 
     function setStateContract(
