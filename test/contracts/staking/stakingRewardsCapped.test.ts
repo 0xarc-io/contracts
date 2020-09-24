@@ -325,10 +325,16 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
       await stakingRewards.setTokensClaimable(true);
     });
 
-    it('should not be able to slash a user with enough debt', async () => {
+    it.only('should not be able to slash a user with enough debt', async () => {
       const contract = await getContract(slasherWallet);
       await expectRevert(contract.slash(userWallet.address));
     });
+
+    it('should not be able to slash past the debt deadline', async () => {});
+
+    it('should not be able to slash as a non-kyf user', async () => {});
+
+    it('should be able to slash past the debt deadline', async () => {});
 
     it('should be able to slash if the user does not have debt', async () => {
       const contract = await getContract(slasherWallet);
