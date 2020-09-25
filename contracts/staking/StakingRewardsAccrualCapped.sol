@@ -5,6 +5,8 @@ pragma experimental ABIEncoderV2;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+import {console} from "@nomiclabs/buidler/console.sol";
+
 import {StakingRewards} from "./StakingRewards.sol";
 import {Accrual} from "./Accrual.sol";
 
@@ -250,12 +252,25 @@ contract StakingRewardsAccrualCapped is StakingRewards, Accrual {
         updateReward(user)
     {
         require(
+            isVerified(msg.sender) == true,
+            "Must be KYF registered to participate"
+        );
+
+        require(
             isMinter(
                 user,
                 balanceOf(user),
                 stakedPosition[user]
             ) == false,
             "You cant slash a user who has staked"
+        );
+
+        console.log("timestamp %s", block.timestamp);
+        console.log("debt deadline %s", debtDeadline);
+
+        require(
+            block.timestamp < debtDeadline,
+            "You cannot slash after the debt deadline"
         );
 
         uint256 reward = rewards[user];
