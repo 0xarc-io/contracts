@@ -346,6 +346,9 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
 
     it('should not be able to slash a user with enough debt', async () => {
       const contract = await getContract(slasherWallet);
+      await arc.repay(positionId, 10, 0, userWallet);
+      await ctx.evm.increaseTime(155);
+      await ctx.evm.mineBlock();
       await expectRevert(contract.slash(userWallet.address));
     });
 
