@@ -40,6 +40,15 @@
 			"network": "rinkeby",
 			"dependencies": {}
 		},
+		"CoreV1": {
+			"dependency": "CoreV1",
+			"address": "0x89B84723455cB8664d9d878F7e0FF7B0B70B44D4",
+			"source": "CoreV1",
+			"link": "https://rinkeby.etherscan.io/address/0x89B84723455cB8664d9d878F7e0FF7B0B70B44D4",
+			"timestamp": "2020-09-09T08:35:32.214Z",
+			"txn": "0x876e3b452e3d490e069144ee7300413014d4a29f0f2b84310b1ed5727de167d8",
+			"network": "rinkeby"
+		},
 		"LINKUSD": {
 			"name": "LINKUSD",
 			"address": "0x5401D0e09F8e517872fb412347dd0886F896a2c7",
@@ -65,15 +74,6 @@
 					"link": "https://rinkeby.etherscan.io/address/0x4239228CC7DEB4dFdc8273bFF5C421af0B92DC8A",
 					"timestamp": "2020-09-09T08:35:16.667Z",
 					"txn": "0xa4e4011dc0793643067a3f24f533dbd34a8acdaed86f370682b015031042c18c",
-					"network": "rinkeby"
-				},
-				"CoreV1": {
-					"dependency": "CoreV1",
-					"address": "0x89B84723455cB8664d9d878F7e0FF7B0B70B44D4",
-					"source": "CoreV1",
-					"link": "https://rinkeby.etherscan.io/address/0x89B84723455cB8664d9d878F7e0FF7B0B70B44D4",
-					"timestamp": "2020-09-09T08:35:32.214Z",
-					"txn": "0x876e3b452e3d490e069144ee7300413014d4a29f0f2b84310b1ed5727de167d8",
 					"network": "rinkeby"
 				},
 				"SyntheticToken": {

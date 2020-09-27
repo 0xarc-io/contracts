@@ -14,7 +14,7 @@
 	"SynthRegistry": {
 		"deploy": false
 	},
-	"LINKUSD": {
+	"SynthLINKUSD": {
 		"deploy": false,
 		"dependencies": {
 			"CoreV1": false,

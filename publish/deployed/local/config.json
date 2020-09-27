@@ -11,6 +11,9 @@
 	"SynthRegistry": {
 		"deploy": true
 	},
+	"CoreV2": {
+		"deploy": true
+	},
 	"LINKUSD": {
 		"deploy": true,
 		"dependencies": {
