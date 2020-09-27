@@ -139,11 +139,11 @@ describe('Staking Integration', () => {
     await evm.mineBlock();
 
     const userRewardPool = await StakingRewardsAccrualCapped.at(userWallet, rewardPool.address);
-    await expectRevert(userRewardPool.getReward());
+    await expectRevert(userRewardPool.getReward(userWallet.address));
     await expectRevert(userRewardPool.setTokensClaimable(true));
 
     await rewardPool.setTokensClaimable(true);
-    await userRewardPool.getReward();
+    await userRewardPool.getReward(userWallet.address);
 
     expect(await (await arcToken.balanceOf(userWallet.address)).toNumber()).toBeGreaterThanOrEqual(
       new BigNumber(100).mul(2).div(3).toNumber(),

@@ -6,10 +6,9 @@ pragma solidity ^0.5.16;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import {Ownable} from "@openzeppelin/contracts/ownership/Ownable.sol";
 
-import {RewardsDistributionRecipient} from "./RewardsDistributionRecipient.sol";
-
-contract StakingRewards is RewardsDistributionRecipient {
+contract StakingRewards is Ownable {
 
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -20,6 +19,7 @@ contract StakingRewards is RewardsDistributionRecipient {
     IERC20 public stakingToken;
 
     address public arcDAO;
+    address public rewardsDistribution;
 
     uint256 public periodFinish = 0;
     uint256 public rewardRate = 0;
@@ -52,6 +52,14 @@ contract StakingRewards is RewardsDistributionRecipient {
             rewards[account] = actualEarned(account);
             userRewardPerTokenPaid[account] = rewardPerTokenStored;
         }
+        _;
+    }
+
+    modifier onlyRewardsDistribution() {
+        require(
+            msg.sender == rewardsDistribution,
+            "Caller is not RewardsDistribution contract"
+        );
         _;
     }
 
@@ -211,24 +219,19 @@ contract StakingRewards is RewardsDistributionRecipient {
         emit Withdrawn(msg.sender, amount);
     }
 
-    function _getReward()
+    function _getReward(address user)
         internal
     {
-        uint256 reward = rewards[msg.sender];
+        uint256 reward = rewards[user];
 
         if (reward > 0) {
-            rewards[msg.sender] = 0;
+            rewards[user] = 0;
 
-            rewardsToken.safeTransfer(msg.sender, reward.mul(2).div(3));
+            rewardsToken.safeTransfer(user, reward.mul(2).div(3));
             rewardsToken.safeTransfer(arcDAO, reward.sub(reward.mul(2).div(3)));
 
-            emit RewardPaid(msg.sender, reward);
+            emit RewardPaid(user, reward);
         }
-    }
-
-    function _exit() internal {
-        _withdraw(_balances[msg.sender]);
-        _getReward();
     }
 
     /* ========== RESTRICTED FUNCTIONS ========== */
@@ -293,5 +296,14 @@ contract StakingRewards is RewardsDistributionRecipient {
         );
         rewardsDuration = _rewardsDuration;
         emit RewardsDurationUpdated(rewardsDuration);
+    }
+
+    function setRewardsDistribution(
+        address _rewardsDistribution
+    )
+        external
+        onlyOwner
+    {
+        rewardsDistribution = _rewardsDistribution;
     }
 }

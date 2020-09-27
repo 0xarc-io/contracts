@@ -49,7 +49,7 @@ contract StakingRewardsAccrual is StakingRewards, Accrual {
     function stake(
         uint256 amount
     )
-        external
+        public
         updateReward(msg.sender)
     {
         _stake(amount);
@@ -58,24 +58,25 @@ contract StakingRewardsAccrual is StakingRewards, Accrual {
     function withdraw(
         uint256 amount
     )
-        external
+        public
         updateReward(msg.sender)
     {
         _withdraw(amount);
     }
 
     function getReward()
-        external
+        public
         updateReward(msg.sender)
     {
-        _getReward();
+        _getReward(msg.sender);
     }
 
     function exit()
         external
         updateReward(msg.sender)
     {
-        _exit();
+        withdraw(balanceOf(msg.sender));
+        getReward();
     }
 
 }

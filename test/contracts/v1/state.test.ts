@@ -44,7 +44,6 @@ arcDescribe('StateV1', init, (ctx: ITestContext) => {
         syntheticLimit: '500',
         positionCollateralMinimum: '',
       });
-      console.log(tx.data);
     });
   });
 
