@@ -79,11 +79,20 @@ const versionsUpdate = async ({ versionTag, release }) => {
             'adding it as current',
           ),
         );
-        entry.contracts[name] = {
-          address,
-          status: 'current',
-          keccak256: (deployment.sources[source].source || {}).keccak256,
-        };
+
+        if (!source) {
+          entry.contracts[name] = {
+            address,
+            status: 'current',
+            keccak256: '',
+          };
+        } else {
+          entry.contracts[name] = {
+            address,
+            status: 'current',
+            keccak256: (deployment.sources[source].source || {}).keccak256,
+          };
+        }
 
         // look for that same name with status of current and update it
         const versionsValues: any = Object.values(versions);

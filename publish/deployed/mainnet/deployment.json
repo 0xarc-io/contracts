@@ -98,7 +98,7 @@
 				"CollateralToken": {
 					"dependency": "CollateralToken",
 					"address": "0x514910771AF9Ca656af840dff83E8264EcF986CA",
-					"source": "IERC20",
+					"source": "",
 					"link": "",
 					"timestamp": "",
 					"txn": "",
