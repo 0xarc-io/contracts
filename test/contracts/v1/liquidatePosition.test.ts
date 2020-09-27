@@ -75,13 +75,14 @@ arcDescribe('#Actions.liquidatePosition()', init, (ctx: ITestContext) => {
     await expectRevert(ctx.arc.liquidatePosition(result.params.id, liquidatorWallet));
 
     const expectedReward = new BigNumber('529629629629629628');
+    const expectedCut = new BigNumber('81481481481481481');
 
-    expect(await ctx.arc.collateralAsset.balanceOf(liquidatorWallet.address)).toEqual(
-      expectedReward.div(2),
+    expect((await ctx.arc.collateralAsset.balanceOf(liquidatorWallet.address)).toString()).toEqual(
+      expectedReward.sub(expectedCut).toString(),
     );
 
-    expect(await ctx.arc.collateralAsset.balanceOf(ctx.arc.core.address)).toEqual(
-      expectedReward.div(2),
+    expect((await ctx.arc.collateralAsset.balanceOf(ctx.arc.core.address)).toString()).toEqual(
+      expectedCut.toString(),
     );
   });
 

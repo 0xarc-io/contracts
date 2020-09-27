@@ -2,9 +2,9 @@ import { BigNumberish } from 'ethers/utils';
 import { Signer } from 'ethers';
 
 export type SynthAddressBook = {
-  stateV1?: string;
+  state?: string;
   proxy?: string;
-  coreV1?: string;
+  core?: string;
   syntheticToken?: string;
   oracle?: string;
   collateralAsset?: string;
