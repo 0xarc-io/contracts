@@ -160,13 +160,13 @@ contract AdminRewards is Ownable {
         uint256 amount
     )
         public
-    {}
+    { /* solium-disable-line no-empty-blocks */ }
 
     function withdraw(
         uint256 amount
     )
         public
-    {}
+    { /* solium-disable-line no-empty-blocks */ }
 
     function getReward()
         public
