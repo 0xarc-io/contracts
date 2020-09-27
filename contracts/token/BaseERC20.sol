@@ -404,6 +404,6 @@ contract BaseERC20 is IERC20 {
         address from,
         address to,
         uint256 amount
-    ) internal { }
+    ) internal { /* solium-disable-line no-empty-blocks */ }
 
 }

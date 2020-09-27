@@ -622,6 +622,7 @@ contract CoreV2 is StorageV1, Adminable {
         IERC20 collateralAsset = IERC20(state.collateralAsset());
 
         (
+            /* solium-disable-next-line */
             Decimal.D256 memory userSplit,
             Decimal.D256 memory arcSplit
         ) = state.calculateLiquidationSplit();
