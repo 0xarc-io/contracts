@@ -5,6 +5,8 @@ pragma experimental ABIEncoderV2;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+import {console} from "@nomiclabs/buidler/console.sol";
+
 import {StakingRewards} from "./StakingRewards.sol";
 import {Accrual} from "./Accrual.sol";
 
@@ -95,7 +97,6 @@ contract StakingRewardsAccrualCapped is StakingRewards, Accrual {
 
     function isMinter(
         address _user,
-        uint256 _stakeAmount,
         uint256 _positionId
     )
         public
@@ -232,7 +233,7 @@ contract StakingRewardsAccrualCapped is StakingRewards, Accrual {
         );
 
         require(
-            isMinter(msg.sender, amount, positionId),
+            isMinter(msg.sender, positionId),
             "Must be a valid minter"
         );
 
@@ -250,37 +251,55 @@ contract StakingRewardsAccrualCapped is StakingRewards, Accrual {
         updateReward(user)
     {
         require(
+            isVerified(msg.sender) == true,
+            "Must be KYF registered to participate"
+        );
+
+        require(
+            block.timestamp < debtDeadline,
+            "You cannot slash after the debt deadline"
+        );
+
+        require(
             isMinter(
                 user,
-                balanceOf(user),
                 stakedPosition[user]
             ) == false,
             "You cant slash a user who has staked"
         );
 
+        require(
+            isMinter(
+                msg.sender,
+                stakedPosition[msg.sender]
+            ) == true,
+            "You must be a minter in order to slash"
+        );
+
         uint256 reward = rewards[user];
+
         rewards[msg.sender] = rewards[msg.sender].add(reward);
         rewards[user] = 0;
 
         emit UserSlashed(user, msg.sender, reward);
     }
 
-    function getReward()
-        external
-        updateReward(msg.sender)
+    function getReward(address user)
+        public
+        updateReward(user)
     {
         require(
             tokensClaimable == true,
             "Tokens cannnot be claimed yet"
         );
 
-        _getReward();
+        _getReward(user);
     }
 
     function withdraw(
         uint256 amount
     )
-        external
+        public
         updateReward(msg.sender)
     {
         _withdraw(amount);
@@ -290,7 +309,8 @@ contract StakingRewardsAccrualCapped is StakingRewards, Accrual {
         external
         updateReward(msg.sender)
     {
-        _exit();
+        getReward(msg.sender);
+        withdraw(balanceOf(msg.sender));
     }
 
 }
