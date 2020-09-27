@@ -91,7 +91,7 @@ describe('Staking Integration', () => {
     await rewardPool.setRewardsDistribution(ownerWallet.address);
     await rewardPool.setRewardsDuration(100);
     await rewardPool.setStateContract(arc.state.address);
-    await rewardPool.setDebtToStake(10);
+    await rewardPool.setDebtRequirement(100);
   });
 
   it('should be able to get verified', async () => {
