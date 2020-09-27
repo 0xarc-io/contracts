@@ -11,10 +11,15 @@
 	"SynthRegistry": {
 		"deploy": false
 	},
+	"CoreV1": {
+		"deploy": false
+	},
+	"CoreV2": {
+		"deploy": false
+	},
 	"LINKUSD": {
 		"deploy": false,
 		"dependencies": {
-			"CoreV1": true,
 			"StateV1": true,
 			"Oracle": true,
 			"CollateralToken": true,
