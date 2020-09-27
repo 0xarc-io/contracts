@@ -7,6 +7,7 @@ require('dotenv').config();
 
 require('./src/commands/build').cmd(program);
 require('./src/commands/deploy').cmd(program);
+require('./src/commands/upgrade-synth').cmd(program);
 require('./src/commands/deploy-staking').cmd(program);
 require('./src/commands/verify').cmd(program);
 require('./src/commands/release').cmd(program);

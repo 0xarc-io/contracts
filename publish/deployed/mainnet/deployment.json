@@ -50,6 +50,15 @@
 			"network": "mainnet",
 			"dependencies": {}
 		},
+		"CoreV1": {
+			"dependency": "CoreV1",
+			"address": "0x08Db418a5234337D76c78cCF630658D4e328FC69",
+			"source": "CoreV1",
+			"link": "https://etherscan.io/address/0x08Db418a5234337D76c78cCF630658D4e328FC69",
+			"timestamp": "2020-09-07T05:48:17.129Z",
+			"txn": "0x4690959ea3442c1b9272abe11386b2f9d60807d86936f0ae7707f350546e7400",
+			"network": "mainnet"
+		},
 		"LINKUSD": {
 			"name": "LINKUSD",
 			"address": "0x5568Df89AF6Bc835B876fDc3B2d44ef63530e419",
@@ -66,15 +75,6 @@
 					"link": "https://etherscan.io/address/0xeFFD9768a337950CdC883682Dc08583D4a3fe596",
 					"timestamp": "2020-09-07T05:48:04.176Z",
 					"txn": "0x64228347bf80803309b51813edd6852346348609e89d724d2f62e44a5b822fc9",
-					"network": "mainnet"
-				},
-				"CoreV1": {
-					"dependency": "CoreV1",
-					"address": "0x08Db418a5234337D76c78cCF630658D4e328FC69",
-					"source": "CoreV1",
-					"link": "https://etherscan.io/address/0x08Db418a5234337D76c78cCF630658D4e328FC69",
-					"timestamp": "2020-09-07T05:48:17.129Z",
-					"txn": "0x4690959ea3442c1b9272abe11386b2f9d60807d86936f0ae7707f350546e7400",
 					"network": "mainnet"
 				},
 				"SyntheticToken": {
