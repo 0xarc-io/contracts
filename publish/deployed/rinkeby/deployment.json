@@ -115,16 +115,6 @@
 			"txn": "0x7e0bce70095fa12fdf3946379b53a5b5e406d7a46a763ff269439a421e1c11bc",
 			"network": "rinkeby",
 			"dependencies": {}
-		},
-		"StakingRewards-KYF1.2/LINKUSD-USDC/50-50": {
-			"name": "StakingRewards-KYF1.2/LINKUSD-USDC/50-50",
-			"address": "0x86C8d6FBF07118cb84ca9cE6E8EC664C12a108C1",
-			"source": "StakingRewardsAccrualCapped",
-			"link": "https://rinkeby.etherscan.io/address/0x86C8d6FBF07118cb84ca9cE6E8EC664C12a108C1",
-			"timestamp": "2020-09-28T01:46:07.807Z",
-			"txn": "0xfef4c085b4fd4dd40b938445b81cd8a2e7cc833e9b15cea4e72af05e67844124",
-			"network": "rinkeby",
-			"dependencies": {}
 		}
 	},
 	"sources": {

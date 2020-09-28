@@ -292,7 +292,7 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
     let positionId: BigNumberish;
     let startingTime: number;
 
-    const expectedReward = new BigNumber(50).mul(2).div(3);
+    const expectedReward = new BigNumber(50).mul(6).div(10);
 
     beforeEach(async () => {
       await stakingRewards.setStakeHardCap(50);
@@ -455,11 +455,7 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
 
       expect(
         await (await stakingRewards.earned(userWallet.address)).toNumber(),
-      ).toBeGreaterThanOrEqual(new BigNumber(50).mul(2).div(3).toNumber());
-
-      expect(
-        await (await stakingRewards.earned(userWallet.address)).toNumber(),
-      ).toBeLessThanOrEqual(new BigNumber(50).mul(2).div(3).add(3).toNumber());
+      ).toBeGreaterThanOrEqual(new BigNumber(50).mul(6).div(10).toNumber());
     });
 
     it('should not be able to get the reward if the tokens are not claimable', async () => {
@@ -474,11 +470,7 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
 
       expect(
         await (await rewardToken.balanceOf(userWallet.address)).toNumber(),
-      ).toBeGreaterThanOrEqual(new BigNumber(50).mul(2).div(3).toNumber());
-
-      expect(
-        await (await rewardToken.balanceOf(userWallet.address)).toNumber(),
-      ).toBeLessThanOrEqual(new BigNumber(50).mul(2).div(3).add(3).toNumber());
+      ).toBeGreaterThanOrEqual(new BigNumber(50).mul(6).div(10).toNumber());
     });
   });
 });

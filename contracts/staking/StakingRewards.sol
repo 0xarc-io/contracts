@@ -140,8 +140,8 @@ contract StakingRewards is Ownable {
                     .mul(rewardRate)
                     .mul(1e18)
                     .div(_totalSupply)
-                    .mul(2)
-                    .div(3)
+                    .mul(6)
+                    .div(10)
             );
     }
 
@@ -169,8 +169,8 @@ contract StakingRewards is Ownable {
             .mul(actualRewardPerToken().sub(userRewardPerTokenPaid[account]))
             .div(1e18)
             .add(rewards[account])
-            .mul(2)
-            .div(3);
+            .mul(6)
+            .div(10);
     }
 
     function getRewardForDuration()
@@ -227,8 +227,8 @@ contract StakingRewards is Ownable {
         if (reward > 0) {
             rewards[user] = 0;
 
-            rewardsToken.safeTransfer(user, reward.mul(2).div(3));
-            rewardsToken.safeTransfer(arcDAO, reward.sub(reward.mul(2).div(3)));
+            rewardsToken.safeTransfer(user, reward.mul(6).div(10));
+            rewardsToken.safeTransfer(arcDAO, reward.sub(reward.mul(6).div(10)));
 
             emit RewardPaid(user, reward);
         }

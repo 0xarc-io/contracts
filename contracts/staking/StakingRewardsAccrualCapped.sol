@@ -251,6 +251,11 @@ contract StakingRewardsAccrualCapped is StakingRewards, Accrual {
         updateReward(user)
     {
         require(
+            user != msg.sender,
+            "You cannot slash yourself"
+        );
+
+        require(
             isVerified(msg.sender) == true,
             "Must be KYF registered to participate"
         );
