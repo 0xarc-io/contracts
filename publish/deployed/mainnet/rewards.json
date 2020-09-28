@@ -14,10 +14,10 @@
         "accrualToken": "0xba100000625a3754423978a60c9317c58a424e3d"
 	},
     {
-        "name": "KYF1.1/SlashBug",
+        "name": "KYF1.1/Slash-Fix",
         "type": "AdminRewards",
         "stakingToken": "0x0000000000000000000000000000000000000000",
-        "rewardsToken": "0x40aa87891b9571579Fc3cf990084520b2363355B",
+        "rewardsToken": "0xED30Dd7E50EdF3581AD970eFC5D9379Ce2614AdB",
         "accrualToken": "0x0000000000000000000000000000000000000000"
     }
 ]
