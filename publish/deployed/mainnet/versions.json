@@ -8,7 +8,7 @@
 		"contracts": {
 			"KYFV2-T1": {
 				"address": "0x1f10ff148a0ad63a57f98530ab472568e90a72c5",
-				"status": "deleted",
+				"status": "current",
 				"keccak256": "0x2f35e329de7f4c345e8da5977fe67089b85ae9aa26e88c86c39edc4d6c6854c2"
 			},
 			"KYFV2": {
@@ -53,27 +53,27 @@
 			},
 			"LINKUSD-Oracle": {
 				"address": "0xeFFD9768a337950CdC883682Dc08583D4a3fe596",
-				"status": "deleted",
+				"status": "current",
 				"keccak256": "0x1e6ed81e71c800b6b9c49ec435abb04f3a7a5c63606f3b3829b3d21b922f251c"
 			},
 			"LINKUSD-CoreV1": {
 				"address": "0x08Db418a5234337D76c78cCF630658D4e328FC69",
-				"status": "deleted",
+				"status": "current",
 				"keccak256": "0x547df71bcf8b06c98ef9b9055e748663c82ba8b9fb0cd82a33052f67087758ad"
 			},
 			"LINKUSD-SyntheticToken": {
 				"address": "0x0E2EC54fC0B509F445631Bf4b91AB8168230C752",
-				"status": "deleted",
+				"status": "current",
 				"keccak256": "0x3ee9d935abd462815d787b64291d2957ec09da0f111cab978c6c58c204169c90"
 			},
 			"LINKUSD-StateV1": {
 				"address": "0x94F40fD4018586AaFb8A6AD95441e0b58cc4c058",
-				"status": "deleted",
+				"status": "current",
 				"keccak256": "0x65b8f3fe957534e05fcff2a758b8cf8d9f9362154c6217795824e48f4c28dd28"
 			},
 			"LINKUSD-CollateralToken": {
 				"address": "0x514910771AF9Ca656af840dff83E8264EcF986CA",
-				"status": "deleted",
+				"status": "current",
 				"keccak256": ""
 			}
 		}

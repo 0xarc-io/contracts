@@ -104,13 +104,13 @@ simpleDescribe('StakingRewards', init, (ctx: ITestContext) => {
 
     expect(
       (await rewardToken.balanceOf(userWallet.address)).gte(
-        rewardPerToken.mul(DEPOSIT_AMOUNT).mul(2).div(3).div(BASE),
+        rewardPerToken.mul(DEPOSIT_AMOUNT).mul(6).div(10).div(BASE),
       ),
     ).toBeTruthy();
 
     expect(
       (await rewardToken.balanceOf(ownerWallet.address)).gte(
-        rewardPerToken.mul(DEPOSIT_AMOUNT).div(3).div(BASE),
+        rewardPerToken.mul(DEPOSIT_AMOUNT).mul(4).div(10).div(BASE),
       ),
     ).toBeTruthy();
   });
@@ -140,7 +140,7 @@ simpleDescribe('StakingRewards', init, (ctx: ITestContext) => {
 
     expect(
       await (await rewardContract.earned(userWallet.address)).gte(
-        rewardPerToken.mul(DEPOSIT_AMOUNT).mul(2).div(3).div(BASE),
+        rewardPerToken.mul(DEPOSIT_AMOUNT).mul(6).div(10).div(BASE),
       ),
     );
   });
