@@ -12,5 +12,12 @@
         "stakingToken": "0x579ECC26deeEdA3b02A91CaE1596348221705457",
         "rewardsToken": "0x40aa87891b9571579Fc3cf990084520b2363355B",
         "accrualToken": "0x0000000000000000000000000000000000000000"
+    },
+    {
+        "name": "KYF1.2/LINKUSD-USDC/50-50",
+        "type": "StakingRewardsAccrualCapped",
+        "stakingToken": "0x579ECC26deeEdA3b02A91CaE1596348221705457",
+        "rewardsToken": "0x40aa87891b9571579Fc3cf990084520b2363355B",
+        "accrualToken": "0x0000000000000000000000000000000000000000"
     }
 ]
