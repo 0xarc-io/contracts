@@ -20,7 +20,7 @@
 	"CoreV2": {
 		"deploy": false
 	},
-	"SynthLINKUSD": {
+	"LINKUSD": {
 		"deploy": false,
 		"dependencies": {
 			"StateV1": false,
