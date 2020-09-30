@@ -5,8 +5,6 @@ pragma experimental ABIEncoderV2;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {console} from "@nomiclabs/buidler/console.sol";
-
 import {StakingRewards} from "./StakingRewards.sol";
 import {Accrual} from "./Accrual.sol";
 
