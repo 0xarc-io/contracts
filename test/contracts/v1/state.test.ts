@@ -37,7 +37,7 @@ arcDescribe('StateV1', init, (ctx: ITestContext) => {
       );
     });
 
-    it.only('should be able to set limits as the admin', async () => {
+    it('should be able to set limits as the admin', async () => {
       const contract = await StateV1.at(ownerWallet, ctx.arc.state.address);
       const tx = await contract.setRiskParams({
         collateralLimit: '',
