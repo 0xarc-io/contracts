@@ -31,6 +31,8 @@ contract StakingRewardsAccrualCapped is StakingRewards, Accrual {
 
     mapping (address => uint256) public stakedPosition;
 
+    mapping (address => uint256) public releasedAmounts;
+
     address[] public kyfInstancesArray;
 
     /* ========== Events ========== */
@@ -259,7 +261,7 @@ contract StakingRewardsAccrualCapped is StakingRewards, Accrual {
         );
 
         require(
-            block.timestamp < debtDeadline,
+            getCurrentTimestamp() < debtDeadline,
             "You cannot slash after the debt deadline"
         );
 
@@ -271,17 +273,12 @@ contract StakingRewardsAccrualCapped is StakingRewards, Accrual {
             "You cant slash a user who has staked"
         );
 
-        require(
-            isMinter(
-                msg.sender,
-                stakedPosition[msg.sender]
-            ) == true,
-            "You must be a minter in order to slash"
-        );
-
         uint256 reward = rewards[user];
+        uint256 slasherCut = reward.div(3);
 
-        rewards[msg.sender] = rewards[msg.sender].add(reward);
+        rewards[msg.sender] = rewards[msg.sender].add(slasherCut);
+        rewards[rewardsDistribution] = rewards[rewardsDistribution].add(reward.sub(slasherCut));
+
         rewards[user] = 0;
 
         emit UserSlashed(user, msg.sender, reward);
@@ -296,7 +293,20 @@ contract StakingRewardsAccrualCapped is StakingRewards, Accrual {
             "Tokens cannnot be claimed yet"
         );
 
-        _getReward(user);
+        uint256 totalAmount = rewards[user].sub(releasedAmounts[user]);
+        uint256 payableAmount = totalAmount;
+        uint256 duration = debtDeadline.sub(periodFinish);
+
+        if (getCurrentTimestamp() < debtDeadline) {
+            payableAmount = totalAmount.mul(getCurrentTimestamp().sub(periodFinish)).div(duration);
+        }
+
+        releasedAmounts[user] = releasedAmounts[user].add(payableAmount);
+
+        rewardsToken.safeTransfer(user, payableAmount.mul(6).div(10));
+        rewardsToken.safeTransfer(arcDAO, payableAmount.sub(payableAmount.mul(6).div(10)));
+
+        emit RewardPaid(user, payableAmount);
     }
 
     function withdraw(

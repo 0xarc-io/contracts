@@ -104,7 +104,7 @@ contract StakingRewards is Ownable {
         view
         returns (uint256)
     {
-        return block.timestamp < periodFinish ? block.timestamp : periodFinish;
+        return getCurrentTimestamp() < periodFinish ? getCurrentTimestamp() : periodFinish;
     }
 
     function actualRewardPerToken()
@@ -181,6 +181,14 @@ contract StakingRewards is Ownable {
         return rewardRate.mul(rewardsDuration);
     }
 
+    function getCurrentTimestamp()
+        public
+        view
+        returns (uint256)
+    {
+        return getCurrentTimestamp();
+    }
+
     /* ========== MUTATIVE FUNCTIONS ========== */
 
     function _stake(
@@ -207,8 +215,8 @@ contract StakingRewards is Ownable {
         internal
     {
         require(
-            amount > 0,
-            "Cannot withdraw 0"
+            amount >= 0,
+            "Cannot withdraw less than 0"
         );
 
         _totalSupply = _totalSupply.sub(amount);
@@ -243,10 +251,10 @@ contract StakingRewards is Ownable {
         onlyRewardsDistribution
         updateReward(address(0))
     {
-        if (block.timestamp >= periodFinish) {
+        if (getCurrentTimestamp() >= periodFinish) {
             rewardRate = reward.div(rewardsDuration);
         } else {
-            uint256 remaining = periodFinish.sub(block.timestamp);
+            uint256 remaining = periodFinish.sub(getCurrentTimestamp());
             uint256 leftover = remaining.mul(rewardRate);
             rewardRate = reward.add(leftover).div(rewardsDuration);
         }
@@ -261,8 +269,8 @@ contract StakingRewards is Ownable {
             "Provided reward too high"
         );
 
-        lastUpdateTime = block.timestamp;
-        periodFinish = block.timestamp.add(rewardsDuration);
+        lastUpdateTime = getCurrentTimestamp();
+        periodFinish = getCurrentTimestamp().add(rewardsDuration);
         emit RewardAdded(reward);
     }
 
@@ -291,7 +299,7 @@ contract StakingRewards is Ownable {
         onlyOwner
     {
         require(
-            periodFinish == 0 || block.timestamp > periodFinish,
+            periodFinish == 0 || getCurrentTimestamp() > periodFinish,
             "Prev period must be complete before changing duration for new period"
         );
         rewardsDuration = _rewardsDuration;
