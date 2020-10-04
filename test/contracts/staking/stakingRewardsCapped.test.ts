@@ -5,13 +5,15 @@ import { TestToken } from '@src/typings/TestToken';
 import simpleDescribe from '@test/helpers/simpleDescribe';
 import { ITestContext } from '@test/helpers/simpleDescribe';
 import { Wallet, ethers } from 'ethers';
+
 import Token from '@src/utils/Token';
+
 import { BigNumber, BigNumberish, Signature } from 'ethers/utils';
-import ArcNumber from '@src/utils/ArcNumber';
-import { StakingRewardsAccrualCapped, KYFV2, KYF } from '@src/typings';
+import { KYFV2, KYF } from '@src/typings';
 import { AddressZero } from 'ethers/constants';
 import { expectRevert } from '../../../src/utils/expectRevert';
 import { TestArc } from '../../../src/TestArc';
+import { MockStakingRewardsAccrualCapped } from '@src/typings/MockStakingRewardsAccrualCapped';
 
 let ownerWallet: Wallet;
 let userWallet: Wallet;
@@ -24,7 +26,7 @@ jest.setTimeout(30000);
 
 let arc: TestArc;
 
-let stakingRewards: StakingRewardsAccrualCapped;
+let stakingRewards: MockStakingRewardsAccrualCapped;
 let stakingToken: TestToken;
 let rewardToken: TestToken;
 
@@ -53,7 +55,7 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
     arc = await TestArc.init(ownerWallet);
     await arc.deployTestArc();
 
-    stakingRewards = await StakingRewardsAccrualCapped.awaitDeployment(
+    stakingRewards = await MockStakingRewardsAccrualCapped.awaitDeployment(
       ownerWallet,
       ownerWallet.address,
       distributionWallet.address,
@@ -62,6 +64,7 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
       AddressZero,
     );
 
+    await stakingRewards.setCurrentTimestamp(0);
     await stakingRewards.setStateContract(arc.state.address);
     await stakingRewards.setDebtRequirement(50);
     await stakingRewards.setRewardsDistribution(ownerWallet.address);
@@ -69,14 +72,13 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
   });
 
   async function getContract(caller: Wallet) {
-    return StakingRewardsAccrualCapped.at(caller, stakingRewards.address);
+    return MockStakingRewardsAccrualCapped.at(caller, stakingRewards.address);
   }
 
-  async function verifyUserIn(
-    kyf: KYFV2,
-    signature: Signature,
-    address: string = userWallet.address,
-  ) {
+  async function verifyUserIn(kyf: KYFV2, address: string = userWallet.address) {
+    const hash = ethers.utils.solidityKeccak256(['address'], [address]);
+    const signedMessage = await ownerWallet.signMessage(ethers.utils.arrayify(hash));
+    const signature = ethers.utils.splitSignature(signedMessage);
     await kyf.verify(address, signature.v, signature.r, signature.s);
   }
 
@@ -169,7 +171,6 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
   });
 
   describe('#stake', () => {
-    let signature;
     let positionId: BigNumberish;
 
     beforeEach(async () => {
@@ -181,16 +182,12 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
       await kyfTranche2.setVerifier(ownerWallet.address);
       await kyfTranche1.setHardCap(20);
 
-      const hash = ethers.utils.solidityKeccak256(['address'], [userWallet.address]);
-      const signedMessage = await ownerWallet.signMessage(ethers.utils.arrayify(hash));
-      signature = ethers.utils.splitSignature(signedMessage);
-
       const result = await arc._borrowSynthetic(50, 100, userWallet);
       positionId = result.params.id;
     });
 
     it('should not be able to stake over the hard cap', async () => {
-      await verifyUserIn(kyfTranche1, signature);
+      await verifyUserIn(kyfTranche1, userWallet.address);
       await approve(kyfTranche1);
 
       const userStaking = await getContract(userWallet);
@@ -201,7 +198,7 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
     });
 
     it('should not be able to stake over the hard cap in total', async () => {
-      await verifyUserIn(kyfTranche1, signature);
+      await verifyUserIn(kyfTranche1, userWallet.address);
       await approve(kyfTranche1);
 
       const userStaking = await getContract(userWallet);
@@ -223,7 +220,7 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
     });
 
     it('should not be able to staking without v1 being added', async () => {
-      await verifyUserIn(kyfTranche1, signature);
+      await verifyUserIn(kyfTranche1, userWallet.address);
 
       const userStaking = await getContract(userWallet);
       await stakingToken.mintShare(userWallet.address, 50);
@@ -232,7 +229,7 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
     });
 
     it('should not be able to staking without v2 verification', async () => {
-      await verifyUserIn(kyfTranche1, signature);
+      await verifyUserIn(kyfTranche1, userWallet.address);
       await approve(kyfTranche2);
 
       const userStaking = await getContract(userWallet);
@@ -242,7 +239,7 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
     });
 
     it('should not able to stake with an invalid position', async () => {
-      await verifyUserIn(kyfTranche1, signature);
+      await verifyUserIn(kyfTranche1, userWallet.address);
       await approve(kyfTranche1);
 
       const userStaking = await getContract(userWallet);
@@ -252,7 +249,7 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
     });
 
     it('should not able to stake without enough debt', async () => {
-      await verifyUserIn(kyfTranche1, signature);
+      await verifyUserIn(kyfTranche1, userWallet.address);
       await approve(kyfTranche1);
 
       const userStaking = await getContract(userWallet);
@@ -265,7 +262,7 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
     });
 
     it('should able to stake the hard cap', async () => {
-      await verifyUserIn(kyfTranche1, signature);
+      await verifyUserIn(kyfTranche1, userWallet.address);
       await approve(kyfTranche1);
 
       const userStaking = await getContract(userWallet);
@@ -276,7 +273,7 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
     });
 
     it('should able to stake up to the hard cap', async () => {
-      await verifyUserIn(kyfTranche1, signature);
+      await verifyUserIn(kyfTranche1, userWallet.address);
       await approve(kyfTranche1);
 
       const userStaking = await getContract(userWallet);
@@ -292,7 +289,7 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
     let positionId: BigNumberish;
     let startingTime: number;
 
-    const expectedReward = new BigNumber(50).mul(6).div(10);
+    const expectedReward = new BigNumber(100).mul(6).div(10);
 
     beforeEach(async () => {
       await stakingRewards.setStakeHardCap(50);
@@ -300,17 +297,8 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
       await kyfTranche1.setVerifier(ownerWallet.address);
       await kyfTranche1.setHardCap(10);
 
-      const userHash = ethers.utils.solidityKeccak256(['address'], [userWallet.address]);
-      const userSignedMessage = await ownerWallet.signMessage(ethers.utils.arrayify(userHash));
-      const userSignature = ethers.utils.splitSignature(userSignedMessage);
-      await verifyUserIn(kyfTranche1, userSignature);
-
-      const slasherHash = ethers.utils.solidityKeccak256(['address'], [slasherWallet.address]);
-      const slasherSignedMessage = await ownerWallet.signMessage(
-        ethers.utils.arrayify(slasherHash),
-      );
-      const slasherSignature = ethers.utils.splitSignature(slasherSignedMessage);
-      await verifyUserIn(kyfTranche1, slasherSignature, slasherWallet.address);
+      await verifyUserIn(kyfTranche1, userWallet.address);
+      await verifyUserIn(kyfTranche1, slasherWallet.address);
 
       await approve(kyfTranche1);
 
@@ -320,22 +308,21 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
 
       await rewardToken.mintShare(stakingRewards.address, 100);
       await stakingRewards.notifyRewardAmount(100);
-      await stakingRewards.setDebtDeadline(startingTime + 200);
+      await stakingRewards.setCurrentTimestamp(0);
+      await stakingRewards.setDebtDeadline(200);
 
       const userStaking = await getContract(userWallet);
       await stakingToken.mintShare(userWallet.address, 50);
       await Token.approve(stakingToken.address, userWallet, stakingRewards.address, 50);
 
       // Give the slasher funds
-      await arc._borrowSynthetic(50, 100, slasherWallet);
+      await arc._borrowSynthetic(60, 100, slasherWallet);
 
-      const result = await arc._borrowSynthetic(50, 100, userWallet);
+      const result = await arc._borrowSynthetic(60, 100, userWallet);
       positionId = result.params.id;
       await userStaking.stake(50, result.params.id);
 
-      // 100 Rewards, in half the time with the 100% stake == 50 tokens
-      await ctx.evm.increaseTime(50);
-      await ctx.evm.mineBlock();
+      await stakingRewards.setCurrentTimestamp(150);
 
       expect(
         await (await stakingRewards.earned(userWallet.address)).toNumber(),
@@ -347,47 +334,34 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
     it('should not be able to slash a user with enough debt', async () => {
       const contract = await getContract(slasherWallet);
       await arc.repay(positionId, 10, 0, userWallet);
-      await ctx.evm.increaseTime(155);
-      await ctx.evm.mineBlock();
       await expectRevert(contract.slash(userWallet.address));
     });
 
-    // it.only('should not be able to slash past the debt deadline', async () => {
-    //   const contract = await getContract(slasherWallet);
-    //   await arc.repay(positionId, 10, 0, userWallet);
-    //   await ctx.evm.increaseTime(155);
-    //   await ctx.evm.mineBlock();
-    //   await expectRevert(contract.slash(userWallet.address));
-    // });
-
-    // it.only('should be able to slash before the debt deadline', async () => {
-    //   const contract = await getContract(slasherWallet);
-    //   await arc.repay(positionId, 10, 0, userWallet);
-    //   await ctx.evm.increaseTime(100);
-    //   await ctx.evm.mineBlock();
-    //   await contract.slash(userWallet.address);
-    //   await contract.slash(userWallet.address);
-    // });
+    it('should not be able to slash past the debt deadline', async () => {
+      const contract = await getContract(slasherWallet);
+      await arc.repay(positionId, 10, 0, userWallet);
+      await stakingRewards.setCurrentTimestamp(200);
+      await expectRevert(contract.slash(userWallet.address));
+    });
 
     it('should not be able to slash as a non-kyf user', async () => {
       await kyfTranche1.remove(slasherWallet.address);
+
       const contract = await getContract(slasherWallet);
-      await arc.repay(positionId, 10, 0, userWallet);
+      await arc.repay(positionId, 20, 0, userWallet);
       await expectRevert(contract.slash(userWallet.address));
     });
 
     it('should be able to slash as a kyf user', async () => {
       const contract = await getContract(slasherWallet);
-      await arc.repay(positionId, 10, 0, userWallet);
+      await arc.repay(positionId, 20, 0, userWallet);
       await contract.slash(userWallet.address);
     });
-
-    it('should be able to slash if the user removes their debt from the system', async () => {});
 
     it('should be able to slash if the user does not have debt', async () => {
       const contract = await getContract(slasherWallet);
       // The sneaky user repays their debt
-      await arc.repay(positionId, 10, 0, userWallet);
+      await arc.repay(positionId, 20, 0, userWallet);
 
       const preSlashBalance = await stakingRewards.balanceOf(userWallet.address);
 
@@ -402,7 +376,7 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
       // The slasher's earnings should be good
       expect(
         await (await stakingRewards.earned(slasherWallet.address)).toNumber(),
-      ).toBeGreaterThanOrEqual(expectedReward.toNumber());
+      ).toBeGreaterThanOrEqual(expectedReward.div(3).sub(1).toNumber());
 
       // The user should not have no earnings
       expect(await (await stakingRewards.earned(userWallet.address)).toNumber()).toEqual(0);
@@ -414,11 +388,18 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
       // The slasher should still be good
       expect(
         await (await rewardToken.balanceOf(slasherWallet.address)).toNumber(),
-      ).toBeGreaterThanOrEqual(expectedReward.toNumber());
+      ).toBeGreaterThanOrEqual(expectedReward.div(2).div(3).sub(1).toNumber());
+
+      await stakingRewards.setCurrentTimestamp(200);
 
       // Let's make sure the slashed user doesnt lose their funds
       const userBalance = await stakingRewards.balanceOf(userWallet.address);
       await (await getContract(userWallet)).exit();
+      await (await getContract(slasherWallet)).exit();
+
+      expect(
+        await (await rewardToken.balanceOf(slasherWallet.address)).toNumber(),
+      ).toBeGreaterThanOrEqual(expectedReward.div(3).sub(1).toNumber());
 
       // Hooray, they got their funds back
       expect(await stakingToken.balanceOf(userWallet.address)).toEqual(userBalance);
@@ -426,17 +407,20 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
   });
 
   describe('#getReward', () => {
+    let positionId: BigNumberish;
+
     beforeEach(async () => {
       await stakingRewards.setStakeHardCap(50);
+      await stakingRewards.setCurrentTimestamp(0);
+      await stakingRewards.setRewardsDuration(100);
+      await stakingRewards.setDebtDeadline(200);
 
       await kyfTranche1.setVerifier(ownerWallet.address);
       await kyfTranche1.setHardCap(10);
 
-      const hash = ethers.utils.solidityKeccak256(['address'], [userWallet.address]);
-      const signedMessage = await ownerWallet.signMessage(ethers.utils.arrayify(hash));
-      const signature = ethers.utils.splitSignature(signedMessage);
+      await verifyUserIn(kyfTranche1, userWallet.address);
+      await verifyUserIn(kyfTranche1, slasherWallet.address);
 
-      await verifyUserIn(kyfTranche1, signature);
       await approve(kyfTranche1);
 
       await rewardToken.mintShare(stakingRewards.address, 100);
@@ -447,15 +431,8 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
       await Token.approve(stakingToken.address, userWallet, stakingRewards.address, 50);
 
       const result = await arc._borrowSynthetic(50, 100, userWallet);
+      positionId = result.params.id;
       await userStaking.stake(50, result.params.id);
-
-      // 100 Rewards, in half the time with the 100% stake == 50 tokens
-      await ctx.evm.increaseTime(50);
-      await ctx.evm.mineBlock();
-
-      expect(
-        await (await stakingRewards.earned(userWallet.address)).toNumber(),
-      ).toBeGreaterThanOrEqual(new BigNumber(50).mul(6).div(10).toNumber());
     });
 
     it('should not be able to get the reward if the tokens are not claimable', async () => {
@@ -463,14 +440,71 @@ simpleDescribe('StakingRewardsCapped', init, (ctx: ITestContext) => {
       await expectRevert(contract.getReward(userWallet.address));
     });
 
-    it('should be able to get the reward if the tokens are claimable', async () => {
+    it('should be able to claim a portion of the rewards if the tokens are claimable but the debt deadline has not been met', async () => {
       await stakingRewards.setTokensClaimable(true);
       const contract = await getContract(userWallet);
-      await contract.getReward(userWallet.address);
 
+      // Set the duration to be half way past the time period
+      await stakingRewards.setCurrentTimestamp(150);
+
+      // All of the tokens should be earned
+      let earned = await contract.earned(userWallet.address);
+      expect(earned.toNumber()).toBeGreaterThanOrEqual(
+        new BigNumber(100).mul(6).div(10).toNumber(),
+      );
+
+      // Since we're now 1/2 past the debt deadline and 100% of the way through the reward
+      // period we should be able to get 1/2 of the earned amount
+
+      const balanceBefore = await rewardToken.balanceOf(userWallet.address);
+      await stakingRewards.getReward(userWallet.address);
+
+      let balanceAfter = await rewardToken.balanceOf(userWallet.address);
+      expect(balanceAfter.toString()).toEqual(balanceBefore.add(earned.div(2)).toString());
+
+      // Let's fast forward to the end of the debt deadline
+      await stakingRewards.setCurrentTimestamp(200);
+      await stakingRewards.getReward(userWallet.address);
+
+      balanceAfter = await rewardToken.balanceOf(userWallet.address);
+      expect(balanceAfter.toString()).toEqual(balanceBefore.add(earned).toString());
+    });
+
+    it('should be able to claim slashed rewards gradually over time as well', async () => {
+      await stakingRewards.setTokensClaimable(true);
+
+      // Ensure the user has earned all their tokens
+      await stakingRewards.setCurrentTimestamp(150);
+      const userEarnings = await stakingRewards.earned(userWallet.address);
+
+      // Make them slashable by repaying all their debt
+      await arc._repay(positionId, 50, 100, userWallet);
+
+      // The slasher slashes and should have 1/3 of the rewards
+      const slasherContract = await getContract(slasherWallet);
+      await slasherContract.slash(userWallet.address);
+      const slasherEarnings = userEarnings.div(3);
       expect(
-        await (await rewardToken.balanceOf(userWallet.address)).toNumber(),
-      ).toBeGreaterThanOrEqual(new BigNumber(50).mul(6).div(10).toNumber());
+        await (await stakingRewards.earned(slasherWallet.address)).toNumber(),
+      ).toBeGreaterThanOrEqual(slasherEarnings.sub(1).toNumber());
+
+      // Fast forward to the end debt requirement period
+      await stakingRewards.setCurrentTimestamp(175);
+      const beforeSlasherBalance = await rewardToken.balanceOf(slasherWallet.address);
+      await stakingRewards.getReward(slasherWallet.address);
+
+      let afterSlasherBalance = await rewardToken.balanceOf(slasherWallet.address);
+      expect(afterSlasherBalance.toNumber()).toBeGreaterThanOrEqual(
+        beforeSlasherBalance.add(slasherEarnings.mul(3).div(4)).sub(1).toNumber(),
+      );
+
+      // Fast forward to the end of the rewards period
+      await stakingRewards.setCurrentTimestamp(200);
+      await stakingRewards.getReward(slasherWallet.address);
+      afterSlasherBalance = await rewardToken.balanceOf(slasherWallet.address);
+      expect(afterSlasherBalance.toNumber()).toBeGreaterThanOrEqual(
+        beforeSlasherBalance.add(slasherEarnings).sub(1).toNumber(),
+      );
     });
   });
 });
