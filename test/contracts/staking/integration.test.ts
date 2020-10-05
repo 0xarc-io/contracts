@@ -3,13 +3,7 @@ import 'jest';
 import simpleDescribe from '@test/helpers/simpleDescribe';
 import { ITestContext } from '@test/helpers/simpleDescribe';
 import { Wallet, ethers } from 'ethers';
-import {
-  AddressAccrual,
-  StakingRewardsAccrualCapped,
-  TokenStakingAccrual,
-  KYFV2,
-  ArcxToken,
-} from '@src/typings';
+import { AddressAccrual, TokenStakingAccrual, KYFV2, ArcxToken } from '@src/typings';
 import { TestToken } from '@src/typings/TestToken';
 import { AddressZero } from 'ethers/constants';
 import Token from '@src/utils/Token';
@@ -19,6 +13,7 @@ import { expectRevert } from '../../../src/utils/expectRevert';
 import ArcNumber from '@src/utils/ArcNumber';
 import { BigNumber, BigNumberish } from 'ethers/utils';
 import { TestArc } from '../../../src/TestArc';
+import { MockStakingRewardsAccrualCapped } from '@src/typings/MockStakingRewardsAccrualCapped';
 
 let ownerWallet: Wallet;
 let userWallet: Wallet;
@@ -32,7 +27,7 @@ let arcToken: ArcxToken;
 let stakingToken: TestToken;
 let kermanToken: TestToken;
 let arcDAO: AddressAccrual;
-let rewardPool: StakingRewardsAccrualCapped;
+let rewardPool: MockStakingRewardsAccrualCapped;
 let kermanStaking: TokenStakingAccrual;
 let kyf: KYFV2;
 let arc: TestArc;
@@ -60,7 +55,7 @@ describe('Staking Integration', () => {
     kermanToken = await TestToken.deploy(ownerWallet, 'KERMAN', 'KERMAN');
     arcDAO = await AddressAccrual.deploy(ownerWallet, arcToken.address);
 
-    rewardPool = await StakingRewardsAccrualCapped.deploy(
+    rewardPool = await MockStakingRewardsAccrualCapped.deploy(
       ownerWallet,
       arcDAO.address,
       ownerWallet.address,
@@ -92,6 +87,7 @@ describe('Staking Integration', () => {
     await rewardPool.setRewardsDuration(100);
     await rewardPool.setStateContract(arc.state.address);
     await rewardPool.setDebtRequirement(100);
+    await rewardPool.setDebtDeadline(100);
   });
 
   it('should be able to get verified', async () => {
@@ -108,14 +104,14 @@ describe('Staking Integration', () => {
     await stakingToken.mintShare(userWallet.address, 100);
     await Token.approve(stakingToken.address, userWallet, rewardPool.address, 100);
 
-    const userRewardPool = await StakingRewardsAccrualCapped.at(userWallet, rewardPool.address);
+    const userRewardPool = await MockStakingRewardsAccrualCapped.at(userWallet, rewardPool.address);
     await userRewardPool.stake(100, positionId);
 
     expect((await userRewardPool.balanceOf(userWallet.address)).toNumber()).toEqual(100);
   });
 
   it('should be able to increase the staking hard cap and let users stake more', async () => {
-    const userRewardPool = await StakingRewardsAccrualCapped.at(userWallet, rewardPool.address);
+    const userRewardPool = await MockStakingRewardsAccrualCapped.at(userWallet, rewardPool.address);
 
     await stakingToken.mintShare(userWallet.address, 100);
     await Token.approve(stakingToken.address, userWallet, rewardPool.address, 100);
@@ -134,11 +130,10 @@ describe('Staking Integration', () => {
     // Set the time period for the rewards amount to 100
     await rewardPool.notifyRewardAmount(100);
 
-    // Increase the time by 100 to get to the end of the reward period
-    await evm.increaseTime(100);
-    await evm.mineBlock();
+    // Increase the time to 200 to get to the end of the reward period + debt deadline
+    await rewardPool.setCurrentTimestamp(200);
 
-    const userRewardPool = await StakingRewardsAccrualCapped.at(userWallet, rewardPool.address);
+    const userRewardPool = await MockStakingRewardsAccrualCapped.at(userWallet, rewardPool.address);
     await expectRevert(userRewardPool.getReward(userWallet.address));
     await expectRevert(userRewardPool.setTokensClaimable(true));
 
