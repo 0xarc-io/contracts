@@ -186,7 +186,7 @@ contract StakingRewards is Ownable {
         view
         returns (uint256)
     {
-        return getCurrentTimestamp();
+        return block.timestamp;
     }
 
     /* ========== MUTATIVE FUNCTIONS ========== */
