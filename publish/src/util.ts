@@ -175,8 +175,6 @@ const performTransactionalStep = async ({
     ? await contract.functions.admin()
     : await contract.functions.getAdmin();
 
-  console.log(await contract.functions.getAdmin());
-
   if (owner === account.address || owner == ethers.constants.AddressZero) {
     // perform action
     let hash;
