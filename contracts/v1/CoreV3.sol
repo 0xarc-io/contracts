@@ -163,10 +163,6 @@ contract CoreV3 is StorageV1, Adminable {
             "operateAction(): collateral locked cannot be greater than limit"
         );
 
-        // SUGGESTION: Making sure the state doesn't get trapped. Echnida fuzzing could help.
-        //             Testing very specific cases which a fuzzer may not be able to hit.
-        //             Setup derived contract which allows direct entry point of internal functions.
-
         // Ensure that the operated action is collateralised again
         require(
             state.isCollateralized(operatedPosition) == true,
