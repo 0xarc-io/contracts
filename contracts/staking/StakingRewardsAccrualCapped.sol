@@ -199,6 +199,11 @@ contract StakingRewardsAccrualCapped is StakingRewards, Accrual {
         public
         onlyOwner
     {
+        require(
+            _debtDeadline >= periodFinish,
+            "You cannot set the debt deadline before the rewards finish"
+        );
+
         debtDeadline = _debtDeadline;
     }
 
@@ -303,8 +308,8 @@ contract StakingRewardsAccrualCapped is StakingRewards, Accrual {
 
         releasedAmounts[user] = releasedAmounts[user].add(payableAmount);
 
-        rewardsToken.safeTransfer(user, payableAmount.mul(6).div(10));
         rewardsToken.safeTransfer(arcDAO, payableAmount.sub(payableAmount.mul(6).div(10)));
+        rewardsToken.safeTransfer(user, payableAmount.mul(6).div(10));
 
         emit RewardPaid(user, payableAmount);
     }
