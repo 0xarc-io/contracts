@@ -12,7 +12,7 @@ import {
   TransactionOverrides,
   SynthAddressBook,
 } from './types';
-import { CoreV3 } from './typings/CoreV3';
+import { CoreV4 } from './typings/CoreV4';
 import { parseLogs } from './utils/parseLogs';
 import { StateV1 } from './typings/StateV1';
 import Token from '../src/utils/Token';
@@ -23,7 +23,7 @@ import { ArcProxy } from './typings/ArcProxy';
 export default class Arc {
   public wallet: Signer;
 
-  public core: CoreV3;
+  public core: CoreV4;
   public state: StateV1;
   public syntheticAsset: IERC20;
   public collateralAsset: IERC20;
@@ -34,7 +34,7 @@ export default class Arc {
     arc.wallet = wallet;
 
     if (addressBook) {
-      arc.core = await CoreV3.at(wallet, addressBook.proxy);
+      arc.core = await CoreV4.at(wallet, addressBook.proxy);
       arc.state = await StateV1.at(wallet, addressBook.state);
       arc.syntheticAsset = await SyntheticToken.at(wallet, addressBook.syntheticToken);
       arc.collateralAsset = await IERC20.at(wallet, addressBook.collateralAsset);
@@ -45,12 +45,12 @@ export default class Arc {
   }
 
   async deployArc(config: DeploymentConfig) {
-    this.core = await CoreV3.deploy(this.wallet);
+    this.core = await CoreV4.deploy(this.wallet);
 
     const address = await this.wallet.getAddress();
     const proxy = await ArcProxy.deploy(this.wallet, this.core.address, address, []);
 
-    this.core = await CoreV3.at(this.wallet, proxy.address);
+    this.core = await CoreV4.at(this.wallet, proxy.address);
 
     this.syntheticAsset = await SyntheticToken.deploy(this.wallet, config.name, config.symbol);
 
@@ -208,7 +208,7 @@ export default class Arc {
 
   async parseActionTx(tx: any) {
     const receipt = await tx.wait();
-    const logs = parseLogs(receipt.logs, CoreV3.ABI);
+    const logs = parseLogs(receipt.logs, CoreV4.ABI);
     const log = logs[0];
 
     const position = {
@@ -241,7 +241,7 @@ export default class Arc {
   }
 
   public async getCore(caller?: Signer) {
-    return await CoreV3.at(caller || this.wallet, this.core.address);
+    return await CoreV4.at(caller || this.wallet, this.core.address);
   }
 
   public async getState(caller?: Signer) {

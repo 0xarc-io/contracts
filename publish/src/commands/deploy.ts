@@ -11,7 +11,7 @@ import { TestToken } from '../../../src/typings/TestToken';
 import { ArcxToken } from '../../../src/typings/ArcxToken';
 import { KYF } from '../../../src/typings/KYF';
 import { KYFV2 } from '../../../src/typings/KYFV2';
-import { SynthRegistry, KYFToken, CoreV3 } from '../../../src/typings';
+import { SynthRegistry, KYFToken, CoreV4 } from '../../../src/typings';
 
 import { ethers } from 'ethers';
 import { asyncForEach } from '../../../src/utils/asyncForEach';
@@ -257,7 +257,7 @@ const deploy = async ({
   let kyfv2: ethers.Contract = getExistingContract({ contract: 'KYFV2' });
   let synthRegistry: ethers.Contract = getExistingContract({ contract: 'SynthRegistry' });
   let kyfToken: ethers.Contract = getExistingContract({ contract: 'KYFToken' });
-  let coreV3: ethers.Contract = getExistingContract({ contract: 'CoreV3' });
+  let coreV4: ethers.Contract = getExistingContract({ contract: 'CoreV4' });
 
   if (!arcToken) {
     arcToken = await deployer.deployContract({
@@ -307,11 +307,11 @@ const deploy = async ({
     });
   }
 
-  if (!coreV3) {
-    coreV3 = await deployer.deployContract({
-      name: 'CoreV3',
-      source: 'CoreV3',
-      deployData: CoreV3.getDeployTransaction(deployer.account).data,
+  if (!coreV4) {
+    coreV4 = await deployer.deployContract({
+      name: 'CoreV4',
+      source: 'CoreV4',
+      deployData: CoreV4.getDeployTransaction(deployer.account).data,
     });
   }
 
@@ -379,7 +379,7 @@ const deploy = async ({
         source: 'ArcProxy',
         deployData: ArcProxy.getDeployTransaction(
           deployer.account,
-          coreV3.address,
+          coreV4.address,
           await deployer.account.getAddress(),
           [],
         ).data,
@@ -426,12 +426,12 @@ const deploy = async ({
       });
     }
 
-    const proxiedCore = await CoreV3.at(account, proxy.address);
+    const proxiedCore = await CoreV4.at(account, proxy.address);
     if ((await proxiedCore.state()) != stateV1.address) {
       const data = proxiedCore.interface.functions.init.encode([stateV1.address]);
       await runStep({
         data: data,
-        name: 'CoreV3',
+        name: 'CoreV4',
         contract: proxiedCore,
       });
     }

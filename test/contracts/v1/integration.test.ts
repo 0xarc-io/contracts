@@ -161,9 +161,8 @@ describe('Arc Integration', () => {
     // The price of LINK now flash crashes to $5 throwing the user underwater
     await updateOraclePrice(ArcDecimal.new(5));
 
-    // The user most defenitely should not be able to borrow more money if they're underwater
     await expectRevert(
-      arc._borrowSynthetic(ArcNumber.new(100), ArcNumber.new(100), userWallet, currentPosition),
+      arc._borrowSynthetic(ArcNumber.new(100), ArcNumber.new(20), userWallet, currentPosition),
     );
 
     // This means that...
