@@ -61,6 +61,7 @@ describe('CoreV4Migration', () => {
     coreV3 = await CoreV3.deploy(ownerWallet);
     coreV4 = await CoreV4.deploy(ownerWallet);
 
+    // Set the current implementation to V4
     await (await ArcProxy.at(ownerWallet, arc.core.address)).upgradeTo(coreV3.address);
 
     // Price of LINK collateral = $10
