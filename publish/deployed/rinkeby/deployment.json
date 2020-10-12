@@ -155,26 +155,6 @@
 			"txn": "0xd91d1b1824e544b323ad1a0fac58952943e80f4a5b38312dd1a44fe8e5fe7ebc",
 			"network": "rinkeby",
 			"dependencies": {}
-		},
-		"StakingRewards-Pool-3": {
-			"name": "StakingRewards-Pool-3",
-			"address": "0x01D6b5b7354913bD00ddcb05369e4bAB951E3aa1",
-			"source": "ArcProxy",
-			"link": "https://rinkeby.etherscan.io/address/0x01D6b5b7354913bD00ddcb05369e4bAB951E3aa1",
-			"timestamp": "2020-10-12T21:59:14.305Z",
-			"txn": "0xee34adace0febe2f7e906072e9a86d022f2bd2158a54691284e8f7b168509da9",
-			"network": "rinkeby",
-			"dependencies": {
-				"Implementation-1": {
-					"dependency": "Implementation-1",
-					"address": "0x106a0E6b5253dEA3A4ae300f061Bea38b93b9b10",
-					"source": "RewardCampaign",
-					"link": "https://rinkeby.etherscan.io/address/0x106a0E6b5253dEA3A4ae300f061Bea38b93b9b10",
-					"timestamp": "2020-10-12T21:59:00.121Z",
-					"txn": "0xb42c3adee99b2fd5c5f64f42fbe04f3714a55f53579402030bf46a1dbb73f83a",
-					"network": "rinkeby"
-				}
-			}
 		}
 	},
 	"sources": {

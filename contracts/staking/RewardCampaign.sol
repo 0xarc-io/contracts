@@ -4,21 +4,20 @@ pragma solidity ^0.5.16;
 
 pragma experimental ABIEncoderV2;
 
-import {console} from "@nomiclabs/buidler/console.sol";
-
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/ownership/Ownable.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import {Decimal} from "../lib/Decimal.sol";
+import {Adminable} from "../lib/Adminable.sol";
 
 import {TypesV1} from "../v1/TypesV1.sol";
 
 import {IKYFV2} from "../interfaces/IKYFV2.sol";
 import {IStateV1} from "../interfaces/IStateV1.sol";
 
-contract RewardCampaign is Ownable {
+contract RewardCampaign is Adminable {
 
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -113,29 +112,13 @@ contract RewardCampaign is Ownable {
         _;
     }
 
-    /* ========== Constructor ========== */
-
-    constructor(
-        address _arcDAO,
-        address _rewardsDistribution,
-        address _rewardsToken,
-        address _stakingToken
-    )
-        public
-    {
-        arcDAO = _arcDAO;
-        rewardsDistributor = _rewardsDistribution;
-        rewardsToken = IERC20(_rewardsToken);
-        stakingToken = IERC20(_stakingToken);
-    }
-
     /* ========== Admin Functions ========== */
 
     function setRewardsDistributor(
         address _rewardsDistributor
     )
         external
-        onlyOwner
+        onlyAdmin
     {
         rewardsDistributor = _rewardsDistributor;
     }
@@ -144,7 +127,7 @@ contract RewardCampaign is Ownable {
         uint256 _rewardsDuration
     )
         external
-        onlyOwner
+        onlyAdmin
     {
         require(
             periodFinish == 0 || getCurrentTimestamp() > periodFinish,
@@ -190,7 +173,7 @@ contract RewardCampaign is Ownable {
         uint256 tokenAmount
     )
         public
-        onlyOwner
+        onlyAdmin
     {
         // Cannot recover the staking token or the rewards token
         require(
@@ -198,7 +181,7 @@ contract RewardCampaign is Ownable {
             "Cannot withdraw the staking or rewards tokens"
         );
 
-        IERC20(tokenAddress).safeTransfer(owner(), tokenAmount);
+        IERC20(tokenAddress).safeTransfer(getAdmin(), tokenAmount);
         emit Recovered(tokenAddress, tokenAmount);
     }
 
@@ -206,25 +189,33 @@ contract RewardCampaign is Ownable {
         bool _enabled
     )
         public
-        onlyOwner
+        onlyAdmin
     {
         tokensClaimable = _enabled;
 
         emit ClaimableStatusUpdated(_enabled);
     }
 
-    function configure(
+    function init(
+        address _arcDAO,
+        address _rewardsDistribution,
+        address _rewardsToken,
+        address _stakingToken,
         Decimal.D256 memory _daoAllocation,
         Decimal.D256 memory _slasherCut,
-        address _rewardsToken,
         address _stateContract,
         uint256 _vestingEndDate,
         uint256 _debtToStake,
         uint256 _hardCap
     )
         public
-        onlyOwner
+        onlyAdmin
     {
+        arcDAO = _arcDAO;
+        rewardsDistributor = _rewardsDistribution;
+        rewardsToken = IERC20(_rewardsToken);
+        stakingToken = IERC20(_stakingToken);
+
         daoAllocation = _daoAllocation;
         slasherCut = _slasherCut;
         rewardsToken = IERC20(_rewardsToken);
@@ -239,7 +230,7 @@ contract RewardCampaign is Ownable {
         bool _status
     )
         public
-        onlyOwner
+        onlyAdmin
     {
         if (_status == true) {
             kyfInstancesArray.push(_kyfContract);

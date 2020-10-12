@@ -254,13 +254,7 @@ const deployStakingRewards = async ({
         name: stakingRewardNameFixed,
         dependency: 'Implementation-1',
         source: type,
-        deployData: RewardCampaign.getDeployTransaction(
-          account,
-          revenue,
-          distributor,
-          rewardsToken,
-          stakingToken,
-        ).data,
+        deployData: RewardCampaign.getDeployTransaction(account).data,
       });
 
       const proxy = await deployer.deployContract({
