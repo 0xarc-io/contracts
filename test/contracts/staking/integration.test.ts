@@ -3,7 +3,13 @@ import 'jest';
 import simpleDescribe from '@test/helpers/simpleDescribe';
 import { ITestContext } from '@test/helpers/simpleDescribe';
 import { Wallet, ethers } from 'ethers';
-import { AddressAccrual, TokenStakingAccrual, KYFV2, ArcxToken } from '@src/typings';
+import {
+  AddressAccrual,
+  TokenStakingAccrual,
+  KYFV2,
+  ArcxToken,
+  MockRewardCampaign,
+} from '@src/typings';
 import { TestToken } from '@src/typings/TestToken';
 import { AddressZero } from 'ethers/constants';
 import Token from '@src/utils/Token';
@@ -13,7 +19,6 @@ import { expectRevert } from '../../../src/utils/expectRevert';
 import ArcNumber from '@src/utils/ArcNumber';
 import { BigNumber, BigNumberish } from 'ethers/utils';
 import { TestArc } from '../../../src/TestArc';
-import { MockStakingRewardsAccrualCapped } from '@src/typings/MockStakingRewardsAccrualCapped';
 
 let ownerWallet: Wallet;
 let userWallet: Wallet;
@@ -27,7 +32,7 @@ let arcToken: ArcxToken;
 let stakingToken: TestToken;
 let kermanToken: TestToken;
 let arcDAO: AddressAccrual;
-let rewardPool: MockStakingRewardsAccrualCapped;
+let rewardPool: MockRewardCampaign;
 let kermanStaking: TokenStakingAccrual;
 let kyf: KYFV2;
 let arc: TestArc;
@@ -55,13 +60,12 @@ describe('Staking Integration', () => {
     kermanToken = await TestToken.deploy(ownerWallet, 'KERMAN', 'KERMAN');
     arcDAO = await AddressAccrual.deploy(ownerWallet, arcToken.address);
 
-    rewardPool = await MockStakingRewardsAccrualCapped.deploy(
+    rewardPool = await MockRewardCampaign.deploy(
       ownerWallet,
       arcDAO.address,
       ownerWallet.address,
       arcToken.address,
       stakingToken.address,
-      AddressZero,
     );
 
     kermanStaking = await TokenStakingAccrual.deploy(
@@ -104,14 +108,14 @@ describe('Staking Integration', () => {
     await stakingToken.mintShare(userWallet.address, 100);
     await Token.approve(stakingToken.address, userWallet, rewardPool.address, 100);
 
-    const userRewardPool = await MockStakingRewardsAccrualCapped.at(userWallet, rewardPool.address);
+    const userRewardPool = await MockRewardCampaign.at(userWallet, rewardPool.address);
     await userRewardPool.stake(100, positionId);
 
     expect((await userRewardPool.balanceOf(userWallet.address)).toNumber()).toEqual(100);
   });
 
   it('should be able to increase the staking hard cap and let users stake more', async () => {
-    const userRewardPool = await MockStakingRewardsAccrualCapped.at(userWallet, rewardPool.address);
+    const userRewardPool = await MockRewardCampaign.at(userWallet, rewardPool.address);
 
     await stakingToken.mintShare(userWallet.address, 100);
     await Token.approve(stakingToken.address, userWallet, rewardPool.address, 100);
@@ -133,7 +137,7 @@ describe('Staking Integration', () => {
     // Increase the time to 200 to get to the end of the reward period + debt deadline
     await rewardPool.setCurrentTimestamp(200);
 
-    const userRewardPool = await MockStakingRewardsAccrualCapped.at(userWallet, rewardPool.address);
+    const userRewardPool = await MockRewardCampaign.at(userWallet, rewardPool.address);
     await expectRevert(userRewardPool.getReward(userWallet.address));
     await expectRevert(userRewardPool.setTokensClaimable(true));
 
