@@ -16,12 +16,7 @@ contract MockRewardCampaign is RewardCampaign {
         address _stakingToken
     )
         public
-        RewardCampaign(
-            _arcDAO,
-            _rewardsDistribution,
-            _rewardsToken,
-            _stakingToken
-        )
+        RewardCampaign()
     { }
 
     function setCurrentTimestamp(uint256 _timestamp)
