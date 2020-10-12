@@ -22,9 +22,8 @@
     },
     {
         "name": "Pool-3",
-        "type": "StakingRewards",
-        "stakingToken": "0x5dcb5baa17a5af85aaec5d2b422cab13c0141bce",
+        "type": "RewardCampaign",
+        "stakingToken": "0x6D65b498cb23deAba52db31c93Da9BFFb340FB8F",
         "rewardsToken": "0xED30Dd7E50EdF3581AD970eFC5D9379Ce2614AdB"
     }
-
 ]
