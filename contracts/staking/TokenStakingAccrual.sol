@@ -5,7 +5,6 @@ pragma solidity ^0.5.16;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
-import {StakingRewards} from "./StakingRewards.sol";
 import {Accrual} from "./Accrual.sol";
 
 contract TokenStakingAccrual is Accrual {
