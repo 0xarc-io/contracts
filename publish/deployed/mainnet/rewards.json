@@ -19,5 +19,12 @@
         "stakingToken": "0x0000000000000000000000000000000000000000",
         "rewardsToken": "0xED30Dd7E50EdF3581AD970eFC5D9379Ce2614AdB",
         "accrualToken": "0x0000000000000000000000000000000000000000"
+    },
+    {
+        "name": "Pool-3",
+        "type": "StakingRewards",
+        "stakingToken": "0x0000000000000000000000000000000000000000",
+        "rewardsToken": "0xED30Dd7E50EdF3581AD970eFC5D9379Ce2614AdB"
     }
+
 ]
