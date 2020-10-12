@@ -216,6 +216,7 @@ contract RewardCampaign is Ownable {
     function configure(
         Decimal.D256 memory _daoAllocation,
         Decimal.D256 memory _slasherCut,
+        address _rewardsToken,
         address _stateContract,
         uint256 _vestingEndDate,
         uint256 _debtToStake,
@@ -226,6 +227,7 @@ contract RewardCampaign is Ownable {
     {
         daoAllocation = _daoAllocation;
         slasherCut = _slasherCut;
+        rewardsToken = IERC20(_rewardsToken);
         stateContract = IStateV1(_stateContract);
         vestingEndDate = _vestingEndDate;
         debtToStake = _debtToStake;
@@ -487,7 +489,7 @@ contract RewardCampaign is Ownable {
 
         require(
             getCurrentTimestamp() < vestingEndDate,
-            "You cannot slash after the debt deadline"
+            "You cannot slash after the vesting end date"
         );
 
         Staker storage userStaker = stakers[user];

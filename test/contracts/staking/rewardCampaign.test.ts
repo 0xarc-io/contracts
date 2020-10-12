@@ -77,6 +77,7 @@ simpleDescribe('RewardCampaign', init, (ctx: ITestContext) => {
     await stakingRewards.configure(
       DAO_ALLOCATION,
       SLAHSER_CUT,
+      rewardToken.address,
       arc.state.address,
       VESTING_END_DATE,
       DEBT_TO_STAKE,
@@ -279,12 +280,17 @@ simpleDescribe('RewardCampaign', init, (ctx: ITestContext) => {
 
       expect(
         await (await stakingRewards.earned(slasherWallet.address)).gte(
-          USER_ALLOCATION.mul(SLAHSER_CUT.value)
+          USER_ALLOCATION.mul(SLAHSER_CUT.value).mul(REWARD_AMOUNT).div(BASE).div(BASE).sub(100),
+        ),
+      ).toBeTruthy();
+
+      expect(
+        await (await stakingRewards.earned(ownerWallet.address)).gte(
+          USER_ALLOCATION.mul(ArcNumber.new(1).sub(SLAHSER_CUT.value))
             .mul(REWARD_AMOUNT)
             .div(BASE)
             .div(BASE)
-            .sub(100)
-            .toString(),
+            .sub(100),
         ),
       ).toBeTruthy();
     });
@@ -503,6 +509,7 @@ simpleDescribe('RewardCampaign', init, (ctx: ITestContext) => {
         (await getContract(userWallet)).configure(
           DAO_ALLOCATION,
           SLAHSER_CUT,
+          rewardToken.address,
           arc.state.address,
           VESTING_END_DATE,
           DEBT_TO_STAKE,
@@ -513,6 +520,7 @@ simpleDescribe('RewardCampaign', init, (ctx: ITestContext) => {
         (await getContract(slasherWallet)).configure(
           DAO_ALLOCATION,
           SLAHSER_CUT,
+          rewardToken.address,
           arc.state.address,
           VESTING_END_DATE,
           DEBT_TO_STAKE,
@@ -525,6 +533,7 @@ simpleDescribe('RewardCampaign', init, (ctx: ITestContext) => {
       await (await getContract(ownerWallet)).configure(
         DAO_ALLOCATION,
         SLAHSER_CUT,
+        rewardToken.address,
         arc.state.address,
         VESTING_END_DATE,
         DEBT_TO_STAKE,

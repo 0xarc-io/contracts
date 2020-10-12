@@ -122,6 +122,9 @@ export default class Deployer {
       if (!dependency || dependency == 'Proxy') {
         deploy = this.config[name].deploy;
       } else {
+        console.log(this.config[name]);
+        console.log(this.config);
+        console.log(name);
         deploy = this.config[name].dependencies.hasOwnProperty(dependency)
           ? this.config[name].dependencies[dependency]
           : true;

@@ -2,7 +2,7 @@
 
 import Deployer from '../Deployer';
 
-import { AdminRewards, RewardCampaign } from '../../../src/typings';
+import { AdminRewards, ArcProxy, RewardCampaign } from '../../../src/typings';
 
 const path = require('path');
 const { gray, green, yellow } = require('chalk');
@@ -128,7 +128,8 @@ const deployStakingRewards = async ({
 
   // Names in rewardsToDeploy will always be true
   const config = rewardsToDeploy.reduce(
-    (acc, x) => Object.assign({}, { [`StakingRewards-${x}`]: { deploy: true } }, acc),
+    (acc, x) =>
+      Object.assign({}, { [`StakingRewards-${x}`]: { deploy: true, dependencies: {} } }, acc),
     {},
   );
 
@@ -249,8 +250,9 @@ const deployStakingRewards = async ({
 
     if (type == 'RewardCampaign') {
       // Deploy contract
-      await deployer.deployContract({
+      const rewardContract = await deployer.deployContract({
         name: stakingRewardNameFixed,
+        dependency: 'Implementation-1',
         source: type,
         deployData: RewardCampaign.getDeployTransaction(
           account,
@@ -258,6 +260,18 @@ const deployStakingRewards = async ({
           distributor,
           rewardsToken,
           stakingToken,
+        ).data,
+      });
+
+      const proxy = await deployer.deployContract({
+        name: stakingRewardNameFixed,
+        dependency: 'Proxy',
+        source: 'ArcProxy',
+        deployData: ArcProxy.getDeployTransaction(
+          deployer.account,
+          rewardContract.address,
+          await deployer.account.getAddress(),
+          [],
         ).data,
       });
     }

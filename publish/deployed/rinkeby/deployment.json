@@ -158,13 +158,23 @@
 		},
 		"StakingRewards-Pool-3": {
 			"name": "StakingRewards-Pool-3",
-			"address": "0xA03bfB9aC6ecA4Baf7bD5239C55e2003DFa7e45C",
-			"source": "RewardCampaign",
-			"link": "https://rinkeby.etherscan.io/address/0xA03bfB9aC6ecA4Baf7bD5239C55e2003DFa7e45C",
-			"timestamp": "2020-10-12T19:23:37.727Z",
-			"txn": "0x5752a2cd4ceeba1b07723c5a675bf05f4d222bfd48eace531e1b13e27623a4e0",
+			"address": "0x01D6b5b7354913bD00ddcb05369e4bAB951E3aa1",
+			"source": "ArcProxy",
+			"link": "https://rinkeby.etherscan.io/address/0x01D6b5b7354913bD00ddcb05369e4bAB951E3aa1",
+			"timestamp": "2020-10-12T21:59:14.305Z",
+			"txn": "0xee34adace0febe2f7e906072e9a86d022f2bd2158a54691284e8f7b168509da9",
 			"network": "rinkeby",
-			"dependencies": {}
+			"dependencies": {
+				"Implementation-1": {
+					"dependency": "Implementation-1",
+					"address": "0x106a0E6b5253dEA3A4ae300f061Bea38b93b9b10",
+					"source": "RewardCampaign",
+					"link": "https://rinkeby.etherscan.io/address/0x106a0E6b5253dEA3A4ae300f061Bea38b93b9b10",
+					"timestamp": "2020-10-12T21:59:00.121Z",
+					"txn": "0xb42c3adee99b2fd5c5f64f42fbe04f3714a55f53579402030bf46a1dbb73f83a",
+					"network": "rinkeby"
+				}
+			}
 		}
 	},
 	"sources": {
