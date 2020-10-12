@@ -24,7 +24,7 @@
 		"deploy": false
 	},
 	"CoreV4": {
-		"deploy": true
+		"deploy": false
 	},
 	"LINKUSD": {
 		"deploy": false,
