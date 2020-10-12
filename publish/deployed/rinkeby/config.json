@@ -20,6 +20,9 @@
 	"CoreV3": {
 		"deploy": false
 	},
+	"CoreV4": {
+		"deploy": false
+	},
 	"LINKUSD": {
 		"deploy": false,
 		"dependencies": {
