@@ -3,6 +3,7 @@
 import Deployer from '../Deployer';
 
 import { AdminRewards, ArcProxy, RewardCampaign } from '../../../src/typings';
+import { AddressZero } from 'ethers/constants';
 
 const path = require('path');
 const { gray, green, yellow } = require('chalk');
@@ -19,9 +20,11 @@ const {
   loadConnections,
   confirmAction,
   parameterNotice,
+  gatherInput,
 } = require('../util');
 
 const {
+  getUsers,
   constants: {
     BUILD_FOLDER,
     CONTRACTS_FOLDER,
@@ -192,7 +195,7 @@ const deployStakingRewards = async ({
   // ----------------
   // Staking Rewards
   // ----------------
-  for (const { name, type, rewardsToken, stakingToken, accrualToken } of stakingRewards) {
+  for (const { name, type, rewardsToken, stakingToken, rewardConfig } of stakingRewards) {
     const stakingRewardNameFixed = `StakingRewards-${name}`;
     const stakingRewardsConfig = config[stakingRewardNameFixed] || {};
 
@@ -268,6 +271,19 @@ const deployStakingRewards = async ({
           [],
         ).data,
       });
+
+      await (await RewardCampaign.at(deployer.account, proxy.address)).init(
+        revenue,
+        getUsers({ network, user: 'rewardsDistributor' }).address,
+        rewardsToken,
+        stakingToken,
+        { value: rewardConfig.daoAllocation },
+        { value: rewardConfig.slasherCut },
+        rewardConfig.stateContract,
+        rewardConfig.vestingEndDate,
+        rewardConfig.debtToStake,
+        rewardConfig.hardCap,
+      );
     }
 
     if (type == 'AdminRewards') {
@@ -281,7 +297,7 @@ const deployStakingRewards = async ({
           distributor,
           rewardsToken,
           stakingToken,
-          accrualToken,
+          AddressZero,
         ).data,
       });
     }
