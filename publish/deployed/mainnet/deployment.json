@@ -195,6 +195,26 @@
 					"network": "mainnet"
 				}
 			}
+		},
+		"StakingRewards-Pool-4": {
+			"name": "StakingRewards-Pool-4",
+			"address": "0x8016F490D76346EBEC91707fD4Fb56A7fe64f694",
+			"source": "ArcProxy",
+			"link": "https://etherscan.io/address/0x8016F490D76346EBEC91707fD4Fb56A7fe64f694",
+			"timestamp": "2020-10-15T11:11:13.488Z",
+			"txn": "0x0bc9985a636df79b3dd1d896b7dbebec47e2b1fe4c25803beae958207a20285c",
+			"network": "mainnet",
+			"dependencies": {
+				"Implementation-1": {
+					"dependency": "Implementation-1",
+					"address": "0x57f52dAD9fcB361c67FF8c555720dc934dD5945D",
+					"source": "RewardCampaign",
+					"link": "https://etherscan.io/address/0x57f52dAD9fcB361c67FF8c555720dc934dD5945D",
+					"timestamp": "2020-10-15T11:10:33.748Z",
+					"txn": "0xe40ce68414f5272836c8f340655cff9f1cc3aab1d9a83a09957ffb75bc30a89e",
+					"network": "mainnet"
+				}
+			}
 		}
 	},
 	"sources": {
