@@ -19,6 +19,8 @@ import { expectRevert } from '../../../src/utils/expectRevert';
 import ArcNumber from '@src/utils/ArcNumber';
 import { BigNumber, BigNumberish } from 'ethers/utils';
 import { TestArc } from '../../../src/TestArc';
+import { ArcProxy } from '@src/typings';
+import ArcDecimal from '@src/utils/ArcDecimal';
 
 let ownerWallet: Wallet;
 let userWallet: Wallet;
@@ -68,6 +70,10 @@ describe('Staking Integration', () => {
       stakingToken.address,
     );
 
+    rewardPool = await MockRewardCampaign.at(
+      ownerWallet,
+      (await ArcProxy.deploy(ownerWallet, rewardPool.address, ownerWallet.address, [])).address,
+    );
     kermanStaking = await TokenStakingAccrual.deploy(
       ownerWallet,
       kermanToken.address,
@@ -79,6 +85,19 @@ describe('Staking Integration', () => {
     arc = await TestArc.init(ownerWallet);
     await arc.deployTestArc();
 
+    await rewardPool.init(
+      arcDAO.address,
+      ownerWallet.address,
+      arcToken.address,
+      stakingToken.address,
+      ArcDecimal.new(0.4),
+      ArcDecimal.new(1),
+      arc.state.address,
+      100,
+      1,
+      100,
+    );
+
     const result = await arc._borrowSynthetic(100, 1000, userWallet);
     positionId = result.params.id;
 
@@ -86,12 +105,7 @@ describe('Staking Integration', () => {
     await kyf.setHardCap(10);
 
     await rewardPool.setApprovedKYFInstance(kyf.address, true);
-    await rewardPool.setStakeHardCap(100);
-    await rewardPool.setRewardsDistribution(ownerWallet.address);
     await rewardPool.setRewardsDuration(100);
-    await rewardPool.setStateContract(arc.state.address);
-    await rewardPool.setDebtRequirement(100);
-    await rewardPool.setDebtDeadline(100);
   });
 
   it('should be able to get verified', async () => {
@@ -112,19 +126,6 @@ describe('Staking Integration', () => {
     await userRewardPool.stake(100, positionId);
 
     expect((await userRewardPool.balanceOf(userWallet.address)).toNumber()).toEqual(100);
-  });
-
-  it('should be able to increase the staking hard cap and let users stake more', async () => {
-    const userRewardPool = await MockRewardCampaign.at(userWallet, rewardPool.address);
-
-    await stakingToken.mintShare(userWallet.address, 100);
-    await Token.approve(stakingToken.address, userWallet, rewardPool.address, 100);
-
-    await expectRevert(userRewardPool.stake(100, positionId));
-    await rewardPool.setStakeHardCap(200);
-    await userRewardPool.stake(100, positionId);
-
-    expect((await userRewardPool.balanceOf(userWallet.address)).toNumber()).toEqual(200);
   });
 
   it('should be able to enable claims', async () => {
