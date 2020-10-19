@@ -38,10 +38,10 @@
 	"KYFToken": {
 		"deploy": false
 	},
-	"BaseERC20Factory": {
-		"deploy": true
-	},
 	"SkillsetMetadata": {
-		"deploy": true
+		"deploy": false,
+		"dependencies": {
+			"SkillsetMetadataV1": true
+		}
 	}
 }
