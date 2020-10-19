@@ -1,18 +1,15 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.5.16;
+pragma experimental ABIEncoderV2;
 
 import {Ownable} from "@openzeppelin/contracts/ownership/Ownable.sol";
 
-import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
-
 import {BaseERC20} from "./BaseERC20.sol";
 
-contract SyntheticToken is BaseERC20, ISyntheticToken, Ownable {
+contract SkillsetToken is BaseERC20, Ownable {
 
     // ============ Variables ============
-
-    bytes32 private _symbolKey;
 
     address[] public mintersArray;
 
@@ -28,7 +25,7 @@ contract SyntheticToken is BaseERC20, ISyntheticToken, Ownable {
     modifier onlyMinter() {
         require(
             minters[msg.sender] == true,
-            "SyntheticToken: only callable by minter"
+            "Skillset: only callable by minter"
         );
         _;
     }
@@ -41,11 +38,7 @@ contract SyntheticToken is BaseERC20, ISyntheticToken, Ownable {
     )
         public
         BaseERC20(_name, _symbol)
-    {
-        _symbolKey = keccak256(
-            abi.encode(_symbol)
-        );
-    }
+    { }
 
     /* ========== VIEW FUNCTIONS ========== */
 
@@ -65,15 +58,6 @@ contract SyntheticToken is BaseERC20, ISyntheticToken, Ownable {
         returns (bool)
     {
         return minters[_minter];
-    }
-
-
-    function symbolKey()
-        external
-        view
-        returns (bytes32)
-    {
-        return _symbolKey;
     }
 
     // ============ Admin Functions ============
@@ -150,21 +134,6 @@ contract SyntheticToken is BaseERC20, ISyntheticToken, Ownable {
         onlyMinter
     {
         _burn(to, value);
-    }
-
-    function transferCollateral(
-        address token,
-        address to,
-        uint256 value
-    )
-        external
-        onlyMinter
-        returns (bool)
-    {
-        return BaseERC20(token).transfer(
-            to,
-            value
-        );
     }
 
 }
