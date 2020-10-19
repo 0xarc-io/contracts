@@ -10,8 +10,8 @@ import {
   CoreV1,
   StateV1,
   SyntheticToken,
+  RewardCampaign,
   TokenStakingAccrual,
-  StakingRewardsAccrual,
 } from '@src/typings';
 
 import { ethers } from 'ethers';
@@ -130,8 +130,8 @@ describe('deployments', () => {
 
               expect(stakingRewardsContractAddress).not.toBeNull();
 
-              if (type == 'StakingRewardsAccrual || StakingRewardsAccrualCapped') {
-                const stakingRewardsContract = StakingRewardsAccrual.at(
+              if (type == 'RewardCampaign') {
+                const stakingRewardsContract = RewardCampaign.at(
                   wallet,
                   stakingRewardsContractAddress,
                 );

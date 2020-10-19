@@ -18,7 +18,6 @@ let liquidatorWallet: Wallet;
 
 async function init(ctx: ITestContext): Promise<void> {
   await initializeArc(ctx);
-  await ctx.arc.oracle.setPrice(ArcDecimal.new(400));
 
   ownerWallet = ctx.wallets[0];
   lenderWallet = ctx.wallets[1];
@@ -34,6 +33,7 @@ arcDescribe('#Actions.repayPosition()', init, (ctx: ITestContext) => {
   let positionId: BigNumberish;
 
   beforeEach(async () => {
+    await ctx.arc.oracle.setPrice(ArcDecimal.new(400));
     const result = await ctx.arc._borrowSynthetic(
       ArcNumber.new(200),
       ArcNumber.new(1),
@@ -77,6 +77,18 @@ arcDescribe('#Actions.repayPosition()', init, (ctx: ITestContext) => {
       ArcNumber.new(0),
       ArcDecimal.new(1).value,
       syntheticMinterWallet,
+    );
+  });
+
+  it('should be able to repay if undercollateralised', async () => {
+    await ctx.arc.oracle.setPrice(ArcDecimal.new(200));
+    await ctx.arc._repay(positionId, ArcNumber.new(200), ArcNumber.new(0), syntheticMinterWallet);
+  });
+
+  it('should not be able to withdraw anything if undercollateralised', async () => {
+    await ctx.arc.oracle.setPrice(ArcDecimal.new(200));
+    await expectRevert(
+      ctx.arc.repay(positionId, ArcNumber.new(0), ArcNumber.new(1), syntheticMinterWallet),
     );
   });
 

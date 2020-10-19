@@ -114,8 +114,8 @@ const loadConnections = ({ network, useFork }) => {
   return { providerUrl, privateKey, etherscanUrl, etherscanLinkPrefix };
 };
 
-const confirmAction = (prompt) =>
-  new Promise((resolve, reject) => {
+const confirmAction = (prompt) => {
+  return new Promise((resolve, reject) => {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
     rl.question(prompt, (answer) => {
@@ -124,6 +124,18 @@ const confirmAction = (prompt) =>
       rl.close();
     });
   });
+};
+
+const gatherInput = (prompt) => {
+  return new Promise((resolve, reject) => {
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+
+    rl.question(prompt, (answer) => {
+      resolve(answer);
+      rl.close();
+    });
+  });
+};
 
 const appendOwnerActionGenerator = ({ ownerActions, ownerActionsFile, etherscanLinkPrefix }) => ({
   key,
@@ -262,6 +274,7 @@ module.exports = {
   loadAndCheckRequiredSources,
   loadConnections,
   confirmAction,
+  gatherInput,
   appendOwnerActionGenerator,
   stringify,
   performTransactionalStep,
