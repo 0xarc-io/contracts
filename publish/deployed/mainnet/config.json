@@ -37,5 +37,11 @@
 	},
 	"KYFToken": {
 		"deploy": false
+	},
+	"BaseERC20Factory": {
+		"deploy": true
+	},
+	"SkillsetMetadata": {
+		"deploy": true
 	}
 }

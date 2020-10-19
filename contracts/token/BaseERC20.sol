@@ -6,12 +6,14 @@ pragma experimental ABIEncoderV2;
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+import {Permittable} from "./Permittable.sol";
+
 /**
  * @title ERC20 Token
  *
  * Basic ERC20 Implementation
  */
-contract BaseERC20 is IERC20 {
+contract BaseERC20 is IERC20, Permittable {
 
     using SafeMath for uint256;
 
@@ -39,6 +41,7 @@ contract BaseERC20 is IERC20 {
         string memory symbol
     )
         public
+        Permittable(name, symbol)
     {
         _name = name;
         _symbol = symbol;
@@ -254,6 +257,36 @@ contract BaseERC20 is IERC20 {
         );
 
         return true;
+    }
+
+    /**
+    * @dev Approve by signature.
+    *
+    * Adapted from Uniswap's UniswapV2ERC20 and MakerDAO's Dai contracts:
+    * https://github.com/Uniswap/uniswap-v2-core/blob/master/contracts/UniswapV2ERC20.sol
+    * https://github.com/makerdao/dss/blob/master/src/dai.sol
+    */
+    function permit(
+        address owner,
+        address spender,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    )
+        public
+    {
+        _permit(
+            owner,
+            spender,
+            value,
+            deadline,
+            v,
+            r,
+            s
+        );
+        _approve(owner, spender, value);
     }
 
     /**
