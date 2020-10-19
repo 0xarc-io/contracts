@@ -161,9 +161,8 @@ describe('Arc Integration', () => {
     // The price of LINK now flash crashes to $5 throwing the user underwater
     await updateOraclePrice(ArcDecimal.new(5));
 
-    // The user most defenitely should not be able to borrow more money if they're underwater
     await expectRevert(
-      arc._borrowSynthetic(ArcNumber.new(100), ArcNumber.new(100), userWallet, currentPosition),
+      arc._borrowSynthetic(ArcNumber.new(100), ArcNumber.new(20), userWallet, currentPosition),
     );
 
     // This means that...
@@ -201,7 +200,7 @@ describe('Arc Integration', () => {
     expect(result.updatedPosition.collateralAmount.sign).toBeTruthy();
     expect(result.params.id).toEqual(currentPosition);
 
-    // ARC should still have 257.222 LINK left in the system (200 from Arthur + 7.22 from rekt dude)
+    // ARC should still have 257.222 LINK left in the system (200 from Arthur + 57.22 from rekt dude)
     expect(
       await (await arc.collateralAsset.balanceOf(arc.syntheticAsset.address)).toString(),
     ).toEqual('257222222222222222224');

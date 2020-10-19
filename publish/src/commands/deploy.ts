@@ -2,7 +2,6 @@
 
 import Deployer from '../Deployer';
 
-import { CoreV1 } from '../../../src/typings/CoreV1';
 import { StateV1 } from '../../../src/typings/StateV1';
 import { ChainLinkOracle } from '../../../src/typings/ChainLinkOracle';
 import { ArcProxy } from '../../../src/typings/ArcProxy';
@@ -12,7 +11,13 @@ import { TestToken } from '../../../src/typings/TestToken';
 import { ArcxToken } from '../../../src/typings/ArcxToken';
 import { KYF } from '../../../src/typings/KYF';
 import { KYFV2 } from '../../../src/typings/KYFV2';
-import { SynthRegistry, KYFToken } from '../../../src/typings';
+import {
+  SynthRegistry,
+  KYFToken,
+  CoreV4,
+  SkillsetMetadata,
+  BaseERC20Factory,
+} from '../../../src/typings';
 
 import { ethers } from 'ethers';
 import { asyncForEach } from '../../../src/utils/asyncForEach';
@@ -258,6 +263,10 @@ const deploy = async ({
   let kyfv2: ethers.Contract = getExistingContract({ contract: 'KYFV2' });
   let synthRegistry: ethers.Contract = getExistingContract({ contract: 'SynthRegistry' });
   let kyfToken: ethers.Contract = getExistingContract({ contract: 'KYFToken' });
+  let coreV4: ethers.Contract = getExistingContract({ contract: 'CoreV4' });
+  let proxiedSkillsetMetadata: ethers.Contract = getExistingContract({
+    contract: 'SkillsetMetadata',
+  });
 
   if (!arcToken) {
     arcToken = await deployer.deployContract({
@@ -307,15 +316,47 @@ const deploy = async ({
     });
   }
 
+  if (!coreV4) {
+    coreV4 = await deployer.deployContract({
+      name: 'CoreV4',
+      source: 'CoreV4',
+      deployData: CoreV4.getDeployTransaction(deployer.account).data,
+    });
+  }
+
+  if (!proxiedSkillsetMetadata) {
+    proxiedSkillsetMetadata = await deployer.deployContract({
+      name: 'SkillsetMetadata',
+      dependency: 'Implementation-1',
+      source: 'SkillsetMetadata',
+      deployData: SkillsetMetadata.getDeployTransaction(deployer.account).data,
+    });
+
+    proxiedSkillsetMetadata = await deployer.deployContract({
+      name: 'SkillsetMetadata',
+      dependency: 'Proxy',
+      source: 'ArcProxy',
+      deployData: ArcProxy.getDeployTransaction(
+        deployer.account,
+        proxiedSkillsetMetadata.address,
+        await account.getAddress(),
+        [],
+      ).data,
+    });
+  }
+
   // ----------------
   // Synths
   // ----------------
   await asyncForEach(synths, async (synth) => {
-    let { name, collateral_address, oracle_source_address, config } = synth;
-    let synthConfig = synth.config;
+    if (!config[synth.name].deploy) {
+      return;
+    }
+
+    let { name, collateral_address, oracle_source_address } = synth;
+    const synthConfig = synth.config;
 
     let proxy: ethers.Contract = getExistingContract({ contract: name });
-    let coreV1: ethers.Contract = getExistingDependency({ name: name, contract: 'CoreV1' });
     let stateV1: ethers.Contract = getExistingDependency({ name: name, contract: 'StateV1' });
     let oracle: ethers.Contract = getExistingDependency({ name: name, contract: 'Oracle' });
     let syntheticToken: ethers.Contract = getExistingDependency({
@@ -361,15 +402,6 @@ const deploy = async ({
       ).address;
     }
 
-    if (!coreV1) {
-      coreV1 = await deployer.deployContract({
-        name: name,
-        dependency: 'CoreV1',
-        source: 'CoreV1',
-        deployData: CoreV1.getDeployTransaction(deployer.account).data,
-      });
-    }
-
     if (!proxy) {
       proxy = await deployer.deployContract({
         name: name,
@@ -377,7 +409,7 @@ const deploy = async ({
         source: 'ArcProxy',
         deployData: ArcProxy.getDeployTransaction(
           deployer.account,
-          coreV1.address,
+          coreV4.address,
           await deployer.account.getAddress(),
           [],
         ).data,
@@ -424,12 +456,12 @@ const deploy = async ({
       });
     }
 
-    const proxiedCore = await CoreV1.at(account, proxy.address);
+    const proxiedCore = await CoreV4.at(account, proxy.address);
     if ((await proxiedCore.state()) != stateV1.address) {
       const data = proxiedCore.interface.functions.init.encode([stateV1.address]);
       await runStep({
         data: data,
-        name: 'CoreV1',
+        name: 'CoreV4',
         contract: proxiedCore,
       });
     }
@@ -502,10 +534,6 @@ module.exports = {
       .option(
         '-r, --dry-run',
         'If enabled, will not run any transactions but merely report on them.',
-      )
-      .option(
-        '-t, --mint-tokens [value]',
-        'Mint ARC tokens which can then be used in reward contracts',
       )
       .option(
         '-v, --private-key [value]',

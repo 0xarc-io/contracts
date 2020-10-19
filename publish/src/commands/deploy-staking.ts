@@ -2,9 +2,8 @@
 
 import Deployer from '../Deployer';
 
-import { StakingRewardsAccrualCapped } from '../../../src/typings/StakingRewardsAccrualCapped';
-import { TokenStakingAccrual } from '../../../src/typings/TokenStakingAccrual';
-import { StakingRewardsAccrual } from '../../../src/typings/StakingRewardsAccrual';
+import { AdminRewards, ArcProxy, RewardCampaign } from '../../../src/typings';
+import { AddressZero } from 'ethers/constants';
 
 const path = require('path');
 const { gray, green, yellow } = require('chalk');
@@ -21,9 +20,11 @@ const {
   loadConnections,
   confirmAction,
   parameterNotice,
+  gatherInput,
 } = require('../util');
 
 const {
+  getUsers,
   constants: {
     BUILD_FOLDER,
     CONTRACTS_FOLDER,
@@ -130,7 +131,8 @@ const deployStakingRewards = async ({
 
   // Names in rewardsToDeploy will always be true
   const config = rewardsToDeploy.reduce(
-    (acc, x) => Object.assign({}, { [`StakingRewards-${x}`]: { deploy: true } }, acc),
+    (acc, x) =>
+      Object.assign({}, { [`StakingRewards-${x}`]: { deploy: true, dependencies: {} } }, acc),
     {},
   );
 
@@ -193,7 +195,7 @@ const deployStakingRewards = async ({
   // ----------------
   // Staking Rewards
   // ----------------
-  for (const { name, type, rewardsToken, stakingToken, accrualToken } of stakingRewards) {
+  for (const { name, type, rewardsToken, stakingToken, rewardConfig } of stakingRewards) {
     const stakingRewardNameFixed = `StakingRewards-${name}`;
     const stakingRewardsConfig = config[stakingRewardNameFixed] || {};
 
@@ -249,44 +251,53 @@ const deployStakingRewards = async ({
     const revenue = deployment.targets['ArcDAO'].address;
     const distributor = owner;
 
-    if (type == 'StakingRewardsAccrual') {
+    if (type == 'RewardCampaign') {
       // Deploy contract
-      await deployer.deployContract({
+      const rewardContract = await deployer.deployContract({
         name: stakingRewardNameFixed,
+        dependency: 'Implementation-1',
         source: type,
-        deployData: StakingRewardsAccrual.getDeployTransaction(
-          account,
-          revenue,
-          distributor,
-          rewardsToken,
-          stakingToken,
-          accrualToken,
+        deployData: RewardCampaign.getDeployTransaction(account).data,
+      });
+
+      const proxy = await deployer.deployContract({
+        name: stakingRewardNameFixed,
+        dependency: 'Proxy',
+        source: 'ArcProxy',
+        deployData: ArcProxy.getDeployTransaction(
+          deployer.account,
+          rewardContract.address,
+          await deployer.account.getAddress(),
+          [],
         ).data,
       });
+
+      await (await RewardCampaign.at(deployer.account, proxy.address)).init(
+        revenue,
+        getUsers({ network, user: 'rewardsDistributor' }).address,
+        rewardsToken,
+        stakingToken,
+        { value: rewardConfig.daoAllocation },
+        { value: rewardConfig.slasherCut },
+        rewardConfig.stateContract,
+        rewardConfig.vestingEndDate,
+        rewardConfig.debtToStake,
+        rewardConfig.hardCap,
+      );
     }
 
-    if (type == 'TokenStakingAccrual') {
+    if (type == 'AdminRewards') {
       // Deploy contract
       await deployer.deployContract({
         name: stakingRewardNameFixed,
         source: type,
-        deployData: TokenStakingAccrual.getDeployTransaction(account, stakingToken, accrualToken)
-          .data,
-      });
-    }
-
-    if (type == 'StakingRewardsAccrualCapped') {
-      // Deploy contract
-      await deployer.deployContract({
-        name: stakingRewardNameFixed,
-        source: type,
-        deployData: StakingRewardsAccrualCapped.getDeployTransaction(
+        deployData: AdminRewards.getDeployTransaction(
           account,
           revenue,
           distributor,
           rewardsToken,
           stakingToken,
-          accrualToken,
+          AddressZero,
         ).data,
       });
     }

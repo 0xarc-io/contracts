@@ -14,10 +14,21 @@
 	"SynthRegistry": {
 		"deploy": false
 	},
+	"CoreV1": {
+		"deploy": false
+	},
+	"CoreV2": {
+		"deploy": false
+	},
+	"CoreV3": {
+		"deploy": false
+	},
+	"CoreV4": {
+		"deploy": false
+	},
 	"LINKUSD": {
 		"deploy": false,
 		"dependencies": {
-			"CoreV1": false,
 			"StateV1": false,
 			"Oracle": false,
 			"CollateralToken": false,
@@ -26,5 +37,11 @@
 	},
 	"KYFToken": {
 		"deploy": false
+	},
+	"SkillsetMetadata": {
+		"deploy": false,
+		"dependencies": {
+			"SkillsetMetadataV1": true
+		}
 	}
 }

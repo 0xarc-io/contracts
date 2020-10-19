@@ -5,10 +5,10 @@ import { ITestContext } from '@test/helpers/simpleDescribe';
 import { Wallet, ethers } from 'ethers';
 import {
   AddressAccrual,
-  StakingRewardsAccrualCapped,
   TokenStakingAccrual,
   KYFV2,
   ArcxToken,
+  MockRewardCampaign,
 } from '@src/typings';
 import { TestToken } from '@src/typings/TestToken';
 import { AddressZero } from 'ethers/constants';
@@ -17,7 +17,10 @@ import { EVM } from '../../helpers/EVM';
 import { generatedWallets } from '../../../src/utils/generatedWallets';
 import { expectRevert } from '../../../src/utils/expectRevert';
 import ArcNumber from '@src/utils/ArcNumber';
-import { BigNumber } from 'ethers/utils';
+import { BigNumber, BigNumberish } from 'ethers/utils';
+import { TestArc } from '../../../src/TestArc';
+import { ArcProxy } from '@src/typings';
+import ArcDecimal from '@src/utils/ArcDecimal';
 
 let ownerWallet: Wallet;
 let userWallet: Wallet;
@@ -31,9 +34,10 @@ let arcToken: ArcxToken;
 let stakingToken: TestToken;
 let kermanToken: TestToken;
 let arcDAO: AddressAccrual;
-let rewardPool: StakingRewardsAccrualCapped;
+let rewardPool: MockRewardCampaign;
 let kermanStaking: TokenStakingAccrual;
 let kyf: KYFV2;
+let arc: TestArc;
 
 jest.setTimeout(30000);
 
@@ -41,6 +45,7 @@ const provider = new ethers.providers.JsonRpcProvider();
 const evm = new EVM(provider);
 
 let wallets = generatedWallets(provider);
+let positionId: BigNumberish;
 
 describe('Staking Integration', () => {
   ownerWallet = wallets[0];
@@ -57,15 +62,18 @@ describe('Staking Integration', () => {
     kermanToken = await TestToken.deploy(ownerWallet, 'KERMAN', 'KERMAN');
     arcDAO = await AddressAccrual.deploy(ownerWallet, arcToken.address);
 
-    rewardPool = await StakingRewardsAccrualCapped.deploy(
+    rewardPool = await MockRewardCampaign.deploy(
       ownerWallet,
       arcDAO.address,
       ownerWallet.address,
       arcToken.address,
       stakingToken.address,
-      AddressZero,
     );
 
+    rewardPool = await MockRewardCampaign.at(
+      ownerWallet,
+      (await ArcProxy.deploy(ownerWallet, rewardPool.address, ownerWallet.address, [])).address,
+    );
     kermanStaking = await TokenStakingAccrual.deploy(
       ownerWallet,
       kermanToken.address,
@@ -74,13 +82,29 @@ describe('Staking Integration', () => {
 
     kyf = await KYFV2.deploy(ownerWallet);
 
+    arc = await TestArc.init(ownerWallet);
+    await arc.deployTestArc();
+
+    await rewardPool.init(
+      arcDAO.address,
+      ownerWallet.address,
+      arcToken.address,
+      stakingToken.address,
+      ArcDecimal.new(0.4),
+      ArcDecimal.new(1),
+      arc.state.address,
+      100,
+      1,
+      100,
+    );
+
+    const result = await arc._borrowSynthetic(100, 1000, userWallet);
+    positionId = result.params.id;
+
     await kyf.setVerifier(ownerWallet.address);
     await kyf.setHardCap(10);
 
     await rewardPool.setApprovedKYFInstance(kyf.address, true);
-    await rewardPool.setStakeHardCap(100);
-
-    await rewardPool.setRewardsDistribution(ownerWallet.address);
     await rewardPool.setRewardsDuration(100);
   });
 
@@ -98,23 +122,10 @@ describe('Staking Integration', () => {
     await stakingToken.mintShare(userWallet.address, 100);
     await Token.approve(stakingToken.address, userWallet, rewardPool.address, 100);
 
-    const userRewardPool = await StakingRewardsAccrualCapped.at(userWallet, rewardPool.address);
-    await userRewardPool.stake(100);
+    const userRewardPool = await MockRewardCampaign.at(userWallet, rewardPool.address);
+    await userRewardPool.stake(100, positionId);
 
     expect((await userRewardPool.balanceOf(userWallet.address)).toNumber()).toEqual(100);
-  });
-
-  it('should be able to increase the staking hard cap and let users stake more', async () => {
-    const userRewardPool = await StakingRewardsAccrualCapped.at(userWallet, rewardPool.address);
-
-    await stakingToken.mintShare(userWallet.address, 100);
-    await Token.approve(stakingToken.address, userWallet, rewardPool.address, 100);
-
-    await expectRevert(userRewardPool.stake(100));
-    await rewardPool.setStakeHardCap(200);
-    await userRewardPool.stake(100);
-
-    expect((await userRewardPool.balanceOf(userWallet.address)).toNumber()).toEqual(200);
   });
 
   it('should be able to enable claims', async () => {
@@ -124,22 +135,21 @@ describe('Staking Integration', () => {
     // Set the time period for the rewards amount to 100
     await rewardPool.notifyRewardAmount(100);
 
-    // Increase the time by 100 to get to the end of the reward period
-    await evm.increaseTime(100);
-    await evm.mineBlock();
+    // Increase the time to 200 to get to the end of the reward period + debt deadline
+    await rewardPool.setCurrentTimestamp(200);
 
-    const userRewardPool = await StakingRewardsAccrualCapped.at(userWallet, rewardPool.address);
-    await expectRevert(userRewardPool.getReward());
+    const userRewardPool = await MockRewardCampaign.at(userWallet, rewardPool.address);
+    await expectRevert(userRewardPool.getReward(userWallet.address));
     await expectRevert(userRewardPool.setTokensClaimable(true));
 
     await rewardPool.setTokensClaimable(true);
-    await userRewardPool.getReward();
+    await userRewardPool.getReward(userWallet.address);
 
     expect(await (await arcToken.balanceOf(userWallet.address)).toNumber()).toBeGreaterThanOrEqual(
-      new BigNumber(100).mul(2).div(3).toNumber(),
+      new BigNumber(100).mul(6).div(10).toNumber(),
     );
     expect(await (await arcToken.balanceOf(arcDAO.address)).toNumber()).toBeGreaterThanOrEqual(
-      new BigNumber(100).div(3).toNumber(),
+      new BigNumber(100).mul(4).div(10).toNumber(),
     );
   });
 
@@ -151,7 +161,9 @@ describe('Staking Integration', () => {
 
     await arcDAO.updateFees();
 
-    expect(await (await arcDAO.accruedBalance()).toNumber()).toBeGreaterThanOrEqual(33);
+    const expectedBalance = 40;
+
+    expect(await (await arcDAO.accruedBalance()).toNumber()).toBeGreaterThanOrEqual(40);
 
     expect(await arcToken.balanceOf(investorWallet.address)).toEqual(ArcNumber.new(0));
     expect(await arcToken.balanceOf(kermanStaking.address)).toEqual(ArcNumber.new(0));
@@ -163,10 +175,18 @@ describe('Staking Integration', () => {
     await arcDAO.claimFor(kermanWallet.address);
     await arcDAO.claimFor(arcFoundationWallet.address);
 
-    expect(await arcToken.balanceOf(investorWallet.address)).toEqual(new BigNumber(8));
-    expect(await arcToken.balanceOf(kermanStaking.address)).toEqual(new BigNumber(8));
-    expect(await arcToken.balanceOf(kermanWallet.address)).toEqual(new BigNumber(8));
-    expect(await arcToken.balanceOf(arcFoundationWallet.address)).toEqual(new BigNumber(8));
+    expect(await arcToken.balanceOf(investorWallet.address)).toEqual(
+      new BigNumber(expectedBalance).div(4),
+    );
+    expect(await arcToken.balanceOf(kermanStaking.address)).toEqual(
+      new BigNumber(expectedBalance).div(4),
+    );
+    expect(await arcToken.balanceOf(kermanWallet.address)).toEqual(
+      new BigNumber(expectedBalance).div(4),
+    );
+    expect(await arcToken.balanceOf(arcFoundationWallet.address)).toEqual(
+      new BigNumber(expectedBalance).div(4),
+    );
   });
 
   it('should be able to claim tokens as a KERMAN holder', async () => {
@@ -185,7 +205,7 @@ describe('Staking Integration', () => {
     await kermanStaking.claimFor(kermanInvestorWallet1.address);
     await kermanStaking.claimFor(kermanInvestorWallet2.address);
 
-    expect(await arcToken.balanceOf(kermanInvestorWallet1.address)).toEqual(new BigNumber(4));
-    expect(await arcToken.balanceOf(kermanInvestorWallet2.address)).toEqual(new BigNumber(4));
+    expect(await arcToken.balanceOf(kermanInvestorWallet1.address)).toEqual(new BigNumber(5));
+    expect(await arcToken.balanceOf(kermanInvestorWallet2.address)).toEqual(new BigNumber(5));
   });
 });

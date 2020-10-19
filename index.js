@@ -198,21 +198,22 @@ const getStakingRewards = ({ network = 'mainnet', path, fs } = {}) => {
  * Retrieve the list of system user addresses
  */
 const getUsers = ({ network = 'mainnet', user } = {}) => {
-	const testnetOwner = '0xB64fF7a4a33Acdf48d97dab0D764afD0F6176882';
+	const testnetOwner = '0xa8C01EfD74A206Bb2d769b6b3a5759508c83F20C';
 	const base = {
 		owner: testnetOwner,
-		deployer: testnetOwner,
+		rewardsDistributor: testnetOwner,
 		zero: '0x' + '0'.repeat(40),
 	};
 
 	const map = {
 		mainnet: Object.assign({}, base, {
-			owner: '',
-			deployer: '',
+			owner: '0x62f31e08e279f3091d9755a09914df97554eae0b',
+			rewardsDistributor: '0x62f31e08e279f3091d9755a09914df97554eae0b',
 		}),
 		kovan: Object.assign({}, base),
 		rinkeby: Object.assign({}, base),
 		ropsten: Object.assign({}, base),
+		local: Object.assign({}, base),
 	};
 
 	const users = Object.entries(map[network]).map(([key, value]) => ({ name: key, address: value }));
