@@ -35,9 +35,9 @@
             "daoAllocation": "330000000000000000",
             "slasherCut": "330000000000000000",
             "stateContract": "0x94F40fD4018586AaFb8A6AD95441e0b58cc4c058",
-            "vestingEndDate": "1602750099",
+            "vestingEndDate": "1610744254",
             "debtToStake": "2",
-            "hardCap": "20000000000000000000000"
+            "hardCap": "2000000000000000000000"
         }
     }
 ]
