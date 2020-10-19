@@ -9,7 +9,7 @@ import { BigNumber, BigNumberish } from 'ethers/utils';
 import ArcNumber from '@src/utils/ArcNumber';
 import { TokenStakingAccrual } from '@src/typings/TokenStakingAccrual';
 import { expectRevert } from '@src/utils/expectRevert';
-import { KYFV2, MockRewardCampaign } from '@src/typings';
+import { ArcProxy, KYFV2, MockRewardCampaign } from '@src/typings';
 import { TestArc } from '../../../src/TestArc';
 import ArcDecimal from '../../../src/utils/ArcDecimal';
 import { Test } from 'mocha';
@@ -69,15 +69,24 @@ simpleDescribe('RewardCampaign', init, (ctx: ITestContext) => {
       stakingToken.address,
     );
 
+    stakingRewards = await MockRewardCampaign.at(
+      ownerWallet,
+      (await ArcProxy.deploy(ownerWallet, stakingRewards.address, ownerWallet.address, [])).address,
+    );
+
     await rewardToken.mintShare(stakingRewards.address, REWARD_AMOUNT);
 
     await stakingRewards.setCurrentTimestamp(0);
     await stakingRewards.setRewardsDistributor(ownerWallet.address);
     await stakingRewards.setRewardsDuration(REWARDS_END_DATE);
-    await stakingRewards.configure(
+
+    await stakingRewards.init(
+      ownerWallet.address,
+      ownerWallet.address,
+      rewardToken.address,
+      stakingToken.address,
       DAO_ALLOCATION,
       SLAHSER_CUT,
-      rewardToken.address,
       arc.state.address,
       VESTING_END_DATE,
       DEBT_TO_STAKE,
@@ -501,15 +510,18 @@ simpleDescribe('RewardCampaign', init, (ctx: ITestContext) => {
     });
   });
 
-  describe('#configure', () => {
+  describe('#init', () => {
     beforeEach(setup);
 
     it('should not be callable by anyone', async () => {
       await expectRevert(
-        (await getContract(userWallet)).configure(
+        (await getContract(userWallet)).init(
+          ownerWallet.address,
+          ownerWallet.address,
+          rewardToken.address,
+          stakingToken.address,
           DAO_ALLOCATION,
           SLAHSER_CUT,
-          rewardToken.address,
           arc.state.address,
           VESTING_END_DATE,
           DEBT_TO_STAKE,
@@ -517,10 +529,13 @@ simpleDescribe('RewardCampaign', init, (ctx: ITestContext) => {
         ),
       );
       await expectRevert(
-        (await getContract(slasherWallet)).configure(
+        (await getContract(slasherWallet)).init(
+          ownerWallet.address,
+          ownerWallet.address,
+          rewardToken.address,
+          stakingToken.address,
           DAO_ALLOCATION,
           SLAHSER_CUT,
-          rewardToken.address,
           arc.state.address,
           VESTING_END_DATE,
           DEBT_TO_STAKE,
@@ -530,10 +545,13 @@ simpleDescribe('RewardCampaign', init, (ctx: ITestContext) => {
     });
 
     it('should only be callable by the contract owner', async () => {
-      await (await getContract(ownerWallet)).configure(
+      await (await getContract(ownerWallet)).init(
+        ownerWallet.address,
+        ownerWallet.address,
+        rewardToken.address,
+        stakingToken.address,
         DAO_ALLOCATION,
         SLAHSER_CUT,
-        rewardToken.address,
         arc.state.address,
         VESTING_END_DATE,
         DEBT_TO_STAKE,
