@@ -362,7 +362,7 @@ contract RewardCampaign is Adminable {
         return rewardRate.mul(rewardsDuration);
     }
 
-     function getCurrentTimestamp()
+    function getCurrentTimestamp()
         public
         view
         returns (uint256)
