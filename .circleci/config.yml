@@ -1,4 +1,3 @@
-
 version: 2.1
 jobs:
   build:
@@ -29,9 +28,3 @@ jobs:
       - run:
           name: Publish release
           command: yarn semantic-release
-          context: Main
-
-      # - save_cache:
-      #     key: dependency-cache-{{ checksum "package.json" }}
-      #     paths:
-      #       - node_modules
