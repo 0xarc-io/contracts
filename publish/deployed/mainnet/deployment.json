@@ -218,20 +218,20 @@
 		},
 		"SkillsetMetadata": {
 			"name": "SkillsetMetadata",
-			"address": "0xfb4b3F58EF56A5e30e26a529FF2Ae9Dc9ef09777",
+			"address": "0xAc09434EAce70771AEcb75B3BdEB775B4c1B4Aef",
 			"source": "ArcProxy",
-			"link": "https://etherscan.io/address/0xfb4b3F58EF56A5e30e26a529FF2Ae9Dc9ef09777",
-			"timestamp": "2020-10-19T03:43:41.352Z",
-			"txn": "0xf9b0bf05c81992ac110926d325420dae99a9775097e08bdbda55ddbc23946662",
+			"link": "https://etherscan.io/address/0xAc09434EAce70771AEcb75B3BdEB775B4c1B4Aef",
+			"timestamp": "2020-10-20T10:10:28.321Z",
+			"txn": "0xe22e539a5fa4b517ffed75d8154e07daa4867035322dcca6ee58d917a28480bb",
 			"network": "mainnet",
 			"dependencies": {
 				"Implementation-1": {
 					"dependency": "Implementation-1",
-					"address": "0xF7A0DE1C841b5a8BE7A6d1DCEf2688Fc86e8104b",
+					"address": "0x1D453D0c02D6ac3494A4be4f53e59F01abd0E6a3",
 					"source": "SkillsetMetadata",
-					"link": "https://etherscan.io/address/0xF7A0DE1C841b5a8BE7A6d1DCEf2688Fc86e8104b",
-					"timestamp": "2020-10-19T03:43:22.115Z",
-					"txn": "0x7175fa475f7e9eece0c2438ac68ae65b072a0f707287c1215cf3339148a0cc90",
+					"link": "https://etherscan.io/address/0x1D453D0c02D6ac3494A4be4f53e59F01abd0E6a3",
+					"timestamp": "2020-10-20T10:09:59.209Z",
+					"txn": "0x0bb685743c7ebb234b6367447a77a9c5af07a1648f0bb3ce1ba46d037aa1a75e",
 					"network": "mainnet"
 				}
 			}
