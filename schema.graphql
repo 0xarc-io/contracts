@@ -15,6 +15,16 @@ type Position @entity {
   borrowedAmountValue: BigInt!
 }
 
+type ActionOperated @entity {
+  id: ID!
+  owner: Bytes!
+  operation: Int!
+  amountOne: BigInt
+  amountTwo: BigInt
+  position: Position!
+  createdAt: Int!
+}
+
 type GlobalMarket @entity {
   id: ID!
   collateralRatio: BigInt!
