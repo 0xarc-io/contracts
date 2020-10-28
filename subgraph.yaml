@@ -10,13 +10,14 @@ dataSources:
     source:
       address: '0x5568Df89AF6Bc835B876fDc3B2d44ef63530e419'
       abi: CoreV1
-      startBlock: 6965000
+      startBlock: 10812695
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
       language: wasm/assemblyscript
       entities:
         - Position
+        - ActionOperated
       abis:
         - name: CoreV1
           file: ./artifacts/CoreV1.json
