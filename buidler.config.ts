@@ -3,7 +3,9 @@ import { privateKeys } from './src/utils/generatedWallets';
 import { BigNumber } from 'ethers/utils';
 
 usePlugin('@nomiclabs/buidler-etherscan');
+usePlugin('@nomiclabs/buidler-waffle');
 usePlugin('buidler-typechain');
+usePlugin('solidity-coverage');
 usePlugin('buidler-spdx-license-identifier');
 
 require('dotenv').config({ path: '.env' }).parsed;
@@ -16,7 +18,7 @@ export const params = {
   etherscan_key: process.env.ETHERSCAN_KEY || '',
 };
 
-const HUNDRED_ETH = new BigNumber(100).pow(18).toString();
+const HUNDRED_THOUSAND_ETH = new BigNumber(100000).pow(18).toString();
 
 const config: BuidlerConfig = {
   defaultNetwork: 'buidlerevm',
@@ -46,7 +48,7 @@ const config: BuidlerConfig = {
       accounts: privateKeys.map((key) => {
         return {
           privateKey: key,
-          balance: HUNDRED_ETH,
+          balance: HUNDRED_THOUSAND_ETH,
         };
       }),
     },

@@ -1,4 +1,4 @@
-import 'jest';
+import 'module-alias/register';
 
 import { Wallet } from 'ethers';
 import { ITestContext } from '@test/helpers/d1ArcDescribe';
@@ -9,6 +9,7 @@ import ArcNumber from '@src/utils/ArcNumber';
 import { expectRevert } from '@src/utils/expectRevert';
 import { BigNumber } from 'ethers/utils';
 import { MockOracle } from '@src/typings';
+import { getWaffleExpect } from '../../helpers/testingUtils';
 
 let ownerWallet: Wallet;
 let lenderWallet: Wallet;
@@ -19,14 +20,14 @@ let liquidatorWallet: Wallet;
 async function init(ctx: ITestContext): Promise<void> {
   await initializeArc(ctx);
 
-  ownerWallet = ctx.wallets[0];
-  lenderWallet = ctx.wallets[1];
-  syntheticMinterWallet = ctx.wallets[2];
-  stableShareMinterWallet = ctx.wallets[3];
-  liquidatorWallet = ctx.wallets[4];
+  ownerWallet = ctx.accounts[0].wallet;
+  lenderWallet = ctx.accounts[1].wallet;
+  syntheticMinterWallet = ctx.accounts[2].wallet;
+  stableShareMinterWallet = ctx.accounts[3].wallet;
+  liquidatorWallet = ctx.accounts[4].wallet;
 }
 
-jest.setTimeout(30000);
+const expect = getWaffleExpect();
 
 d1ArcDescribe('#Actions.liquidatePosition()', init, (ctx: ITestContext) => {
   beforeEach(async () => {
@@ -77,11 +78,11 @@ d1ArcDescribe('#Actions.liquidatePosition()', init, (ctx: ITestContext) => {
     const expectedReward = new BigNumber('529629629629629628');
     const expectedCut = new BigNumber('26481481481481481');
 
-    expect((await ctx.arc.collateralAsset.balanceOf(liquidatorWallet.address)).toString()).toEqual(
-      expectedReward.sub(expectedCut).toString(),
-    );
+    expect(
+      (await ctx.arc.collateralAsset.balanceOf(await liquidatorWallet.getAddress())).toString(),
+    ).to.equal(expectedReward.sub(expectedCut).toString());
 
-    expect((await ctx.arc.collateralAsset.balanceOf(ctx.arc.core.address)).toString()).toEqual(
+    expect((await ctx.arc.collateralAsset.balanceOf(ctx.arc.core.address)).toString()).to.equal(
       expectedCut.toString(),
     );
   });

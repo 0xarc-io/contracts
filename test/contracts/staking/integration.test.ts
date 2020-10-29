@@ -1,4 +1,4 @@
-import 'jest';
+import 'module-alias/register';
 
 import simpleDescribe from '@test/helpers/simpleDescribe';
 import { ITestContext } from '@test/helpers/simpleDescribe';
@@ -21,6 +21,7 @@ import { BigNumber, BigNumberish } from 'ethers/utils';
 import { D1TestArc } from '../../../src/D1TestArc';
 import { ArcProxy } from '@src/typings';
 import ArcDecimal from '@src/utils/ArcDecimal';
+import { getWaffleExpect } from '../../helpers/testingUtils';
 
 let ownerWallet: Wallet;
 let userWallet: Wallet;
@@ -39,7 +40,7 @@ let kermanStaking: TokenStakingAccrual;
 let kyf: KYFV2;
 let arc: D1TestArc;
 
-jest.setTimeout(30000);
+const expect = getWaffleExpect();
 
 const provider = new ethers.providers.JsonRpcProvider();
 const evm = new EVM(provider);
@@ -56,7 +57,7 @@ describe('Staking Integration', () => {
   kermanInvestorWallet1 = wallets[5];
   kermanInvestorWallet2 = wallets[6];
 
-  beforeAll(async () => {
+  before(async () => {
     arcToken = await ArcxToken.deploy(ownerWallet);
     stakingToken = await TestToken.deploy(ownerWallet, 'BPT', 'BPT');
     kermanToken = await TestToken.deploy(ownerWallet, 'KERMAN', 'KERMAN');
@@ -115,7 +116,7 @@ describe('Staking Integration', () => {
 
     await kyf.verify(userWallet.address, signature.v, signature.r, signature.s);
 
-    expect(await kyf.checkVerified(userWallet.address)).toBeTruthy();
+    expect(await kyf.checkVerified(userWallet.address)).to.be.true;
   });
 
   it('should be able to stake', async () => {
@@ -125,7 +126,7 @@ describe('Staking Integration', () => {
     const userRewardPool = await MockRewardCampaign.at(userWallet, rewardPool.address);
     await userRewardPool.stake(100, positionId);
 
-    expect((await userRewardPool.balanceOf(userWallet.address)).toNumber()).toEqual(100);
+    expect((await userRewardPool.balanceOf(userWallet.address)).toNumber()).to.equal(100);
   });
 
   it('should be able to enable claims', async () => {
@@ -145,10 +146,10 @@ describe('Staking Integration', () => {
     await rewardPool.setTokensClaimable(true);
     await userRewardPool.getReward(userWallet.address);
 
-    expect(await (await arcToken.balanceOf(userWallet.address)).toNumber()).toBeGreaterThanOrEqual(
+    expect(await (await arcToken.balanceOf(userWallet.address)).toNumber()).to.be.gte(
       new BigNumber(100).mul(6).div(10).toNumber(),
     );
-    expect(await (await arcToken.balanceOf(arcDAO.address)).toNumber()).toBeGreaterThanOrEqual(
+    expect(await (await arcToken.balanceOf(arcDAO.address)).toNumber()).to.be.gte(
       new BigNumber(100).mul(4).div(10).toNumber(),
     );
   });
@@ -163,35 +164,35 @@ describe('Staking Integration', () => {
 
     const expectedBalance = 40;
 
-    expect(await (await arcDAO.accruedBalance()).toNumber()).toBeGreaterThanOrEqual(40);
+    expect(await (await arcDAO.accruedBalance()).toNumber()).to.be.gte(40);
 
-    expect(await arcToken.balanceOf(investorWallet.address)).toEqual(ArcNumber.new(0));
-    expect(await arcToken.balanceOf(kermanStaking.address)).toEqual(ArcNumber.new(0));
-    expect(await arcToken.balanceOf(kermanWallet.address)).toEqual(ArcNumber.new(0));
-    expect(await arcToken.balanceOf(arcFoundationWallet.address)).toEqual(ArcNumber.new(0));
+    expect(await arcToken.balanceOf(investorWallet.address)).to.equal(ArcNumber.new(0));
+    expect(await arcToken.balanceOf(kermanStaking.address)).to.equal(ArcNumber.new(0));
+    expect(await arcToken.balanceOf(kermanWallet.address)).to.equal(ArcNumber.new(0));
+    expect(await arcToken.balanceOf(arcFoundationWallet.address)).to.equal(ArcNumber.new(0));
 
     await arcDAO.claimFor(investorWallet.address);
     await arcDAO.claimFor(kermanStaking.address);
     await arcDAO.claimFor(kermanWallet.address);
     await arcDAO.claimFor(arcFoundationWallet.address);
 
-    expect(await arcToken.balanceOf(investorWallet.address)).toEqual(
+    expect(await arcToken.balanceOf(investorWallet.address)).to.equal(
       new BigNumber(expectedBalance).div(4),
     );
-    expect(await arcToken.balanceOf(kermanStaking.address)).toEqual(
+    expect(await arcToken.balanceOf(kermanStaking.address)).to.equal(
       new BigNumber(expectedBalance).div(4),
     );
-    expect(await arcToken.balanceOf(kermanWallet.address)).toEqual(
+    expect(await arcToken.balanceOf(kermanWallet.address)).to.equal(
       new BigNumber(expectedBalance).div(4),
     );
-    expect(await arcToken.balanceOf(arcFoundationWallet.address)).toEqual(
+    expect(await arcToken.balanceOf(arcFoundationWallet.address)).to.equal(
       new BigNumber(expectedBalance).div(4),
     );
   });
 
   it('should be able to claim tokens as a KERMAN holder', async () => {
-    expect(await arcToken.balanceOf(kermanInvestorWallet1.address)).toEqual(new BigNumber(0));
-    expect(await arcToken.balanceOf(kermanInvestorWallet2.address)).toEqual(new BigNumber(0));
+    expect(await arcToken.balanceOf(kermanInvestorWallet1.address)).to.equal(new BigNumber(0));
+    expect(await arcToken.balanceOf(kermanInvestorWallet2.address)).to.equal(new BigNumber(0));
 
     await kermanToken.mintShare(kermanInvestorWallet1.address, 50);
     await kermanToken.mintShare(kermanInvestorWallet2.address, 50);
@@ -205,7 +206,7 @@ describe('Staking Integration', () => {
     await kermanStaking.claimFor(kermanInvestorWallet1.address);
     await kermanStaking.claimFor(kermanInvestorWallet2.address);
 
-    expect(await arcToken.balanceOf(kermanInvestorWallet1.address)).toEqual(new BigNumber(5));
-    expect(await arcToken.balanceOf(kermanInvestorWallet2.address)).toEqual(new BigNumber(5));
+    expect(await arcToken.balanceOf(kermanInvestorWallet1.address)).to.equal(new BigNumber(5));
+    expect(await arcToken.balanceOf(kermanInvestorWallet2.address)).to.equal(new BigNumber(5));
   });
 });

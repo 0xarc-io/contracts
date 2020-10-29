@@ -1,4 +1,4 @@
-import 'jest';
+import 'module-alias/register';
 
 import { ethers, Wallet } from 'ethers';
 import { expectRevert } from '@src/utils/expectRevert';
@@ -12,8 +12,9 @@ import { BigNumberish, BigNumber } from 'ethers/utils';
 import { EVM } from '../../helpers/EVM';
 import { generatedWallets } from '../../../src/utils/generatedWallets';
 import Token from '@src/utils/Token';
+import { getWaffleExpect } from '../../helpers/testingUtils';
 
-jest.setTimeout(30000);
+const expect = getWaffleExpect();
 
 const provider = new ethers.providers.JsonRpcProvider();
 const evm = new EVM(provider);
@@ -37,7 +38,7 @@ describe('CoreV4Migration', () => {
     await oracle.setPrice(price);
   }
 
-  beforeAll(async () => {
+  before(async () => {
     ownerWallet = wallets[0];
     userWallet = wallets[1];
     liquidatorWallet = wallets[2];
@@ -82,15 +83,15 @@ describe('CoreV4Migration', () => {
 
     // This should put the user's position in positive debt by 200
     const repayResult = await arc.repay(positionId, ArcNumber.new(300), 0, userWallet);
-    expect(repayResult.updatedPosition.borrowedAmount.sign).toBeTruthy();
-    expect(repayResult.updatedPosition.borrowedAmount.value).toEqual(ArcNumber.new(200));
+    expect(repayResult.updatedPosition.borrowedAmount.sign).to.be.true;
+    expect(repayResult.updatedPosition.borrowedAmount.value).to.equal(ArcNumber.new(200));
 
     // Drop the price so the position is now "under collateralised"
     // 50 LINK * 5 = $250, Borrow = $200 = < 200% c-ratio
     await updateOraclePrice(ArcDecimal.new(5));
 
     const isCollateralised = await arc.state.isCollateralized(repayResult.updatedPosition);
-    expect(isCollateralised).toBeFalsy();
+    expect(isCollateralised).to.be.false;
 
     await expectRevert(
       arc._borrowSynthetic(ArcNumber.new(10), ArcNumber.new(100), userWallet, positionId),
@@ -121,8 +122,8 @@ describe('CoreV4Migration', () => {
       positionId,
     );
 
-    expect(borrowResult.updatedPosition.borrowedAmount.value).toEqual(ArcNumber.new(0));
-    expect(borrowResult.updatedPosition.borrowedAmount.sign).toBeFalsy();
+    expect(borrowResult.updatedPosition.borrowedAmount.value).to.equal(ArcNumber.new(0));
+    expect(borrowResult.updatedPosition.borrowedAmount.sign).to.be.false;
 
     // Withdraw the remaining collateral
     const repayResult = await arc.repay(
@@ -132,8 +133,8 @@ describe('CoreV4Migration', () => {
       userWallet,
     );
 
-    expect(repayResult.updatedPosition.collateralAmount.value).toEqual(ArcNumber.new(0));
-    expect(repayResult.updatedPosition.collateralAmount.sign).toBeTruthy();
+    expect(repayResult.updatedPosition.collateralAmount.value).to.equal(ArcNumber.new(0));
+    expect(repayResult.updatedPosition.collateralAmount.sign).to.be.true;
 
     // Make sure they can't go into positive debt again
     await expectRevert(arc.repay(positionId, ArcNumber.new(100), 0, userWallet));

@@ -1,4 +1,4 @@
-import 'jest';
+import 'module-alias/register';
 
 import { Wallet } from 'ethers';
 
@@ -9,19 +9,19 @@ import { StateV1, MockOracle } from '@src/typings';
 import { expectRevert } from '@src/utils/expectRevert';
 import ArcNumber from '@src/utils/ArcNumber';
 import ArcDecimal from '@src/utils/ArcDecimal';
-import { AddressZero } from 'ethers/constants';
+import { getWaffleExpect } from '../../helpers/testingUtils';
 
 let ownerWallet: Wallet;
 let otherWallet: Wallet;
 
-jest.setTimeout(30000);
+const expect = getWaffleExpect();
 
 async function init(ctx: ITestContext): Promise<void> {
   await initializeArc(ctx);
   await ctx.arc.oracle.setPrice(ArcDecimal.new(400));
 
-  ownerWallet = ctx.wallets[0];
-  otherWallet = ctx.wallets[1];
+  ownerWallet = ctx.accounts[0].wallet;
+  otherWallet = ctx.accounts[1].wallet;
 }
 
 d1ArcDescribe('StateV1', init, (ctx: ITestContext) => {
@@ -106,9 +106,9 @@ d1ArcDescribe('StateV1', init, (ctx: ITestContext) => {
       });
 
       const currentMarket = await state.market();
-      expect(currentMarket.collateralRatio.value).toEqual(ArcNumber.new(1));
-      expect(currentMarket.liquidationArcFee.value).toEqual(ArcNumber.new(1));
-      expect(currentMarket.liquidationUserFee.value).toEqual(ArcNumber.new(1));
+      expect(currentMarket.collateralRatio.value).to.equal(ArcNumber.new(1));
+      expect(currentMarket.liquidationArcFee.value).to.equal(ArcNumber.new(1));
+      expect(currentMarket.liquidationUserFee.value).to.equal(ArcNumber.new(1));
     });
 
     it('should not be able to set the risk params as non-admin', async () => {
@@ -131,20 +131,20 @@ d1ArcDescribe('StateV1', init, (ctx: ITestContext) => {
       });
 
       const currentRisk = await state.risk();
-      expect(currentRisk.syntheticLimit).toEqual(ArcNumber.new(100));
-      expect(currentRisk.collateralLimit).toEqual(ArcNumber.new(100));
-      expect(currentRisk.positionCollateralMinimum).toEqual(ArcNumber.new(100));
+      expect(currentRisk.syntheticLimit).to.equal(ArcNumber.new(100));
+      expect(currentRisk.collateralLimit).to.equal(ArcNumber.new(100));
+      expect(currentRisk.positionCollateralMinimum).to.equal(ArcNumber.new(100));
     });
 
     it('should not be able to set the oracle as non-admin', async () => {
       const state = await ctx.arc.getState(otherWallet);
-      await expectRevert(state.setOracle(otherWallet.address));
+      await expectRevert(state.setOracle(await otherWallet.getAddress()));
     });
 
     it('should be able to set the oracle as admin', async () => {
       const state = await ctx.arc.getState(ownerWallet);
-      await state.setOracle(ownerWallet.address);
-      expect(await state.oracle()).toEqual(ownerWallet.address);
+      await state.setOracle(await ownerWallet.getAddress());
+      expect(await state.oracle()).to.equal(await ownerWallet.getAddress());
     });
   });
 
@@ -152,12 +152,13 @@ d1ArcDescribe('StateV1', init, (ctx: ITestContext) => {
     let isolatedStateAddress: string;
 
     beforeEach(async () => {
+      const ownerWalletAddress = await ownerWallet.getAddress();
       const contract = await StateV1.deploy(
         ownerWallet,
-        ownerWallet.address,
-        ownerWallet.address,
-        ownerWallet.address,
-        ownerWallet.address,
+        ownerWalletAddress,
+        ownerWalletAddress,
+        ownerWalletAddress,
+        ownerWalletAddress,
         {
           collateralRatio: ArcDecimal.new(1),
           liquidationUserFee: ArcDecimal.new(1),
@@ -178,7 +179,7 @@ d1ArcDescribe('StateV1', init, (ctx: ITestContext) => {
 
     async function saveNewPosition(state: StateV1) {
       return await state.savePosition({
-        owner: ownerWallet.address,
+        owner: await ownerWallet.getAddress(),
         collateralAsset: 0,
         borrowedAmount: {
           sign: true,

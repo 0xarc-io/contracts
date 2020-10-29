@@ -45,7 +45,7 @@ export class D1TestArc extends D1Arc {
     positionId?: BigNumberish,
   ) {
     await Token.approve(this.collateralAsset.address, from, this.core.address, collateral, {});
-    await this.collateralAsset.mintShare(from.address, collateral, {});
+    await this.collateralAsset.mintShare(await from.getAddress(), collateral, {});
 
     if (!positionId) {
       return await this.openPosition(collateral, amount, from, {});
@@ -63,7 +63,7 @@ export class D1TestArc extends D1Arc {
     const position = await this.state.getPosition(positionId);
 
     if (position.borrowedAsset == AssetType.Collateral) {
-      await this.collateralAsset.mintShare(from.address, repayAmount, {});
+      await this.collateralAsset.mintShare(await from.getAddress(), repayAmount, {});
       await Token.approve(this.collateralAsset.address, from, this.core.address, repayAmount, {});
     } else if (position.borrowedAsset == AssetType.Synthetic) {
       const price = await this.oracle.fetchCurrentPrice();
