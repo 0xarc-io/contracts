@@ -67,10 +67,6 @@ contract D2CoreV1 is Adminable, D2Storage {
     /* ========== Modifiers ========== */
 
     modifier isAuthorisedOperator(D2Types.Position memory position) {
-        require(
-            position.owner == msg.sender,
-            "Must be an authorised operator"
-        );
         _;
     }
 
@@ -82,7 +78,7 @@ contract D2CoreV1 is Adminable, D2Storage {
         public
         onlyAdmin
     {
-        oracle = IOracle(_oracle);
+
     }
 
     function setCollateralRatio(
@@ -91,7 +87,7 @@ contract D2CoreV1 is Adminable, D2Storage {
         public
         onlyAdmin
     {
-        collateralRatio = _collateralRatio;
+
     }
 
     function setLiquidationFees(
@@ -100,7 +96,7 @@ contract D2CoreV1 is Adminable, D2Storage {
         public
         onlyAdmin
     {
-        liquidationUserFee = _liquidationUserFee;
+
     }
 
     function setLimits(
@@ -111,9 +107,7 @@ contract D2CoreV1 is Adminable, D2Storage {
         public
         onlyAdmin
     {
-        collateralLimit = _collateralLimit;
-        syntheticLimit = _syntheticLimit;
-        positionCollateralMinimum = _positionCollateralMinimum;
+
     }
 
     /* ========== Public Functions ========== */
