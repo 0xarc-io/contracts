@@ -4,8 +4,8 @@ import { ethers, Wallet } from 'ethers';
 import { expectRevert } from '@src/utils/expectRevert';
 
 import ArcNumber from '@src/utils/ArcNumber';
-import arcDescribe from '@test/helpers/arcDescribe';
-import { ITestContext } from '@test/helpers/arcDescribe';
+import d1ArcDescribe from '@test/helpers/d1ArcDescribe';
+import { ITestContext } from '@test/helpers/d1ArcDescribe';
 import initializeArc from '@test/helpers/initializeArc';
 import { AddressZero } from 'ethers/constants';
 import ArcDecimal from '@src/utils/ArcDecimal';
@@ -29,7 +29,7 @@ async function init(ctx: ITestContext): Promise<void> {
   otherWallet = ctx.wallets[1];
 }
 
-arcDescribe('D1Arc', init, (ctx: ITestContext) => {
+d1ArcDescribe('D1Arc', init, (ctx: ITestContext) => {
   describe('#init', () => {
     it('cannot call init if already called', async () => {
       const stateAddress = await ctx.arc.core.state();
