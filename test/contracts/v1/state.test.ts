@@ -2,8 +2,8 @@ import 'jest';
 
 import { Wallet } from 'ethers';
 
-import arcDescribe from '@test/helpers/arcDescribe';
-import { ITestContext } from '@test/helpers/arcDescribe';
+import d1ArcDescribe from '@test/helpers/d1ArcDescribe';
+import { ITestContext } from '@test/helpers/d1ArcDescribe';
 import initializeArc from '@test/helpers/initializeArc';
 import { StateV1, MockOracle } from '@src/typings';
 import { expectRevert } from '@src/utils/expectRevert';
@@ -24,7 +24,7 @@ async function init(ctx: ITestContext): Promise<void> {
   otherWallet = ctx.wallets[1];
 }
 
-arcDescribe('StateV1', init, (ctx: ITestContext) => {
+d1ArcDescribe('StateV1', init, (ctx: ITestContext) => {
   describe('#setLimits', () => {
     it('should not be able to set limits as non-admin', async () => {
       const contract = await StateV1.at(otherWallet, ctx.arc.state.address);

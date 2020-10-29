@@ -1,4 +1,4 @@
-import { ITestContext } from './arcDescribe';
+import { ITestContext } from './d1ArcDescribe';
 
 export interface ArcOptions {}
 

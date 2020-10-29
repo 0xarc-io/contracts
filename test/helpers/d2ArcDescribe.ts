@@ -1,10 +1,12 @@
 import 'jest';
 
-import { Wallet, ethers, providers } from 'ethers';
+import { D2TestArc } from '../../src/D2TestArc';
+import { Wallet, ethers } from 'ethers';
 import { generatedWallets } from '../../src/utils/generatedWallets';
 import { EVM } from './EVM';
 
 export interface ITestContext {
+  arc?: D2TestArc;
   wallets?: Wallet[];
   evm?: EVM;
 }
@@ -15,7 +17,7 @@ export type testsFunction = (ctx: ITestContext) => void;
 const provider = new ethers.providers.JsonRpcProvider();
 const evm = new EVM(provider);
 
-export default function simpleDescribe(
+export default function d2ArcDescribe(
   name: string,
   init: initFunction,
   tests: testsFunction,
@@ -31,6 +33,9 @@ export default function simpleDescribe(
     beforeAll(async () => {
       ctx.wallets = generatedWallets(provider);
       ctx.evm = evm;
+      ctx.arc = await D2TestArc.init(ctx.wallets[0]);
+
+      await ctx.arc.deployTestArc();
 
       preInitSnapshotId = await evm.snapshot();
 
@@ -53,8 +58,4 @@ export default function simpleDescribe(
 
     tests(ctx);
   });
-}
-
-function printGasUsage(label: string, value: number | string): void {
-  console.log(`\t\t\x1b[33m${label} \x1b[93m${value}\x1b[0m`);
 }

@@ -1,9 +1,9 @@
 import 'jest';
 
 import { Wallet } from 'ethers';
-import { ITestContext } from '@test/helpers/arcDescribe';
+import { ITestContext } from '@test/helpers/d1ArcDescribe';
 import initializeArc from '@test/helpers/initializeArc';
-import arcDescribe from '@test/helpers/arcDescribe';
+import d1ArcDescribe from '@test/helpers/d1ArcDescribe';
 import ArcDecimal from '@src/utils/ArcDecimal';
 import ArcNumber from '@src/utils/ArcNumber';
 import { BigNumberish, BigNumber } from 'ethers/utils';
@@ -28,7 +28,7 @@ async function init(ctx: ITestContext): Promise<void> {
 
 jest.setTimeout(30000);
 
-arcDescribe('#Actions.borrowPosition()', init, (ctx: ITestContext) => {
+d1ArcDescribe('#Actions.borrowPosition()', init, (ctx: ITestContext) => {
   describe('synthetic', () => {
     let positionId: BigNumberish;
 
