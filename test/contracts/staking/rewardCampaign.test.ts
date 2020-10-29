@@ -10,7 +10,7 @@ import ArcNumber from '@src/utils/ArcNumber';
 import { TokenStakingAccrual } from '@src/typings/TokenStakingAccrual';
 import { expectRevert } from '@src/utils/expectRevert';
 import { ArcProxy, KYFV2, MockRewardCampaign } from '@src/typings';
-import { TestArc } from '../../../src/TestArc';
+import { D1TestArc } from '../../../src/D1TestArc';
 import ArcDecimal from '../../../src/utils/ArcDecimal';
 import { Test } from 'mocha';
 import { Zero } from 'ethers/constants';
@@ -22,7 +22,7 @@ let distributionWallet: Wallet;
 
 jest.setTimeout(30000);
 
-let arc: TestArc;
+let arc: D1TestArc;
 let stakingRewards: MockRewardCampaign;
 
 let stakingToken: TestToken;
@@ -58,7 +58,7 @@ simpleDescribe('RewardCampaign', init, (ctx: ITestContext) => {
     kyfTranche1 = await KYFV2.deploy(ownerWallet);
     kyfTranche2 = await KYFV2.deploy(ownerWallet);
 
-    arc = await TestArc.init(ownerWallet);
+    arc = await D1TestArc.init(ownerWallet);
     await arc.deployTestArc();
 
     stakingRewards = await MockRewardCampaign.awaitDeployment(

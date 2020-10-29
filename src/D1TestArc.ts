@@ -1,4 +1,4 @@
-import Arc from './Arc';
+import D1Arc from './D1Arc';
 
 import { Wallet } from 'ethers';
 import { MockOracle } from './typings/MockOracle';
@@ -9,9 +9,9 @@ import { AssetType, DeploymentConfig } from './types';
 import { TestToken } from './typings';
 import ArcDecimal from './utils/ArcDecimal';
 
-export class TestArc extends Arc {
-  static async init(wallet: Wallet): Promise<TestArc> {
-    let arc = new TestArc();
+export class D1TestArc extends D1Arc {
+  static async init(wallet: Wallet): Promise<D1TestArc> {
+    let arc = new D1TestArc();
     arc.wallet = wallet;
     return arc;
   }
