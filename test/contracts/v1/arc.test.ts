@@ -6,7 +6,6 @@ import { expectRevert } from '@src/utils/expectRevert';
 import ArcNumber from '@src/utils/ArcNumber';
 import d1ArcDescribe from '@test/helpers/d1ArcDescribe';
 import { ITestContext } from '@test/helpers/d1ArcDescribe';
-import initializeArc from '@test/helpers/initializeArc';
 import { AddressZero } from 'ethers/constants';
 import ArcDecimal from '@src/utils/ArcDecimal';
 import { Account, getWaffleExpect } from '../../helpers/testingUtils';
@@ -17,9 +16,7 @@ let otherWallet: Account;
 const expect = getWaffleExpect();
 
 async function init(ctx: ITestContext): Promise<void> {
-  await initializeArc(ctx);
   await ctx.arc.oracle.setPrice(ArcDecimal.new(100));
-
   await ctx.arc.state.setMarketParams({
     collateralRatio: { value: ArcNumber.new(2) },
     liquidationUserFee: { value: ArcDecimal.new(0.05).value },

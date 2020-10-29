@@ -24,8 +24,8 @@ contract D2StorageV1 {
 
     uint256 public positionCount;
 
-    Amount.Principal public totalSupplied;
-    Amount.Principal public totalBorrowed;
+    uint256 public totalSupplied;
+    uint256 public totalBorrowed;
 
     uint256 public borrowIndex;
     uint256 public indexLastUpdate;

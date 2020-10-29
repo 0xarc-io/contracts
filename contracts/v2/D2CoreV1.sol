@@ -60,7 +60,9 @@ contract D2CoreV1 is Adminable, D2Storage {
 
     /* ========== Constructor ========== */
 
-    constructor() public {
+    constructor()
+        public
+    {
         paused = true;
     }
 
@@ -72,20 +74,38 @@ contract D2CoreV1 is Adminable, D2Storage {
 
     /* ========== Admin Setters ========== */
 
+    function init(
+        address _collateralAddress,
+        address _syntheticAddress,
+        address _oracleAddress
+    )
+        public
+    {
+        collateralAsset = _collateralAddress;
+        syntheticAsset = _syntheticAddress;
+        setOracle(_oracleAddress);
+    }
+
+    function setRate(
+        uint256 _rate
+    )
+        public
+    {
+
+    }
+
     function setOracle(
         address _oracle
     )
         public
-        onlyAdmin
     {
-
+        oracle = IOracle(_oracle);
     }
 
     function setCollateralRatio(
         Decimal.D256 memory _collateralRatio
     )
         public
-        onlyAdmin
     {
 
     }
@@ -94,7 +114,6 @@ contract D2CoreV1 is Adminable, D2Storage {
         Decimal.D256 memory _liquidationUserFee
     )
         public
-        onlyAdmin
     {
 
     }
@@ -105,7 +124,6 @@ contract D2CoreV1 is Adminable, D2Storage {
         uint256 _positionCollateralMinimum
     )
         public
-        onlyAdmin
     {
 
     }
@@ -291,6 +309,70 @@ contract D2CoreV1 is Adminable, D2Storage {
         returns (Decimal.D256 memory)
     {
         return oracle.fetchCurrentPrice();
+    }
+
+    function getSyntheticAsset()
+        external
+        view
+        returns (address)
+    {
+        return address(syntheticAsset);
+    }
+
+    function getCollateralAsset()
+        external
+        view
+        returns (address)
+    {
+        return address(collateralAsset);
+    }
+
+    function getCurrentOracle()
+        external
+        view
+        returns (address)
+    {
+        return address(oracle);
+    }
+
+    function getBorrowIndex()
+        external
+        view
+        returns (uint256)
+    {
+        return borrowIndex;
+    }
+
+    function getLastIndexUpdate()
+        external
+        view
+        returns (uint256)
+    {
+        return indexLastUpdate;
+    }
+
+    function getCollateralRatio()
+        external
+        view
+        returns (Decimal.D256 memory)
+    {
+        return collateralRatio;
+    }
+
+    function getTotalSupplied()
+        external
+        view
+        returns (uint256)
+    {
+        return totalSupplied;
+    }
+
+    function getTotalBorrowed()
+        external
+        view
+        returns (uint256)
+    {
+        return totalBorrowed;
     }
 
 }

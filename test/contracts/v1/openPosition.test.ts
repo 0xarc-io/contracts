@@ -1,7 +1,6 @@
 import 'module-alias/register';
 
 import { ITestContext } from '@test/helpers/d1ArcDescribe';
-import initializeArc from '@test/helpers/initializeArc';
 import d1ArcDescribe from '@test/helpers/d1ArcDescribe';
 import ArcNumber from '@src/utils/ArcNumber';
 import Token from '@src/utils/Token';
@@ -16,8 +15,6 @@ let minterAccount: Account;
 let otherAccount: Account;
 
 async function init(ctx: ITestContext): Promise<void> {
-  await initializeArc(ctx);
-
   ownerAccount = ctx.accounts[0];
   lenderAccount = ctx.accounts[1];
   minterAccount = ctx.accounts[2];

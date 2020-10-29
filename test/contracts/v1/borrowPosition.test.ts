@@ -2,7 +2,6 @@ import 'module-alias/register';
 
 import { Wallet } from 'ethers';
 import { ITestContext } from '@test/helpers/d1ArcDescribe';
-import initializeArc from '@test/helpers/initializeArc';
 import d1ArcDescribe from '@test/helpers/d1ArcDescribe';
 import ArcDecimal from '@src/utils/ArcDecimal';
 import ArcNumber from '@src/utils/ArcNumber';
@@ -18,8 +17,6 @@ let stableShareMinterWallet: Wallet;
 let liquidatorWallet: Wallet;
 
 async function init(ctx: ITestContext): Promise<void> {
-  await initializeArc(ctx);
-
   ownerWallet = ctx.accounts[0].wallet;
   lenderWallet = ctx.accounts[1].wallet;
   syntheticMinterWallet = ctx.accounts[2].wallet;
