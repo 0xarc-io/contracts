@@ -29,8 +29,21 @@ chokidar.watch('./contracts').on(
 chokidar.watch('./test').on(
 	'change',
 	_.debounce(async (path, event) => {
+		if (path.includes('/helpers/')) {
+			return;
+		}
+
 		console.log(yellow(`Tests changed: ${path}`));
 		await runTest(path);
+	}),
+	500
+);
+
+chokidar.watch('./src').on(
+	'change',
+	_.debounce(async (path, event) => {
+		console.log(yellow(`SRC changed: ${path}`));
+		await runTest(lastRunPath);
 	}),
 	500
 );

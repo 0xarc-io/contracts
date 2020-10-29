@@ -4,7 +4,6 @@ import { Wallet } from 'ethers';
 
 import d1ArcDescribe from '@test/helpers/d1ArcDescribe';
 import { ITestContext } from '@test/helpers/d1ArcDescribe';
-import initializeArc from '@test/helpers/initializeArc';
 import { StateV1, MockOracle } from '@src/typings';
 import { expectRevert } from '@src/utils/expectRevert';
 import ArcNumber from '@src/utils/ArcNumber';
@@ -17,7 +16,6 @@ let otherWallet: Wallet;
 const expect = getWaffleExpect();
 
 async function init(ctx: ITestContext): Promise<void> {
-  await initializeArc(ctx);
   await ctx.arc.oracle.setPrice(ArcDecimal.new(400));
 
   ownerWallet = ctx.accounts[0].wallet;

@@ -1,21 +1,47 @@
-import { D1TestArc } from '../../src/D1TestArc';
-import { Wallet, providers } from 'ethers';
 import { ethers } from '@nomiclabs/buidler';
-import { generatedWallets } from '../../src/utils/generatedWallets';
 import { EVM } from './EVM';
 import { D2TestArc } from '../../src/D2TestArc';
+import { Account, getAccounts } from './testingUtils';
+import ArcDecimal from '@src/utils/ArcDecimal';
+import { MockOracle } from '@src/typings';
+import { BigNumberish } from 'ethers/utils';
+
+/**
+ * Setup test tooling
+ */
+
+const provider = ethers.provider;
+const evm = new EVM(provider);
+
+/**
+ * Declare interfaces
+ */
 
 export interface ITestContext {
   arc?: D2TestArc;
-  wallets?: Wallet[];
+  accounts?: Account[];
   evm?: EVM;
+}
+
+export interface ArcOptions {
+  oraclePrice: BigNumberish;
+  accounts: Account[];
 }
 
 export type initFunction = (ctx: ITestContext) => Promise<void>;
 export type testsFunction = (ctx: ITestContext) => void;
 
-const provider = ethers.provider;
-const evm = new EVM(provider);
+/**
+ * Initialize the Arc smart contracts
+ */
+export async function initializeD2Arc(ctx: ITestContext, options: ArcOptions): Promise<void> {
+  const mockOracle = await MockOracle.at(ctx.accounts[0].wallet, ctx.arc.synth().oracle.address);
+  await mockOracle.setPrice({ value: options.oraclePrice });
+
+  for (let i = 0; i < options.accounts.length; i++) {
+    options.accounts[i] = ctx.accounts[i];
+  }
+}
 
 export default function d2ArcDescribe(
   name: string,
@@ -31,9 +57,9 @@ export default function d2ArcDescribe(
 
     // Runs before any before() calls made within the d1ArcDescribe() call.
     before(async () => {
-      ctx.wallets = generatedWallets(provider);
+      ctx.accounts = await getAccounts();
       ctx.evm = evm;
-      ctx.arc = await D2TestArc.init(ctx.wallets[0]);
+      ctx.arc = await D2TestArc.init(ctx.accounts[0].wallet);
 
       await ctx.arc.deployTestArc();
 

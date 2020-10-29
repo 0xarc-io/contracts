@@ -5,8 +5,19 @@ import { ethers } from '@nomiclabs/buidler';
 import { EVM } from './EVM';
 import { Account, getAccounts } from './testingUtils';
 import { solidity } from 'ethereum-waffle';
+import ArcDecimal from '@src/utils/ArcDecimal';
 
-chai.use(solidity);
+/**
+ * Setup test tooling
+ */
+
+const provider = ethers.provider;
+const evm = new EVM(provider);
+
+/**
+ * Declare interfaces
+ */
+
 export interface ITestContext {
   arc?: D1TestArc;
   accounts?: Account[];
@@ -16,8 +27,10 @@ export interface ITestContext {
 export type initFunction = (ctx: ITestContext) => Promise<void>;
 export type testsFunction = (ctx: ITestContext) => void;
 
-const provider = ethers.provider;
-const evm = new EVM(provider);
+/**
+ * Initialize the Arc smart contracts
+ */
+export async function initializeArc(ctx: ITestContext): Promise<void> {}
 
 export default function d1ArcDescribe(
   name: string,
