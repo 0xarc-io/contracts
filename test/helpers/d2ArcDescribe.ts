@@ -1,9 +1,9 @@
-import 'jest';
-
-import { D2TestArc } from '../../src/D2TestArc';
-import { Wallet, ethers } from 'ethers';
+import { D1TestArc } from '../../src/D1TestArc';
+import { Wallet, providers } from 'ethers';
+import { ethers } from '@nomiclabs/buidler';
 import { generatedWallets } from '../../src/utils/generatedWallets';
 import { EVM } from './EVM';
+import { D2TestArc } from '../../src/D2TestArc';
 
 export interface ITestContext {
   arc?: D2TestArc;
@@ -14,7 +14,7 @@ export interface ITestContext {
 export type initFunction = (ctx: ITestContext) => Promise<void>;
 export type testsFunction = (ctx: ITestContext) => void;
 
-const provider = new ethers.providers.JsonRpcProvider();
+const provider = ethers.provider;
 const evm = new EVM(provider);
 
 export default function d2ArcDescribe(
@@ -30,7 +30,7 @@ export default function d2ArcDescribe(
     let postInitSnapshotId: string;
 
     // Runs before any before() calls made within the d1ArcDescribe() call.
-    beforeAll(async () => {
+    before(async () => {
       ctx.wallets = generatedWallets(provider);
       ctx.evm = evm;
       ctx.arc = await D2TestArc.init(ctx.wallets[0]);

@@ -1,20 +1,22 @@
-import 'jest';
+import chai from 'chai';
 
 import { D1TestArc } from '../../src/D1TestArc';
-import { Wallet, ethers, providers } from 'ethers';
-import { generatedWallets } from '../../src/utils/generatedWallets';
+import { ethers } from '@nomiclabs/buidler';
 import { EVM } from './EVM';
+import { Account, getAccounts } from './testingUtils';
+import { solidity } from 'ethereum-waffle';
 
+chai.use(solidity);
 export interface ITestContext {
   arc?: D1TestArc;
-  wallets?: Wallet[];
+  accounts?: Account[];
   evm?: EVM;
 }
 
 export type initFunction = (ctx: ITestContext) => Promise<void>;
 export type testsFunction = (ctx: ITestContext) => void;
 
-const provider = new ethers.providers.JsonRpcProvider();
+const provider = ethers.provider;
 const evm = new EVM(provider);
 
 export default function d1ArcDescribe(
@@ -30,10 +32,11 @@ export default function d1ArcDescribe(
     let postInitSnapshotId: string;
 
     // Runs before any before() calls made within the d1ArcDescribe() call.
-    beforeAll(async () => {
-      ctx.wallets = generatedWallets(provider);
+    before(async () => {
+      ctx.accounts = await getAccounts();
+
       ctx.evm = evm;
-      ctx.arc = await D1TestArc.init(ctx.wallets[0]);
+      ctx.arc = await D1TestArc.init(ctx.accounts[0].wallet);
 
       await ctx.arc.deployTestArc();
 

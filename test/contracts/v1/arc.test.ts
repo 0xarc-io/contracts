@@ -1,4 +1,4 @@
-import 'jest';
+import 'module-alias/register';
 
 import { ethers, Wallet } from 'ethers';
 import { expectRevert } from '@src/utils/expectRevert';
@@ -9,11 +9,12 @@ import { ITestContext } from '@test/helpers/d1ArcDescribe';
 import initializeArc from '@test/helpers/initializeArc';
 import { AddressZero } from 'ethers/constants';
 import ArcDecimal from '@src/utils/ArcDecimal';
+import { Account, getWaffleExpect } from '../../helpers/testingUtils';
 
-let ownerWallet: Wallet;
-let otherWallet: Wallet;
+let ownerWallet: Account;
+let otherWallet: Account;
 
-jest.setTimeout(30000);
+const expect = getWaffleExpect();
 
 async function init(ctx: ITestContext): Promise<void> {
   await initializeArc(ctx);
@@ -25,15 +26,15 @@ async function init(ctx: ITestContext): Promise<void> {
     liquidationArcFee: { value: ArcDecimal.new(0.05).value },
   });
 
-  ownerWallet = ctx.wallets[0];
-  otherWallet = ctx.wallets[1];
+  ownerWallet = ctx.accounts[0];
+  otherWallet = ctx.accounts[1];
 }
 
 d1ArcDescribe('D1Arc', init, (ctx: ITestContext) => {
   describe('#init', () => {
     it('cannot call init if already called', async () => {
       const stateAddress = await ctx.arc.core.state();
-      expect(stateAddress).not.toEqual(AddressZero);
+      expect(stateAddress).not.to.equal(AddressZero);
       await expectRevert(ctx.arc.core.init(AddressZero));
     });
   });
@@ -41,14 +42,14 @@ d1ArcDescribe('D1Arc', init, (ctx: ITestContext) => {
   describe('#setPause', () => {
     it('cannot call operate action if contracts are paused', async () => {
       await ctx.arc.core.setPause(true);
-      expect(await ctx.arc.core.paused()).toBeTruthy();
-      await expectRevert(ctx.arc._borrowSynthetic(1, 5, ownerWallet));
+      expect(await ctx.arc.core.paused()).to.be.true;
+      await expectRevert(ctx.arc._borrowSynthetic(1, 5, ownerWallet.wallet));
     });
 
     it('can unpause contracts', async () => {
       await ctx.arc.core.setPause(false);
-      expect(await ctx.arc.core.paused()).toBeFalsy();
-      await await ctx.arc._borrowSynthetic(1, 5, ownerWallet);
+      expect(await ctx.arc.core.paused()).to.be.false;
+      await await ctx.arc._borrowSynthetic(1, 5, ownerWallet.wallet);
     });
   });
 
@@ -57,14 +58,14 @@ d1ArcDescribe('D1Arc', init, (ctx: ITestContext) => {
       await ctx.arc.collateralAsset.mintShare(ctx.arc.core.address, 5, {});
     });
     it('cannot withdraw as a non-admin', async () => {
-      const core = await ctx.arc.getCore(otherWallet);
+      const core = await ctx.arc.getCore(otherWallet.wallet);
       await expectRevert(
         core.withdrawTokens(ctx.arc.collateralAsset.address, otherWallet.address, 1),
       );
     });
 
     it('can withdraw tokens as an admin', async () => {
-      const core = await ctx.arc.getCore(ownerWallet);
+      const core = await ctx.arc.getCore(ownerWallet.wallet);
       await core.withdrawTokens(ctx.arc.collateralAsset.address, otherWallet.address, 1);
     });
   });

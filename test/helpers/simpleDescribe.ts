@@ -1,18 +1,16 @@
-import 'jest';
-
-import { Wallet, ethers, providers } from 'ethers';
-import { generatedWallets } from '../../src/utils/generatedWallets';
 import { EVM } from './EVM';
+import { ethers } from '@nomiclabs/buidler';
+import { getWaffleExpect, Account, getAccounts } from './testingUtils';
 
 export interface ITestContext {
-  wallets?: Wallet[];
+  accounts?: Account[];
   evm?: EVM;
 }
 
 export type initFunction = (ctx: ITestContext) => Promise<void>;
 export type testsFunction = (ctx: ITestContext) => void;
 
-const provider = new ethers.providers.JsonRpcProvider();
+const provider = ethers.provider;
 const evm = new EVM(provider);
 
 export default function simpleDescribe(
@@ -28,8 +26,8 @@ export default function simpleDescribe(
     let postInitSnapshotId: string;
 
     // Runs before any before() calls made within the d1ArcDescribe() call.
-    beforeAll(async () => {
-      ctx.wallets = generatedWallets(provider);
+    before(async () => {
+      ctx.accounts = await getAccounts();
       ctx.evm = evm;
 
       preInitSnapshotId = await evm.snapshot();

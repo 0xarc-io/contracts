@@ -1,190 +1,190 @@
-import 'jest';
+import 'module-alias/register';
 
 import simpleDescribe from '@test/helpers/simpleDescribe';
 import { ITestContext } from '@test/helpers/simpleDescribe';
-import { Wallet } from 'ethers';
 import { expectRevert } from '@src/utils/expectRevert';
 import { SyntheticToken } from '@src/typings/SyntheticToken';
+import { Account, getWaffleExpect } from '../../helpers/testingUtils';
 
-let ownerWallet: Wallet;
-let arcWallet: Wallet;
-let arcWallet1: Wallet;
-let arcWallet2: Wallet;
-let userWallet: Wallet;
-let otherWallet: Wallet;
+let ownerAccount: Account;
+let arcAccount: Account;
+let arcAccount1: Account;
+let arcAccount2: Account;
+let userAccount: Account;
+let otherAccount: Account;
 
-jest.setTimeout(30000);
+const expect = getWaffleExpect();
 
 let syntheticToken: SyntheticToken;
 
 async function init(ctx: ITestContext): Promise<void> {
-  ownerWallet = ctx.wallets[0];
-  arcWallet = ctx.wallets[1];
-  userWallet = ctx.wallets[2];
-  otherWallet = ctx.wallets[3];
-  arcWallet1 = ctx.wallets[4];
-  arcWallet2 = ctx.wallets[5];
+  ownerAccount = ctx.accounts[0];
+  arcAccount = ctx.accounts[1];
+  userAccount = ctx.accounts[2];
+  otherAccount = ctx.accounts[3];
+  arcAccount1 = ctx.accounts[4];
+  arcAccount2 = ctx.accounts[5];
 }
 
-async function getContract(caller: Wallet) {
-  return SyntheticToken.at(caller, syntheticToken.address);
+async function getContract(caller: Account) {
+  return SyntheticToken.at(caller.wallet, syntheticToken.address);
 }
 
 simpleDescribe('SyntheticToken', init, (ctx: ITestContext) => {
   beforeEach(async () => {
-    syntheticToken = await SyntheticToken.deploy(ownerWallet, 'ARCUSD', 'ARCUSD');
+    syntheticToken = await SyntheticToken.deploy(ownerAccount.wallet, 'ARCUSD', 'ARCUSD');
 
-    syntheticToken = await SyntheticToken.at(arcWallet, syntheticToken.address);
+    syntheticToken = await SyntheticToken.at(arcAccount.wallet, syntheticToken.address);
   });
 
   describe('#mint', () => {
     beforeEach(async () => {
-      const contract = await getContract(ownerWallet);
-      await contract.addMinter(arcWallet.address);
+      const contract = await getContract(ownerAccount);
+      await contract.addMinter(arcAccount.address);
     });
 
     it('should not be able to mint as an unauthorised user', async () => {
-      const contract = await getContract(otherWallet);
-      await expectRevert(contract.mint(otherWallet.address, 10));
+      const contract = await getContract(otherAccount);
+      await expectRevert(contract.mint(otherAccount.address, 10));
     });
 
     it('should be able to mint as arc', async () => {
-      const contract = await getContract(arcWallet);
-      await contract.mint(arcWallet.address, 10);
-      expect(await (await syntheticToken.balanceOf(arcWallet.address)).toNumber()).toEqual(10);
+      const contract = await getContract(arcAccount);
+      await contract.mint(arcAccount.address, 10);
+      expect(await (await syntheticToken.balanceOf(arcAccount.address)).toNumber()).to.equal(10);
     });
   });
 
   describe('#addMinter', () => {
     it('should not be able to add a minter as an unauthorised user', async () => {
-      const contract = await getContract(otherWallet);
-      await expectRevert(contract.addMinter(otherWallet.address));
+      const contract = await getContract(otherAccount);
+      await expectRevert(contract.addMinter(otherAccount.address));
     });
 
     it('should be able to add a minter as the owner', async () => {
-      const contract = await getContract(ownerWallet);
-      await contract.addMinter(arcWallet.address);
+      const contract = await getContract(ownerAccount);
+      await contract.addMinter(arcAccount.address);
 
-      expect(await (await contract.getAllMinters()).length).toEqual(1);
-      expect(await contract.mintersArray(0)).toEqual(arcWallet.address);
-      expect(await contract.minters(arcWallet.address)).toBeTruthy();
+      expect(await (await contract.getAllMinters()).length).to.equal(1);
+      expect(await contract.mintersArray(0)).to.equal(arcAccount.address);
+      expect(await contract.minters(arcAccount.address)).to.be.true;
 
-      await contract.addMinter(arcWallet1.address);
-      expect(await (await contract.getAllMinters()).length).toEqual(2);
-      expect(await contract.mintersArray(0)).toEqual(arcWallet.address);
-      expect(await contract.mintersArray(1)).toEqual(arcWallet1.address);
-      expect(await contract.minters(arcWallet.address)).toBeTruthy();
-      expect(await contract.minters(arcWallet1.address)).toBeTruthy();
+      await contract.addMinter(arcAccount1.address);
+      expect(await (await contract.getAllMinters()).length).to.equal(2);
+      expect(await contract.mintersArray(0)).to.equal(arcAccount.address);
+      expect(await contract.mintersArray(1)).to.equal(arcAccount1.address);
+      expect(await contract.minters(arcAccount.address)).to.be.true;
+      expect(await contract.minters(arcAccount1.address)).to.be.true;
 
-      await contract.addMinter(arcWallet2.address);
-      expect(await (await contract.getAllMinters()).length).toEqual(3);
-      expect(await contract.mintersArray(0)).toEqual(arcWallet.address);
-      expect(await contract.mintersArray(1)).toEqual(arcWallet1.address);
-      expect(await contract.mintersArray(2)).toEqual(arcWallet2.address);
-      expect(await contract.minters(arcWallet.address)).toBeTruthy();
-      expect(await contract.minters(arcWallet1.address)).toBeTruthy();
-      expect(await contract.minters(arcWallet2.address)).toBeTruthy();
+      await contract.addMinter(arcAccount2.address);
+      expect(await (await contract.getAllMinters()).length).to.equal(3);
+      expect(await contract.mintersArray(0)).to.equal(arcAccount.address);
+      expect(await contract.mintersArray(1)).to.equal(arcAccount1.address);
+      expect(await contract.mintersArray(2)).to.equal(arcAccount2.address);
+      expect(await contract.minters(arcAccount.address)).to.be.true;
+      expect(await contract.minters(arcAccount1.address)).to.be.true;
+      expect(await contract.minters(arcAccount2.address)).to.be.true;
 
-      await contract.removeMinter(arcWallet1.address);
-      expect(await (await contract.getAllMinters()).length).toEqual(2);
-      expect(await contract.mintersArray(0)).toEqual(arcWallet.address);
-      expect(await contract.mintersArray(1)).toEqual(arcWallet2.address);
-      expect(await contract.minters(arcWallet.address)).toBeTruthy();
-      expect(await contract.minters(arcWallet1.address)).toBeFalsy();
-      expect(await contract.minters(arcWallet2.address)).toBeTruthy();
+      await contract.removeMinter(arcAccount1.address);
+      expect(await (await contract.getAllMinters()).length).to.equal(2);
+      expect(await contract.mintersArray(0)).to.equal(arcAccount.address);
+      expect(await contract.mintersArray(1)).to.equal(arcAccount2.address);
+      expect(await contract.minters(arcAccount.address)).to.be.true;
+      expect(await contract.minters(arcAccount1.address)).to.be.false;
+      expect(await contract.minters(arcAccount2.address)).to.be.true;
 
-      await contract.removeMinter(arcWallet.address);
-      expect(await (await contract.getAllMinters()).length).toEqual(1);
-      expect(await contract.mintersArray(0)).toEqual(arcWallet2.address);
-      expect(await contract.minters(arcWallet.address)).toBeFalsy();
-      expect(await contract.minters(arcWallet1.address)).toBeFalsy();
-      expect(await contract.minters(arcWallet2.address)).toBeTruthy();
+      await contract.removeMinter(arcAccount.address);
+      expect(await (await contract.getAllMinters()).length).to.equal(1);
+      expect(await contract.mintersArray(0)).to.equal(arcAccount2.address);
+      expect(await contract.minters(arcAccount.address)).to.be.false;
+      expect(await contract.minters(arcAccount1.address)).to.be.false;
+      expect(await contract.minters(arcAccount2.address)).to.be.true;
     });
 
     it('should not be able to add a minter as another minter', async () => {
-      const ownerContract = await getContract(ownerWallet);
-      await ownerContract.addMinter(arcWallet.address);
+      const ownerContract = await getContract(ownerAccount);
+      await ownerContract.addMinter(arcAccount.address);
 
-      const arcContract = await getContract(arcWallet);
-      await expectRevert(arcContract.addMinter(otherWallet.address));
+      const arcContract = await getContract(arcAccount);
+      await expectRevert(arcContract.addMinter(otherAccount.address));
     });
 
     it('should not be able to re-add a minter as the owner', async () => {
-      const contract = await getContract(ownerWallet);
-      await contract.addMinter(arcWallet.address);
-      await expectRevert(contract.addMinter(arcWallet.address));
+      const contract = await getContract(ownerAccount);
+      await contract.addMinter(arcAccount.address);
+      await expectRevert(contract.addMinter(arcAccount.address));
     });
   });
 
   describe('#removeMinter', () => {
     beforeEach(async () => {
-      const contract = await getContract(ownerWallet);
-      await contract.addMinter(arcWallet.address);
+      const contract = await getContract(ownerAccount);
+      await contract.addMinter(arcAccount.address);
     });
 
     it('should not be able to remove a minter as an unauthorised user', async () => {
-      const contract = await getContract(otherWallet);
-      await expectRevert(contract.removeMinter(otherWallet.address));
+      const contract = await getContract(otherAccount);
+      await expectRevert(contract.removeMinter(otherAccount.address));
     });
 
     it('should be able to remove a minter as the owner', async () => {
-      const contract = await getContract(ownerWallet);
-      await contract.removeMinter(arcWallet.address);
+      const contract = await getContract(ownerAccount);
+      await contract.removeMinter(arcAccount.address);
 
-      expect(await (await contract.getAllMinters()).length).toEqual(0);
-      expect(await contract.minters(arcWallet.address)).toBeFalsy();
+      expect(await (await contract.getAllMinters()).length).to.equal(0);
+      expect(await contract.minters(arcAccount.address)).to.be.false;
     });
 
     it('should not be able to remove a minter as another minter', async () => {
-      const arcContract = await getContract(arcWallet);
-      await expectRevert(arcContract.removeMinter(otherWallet.address));
+      const arcContract = await getContract(arcAccount);
+      await expectRevert(arcContract.removeMinter(otherAccount.address));
     });
 
     it('should not be able to remove a non-existent minter as the owner', async () => {
-      const contract = await getContract(ownerWallet);
-      await contract.removeMinter(arcWallet.address);
-      await expectRevert(contract.removeMinter(arcWallet.address));
+      const contract = await getContract(ownerAccount);
+      await contract.removeMinter(arcAccount.address);
+      await expectRevert(contract.removeMinter(arcAccount.address));
     });
   });
 
   describe('#burn', () => {
     beforeEach(async () => {
-      const contract = await getContract(ownerWallet);
-      await contract.addMinter(arcWallet.address);
-      await syntheticToken.mint(userWallet.address, 10);
+      const contract = await getContract(ownerAccount);
+      await contract.addMinter(arcAccount.address);
+      await syntheticToken.mint(userAccount.address, 10);
     });
 
     it('should not be able to burn as an unauthorised user', async () => {
-      const contract = await getContract(otherWallet);
-      await expectRevert(contract.burn(userWallet.address, 10));
+      const contract = await getContract(otherAccount);
+      await expectRevert(contract.burn(userAccount.address, 10));
     });
 
     it('should be able to burn as arc', async () => {
-      expect(await (await syntheticToken.balanceOf(userWallet.address)).toNumber()).toEqual(10);
-      const contract = await getContract(arcWallet);
-      await contract.burn(userWallet.address, 10);
-      expect(await (await syntheticToken.balanceOf(userWallet.address)).toNumber()).toEqual(0);
+      expect(await (await syntheticToken.balanceOf(userAccount.address)).toNumber()).to.equal(10);
+      const contract = await getContract(arcAccount);
+      await contract.burn(userAccount.address, 10);
+      expect(await (await syntheticToken.balanceOf(userAccount.address)).toNumber()).to.equal(0);
     });
   });
 
   describe('#transferCollateral', () => {
     beforeEach(async () => {
-      const contract = await getContract(ownerWallet);
-      await contract.addMinter(arcWallet.address);
+      const contract = await getContract(ownerAccount);
+      await contract.addMinter(arcAccount.address);
       await syntheticToken.mint(syntheticToken.address, 10);
     });
 
     it('should not be able to transfer collateral as an unauthorised user', async () => {
-      const contract = await getContract(otherWallet);
+      const contract = await getContract(otherAccount);
       await expectRevert(
-        contract.transferCollateral(syntheticToken.address, userWallet.address, 10),
+        contract.transferCollateral(syntheticToken.address, userAccount.address, 10),
       );
     });
 
     it('should be able to transfer collateral as arc', async () => {
-      const contract = await getContract(arcWallet);
-      await contract.transferCollateral(syntheticToken.address, userWallet.address, 10);
-      expect(await (await syntheticToken.balanceOf(userWallet.address)).toNumber()).toEqual(10);
+      const contract = await getContract(arcAccount);
+      await contract.transferCollateral(syntheticToken.address, userAccount.address, 10);
+      expect(await (await syntheticToken.balanceOf(userAccount.address)).toNumber()).to.equal(10);
     });
   });
 });

@@ -1,4 +1,4 @@
-import 'jest';
+import 'module-alias/register';
 
 import { ethers, Wallet } from 'ethers';
 import { expectRevert } from '@src/utils/expectRevert';
@@ -12,8 +12,9 @@ import { BigNumberish, BigNumber } from 'ethers/utils';
 import { EVM } from '../../helpers/EVM';
 import { generatedWallets } from '../../../src/utils/generatedWallets';
 import Token from '@src/utils/Token';
+import { getWaffleExpect } from '../../helpers/testingUtils';
 
-jest.setTimeout(30000);
+const expect = getWaffleExpect();
 
 const provider = new ethers.providers.JsonRpcProvider();
 const evm = new EVM(provider);
@@ -33,7 +34,7 @@ describe('D1Arc Integration', () => {
     await oracle.setPrice(price);
   }
 
-  beforeAll(async () => {
+  before(async () => {
     ownerWallet = wallets[0];
     userWallet = wallets[1];
     liquidatorWallet = wallets[2];
@@ -62,23 +63,23 @@ describe('D1Arc Integration', () => {
     currentPosition = result.params.id;
 
     // Ensure the emitted parameters are correct
-    expect(result.operation).toEqual(Operation.Open);
-    expect(result.updatedPosition.borrowedAmount.value).toEqual(ArcNumber.new(100));
-    expect(result.updatedPosition.borrowedAmount.sign).toBeFalsy();
-    expect(result.updatedPosition.collateralAmount.value).toEqual(ArcNumber.new(50));
-    expect(result.updatedPosition.collateralAmount.sign).toBeTruthy();
-    expect(result.params.id).toEqual(currentPosition);
+    expect(result.operation).to.equal(Operation.Open);
+    expect(result.updatedPosition.borrowedAmount.value).to.equal(ArcNumber.new(100));
+    expect(result.updatedPosition.borrowedAmount.sign).to.be.false;
+    expect(result.updatedPosition.collateralAmount.value).to.equal(ArcNumber.new(50));
+    expect(result.updatedPosition.collateralAmount.sign).to.be.true;
+    expect(result.params.id).to.equal(currentPosition);
 
     // ARC should now hold $500 worth of the user's collateral (50 LINK * $10 = $500)
-    expect(await arc.collateralAsset.balanceOf(arc.syntheticAsset.address)).toEqual(
+    expect(await arc.collateralAsset.balanceOf(arc.syntheticAsset.address)).to.equal(
       ArcNumber.new(50),
     );
 
     // The user should have received $100 worth of LINKUSD in return
-    expect(await arc.syntheticAsset.balanceOf(userWallet.address)).toEqual(ArcNumber.new(100));
+    expect(await arc.syntheticAsset.balanceOf(userWallet.address)).to.equal(ArcNumber.new(100));
 
     // The total LINKUSD supply should be the same as the user's balance
-    expect(await arc.syntheticAsset.totalSupply()).toEqual(ArcNumber.new(100));
+    expect(await arc.syntheticAsset.totalSupply()).to.equal(ArcNumber.new(100));
   });
 
   it('should be able to borrow more against that position when the price increases', async () => {
@@ -96,23 +97,23 @@ describe('D1Arc Integration', () => {
     );
 
     // Ensure the correct emitted parameters are correct
-    expect(result.operation).toEqual(Operation.Borrow);
-    expect(result.updatedPosition.borrowedAmount.value).toEqual(ArcNumber.new(300));
-    expect(result.updatedPosition.borrowedAmount.sign).toBeFalsy();
-    expect(result.updatedPosition.collateralAmount.value).toEqual(ArcNumber.new(50));
-    expect(result.updatedPosition.collateralAmount.sign).toBeTruthy();
-    expect(result.params.id).toEqual(currentPosition);
+    expect(result.operation).to.equal(Operation.Borrow);
+    expect(result.updatedPosition.borrowedAmount.value).to.equal(ArcNumber.new(300));
+    expect(result.updatedPosition.borrowedAmount.sign).to.be.false;
+    expect(result.updatedPosition.collateralAmount.value).to.equal(ArcNumber.new(50));
+    expect(result.updatedPosition.collateralAmount.sign).be.be.true;
+    expect(result.params.id).to.equal(currentPosition);
 
     // ARC should still $500 worth of the user's collateral (50 LINK * $10 = $500)
-    expect(await arc.collateralAsset.balanceOf(arc.syntheticAsset.address)).toEqual(
+    expect(await arc.collateralAsset.balanceOf(arc.syntheticAsset.address)).to.equal(
       ArcNumber.new(50),
     );
 
     // The user should have $300 worth of LINKUSD in return
-    expect(await arc.syntheticAsset.balanceOf(userWallet.address)).toEqual(ArcNumber.new(300));
+    expect(await arc.syntheticAsset.balanceOf(userWallet.address)).to.equal(ArcNumber.new(300));
 
     // The total LINKUSD supply should be the same as the user's balance
-    expect(await arc.syntheticAsset.totalSupply()).toEqual(ArcNumber.new(300));
+    expect(await arc.syntheticAsset.totalSupply()).to.equal(ArcNumber.new(300));
   });
 
   it('should be able to pay back debt', async () => {
@@ -135,23 +136,23 @@ describe('D1Arc Integration', () => {
     );
 
     //Ensure that the correct events were emitted
-    expect(result.operation).toEqual(Operation.Repay);
-    expect(result.updatedPosition.borrowedAmount.value).toEqual(ArcNumber.new(200));
-    expect(result.updatedPosition.borrowedAmount.sign).toBeFalsy();
-    expect(result.updatedPosition.collateralAmount.value).toEqual(ArcNumber.new(50));
-    expect(result.updatedPosition.collateralAmount.sign).toBeTruthy();
-    expect(result.params.id).toEqual(currentPosition);
+    expect(result.operation).to.equal(Operation.Repay);
+    expect(result.updatedPosition.borrowedAmount.value).to.equal(ArcNumber.new(200));
+    expect(result.updatedPosition.borrowedAmount.sign).to.be.false;
+    expect(result.updatedPosition.collateralAmount.value).to.equal(ArcNumber.new(50));
+    expect(result.updatedPosition.collateralAmount.sign).to.be.true;
+    expect(result.params.id).to.equal(currentPosition);
 
     // ARC should still have $500 worth of the user's collateral (50 LINK * $10 = $500)
     expect(
       await (await arc.collateralAsset.balanceOf(arc.syntheticAsset.address)).toString(),
-    ).toEqual(ArcNumber.new(50).toString());
+    ).to.equal(ArcNumber.new(50).toString());
 
     // The user should have $200 worth of LINKUSD in return
-    expect(await arc.syntheticAsset.balanceOf(userWallet.address)).toEqual(ArcNumber.new(200));
+    expect(await arc.syntheticAsset.balanceOf(userWallet.address)).to.equal(ArcNumber.new(200));
 
     // The total LINKUSD supply should be the same as the user's balance
-    expect(await arc.syntheticAsset.totalSupply()).toEqual(ArcNumber.new(200));
+    expect(await arc.syntheticAsset.totalSupply()).to.equal(ArcNumber.new(200));
   });
 
   it('should be able to be liquidate when the price decreases', async () => {
@@ -193,28 +194,30 @@ describe('D1Arc Integration', () => {
     // - Safety over profits.
 
     // Ensure the emitted parameters are correct
-    expect(result.operation).toEqual(Operation.Liquidate);
-    expect(result.updatedPosition.borrowedAmount.value.toString()).toEqual('7500000000000000008');
-    expect(result.updatedPosition.borrowedAmount.sign).toBeFalsy();
-    expect(result.updatedPosition.collateralAmount.value.toString()).toEqual('7222222222222222224');
-    expect(result.updatedPosition.collateralAmount.sign).toBeTruthy();
-    expect(result.params.id).toEqual(currentPosition);
+    expect(result.operation).to.equal(Operation.Liquidate);
+    expect(result.updatedPosition.borrowedAmount.value.toString()).to.equal('7500000000000000008');
+    expect(result.updatedPosition.borrowedAmount.sign).to.be.false;
+    expect(result.updatedPosition.collateralAmount.value.toString()).to.equal(
+      '7222222222222222224',
+    );
+    expect(result.updatedPosition.collateralAmount.sign).to.be.true;
+    expect(result.params.id).to.equal(currentPosition);
 
     // ARC should still have 257.222 LINK left in the system (200 from Arthur + 57.22 from rekt dude)
     expect(
       await (await arc.collateralAsset.balanceOf(arc.syntheticAsset.address)).toString(),
-    ).toEqual('257222222222222222224');
+    ).to.equal('257222222222222222224');
 
     // The user can still have $200 worth of LINKUSD since they got rekt
-    expect(await arc.syntheticAsset.balanceOf(userWallet.address)).toEqual(ArcNumber.new(200));
+    expect(await arc.syntheticAsset.balanceOf(userWallet.address)).to.equal(ArcNumber.new(200));
 
     // The liquidator will now have less LINKUSD since they had to pay the rekt dude's debt
-    expect((await arc.syntheticAsset.balanceOf(liquidatorWallet.address)).toString()).toEqual(
+    expect((await arc.syntheticAsset.balanceOf(liquidatorWallet.address)).toString()).to.equal(
       '307500000000000000008',
     );
 
     // The total LINKUSD supply be the amount the user holds + the amount arthur holds
-    expect((await arc.syntheticAsset.totalSupply()).toString()).toEqual('507500000000000000008');
+    expect((await arc.syntheticAsset.totalSupply()).toString()).to.equal('507500000000000000008');
   });
 
   it('should be able to deposit more collateral', async () => {
@@ -229,12 +232,11 @@ describe('D1Arc Integration', () => {
     );
 
     // Let's check the new status of our user
-    expect(result.operation).toEqual(Operation.Borrow);
-    expect(result.updatedPosition.borrowedAmount.value).toEqual(ArcNumber.new(100));
-    expect(result.updatedPosition.borrowedAmount.sign).toBeFalsy();
-    expect(result.updatedPosition.collateralAmount.value).toEqual(ArcNumber.new(100));
-    expect(result.updatedPosition.collateralAmount.sign).toBeTruthy();
-    expect(result.params.id).toEqual(currentPosition);
+    expect(result.operation).to.equal(Operation.Borrow);
+    expect(result.updatedPosition.borrowedAmount.value).to.equal(ArcNumber.new(100));
+    expect(result.updatedPosition.borrowedAmount.sign).to.be.false;
+    expect(result.updatedPosition.collateralAmount.sign).be.true;
+    expect(result.params.id).to.equal(currentPosition);
   });
 
   it('should be able to borrow more debt against the collateral', async () => {
@@ -249,12 +251,12 @@ describe('D1Arc Integration', () => {
     );
 
     // Let's check the new status of our user
-    expect(result.operation).toEqual(Operation.Borrow);
-    expect(result.updatedPosition.borrowedAmount.value).toEqual(ArcNumber.new(250));
-    expect(result.updatedPosition.borrowedAmount.sign).toBeFalsy();
-    expect(result.updatedPosition.collateralAmount.value).toEqual(ArcNumber.new(100));
-    expect(result.updatedPosition.collateralAmount.sign).toBeTruthy();
-    expect(result.params.id).toEqual(currentPosition);
+    expect(result.operation).to.equal(Operation.Borrow);
+    expect(result.updatedPosition.borrowedAmount.value).to.equal(ArcNumber.new(250));
+    expect(result.updatedPosition.borrowedAmount.sign).to.be.false;
+    expect(result.updatedPosition.collateralAmount.value).to.equal(ArcNumber.new(100));
+    expect(result.updatedPosition.collateralAmount.sign).to.be.true;
+    expect(result.params.id).to.equal(currentPosition);
   });
 
   it('should be able to be liquidated if the price drops', async () => {
@@ -264,14 +266,14 @@ describe('D1Arc Integration', () => {
     // Here comes the grim reaper
     const result = await arc.liquidatePosition(currentPosition, liquidatorWallet);
 
-    expect(result.operation).toEqual(Operation.Liquidate);
-    expect(result.updatedPosition.borrowedAmount.value).toEqual(ArcNumber.new(96).add(7));
-    expect(result.updatedPosition.borrowedAmount.sign).toBeFalsy();
-    expect(result.updatedPosition.collateralAmount.value.toString()).toEqual(
+    expect(result.operation).to.equal(Operation.Liquidate);
+    expect(result.updatedPosition.borrowedAmount.value).to.equal(ArcNumber.new(96).add(7));
+    expect(result.updatedPosition.borrowedAmount.sign).to.be.false;
+    expect(result.updatedPosition.collateralAmount.value.toString()).to.equal(
       '57222222222222222224',
     );
-    expect(result.updatedPosition.collateralAmount.sign).toBeTruthy();
-    expect(result.params.id).toEqual(currentPosition);
+    expect(result.updatedPosition.collateralAmount.sign).to.be.true;
+    expect(result.params.id).to.equal(currentPosition);
 
     await expectRevert(arc.liquidatePosition(currentPosition, liquidatorWallet));
   });
@@ -302,15 +304,15 @@ describe('D1Arc Integration', () => {
     const userPostCollateralBalance = await arc.collateralAsset.balanceOf(userWallet.address);
     const userPostSyntheticBalance = await arc.syntheticAsset.balanceOf(userWallet.address);
 
-    expect(userPostCollateralBalance).toEqual(
+    expect(userPostCollateralBalance).to.equal(
       userPreCollateralBalance.add(preResult.collateralAmount.value),
     );
-    expect(userPostSyntheticBalance).toEqual(
+    expect(userPostSyntheticBalance).to.equal(
       userPreSyntheticBalance.sub(preResult.borrowedAmount.value),
     );
 
     const postResult = await arc.state.positions(currentPosition);
-    expect(postResult.collateralAmount.value.toNumber()).toEqual(0);
-    expect(postResult.borrowedAmount.value.toNumber()).toEqual(0);
+    expect(postResult.collateralAmount.value.toNumber()).to.equal(0);
+    expect(postResult.borrowedAmount.value.toNumber()).to.equal(0);
   });
 });
