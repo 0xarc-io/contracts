@@ -18,7 +18,7 @@ import { generatedWallets } from '../../../src/utils/generatedWallets';
 import { expectRevert } from '../../../src/utils/expectRevert';
 import ArcNumber from '@src/utils/ArcNumber';
 import { BigNumber, BigNumberish } from 'ethers/utils';
-import { TestArc } from '../../../src/TestArc';
+import { D1TestArc } from '../../../src/D1TestArc';
 import { ArcProxy } from '@src/typings';
 import ArcDecimal from '@src/utils/ArcDecimal';
 
@@ -37,7 +37,7 @@ let arcDAO: AddressAccrual;
 let rewardPool: MockRewardCampaign;
 let kermanStaking: TokenStakingAccrual;
 let kyf: KYFV2;
-let arc: TestArc;
+let arc: D1TestArc;
 
 jest.setTimeout(30000);
 
@@ -82,7 +82,7 @@ describe('Staking Integration', () => {
 
     kyf = await KYFV2.deploy(ownerWallet);
 
-    arc = await TestArc.init(ownerWallet);
+    arc = await D1TestArc.init(ownerWallet);
     await arc.deployTestArc();
 
     await rewardPool.init(

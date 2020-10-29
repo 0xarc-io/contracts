@@ -15,12 +15,12 @@ import {
 import { CoreV4 } from './typings/CoreV4';
 import { parseLogs } from './utils/parseLogs';
 import { StateV1 } from './typings/StateV1';
-import Token from '../src/utils/Token';
+import Token from './utils/Token';
 import { IERC20 } from './typings/IERC20';
 import { RiskParams, MarketParams, DeploymentConfig } from './types';
 import { ArcProxy } from './typings/ArcProxy';
 
-export default class Arc {
+export default class D1Arc {
   public wallet: Signer;
 
   public core: CoreV4;
@@ -29,8 +29,8 @@ export default class Arc {
   public collateralAsset: IERC20;
   public oracle: IOracle;
 
-  static async init(wallet: Signer, addressBook?: SynthAddressBook): Promise<Arc> {
-    let arc = new Arc();
+  static async init(wallet: Signer, addressBook?: SynthAddressBook): Promise<D1Arc> {
+    let arc = new D1Arc();
     arc.wallet = wallet;
 
     if (addressBook) {

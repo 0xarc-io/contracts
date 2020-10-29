@@ -1,12 +1,12 @@
 import 'jest';
 
-import { TestArc } from '../../src/TestArc';
+import { D1TestArc } from '../../src/D1TestArc';
 import { Wallet, ethers, providers } from 'ethers';
 import { generatedWallets } from '../../src/utils/generatedWallets';
 import { EVM } from './EVM';
 
 export interface ITestContext {
-  arc?: TestArc;
+  arc?: D1TestArc;
   wallets?: Wallet[];
   evm?: EVM;
 }
@@ -29,7 +29,7 @@ export default function arcDescribe(name: string, init: initFunction, tests: tes
     beforeAll(async () => {
       ctx.wallets = generatedWallets(provider);
       ctx.evm = evm;
-      ctx.arc = await TestArc.init(ctx.wallets[0]);
+      ctx.arc = await D1TestArc.init(ctx.wallets[0]);
 
       await ctx.arc.deployTestArc();
 

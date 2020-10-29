@@ -29,7 +29,7 @@ async function init(ctx: ITestContext): Promise<void> {
   otherWallet = ctx.wallets[1];
 }
 
-arcDescribe('Arc', init, (ctx: ITestContext) => {
+arcDescribe('D1Arc', init, (ctx: ITestContext) => {
   describe('#init', () => {
     it('cannot call init if already called', async () => {
       const stateAddress = await ctx.arc.core.state();

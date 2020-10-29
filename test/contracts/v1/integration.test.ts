@@ -6,7 +6,7 @@ import { expectRevert } from '@src/utils/expectRevert';
 import ArcNumber from '@src/utils/ArcNumber';
 import ArcDecimal from '@src/utils/ArcDecimal';
 import { MockOracle } from '@src/typings';
-import { TestArc } from '../../../src/TestArc';
+import { D1TestArc } from '../../../src/D1TestArc';
 import { Operation } from '../../../src/types';
 import { BigNumberish, BigNumber } from 'ethers/utils';
 import { EVM } from '../../helpers/EVM';
@@ -18,7 +18,7 @@ jest.setTimeout(30000);
 const provider = new ethers.providers.JsonRpcProvider();
 const evm = new EVM(provider);
 
-let arc: TestArc;
+let arc: D1TestArc;
 
 let ownerWallet: Wallet;
 let userWallet: Wallet;
@@ -27,7 +27,7 @@ let liquidatorWallet: Wallet;
 let currentPosition: BigNumberish;
 let wallets = generatedWallets(provider);
 
-describe('Arc Integration', () => {
+describe('D1Arc Integration', () => {
   async function updateOraclePrice(price: any) {
     const oracle = await MockOracle.at(ownerWallet, arc.oracle.address);
     await oracle.setPrice(price);
@@ -38,7 +38,7 @@ describe('Arc Integration', () => {
     userWallet = wallets[1];
     liquidatorWallet = wallets[2];
 
-    arc = await TestArc.init(ownerWallet);
+    arc = await D1TestArc.init(ownerWallet);
 
     await arc.deployTestArc();
     await arc.state.setMarketParams({
