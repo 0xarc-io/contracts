@@ -4,7 +4,9 @@ import { D2TestArc } from '../../src/D2TestArc';
 import { Account, getAccounts } from './testingUtils';
 import ArcDecimal from '@src/utils/ArcDecimal';
 import { MockOracle } from '@src/typings';
-import { BigNumberish } from 'ethers/utils';
+import { BigNumberish, BigNumber } from 'ethers/utils';
+import { asyncForEach } from '@src/utils/asyncForEach';
+import Token from '@src/utils/Token';
 
 /**
  * Setup test tooling
@@ -23,9 +25,10 @@ export interface ITestContext {
   evm?: EVM;
 }
 
-export interface ArcOptions {
+export interface D2ArcOptions {
   oraclePrice: BigNumberish;
-  accounts: Account[];
+  collateralRatio: BigNumberish;
+  initialCollateralBalances?: [Account, BigNumber][];
 }
 
 export type initFunction = (ctx: ITestContext) => Promise<void>;
@@ -34,13 +37,23 @@ export type testsFunction = (ctx: ITestContext) => void;
 /**
  * Initialize the Arc smart contracts
  */
-export async function initializeD2Arc(ctx: ITestContext, options: ArcOptions): Promise<void> {
-  const mockOracle = await MockOracle.at(ctx.accounts[0].wallet, ctx.arc.synth().oracle.address);
-  await mockOracle.setPrice({ value: options.oraclePrice });
+export async function initializeD2Arc(ctx: ITestContext, options: D2ArcOptions): Promise<void> {
+  // Set the price of the oracle
+  await ctx.arc.updatePrice(options.oraclePrice);
 
-  for (let i = 0; i < options.accounts.length; i++) {
-    options.accounts[i] = ctx.accounts[i];
-  }
+  // Update the collateral ratio
+  await ctx.arc.synth().core.setCollateralRatio({ value: options.collateralRatio });
+
+  // Set a starting balance and approval for each user we're going to be using
+  await asyncForEach(options.initialCollateralBalances, async (account, balance) => {
+    await ctx.arc.synth().collateral.mintShare(account.address, balance);
+    await Token.approve(
+      ctx.arc.synth().collateral.address,
+      account.wallet,
+      ctx.arc.synth().core.address,
+      balance,
+    );
+  });
 }
 
 export default function d2ArcDescribe(

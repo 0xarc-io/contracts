@@ -31,13 +31,18 @@ contract D2StorageV1 {
     uint256 public indexLastUpdate;
 
     Decimal.D256 collateralRatio;
+
     Decimal.D256 liquidationUserFee;
     Decimal.D256 liquidationArcFee;
+
+    Decimal.D256 printerPercentage;
+    address printerDestination;
 
     uint256 collateralLimit;
     uint256 syntheticLimit;
     uint256 positionCollateralMinimum;
 
+    address interestSetter;
 }
 
 contract D2Storage is D2StorageV1 { }
