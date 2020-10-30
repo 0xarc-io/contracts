@@ -3,6 +3,14 @@ enum AssetType {
   Synthetic
 }
 
+type UserSlashed @entity {
+  id: ID!
+  transactionHash: Bytes!
+  user: Bytes!
+  slasher: Bytes!
+  amount: BigInt!
+}
+
 type Position @entity {
   id: ID!
   owner: Bytes!
