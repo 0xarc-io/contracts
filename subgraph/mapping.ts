@@ -1,12 +1,22 @@
-import { Position, GlobalMarket, GlobalRisk, ActionOperated } from '../generated/schema';
+import { Position, GlobalMarket, GlobalRisk, ActionOperated, UserSlashed } from '../generated/schema';
 import { RiskParamsUpdated, MarketParamsUpdated } from '../generated/StateV1/StateV1';
 import { ActionOperated as ActionOperatedEvent } from '../generated/CoreV1/CoreV1';
+import { UserSlashed as UserSlashedEvent } from '../generated/StakingRewards-Pool-4/RewardCampaign';
+
+export function userSlashed(event: UserSlashedEvent): void {
+  let userSlashed = new UserSlashed(event.transaction.hash.toHexString());
+  userSlashed.transactionHash = event.transaction.hash;
+  userSlashed.slasher = event.params._slasher;
+  userSlashed.user = event.params._user;
+  userSlashed.amount = event.params._amount;
+  userSlashed.save();
+}
 
 export function actionOperated(event: ActionOperatedEvent): void {
   handlePosition(event);
   let positionId = event.params.params.id.toHexString();
   let actionOperated = new ActionOperated(event.transaction.hash.toHexString().concat('-').concat(positionId));
-  actionOperated.sender = event.transaction.from
+  actionOperated.sender = event.transaction.from;
   actionOperated.position = positionId;
   actionOperated.amountOne = event.params.params.amountOne;
   actionOperated.amountTwo = event.params.params.amountTwo;
