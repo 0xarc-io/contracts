@@ -17,7 +17,7 @@ type Position @entity {
 
 type ActionOperated @entity {
   id: ID!
-  owner: Bytes!
+  sender: Bytes!
   operation: Int!
   amountOne: BigInt
   amountTwo: BigInt
