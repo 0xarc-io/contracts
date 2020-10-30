@@ -27,12 +27,7 @@ interface ID2Core {
     function getBorrowIndex()
         external
         view
-        returns (uint256);
-
-    function getLastIndexUpdate()
-        external
-        view
-        returns (uint256);
+        returns (uint256, uint256);
 
     function getPosition(
         uint256 positionId
@@ -46,12 +41,17 @@ interface ID2Core {
         view
         returns (Decimal.D256 memory);
 
-    function getTotalSupplied()
+    function getTotals()
         external
         view
-        returns (uint256);
+        returns (uint256, uint256);
 
-    function getTotalBorrowed()
+    function getLimits()
+        external
+        view
+        returns (uint256, uint256, uint256);
+
+    function getInterestRate()
         external
         view
         returns (uint256);
