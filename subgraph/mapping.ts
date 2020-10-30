@@ -6,7 +6,7 @@ export function actionOperated(event: ActionOperatedEvent): void {
   handlePosition(event);
   let positionId = event.params.params.id.toHexString();
   let actionOperated = new ActionOperated(event.transaction.hash.toHexString().concat('-').concat(positionId));
-  actionOperated.owner = event.transaction.from
+  actionOperated.sender = event.transaction.from
   actionOperated.position = positionId;
   actionOperated.amountOne = event.params.params.amountOne;
   actionOperated.amountTwo = event.params.params.amountTwo;
