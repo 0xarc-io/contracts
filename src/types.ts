@@ -54,17 +54,13 @@ export type Int = {
 
 export type Position = {
   owner: string;
-  collateralAsset: AssetType;
-  borrowedAsset: AssetType;
   collateralAmount: Int;
   borrowedAmount: Int;
 };
 
 export type OperationParams = {
   id: BigNumberish;
-  assetOne: BigNumberish;
   amountOne: BigNumberish;
-  assetTwo: BigNumberish;
   amountTwo: BigNumberish;
 };
 
@@ -77,8 +73,6 @@ export type ActionOperated = {
 export type GraphPosition = {
   id: BigNumberish;
   owner: string;
-  collateralAsset: AssetType;
-  borrowedAsset: AssetType;
   collateralAmountSign: Boolean;
   collateralAmountValue: BigNumberish;
   borrowedAmountSign: Boolean;

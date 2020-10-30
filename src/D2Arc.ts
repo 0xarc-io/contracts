@@ -3,6 +3,9 @@ import { BigNumber, BigNumberish } from 'ethers/utils';
 import { D2CoreV1, IERC20, IOracle, ISyntheticToken, TransactionOverrides } from './typings';
 import { ID2Core } from './typings/ID2Core';
 import { asyncForEach } from '@src/utils/asyncForEach';
+import { TestToken } from '@src/typings/TestToken';
+import { ActionOperated, Operation, Position } from './types';
+import { parseLogs } from './utils/parseLogs';
 
 export enum SynthNames {
   TESTUSD = 'TESTUSD',
@@ -11,7 +14,7 @@ export enum SynthNames {
 export type Synth = {
   core: D2CoreV1;
   oracle: IOracle;
-  collateral: IERC20;
+  collateral: TestToken;
   synthetic: ISyntheticToken;
 };
 
@@ -33,7 +36,7 @@ export default class D2Arc {
     await asyncForEach(entries, async ([name, synth]) => {
       const core = D2CoreV1.at(this.wallet, synth);
       const oracle = IOracle.at(this.wallet, await core.getCurrentOracle());
-      const collateral = IERC20.at(this.wallet, await core.getCollateralAsset());
+      const collateral = TestToken.at(this.wallet, await core.getCollateralAsset());
       const synthetic = ISyntheticToken.at(this.wallet, await core.getSyntheticAsset());
 
       this.synths[name] = {
@@ -55,7 +58,20 @@ export default class D2Arc {
     caller: Signer = this.wallet,
     synth: Synth = this.availableSynths()[0],
     overrides: TransactionOverrides = {},
-  ) {}
+  ) {
+    const contract = await this.getCore(synth, caller);
+    const tx = await contract.operateAction(
+      Operation.Open,
+      {
+        id: 0,
+        amountOne: collateralAmount,
+        amountTwo: borrowAmount,
+      },
+      overrides,
+    );
+
+    return await this.parseActionTx(tx);
+  }
 
   async borrow(
     positionId: BigNumberish,
@@ -82,5 +98,37 @@ export default class D2Arc {
     overrides: TransactionOverrides = {},
   ) {}
 
-  async parseActionTx(tx: any) {}
+  async parseActionTx(tx: any) {
+    const receipt = await tx.wait();
+    const logs = parseLogs(receipt.logs, D2CoreV1.ABI);
+    const log = logs[0];
+
+    const position = {
+      owner: log.values.updatedPosition[0],
+      collateralAmount: {
+        sign: log.values.updatedPosition[3][0],
+        value: log.values.updatedPosition[3][1],
+      },
+      borrowedAmount: {
+        sign: log.values.updatedPosition[4][0],
+        value: log.values.updatedPosition[4][1],
+      },
+    } as Position;
+
+    const result = {
+      operation: log.values.operation,
+      params: {
+        id: log.values.params[0],
+        amountOne: log.values.params[2],
+        amountTwo: log.values.params[4],
+      },
+      updatedPosition: position,
+    } as ActionOperated;
+
+    return result;
+  }
+
+  async getCore(synth: Synth, caller?: Signer) {
+    return await D2CoreV1.at(caller || this.wallet, synth.core.address);
+  }
 }

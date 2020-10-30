@@ -4,6 +4,7 @@ import { TestToken } from '@src/typings/TestToken';
 import { ArcProxy, D2CoreV1, MockOracle, SyntheticToken } from '@src/typings';
 import { SynthNames } from './D2Arc';
 import { assert } from 'console';
+import { BigNumberish } from 'ethers/utils';
 
 export class D2TestArc extends D2Arc {
   static async init(wallet: Wallet): Promise<D2TestArc> {
@@ -30,5 +31,10 @@ export class D2TestArc extends D2Arc {
 
   public synth() {
     return this.availableSynths()[0];
+  }
+
+  public async updatePrice(price: BigNumberish) {
+    const mockOracle = await MockOracle.at(this.wallet, this.synth().oracle.address);
+    await mockOracle.setPrice({ value: price });
   }
 }

@@ -110,6 +110,14 @@ contract D2CoreV1 is Adminable, D2Storage {
 
     }
 
+    function setPrinterDestination(
+        address _printerDestination
+    )
+        public
+    {
+
+    }
+
     function setLiquidationFees(
         Decimal.D256 memory _liquidationUserFee
     )
