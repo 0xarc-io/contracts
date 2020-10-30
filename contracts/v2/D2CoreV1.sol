@@ -10,6 +10,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
 import {IMintableToken} from "../interfaces/IMintableToken.sol";
 import {IOracle} from "../interfaces/IOracle.sol";
+import {ID2Core} from "../interfaces/ID2Core.sol";
 
 import {Adminable} from "../lib/Adminable.sol";
 import {Decimal} from "../lib/Decimal.sol";
@@ -18,7 +19,7 @@ import {Math} from "../lib/Math.sol";
 import {D2Storage} from "./D2Storage.sol";
 import {D2Types} from  "./D2Types.sol";
 
-contract D2CoreV1 is Adminable, D2Storage {
+contract D2CoreV1 is Adminable, D2Storage, ID2Core {
 
     /* ========== Libraries ========== */
 
@@ -80,6 +81,7 @@ contract D2CoreV1 is Adminable, D2Storage {
         address _oracleAddress
     )
         public
+        onlyAdmin
     {
         collateralAsset = _collateralAddress;
         syntheticAsset = _syntheticAddress;
@@ -90,14 +92,16 @@ contract D2CoreV1 is Adminable, D2Storage {
         uint256 _rate
     )
         public
+        onlyAdmin
     {
-
+        interestRate = _rate;
     }
 
     function setOracle(
         address _oracle
     )
         public
+        onlyAdmin
     {
         oracle = IOracle(_oracle);
     }
@@ -106,24 +110,31 @@ contract D2CoreV1 is Adminable, D2Storage {
         Decimal.D256 memory _collateralRatio
     )
         public
+        onlyAdmin
     {
-
+        collateralRatio = _collateralRatio;
     }
 
     function setPrinterDestination(
         address _printerDestination
     )
         public
+        onlyAdmin
     {
-
+        printerDestination = _printerDestination;
     }
 
-    function setLiquidationFees(
-        Decimal.D256 memory _liquidationUserFee
+    function setFees(
+        Decimal.D256 memory _liquidationUserFee,
+        Decimal.D256 memory _liquidationArcRatio,
+        Decimal.D256 memory _printerArcRatio
     )
         public
+        onlyAdmin
     {
-
+        liquidationUserFee = _liquidationUserFee;
+        liquidationArcRatio = _liquidationArcRatio;
+        printerArcRatio = _printerArcRatio;
     }
 
     function setLimits(
@@ -132,8 +143,11 @@ contract D2CoreV1 is Adminable, D2Storage {
         uint256 _positionCollateralMinimum
     )
         public
+        onlyAdmin
     {
-
+        collateralLimit = _collateralLimit;
+        syntheticLimit = _syntheticLimit;
+        positionCollateralMinimum = _positionCollateralMinimum;
     }
 
     /* ========== Public Functions ========== */
@@ -346,17 +360,9 @@ contract D2CoreV1 is Adminable, D2Storage {
     function getBorrowIndex()
         external
         view
-        returns (uint256)
+        returns (uint256, uint256)
     {
-        return borrowIndex;
-    }
-
-    function getLastIndexUpdate()
-        external
-        view
-        returns (uint256)
-    {
-        return indexLastUpdate;
+        return (borrowIndex, indexLastUpdate);
     }
 
     function getCollateralRatio()
@@ -367,20 +373,28 @@ contract D2CoreV1 is Adminable, D2Storage {
         return collateralRatio;
     }
 
-    function getTotalSupplied()
+    function getTotals()
         external
         view
-        returns (uint256)
+        returns (uint256, uint256)
     {
-        return totalSupplied;
+        return (totalSupplied, totalBorrowed);
     }
 
-    function getTotalBorrowed()
+    function getLimits()
+        external
+        view
+        returns (uint256, uint256, uint256)
+    {
+        return (collateralLimit, syntheticLimit, positionCollateralMinimum);
+    }
+
+    function getInterestRate()
         external
         view
         returns (uint256)
     {
-        return totalBorrowed;
+        return interestRate;
     }
 
 }

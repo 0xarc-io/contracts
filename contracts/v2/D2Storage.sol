@@ -15,34 +15,34 @@ contract D2StorageV1 {
 
     bool public paused;
 
-    mapping (uint256 => D2Types.Position) public positions;
+    mapping (uint256 => D2Types.Position) internal positions;
 
-    IOracle public oracle;
+    IOracle internal oracle;
 
-    address public collateralAsset;
-    address public syntheticAsset;
+    address internal collateralAsset;
+    address internal syntheticAsset;
 
     uint256 public positionCount;
 
-    uint256 public totalSupplied;
-    uint256 public totalBorrowed;
+    uint256 internal totalSupplied;
+    uint256 internal totalBorrowed;
 
-    uint256 public borrowIndex;
-    uint256 public indexLastUpdate;
+    uint256 internal borrowIndex;
+    uint256 internal indexLastUpdate;
+    uint256 internal interestRate;
 
-    Decimal.D256 collateralRatio;
+    Decimal.D256 internal collateralRatio;
 
-    Decimal.D256 liquidationUserFee;
-    Decimal.D256 liquidationArcFee;
+    Decimal.D256 public liquidationUserFee;
+    Decimal.D256 public liquidationArcRatio;
+    Decimal.D256 public printerArcRatio;
 
-    Decimal.D256 printerPercentage;
-    address printerDestination;
+    address public printerDestination;
+    address public interestSetter;
 
-    uint256 collateralLimit;
-    uint256 syntheticLimit;
-    uint256 positionCollateralMinimum;
-
-    address interestSetter;
+    uint256 internal collateralLimit;
+    uint256 internal syntheticLimit;
+    uint256 internal positionCollateralMinimum;
 }
 
 contract D2Storage is D2StorageV1 { }
