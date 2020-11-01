@@ -180,8 +180,8 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         D2Types.Position memory operatedPosition;
 
         // Update the index to calculate how much interest has accrued
-        // And then subsequently mint more of the synth to the money printer
-        updateIndex();
+        // And then subsequently mint more of the synth to the printer
+        updateIndexAndPrint();
 
         if (operation == Operation.Open) {
             (operatedPosition, params.id) = openPosition(
@@ -234,7 +234,7 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
      *      (in seconds) then multiplied by the interest rate. The result is then
      *      multiplied by the totalBorrowed amount.
     */
-    function updateIndex()
+    function updateIndexAndPrint()
         public
     {
         if (currentTimestamp() == indexLastUpdate || totalBorrowed == 0) {
@@ -512,7 +512,7 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         // 1. Burn the synths being repaid directly from their wallet
         // 2. Transfer the collateral back to the user
 
-        D2Types.Position memory position = positions[positionId];
+        D2Types.Position storage position = positions[positionId];
 
         Decimal.D256 memory currentPrice = oracle.fetchCurrentPrice();
 
@@ -623,8 +623,158 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         // 2. Tranfer the collateral from the synthetic token to the liquidator
         // 3. Transfer a portion to the ARC Core contract as a fee
 
+        D2Types.Position storage position = positions[positionId];
 
+        require(
+            position.owner != address(0),
+            "liquidatePosition(): must be a valid position"
+        );
 
+        // Ensure that the position is not collateralized
+        require(
+            isCollateralized(position) == false,
+            "liquidatePosition(): position is collateralised"
+        );
+
+        // Get the liquidation price of the asset (discount for liquidator)
+        Decimal.D256 memory liquidationPrice = calculateLiquidationPrice();
+
+        // Calculate how much the user is in debt by to be whole again at a discounted price
+        (Amount.Principal memory liquidationCollateralDelta) = calculateCollateralDelta(
+            position.collateralAmount,
+            position.borrowedAmount.calculateAdjusted(borrowIndex),
+            liquidationPrice
+        );
+
+        // Liquidate a slight bit more to ensure the user is guarded against futher price drops
+        liquidationCollateralDelta.value = Decimal.mul(
+            liquidationCollateralDelta.value,
+            Decimal.add(
+                liquidationUserFee,
+                Decimal.one().value
+            )
+        );
+
+        // Calculate how much collateral this is going to cost the liquidator
+        // The sign is negative since we need to subtract from the liquidation delta
+        // which is a negative sign and subtracting a negative will actually add it
+
+        // Calculate the amount of collateral actually needed in order to perform this liquidation.
+        // Since the liquidationUserFee is the penalty, by multiplying (1-fee) we can get the
+        // actual collateral amount needed. We'll ultimately be adding this amount to the
+        // liquidation delta (which is negative) to give us the profit amount.
+        (Amount.Principal memory liquidatorCollateralCost) = Amount.Principal({
+            sign: true,
+            value: Decimal.mul(
+                liquidationCollateralDelta.value,
+                Decimal.sub(
+                    Decimal.one(),
+                    liquidationUserFee.value
+                )
+            )
+        });
+
+        // If the maximum they're down by is greater than their collateral, bound to the maximum
+        if (liquidationCollateralDelta.value > position.collateralAmount.value) {
+            liquidationCollateralDelta.value = position.collateralAmount.value;
+
+            // If the the original collateral delta is to be the same as the
+            // collateral amount. What this does is that the profit calculated
+            // will be 0 since the liquidationCollateralDelta less the
+            // originalCollateralDelta will be the same.
+            liquidatorCollateralCost.value = position.collateralAmount.value;
+        }
+
+        // Calculate how much borrowed assets to liquidate (at a discounted price)
+        // We can use the liquidationCollateralDelta.value since it's already using
+        // interest-adjusted values rather than principal values
+        uint256 borrowToLiquidate = calculateCollateralAmount(
+            liquidationCollateralDelta.value,
+            liquidationPrice
+        );
+
+        // Decrease the user's debt amout by the principal amount
+        position = setBorrowAmount(
+            positionId,
+            position.borrowedAmount.add(
+                Amount.calculatePrincipal(
+                    borrowToLiquidate,
+                    borrowIndex,
+                    true
+                )
+            )
+        );
+
+        // Decrease the user's collateral amount
+        position = setCollateralAmount(
+            positionId,
+            position.collateralAmount.sub(liquidationCollateralDelta)
+        );
+
+        require(
+            IERC20(collateralAsset).balanceOf(msg.sender) >= borrowToLiquidate,
+            "liquidatePosition(): msg.sender not enough of borrowed asset to liquidate"
+        );
+
+        _settleLiquidation(
+            borrowToLiquidate,
+            liquidationCollateralDelta,
+            liquidatorCollateralCost
+        );
+    }
+
+    function _settleLiquidation(
+        uint256 borrowToLiquidate,
+        Amount.Principal memory liquidationCollateralDelta,
+        Amount.Principal memory liquidatorCollateralCost
+    )
+        private
+    {
+        ISyntheticToken synthetic = ISyntheticToken(syntheticAsset);
+        IERC20 collateralAsset = IERC20(collateralAsset);
+
+        // Burn the synthetic asset from the liquidator
+        synthetic.burn(
+            msg.sender,
+            borrowToLiquidate
+        );
+
+        // This is the actual profit collected from the liquidation
+        // Since the liquidationCollateralDelta is negative and liquidationCollateralCost
+        // is a positive value, by adding them the result gives us the profit
+        Amount.Principal memory collateralProfit = liquidationCollateralDelta.add(
+            liquidatorCollateralCost
+        );
+
+        // ARC's profit is simple a percentage of the profit, not net total
+        uint256 arcProfit = Decimal.mul(
+            collateralProfit.value,
+            liquidationArcRatio
+        );
+
+        // Transfer them the collateral assets they acquired at a discount
+        bool userTransferResult = synthetic.transferCollateral(
+            address(collateralAsset),
+            msg.sender,
+            uint256(liquidationCollateralDelta.value).sub(arcProfit)
+        );
+
+        require(
+            userTransferResult == true,
+            "liquidate(): collateral failed to transfer to user"
+        );
+
+        // Transfer ARC the collateral asset acquired at a discount
+        bool arcTransferResult = synthetic.transferCollateral(
+            address(collateralAsset),
+            address(this),
+            arcProfit
+        );
+
+        require(
+            arcTransferResult == true,
+            "liquidate(): collateral failed to transfer to arc"
+        );
     }
 
     function setCollateralAmount(
@@ -818,6 +968,26 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
     }
 
     /**
+     * @dev Given a borrowed amount, calculate the inverse collateral amount
+     *
+     * @param borrowedAmount The borrowed amount expressed as a uint256 (NOT principal)
+     * @param price What price do you want to calculate the inverse at
+     */
+    function calculateCollateralAmount(
+        uint256 borrowedAmount,
+        Decimal.D256 memory price
+    )
+        public
+        pure
+        returns (uint256)
+    {
+        return Decimal.div(
+            borrowedAmount,
+            price
+        );
+    }
+
+    /**
      * @dev Calculate how much collateral you need given a certain borrow amount
      *
      * @param borrowedAmount The borrowed amount expressed as a uint256 (NOT principal)
@@ -832,7 +1002,7 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         returns (Amount.Principal memory)
     {
 
-        uint256 inverseRequired = Decimal.div(
+        uint256 inverseRequired = calculateCollateralAmount(
             borrowedAmount,
             price
         );
@@ -879,5 +1049,32 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         collateralDelta = parSupply.sub(collateralRequired);
 
         return collateralDelta;
+    }
+
+    /**
+     * @dev When executing a liqudation, the price of the asset has to be calculated
+     *      at a discount in order for it to be profitable for the liquidator. This function
+     *      will get the current oracle price for the asset and find the discounted price.
+     *
+     */
+    function calculateLiquidationPrice()
+        public
+        view
+        returns (Decimal.D256 memory)
+    {
+        Decimal.D256 memory result;
+        Decimal.D256 memory currentPrice = oracle.fetchCurrentPrice();
+
+        result = Decimal.sub(
+            Decimal.one(),
+            liquidationUserFee.value
+        );
+
+        result = Decimal.mul(
+            currentPrice,
+            result
+        );
+
+        return result;
     }
 }
