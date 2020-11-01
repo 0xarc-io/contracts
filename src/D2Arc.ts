@@ -1,6 +1,13 @@
 import { Signer } from 'ethers';
 import { BigNumber, BigNumberish } from 'ethers/utils';
-import { D2CoreV1, IERC20, IOracle, ISyntheticToken, TransactionOverrides } from './typings';
+import {
+  D2CoreV1,
+  IERC20,
+  IOracle,
+  ISyntheticToken,
+  SyntheticToken,
+  TransactionOverrides,
+} from './typings';
 import { ID2Core } from './typings/ID2Core';
 import { asyncForEach } from '@src/utils/asyncForEach';
 import { TestToken } from '@src/typings/TestToken';
@@ -15,7 +22,7 @@ export type Synth = {
   core: D2CoreV1;
   oracle: IOracle;
   collateral: TestToken;
-  synthetic: ISyntheticToken;
+  synthetic: SyntheticToken;
 };
 
 export default class D2Arc {
@@ -37,7 +44,7 @@ export default class D2Arc {
       const core = D2CoreV1.at(this.wallet, synth);
       const oracle = IOracle.at(this.wallet, await core.getCurrentOracle());
       const collateral = TestToken.at(this.wallet, await core.getCollateralAsset());
-      const synthetic = ISyntheticToken.at(this.wallet, await core.getSyntheticAsset());
+      const synthetic = SyntheticToken.at(this.wallet, await core.getSyntheticAsset());
 
       this.synths[name] = {
         core,
@@ -89,7 +96,20 @@ export default class D2Arc {
     caller: Signer = this.wallet,
     synth: Synth = this.availableSynths()[0],
     overrides: TransactionOverrides = {},
-  ) {}
+  ) {
+    const contract = await this.getCore(synth, caller);
+    const tx = await contract.operateAction(
+      Operation.Repay,
+      {
+        id: 0,
+        amountOne: repaymentAmount,
+        amountTwo: withdrawAmount,
+      },
+      overrides,
+    );
+
+    return await this.parseActionTx(tx);
+  }
 
   async liquidatePosition(
     positionId: BigNumberish,
@@ -106,12 +126,12 @@ export default class D2Arc {
     const position = {
       owner: log.values.updatedPosition[0],
       collateralAmount: {
-        sign: log.values.updatedPosition[3][0],
-        value: log.values.updatedPosition[3][1],
+        sign: log.values.updatedPosition[1][0],
+        value: log.values.updatedPosition[1][1],
       },
       borrowedAmount: {
-        sign: log.values.updatedPosition[4][0],
-        value: log.values.updatedPosition[4][1],
+        sign: log.values.updatedPosition[2][0],
+        value: log.values.updatedPosition[2][1],
       },
     } as Position;
 
@@ -119,8 +139,8 @@ export default class D2Arc {
       operation: log.values.operation,
       params: {
         id: log.values.params[0],
-        amountOne: log.values.params[2],
-        amountTwo: log.values.params[4],
+        amountOne: log.values.params[1],
+        amountTwo: log.values.params[2],
       },
       updatedPosition: position,
     } as ActionOperated;
