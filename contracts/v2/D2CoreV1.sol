@@ -485,7 +485,7 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
      *      debt will be reduced and in turn will allow them to withdraw their collateral should they choose.
      *
      * @param positionId ID of the position to repay
-     * @param repayAmount Amount of collateral to repay
+     * @param repayAmount Amount of debt to repay
      * @param withdrawAmount Amount of collateral to withdraw
      */
     function repay(

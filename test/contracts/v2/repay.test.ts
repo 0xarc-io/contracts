@@ -35,7 +35,10 @@ async function init(ctx: ITestContext): Promise<void> {
     collateralRatio: ArcDecimal.new(2).value,
     interestRate: TEN_PERCENT,
     printerDestination: printerAccount.address,
-    initialCollateralBalances: [[minterAccount, COLLATERAL_AMOUNT.mul(5)]],
+    initialCollateralBalances: [
+      [minterAccount, COLLATERAL_AMOUNT.mul(5)],
+      [otherAccount, COLLATERAL_AMOUNT.mul(5)],
+    ],
   } as D2ArcOptions;
 
   await initializeD2Arc(ctx, setupOptions);
@@ -162,13 +165,75 @@ describe('D2Core.operateAction(Repay)', () => {
     expect(ctx.arc.repay(0, 0, 1, minterAccount.wallet)).to.be.revertedWith(REPAY_WITHDRAW_ERROR);
   });
 
-  it('should not be able to repay more than it owes (positive debt not allowed)', async () => {});
+  it('should not be able to repay more than it owes (positive debt not allowed)', async () => {
+    await ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, minterAccount.wallet);
+    await ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, otherAccount.wallet);
 
-  it('should be able to repay accumulated interest (3 months)', async () => {});
+    await Token.transfer(
+      ctx.arc.syntheticAddress(),
+      minterAccount.address,
+      BORROW_AMOUNT,
+      otherAccount.wallet,
+    );
 
-  it('should be able to repay accumulated interest (6 months)', async () => {});
+    expect(ctx.arc.repay(0, BORROW_AMOUNT.mul(3), COLLATERAL_AMOUNT, minterAccount.wallet)).to.be
+      .reverted;
+  });
 
-  it('should be able to repay accumulated interest (12 months)', async () => {});
+  it.only('should be able to repay accumulated interest (12 months)', async () => {
+    await ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, minterAccount.wallet);
 
-  it('should be able to repay all interest and debt (12 months', async () => {});
+    // Set the time to one year from now in order for interest to accumulate
+    await ctx.arc.updateTime(ONE_YEAR_IN_SECONDS);
+    await ctx.arc.synth().core.updateIndex();
+
+    let borrowIndex = await ctx.arc.core().getBorrowIndex();
+    let position = await ctx.arc.getPosition(0);
+
+    const totalOwed = BORROW_AMOUNT.bigMul(borrowIndex[0]);
+    const interestOwed = await totalOwed.sub(BORROW_AMOUNT);
+
+    await ctx.arc.openPosition(COLLATERAL_AMOUNT.mul(4), BORROW_AMOUNT.mul(4), otherAccount.wallet);
+
+    await Token.transfer(
+      ctx.arc.syntheticAddress(),
+      minterAccount.address,
+      BORROW_AMOUNT.mul(4),
+      otherAccount.wallet,
+    );
+
+    const originalCollateralBalance = await ctx.arc
+      .synth()
+      .collateral.balanceOf(minterAccount.address);
+
+    // Repay the interest owed
+    await ctx.arc.repay(0, interestOwed, 0, minterAccount.wallet);
+
+    expect(await ctx.arc.synth().collateral.balanceOf(minterAccount.address)).to.equal(
+      originalCollateralBalance,
+    );
+
+    position = await ctx.arc.getPosition(0);
+    borrowIndex = await ctx.arc.core().getBorrowIndex();
+
+    expect(position.borrowedAmount.value.bigMul(borrowIndex[0])).to.equal(BORROW_AMOUNT);
+
+    const outstandingBorrow = position.borrowedAmount.value.bigMul(borrowIndex[0]);
+    const availableCollateral = await ctx.arc
+      .core()
+      .calculateCollateralDelta(position.collateralAmount, 1, {
+        value: BASE,
+      });
+
+    expect(availableCollateral.value.gte(ArcDecimal.new(99.99).value));
+    position = await ctx.arc.getPosition(0);
+
+    // Repay the remaining amount to get back all of the collateral
+    await ctx.arc.repay(0, outstandingBorrow, availableCollateral.value, minterAccount.wallet);
+
+    position = await ctx.arc.getPosition(0);
+    expect(await ctx.arc.synth().collateral.balanceOf(minterAccount.address)).to.equal(
+      originalCollateralBalance.add(availableCollateral.value),
+    );
+  });
 });
