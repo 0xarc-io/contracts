@@ -2,6 +2,7 @@ import { JsonRpcProvider } from 'ethers/providers';
 
 export class EVM {
   private provider: JsonRpcProvider;
+  private _snapshotId: string;
 
   constructor(provider: JsonRpcProvider) {
     this.provider = provider;
@@ -33,10 +34,11 @@ export class EVM {
   }
 
   public async snapshot(): Promise<string> {
-    return this.callJsonrpcMethod('evm_snapshot');
+    this._snapshotId = await this.callJsonrpcMethod('evm_snapshot');
+    return this._snapshotId;
   }
 
-  public async evmRevert(id: string): Promise<string> {
+  public async evmRevert(id: string = this._snapshotId): Promise<string> {
     return this.callJsonrpcMethod('evm_revert', [id]);
   }
 

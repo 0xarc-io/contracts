@@ -1,7 +1,7 @@
 import { Wallet } from 'ethers';
 import D2Arc from './D2Arc';
 import { TestToken } from '@src/typings/TestToken';
-import { ArcProxy, D2CoreV1, MockOracle, SyntheticToken } from '@src/typings';
+import { ArcProxy, D2CoreV1, MockD2CoreV1, MockOracle, SyntheticToken } from '@src/typings';
 import { SynthNames } from './D2Arc';
 import { assert } from 'console';
 import { BigNumberish } from 'ethers/utils';
@@ -15,16 +15,18 @@ export class D2TestArc extends D2Arc {
   }
 
   async deployTestArc() {
-    let core = await D2CoreV1.deploy(this.wallet);
+    const mockCore = await MockD2CoreV1.deploy(this.wallet);
 
     const collateralAsset = await TestToken.deploy(this.wallet, 'TestCollateral', 'TEST');
     const syntheticAsset = await SyntheticToken.deploy(this.wallet, 'TESTUSD', 'TESTUSD');
 
     const oracle = await MockOracle.deploy(this.wallet);
-    const proxy = await ArcProxy.deploy(this.wallet, core.address, this.walletAddress, []);
+    const proxy = await ArcProxy.deploy(this.wallet, mockCore.address, this.walletAddress, []);
 
-    core = await D2CoreV1.at(this.wallet, proxy.address);
+    let core = await D2CoreV1.at(this.wallet, proxy.address);
+
     await core.init(collateralAsset.address, syntheticAsset.address, oracle.address);
+    await syntheticAsset.addMinter(core.address);
 
     await this.addSynths({ TESTUSD: core.address });
   }
@@ -36,5 +38,34 @@ export class D2TestArc extends D2Arc {
   public async updatePrice(price: BigNumberish) {
     const mockOracle = await MockOracle.at(this.wallet, this.synth().oracle.address);
     await mockOracle.setPrice({ value: price });
+  }
+
+  public async updateTime(value: BigNumberish) {
+    const mockArc = await MockD2CoreV1.at(this.wallet, this.synth().core.address);
+    await mockArc.setCurrentTimestamp(value);
+  }
+
+  public async getSynthTotals() {
+    return await this.synth().core.getTotals();
+  }
+
+  public async getPosition(id: BigNumberish) {
+    return await this.synth().core.getPosition(id);
+  }
+
+  public core() {
+    return this.synth().core;
+  }
+
+  public synthetic() {
+    return this.synth().synthetic;
+  }
+
+  public coreAddress() {
+    return this.synth().core.address;
+  }
+
+  public syntheticAddress() {
+    return this.synth().synthetic.address;
   }
 }

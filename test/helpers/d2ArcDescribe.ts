@@ -7,6 +7,9 @@ import { MockOracle } from '@src/typings';
 import { BigNumberish, BigNumber } from 'ethers/utils';
 import { asyncForEach } from '@src/utils/asyncForEach';
 import Token from '@src/utils/Token';
+import ArcNumber from '../../src/utils/ArcNumber';
+import { D2Fees } from '@src/types';
+import { BASE } from '../../src/constants';
 
 /**
  * Setup test tooling
@@ -23,21 +26,33 @@ export interface ITestContext {
   arc?: D2TestArc;
   accounts?: Account[];
   evm?: EVM;
+  postInitSnapshotId?: string;
 }
 
 export interface D2ArcOptions {
   oraclePrice: BigNumberish;
   collateralRatio: BigNumberish;
+  printerDestination: string;
+  interestRate?: BigNumberish;
+  startingTime?: BigNumberish;
+  fees?: D2Fees;
   initialCollateralBalances?: [Account, BigNumber][];
 }
 
 export type initFunction = (ctx: ITestContext) => Promise<void>;
 export type testsFunction = (ctx: ITestContext) => void;
 
+export const DEFAULT_LIQUIDATION_USER_FEE = ArcDecimal.new(0.1).value;
+export const DEFAULT_LIQUIDATION_ARC_RATIO = ArcDecimal.new(0.5).value;
+export const DEFAULT_PRINTER_ARC_RATIO = ArcDecimal.new(0.1).value;
+
 /**
  * Initialize the Arc smart contracts
  */
 export async function initializeD2Arc(ctx: ITestContext, options: D2ArcOptions): Promise<void> {
+  // Set the starting timestamp
+  await ctx.arc.updateTime(options.startingTime || 0);
+
   // Set the price of the oracle
   await ctx.arc.updatePrice(options.oraclePrice);
 
@@ -45,7 +60,7 @@ export async function initializeD2Arc(ctx: ITestContext, options: D2ArcOptions):
   await ctx.arc.synth().core.setCollateralRatio({ value: options.collateralRatio });
 
   // Set a starting balance and approval for each user we're going to be using
-  await asyncForEach(options.initialCollateralBalances, async (account, balance) => {
+  await asyncForEach(options.initialCollateralBalances, async ([account, balance]) => {
     await ctx.arc.synth().collateral.mintShare(account.address, balance);
     await Token.approve(
       ctx.arc.synth().collateral.address,
@@ -54,47 +69,32 @@ export async function initializeD2Arc(ctx: ITestContext, options: D2ArcOptions):
       balance,
     );
   });
+
+  // Set the interest rate
+  await ctx.arc.synth().core.setRate(options.interestRate || BASE);
+
+  // Set the money printer destination
+  await ctx.arc.synth().core.setPrinterDestination(options.printerDestination);
+
+  // Set ARC's fees
+  await ctx.arc
+    .synth()
+    .core.setFees(
+      { value: options.fees?.liquidationUserFee || DEFAULT_LIQUIDATION_USER_FEE },
+      { value: options.fees?.liquidationArcRatio || DEFAULT_LIQUIDATION_ARC_RATIO },
+      { value: options.fees?.printerArcRatio || DEFAULT_PRINTER_ARC_RATIO },
+    );
 }
 
-export default function d2ArcDescribe(
-  name: string,
-  init: initFunction,
-  tests: testsFunction,
-): void {
-  // Note that the function passed into describe() should not be async.
-  describe(name, () => {
-    const ctx: ITestContext = {};
+export async function d2Setup(init: initFunction): Promise<ITestContext> {
+  const ctx: ITestContext = {};
+  ctx.accounts = await getAccounts();
+  ctx.evm = evm;
+  ctx.arc = await D2TestArc.init(ctx.accounts[0].wallet);
 
-    let preInitSnapshotId: string;
-    let postInitSnapshotId: string;
+  await ctx.arc.deployTestArc();
+  await init(ctx);
 
-    // Runs before any before() calls made within the d1ArcDescribe() call.
-    before(async () => {
-      ctx.accounts = await getAccounts();
-      ctx.evm = evm;
-      ctx.arc = await D2TestArc.init(ctx.accounts[0].wallet);
-
-      await ctx.arc.deployTestArc();
-
-      preInitSnapshotId = await evm.snapshot();
-
-      await init(ctx);
-
-      await evm.mineAvgBlock();
-
-      postInitSnapshotId = await evm.snapshot();
-    });
-
-    // Runs before any beforeEach() calls made within the d1ArcDescribe() call.
-    beforeEach(async () => {
-      await evm.resetEVM(postInitSnapshotId);
-    });
-
-    // Runs before any after() calls made within the d1ArcDescribe() call.
-    afterEach(async () => {
-      await evm.resetEVM(postInitSnapshotId);
-    });
-
-    tests(ctx);
-  });
+  ctx.postInitSnapshotId = await evm.snapshot();
+  return ctx;
 }

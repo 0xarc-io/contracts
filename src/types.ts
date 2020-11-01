@@ -1,5 +1,6 @@
-import { BigNumberish } from 'ethers/utils';
+import { BigNumber, BigNumberish } from 'ethers/utils';
 import { Signer } from 'ethers';
+import { BASE } from './constants';
 
 export type SynthAddressBook = {
   state?: string;
@@ -91,6 +92,12 @@ export type RiskParams = {
   positionCollateralMinimum: BigNumberish;
 };
 
+export type D2Fees = {
+  liquidationUserFee: BigNumberish;
+  liquidationArcRatio: BigNumberish;
+  printerArcRatio: BigNumberish;
+};
+
 export interface TransactionOverrides {
   nonce?: BigNumberish | Promise<BigNumberish>;
   gasLimit?: BigNumberish | Promise<BigNumberish>;
@@ -99,3 +106,18 @@ export interface TransactionOverrides {
   chainId?: number | Promise<number>;
   from?: Signer;
 }
+
+declare module 'ethers/utils/BigNumber' {
+  interface BigNumber {
+    bigMul(value: BigNumberish): BigNumber;
+    bigDiv(value: BigNumberish): BigNumber;
+  }
+}
+
+BigNumber.prototype.bigMul = function (value: BigNumberish): BigNumber {
+  return this.mul(value).div(BASE);
+};
+
+BigNumber.prototype.bigDiv = function (value: BigNumberish): BigNumber {
+  return this.mul(BASE).div(value);
+};

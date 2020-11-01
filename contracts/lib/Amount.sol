@@ -11,6 +11,10 @@ library Amount {
     using Math for uint256;
     using SafeMath for uint256;
 
+    // ============ Constants ============
+
+    uint256 constant BASE = 10**18;
+
     // A Principal Amount is an amount that's been adjusted by an index
 
     struct Principal {
@@ -18,7 +22,7 @@ library Amount {
         uint256 value;
     }
 
-    function zeroPar()
+    function zero()
         internal
         pure
         returns (Principal memory)
@@ -65,6 +69,23 @@ library Amount {
         return result;
     }
 
+    function equals(
+        Principal memory a,
+        Principal memory b
+    )
+        internal
+        pure
+        returns (bool)
+    {
+        if (a.value == b.value) {
+            if (a.value == 0) {
+                return true;
+            }
+            return a.sign == b.sign;
+        }
+        return false;
+    }
+
     function negative(
         Principal memory a
     )
@@ -79,13 +100,14 @@ library Amount {
     }
 
     function calculateAdjusted(
-        Principal memory a
+        Principal memory a,
+        uint256 index
     )
         internal
         pure
         returns (uint256)
     {
-        return a.value;
+        return Math.getPartial(a.value, index, BASE);
     }
 
     function calculatePrincipal(
@@ -99,7 +121,7 @@ library Amount {
     {
         return Principal({
             sign: sign,
-            value: value
+            value: Math.getPartial(value, BASE, index)
         });
     }
 
