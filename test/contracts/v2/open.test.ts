@@ -120,7 +120,7 @@ describe('D2Core.operateAction(Open)', () => {
 
     // Set the time to one year from now in order for interest to accumulate
     await ctx.arc.updateTime(ONE_YEAR_IN_SECONDS);
-    await ctx.arc.synth().core.updateIndex();
+    await ctx.arc.synth().core.updateIndexAndPrint();
 
     const borrowIndex = await ctx.arc.synth().core.getBorrowIndex();
 

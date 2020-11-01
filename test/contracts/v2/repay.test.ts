@@ -185,7 +185,7 @@ describe('D2Core.operateAction(Repay)', () => {
 
     // Set the time to one year from now in order for interest to accumulate
     await ctx.arc.updateTime(ONE_YEAR_IN_SECONDS);
-    await ctx.arc.synth().core.updateIndex();
+    await ctx.arc.synth().core.updateIndexAndPrint();
 
     let borrowIndex = await ctx.arc.core().getBorrowIndex();
     let position = await ctx.arc.getPosition(0);
