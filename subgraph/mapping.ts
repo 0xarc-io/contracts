@@ -3,13 +3,21 @@ import { RiskParamsUpdated, MarketParamsUpdated } from '../generated/StateV1/Sta
 import { ActionOperated as ActionOperatedEvent } from '../generated/CoreV1/CoreV1';
 import { UserSlashed as UserSlashedEvent } from '../generated/StakingRewards-Pool-4/RewardCampaign';
 
-export function userSlashed(event: UserSlashedEvent): void {
+export function userSlashed(event: UserSlashedEvent, contractAddress: string): void {
   let userSlashed = new UserSlashed(event.transaction.hash.toHexString());
-  userSlashed.transactionHash = event.transaction.hash;
+  userSlashed.contractAddress = contractAddress;
   userSlashed.slasher = event.params._slasher;
   userSlashed.user = event.params._user;
   userSlashed.amount = event.params._amount;
   userSlashed.save();
+}
+
+export function userSlashedPool3(event: UserSlashedEvent): void {
+  userSlashed(event, '0x38b25c0A9e61E226023B700ce4a6A4134eCAEeDF');
+}
+
+export function userSlashedPool4(event: UserSlashedEvent): void {
+  userSlashed(event, '0x8016F490D76346EBEC91707fD4Fb56A7fe64f694');
 }
 
 export function actionOperated(event: ActionOperatedEvent): void {
