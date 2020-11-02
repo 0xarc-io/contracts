@@ -5,7 +5,7 @@ enum AssetType {
 
 type UserSlashed @entity {
   id: ID!
-  contractAddress: String!
+  contractAddress: Bytes!
   user: Bytes!
   slasher: Bytes!
   amount: BigInt!
