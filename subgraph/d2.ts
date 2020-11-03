@@ -1,5 +1,4 @@
 import { Address, BigInt } from '@graphprotocol/graph-ts';
-import { AddressZero } from 'ethers/constants';
 import {
   ActionOperated as ActionOperatedEvent,
   FeesUpdated as FeesUpdatedEvent,
@@ -13,7 +12,7 @@ import {
 
 import { ActionOperated, Position, Synth } from '../generated/schema';
 
-function actionOperated(event: ActionOperatedEvent): void {
+export function actionOperated(event: ActionOperatedEvent): void {
   handlePosition(event);
 
   let positionId = event.params.params.id.toHexString();
