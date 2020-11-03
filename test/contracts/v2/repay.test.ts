@@ -180,7 +180,7 @@ describe('D2Core.operateAction(Repay)', () => {
       .reverted;
   });
 
-  it.only('should be able to repay accumulated interest (12 months)', async () => {
+  it('should be able to repay accumulated interest (12 months)', async () => {
     await ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, minterAccount.wallet);
 
     // Set the time to one year from now in order for interest to accumulate
