@@ -688,7 +688,7 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         // Calculate how much borrowed assets to liquidate (at a discounted price)
         // We can use the liquidationCollateralDelta.value since it's already using
         // interest-adjusted values rather than principal values
-        uint256 borrowToLiquidate = calculateCollateralAmount(
+        uint256 borrowToLiquidate = Decimal.mul(
             liquidationCollateralDelta.value,
             liquidationPrice
         );
@@ -823,9 +823,6 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
 
         uint256 newTotalBorrowed = totalBorrowed;
 
-        console.log("total borrowed (old): %s", totalBorrowed);
-        console.log("new amount: %s", newBorrowAmount.value);
-        console.log("old position amount: %s", existingAmount.value);
         // Roll back the old amount
         newTotalBorrowed = newTotalBorrowed.sub(existingAmount.value);
 
@@ -837,8 +834,6 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
 
         // Update the actual position's borrowed amount
         position.borrowedAmount = newBorrowAmount;
-
-        console.log("new position amount: %s", position.borrowedAmount.value);
 
         // Prevent having debt represented by positive values
         if (position.borrowedAmount.value == 0) {
@@ -939,6 +934,22 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         return interestRate;
     }
 
+    function getFees()
+        external
+        view
+        returns (
+            Decimal.D256 memory _liquidationUserFee,
+            Decimal.D256 memory _liquidationArcRatio,
+            Decimal.D256 memory _printerArcRatio
+        )
+    {
+        return (
+            liquidationUserFee,
+            liquidationArcRatio,
+            printerArcRatio
+        );
+    }
+
     /* ========== Developer Functions ========== */
 
     function isCollateralized(
@@ -968,26 +979,6 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
     }
 
     /**
-     * @dev Given a borrowed amount, calculate the inverse collateral amount
-     *
-     * @param borrowedAmount The borrowed amount expressed as a uint256 (NOT principal)
-     * @param price What price do you want to calculate the inverse at
-     */
-    function calculateCollateralAmount(
-        uint256 borrowedAmount,
-        Decimal.D256 memory price
-    )
-        public
-        pure
-        returns (uint256)
-    {
-        return Decimal.div(
-            borrowedAmount,
-            price
-        );
-    }
-
-    /**
      * @dev Calculate how much collateral you need given a certain borrow amount
      *
      * @param borrowedAmount The borrowed amount expressed as a uint256 (NOT principal)
@@ -1002,7 +993,7 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         returns (Amount.Principal memory)
     {
 
-        uint256 inverseRequired = calculateCollateralAmount(
+        uint256 inverseRequired = Decimal.div(
             borrowedAmount,
             price
         );

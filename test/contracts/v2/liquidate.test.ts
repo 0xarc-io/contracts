@@ -15,6 +15,7 @@ import { BigNumber } from 'ethers/utils';
 import { UNDERCOLLATERALIZED_ERROR } from '../../helpers/contractErrors';
 import { TEN_PERCENT, ONE_YEAR_IN_SECONDS, BASE } from '../../../src/constants';
 import { Zero } from 'ethers/constants';
+import { calculateLiquidationAmount } from '@src/utils/calculations';
 
 let ownerAccount: Account;
 let minterAccount: Account;
@@ -54,6 +55,7 @@ describe('D2Core.operateAction(Liquidate)', () => {
 
     // Open a 200% collateralized position (at the boundary)
     await ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, minterAccount.wallet);
+
     await ctx.arc.openPosition(
       COLLATERAL_AMOUNT.mul(5),
       BORROW_AMOUNT.mul(5),
@@ -64,13 +66,23 @@ describe('D2Core.operateAction(Liquidate)', () => {
   addSnapshotBeforeRestoreAfterEach();
 
   it('should be able to liquidate an undercollateralized position', async () => {
-    // Drop the price in half
-    await ctx.arc.updatePrice(ArcDecimal.new(0.5).value);
+    // Get information about the position pre-liquidation and what we expect
+    const position = await ctx.arc.getPosition(0);
+
+    // Drop the price
+    await ctx.arc.updatePrice(ArcDecimal.new(0.75).value);
+
+    const liquidationDetails = await ctx.arc.getLiquidationDetails(position);
+    const preLiquidateSupply = await ctx.arc.synthetic().totalSupply();
 
     // Call up arthur to do the deed
     await ctx.arc.liquidatePosition(0, liquidatorAccount.wallet);
 
     // @TODO: Check total supply
+    expect(await await ctx.arc.synthetic().totalSupply()).to.equal(
+      preLiquidateSupply.sub(liquidationDetails.debtNeededToLiquidate),
+    );
+
     // @TODO: Check position borrow amount (decrease)
     // @TODO: Check position collateral amount (decrease)
     // @TODO: Check liquidator collateral amount (increase)
