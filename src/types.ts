@@ -107,7 +107,7 @@ export interface TransactionOverrides {
   from?: Signer;
 }
 
-declare module 'ethers/utils/BigNumber' {
+declare module 'ethers/utils' {
   interface BigNumber {
     bigMul(value: BigNumberish): BigNumber;
     bigDiv(value: BigNumberish): BigNumber;
