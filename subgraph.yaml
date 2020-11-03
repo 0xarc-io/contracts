@@ -32,7 +32,7 @@ dataSources:
         - event: RateUpdated(uint256)
           handler: rateUpdated
         - event: OracleUpdated(address)
-          handler: oracleUpdate
+          handler: oracleUpdated
         - event: CollateralRatioUpdated((uint256))
           handler: collateralRatioUpdated
         - event: PauseStatusUpdated(bool)
