@@ -3,6 +3,7 @@ import { RiskParamsUpdated, MarketParamsUpdated, StateV1 } from '../generated/St
 import { ActionOperated as ActionOperatedEvent } from '../generated/CoreV1/CoreV1';
 import { Address, BigInt, ByteArray } from '@graphprotocol/graph-ts';
 import { BASE } from '../src/constants';
+import { createOrLoadSynth } from './createOrLoadSynth';
 
 export function actionOperated(event: ActionOperatedEvent): void {
   handlePosition(event);
@@ -66,18 +67,4 @@ export function riskParamsUpdated(event: RiskParamsUpdated): void {
   synth.syntheticLimit = event.params.updatedParams.syntheticLimit;
   synth.positionCollateralMinimum = event.params.updatedParams.positionCollateralMinimum;
   synth.save();
-}
-
-function createOrLoadSynth(address: Address): Synth {
-  let stateContract = StateV1.bind(address);
-  let coreAddress = stateContract.core();
-
-  let synth = Synth.load(coreAddress.toHex());
-
-  if (synth == null) {
-    synth = new Synth(coreAddress.toHex());
-    synth.borrowIndex = BASE;
-  }
-
-  return synth as Synth;
 }
