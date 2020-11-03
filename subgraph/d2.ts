@@ -1,4 +1,4 @@
-import { Address, BigInt } from '@graphprotocol/graph-ts';
+import { Address } from '@graphprotocol/graph-ts';
 import {
   ActionOperated as ActionOperatedEvent,
   FeesUpdated as FeesUpdatedEvent,
@@ -11,6 +11,8 @@ import {
 } from '../generated/D2CoreV1/D2CoreV1';
 
 import { ActionOperated, Position, Synth } from '../generated/schema';
+import { BASE } from '../src/constants';
+import { createOrLoadSynth } from './createOrLoadSynth';
 
 export function actionOperated(event: ActionOperatedEvent): void {
   handlePosition(event);
@@ -85,15 +87,4 @@ export function pauseStatusUpdated(event: PauseStatusUpdatedEvent): void {
   let synth = createOrLoadSynth(event.address);
   synth.paused = event.params.value;
   synth.save();
-}
-
-function createOrLoadSynth(address: Address): Synth {
-  let synth = Synth.load(address.toHex());
-
-  if (synth == null) {
-    synth = new Synth(address.toHex());
-    synth.borrowIndex = BigInt.fromI32(1000000000000000000);
-  }
-
-  return synth;
 }
