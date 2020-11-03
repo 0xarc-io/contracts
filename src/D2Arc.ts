@@ -13,6 +13,7 @@ import { asyncForEach } from '@src/utils/asyncForEach';
 import { TestToken } from '@src/typings/TestToken';
 import { ActionOperated, Operation, Position } from './types';
 import { parseLogs } from './utils/parseLogs';
+import { calculateLiquidationAmount } from './utils/calculations';
 
 export enum SynthNames {
   TESTUSD = 'TESTUSD',
@@ -101,7 +102,7 @@ export default class D2Arc {
     const tx = await contract.operateAction(
       Operation.Repay,
       {
-        id: 0,
+        id: positionId,
         amountOne: repaymentAmount,
         amountTwo: withdrawAmount,
       },
@@ -116,7 +117,35 @@ export default class D2Arc {
     caller: Signer = this.wallet,
     synth: Synth = this.availableSynths()[0],
     overrides: TransactionOverrides = {},
-  ) {}
+  ) {
+    const contract = await this.getCore(synth, caller);
+    const tx = await contract.operateAction(
+      Operation.Liquidate,
+      {
+        id: positionId,
+        amountOne: 0,
+        amountTwo: 0,
+      },
+      overrides,
+    );
+
+    return await this.parseActionTx(tx);
+  }
+
+  async getLiquidationDetails(position: Position, synth: Synth = this.availableSynths()[0]) {
+    const currentPrice = await (await synth.oracle.fetchCurrentPrice()).value;
+    const liquidationFee = await (await synth.core.getFees())._liquidationUserFee.value;
+    const collateralRatio = await (await synth.core.getCollateralRatio()).value;
+    const borrowIndex = await synth.core.getBorrowIndex();
+
+    return calculateLiquidationAmount(
+      position.collateralAmount.value,
+      new BigNumber(position.borrowedAmount.value).bigMul(borrowIndex[0]),
+      currentPrice,
+      liquidationFee,
+      collateralRatio,
+    );
+  }
 
   async parseActionTx(tx: any) {
     const receipt = await tx.wait();
