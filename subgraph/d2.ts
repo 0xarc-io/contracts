@@ -1,5 +1,3 @@
-import { Address, BigInt } from '@graphprotocol/graph-ts';
-import { AddressZero } from 'ethers/constants';
 import {
   ActionOperated as ActionOperatedEvent,
   FeesUpdated as FeesUpdatedEvent,
@@ -12,8 +10,9 @@ import {
 } from '../generated/D2CoreV1/D2CoreV1';
 
 import { ActionOperated, Position, Synth } from '../generated/schema';
+import { createOrLoadSynth } from './createOrLoadSynth';
 
-function actionOperated(event: ActionOperatedEvent): void {
+export function actionOperated(event: ActionOperatedEvent): void {
   handlePosition(event);
 
   let positionId = event.params.params.id.toHexString();
@@ -48,7 +47,7 @@ function handlePosition(event: ActionOperatedEvent): void {
   position.save();
 }
 
-function feesUpdated(event: FeesUpdatedEvent): void {
+export function feesUpdated(event: FeesUpdatedEvent): void {
   let synth = createOrLoadSynth(event.address);
   synth.liquidationArcRatio = event.params._liquidationArcRatio.value;
   synth.liquidationUserFee = event.params._liquidationUserFee.value;
@@ -56,7 +55,7 @@ function feesUpdated(event: FeesUpdatedEvent): void {
   synth.save();
 }
 
-function limitsUpdated(event: LimitsUpdatedEvent): void {
+export function limitsUpdated(event: LimitsUpdatedEvent): void {
   let synth = createOrLoadSynth(event.address);
   synth.syntheticLimit = event.params._syntheticLimit;
   synth.collateralLimit = event.params._collateralLimit;
@@ -64,37 +63,26 @@ function limitsUpdated(event: LimitsUpdatedEvent): void {
   synth.save();
 }
 
-function rateUpdated(event: RateUpdatedEvent): void {
+export function rateUpdated(event: RateUpdatedEvent): void {
   let synth = createOrLoadSynth(event.address);
   synth.interestRate = event.params.value;
   synth.save();
 }
 
-function oracleUpdated(event: OracleUpdatedEvent): void {
+export function oracleUpdated(event: OracleUpdatedEvent): void {
   let synth = createOrLoadSynth(event.address);
   synth.oracle = event.params.value;
   synth.save();
 }
 
-function collateralRatioUpdated(event: CollateralRatioUpdatedEvent): void {
+export function collateralRatioUpdated(event: CollateralRatioUpdatedEvent): void {
   let synth = createOrLoadSynth(event.address);
   synth.collateralRatio = event.params.value.value;
   synth.save();
 }
 
-function pauseStatusUpdated(event: PauseStatusUpdatedEvent): void {
+export function pauseStatusUpdated(event: PauseStatusUpdatedEvent): void {
   let synth = createOrLoadSynth(event.address);
   synth.paused = event.params.value;
   synth.save();
-}
-
-function createOrLoadSynth(address: Address): Synth {
-  let synth = Synth.load(address.toHex());
-
-  if (synth == null) {
-    synth = new Synth(address.toHex());
-    synth.borrowIndex = BigInt.fromI32(1000000000000000000);
-  }
-
-  return synth;
 }
