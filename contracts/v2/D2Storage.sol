@@ -45,4 +45,4 @@ contract D2StorageV1 {
     uint256 internal positionCollateralMinimum;
 }
 
-contract D2Storage is D2StorageV1 { }
+contract D2Storage is D2StorageV1 { /* solium-disable-line no-empty-blocks */ }

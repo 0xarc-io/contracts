@@ -224,9 +224,7 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
     )
         public
         returns (bool)
-    {
-
-    }
+    { /* solium-disable-line no-empty-blocks */ }
 
     /**
      * @dev Update the index of the contracts to compute the current interest rate.

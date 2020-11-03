@@ -21,7 +21,7 @@ let minterAccount: Account;
 let printerAccount: Account;
 let otherAccount: Account;
 
-const COLLATERAL_AMOUNT = ArcNumber.new(100);
+const COLLATERAL_AMOUNT = ArcNumber.new(200);
 const BORROW_AMOUNT = ArcNumber.new(50);
 
 const ctx: ITestContext = {};
@@ -51,6 +51,9 @@ describe('D2Core.operateAction(Borrow)', () => {
   before(async () => {
     ctx = await d2Setup(init);
 
+    // Open a position at 400% c-ratio
+    await ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, minterAccount.wallet);
+
     // Set an unlimited approval
     await Token.approve(
       ctx.arc.synth().synthetic.address,
@@ -62,7 +65,18 @@ describe('D2Core.operateAction(Borrow)', () => {
 
   addSnapshotBeforeRestoreAfterEach();
 
-  it('should be able to borrow above the c-ratio', async () => {});
+  it('should be able to borrow above the c-ratio', async () => {
+    const prePosition = await ctx.arc.getPosition(0);
+    expect(prePosition.collateralAmount.value).to.equal(COLLATERAL_AMOUNT);
+    expect(prePosition.borrowedAmount.value).to.equal(BORROW_AMOUNT);
+
+    // Set it right at the boundary of the c-ratio
+    await ctx.arc.borrow(0, 0, BORROW_AMOUNT, minterAccount.wallet);
+
+    const postPosition = await ctx.arc.getPosition(0);
+    expect(postPosition.borrowedAmount.value).to.equal(BORROW_AMOUNT.mul(2));
+    expect(await ctx.arc.synth().core.isCollateralized(postPosition)).to.be.true;
+  });
 
   it('should update the index and print more synthetics', async () => {});
 
