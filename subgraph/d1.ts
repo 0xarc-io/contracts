@@ -1,10 +1,10 @@
 import { Position, ActionOperated, Synth } from '../generated/schema';
 import { RiskParamsUpdated, MarketParamsUpdated, StateV1 } from '../generated/StateV1/StateV1';
 import { ActionOperated as ActionOperatedEvent } from '../generated/CoreV1/CoreV1';
-import { Address, BigInt } from '@graphprotocol/graph-ts';
+import { Address, BigInt, ByteArray } from '@graphprotocol/graph-ts';
 import { BASE } from '../src/constants';
 
-function actionOperated(event: ActionOperatedEvent): void {
+export function actionOperated(event: ActionOperatedEvent): void {
   handlePosition(event);
 
   let positionId = event.params.params.id.toHexString();
@@ -54,7 +54,7 @@ export function marketParamsUpdated(event: MarketParamsUpdated): void {
   );
   synth.liquidationUserFee = totalFee;
   synth.liquidationArcRatio = event.params.updatedMarket.liquidationArcFee.value
-    .times(BigInt.fromI32(BASE))
+    .times(BASE)
     .div(totalFee);
 
   synth.save();
@@ -76,8 +76,8 @@ function createOrLoadSynth(address: Address): Synth {
 
   if (synth == null) {
     synth = new Synth(coreAddress.toHex());
-    synth.borrowIndex = BigInt.fromI32(1000000000000000000);
+    synth.borrowIndex = BASE;
   }
 
-  return synth;
+  return synth as Synth;
 }
