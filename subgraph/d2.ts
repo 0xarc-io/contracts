@@ -47,7 +47,7 @@ function handlePosition(event: ActionOperatedEvent): void {
   position.save();
 }
 
-function feesUpdated(event: FeesUpdatedEvent): void {
+export function feesUpdated(event: FeesUpdatedEvent): void {
   let synth = createOrLoadSynth(event.address);
   synth.liquidationArcRatio = event.params._liquidationArcRatio.value;
   synth.liquidationUserFee = event.params._liquidationUserFee.value;
@@ -55,7 +55,7 @@ function feesUpdated(event: FeesUpdatedEvent): void {
   synth.save();
 }
 
-function limitsUpdated(event: LimitsUpdatedEvent): void {
+export function limitsUpdated(event: LimitsUpdatedEvent): void {
   let synth = createOrLoadSynth(event.address);
   synth.syntheticLimit = event.params._syntheticLimit;
   synth.collateralLimit = event.params._collateralLimit;
@@ -63,25 +63,25 @@ function limitsUpdated(event: LimitsUpdatedEvent): void {
   synth.save();
 }
 
-function rateUpdated(event: RateUpdatedEvent): void {
+export function rateUpdated(event: RateUpdatedEvent): void {
   let synth = createOrLoadSynth(event.address);
   synth.interestRate = event.params.value;
   synth.save();
 }
 
-function oracleUpdated(event: OracleUpdatedEvent): void {
+export function oracleUpdated(event: OracleUpdatedEvent): void {
   let synth = createOrLoadSynth(event.address);
   synth.oracle = event.params.value;
   synth.save();
 }
 
-function collateralRatioUpdated(event: CollateralRatioUpdatedEvent): void {
+export function collateralRatioUpdated(event: CollateralRatioUpdatedEvent): void {
   let synth = createOrLoadSynth(event.address);
   synth.collateralRatio = event.params.value.value;
   synth.save();
 }
 
-function pauseStatusUpdated(event: PauseStatusUpdatedEvent): void {
+export function pauseStatusUpdated(event: PauseStatusUpdatedEvent): void {
   let synth = createOrLoadSynth(event.address);
   synth.paused = event.params.value;
   synth.save();
