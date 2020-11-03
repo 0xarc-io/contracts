@@ -675,6 +675,7 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         });
 
         // If the maximum they're down by is greater than their collateral, bound to the maximum
+        // This case will only arise if the position has truly become under-collateralized
         if (liquidationCollateralDelta.value > position.collateralAmount.value) {
             liquidationCollateralDelta.value = position.collateralAmount.value;
 
@@ -705,11 +706,15 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
             )
         );
 
-        // Decrease the user's collateral amount
+        console.log("borrow to liquidate: %s", borrowToLiquidate);
+        console.log("liquidationCollateralDelta: %s", liquidationCollateralDelta.value);
+        console.log("pre collateral amount: %s", position.collateralAmount.value);
+        // Decrease the user's collateral amount by adding the collateral delta (which is negative)
         position = setCollateralAmount(
             positionId,
-            position.collateralAmount.sub(liquidationCollateralDelta)
+            position.collateralAmount.add(liquidationCollateralDelta)
         );
+        console.log("post collateral amount: %s", position.collateralAmount.value);
 
         require(
             IERC20(collateralAsset).balanceOf(msg.sender) >= borrowToLiquidate,

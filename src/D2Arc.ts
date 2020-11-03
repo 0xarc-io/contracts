@@ -134,7 +134,7 @@ export default class D2Arc {
 
   async getLiquidationDetails(position: Position, synth: Synth = this.availableSynths()[0]) {
     const currentPrice = await (await synth.oracle.fetchCurrentPrice()).value;
-    const liquidationFee = await (await synth.core.getFees())._liquidationUserFee.value;
+    const fees = await await synth.core.getFees();
     const collateralRatio = await (await synth.core.getCollateralRatio()).value;
     const borrowIndex = await synth.core.getBorrowIndex();
 
@@ -142,8 +142,9 @@ export default class D2Arc {
       position.collateralAmount.value,
       new BigNumber(position.borrowedAmount.value).bigMul(borrowIndex[0]),
       currentPrice,
-      liquidationFee,
+      fees._liquidationUserFee.value,
       collateralRatio,
+      fees._liquidationArcRatio.value,
     );
   }
 

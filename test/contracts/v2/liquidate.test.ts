@@ -52,51 +52,102 @@ describe('D2Core.operateAction(Liquidate)', () => {
 
   before(async () => {
     ctx = await d2Setup(init);
-
     // Open a 200% collateralized position (at the boundary)
     await ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, minterAccount.wallet);
+  });
 
+  addSnapshotBeforeRestoreAfterEach();
+
+  async function openLiquidatorPosition() {
+    // Ensure the liquidator has enough synth
     await ctx.arc.openPosition(
       COLLATERAL_AMOUNT.mul(5),
       BORROW_AMOUNT.mul(5),
       liquidatorAccount.wallet,
     );
-  });
-
-  addSnapshotBeforeRestoreAfterEach();
+  }
 
   it('should be able to liquidate an undercollateralized position', async () => {
+    await openLiquidatorPosition();
+
     // Get information about the position pre-liquidation and what we expect
-    const position = await ctx.arc.getPosition(0);
+    const preLiquidatePosition = await ctx.arc.getPosition(0);
 
     // Drop the price
     await ctx.arc.updatePrice(ArcDecimal.new(0.75).value);
 
-    const liquidationDetails = await ctx.arc.getLiquidationDetails(position);
+    const liquidationDetails = await ctx.arc.getLiquidationDetails(preLiquidatePosition);
     const preLiquidateSupply = await ctx.arc.synthetic().totalSupply();
+    const preProxyCollateralBalance = await ctx.arc
+      .synth()
+      .collateral.balanceOf(ctx.arc.coreAddress());
+    const preLiquidatorCollateralBalance = await ctx.arc
+      .synth()
+      .collateral.balanceOf(liquidatorAccount.address);
+    const preLiquidatorSyntheticBalance = await ctx.arc
+      .synth()
+      .synthetic.balanceOf(liquidatorAccount.address);
 
     // Call up arthur to do the deed
     await ctx.arc.liquidatePosition(0, liquidatorAccount.wallet);
 
-    // @TODO: Check total supply
+    const postLiquidatePosition = await ctx.arc.getPosition(0);
+    const postLiquidatorCollateralBalance = await ctx.arc
+      .synth()
+      .collateral.balanceOf(liquidatorAccount.address);
+    const postLiquidatorSyntheticBalance = await ctx.arc
+      .synth()
+      .synthetic.balanceOf(liquidatorAccount.address);
+    const postProxyCollateralBalance = await ctx.arc
+      .synth()
+      .collateral.balanceOf(ctx.arc.coreAddress());
+
+    // Check synth supply decreased
     expect(await await ctx.arc.synthetic().totalSupply()).to.equal(
       preLiquidateSupply.sub(liquidationDetails.debtNeededToLiquidate),
     );
 
-    // @TODO: Check position borrow amount (decrease)
-    // @TODO: Check position collateral amount (decrease)
-    // @TODO: Check liquidator collateral amount (increase)
-    // @TODO: Check liquidator synth balance (decrease)
-    // @TODO: Check proxy collateral amount (increase)
+    // Check position borrow amount (decrease)
+    expect(postLiquidatePosition.borrowedAmount.value).to.equal(liquidationDetails.newDebtAmount);
+
+    console.log(
+      `Current collat amount: ${postLiquidatePosition.collateralAmount.value.toString()}`,
+    );
+
+    // Check position collateral amount (decrease)
+    expect(postLiquidatePosition.collateralAmount.value).to.equal(
+      liquidationDetails.newCollateralAmount,
+    );
+
+    // Check liquidator collateral amount (increase)
+    console.log(`Pre liquidator colat: ${preLiquidatorCollateralBalance.toString()}`);
+    console.log(`Post liquidator collat: ${postLiquidatorCollateralBalance.toString()}`);
+    expect(postLiquidatorCollateralBalance).to.equal(
+      preLiquidatorCollateralBalance.add(
+        liquidationDetails.collateralLiquidated.sub(liquidationDetails.collateralToArc),
+      ),
+    );
+    // Check liquidator synth balance (decrease)
+    expect(postLiquidatorSyntheticBalance).to.equal(
+      preLiquidatorSyntheticBalance.sub(liquidationDetails.debtNeededToLiquidate),
+    );
+
+    // Check proxy collateral amount (increase)
+    expect(postProxyCollateralBalance).to.equal(
+      preProxyCollateralBalance.add(liquidationDetails.collateralToArc),
+    );
   });
 
   it('should not be able to liquidate a collateralized position ', async () => {
+    await openLiquidatorPosition();
     expect(ctx.arc.liquidatePosition(0, liquidatorAccount.wallet)).to.be.reverted;
   });
 
-  it('should not be able to liquidate without enough synthetic', async () => {});
+  it('should not be able to liquidate without enough synthetic', async () => {
+    expect(ctx.arc.liquidatePosition(0, liquidatorAccount.wallet)).to.be.reverted;
+  });
 
-  it('should be able to liquidate if too much interest accumulates', async () => {});
+  it('should be able to liquidate if interest accumulates', async () => {});
 
   it('should be able to liquidate if the price drops', async () => {});
 
