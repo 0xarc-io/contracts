@@ -88,7 +88,20 @@ export default class D2Arc {
     caller: Signer = this.wallet,
     synth: Synth = this.availableSynths()[0],
     overrides: TransactionOverrides = {},
-  ) {}
+  ) {
+    const contract = await this.getCore(synth, caller);
+    const tx = await contract.operateAction(
+      Operation.Borrow,
+      {
+        id: positionId,
+        amountOne: collateralAmount,
+        amountTwo: borrowAmount,
+      },
+      overrides,
+    );
+
+    return await this.parseActionTx(tx);
+  }
 
   async repay(
     positionId: BigNumberish,
