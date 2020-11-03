@@ -3,6 +3,14 @@ enum AssetType {
   Synthetic
 }
 
+type UserSlashed @entity {
+  id: ID!
+  contractAddress: Bytes!
+  user: Bytes!
+  slasher: Bytes!
+  amount: BigInt!
+}
+
 type Position @entity {
   id: ID!
   owner: Bytes!
@@ -13,6 +21,16 @@ type Position @entity {
   collateralAmountValue: BigInt!
   borrowedAmountSign: Boolean!
   borrowedAmountValue: BigInt!
+}
+
+type ActionOperated @entity {
+  id: ID!
+  sender: Bytes!
+  operation: Int!
+  amountOne: BigInt
+  amountTwo: BigInt
+  position: Position!
+  createdAt: Int!
 }
 
 type GlobalMarket @entity {

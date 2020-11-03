@@ -1,15 +1,35 @@
-import { Position, GlobalMarket, GlobalRisk } from '../generated/schema';
+import { Position, GlobalMarket, GlobalRisk, ActionOperated, UserSlashed } from '../generated/schema';
 import { RiskParamsUpdated, MarketParamsUpdated } from '../generated/StateV1/StateV1';
-import { log } from '@graphprotocol/graph-ts';
-import { ActionOperated } from '../generated/CoreV1/CoreV1';
+import { ActionOperated as ActionOperatedEvent } from '../generated/CoreV1/CoreV1';
+import { UserSlashed as UserSlashedEvent } from '../generated/StakingRewards-Pool-4/RewardCampaign';
 
-export function actionOperated(event: ActionOperated): void {
-  if (
-    !(
-      event.params.updatedPosition.borrowedAsset == 0 &&
-      event.params.updatedPosition.collateralAsset == 0
-    )
-  ) {
+export function userSlashed(event: UserSlashedEvent): void {
+  let userSlashed = new UserSlashed(event.transaction.hash.toHexString());
+  userSlashed.contractAddress = event.address;
+  userSlashed.slasher = event.params._slasher;
+  userSlashed.user = event.params._user;
+  userSlashed.amount = event.params._amount;
+  userSlashed.save();
+}
+
+export function actionOperated(event: ActionOperatedEvent): void {
+  handlePosition(event);
+  let positionId = event.params.params.id.toHexString();
+  let actionOperated = new ActionOperated(event.transaction.hash.toHexString().concat('-').concat(positionId));
+  actionOperated.sender = event.transaction.from;
+  actionOperated.position = positionId;
+  actionOperated.amountOne = event.params.params.amountOne;
+  actionOperated.amountTwo = event.params.params.amountTwo;
+  actionOperated.operation = event.params.operation;
+  actionOperated.createdAt = event.block.timestamp.toI32();
+  actionOperated.save();
+}
+
+function handlePosition(event: ActionOperatedEvent): void {
+  if (!(
+    event.params.updatedPosition.borrowedAsset == 0 &&
+    event.params.updatedPosition.collateralAsset == 0
+  )) {
     let position = Position.load(event.params.params.id.toHex());
 
     if (position == null) {
