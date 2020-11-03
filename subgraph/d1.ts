@@ -1,7 +1,6 @@
-import { Position, ActionOperated, Synth } from '../generated/schema';
-import { RiskParamsUpdated, MarketParamsUpdated, StateV1 } from '../generated/StateV1/StateV1';
+import { Position, ActionOperated } from '../generated/schema';
+import { RiskParamsUpdated, MarketParamsUpdated } from '../generated/StateV1/StateV1';
 import { ActionOperated as ActionOperatedEvent } from '../generated/CoreV1/CoreV1';
-import { Address, BigInt, ByteArray } from '@graphprotocol/graph-ts';
 import { BASE } from '../src/constants';
 import { createOrLoadSynth } from './createOrLoadSynth';
 
