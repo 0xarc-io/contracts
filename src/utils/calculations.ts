@@ -2,10 +2,11 @@ import { BigNumber, BigNumberish } from 'ethers/utils';
 import { BASE } from '../constants';
 
 export interface LiquidationInformation {
-  debtNeededToLiquidate: BigNumberish;
-  collateralReceivedOnLiquidation: BigNumberish;
-  newDebtAmount: BigNumberish;
-  newCollateralAmount: BigNumberish;
+  debtNeededToLiquidate: BigNumber;
+  collateralLiquidated: BigNumber;
+  collateralToArc: BigNumber;
+  newDebtAmount: BigNumber;
+  newCollateralAmount: BigNumber;
 }
 
 export function calculateLiquidationPrice(
@@ -36,6 +37,7 @@ export function calculateLiquidationAmount(
   currentPrice: BigNumberish,
   liquidationRatio: BigNumberish,
   collateralRatio: BigNumberish,
+  arcRatio: BigNumberish,
 ): LiquidationInformation {
   const liquidationPrice = calculateLiquidationPrice(currentPrice, liquidationRatio);
   console.log(`Liquidation price: ${liquidationPrice.toString()}`);
@@ -56,11 +58,16 @@ export function calculateLiquidationAmount(
   console.log(`New collateral amount: ${newCollateralAmount.toString()}`);
   const newBorrowAmount = new BigNumber(borrowedAmount).sub(borrowToLiquidate);
   console.log(`New Borrow amount: ${newBorrowAmount.toString()}`);
+  const collateralProfit = collateralToLiquidate.sub(borrowToLiquidate.bigDiv(currentPrice));
+  console.log(`Collateral profit: ${collateralProfit.toString()}`);
+  const arcProft = collateralProfit.bigMul(arcRatio);
+  console.log(`Arc Profit: ${arcProft}`);
 
   return {
     debtNeededToLiquidate: borrowToLiquidate,
-    collateralReceivedOnLiquidation: collateralToLiquidate,
+    collateralLiquidated: collateralToLiquidate,
     newDebtAmount: newBorrowAmount,
     newCollateralAmount: newCollateralAmount,
+    collateralToArc: arcProft,
   } as LiquidationInformation;
 }
