@@ -1,43 +1,118 @@
 specVersion: 0.0.2
-description: ARC conracts
+description: ARC Contracts
 repository: https://github.com/arcxfinance/contracts
 schema:
   file: ./schema.graphql
 dataSources:
+  - kind: ethereum/contract
+    name: D2CoreV1
+    network: mainnet
+    source:
+      address: '0x5568Df89AF6Bc835B876fDc3B2d44ef63530e419'
+      abi: D2CoreV1
+      startBlock: 10812695
+    mapping:
+      kind: ethereum/events
+      language: wasm/assemblyscript
+      apiVersion: 0.0.4
+      entities:
+        - Synth
+        - Position
+        - ActionOperated
+      abis:
+        - name: D2CoreV1
+          file: ./artifacts/D2CoreV1.json
+      eventHandlers:
+        - event: ActionOperated(uint8,(uint256,uint256,uint256),(address,(bool,uint256),(bool,uint256)))
+          handler: actionOperated
+        - event: FeesUpdated((uint256),(uint256),(uint256))
+          handler: feesUpdated
+        - event: LimitsUpdated(uint256,uint256,uint256)
+          handler: limitsUpdated
+        - event: RateUpdated(uint256)
+          handler: rateUpdated
+        - event: OracleUpdated(address)
+          handler: oracleUpdate
+        - event: CollateralRatioUpdated((uint256))
+          handler: collateralRatioUpdated
+        - event: PauseStatusUpdated(bool)
+          handler: pauseStatusUpdated
+      file: ./subgraph/d2.ts
+  - kind: ethereum/contract
+    name: StakingRewards-Pool-3
+    network: mainnet
+    source:
+      address: '0x38b25c0A9e61E226023B700ce4a6A4134eCAEeDF'
+      abi: RewardCampaign
+      startBlock: 11043689
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      entities:
+        - UserSlashed
+      abis:
+        - name: RewardCampaign
+          file: ./artifacts/RewardCampaign.json
+      eventHandlers:
+        - event: UserSlashed(address,address,uint256)
+          handler: userSlashed
+      file: ./subgraph/slashing.ts
+  - kind: ethereum/contract
+    name: StakingRewards-Pool-4
+    network: mainnet
+    source:
+      address: '0x8016F490D76346EBEC91707fD4Fb56A7fe64f694'
+      abi: RewardCampaign
+      startBlock: 11060003
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      entities:
+        - UserSlashed
+      abis:
+        - name: RewardCampaign
+          file: ./artifacts/RewardCampaign.json
+      eventHandlers:
+        - event: UserSlashed(address,address,uint256)
+          handler: userSlashed
+      file: ./subgraph/slashing.ts
   - kind: ethereum/contract
     name: CoreV1
     network: mainnet
     source:
       address: '0x5568Df89AF6Bc835B876fDc3B2d44ef63530e419'
       abi: CoreV1
-      startBlock: 6965000
+      startBlock: 10812695
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
       language: wasm/assemblyscript
       entities:
         - Position
+        - ActionOperated
+        - Synth
       abis:
         - name: CoreV1
           file: ./artifacts/CoreV1.json
       eventHandlers:
         - event: ActionOperated(uint8,(uint256,uint256,uint256),(address,uint8,uint8,(bool,uint128),(bool,uint128)))
           handler: actionOperated
-      file: ./subgraph/mapping.ts
+      file: ./subgraph/d1.ts
   - kind: ethereum/contract
     name: StateV1
     network: mainnet
     source:
       address: '0x94F40fD4018586AaFb8A6AD95441e0b58cc4c058'
       abi: StateV1
-      startBlock: 6965000
+      startBlock: 10812700
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
       language: wasm/assemblyscript
       entities:
-        - GlobalMarket
-        - GlobalRisk
+        - Synth
       abis:
         - name: StateV1
           file: ./artifacts/StateV1.json
@@ -46,4 +121,4 @@ dataSources:
           handler: marketParamsUpdated
         - event: RiskParamsUpdated((uint256,uint256,uint256))
           handler: riskParamsUpdated
-      file: ./subgraph/mapping.ts
+      file: ./subgraph/d1.ts

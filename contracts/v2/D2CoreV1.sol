@@ -63,9 +63,27 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         address destination
     );
 
-    event PauseStatusUpdated(
-        bool value
+    event FeesUpdated(
+        Decimal.D256 _liquidationUserFee,
+        Decimal.D256 _liquidationArcRatio,
+        Decimal.D256 _printerArcRatio
     );
+
+    event LimitsUpdated(
+        uint256 _collateralLimit,
+        uint256 _syntheticLimit,
+        uint256 _positionCollateralMinimum
+    );
+
+    event RateUpdated(uint256 value);
+
+    event OracleUpdated(address value);
+
+    event CollateralRatioUpdated(Decimal.D256 value);
+
+    event PrinterUpdated(address value);
+
+    event PauseStatusUpdated(bool value);
 
     /* ========== Constructor ========== */
 
@@ -105,6 +123,7 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         onlyAdmin
     {
         interestRate = _rate;
+        emit RateUpdated(_rate);
     }
 
     function setOracle(
@@ -114,6 +133,7 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         onlyAdmin
     {
         oracle = IOracle(_oracle);
+        emit OracleUpdated(_oracle);
     }
 
     function setCollateralRatio(
@@ -123,6 +143,7 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         onlyAdmin
     {
         collateralRatio = _collateralRatio;
+        emit CollateralRatioUpdated(_collateralRatio);
     }
 
     function setPrinterDestination(
@@ -132,6 +153,7 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         onlyAdmin
     {
         printerDestination = _printerDestination;
+        emit PrinterUpdated(_printerDestination);
     }
 
     function setFees(
