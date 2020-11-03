@@ -90,7 +90,11 @@ describe('CoreV4Migration', () => {
     // 50 LINK * 5 = $250, Borrow = $200 = < 200% c-ratio
     await updateOraclePrice(ArcDecimal.new(5));
 
-    const isCollateralised = await arc.state.isCollateralized(repayResult.updatedPosition);
+    const isCollateralised = await arc.state.isCollateralized({
+      ...repayResult.updatedPosition,
+      collateralAsset: 0,
+      borrowedAsset: 1,
+    });
     expect(isCollateralised).to.be.false;
 
     await expectRevert(
