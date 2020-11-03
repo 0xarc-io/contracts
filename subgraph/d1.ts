@@ -1,10 +1,10 @@
-import { Position, ActionOperated, Synth } from '../generated/schema';
-import { RiskParamsUpdated, MarketParamsUpdated, StateV1 } from '../generated/StateV1/StateV1';
+import { Position, ActionOperated } from '../generated/schema';
+import { RiskParamsUpdated, MarketParamsUpdated } from '../generated/StateV1/StateV1';
 import { ActionOperated as ActionOperatedEvent } from '../generated/CoreV1/CoreV1';
-import { Address, BigInt } from '@graphprotocol/graph-ts';
 import { BASE } from '../src/constants';
+import { createOrLoadSynth } from './createOrLoadSynth';
 
-function actionOperated(event: ActionOperatedEvent): void {
+export function actionOperated(event: ActionOperatedEvent): void {
   handlePosition(event);
 
   let positionId = event.params.params.id.toHexString();
@@ -54,7 +54,7 @@ export function marketParamsUpdated(event: MarketParamsUpdated): void {
   );
   synth.liquidationUserFee = totalFee;
   synth.liquidationArcRatio = event.params.updatedMarket.liquidationArcFee.value
-    .times(BigInt.fromI32(BASE))
+    .times(BASE)
     .div(totalFee);
 
   synth.save();
@@ -66,18 +66,4 @@ export function riskParamsUpdated(event: RiskParamsUpdated): void {
   synth.syntheticLimit = event.params.updatedParams.syntheticLimit;
   synth.positionCollateralMinimum = event.params.updatedParams.positionCollateralMinimum;
   synth.save();
-}
-
-function createOrLoadSynth(address: Address): Synth {
-  let stateContract = StateV1.bind(address);
-  let coreAddress = stateContract.core();
-
-  let synth = Synth.load(coreAddress.toHex());
-
-  if (synth == null) {
-    synth = new Synth(coreAddress.toHex());
-    synth.borrowIndex = BigInt.fromI32(1000000000000000000);
-  }
-
-  return synth;
 }

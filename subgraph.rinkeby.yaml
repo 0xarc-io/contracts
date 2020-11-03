@@ -24,7 +24,7 @@ dataSources:
       eventHandlers:
         - event: ActionOperated(uint8,(uint256,uint256,uint256),(address,uint8,uint8,(bool,uint128),(bool,uint128)))
           handler: actionOperated
-      file: ./subgraph/mapping.ts
+      file: ./subgraph/d1.ts
   - kind: ethereum/contract
     name: StateV1
     network: rinkeby
@@ -37,8 +37,7 @@ dataSources:
       apiVersion: 0.0.4
       language: wasm/assemblyscript
       entities:
-        - GlobalMarket
-        - GlobalRisk
+        - Synth
       abis:
         - name: StateV1
           file: ./artifacts/StateV1.json
@@ -47,4 +46,4 @@ dataSources:
           handler: marketParamsUpdated
         - event: RiskParamsUpdated((uint256,uint256,uint256))
           handler: riskParamsUpdated
-      file: ./subgraph/mapping.ts
+      file: ./subgraph/d1.ts
