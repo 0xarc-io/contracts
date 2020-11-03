@@ -242,41 +242,30 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         // First we multiply the interest rate (expressed in rate/sec) by the time since
         // the last update. This result represents the proprtional amount of interest to
         // apply to the system at a whole
-        console.log("Interest rate: %s", interestRate);
         uint256 interestAccumulated = interestRate.mul(currentTimestamp().sub(indexLastUpdate));
-        console.log("time since last update: %s", currentTimestamp().sub(indexLastUpdate));
-        console.log("interestAccumulated: %s", interestAccumulated);
 
         // Then we multiply the existing index by the newly generated rate so that we can
         // get a compounded interest rate.
         // ie. interestAccumulated = 0.1, borrowIndex = 1.1, new borrowIndex = 0.1 + 1.1 = 1.2
-        console.log("Old borrowIndex: %s", borrowIndex);
         borrowIndex = borrowIndex.add(interestAccumulated);
-        console.log("Updated borrowIndex: %s", borrowIndex);
 
         // Let's save the existing total borrows in the system before we updated it
         uint256 existingBorrow = totalBorrowed;
-        console.log("existing totalBorrowed: %s", existingBorrow);
 
         // Update the total borrows based on the proportional rate of interest applied
         // to the entire system
         totalBorrowed = totalBorrowed.mul(borrowIndex).div(BASE);
-        console.log("new totalBorrowed: %s", totalBorrowed);
 
         // With the difference between the new amount being borrowed and the existing amount
         // we can figure out how much interest is owed to the system as a whole and therefore
         // calculate how much of the synth to mint
         uint256 interestOwed = totalBorrowed.sub(existingBorrow);
-        console.log("interestOwed: %s", interestOwed);
-
         uint256 arcProfit = Decimal.mul(
             interestOwed,
             printerArcRatio
         );
 
         indexLastUpdate = currentTimestamp();
-
-        console.log("arc profit: %s", arcProfit);
 
         ISyntheticToken(syntheticAsset).mint(
             address(this),
@@ -527,16 +516,12 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
             true
         );
 
-        console.log("old borrow amount: %s", position.borrowedAmount.value);
-
         // Set the user's new borrow amount by decreasing their debt amount.
         // A positive par value will increase a negative par value.
         position = setBorrowAmount(
             positionId,
             position.borrowedAmount.add(convertedPrincipal)
         );
-
-        console.log("new borrow amount: %s", position.borrowedAmount.value);
 
         // Calculate how much the user is allowed to withdraw given their debt was repaid
         Amount.Principal memory collateralDelta = calculateCollateralDelta(
@@ -547,8 +532,6 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
 
         // Ensure that the amount they are trying to withdraw is less than their limit
         // Also, make sure that the delta is positive (aka collateralized).
-        console.log("collateralDelta Sign: %s", collateralDelta.sign);
-        console.log("collateralDelta Value: %s", collateralDelta.value);
         require(
             collateralDelta.sign == true && withdrawAmount <= collateralDelta.value,
             "repay(): cannot withdraw more than allowed"
@@ -704,15 +687,11 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
             )
         );
 
-        console.log("borrow to liquidate: %s", borrowToLiquidate);
-        console.log("liquidationCollateralDelta: %s", liquidationCollateralDelta.value);
-        console.log("pre collateral amount: %s", position.collateralAmount.value);
         // Decrease the user's collateral amount by adding the collateral delta (which is negative)
         position = setCollateralAmount(
             positionId,
             position.collateralAmount.add(liquidationCollateralDelta)
         );
-        console.log("post collateral amount: %s", position.collateralAmount.value);
 
         require(
             IERC20(collateralAsset).balanceOf(msg.sender) >= borrowToLiquidate,

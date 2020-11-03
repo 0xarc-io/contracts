@@ -2,7 +2,8 @@ import 'module-alias/register';
 
 import simpleDescribe from '@test/helpers/simpleDescribe';
 import { ITestContext } from '@test/helpers/simpleDescribe';
-import { Wallet, ethers } from 'ethers';
+import { Wallet } from 'ethers';
+import { ethers } from '@nomiclabs/buidler';
 import {
   AddressAccrual,
   TokenStakingAccrual,
@@ -42,7 +43,7 @@ let arc: D1TestArc;
 
 const expect = getWaffleExpect();
 
-const provider = new ethers.providers.JsonRpcProvider();
+const provider = ethers.provider;
 const evm = new EVM(provider);
 
 let wallets = generatedWallets(provider);

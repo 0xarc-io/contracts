@@ -17,7 +17,7 @@ const {
     VERSIONS_FILENAME,
   },
   getPathToNetwork,
-} = require('../..');
+} = require('../../index');
 
 const { networks } = require('../..');
 const stringify = (input) => JSON.stringify(input, null, '\t') + '\n';

@@ -1,6 +1,7 @@
 import 'module-alias/register';
 
-import { ethers, Wallet } from 'ethers';
+import { Wallet } from 'ethers';
+import { ethers } from '@nomiclabs/buidler';
 import { expectRevert } from '@src/utils/expectRevert';
 
 import ArcNumber from '@src/utils/ArcNumber';
@@ -16,7 +17,7 @@ import { getWaffleExpect } from '../../helpers/testingUtils';
 
 const expect = getWaffleExpect();
 
-const provider = new ethers.providers.JsonRpcProvider();
+const provider = ethers.provider;
 const evm = new EVM(provider);
 
 let arc: D1TestArc;
