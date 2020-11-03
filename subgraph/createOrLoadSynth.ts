@@ -1,4 +1,4 @@
-import { Address } from "@graphprotocol/graph-ts";
+import { Address, Bytes } from "@graphprotocol/graph-ts";
 import { Synth } from "../generated/schema";
 import { StateV1 } from "../generated/StateV1/StateV1";
 import { BASE } from "../src/constants";
@@ -12,6 +12,7 @@ export function createOrLoadSynth(address: Address): Synth {
   if (synth == null) {
     synth = new Synth(coreAddress.toHex());
     synth.borrowIndex = BASE;
+    synth.paused = false;
   }
 
   return synth as Synth;

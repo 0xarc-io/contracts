@@ -1,4 +1,3 @@
-import { Address } from '@graphprotocol/graph-ts';
 import {
   ActionOperated as ActionOperatedEvent,
   FeesUpdated as FeesUpdatedEvent,
@@ -11,7 +10,6 @@ import {
 } from '../generated/D2CoreV1/D2CoreV1';
 
 import { ActionOperated, Position, Synth } from '../generated/schema';
-import { BASE } from '../src/constants';
 import { createOrLoadSynth } from './createOrLoadSynth';
 
 export function actionOperated(event: ActionOperatedEvent): void {

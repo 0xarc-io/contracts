@@ -92,7 +92,6 @@ dataSources:
       entities:
         - Position
         - ActionOperated
-        - Synth
       abis:
         - name: CoreV1
           file: ./artifacts/CoreV1.json
