@@ -30,7 +30,7 @@ export default class Deployer {
   useFork: any;
   newContractsDeployed: any;
   provider: Provider;
-  account: Wallet;
+  account: Signer;
   deployedContracts: any;
   updatedConfig: any;
   _dryRunCounter: number;
