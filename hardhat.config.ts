@@ -8,6 +8,7 @@ import '@nomiclabs/hardhat-etherscan';
 import '@nomiclabs/hardhat-waffle';
 import 'hardhat-preprocessor';
 import 'hardhat-spdx-license-identifier';
+import 'hardhat-contract-sizer';
 
 require('dotenv').config({ path: '.env' }).parsed;
 
@@ -32,6 +33,7 @@ const config: HardhatUserConfig = {
     version: '0.5.16',
     settings: {
       optimizer: {
+        enabled: true,
         runs: 200,
       },
     },
