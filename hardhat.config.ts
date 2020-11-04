@@ -10,6 +10,8 @@ import 'hardhat-preprocessor';
 import 'hardhat-spdx-license-identifier';
 import 'hardhat-contract-sizer';
 
+import './tasks';
+
 require('dotenv').config({ path: '.env' }).parsed;
 
 export const params = {
@@ -45,13 +47,6 @@ const config: HardhatUserConfig = {
     artifacts: './artifacts',
   },
   networks: {
-    rinkeby: {
-      url: params.rpc_url,
-      accounts: [params.private_key],
-    },
-    coverage: {
-      url: 'http://127.0.0.1:8555', // Coverage launches its own ganache-cli client
-    },
     hardhat: {
       hardfork: 'istanbul',
       blockGasLimit: 12500000,
@@ -61,6 +56,16 @@ const config: HardhatUserConfig = {
           balance: HUNDRED_THOUSAND_ETH,
         };
       }),
+    },
+    local: {
+      url: 'http://127.0.0.1:8545',
+    },
+    coverage: {
+      url: 'http://127.0.0.1:8555', // Coverage launches its own ganache-cli client
+    },
+    rinkeby: {
+      url: params.rpc_url,
+      accounts: [params.private_key],
     },
   },
   etherscan: {
