@@ -81,7 +81,6 @@
   },
   {
     "name": "D1Core",
-    "group": "LINKUSD",
     "source": "CoreV4",
     "address": "0x119d2778f418E7920943B3CF936424b70E842778",
     "txn": "0xd91d1b1824e544b323ad1a0fac58952943e80f4a5b38312dd1a44fe8e5fe7ebc",
