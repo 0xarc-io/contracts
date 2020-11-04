@@ -20,7 +20,7 @@ import {Amount} from "../lib/Amount.sol";
 import {D2Storage} from "./D2Storage.sol";
 import {D2Types} from  "./D2Types.sol";
 
-import {console} from "@nomiclabs/buidler/console.sol";
+import {console} from "hardhat/console.sol";
 
 contract D2CoreV1 is Adminable, D2Storage, ID2Core {
 
