@@ -25,7 +25,10 @@ export interface WriteToDeploymentsParams {
 
 export async function writeToDeployments(params: WriteToDeploymentsParams) {
   const contracts = loadDeployedContracts(params.network);
-  contracts.push(params);
+  contracts.push({
+    ...params,
+    group: params.group || '',
+  });
 
   const deploymentsPath = getDeploymentsFilePath(params.network);
   await fs.writeFileSync(deploymentsPath, JSON.stringify(contracts, null, 2));
