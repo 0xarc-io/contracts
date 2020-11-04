@@ -1,5 +1,5 @@
 {
-  "require": ["@nomiclabs/buidler/register"],
+  "require": ["@nomiclabs/hardhat/register"],
   "timeout": 20000,
   "recursive": "test",
   "extension": ["ts"]

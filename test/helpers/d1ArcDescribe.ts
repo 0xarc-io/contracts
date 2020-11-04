@@ -1,7 +1,7 @@
 import chai from 'chai';
 
 import { D1TestArc } from '../../src/D1TestArc';
-import { ethers } from '@nomiclabs/buidler';
+import { ethers } from 'hardhat';
 import { EVM } from './EVM';
 import { Account, getAccounts } from './testingUtils';
 import { solidity } from 'ethereum-waffle';
@@ -49,7 +49,7 @@ export default function d1ArcDescribe(
       ctx.accounts = await getAccounts();
 
       ctx.evm = evm;
-      ctx.arc = await D1TestArc.init(ctx.accounts[0].wallet);
+      ctx.arc = await D1TestArc.init(ctx.accounts[0].signer);
 
       await ctx.arc.deployTestArc();
 

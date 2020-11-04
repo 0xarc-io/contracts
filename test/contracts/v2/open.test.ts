@@ -55,7 +55,7 @@ describe('D2Core.operateAction(Open)', () => {
     const result = await ctx.arc.openPosition(
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
-      minterAccount.wallet,
+      minterAccount.signer,
     );
 
     // Simple tests ensuring the events are emitting the correct information
@@ -90,7 +90,7 @@ describe('D2Core.operateAction(Open)', () => {
     const result = await ctx.arc.openPosition(
       COLLATERAL_AMOUNT.mul(2),
       BORROW_AMOUNT,
-      minterAccount.wallet,
+      minterAccount.signer,
     );
 
     const position = await ctx.arc.getPosition(0);
@@ -101,16 +101,16 @@ describe('D2Core.operateAction(Open)', () => {
 
   it('should not be able to open below the required c-ratio', async () => {
     expect(
-      ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT.add(1), minterAccount.wallet),
+      ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT.add(1), minterAccount.signer),
     ).to.be.revertedWith(UNDERCOLLATERALIZED_ERROR);
 
     expect(
-      ctx.arc.openPosition(COLLATERAL_AMOUNT.sub(1), BORROW_AMOUNT, minterAccount.wallet),
+      ctx.arc.openPosition(COLLATERAL_AMOUNT.sub(1), BORROW_AMOUNT, minterAccount.signer),
     ).to.be.revertedWith(UNDERCOLLATERALIZED_ERROR);
   });
 
   it('should be able to calculate the principle amount', async () => {
-    await ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, minterAccount.wallet);
+    await ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, minterAccount.signer);
 
     expect((await ctx.arc.getSynthTotals())[1]).to.equal(BORROW_AMOUNT);
 
@@ -139,7 +139,7 @@ describe('D2Core.operateAction(Open)', () => {
     const result = await ctx.arc.openPosition(
       COLLATERAL_AMOUNT.mul(2),
       BORROW_AMOUNT,
-      minterAccount.wallet,
+      minterAccount.signer,
     );
 
     const position = await ctx.arc.getPosition(result.params.id);

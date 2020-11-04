@@ -40,13 +40,13 @@ d1ArcDescribe('D1Arc', init, (ctx: ITestContext) => {
     it('cannot call operate action if contracts are paused', async () => {
       await ctx.arc.core.setPause(true);
       expect(await ctx.arc.core.paused()).to.be.true;
-      await expectRevert(ctx.arc._borrowSynthetic(1, 5, ownerWallet.wallet));
+      await expectRevert(ctx.arc._borrowSynthetic(1, 5, ownerWallet.signer));
     });
 
     it('can unpause contracts', async () => {
       await ctx.arc.core.setPause(false);
       expect(await ctx.arc.core.paused()).to.be.false;
-      await await ctx.arc._borrowSynthetic(1, 5, ownerWallet.wallet);
+      await await ctx.arc._borrowSynthetic(1, 5, ownerWallet.signer);
     });
   });
 
@@ -55,14 +55,14 @@ d1ArcDescribe('D1Arc', init, (ctx: ITestContext) => {
       await ctx.arc.collateralAsset.mintShare(ctx.arc.core.address, 5, {});
     });
     it('cannot withdraw as a non-admin', async () => {
-      const core = await ctx.arc.getCore(otherWallet.wallet);
+      const core = await ctx.arc.getCore(otherWallet.signer);
       await expectRevert(
         core.withdrawTokens(ctx.arc.collateralAsset.address, otherWallet.address, 1),
       );
     });
 
     it('can withdraw tokens as an admin', async () => {
-      const core = await ctx.arc.getCore(ownerWallet.wallet);
+      const core = await ctx.arc.getCore(ownerWallet.signer);
       await core.withdrawTokens(ctx.arc.collateralAsset.address, otherWallet.address, 1);
     });
   });

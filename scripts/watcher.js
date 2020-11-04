@@ -54,7 +54,7 @@ async function runTest(path) {
 	}
 
 	lastRunPath = path;
-	shell.exec(`yarn buidler test ${path} --network buidlerevm`);
+	shell.exec(`yarn hardhat test ${path} --network hardhatevm`);
 	let splitPath = lastRunPath.split('/');
 	console.log(green(`Finished running: ${splitPath[splitPath.length - 1]}`));
 }

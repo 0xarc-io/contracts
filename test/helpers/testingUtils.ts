@@ -1,9 +1,9 @@
 // Buidler automatically injects the waffle version into chai
 import chai from 'chai';
 
-import { Wallet } from 'ethers';
+import { Wallet, Signer } from 'ethers';
 import { EVM } from './EVM';
-import { ethers } from '@nomiclabs/buidler';
+import { ethers } from 'hardhat';
 
 // BUIDLER / WAFFLE
 export const getWaffleExpect = (): Chai.ExpectStatic => {
@@ -14,25 +14,25 @@ const provider = ethers.provider;
 
 export type Account = {
   address: string;
-  wallet: Wallet;
+  signer: Signer;
 };
 
 export const getAccounts = async (): Promise<Account[]> => {
   const accounts: Account[] = [];
 
-  const wallets = await getWallets();
-  for (let i = 0; i < wallets.length; i++) {
+  const signers = await getSigners();
+  for (let i = 0; i < signers.length; i++) {
     accounts.push({
-      wallet: wallets[i],
-      address: await wallets[i].getAddress(),
+      signer: signers[i],
+      address: await signers[i].getAddress(),
     });
   }
 
   return accounts;
 };
 
-export const getWallets = async (): Promise<Wallet[]> => {
-  return (await ethers.signers()) as Wallet[];
+export const getSigners = async (): Promise<Signer[]> => {
+  return await ethers.getSigners();
 };
 
 // And this is our test sandboxing. It snapshots and restores between each test.

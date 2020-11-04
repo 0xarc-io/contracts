@@ -14,7 +14,7 @@ import {
   TokenStakingAccrual,
 } from '@src/typings';
 
-import { ethers } from '@nomiclabs/buidler';
+import { ethers } from 'hardhat';
 import { AddressZero } from 'ethers/constants';
 import { SynthRegistry } from '@src/typings';
 import { getWaffleExpect } from '../helpers/testingUtils';

@@ -1,5 +1,5 @@
 import { BigNumber, BigNumberish } from 'ethers/utils';
-import { Signer } from 'ethers';
+import { Wallet } from 'ethers';
 import { BASE } from './constants';
 
 export type SynthAddressBook = {
@@ -104,7 +104,7 @@ export interface TransactionOverrides {
   gasPrice?: BigNumberish | Promise<BigNumberish>;
   value?: BigNumberish | Promise<BigNumberish>;
   chainId?: number | Promise<number>;
-  from?: Signer;
+  from?: Wallet;
 }
 
 declare module 'ethers/utils' {

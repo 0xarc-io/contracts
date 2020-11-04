@@ -1,12 +1,11 @@
-import { BuidlerConfig, usePlugin } from '@nomiclabs/buidler/config';
 import { privateKeys } from './src/utils/generatedWallets';
 import { BigNumber } from 'ethers/utils';
+import { HardhatUserConfig } from 'hardhat/config';
 
-usePlugin('@nomiclabs/buidler-etherscan');
-usePlugin('@nomiclabs/buidler-waffle');
-usePlugin('buidler-typechain');
-usePlugin('solidity-coverage');
-usePlugin('buidler-spdx-license-identifier');
+import '@nomiclabs/hardhat-etherscan';
+import '@nomiclabs/hardhat-waffle';
+// import 'solidity-coverage';
+import 'hardhat-spdx-license-identifier';
 
 require('dotenv').config({ path: '.env' }).parsed;
 
@@ -20,12 +19,14 @@ export const params = {
 
 const HUNDRED_THOUSAND_ETH = new BigNumber(100000).pow(18).toString();
 
-const config: BuidlerConfig = {
-  defaultNetwork: 'buidlerevm',
-  solc: {
+const config: HardhatUserConfig = {
+  defaultNetwork: 'hardhat',
+  solidity: {
     version: '0.5.16',
-    optimizer: {
-      runs: 200,
+    settings: {
+      optimizer: {
+        runs: 200,
+      },
     },
   },
   paths: {
@@ -42,7 +43,7 @@ const config: BuidlerConfig = {
     coverage: {
       url: 'http://127.0.0.1:8555', // Coverage launches its own ganache-cli client
     },
-    buidlerevm: {
+    hardhat: {
       hardfork: 'istanbul',
       blockGasLimit: 12500000,
       accounts: privateKeys.map((key) => {
@@ -54,10 +55,6 @@ const config: BuidlerConfig = {
     },
   },
   etherscan: {
-    // The url for the Etherscan API you want to use.
-    url: 'https://api-rinkeby.etherscan.io/api',
-    // Your API key for Etherscan
-    // Obtain one at https://etherscan.io/
     apiKey: params.etherscan_key,
   },
 };

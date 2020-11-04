@@ -50,14 +50,12 @@ describe('D2Core.operateAction(Borrow)', () => {
 
   before(async () => {
     ctx = await d2Setup(init);
-
     // Open a position at 400% c-ratio
-    await ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, minterAccount.wallet);
-
+    await ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, minterAccount.signer);
     // Set an unlimited approval
     await Token.approve(
       ctx.arc.synth().synthetic.address,
-      minterAccount.wallet,
+      minterAccount.signer,
       ctx.arc.synth().core.address,
       BORROW_AMOUNT.mul(100),
     );
@@ -71,7 +69,7 @@ describe('D2Core.operateAction(Borrow)', () => {
     expect(prePosition.borrowedAmount.value).to.equal(BORROW_AMOUNT);
 
     // Set it right at the boundary of the c-ratio
-    await ctx.arc.borrow(0, 0, BORROW_AMOUNT, minterAccount.wallet);
+    await ctx.arc.borrow(0, 0, BORROW_AMOUNT, minterAccount.signer);
 
     const postPosition = await ctx.arc.getPosition(0);
     expect(postPosition.borrowedAmount.value).to.equal(BORROW_AMOUNT.mul(2));
