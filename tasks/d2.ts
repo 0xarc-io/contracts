@@ -109,7 +109,17 @@ task('deploy-d2', 'Deploy, update and interact with D2 contracts')
 
     console.log(yellow(`* Calling init()...`));
     try {
-      await core.init(collateralAddress, syntheticAddress, oracleAddress);
+      await core.init(
+        collateralAddress,
+        syntheticAddress,
+        oracleAddress,
+        signer.address,
+        signer.address,
+        { value: synthConfig.collateral_ratio },
+        { value: synthConfig.liquidation_user_fee },
+        { value: synthConfig.liquidation_arc_ratio },
+        { value: synthConfig.printer_arc_ratio },
+      );
       console.log(green(`Called init() successfully!`));
     } catch {
       throw red(`Failed to call init()\n`);

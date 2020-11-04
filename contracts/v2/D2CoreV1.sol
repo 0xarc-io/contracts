@@ -104,24 +104,50 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
     function init(
         address _collateralAddress,
         address _syntheticAddress,
-        address _oracleAddress
+        address _oracleAddress,
+        address _interestSetter,
+        address _printerDestination,
+        Decimal.D256 memory _collateralRatio,
+        Decimal.D256 memory _liquidationUserFee,
+        Decimal.D256 memory _liquidationArcRatio,
+        Decimal.D256 memory _printerArcRatio
     )
         public
         onlyAdmin
     {
+        require(
+            collateralAsset == address(0),
+            "D2CoreV1: cannot re-call init()"
+        );
+
         collateralAsset = _collateralAddress;
         syntheticAsset = _syntheticAddress;
+        interestSetter = _interestSetter;
+        printerDestination = _printerDestination;
+
         borrowIndex = uint256(10**18);
         indexLastUpdate = currentTimestamp();
+
         setOracle(_oracleAddress);
+        setCollateralRatio(_collateralRatio);
+
+        setFees(
+            _liquidationUserFee,
+            _liquidationArcRatio,
+            _printerArcRatio
+        );
     }
 
     function setRate(
         uint256 _rate
     )
         public
-        onlyAdmin
     {
+        require(
+            msg.sender == interestSetter,
+            "D2CoreV1: only callable by interest setter"
+        );
+
         interestRate = _rate;
         emit RateUpdated(_rate);
     }
@@ -257,7 +283,11 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
     function updateIndexAndPrint()
         public
     {
-        if (currentTimestamp() == indexLastUpdate || totalBorrowed == 0) {
+        if (
+            currentTimestamp() == indexLastUpdate ||
+            totalBorrowed == 0 ||
+            interestRate == 0
+        ) {
             return;
         }
 

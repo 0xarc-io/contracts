@@ -15,9 +15,7 @@ import './tasks';
 require('dotenv').config({ path: '.env' }).parsed;
 
 export const params = {
-  private_key: process.env.PRIVATE_KEY || '',
-  network_id: parseInt(process.env.DEPLOYMENT_NETWORK_ID) || 50,
-  network_env: `${process.env.DEPLOYMENT_ENVIRONMENT}` || '0.0.0.0:8545',
+  private_key: process.env.TESTNET_DEPLOY_PRIVATE_KEY || '',
   rpc_url: process.env.RPC_ENDPOINT || '',
   etherscan_key: process.env.ETHERSCAN_KEY || '',
 };

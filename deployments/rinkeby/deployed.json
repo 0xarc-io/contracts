@@ -87,5 +87,15 @@
     "network": "rinkeby",
     "version": 4,
     "type": "synth"
+  },
+  {
+    "name": "D2Core",
+    "source": "D2CoreV1",
+    "address": "0xB55acc46aCf5cce1fA7CD47F30c03637fC30087f",
+    "txn": "0xc96d91ced5c8b4aa01a8942ddf2150d85aed63f461cf9d4a81c6bd02d7baff1b",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": ""
   }
 ]

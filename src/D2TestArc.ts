@@ -6,6 +6,7 @@ import { ArcProxy, D2CoreV1, MockD2CoreV1, MockOracle, SyntheticToken } from '@s
 import { SynthNames } from './D2Arc';
 import { assert } from 'console';
 import { BigNumberish } from 'ethers/utils';
+import { AddressZero, Zero } from 'ethers/constants';
 
 export class D2TestArc extends D2Arc {
   static async init(signer: Signer): Promise<D2TestArc> {
@@ -26,7 +27,18 @@ export class D2TestArc extends D2Arc {
 
     let core = await D2CoreV1.at(this.signer, proxy.address);
 
-    await core.init(collateralAsset.address, syntheticAsset.address, oracle.address);
+    await core.init(
+      collateralAsset.address,
+      syntheticAsset.address,
+      oracle.address,
+      await this.signer.getAddress(),
+      await this.signer.getAddress(),
+      { value: 0 },
+      { value: 0 },
+      { value: 0 },
+      { value: 0 },
+    );
+
     await syntheticAsset.addMinter(core.address);
 
     await this.addSynths({ TESTUSD: core.address });
