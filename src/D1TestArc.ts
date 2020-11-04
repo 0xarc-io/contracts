@@ -1,6 +1,6 @@
 import D1Arc from './D1Arc';
 
-import { Wallet } from 'ethers';
+import { Wallet, Signer } from 'ethers';
 import { MockOracle } from './typings/MockOracle';
 import Token from './utils/Token';
 import { BigNumberish, BigNumber } from 'ethers/utils';
@@ -10,18 +10,18 @@ import { TestToken } from './typings';
 import ArcDecimal from './utils/ArcDecimal';
 
 export class D1TestArc extends D1Arc {
-  static async init(wallet: Wallet): Promise<D1TestArc> {
+  static async init(signer: Signer): Promise<D1TestArc> {
     let arc = new D1TestArc();
-    arc.wallet = wallet;
+    arc.signer = signer;
     return arc;
   }
 
   async deployTestArc() {
-    this.collateralAsset = await TestToken.deploy(this.wallet, 'TEST', 'TEST');
-    this.oracle = await MockOracle.deploy(this.wallet);
+    this.collateralAsset = await TestToken.deploy(this.signer, 'TEST', 'TEST');
+    this.oracle = await MockOracle.deploy(this.signer);
 
     const testConfig: DeploymentConfig = {
-      owner: await this.wallet.getAddress(),
+      owner: await this.signer.getAddress(),
       name: 'LINKUSD',
       symbol: 'LINKUSD',
       collateralAsset: this.collateralAsset.address,
@@ -41,7 +41,7 @@ export class D1TestArc extends D1Arc {
   async _borrowSynthetic(
     amount: BigNumberish,
     collateral: BigNumberish,
-    from: Wallet,
+    from: Signer,
     positionId?: BigNumberish,
   ) {
     await Token.approve(this.collateralAsset.address, from, this.core.address, collateral, {});
@@ -58,7 +58,7 @@ export class D1TestArc extends D1Arc {
     positionId: BigNumberish,
     repayAmount: BigNumberish,
     withdrawAmount: BigNumberish,
-    from: Wallet,
+    from: Signer,
   ) {
     const position = await this.state.getPosition(positionId);
 

@@ -55,7 +55,7 @@ describe('D2Core.operateAction(Repay)', () => {
     // Set an unlimited approval
     await Token.approve(
       ctx.arc.synth().synthetic.address,
-      minterAccount.wallet,
+      minterAccount.signer,
       ctx.arc.synth().core.address,
       BORROW_AMOUNT.mul(100),
     );
@@ -65,7 +65,7 @@ describe('D2Core.operateAction(Repay)', () => {
 
   it('should be able to repay to increase the c-ratio', async () => {
     // Create a 200% collateralised position
-    await ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, minterAccount.wallet);
+    await ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, minterAccount.signer);
 
     let position = await ctx.arc.synth().core.getPosition(0);
     expect(position.collateralAmount.value).to.equal(COLLATERAL_AMOUNT);
@@ -73,7 +73,7 @@ describe('D2Core.operateAction(Repay)', () => {
 
     expect(await ctx.arc.synthetic().totalSupply()).to.equal(BORROW_AMOUNT);
 
-    await ctx.arc.repay(0, BORROW_AMOUNT.div(2), 0, minterAccount.wallet);
+    await ctx.arc.repay(0, BORROW_AMOUNT.div(2), 0, minterAccount.signer);
 
     // Ensure that the synthetic supply has been burned by repaying
     expect(await ctx.arc.synthetic().totalSupply()).to.equal(BORROW_AMOUNT.div(2));
@@ -85,7 +85,7 @@ describe('D2Core.operateAction(Repay)', () => {
 
   it('should be able to repay (withdraw) to decrease the c-ratio', async () => {
     // Create a 400% collateralised position
-    await ctx.arc.openPosition(COLLATERAL_AMOUNT.mul(2), BORROW_AMOUNT, minterAccount.wallet);
+    await ctx.arc.openPosition(COLLATERAL_AMOUNT.mul(2), BORROW_AMOUNT, minterAccount.signer);
 
     const currentPrice = await ctx.arc.synth().oracle.fetchCurrentPrice();
 
@@ -104,7 +104,7 @@ describe('D2Core.operateAction(Repay)', () => {
     expect(collateralDelta.sign).to.be.true;
 
     // Withdraw the maximum amount to put it at the boundary (200%)
-    await ctx.arc.repay(0, 0, COLLATERAL_AMOUNT, minterAccount.wallet);
+    await ctx.arc.repay(0, 0, COLLATERAL_AMOUNT, minterAccount.signer);
     position = await ctx.arc.synth().core.getPosition(0);
 
     collateralDelta = await ctx.arc
@@ -123,7 +123,7 @@ describe('D2Core.operateAction(Repay)', () => {
 
   it('should be able to repay to make the position collateralized ', async () => {
     // Create a 200% collateralised position
-    await ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, minterAccount.wallet);
+    await ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, minterAccount.signer);
 
     // Drop the price to $0.50 so the position is now 100% (should be 200%)
     const newPrice = ArcDecimal.new(0.5).value;
@@ -144,7 +144,7 @@ describe('D2Core.operateAction(Repay)', () => {
     // Double check to make sure we're under-collateralized
     expect(await ctx.arc.synth().core.isCollateralized(position)).to.be.false;
 
-    await ctx.arc.repay(0, BORROW_AMOUNT.div(2), 0, minterAccount.wallet);
+    await ctx.arc.repay(0, BORROW_AMOUNT.div(2), 0, minterAccount.signer);
     position = await ctx.arc.synth().core.getPosition(0);
 
     // We should be happy campers now
@@ -155,33 +155,33 @@ describe('D2Core.operateAction(Repay)', () => {
 
   it('should not be able to withdraw if undercollateralized', async () => {
     // Create a 200% collateralised position
-    await ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, minterAccount.wallet);
+    await ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, minterAccount.signer);
 
     // Drop the price to $0.99999 so the position is just under 200%
     const newPrice = ArcDecimal.new(0.999999).value;
     await ctx.arc.updatePrice(newPrice);
 
     // When trying to withdraw right below the undercollat amount then it should revert
-    expect(ctx.arc.repay(0, 0, 1, minterAccount.wallet)).to.be.revertedWith(REPAY_WITHDRAW_ERROR);
+    expect(ctx.arc.repay(0, 0, 1, minterAccount.signer)).to.be.revertedWith(REPAY_WITHDRAW_ERROR);
   });
 
   it('should not be able to repay more than it owes (positive debt not allowed)', async () => {
-    await ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, minterAccount.wallet);
-    await ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, otherAccount.wallet);
+    await ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, minterAccount.signer);
+    await ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, otherAccount.signer);
 
     await Token.transfer(
       ctx.arc.syntheticAddress(),
       minterAccount.address,
       BORROW_AMOUNT,
-      otherAccount.wallet,
+      otherAccount.signer,
     );
 
-    expect(ctx.arc.repay(0, BORROW_AMOUNT.mul(3), COLLATERAL_AMOUNT, minterAccount.wallet)).to.be
+    expect(ctx.arc.repay(0, BORROW_AMOUNT.mul(3), COLLATERAL_AMOUNT, minterAccount.signer)).to.be
       .reverted;
   });
 
   it('should be able to repay accumulated interest (12 months)', async () => {
-    await ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, minterAccount.wallet);
+    await ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, minterAccount.signer);
 
     // Set the time to one year from now in order for interest to accumulate
     await ctx.arc.updateTime(ONE_YEAR_IN_SECONDS);
@@ -193,13 +193,13 @@ describe('D2Core.operateAction(Repay)', () => {
     const totalOwed = BORROW_AMOUNT.bigMul(borrowIndex[0]);
     const interestOwed = await totalOwed.sub(BORROW_AMOUNT);
 
-    await ctx.arc.openPosition(COLLATERAL_AMOUNT.mul(4), BORROW_AMOUNT.mul(4), otherAccount.wallet);
+    await ctx.arc.openPosition(COLLATERAL_AMOUNT.mul(4), BORROW_AMOUNT.mul(4), otherAccount.signer);
 
     await Token.transfer(
       ctx.arc.syntheticAddress(),
       minterAccount.address,
       BORROW_AMOUNT.mul(4),
-      otherAccount.wallet,
+      otherAccount.signer,
     );
 
     const originalCollateralBalance = await ctx.arc
@@ -207,7 +207,7 @@ describe('D2Core.operateAction(Repay)', () => {
       .collateral.balanceOf(minterAccount.address);
 
     // Repay the interest owed
-    await ctx.arc.repay(0, interestOwed, 0, minterAccount.wallet);
+    await ctx.arc.repay(0, interestOwed, 0, minterAccount.signer);
 
     expect(await ctx.arc.synth().collateral.balanceOf(minterAccount.address)).to.equal(
       originalCollateralBalance,
@@ -229,7 +229,7 @@ describe('D2Core.operateAction(Repay)', () => {
     position = await ctx.arc.getPosition(0);
 
     // Repay the remaining amount to get back all of the collateral
-    await ctx.arc.repay(0, outstandingBorrow, availableCollateral.value, minterAccount.wallet);
+    await ctx.arc.repay(0, outstandingBorrow, availableCollateral.value, minterAccount.signer);
 
     position = await ctx.arc.getPosition(0);
     expect(await ctx.arc.synth().collateral.balanceOf(minterAccount.address)).to.equal(

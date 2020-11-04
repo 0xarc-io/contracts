@@ -1,7 +1,8 @@
 import 'module-alias/register';
 
 import { Wallet } from 'ethers';
-import { ethers } from '@nomiclabs/buidler';
+
+import { ethers } from 'hardhat';
 import { expectRevert } from '@src/utils/expectRevert';
 
 import ArcNumber from '@src/utils/ArcNumber';

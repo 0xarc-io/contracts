@@ -53,7 +53,7 @@ describe('D2Core.operateAction(Liquidate)', () => {
   before(async () => {
     ctx = await d2Setup(init);
     // Open a 200% collateralized position (at the boundary)
-    await ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, minterAccount.wallet);
+    await ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, minterAccount.signer);
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -63,7 +63,7 @@ describe('D2Core.operateAction(Liquidate)', () => {
     await ctx.arc.openPosition(
       COLLATERAL_AMOUNT.mul(5),
       BORROW_AMOUNT.mul(5),
-      liquidatorAccount.wallet,
+      liquidatorAccount.signer,
     );
   }
 
@@ -89,7 +89,7 @@ describe('D2Core.operateAction(Liquidate)', () => {
       .synthetic.balanceOf(liquidatorAccount.address);
 
     // Call up arthur to do the deed
-    await ctx.arc.liquidatePosition(0, liquidatorAccount.wallet);
+    await ctx.arc.liquidatePosition(0, liquidatorAccount.signer);
 
     const postLiquidatePosition = await ctx.arc.getPosition(0);
     const postLiquidatorCollateralBalance = await ctx.arc
@@ -140,11 +140,11 @@ describe('D2Core.operateAction(Liquidate)', () => {
 
   it('should not be able to liquidate a collateralized position ', async () => {
     await openLiquidatorPosition();
-    expect(ctx.arc.liquidatePosition(0, liquidatorAccount.wallet)).to.be.reverted;
+    expect(ctx.arc.liquidatePosition(0, liquidatorAccount.signer)).to.be.reverted;
   });
 
   it('should not be able to liquidate without enough synthetic', async () => {
-    expect(ctx.arc.liquidatePosition(0, liquidatorAccount.wallet)).to.be.reverted;
+    expect(ctx.arc.liquidatePosition(0, liquidatorAccount.signer)).to.be.reverted;
   });
 
   it('should be able to liquidate if interest accumulates', async () => {});

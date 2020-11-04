@@ -32,11 +32,11 @@ async function init(ctx: ITestContext): Promise<void> {
 
 simpleDescribe('TokenAccrual', init, (ctx: ITestContext) => {
   beforeEach(async () => {
-    stakingToken = await TestToken.deploy(ownerAccount.wallet, 'LINKUSD/USDC 50/50', 'BPT');
-    rewardToken = await TestToken.deploy(ownerAccount.wallet, 'Arc Token', 'ARC');
+    stakingToken = await TestToken.deploy(ownerAccount.signer, 'LINKUSD/USDC 50/50', 'BPT');
+    rewardToken = await TestToken.deploy(ownerAccount.signer, 'Arc Token', 'ARC');
 
     rewardContract = await TokenStakingAccrual.deploy(
-      ownerAccount.wallet,
+      ownerAccount.signer,
       stakingToken.address,
       rewardToken.address,
     );
@@ -46,12 +46,12 @@ simpleDescribe('TokenAccrual', init, (ctx: ITestContext) => {
   });
 
   async function getStakingContractAs(caller: Account) {
-    return await TokenStakingAccrual.at(caller.wallet, rewardContract.address);
+    return await TokenStakingAccrual.at(caller.signer, rewardContract.address);
   }
 
   async function stakeTokens(contract: TokenStakingAccrual, tokens: BigNumberish, caller: Account) {
     await stakingToken.mintShare(caller.address, tokens);
-    await Token.approve(stakingToken.address, caller.wallet, contract.address, tokens);
+    await Token.approve(stakingToken.address, caller.signer, contract.address, tokens);
     await contract.stake(tokens);
   }
 

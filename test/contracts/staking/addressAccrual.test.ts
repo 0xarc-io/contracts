@@ -35,8 +35,8 @@ async function init(ctx: ITestContext): Promise<void> {
 
 simpleDescribe('Distribution', init, (ctx: ITestContext) => {
   beforeEach(async () => {
-    rewardToken = await TestToken.deploy(ownerAccount.wallet, 'ARC', 'ARC');
-    distribution = await AddressAccrual.deploy(ownerAccount.wallet, rewardToken.address);
+    rewardToken = await TestToken.deploy(ownerAccount.signer, 'ARC', 'ARC');
+    distribution = await AddressAccrual.deploy(ownerAccount.signer, rewardToken.address);
 
     await rewardToken.mintShare(distribution.address, ArcNumber.new(100));
 
@@ -46,7 +46,7 @@ simpleDescribe('Distribution', init, (ctx: ITestContext) => {
   });
 
   async function claimAs(caller: Account) {
-    const contract = await AddressAccrual.at(caller.wallet, distribution.address);
+    const contract = await AddressAccrual.at(caller.signer, distribution.address);
     return await contract.claimFees();
   }
 

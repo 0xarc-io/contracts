@@ -27,14 +27,14 @@ async function init(ctx: ITestContext): Promise<void> {
 }
 
 async function getContract(caller: Account) {
-  return SyntheticToken.at(caller.wallet, syntheticToken.address);
+  return SyntheticToken.at(caller.signer, syntheticToken.address);
 }
 
 simpleDescribe('SyntheticToken', init, (ctx: ITestContext) => {
   beforeEach(async () => {
-    syntheticToken = await SyntheticToken.deploy(ownerAccount.wallet, 'ARCUSD', 'ARCUSD');
+    syntheticToken = await SyntheticToken.deploy(ownerAccount.signer, 'ARCUSD', 'ARCUSD');
 
-    syntheticToken = await SyntheticToken.at(arcAccount.wallet, syntheticToken.address);
+    syntheticToken = await SyntheticToken.at(arcAccount.signer, syntheticToken.address);
   });
 
   describe('#mint', () => {

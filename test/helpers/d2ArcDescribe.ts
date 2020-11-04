@@ -1,4 +1,4 @@
-import { ethers } from '@nomiclabs/buidler';
+import { ethers } from 'hardhat';
 import { EVM } from './EVM';
 import { D2TestArc } from '../../src/D2TestArc';
 import { Account, getAccounts } from './testingUtils';
@@ -60,15 +60,18 @@ export async function initializeD2Arc(ctx: ITestContext, options: D2ArcOptions):
   await ctx.arc.synth().core.setCollateralRatio({ value: options.collateralRatio });
 
   // Set a starting balance and approval for each user we're going to be using
-  await asyncForEach(options.initialCollateralBalances, async ([account, balance]) => {
-    await ctx.arc.synth().collateral.mintShare(account.address, balance);
-    await Token.approve(
-      ctx.arc.synth().collateral.address,
-      account.wallet,
-      ctx.arc.synth().core.address,
-      balance,
-    );
-  });
+  await asyncForEach(
+    options.initialCollateralBalances,
+    async ([account, balance]: [Account, BigNumberish]) => {
+      await ctx.arc.synth().collateral.mintShare(account.address, balance);
+      await Token.approve(
+        ctx.arc.synth().collateral.address,
+        account.signer,
+        ctx.arc.synth().core.address,
+        balance,
+      );
+    },
+  );
 
   // Set the interest rate
   await ctx.arc.synth().core.setRate(options.interestRate || BASE);
@@ -90,7 +93,7 @@ export async function d2Setup(init: initFunction): Promise<ITestContext> {
   const ctx: ITestContext = {};
   ctx.accounts = await getAccounts();
   ctx.evm = evm;
-  ctx.arc = await D2TestArc.init(ctx.accounts[0].wallet);
+  ctx.arc = await D2TestArc.init(ctx.accounts[0].signer);
 
   await ctx.arc.deployTestArc();
   await init(ctx);
