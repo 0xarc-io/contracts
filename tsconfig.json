@@ -23,6 +23,7 @@
     "./src",
     "./scripts",
     "./test",
+    "./tasks",
     "./publish/**/*.json"
   ],
   "exclude": ["node_modules"],
