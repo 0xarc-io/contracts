@@ -2,9 +2,11 @@ import { privateKeys } from './src/utils/generatedWallets';
 import { BigNumber } from 'ethers/utils';
 import { HardhatUserConfig } from 'hardhat/config';
 
+import { removeConsoleLog } from 'hardhat-preprocessor';
+
 import '@nomiclabs/hardhat-etherscan';
 import '@nomiclabs/hardhat-waffle';
-// import 'solidity-coverage';
+import 'hardhat-preprocessor';
 import 'hardhat-spdx-license-identifier';
 
 require('dotenv').config({ path: '.env' }).parsed;
@@ -21,6 +23,11 @@ const HUNDRED_THOUSAND_ETH = new BigNumber(100000).pow(18).toString();
 
 const config: HardhatUserConfig = {
   defaultNetwork: 'hardhat',
+  preprocess: {
+    eachLine: removeConsoleLog(
+      (bre) => bre.network.name !== 'hardhat' && bre.network.name !== 'localhost',
+    ),
+  },
   solidity: {
     version: '0.5.16',
     settings: {
