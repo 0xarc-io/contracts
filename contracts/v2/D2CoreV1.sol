@@ -220,6 +220,10 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
     )
         public
     {
+        require(
+            paused == false,
+            "operateAction(): contracts cannot be paused"
+        );
 
         D2Types.Position memory operatedPosition;
 
