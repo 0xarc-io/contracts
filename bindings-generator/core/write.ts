@@ -20,7 +20,7 @@ export interface TransactionOverrides {
     gasPrice?: BigNumberish | Promise<BigNumberish>;
     value?: BigNumberish | Promise<BigNumberish>;
     chainId?: number | Promise<number>;
-    from?: Wallet;
+    from?: Signer;
 }
 
 export interface TypedEventDescription<

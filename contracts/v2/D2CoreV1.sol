@@ -65,8 +65,7 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
 
     event FeesUpdated(
         Decimal.D256 _liquidationUserFee,
-        Decimal.D256 _liquidationArcRatio,
-        Decimal.D256 _printerArcRatio
+        Decimal.D256 _liquidationArcRatio
     );
 
     event LimitsUpdated(
@@ -106,11 +105,9 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         address _syntheticAddress,
         address _oracleAddress,
         address _interestSetter,
-        address _printerDestination,
         Decimal.D256 memory _collateralRatio,
         Decimal.D256 memory _liquidationUserFee,
-        Decimal.D256 memory _liquidationArcRatio,
-        Decimal.D256 memory _printerArcRatio
+        Decimal.D256 memory _liquidationArcRatio
     )
         public
         onlyAdmin
@@ -123,7 +120,6 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         collateralAsset = _collateralAddress;
         syntheticAsset = _syntheticAddress;
         interestSetter = _interestSetter;
-        printerDestination = _printerDestination;
 
         borrowIndex = uint256(10**18);
         indexLastUpdate = currentTimestamp();
@@ -133,8 +129,7 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
 
         setFees(
             _liquidationUserFee,
-            _liquidationArcRatio,
-            _printerArcRatio
+            _liquidationArcRatio
         );
     }
 
@@ -172,27 +167,15 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         emit CollateralRatioUpdated(_collateralRatio);
     }
 
-    function setPrinterDestination(
-        address _printerDestination
-    )
-        public
-        onlyAdmin
-    {
-        printerDestination = _printerDestination;
-        emit PrinterUpdated(_printerDestination);
-    }
-
     function setFees(
         Decimal.D256 memory _liquidationUserFee,
-        Decimal.D256 memory _liquidationArcRatio,
-        Decimal.D256 memory _printerArcRatio
+        Decimal.D256 memory _liquidationArcRatio
     )
         public
         onlyAdmin
     {
         liquidationUserFee = _liquidationUserFee;
         liquidationArcRatio = _liquidationArcRatio;
-        printerArcRatio = _printerArcRatio;
     }
 
     function setLimits(
@@ -229,7 +212,7 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
 
         // Update the index to calculate how much interest has accrued
         // And then subsequently mint more of the synth to the printer
-        updateIndexAndPrint();
+        updateIndex();
 
         if (operation == Operation.Open) {
             (operatedPosition, params.id) = openPosition(
@@ -280,7 +263,7 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
      *      (in seconds) then multiplied by the interest rate. The result is then
      *      multiplied by the totalBorrowed amount.
     */
-    function updateIndexAndPrint()
+    function updateIndex()
         public
     {
         if (
@@ -312,23 +295,9 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         // we can figure out how much interest is owed to the system as a whole and therefore
         // calculate how much of the synth to mint
         uint256 interestOwed = totalBorrowed.sub(existingBorrow);
-        uint256 arcProfit = Decimal.mul(
-            interestOwed,
-            printerArcRatio
-        );
 
+        // Set the last time the index was updated to now
         indexLastUpdate = currentTimestamp();
-
-        ISyntheticToken(syntheticAsset).mint(
-            address(this),
-            arcProfit
-        );
-
-        ISyntheticToken(syntheticAsset).mint(
-            printerDestination,
-            interestOwed.sub(arcProfit)
-        );
-
     }
 
     /* ========== Admin Functions ========== */
@@ -973,14 +942,12 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         view
         returns (
             Decimal.D256 memory _liquidationUserFee,
-            Decimal.D256 memory _liquidationArcRatio,
-            Decimal.D256 memory _printerArcRatio
+            Decimal.D256 memory _liquidationArcRatio
         )
     {
         return (
             liquidationUserFee,
-            liquidationArcRatio,
-            printerArcRatio
+            liquidationArcRatio
         );
     }
 

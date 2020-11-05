@@ -32,7 +32,6 @@ export class D2TestArc extends D2Arc {
       syntheticAsset.address,
       oracle.address,
       await this.signer.getAddress(),
-      await this.signer.getAddress(),
       { value: 0 },
       { value: 0 },
       { value: 0 },

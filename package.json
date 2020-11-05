@@ -26,7 +26,7 @@
     "generate-typings": "yarn ts-node ./bindings-generator/main.ts artifacts -o src/typings",
     "build": "yarn compile && yarn generate-typings",
     "coverage": "yarn run build && yarn hardhat coverage --testfiles test/contracts/ --temp artifacts --network coverage",
-    "test": "yarn hardhat test test/contracts",
+    "test": "yarn hardhat test",
     "deploy": "yarn ts-node deployment/deploy.ts",
     "graph:create": "graph create arcxgame/linkusd --node https://api.thegraph.com/deploy/",
     "graph:create-local": "graph create arcxgame/linkusd --node http://127.0.0.1:8020",

@@ -44,7 +44,6 @@ export type testsFunction = (ctx: ITestContext) => void;
 
 export const DEFAULT_LIQUIDATION_USER_FEE = ArcDecimal.new(0.1).value;
 export const DEFAULT_LIQUIDATION_ARC_RATIO = ArcDecimal.new(0.5).value;
-export const DEFAULT_PRINTER_ARC_RATIO = ArcDecimal.new(0.1).value;
 
 /**
  * Initialize the Arc smart contracts
@@ -76,16 +75,12 @@ export async function initializeD2Arc(ctx: ITestContext, options: D2ArcOptions):
   // Set the interest rate
   await ctx.arc.synth().core.setRate(options.interestRate || BASE);
 
-  // Set the money printer destination
-  await ctx.arc.synth().core.setPrinterDestination(options.printerDestination);
-
   // Set ARC's fees
   await ctx.arc
     .synth()
     .core.setFees(
       { value: options.fees?.liquidationUserFee || DEFAULT_LIQUIDATION_USER_FEE },
       { value: options.fees?.liquidationArcRatio || DEFAULT_LIQUIDATION_ARC_RATIO },
-      { value: options.fees?.printerArcRatio || DEFAULT_PRINTER_ARC_RATIO },
     );
 }
 

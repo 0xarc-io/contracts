@@ -9,7 +9,7 @@ import {
 } from '../../helpers/testingUtils';
 import { d2Setup, initializeD2Arc } from '@test/helpers/d2ArcDescribe';
 import { ITestContext } from '@test/helpers/d2ArcDescribe';
-import { D2ArcOptions, DEFAULT_PRINTER_ARC_RATIO } from '../../helpers/d2ArcDescribe';
+import { D2ArcOptions } from '../../helpers/d2ArcDescribe';
 import { Operation } from '../../../src/types';
 import { BigNumber } from 'ethers/utils';
 import { UNDERCOLLATERALIZED_ERROR } from '../../helpers/contractErrors';
@@ -120,7 +120,7 @@ describe('D2Core.operateAction(Open)', () => {
 
     // Set the time to one year from now in order for interest to accumulate
     await ctx.arc.updateTime(ONE_YEAR_IN_SECONDS);
-    await ctx.arc.synth().core.updateIndexAndPrint();
+    await ctx.arc.synth().core.updateIndex();
 
     const borrowIndex = await ctx.arc.synth().core.getBorrowIndex();
 
@@ -164,23 +164,10 @@ describe('D2Core.operateAction(Open)', () => {
     // The interest increase is simply how much the total is less the amount we know we deposited (par values)
     const interestIncrease = newBorrowTotal.sub(BORROW_AMOUNT.add(secondPositionBorrowedAmount));
 
-    // The profit amount is simply the interest increase multiplied by the ARC printer ratio
-    const arcProfit = interestIncrease.bigMul(DEFAULT_PRINTER_ARC_RATIO);
-
-    expect(await ctx.arc.synth().synthetic.balanceOf(ctx.arc.synth().core.address)).to.equal(
-      arcProfit,
-    );
-
-    expect(await ctx.arc.synth().synthetic.balanceOf(printerAccount.address)).to.equal(
-      interestIncrease.sub(arcProfit),
-    );
-
     expect(await ctx.arc.synth().collateral.balanceOf(ctx.arc.syntheticAddress())).to.equal(
       COLLATERAL_AMOUNT.mul(3),
     );
-    expect(await ctx.arc.synthetic().totalSupply()).to.equal(
-      firstPositionAccumulatedAmount.add(BORROW_AMOUNT),
-    );
+    expect(await ctx.arc.synthetic().totalSupply()).to.equal(BORROW_AMOUNT.mul(2));
     expect(await ctx.arc.synthetic().balanceOf(minterAccount.address)).to.equal(
       BORROW_AMOUNT.mul(2),
     );

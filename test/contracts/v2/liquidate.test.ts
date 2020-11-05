@@ -9,7 +9,7 @@ import {
 } from '../../helpers/testingUtils';
 import { d2Setup, initializeD2Arc } from '@test/helpers/d2ArcDescribe';
 import { ITestContext } from '@test/helpers/d2ArcDescribe';
-import { D2ArcOptions, DEFAULT_PRINTER_ARC_RATIO } from '../../helpers/d2ArcDescribe';
+import { D2ArcOptions } from '../../helpers/d2ArcDescribe';
 import { Operation } from '../../../src/types';
 import { BigNumber } from 'ethers/utils';
 import { UNDERCOLLATERALIZED_ERROR } from '../../helpers/contractErrors';
@@ -35,7 +35,6 @@ async function init(ctx: ITestContext): Promise<void> {
     oraclePrice: ArcDecimal.new(1).value,
     collateralRatio: ArcDecimal.new(2).value,
     interestRate: TEN_PERCENT,
-    printerDestination: printerAccount.address,
     initialCollateralBalances: [
       [minterAccount, COLLATERAL_AMOUNT.mul(5)],
       [liquidatorAccount, COLLATERAL_AMOUNT.mul(10)],

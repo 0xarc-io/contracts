@@ -34,12 +34,9 @@ contract D2StorageV1 {
     uint256 internal interestRate;
 
     Decimal.D256 internal collateralRatio;
+    Decimal.D256 internal liquidationUserFee;
+    Decimal.D256 internal liquidationArcRatio;
 
-    Decimal.D256 public liquidationUserFee;
-    Decimal.D256 public liquidationArcRatio;
-    Decimal.D256 public printerArcRatio;
-
-    address public printerDestination;
     address public interestSetter;
 
     uint256 internal collateralLimit;
