@@ -76,9 +76,7 @@ describe('D2Core.operateAction(Borrow)', () => {
     expect(await ctx.arc.synth().core.isCollateralized(postPosition)).to.be.true;
   });
 
-  it('should update the index and print more synthetics', async () => {});
-
-  it('should update the index and print more synthetics based on the print ratio', async () => {});
+  it('should update the index', async () => {});
 
   it('should be able to borrow more if the c-ratio is not at the minimum', async () => {});
 

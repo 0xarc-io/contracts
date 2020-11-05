@@ -9,6 +9,18 @@ import {Decimal} from "../lib/Decimal.sol";
 
 interface ID2Core {
 
+    function getPosition(
+        uint256 id
+    )
+        external
+        view
+        returns (D2Types.Position memory);
+
+    function getCurrentPrice()
+        external
+        view
+        returns (Decimal.D256 memory);
+
     function getSyntheticAsset()
         external
         view
@@ -24,17 +36,15 @@ interface ID2Core {
         view
         returns (address);
 
+    function getInterestSetter()
+        external
+        view
+        returns (address);
+
     function getBorrowIndex()
         external
         view
         returns (uint256, uint256);
-
-    function getPosition(
-        uint256 positionId
-    )
-        external
-        view
-        returns (D2Types.Position memory);
 
     function getCollateralRatio()
         external
@@ -55,4 +65,12 @@ interface ID2Core {
         external
         view
         returns (uint256);
+
+    function getFees()
+        external
+        view
+        returns (
+            Decimal.D256 memory _liquidationUserFee,
+            Decimal.D256 memory _liquidationArcRatio
+        );
 }
