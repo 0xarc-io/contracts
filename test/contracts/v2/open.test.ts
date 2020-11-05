@@ -7,12 +7,12 @@ import {
   addSnapshotBeforeRestoreAfterEach,
   getWaffleExpect,
 } from '../../helpers/testingUtils';
+
 import { d2Setup, initializeD2Arc } from '@test/helpers/d2ArcDescribe';
 import { ITestContext } from '@test/helpers/d2ArcDescribe';
 import { D2ArcOptions } from '../../helpers/d2ArcDescribe';
 import { Operation } from '../../../src/types';
 import { BigNumber } from 'ethers/utils';
-import { UNDERCOLLATERALIZED_ERROR } from '../../helpers/contractErrors';
 import { TEN_PERCENT, ONE_YEAR_IN_SECONDS, BASE } from '../../../src/constants';
 import { Zero } from 'ethers/constants';
 

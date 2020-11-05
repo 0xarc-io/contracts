@@ -32,7 +32,6 @@ export interface ITestContext {
 export interface D2ArcOptions {
   oraclePrice: BigNumberish;
   collateralRatio: BigNumberish;
-  printerDestination: string;
   interestRate?: BigNumberish;
   startingTime?: BigNumberish;
   fees?: D2Fees;
