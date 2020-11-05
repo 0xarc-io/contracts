@@ -84,6 +84,8 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
 
     event PauseStatusUpdated(bool value);
 
+    event InterestSetterUpdated(address value);
+
     /* ========== Constructor ========== */
 
     constructor()
@@ -119,13 +121,13 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
 
         collateralAsset = _collateralAddress;
         syntheticAsset = _syntheticAddress;
-        interestSetter = _interestSetter;
 
         borrowIndex = uint256(10**18);
         indexLastUpdate = currentTimestamp();
 
         setOracle(_oracleAddress);
         setCollateralRatio(_collateralRatio);
+        setInterestSetter(_interestSetter);
 
         setFees(
             _liquidationUserFee,
@@ -189,6 +191,17 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         collateralLimit = _collateralLimit;
         syntheticLimit = _syntheticLimit;
         positionCollateralMinimum = _positionCollateralMinimum;
+    }
+
+    function setInterestSetter(
+        address _setter
+    )
+        public
+        onlyAdmin
+    {
+        interestSetter = _setter;
+
+        emit InterestSetterUpdated(_setter);
     }
 
     /* ========== Public Functions ========== */
@@ -858,7 +871,7 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
     function getPosition(
         uint256 id
     )
-        public
+        external
         view
         returns (D2Types.Position memory)
     {
@@ -866,7 +879,7 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
     }
 
     function getCurrentPrice()
-        public
+        external
         view
         returns (Decimal.D256 memory)
     {
@@ -895,6 +908,14 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         returns (address)
     {
         return address(oracle);
+    }
+
+    function getInterestSetter()
+        external
+        view
+        returns (address)
+    {
+        return interestSetter;
     }
 
     function getBorrowIndex()
