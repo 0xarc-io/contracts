@@ -114,7 +114,6 @@ task('deploy-d2', 'Deploy, update and interact with D2 contracts')
         syntheticAddress,
         oracleAddress,
         signer.address,
-        signer.address,
         { value: synthConfig.collateral_ratio },
         { value: synthConfig.liquidation_user_fee },
         { value: synthConfig.liquidation_arc_ratio },

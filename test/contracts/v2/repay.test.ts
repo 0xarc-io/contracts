@@ -9,7 +9,7 @@ import {
 } from '../../helpers/testingUtils';
 import { d2Setup, initializeD2Arc } from '@test/helpers/d2ArcDescribe';
 import { ITestContext } from '@test/helpers/d2ArcDescribe';
-import { D2ArcOptions, DEFAULT_PRINTER_ARC_RATIO } from '../../helpers/d2ArcDescribe';
+import { D2ArcOptions } from '../../helpers/d2ArcDescribe';
 import { Operation } from '../../../src/types';
 import { BigNumber, BigNumberish } from 'ethers/utils';
 import { REPAY_WITHDRAW_ERROR, UNDERCOLLATERALIZED_ERROR } from '../../helpers/contractErrors';
@@ -34,7 +34,6 @@ async function init(ctx: ITestContext): Promise<void> {
     oraclePrice: ArcDecimal.new(1).value,
     collateralRatio: ArcDecimal.new(2).value,
     interestRate: TEN_PERCENT,
-    printerDestination: printerAccount.address,
     initialCollateralBalances: [
       [minterAccount, COLLATERAL_AMOUNT.mul(5)],
       [otherAccount, COLLATERAL_AMOUNT.mul(5)],
@@ -185,7 +184,7 @@ describe('D2Core.operateAction(Repay)', () => {
 
     // Set the time to one year from now in order for interest to accumulate
     await ctx.arc.updateTime(ONE_YEAR_IN_SECONDS);
-    await ctx.arc.synth().core.updateIndexAndPrint();
+    await ctx.arc.synth().core.updateIndex();
 
     let borrowIndex = await ctx.arc.core().getBorrowIndex();
     let position = await ctx.arc.getPosition(0);
