@@ -10,9 +10,7 @@ import {
 import { d2Setup, initializeD2Arc } from '@test/helpers/d2ArcDescribe';
 import { ITestContext } from '@test/helpers/d2ArcDescribe';
 import { D2ArcOptions } from '../../helpers/d2ArcDescribe';
-import { Operation } from '../../../src/types';
-import { BigNumber, BigNumberish } from 'ethers/utils';
-import { REPAY_WITHDRAW_ERROR, UNDERCOLLATERALIZED_ERROR } from '../../helpers/contractErrors';
+import { REPAY_WITHDRAW_ERROR } from '../../helpers/contractErrors';
 import { TEN_PERCENT, ONE_YEAR_IN_SECONDS, BASE } from '../../../src/constants';
 import Token from '@src/utils/Token';
 import { Zero } from 'ethers/constants';
@@ -161,7 +159,7 @@ describe('D2Core.operateAction(Repay)', () => {
     await ctx.arc.updatePrice(newPrice);
 
     // When trying to withdraw right below the undercollat amount then it should revert
-    expect(ctx.arc.repay(0, 0, 1, minterAccount.signer)).to.be.revertedWith(REPAY_WITHDRAW_ERROR);
+    await expect(ctx.arc.repay(0, 0, 1, minterAccount.signer)).to.be.reverted;
   });
 
   it('should not be able to repay more than it owes (positive debt not allowed)', async () => {

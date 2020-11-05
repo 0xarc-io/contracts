@@ -1,24 +1,15 @@
 import 'module-alias/register';
 
-import ArcNumber from '@src/utils/ArcNumber';
 import ArcDecimal from '@src/utils/ArcDecimal';
 import {
   Account,
   addSnapshotBeforeRestoreAfterEach,
   getWaffleExpect,
 } from '../../helpers/testingUtils';
-import { d2Setup, initializeD2Arc } from '@test/helpers/d2ArcDescribe';
-import { ITestContext } from '@test/helpers/d2ArcDescribe';
-import { D2ArcOptions } from '../../helpers/d2ArcDescribe';
-import { Operation } from '../../../src/types';
-import { BigNumber, BigNumberish } from 'ethers/utils';
-import { TEN_PERCENT, ONE_YEAR_IN_SECONDS, BASE } from '../../../src/constants';
-import Token from '@src/utils/Token';
-import { Zero } from 'ethers/constants';
+import { BigNumber } from 'ethers/utils';
 import { ADMINABLE_ERROR, INTEREST_SETTER_ERROR } from '../../helpers/contractErrors';
 import { getAccounts } from '../../helpers/testingUtils';
 import { MockD2CoreV1, MockOracle, SyntheticToken, ArcProxy, TestToken } from '@src/typings';
-import { Test } from 'mocha';
 import { Signer } from 'ethers';
 
 let ownerAccount: Account;
@@ -59,7 +50,7 @@ describe('D2Core.setters', () => {
   describe('#init', () => {
     it('should not be settable by any user', async () => {
       const contract = await getCore(otherAccount.signer);
-      expect(
+      await expect(
         contract.init(
           otherAccount.address,
           otherAccount.address,
@@ -69,7 +60,7 @@ describe('D2Core.setters', () => {
           { value: 4 },
           { value: 5 },
         ),
-      ).to.be.revertedWith(ADMINABLE_ERROR);
+      ).to.be.reverted;
     });
 
     it('should only be settable by the admin', async () => {
@@ -93,20 +84,20 @@ describe('D2Core.setters', () => {
   describe('#setInterestRate', () => {
     it('should not be settable by any user', async () => {
       const contract = await getCore(otherAccount.signer);
-      expect(contract.setRate(999)).to.be.revertedWith(INTEREST_SETTER_ERROR);
+      await expect(contract.setRate(999)).to.be.reverted;
     });
 
     it('should only be settable by the setter', async () => {
       const contract = await getCore(interestSetterAccount.signer);
       await contract.setRate(999);
-      expect(await contract.getInterestRate()).to.equal(new BigNumber(999));
+      await expect(await contract.getInterestRate()).to.equal(new BigNumber(999));
     });
   });
 
   describe('#setOracle', () => {
     it('should not be settable by any user', async () => {
       const contract = await getCore(otherAccount.signer);
-      expect(contract.setOracle(ownerAccount.address)).to.be.revertedWith(ADMINABLE_ERROR);
+      await expect(contract.setOracle(ownerAccount.address)).to.be.reverted;
     });
 
     it('should only be settable by the admin', async () => {
@@ -119,7 +110,7 @@ describe('D2Core.setters', () => {
   describe('#setCollateralRatio', () => {
     it('should not be settable by any user', async () => {
       const contract = await getCore(otherAccount.signer);
-      expect(contract.setCollateralRatio(ArcDecimal.new(5))).to.be.revertedWith(ADMINABLE_ERROR);
+      await expect(contract.setCollateralRatio(ArcDecimal.new(5))).to.be.reverted;
     });
 
     it('should only be settable by the admin', async () => {
@@ -132,9 +123,7 @@ describe('D2Core.setters', () => {
   describe('#setLiquidationFees', () => {
     it('should not be settable by any user', async () => {
       const contract = await getCore(otherAccount.signer);
-      expect(contract.setFees(ArcDecimal.new(5), ArcDecimal.new(5))).to.be.revertedWith(
-        ADMINABLE_ERROR,
-      );
+      await expect(contract.setFees(ArcDecimal.new(5), ArcDecimal.new(5))).to.be.reverted;
     });
 
     it('should only be settable by the admin', async () => {
@@ -149,7 +138,7 @@ describe('D2Core.setters', () => {
   describe('#setLimits', () => {
     it('should not be settable by any user', async () => {
       const contract = await getCore(otherAccount.signer);
-      expect(contract.setLimits(1, 2, 3)).to.be.revertedWith(ADMINABLE_ERROR);
+      await expect(contract.setLimits(1, 2, 3)).to.be.reverted;
     });
 
     it('should only be settable by the admin', async () => {
@@ -164,7 +153,7 @@ describe('D2Core.setters', () => {
   describe('#setInterestSetter', () => {
     it('should not be settable by any user', async () => {
       const contract = await getCore(otherAccount.signer);
-      expect(contract.setInterestSetter(ownerAccount.address)).to.be.revertedWith(ADMINABLE_ERROR);
+      await expect(contract.setInterestSetter(ownerAccount.address)).to.be.reverted;
     });
 
     it('should only be settable by the admin', async () => {

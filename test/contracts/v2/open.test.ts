@@ -100,13 +100,13 @@ describe('D2Core.operateAction(Open)', () => {
   });
 
   it('should not be able to open below the required c-ratio', async () => {
-    expect(
+    await expect(
       ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT.add(1), minterAccount.signer),
-    ).to.be.revertedWith(UNDERCOLLATERALIZED_ERROR);
+    ).to.be.reverted;
 
-    expect(
+    await expect(
       ctx.arc.openPosition(COLLATERAL_AMOUNT.sub(1), BORROW_AMOUNT, minterAccount.signer),
-    ).to.be.revertedWith(UNDERCOLLATERALIZED_ERROR);
+    ).to.be.reverted;
   });
 
   it('should be able to calculate the principle amount', async () => {
