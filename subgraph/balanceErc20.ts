@@ -1,10 +1,16 @@
 import { Address, BigInt } from '@graphprotocol/graph-ts';
-import { Transfer } from '../generated/LinkUSD/IERC20';
+import { SynthAdded } from '../generated/SynthRegistry/SynthRegistry';
+import { Transfer } from '../generated/templates/IErc20/IERC20';
+import { IErc20 } from '../generated/templates';
 import { AccountBalance } from '../generated/schema';
 
 enum ModifyOperation {
   plus,
   minus,
+}
+
+export function synthAdded(event: SynthAdded): void {
+  IErc20.create(event.params.synth);
 }
 
 export function transfer(event: Transfer): void {
