@@ -1,4 +1,4 @@
-import { Address, Bytes } from "@graphprotocol/graph-ts";
+import { Address } from "@graphprotocol/graph-ts";
 import { Synth } from "../generated/schema";
 import { StateV1 } from "../generated/StateV1/StateV1";
 import { BASE } from "../src/constants";
