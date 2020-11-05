@@ -1,16 +1,16 @@
 type Synth @entity {
   id: ID!
   paused: Boolean!
-  oracle: Bytes!
-  collateralRatio: BigInt!
-  liquidationUserFee: BigInt!
-  liquidationArcRatio: BigInt!
-  printerArcRatio: BigInt!
-  collateralLimit: BigInt!
-  syntheticLimit: BigInt!
-  positionCollateralMinimum: BigInt!
+  oracle: Bytes
+  collateralRatio: BigInt
+  liquidationUserFee: BigInt
+  liquidationArcRatio: BigInt
+  printerArcRatio: BigInt
+  collateralLimit: BigInt
+  syntheticLimit: BigInt
+  positionCollateralMinimum: BigInt
   borrowIndex: BigInt!
-  interestRate: BigInt!
+  interestRate: BigInt
 }
 
 type Position @entity {

@@ -1,6 +1,6 @@
-import { BigNumber } from 'ethers/utils';
+import { BigInt } from '@graphprotocol/graph-ts'
 
-export const TEN_PERCENT = new BigNumber('3022265980');
-export const FIVE_PERCENT = new BigNumber('1547125957');
-export const ONE_YEAR_IN_SECONDS = 31536000;
-export const BASE = new BigNumber(10).pow(18);
+export let TEN_PERCENT = BigInt.fromI32(3022265980);
+export let FIVE_PERCENT = BigInt.fromI32(1547125957);
+export let ONE_YEAR_IN_SECONDS = 31536000;
+export let BASE = BigInt.fromI32(10).pow(18);
