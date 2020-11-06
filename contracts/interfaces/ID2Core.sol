@@ -4,10 +4,22 @@ pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {D2Types} from "../v2/D2Types.sol";
-
 import {Decimal} from "../lib/Decimal.sol";
+import {Amount} from "../lib/Amount.sol";
 
 interface ID2Core {
+
+    function getPosition(
+        uint256 id
+    )
+        external
+        view
+        returns (D2Types.Position memory);
+
+    function getCurrentPrice()
+        external
+        view
+        returns (Decimal.D256 memory);
 
     function getSyntheticAsset()
         external
@@ -24,17 +36,15 @@ interface ID2Core {
         view
         returns (address);
 
+    function getInterestSetter()
+        external
+        view
+        returns (address);
+
     function getBorrowIndex()
         external
         view
         returns (uint256, uint256);
-
-    function getPosition(
-        uint256 positionId
-    )
-        external
-        view
-        returns (D2Types.Position memory);
 
     function getCollateralRatio()
         external
@@ -44,7 +54,7 @@ interface ID2Core {
     function getTotals()
         external
         view
-        returns (uint256, uint256);
+        returns (uint256, uint256, Amount.Principal memory);
 
     function getLimits()
         external
@@ -55,4 +65,12 @@ interface ID2Core {
         external
         view
         returns (uint256);
+
+    function getFees()
+        external
+        view
+        returns (
+            Decimal.D256 memory _liquidationUserFee,
+            Decimal.D256 memory _liquidationArcRatio
+        );
 }

@@ -23,13 +23,14 @@
     "./src",
     "./scripts",
     "./test",
+    "./tasks",
     "./publish/**/*.json"
   ],
   "exclude": ["node_modules"],
   "files": [
     "./index.js",
-    "buidler.config.ts",
-    "node_modules/@nomiclabs/buidler-ethers/src/type-extensions.d.ts",
-    "node_modules/@nomiclabs/buidler-etherscan/src/type-extensions.d.ts"
+    "hardhat.config.ts",
+    "node_modules/@nomiclabs/hardhat-ethers/src/type-extensions.d.ts",
+    "node_modules/@nomiclabs/hardhat-etherscan/src/type-extensions.d.ts"
   ]
 }

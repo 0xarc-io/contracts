@@ -1,6 +1,7 @@
 import 'module-alias/register';
 
-import { Wallet } from 'ethers';
+import { Signer, Wallet } from 'ethers';
+
 import { ITestContext } from '@test/helpers/d1ArcDescribe';
 import d1ArcDescribe from '@test/helpers/d1ArcDescribe';
 import ArcDecimal from '@src/utils/ArcDecimal';
@@ -10,18 +11,18 @@ import { BigNumber } from 'ethers/utils';
 import { MockOracle } from '@src/typings';
 import { getWaffleExpect } from '../../helpers/testingUtils';
 
-let ownerWallet: Wallet;
-let lenderWallet: Wallet;
-let syntheticMinterWallet: Wallet;
-let stableShareMinterWallet: Wallet;
-let liquidatorWallet: Wallet;
+let ownerWallet: Signer;
+let lenderWallet: Signer;
+let syntheticMinterWallet: Signer;
+let stableShareMinterWallet: Signer;
+let liquidatorWallet: Signer;
 
 async function init(ctx: ITestContext): Promise<void> {
-  ownerWallet = ctx.accounts[0].wallet;
-  lenderWallet = ctx.accounts[1].wallet;
-  syntheticMinterWallet = ctx.accounts[2].wallet;
-  stableShareMinterWallet = ctx.accounts[3].wallet;
-  liquidatorWallet = ctx.accounts[4].wallet;
+  ownerWallet = ctx.accounts[0].signer;
+  lenderWallet = ctx.accounts[1].signer;
+  syntheticMinterWallet = ctx.accounts[2].signer;
+  stableShareMinterWallet = ctx.accounts[3].signer;
+  liquidatorWallet = ctx.accounts[4].signer;
 }
 
 const expect = getWaffleExpect();

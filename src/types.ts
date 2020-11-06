@@ -1,5 +1,5 @@
 import { BigNumber, BigNumberish } from 'ethers/utils';
-import { Signer } from 'ethers';
+import { Signer, Wallet } from 'ethers';
 import { BASE } from './constants';
 
 export type SynthAddressBook = {
@@ -95,7 +95,6 @@ export type RiskParams = {
 export type D2Fees = {
   liquidationUserFee: BigNumberish;
   liquidationArcRatio: BigNumberish;
-  printerArcRatio: BigNumberish;
 };
 
 export interface TransactionOverrides {

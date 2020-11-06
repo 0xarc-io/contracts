@@ -1,7 +1,7 @@
 import { Position, ActionOperated } from '../generated/schema';
 import { RiskParamsUpdated, MarketParamsUpdated } from '../generated/StateV1/StateV1';
 import { ActionOperated as ActionOperatedEvent } from '../generated/CoreV1/CoreV1';
-import { BASE } from '../src/constants';
+import { BASE } from './constants';
 import { createOrLoadSynth } from './createOrLoadSynth';
 
 export function actionOperated(event: ActionOperatedEvent): void {

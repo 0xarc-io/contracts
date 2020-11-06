@@ -51,17 +51,17 @@ simpleDescribe('RewardCampaign', init, (ctx: ITestContext) => {
   const DEBT_AMOUNT = HARD_CAP.div(DEBT_TO_STAKE);
 
   async function setup() {
-    stakingToken = await TestToken.deploy(ownerAccount.wallet, 'LINKUSD/USDC 50/50', 'BPT');
-    rewardToken = await TestToken.deploy(ownerAccount.wallet, 'Arc Token', 'ARC');
+    stakingToken = await TestToken.deploy(ownerAccount.signer, 'LINKUSD/USDC 50/50', 'BPT');
+    rewardToken = await TestToken.deploy(ownerAccount.signer, 'Arc Token', 'ARC');
 
-    kyfTranche1 = await KYFV2.deploy(ownerAccount.wallet);
-    kyfTranche2 = await KYFV2.deploy(ownerAccount.wallet);
+    kyfTranche1 = await KYFV2.deploy(ownerAccount.signer);
+    kyfTranche2 = await KYFV2.deploy(ownerAccount.signer);
 
-    arc = await D1TestArc.init(ownerAccount.wallet);
+    arc = await D1TestArc.init(ownerAccount.signer);
     await arc.deployTestArc();
 
     stakingRewards = await MockRewardCampaign.awaitDeployment(
-      ownerAccount.wallet,
+      ownerAccount.signer,
       ownerAccount.address,
       distributionAccount.address,
       rewardToken.address,
@@ -69,8 +69,8 @@ simpleDescribe('RewardCampaign', init, (ctx: ITestContext) => {
     );
 
     stakingRewards = await MockRewardCampaign.at(
-      ownerAccount.wallet,
-      (await ArcProxy.deploy(ownerAccount.wallet, stakingRewards.address, ownerAccount.address, []))
+      ownerAccount.signer,
+      (await ArcProxy.deploy(ownerAccount.signer, stakingRewards.address, ownerAccount.address, []))
         .address,
     );
 
@@ -104,12 +104,12 @@ simpleDescribe('RewardCampaign', init, (ctx: ITestContext) => {
   /* ========== Helpers ========== */
 
   async function getContract(caller: Account) {
-    return MockRewardCampaign.at(caller.wallet, stakingRewards.address);
+    return MockRewardCampaign.at(caller.signer, stakingRewards.address);
   }
 
   async function verifyUserIn(kyf: KYFV2, address: string = userAccount.address) {
     const hash = ethers.utils.solidityKeccak256(['address'], [address]);
-    const signedMessage = await ownerAccount.wallet.signMessage(ethers.utils.arrayify(hash));
+    const signedMessage = await ownerAccount.signer.signMessage(ethers.utils.arrayify(hash));
     const signature = ethers.utils.splitSignature(signedMessage);
     await kyf.verify(address, signature.v, signature.r, signature.s);
   }
@@ -122,7 +122,7 @@ simpleDescribe('RewardCampaign', init, (ctx: ITestContext) => {
     await stakingToken.mintShare(account.address, amount);
     await Token.approve(
       stakingToken.address,
-      account.wallet,
+      account.signer,
       stakingRewards.address,
       new BigNumber(amount).mul(10),
     );
@@ -152,10 +152,10 @@ simpleDescribe('RewardCampaign', init, (ctx: ITestContext) => {
     beforeEach(setup);
 
     beforeEach(async () => {
-      const result1 = await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, userAccount.wallet);
+      const result1 = await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, userAccount.signer);
       positionId = result1.params.id;
 
-      const result2 = await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, slasherAccount.wallet);
+      const result2 = await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, slasherAccount.signer);
       altPositionId = result2.params.id;
     });
 
@@ -195,7 +195,7 @@ simpleDescribe('RewardCampaign', init, (ctx: ITestContext) => {
       const newPosition = await arc._borrowSynthetic(
         DEBT_AMOUNT.div(2),
         DEBT_AMOUNT,
-        userAccount.wallet,
+        userAccount.signer,
       );
       await expectRevert(stake(HARD_CAP, newPosition.params.id, userAccount));
     });
@@ -208,7 +208,7 @@ simpleDescribe('RewardCampaign', init, (ctx: ITestContext) => {
       const newPosition = await arc._borrowSynthetic(
         DEBT_AMOUNT.div(2),
         DEBT_AMOUNT,
-        userAccount.wallet,
+        userAccount.signer,
       );
       await stake(HARD_CAP.div(2), newPosition.params.id, userAccount);
 
@@ -228,7 +228,7 @@ simpleDescribe('RewardCampaign', init, (ctx: ITestContext) => {
       const newPosition = await arc._borrowSynthetic(
         DEBT_AMOUNT.div(2),
         DEBT_AMOUNT.div(2),
-        userAccount.wallet,
+        userAccount.signer,
       );
       await expectRevert(stake(HARD_CAP, newPosition.params.id, userAccount));
     });
@@ -257,10 +257,10 @@ simpleDescribe('RewardCampaign', init, (ctx: ITestContext) => {
     beforeEach(async () => {
       await setup();
 
-      const result1 = await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, userAccount.wallet);
+      const result1 = await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, userAccount.signer);
       userPosition = result1.params.id;
 
-      const result2 = await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, slasherAccount.wallet);
+      const result2 = await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, slasherAccount.signer);
       slasherPosition = result2.params.id;
 
       await approve(kyfTranche1);
@@ -274,7 +274,7 @@ simpleDescribe('RewardCampaign', init, (ctx: ITestContext) => {
     });
 
     it('should not be able to slash past the vesting end date', async () => {
-      await arc.repay(userPosition, DEBT_AMOUNT, 0, userAccount.wallet);
+      await arc.repay(userPosition, DEBT_AMOUNT, 0, userAccount.signer);
       await stakingRewards.setCurrentTimestamp(200);
       await expectRevert(slash(userAccount.address, slasherAccount));
     });
@@ -291,7 +291,7 @@ simpleDescribe('RewardCampaign', init, (ctx: ITestContext) => {
     it('should be able to slash if the user does not have enough debt', async () => {
       await stakingRewards.setCurrentTimestamp(100);
 
-      await arc.repay(userPosition, DEBT_AMOUNT, 0, userAccount.wallet);
+      await arc.repay(userPosition, DEBT_AMOUNT, 0, userAccount.signer);
 
       await slash(userAccount.address, slasherAccount);
 
@@ -320,10 +320,10 @@ simpleDescribe('RewardCampaign', init, (ctx: ITestContext) => {
     beforeEach(setup);
 
     beforeEach(async () => {
-      const result1 = await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, userAccount.wallet);
+      const result1 = await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, userAccount.signer);
       userPosition = result1.params.id;
 
-      const result2 = await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, slasherAccount.wallet);
+      const result2 = await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, slasherAccount.signer);
       slasherPosition = result2.params.id;
 
       await approve(kyfTranche1);
@@ -407,7 +407,7 @@ simpleDescribe('RewardCampaign', init, (ctx: ITestContext) => {
 
     it('should be able to withdraw', async () => {
       const contract = await getContract(userAccount);
-      const result = await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, userAccount.wallet);
+      const result = await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, userAccount.signer);
 
       await approve(kyfTranche1);
       await verifyUserIn(kyfTranche1, userAccount.address);
@@ -428,7 +428,7 @@ simpleDescribe('RewardCampaign', init, (ctx: ITestContext) => {
     beforeEach(async () => {
       await setup();
 
-      const result = await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, userAccount.wallet);
+      const result = await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, userAccount.signer);
       userPosition = result.params.id;
 
       await approve(kyfTranche1);
@@ -489,7 +489,7 @@ simpleDescribe('RewardCampaign', init, (ctx: ITestContext) => {
 
     beforeEach(async () => {
       await setup();
-      dummyToken = await TestToken.deploy(ownerAccount.wallet, 'TEST', 'TEST');
+      dummyToken = await TestToken.deploy(ownerAccount.signer, 'TEST', 'TEST');
       await dummyToken.mintShare(stakingRewards.address, 100);
     });
 

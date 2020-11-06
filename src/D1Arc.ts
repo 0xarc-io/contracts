@@ -21,7 +21,7 @@ import { RiskParams, MarketParams, DeploymentConfig } from './types';
 import { ArcProxy } from './typings/ArcProxy';
 
 export default class D1Arc {
-  public wallet: Signer;
+  public signer: Signer;
 
   public core: CoreV4;
   public state: StateV1;
@@ -29,35 +29,35 @@ export default class D1Arc {
   public collateralAsset: IERC20;
   public oracle: IOracle;
 
-  static async init(wallet: Signer, addressBook?: SynthAddressBook): Promise<D1Arc> {
+  static async init(signer: Signer, addressBook?: SynthAddressBook): Promise<D1Arc> {
     let arc = new D1Arc();
-    arc.wallet = wallet;
+    arc.signer = signer;
 
     if (addressBook) {
-      arc.core = await CoreV4.at(wallet, addressBook.proxy);
-      arc.state = await StateV1.at(wallet, addressBook.state);
-      arc.syntheticAsset = await SyntheticToken.at(wallet, addressBook.syntheticToken);
-      arc.collateralAsset = await IERC20.at(wallet, addressBook.collateralAsset);
-      arc.oracle = await IOracle.at(wallet, addressBook.oracle);
+      arc.core = await CoreV4.at(signer, addressBook.proxy);
+      arc.state = await StateV1.at(signer, addressBook.state);
+      arc.syntheticAsset = await SyntheticToken.at(signer, addressBook.syntheticToken);
+      arc.collateralAsset = await IERC20.at(signer, addressBook.collateralAsset);
+      arc.oracle = await IOracle.at(signer, addressBook.oracle);
     }
 
     return arc;
   }
 
   async deployArc(config: DeploymentConfig) {
-    this.core = await CoreV4.deploy(this.wallet);
+    this.core = await CoreV4.deploy(this.signer);
 
-    const address = await this.wallet.getAddress();
-    const proxy = await ArcProxy.deploy(this.wallet, this.core.address, address, []);
+    const address = await this.signer.getAddress();
+    const proxy = await ArcProxy.deploy(this.signer, this.core.address, address, []);
 
-    this.core = await CoreV4.at(this.wallet, proxy.address);
+    this.core = await CoreV4.at(this.signer, proxy.address);
 
-    this.syntheticAsset = await SyntheticToken.deploy(this.wallet, config.name, config.symbol);
+    this.syntheticAsset = await SyntheticToken.deploy(this.signer, config.name, config.symbol);
 
-    await SyntheticToken.at(this.wallet, this.syntheticAsset.address).addMinter(this.core.address);
+    await SyntheticToken.at(this.signer, this.syntheticAsset.address).addMinter(this.core.address);
 
     this.state = await StateV1.deploy(
-      this.wallet,
+      this.signer,
       this.core.address,
       config.collateralAsset,
       this.syntheticAsset.address,
@@ -79,12 +79,12 @@ export default class D1Arc {
 
   async approveStableShare(
     amount: BigNumberish,
-    caller: Signer = this.wallet,
+    caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
   ) {
     await Token.approve(
       this.collateralAsset.address,
-      caller || this.wallet,
+      caller || this.signer,
       this.core.address,
       amount,
       overrides,
@@ -93,12 +93,12 @@ export default class D1Arc {
 
   async approveSynthetic(
     amount: BigNumberish,
-    caller: Signer = this.wallet,
+    caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
   ) {
     await Token.approve(
       this.syntheticAsset.address,
-      caller || this.wallet,
+      caller || this.signer,
       this.core.address,
       amount,
       overrides,
@@ -108,7 +108,7 @@ export default class D1Arc {
   async openPosition(
     collateralAmount: BigNumberish,
     borrowAmount: BigNumberish,
-    caller: Signer = this.wallet,
+    caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
   ) {
     const contract = await this.getCore(caller);
@@ -129,7 +129,7 @@ export default class D1Arc {
     collateralAsset: AssetType,
     collateralAmount: BigNumberish,
     borrowAmount: BigNumberish,
-    caller: Signer = this.wallet,
+    caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
   ) {
     const contract = await this.getCore(caller);
@@ -150,7 +150,7 @@ export default class D1Arc {
     positionId: BigNumberish,
     repaymentAmount: BigNumberish,
     withdrawAmount: BigNumberish,
-    caller: Signer = this.wallet,
+    caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
   ) {
     const contract = await this.getCore(caller);
@@ -169,7 +169,7 @@ export default class D1Arc {
 
   async liquidatePosition(
     positionId: BigNumberish,
-    caller: Signer = this.wallet,
+    caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
   ) {
     const contract = await this.getCore(caller);
@@ -190,7 +190,7 @@ export default class D1Arc {
 
   async setRiskParams(
     params: RiskParams,
-    caller: Signer = this.wallet,
+    caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
   ) {
     const contract = await this.getState(caller);
@@ -199,7 +199,7 @@ export default class D1Arc {
 
   async setMarketParams(
     params: MarketParams,
-    caller: Signer = this.wallet,
+    caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
   ) {
     const contract = await this.getState(caller);
@@ -241,10 +241,10 @@ export default class D1Arc {
   }
 
   public async getCore(caller?: Signer) {
-    return await CoreV4.at(caller || this.wallet, this.core.address);
+    return await CoreV4.at(caller || this.signer, this.core.address);
   }
 
   public async getState(caller?: Signer) {
-    return await StateV1.at(caller || this.wallet, this.state.address);
+    return await StateV1.at(caller || this.signer, this.state.address);
   }
 }
