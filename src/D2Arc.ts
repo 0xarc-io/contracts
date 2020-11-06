@@ -191,6 +191,15 @@ export default class D2Arc {
     return result;
   }
 
+  async isCollateralized(
+    positionId: BigNumberish,
+    caller: Signer = this.signer,
+    synth: Synth = this.availableSynths()[0],
+  ) {
+    const position = await synth.core.getPosition(positionId);
+    return await synth.core.isCollateralized(position);
+  }
+
   async getCore(synth: Synth, caller?: Signer) {
     return await D2CoreV1.at(caller || this.signer, synth.core.address);
   }

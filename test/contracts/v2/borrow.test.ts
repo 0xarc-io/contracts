@@ -76,21 +76,95 @@ describe('D2Core.operateAction(Borrow)', () => {
     expect(await ctx.arc.synth().core.isCollateralized(postPosition)).to.be.true;
   });
 
-  it('should update the index', async () => {});
+  it('should update the index', async () => {
+    // Set the time to one year from now in order for interest to accumulate
+    await ctx.arc.updateTime(ONE_YEAR_IN_SECONDS);
+    await ctx.arc.synth().core.updateIndex();
 
-  it('should be able to borrow more if the c-ratio is not at the minimum', async () => {});
+    let borrowIndex = await ctx.arc.synth().core.getBorrowIndex();
 
-  it('should not be able to borrow below the required c-ratio', async () => {});
+    // In order to calculate the new index we need to multiply one year
+    // by the interest rate (in seconds)
+    let calculatedIndex = BASE.add(
+      (await ctx.arc.synth().core.getInterestRate()).mul(ONE_YEAR_IN_SECONDS),
+    );
 
-  it('should not be able to borrow without enough collateral', async () => {});
+    // Our calculated index should equal the newly set borrow index
+    expect(borrowIndex[0]).to.equal(calculatedIndex);
 
-  it('should not be able to borrow with the wrong collateral asset', async () => {});
+    // Set the time to two years from now in order for interest to accumulate
+    await ctx.arc.updateTime(ONE_YEAR_IN_SECONDS.mul(2));
+    await ctx.arc.synth().core.updateIndex();
 
-  it('should not be able to borrow more if the price decreases', async () => {});
+    borrowIndex = await ctx.arc.synth().core.getBorrowIndex();
 
-  it('should not be able to borrow more if the interest payments have increased', async () => {});
+    calculatedIndex = calculatedIndex.add(
+      (await ctx.arc.synth().core.getInterestRate()).mul(ONE_YEAR_IN_SECONDS),
+    );
 
-  it('should not be able to borrow more than the synthetic limit', async () => {});
+    // Our calculated index should equal the newly set borrow index
+    expect(borrowIndex[0]).to.equal(calculatedIndex);
+  });
 
-  it('should not be able to borrow more the collateral limit', async () => {});
+  it('should be able to borrow more if the c-ratio is not at the minimum', async () => {
+    const beforePosition = await ctx.arc.getPosition(0);
+    await ctx.arc.borrow(0, 0, BORROW_AMOUNT, minterAccount.signer);
+
+    const afterPosition = await ctx.arc.getPosition(0);
+
+    expect(afterPosition.collateralAmount.value).to.equal(beforePosition.collateralAmount.value);
+    expect(afterPosition.borrowedAmount.value).to.equal(
+      beforePosition.borrowedAmount.value.add(BORROW_AMOUNT),
+    );
+    await expect(ctx.arc.borrow(0, 0, 1, minterAccount.signer)).to.be.reverted;
+  });
+
+  it('should not be able to borrow without enough collateral', async () => {
+    await expect(ctx.arc.borrow(0, 0, BORROW_AMOUNT.add(1), minterAccount.signer)).be.reverted;
+    await expect(
+      ctx.arc.borrow(0, COLLATERAL_AMOUNT.sub(1), BORROW_AMOUNT.mul(3), minterAccount.signer),
+    ).be.reverted;
+  });
+
+  it('should be able to borrow more if more collateral provided', async () => {
+    await ctx.arc.borrow(0, 0, BORROW_AMOUNT, minterAccount.signer);
+    await ctx.arc.borrow(0, COLLATERAL_AMOUNT, BORROW_AMOUNT.mul(2), minterAccount.signer);
+
+    let position = await ctx.arc.getPosition(0);
+    const price = await ctx.arc.synth().oracle.fetchCurrentPrice();
+    const collateralDelta = await ctx.arc
+      .core()
+      .calculateCollateralDelta(position.collateralAmount, position.borrowedAmount.value, price);
+
+    expect(collateralDelta.value).to.equal(Zero);
+
+    await expect(ctx.arc.borrow(0, 0, BORROW_AMOUNT, minterAccount.signer)).to.be.reverted;
+  });
+
+  it('should not be able to borrow more if the price decreases', async () => {
+    await ctx.arc.updatePrice(ArcDecimal.new(0.5).value);
+    await expect(ctx.arc.borrow(0, 0, 1, minterAccount.signer)).to.be.reverted;
+  });
+
+  it('should not be able to borrow more if the interest payments have increased', async () => {
+    await ctx.arc.updatePrice(ArcDecimal.new(0.5).value);
+
+    expect(await ctx.arc.isCollateralized(0)).to.be.true;
+
+    // Set the time to two years from now in order for interest to accumulate
+    await ctx.arc.updateTime(ONE_YEAR_IN_SECONDS);
+    await ctx.arc.synth().core.updateIndex();
+
+    expect(await ctx.arc.isCollateralized(0)).to.be.false;
+  });
+
+  it('should not be able to borrow more than the synthetic limit', async () => {
+    await ctx.arc.core().setLimits(0, BORROW_AMOUNT, 0);
+    await expect(ctx.arc.borrow(0, 0, 1, minterAccount.signer)).to.be.reverted;
+  });
+
+  it('should not be able to borrow more the collateral limit', async () => {
+    await ctx.arc.core().setLimits(COLLATERAL_AMOUNT, 0, 0);
+    await expect(ctx.arc.borrow(0, 1, 0, minterAccount.signer)).to.be.reverted;
+  });
 });

@@ -124,6 +124,7 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
 
         borrowIndex = uint256(10**18);
         indexLastUpdate = currentTimestamp();
+        totalIssued = Amount.zero();
 
         setOracle(_oracleAddress);
         setCollateralRatio(_collateralRatio);
@@ -236,6 +237,11 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
                 params.amountOne,
                 params.amountTwo
             );
+
+            require(
+                params.amountOne >= positionCollateralMinimum,
+                "operateAction(): must exceed minimum collateral amount"
+            );
         } else if (operation == Operation.Borrow) {
             operatedPosition = borrow(
                 params.id,
@@ -253,6 +259,22 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
                 params.id
             );
         }
+
+        // Ensure that the operated action is collateralised again
+        require(
+            isCollateralized(operatedPosition) == true,
+            "operateAction(): the operated position is undercollateralised"
+        );
+
+        require(
+            totalIssued.value <= syntheticLimit || syntheticLimit == 0,
+            "operateAction(): synthetic issued cannot be greater than limit"
+        );
+
+        require(
+            totalSupplied <= collateralLimit || collateralLimit == 0,
+            "operateAction(): collateral locked cannot be greater than limit"
+        );
 
         emit ActionOperated(
             uint8(operation),
@@ -497,6 +519,13 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         );
 
         // Mint the synthetic token to user opening the borrow position
+        totalIssued = totalIssued.add(
+            Amount.Principal({
+                value: borrowAmount,
+                sign: true
+            })
+        );
+
         ISyntheticToken(address(syntheticAsset)).mint(
             msg.sender,
             borrowAmount
@@ -590,6 +619,13 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         IERC20 collateralAsset = IERC20(collateralAsset);
 
         // Burn the synthetic asset from the user
+        totalIssued = totalIssued.sub(
+            Amount.Principal({
+                value: repayAmount,
+                sign: true
+            })
+        );
+
         synthetic.burn(
             msg.sender,
             repayAmount
@@ -754,6 +790,13 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         IERC20 collateralAsset = IERC20(collateralAsset);
 
         // Burn the synthetic asset from the liquidator
+        totalIssued = totalIssued.sub(
+            Amount.Principal({
+                value: borrowToLiquidate,
+                sign: true
+            })
+        );
+
         synthetic.burn(
             msg.sender,
             borrowToLiquidate
@@ -941,9 +984,17 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
     function getTotals()
         external
         view
-        returns (uint256, uint256)
+        returns (
+            uint256,
+            uint256,
+            Amount.Principal memory
+        )
     {
-        return (totalSupplied, totalBorrowed);
+        return (
+            totalSupplied,
+            totalBorrowed,
+            totalIssued
+        );
     }
 
     function getLimits()

@@ -87,6 +87,7 @@ describe('D2Core.operateAction(Liquidate)', () => {
     const preLiquidatorSyntheticBalance = await ctx.arc
       .synth()
       .synthetic.balanceOf(liquidatorAccount.address);
+    const preTotals = await ctx.arc.getSynthTotals();
 
     // Call up arthur to do the deed
     await ctx.arc.liquidatePosition(0, liquidatorAccount.signer);
@@ -101,10 +102,15 @@ describe('D2Core.operateAction(Liquidate)', () => {
     const postProxyCollateralBalance = await ctx.arc
       .synth()
       .collateral.balanceOf(ctx.arc.coreAddress());
+    const postTotals = await ctx.arc.getSynthTotals();
 
     // Check synth supply decreased
     expect(await await ctx.arc.synthetic().totalSupply()).to.equal(
       preLiquidateSupply.sub(liquidationDetails.debtNeededToLiquidate),
+    );
+
+    expect(postTotals[2].value).to.equal(
+      preTotals[1].sub(liquidationDetails.debtNeededToLiquidate),
     );
 
     // Check position borrow amount (decrease)
