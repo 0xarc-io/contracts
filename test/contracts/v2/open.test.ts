@@ -7,12 +7,12 @@ import {
   addSnapshotBeforeRestoreAfterEach,
   getWaffleExpect,
 } from '../../helpers/testingUtils';
+
 import { d2Setup, initializeD2Arc } from '@test/helpers/d2ArcDescribe';
 import { ITestContext } from '@test/helpers/d2ArcDescribe';
-import { D2ArcOptions, DEFAULT_PRINTER_ARC_RATIO } from '../../helpers/d2ArcDescribe';
+import { D2ArcOptions } from '../../helpers/d2ArcDescribe';
 import { Operation } from '../../../src/types';
 import { BigNumber } from 'ethers/utils';
-import { UNDERCOLLATERALIZED_ERROR } from '../../helpers/contractErrors';
 import { TEN_PERCENT, ONE_YEAR_IN_SECONDS, BASE } from '../../../src/constants';
 import { Zero } from 'ethers/constants';
 
@@ -55,7 +55,7 @@ describe('D2Core.operateAction(Open)', () => {
     const result = await ctx.arc.openPosition(
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
-      minterAccount.wallet,
+      minterAccount.signer,
     );
 
     // Simple tests ensuring the events are emitting the correct information
@@ -75,9 +75,10 @@ describe('D2Core.operateAction(Open)', () => {
     expect(position.collateralAmount.value).to.equal(COLLATERAL_AMOUNT);
     expect(position.owner).to.equal(minterAccount.address);
 
-    const totals = await ctx.arc.synth().core.getTotals();
+    const totals = await ctx.arc.getSynthTotals();
     expect(totals[0]).to.equal(COLLATERAL_AMOUNT);
     expect(totals[1]).to.equal(BORROW_AMOUNT);
+    expect(totals[2].value).to.equal(BORROW_AMOUNT);
 
     expect(await ctx.arc.synth().collateral.balanceOf(ctx.arc.syntheticAddress())).to.equal(
       COLLATERAL_AMOUNT,
@@ -90,7 +91,7 @@ describe('D2Core.operateAction(Open)', () => {
     const result = await ctx.arc.openPosition(
       COLLATERAL_AMOUNT.mul(2),
       BORROW_AMOUNT,
-      minterAccount.wallet,
+      minterAccount.signer,
     );
 
     const position = await ctx.arc.getPosition(0);
@@ -100,17 +101,17 @@ describe('D2Core.operateAction(Open)', () => {
   });
 
   it('should not be able to open below the required c-ratio', async () => {
-    expect(
-      ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT.add(1), minterAccount.wallet),
-    ).to.be.revertedWith(UNDERCOLLATERALIZED_ERROR);
+    await expect(
+      ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT.add(1), minterAccount.signer),
+    ).to.be.reverted;
 
-    expect(
-      ctx.arc.openPosition(COLLATERAL_AMOUNT.sub(1), BORROW_AMOUNT, minterAccount.wallet),
-    ).to.be.revertedWith(UNDERCOLLATERALIZED_ERROR);
+    await expect(
+      ctx.arc.openPosition(COLLATERAL_AMOUNT.sub(1), BORROW_AMOUNT, minterAccount.signer),
+    ).to.be.reverted;
   });
 
   it('should be able to calculate the principle amount', async () => {
-    await ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, minterAccount.wallet);
+    await ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, minterAccount.signer);
 
     expect((await ctx.arc.getSynthTotals())[1]).to.equal(BORROW_AMOUNT);
 
@@ -120,7 +121,7 @@ describe('D2Core.operateAction(Open)', () => {
 
     // Set the time to one year from now in order for interest to accumulate
     await ctx.arc.updateTime(ONE_YEAR_IN_SECONDS);
-    await ctx.arc.synth().core.updateIndexAndPrint();
+    await ctx.arc.synth().core.updateIndex();
 
     const borrowIndex = await ctx.arc.synth().core.getBorrowIndex();
 
@@ -139,7 +140,7 @@ describe('D2Core.operateAction(Open)', () => {
     const result = await ctx.arc.openPosition(
       COLLATERAL_AMOUNT.mul(2),
       BORROW_AMOUNT,
-      minterAccount.wallet,
+      minterAccount.signer,
     );
 
     const position = await ctx.arc.getPosition(result.params.id);
@@ -160,29 +161,23 @@ describe('D2Core.operateAction(Open)', () => {
     const totals = await ctx.arc.getSynthTotals();
     expect(totals[0]).to.equal(COLLATERAL_AMOUNT.mul(3));
     expect(totals[1]).to.equal(newBorrowTotal);
+    expect(totals[2].value).to.equal(BORROW_AMOUNT.mul(2));
 
     // The interest increase is simply how much the total is less the amount we know we deposited (par values)
     const interestIncrease = newBorrowTotal.sub(BORROW_AMOUNT.add(secondPositionBorrowedAmount));
 
-    // The profit amount is simply the interest increase multiplied by the ARC printer ratio
-    const arcProfit = interestIncrease.bigMul(DEFAULT_PRINTER_ARC_RATIO);
-
-    expect(await ctx.arc.synth().synthetic.balanceOf(ctx.arc.synth().core.address)).to.equal(
-      arcProfit,
-    );
-
-    expect(await ctx.arc.synth().synthetic.balanceOf(printerAccount.address)).to.equal(
-      interestIncrease.sub(arcProfit),
-    );
-
     expect(await ctx.arc.synth().collateral.balanceOf(ctx.arc.syntheticAddress())).to.equal(
       COLLATERAL_AMOUNT.mul(3),
     );
-    expect(await ctx.arc.synthetic().totalSupply()).to.equal(
-      firstPositionAccumulatedAmount.add(BORROW_AMOUNT),
-    );
+    expect(await ctx.arc.synthetic().totalSupply()).to.equal(BORROW_AMOUNT.mul(2));
     expect(await ctx.arc.synthetic().balanceOf(minterAccount.address)).to.equal(
       BORROW_AMOUNT.mul(2),
     );
+  });
+
+  it('should not be able to borrow below in the minimum position amount', async () => {
+    await ctx.arc.core().setLimits(0, 0, COLLATERAL_AMOUNT.add(1));
+    await expect(ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, minterAccount.signer)).to.be
+      .reverted;
   });
 });

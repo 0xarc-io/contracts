@@ -3,7 +3,8 @@ import 'module-alias/register';
 import simpleDescribe from '@test/helpers/simpleDescribe';
 import { ITestContext } from '@test/helpers/simpleDescribe';
 import { Wallet } from 'ethers';
-import { ethers } from '@nomiclabs/buidler';
+
+import { ethers } from 'hardhat';
 import {
   AddressAccrual,
   TokenStakingAccrual,

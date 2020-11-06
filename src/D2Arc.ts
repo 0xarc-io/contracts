@@ -1,4 +1,4 @@
-import { Signer } from 'ethers';
+import { Signer, Wallet } from 'ethers';
 import { BigNumber, BigNumberish } from 'ethers/utils';
 import {
   D2CoreV1,
@@ -27,25 +27,25 @@ export type Synth = {
 };
 
 export default class D2Arc {
-  public wallet: Signer;
-  public walletAddress: string;
+  public signer: Signer;
+  public signerAddress: string;
 
   public synths: { [name: string]: Synth } = {};
 
-  static async init(wallet: Signer): Promise<D2Arc> {
+  static async init(signer: Signer): Promise<D2Arc> {
     let arc = new D2Arc();
-    arc.wallet = wallet;
-    arc.walletAddress = await wallet.getAddress();
+    arc.signer = signer;
+    arc.signerAddress = await signer.getAddress();
     return arc;
   }
 
   public async addSynths(synths: { [name in SynthNames]: string }) {
     const entries = Object.entries(synths);
     await asyncForEach(entries, async ([name, synth]) => {
-      const core = D2CoreV1.at(this.wallet, synth);
-      const oracle = IOracle.at(this.wallet, await core.getCurrentOracle());
-      const collateral = TestToken.at(this.wallet, await core.getCollateralAsset());
-      const synthetic = SyntheticToken.at(this.wallet, await core.getSyntheticAsset());
+      const core = D2CoreV1.at(this.signer, synth);
+      const oracle = IOracle.at(this.signer, await core.getCurrentOracle());
+      const collateral = TestToken.at(this.signer, await core.getCollateralAsset());
+      const synthetic = SyntheticToken.at(this.signer, await core.getSyntheticAsset());
 
       this.synths[name] = {
         core,
@@ -63,7 +63,7 @@ export default class D2Arc {
   async openPosition(
     collateralAmount: BigNumberish,
     borrowAmount: BigNumber,
-    caller: Signer = this.wallet,
+    caller: Signer = this.signer,
     synth: Synth = this.availableSynths()[0],
     overrides: TransactionOverrides = {},
   ) {
@@ -85,7 +85,7 @@ export default class D2Arc {
     positionId: BigNumberish,
     collateralAmount: BigNumberish,
     borrowAmount: BigNumberish,
-    caller: Signer = this.wallet,
+    caller: Signer = this.signer,
     synth: Synth = this.availableSynths()[0],
     overrides: TransactionOverrides = {},
   ) {
@@ -107,7 +107,7 @@ export default class D2Arc {
     positionId: BigNumberish,
     repaymentAmount: BigNumberish,
     withdrawAmount: BigNumberish,
-    caller: Signer = this.wallet,
+    caller: Signer = this.signer,
     synth: Synth = this.availableSynths()[0],
     overrides: TransactionOverrides = {},
   ) {
@@ -127,7 +127,7 @@ export default class D2Arc {
 
   async liquidatePosition(
     positionId: BigNumberish,
-    caller: Signer = this.wallet,
+    caller: Signer = this.signer,
     synth: Synth = this.availableSynths()[0],
     overrides: TransactionOverrides = {},
   ) {
@@ -191,7 +191,16 @@ export default class D2Arc {
     return result;
   }
 
+  async isCollateralized(
+    positionId: BigNumberish,
+    caller: Signer = this.signer,
+    synth: Synth = this.availableSynths()[0],
+  ) {
+    const position = await synth.core.getPosition(positionId);
+    return await synth.core.isCollateralized(position);
+  }
+
   async getCore(synth: Synth, caller?: Signer) {
-    return await D2CoreV1.at(caller || this.wallet, synth.core.address);
+    return await D2CoreV1.at(caller || this.signer, synth.core.address);
   }
 }

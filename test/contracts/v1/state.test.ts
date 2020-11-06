@@ -1,6 +1,6 @@
 import 'module-alias/register';
 
-import { Wallet } from 'ethers';
+import { Signer, Wallet } from 'ethers';
 
 import d1ArcDescribe from '@test/helpers/d1ArcDescribe';
 import { ITestContext } from '@test/helpers/d1ArcDescribe';
@@ -8,24 +8,24 @@ import { StateV1, MockOracle } from '@src/typings';
 import { expectRevert } from '@src/utils/expectRevert';
 import ArcNumber from '@src/utils/ArcNumber';
 import ArcDecimal from '@src/utils/ArcDecimal';
-import { getWaffleExpect } from '../../helpers/testingUtils';
+import { getWaffleExpect, Account } from '../../helpers/testingUtils';
 
-let ownerWallet: Wallet;
-let otherWallet: Wallet;
+let ownerWallet: Account;
+let otherWallet: Account;
 
 const expect = getWaffleExpect();
 
 async function init(ctx: ITestContext): Promise<void> {
   await ctx.arc.oracle.setPrice(ArcDecimal.new(400));
 
-  ownerWallet = ctx.accounts[0].wallet;
-  otherWallet = ctx.accounts[1].wallet;
+  ownerWallet = ctx.accounts[0];
+  otherWallet = ctx.accounts[1];
 }
 
 d1ArcDescribe('StateV1', init, (ctx: ITestContext) => {
   describe('#setLimits', () => {
     it('should not be able to set limits as non-admin', async () => {
-      const contract = await StateV1.at(otherWallet, ctx.arc.state.address);
+      const contract = await StateV1.at(otherWallet.signer, ctx.arc.state.address);
       await expectRevert(
         contract.setRiskParams({
           collateralLimit: '',
@@ -36,7 +36,7 @@ d1ArcDescribe('StateV1', init, (ctx: ITestContext) => {
     });
 
     it('should be able to set limits as the admin', async () => {
-      const contract = await StateV1.at(ownerWallet, ctx.arc.state.address);
+      const contract = await StateV1.at(ownerWallet.signer, ctx.arc.state.address);
       const tx = await contract.setRiskParams({
         collateralLimit: '',
         syntheticLimit: '500',
@@ -53,7 +53,7 @@ d1ArcDescribe('StateV1', init, (ctx: ITestContext) => {
         positionCollateralMinimum: ArcNumber.new(300),
       });
       await expectRevert(
-        ctx.arc._borrowSynthetic(ArcNumber.new(1), ArcNumber.new(200), ownerWallet),
+        ctx.arc._borrowSynthetic(ArcNumber.new(1), ArcNumber.new(200), ownerWallet.signer),
       );
     });
 
@@ -65,7 +65,7 @@ d1ArcDescribe('StateV1', init, (ctx: ITestContext) => {
       });
 
       await expectRevert(
-        ctx.arc._borrowSynthetic(ArcNumber.new(1), ArcNumber.new(200), ownerWallet),
+        ctx.arc._borrowSynthetic(ArcNumber.new(1), ArcNumber.new(200), ownerWallet.signer),
       );
     });
 
@@ -77,14 +77,14 @@ d1ArcDescribe('StateV1', init, (ctx: ITestContext) => {
       });
 
       await expectRevert(
-        ctx.arc._borrowSynthetic(ArcNumber.new(2), ArcNumber.new(500), ownerWallet),
+        ctx.arc._borrowSynthetic(ArcNumber.new(2), ArcNumber.new(500), ownerWallet.signer),
       );
     });
   });
 
   describe('#onlyAdmin', () => {
     it('should not be able to set the market params as non-admin', async () => {
-      const state = await ctx.arc.getState(otherWallet);
+      const state = await ctx.arc.getState(otherWallet.signer);
       await expectRevert(
         state.setMarketParams({
           collateralRatio: ArcDecimal.new(0),
@@ -95,7 +95,7 @@ d1ArcDescribe('StateV1', init, (ctx: ITestContext) => {
     });
 
     it('should be able to set the market as admin', async () => {
-      const state = await ctx.arc.getState(ownerWallet);
+      const state = await ctx.arc.getState(ownerWallet.signer);
 
       await state.setMarketParams({
         collateralRatio: ArcDecimal.new(1),
@@ -110,7 +110,7 @@ d1ArcDescribe('StateV1', init, (ctx: ITestContext) => {
     });
 
     it('should not be able to set the risk params as non-admin', async () => {
-      const state = await ctx.arc.getState(otherWallet);
+      const state = await ctx.arc.getState(otherWallet.signer);
       await expectRevert(
         state.setRiskParams({
           syntheticLimit: ArcNumber.new(100),
@@ -121,7 +121,7 @@ d1ArcDescribe('StateV1', init, (ctx: ITestContext) => {
     });
 
     it('should be able to set the risk params as admin', async () => {
-      const state = await ctx.arc.getState(ownerWallet);
+      const state = await ctx.arc.getState(ownerWallet.signer);
       await state.setRiskParams({
         syntheticLimit: ArcNumber.new(100),
         collateralLimit: ArcNumber.new(100),
@@ -135,14 +135,14 @@ d1ArcDescribe('StateV1', init, (ctx: ITestContext) => {
     });
 
     it('should not be able to set the oracle as non-admin', async () => {
-      const state = await ctx.arc.getState(otherWallet);
-      await expectRevert(state.setOracle(await otherWallet.getAddress()));
+      const state = await ctx.arc.getState(otherWallet.signer);
+      await expectRevert(state.setOracle(await otherWallet.address));
     });
 
     it('should be able to set the oracle as admin', async () => {
-      const state = await ctx.arc.getState(ownerWallet);
-      await state.setOracle(await ownerWallet.getAddress());
-      expect(await state.oracle()).to.equal(await ownerWallet.getAddress());
+      const state = await ctx.arc.getState(ownerWallet.signer);
+      await state.setOracle(await ownerWallet.address);
+      expect(await state.oracle()).to.equal(await ownerWallet.address);
     });
   });
 
@@ -150,9 +150,9 @@ d1ArcDescribe('StateV1', init, (ctx: ITestContext) => {
     let isolatedStateAddress: string;
 
     beforeEach(async () => {
-      const ownerWalletAddress = await ownerWallet.getAddress();
+      const ownerWalletAddress = await ownerWallet.address;
       const contract = await StateV1.deploy(
-        ownerWallet,
+        ownerWallet.signer,
         ownerWalletAddress,
         ownerWalletAddress,
         ownerWalletAddress,
@@ -171,13 +171,13 @@ d1ArcDescribe('StateV1', init, (ctx: ITestContext) => {
       isolatedStateAddress = contract.address;
     });
 
-    async function getIsolatedState(caller: Wallet) {
+    async function getIsolatedState(caller: Signer) {
       return StateV1.at(caller, isolatedStateAddress);
     }
 
     async function saveNewPosition(state: StateV1) {
       return await state.savePosition({
-        owner: await ownerWallet.getAddress(),
+        owner: await ownerWallet.address,
         collateralAsset: 0,
         borrowedAmount: {
           sign: true,
@@ -192,50 +192,50 @@ d1ArcDescribe('StateV1', init, (ctx: ITestContext) => {
     }
 
     it('should not be able to save a new position as non-core', async () => {
-      const state = await getIsolatedState(otherWallet);
+      const state = await getIsolatedState(otherWallet.signer);
       await expectRevert(saveNewPosition(state));
     });
 
     it('should not be able to set the amount as non-core', async () => {
-      const ownerState = await getIsolatedState(ownerWallet);
+      const ownerState = await getIsolatedState(ownerWallet.signer);
       await saveNewPosition(ownerState);
 
-      const otherState = await getIsolatedState(otherWallet);
+      const otherState = await getIsolatedState(otherWallet.signer);
       await expectRevert(otherState.setAmount(0, 0, { sign: true, value: 0 }));
     });
 
     it('should not be able to update the position as non-core', async () => {
-      const ownerState = await getIsolatedState(ownerWallet);
+      const ownerState = await getIsolatedState(ownerWallet.signer);
       await saveNewPosition(ownerState);
 
-      const otherState = await getIsolatedState(otherWallet);
+      const otherState = await getIsolatedState(otherWallet.signer);
       await expectRevert(otherState.updatePositionAmount(0, 0, { sign: true, value: 0 }));
     });
 
     it('should not be able to set the supply balance as non-core', async () => {
-      const state = await getIsolatedState(otherWallet);
+      const state = await getIsolatedState(otherWallet.signer);
       await expectRevert(state.updateTotalSupplied(1));
     });
 
     it('should be able to save a new position as core', async () => {
-      const state = await getIsolatedState(ownerWallet);
+      const state = await getIsolatedState(ownerWallet.signer);
       await saveNewPosition(state);
     });
 
     it('should be able to set the amount as core', async () => {
-      const ownerState = await getIsolatedState(ownerWallet);
+      const ownerState = await getIsolatedState(ownerWallet.signer);
       await saveNewPosition(ownerState);
       await ownerState.setAmount(0, 0, { sign: true, value: 0 });
     });
 
     it('should be able to update the position as core', async () => {
-      const ownerState = await getIsolatedState(ownerWallet);
+      const ownerState = await getIsolatedState(ownerWallet.signer);
       await saveNewPosition(ownerState);
       await ownerState.updatePositionAmount(0, 0, { sign: true, value: 0 });
     });
 
     it('should be able to set the supply balance as core', async () => {
-      const state = await getIsolatedState(ownerWallet);
+      const state = await getIsolatedState(ownerWallet.signer);
       await state.updateTotalSupplied(1);
     });
   });

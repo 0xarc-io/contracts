@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 
 // SPDX-License-Identifier: MIT
 
@@ -24,20 +26,23 @@ contract D2StorageV1 {
 
     uint256 public positionCount;
 
+    // The total amount of collateral supplied by this contract
     uint256 internal totalSupplied;
+
+    // The total amount owed to the system (grows in real time)
     uint256 internal totalBorrowed;
+
+    // How much synthetic this contract itself has created/destroyed
+    Amount.Principal internal totalIssued;
 
     uint256 internal borrowIndex;
     uint256 internal indexLastUpdate;
     uint256 internal interestRate;
 
     Decimal.D256 internal collateralRatio;
+    Decimal.D256 internal liquidationUserFee;
+    Decimal.D256 internal liquidationArcRatio;
 
-    Decimal.D256 public liquidationUserFee;
-    Decimal.D256 public liquidationArcRatio;
-    Decimal.D256 public printerArcRatio;
-
-    address public printerDestination;
     address public interestSetter;
 
     uint256 internal collateralLimit;

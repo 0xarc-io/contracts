@@ -1,5 +1,5 @@
 import { EVM } from './EVM';
-import { ethers } from '@nomiclabs/buidler';
+import { ethers } from 'hardhat';
 import { getWaffleExpect, Account, getAccounts } from './testingUtils';
 
 export interface ITestContext {

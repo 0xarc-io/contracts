@@ -20,7 +20,7 @@ import {Amount} from "../lib/Amount.sol";
 import {D2Storage} from "./D2Storage.sol";
 import {D2Types} from  "./D2Types.sol";
 
-import {console} from "@nomiclabs/buidler/console.sol";
+import {console} from "hardhat/console.sol";
 
 contract D2CoreV1 is Adminable, D2Storage, ID2Core {
 
@@ -65,8 +65,7 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
 
     event FeesUpdated(
         Decimal.D256 _liquidationUserFee,
-        Decimal.D256 _liquidationArcRatio,
-        Decimal.D256 _printerArcRatio
+        Decimal.D256 _liquidationArcRatio
     );
 
     event LimitsUpdated(
@@ -84,6 +83,8 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
     event PrinterUpdated(address value);
 
     event PauseStatusUpdated(bool value);
+
+    event InterestSetterUpdated(address value);
 
     /* ========== Constructor ========== */
 
@@ -104,24 +105,47 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
     function init(
         address _collateralAddress,
         address _syntheticAddress,
-        address _oracleAddress
+        address _oracleAddress,
+        address _interestSetter,
+        Decimal.D256 memory _collateralRatio,
+        Decimal.D256 memory _liquidationUserFee,
+        Decimal.D256 memory _liquidationArcRatio
     )
         public
         onlyAdmin
     {
+        require(
+            collateralAsset == address(0),
+            "D2CoreV1: cannot re-call init()"
+        );
+
         collateralAsset = _collateralAddress;
         syntheticAsset = _syntheticAddress;
+
         borrowIndex = uint256(10**18);
         indexLastUpdate = currentTimestamp();
+        totalIssued = Amount.zero();
+
         setOracle(_oracleAddress);
+        setCollateralRatio(_collateralRatio);
+        setInterestSetter(_interestSetter);
+
+        setFees(
+            _liquidationUserFee,
+            _liquidationArcRatio
+        );
     }
 
     function setRate(
         uint256 _rate
     )
         public
-        onlyAdmin
     {
+        require(
+            msg.sender == interestSetter,
+            "D2CoreV1: only callable by interest setter"
+        );
+
         interestRate = _rate;
         emit RateUpdated(_rate);
     }
@@ -146,27 +170,15 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         emit CollateralRatioUpdated(_collateralRatio);
     }
 
-    function setPrinterDestination(
-        address _printerDestination
-    )
-        public
-        onlyAdmin
-    {
-        printerDestination = _printerDestination;
-        emit PrinterUpdated(_printerDestination);
-    }
-
     function setFees(
         Decimal.D256 memory _liquidationUserFee,
-        Decimal.D256 memory _liquidationArcRatio,
-        Decimal.D256 memory _printerArcRatio
+        Decimal.D256 memory _liquidationArcRatio
     )
         public
         onlyAdmin
     {
         liquidationUserFee = _liquidationUserFee;
         liquidationArcRatio = _liquidationArcRatio;
-        printerArcRatio = _printerArcRatio;
     }
 
     function setLimits(
@@ -180,6 +192,17 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         collateralLimit = _collateralLimit;
         syntheticLimit = _syntheticLimit;
         positionCollateralMinimum = _positionCollateralMinimum;
+    }
+
+    function setInterestSetter(
+        address _setter
+    )
+        public
+        onlyAdmin
+    {
+        interestSetter = _setter;
+
+        emit InterestSetterUpdated(_setter);
     }
 
     /* ========== Public Functions ========== */
@@ -198,17 +221,26 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
     )
         public
     {
+        require(
+            paused == false,
+            "operateAction(): contracts cannot be paused"
+        );
 
         D2Types.Position memory operatedPosition;
 
         // Update the index to calculate how much interest has accrued
         // And then subsequently mint more of the synth to the printer
-        updateIndexAndPrint();
+        updateIndex();
 
         if (operation == Operation.Open) {
             (operatedPosition, params.id) = openPosition(
                 params.amountOne,
                 params.amountTwo
+            );
+
+            require(
+                params.amountOne >= positionCollateralMinimum,
+                "operateAction(): must exceed minimum collateral amount"
             );
         } else if (operation == Operation.Borrow) {
             operatedPosition = borrow(
@@ -227,6 +259,22 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
                 params.id
             );
         }
+
+        // Ensure that the operated action is collateralised again
+        require(
+            isCollateralized(operatedPosition) == true,
+            "operateAction(): the operated position is undercollateralised"
+        );
+
+        require(
+            totalIssued.value <= syntheticLimit || syntheticLimit == 0,
+            "operateAction(): synthetic issued cannot be greater than limit"
+        );
+
+        require(
+            totalSupplied <= collateralLimit || collateralLimit == 0,
+            "operateAction(): collateral locked cannot be greater than limit"
+        );
 
         emit ActionOperated(
             uint8(operation),
@@ -254,10 +302,14 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
      *      (in seconds) then multiplied by the interest rate. The result is then
      *      multiplied by the totalBorrowed amount.
     */
-    function updateIndexAndPrint()
+    function updateIndex()
         public
     {
-        if (currentTimestamp() == indexLastUpdate || totalBorrowed == 0) {
+        if (
+            currentTimestamp() == indexLastUpdate ||
+            totalBorrowed == 0 ||
+            interestRate == 0
+        ) {
             return;
         }
 
@@ -282,23 +334,9 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         // we can figure out how much interest is owed to the system as a whole and therefore
         // calculate how much of the synth to mint
         uint256 interestOwed = totalBorrowed.sub(existingBorrow);
-        uint256 arcProfit = Decimal.mul(
-            interestOwed,
-            printerArcRatio
-        );
 
+        // Set the last time the index was updated to now
         indexLastUpdate = currentTimestamp();
-
-        ISyntheticToken(syntheticAsset).mint(
-            address(this),
-            arcProfit
-        );
-
-        ISyntheticToken(syntheticAsset).mint(
-            printerDestination,
-            interestOwed.sub(arcProfit)
-        );
-
     }
 
     /* ========== Admin Functions ========== */
@@ -481,6 +519,13 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         );
 
         // Mint the synthetic token to user opening the borrow position
+        totalIssued = totalIssued.add(
+            Amount.Principal({
+                value: borrowAmount,
+                sign: true
+            })
+        );
+
         ISyntheticToken(address(syntheticAsset)).mint(
             msg.sender,
             borrowAmount
@@ -574,6 +619,13 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         IERC20 collateralAsset = IERC20(collateralAsset);
 
         // Burn the synthetic asset from the user
+        totalIssued = totalIssued.sub(
+            Amount.Principal({
+                value: repayAmount,
+                sign: true
+            })
+        );
+
         synthetic.burn(
             msg.sender,
             repayAmount
@@ -738,6 +790,13 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         IERC20 collateralAsset = IERC20(collateralAsset);
 
         // Burn the synthetic asset from the liquidator
+        totalIssued = totalIssued.sub(
+            Amount.Principal({
+                value: borrowToLiquidate,
+                sign: true
+            })
+        );
+
         synthetic.burn(
             msg.sender,
             borrowToLiquidate
@@ -859,7 +918,7 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
     function getPosition(
         uint256 id
     )
-        public
+        external
         view
         returns (D2Types.Position memory)
     {
@@ -867,7 +926,7 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
     }
 
     function getCurrentPrice()
-        public
+        external
         view
         returns (Decimal.D256 memory)
     {
@@ -898,6 +957,14 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         return address(oracle);
     }
 
+    function getInterestSetter()
+        external
+        view
+        returns (address)
+    {
+        return interestSetter;
+    }
+
     function getBorrowIndex()
         external
         view
@@ -917,9 +984,17 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
     function getTotals()
         external
         view
-        returns (uint256, uint256)
+        returns (
+            uint256,
+            uint256,
+            Amount.Principal memory
+        )
     {
-        return (totalSupplied, totalBorrowed);
+        return (
+            totalSupplied,
+            totalBorrowed,
+            totalIssued
+        );
     }
 
     function getLimits()
@@ -943,14 +1018,12 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         view
         returns (
             Decimal.D256 memory _liquidationUserFee,
-            Decimal.D256 memory _liquidationArcRatio,
-            Decimal.D256 memory _printerArcRatio
+            Decimal.D256 memory _liquidationArcRatio
         )
     {
         return (
             liquidationUserFee,
-            liquidationArcRatio,
-            printerArcRatio
+            liquidationArcRatio
         );
     }
 

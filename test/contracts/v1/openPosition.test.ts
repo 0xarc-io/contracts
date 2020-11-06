@@ -31,14 +31,14 @@ d1ArcDescribe('#Actions.openPosition()', init, (ctx: ITestContext) => {
 
       await Token.approve(
         ctx.arc.collateralAsset.address,
-        minterAccount.wallet,
+        minterAccount.signer,
         ctx.arc.core.address,
         ArcNumber.new(1),
       );
     });
 
     it('should be able to borrow by the exact amout of collateral provided', async () => {
-      await ctx.arc.openPosition(ArcNumber.new(1), ArcNumber.new(100), minterAccount.wallet);
+      await ctx.arc.openPosition(ArcNumber.new(1), ArcNumber.new(100), minterAccount.signer);
 
       const supply = await ctx.arc.state.totalSupplied();
       expect(supply).to.equal(ArcNumber.new(1));
@@ -54,13 +54,13 @@ d1ArcDescribe('#Actions.openPosition()', init, (ctx: ITestContext) => {
 
     it('should not be able to open a position with not enough collateral', async () => {
       await expectRevert(
-        ctx.arc.openPosition(ArcNumber.new(1), ArcNumber.new(101), minterAccount.wallet),
+        ctx.arc.openPosition(ArcNumber.new(1), ArcNumber.new(101), minterAccount.signer),
       );
     });
 
     it('should not be able to open a position with not enough collateral', async () => {
       await expectRevert(
-        ctx.arc.openPosition(ArcNumber.new(0), ArcNumber.new(1), minterAccount.wallet),
+        ctx.arc.openPosition(ArcNumber.new(0), ArcNumber.new(1), minterAccount.signer),
       );
     });
   });
