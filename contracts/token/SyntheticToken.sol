@@ -23,6 +23,8 @@ contract SyntheticToken is BaseERC20, ISyntheticToken, Ownable {
     event MinterAdded(address _minter);
     event MinterRemoved(address _minter);
 
+    event MetadataChanged();
+
     // ============ Modifier ============
 
     modifier onlyMinter() {
@@ -77,6 +79,21 @@ contract SyntheticToken is BaseERC20, ISyntheticToken, Ownable {
     }
 
     // ============ Admin Functions ============
+
+    function updateMetadata(
+        string calldata __name,
+        string calldata __symbol,
+        bytes32 __symbolKey
+    )
+        external
+        onlyOwner
+    {
+        _name = __name;
+        _symbol = __symbol;
+        _symbolKey = __symbolKey;
+
+        emit MetadataChanged();
+    }
 
     function addMinter(
         address _minter
