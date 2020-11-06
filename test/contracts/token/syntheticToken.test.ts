@@ -5,6 +5,7 @@ import { ITestContext } from '@test/helpers/simpleDescribe';
 import { expectRevert } from '@src/utils/expectRevert';
 import { SyntheticToken } from '@src/typings/SyntheticToken';
 import { Account, getWaffleExpect } from '../../helpers/testingUtils';
+import { ethers } from 'hardhat';
 
 let ownerAccount: Account;
 let arcAccount: Account;
@@ -185,6 +186,28 @@ simpleDescribe('SyntheticToken', init, (ctx: ITestContext) => {
       const contract = await getContract(arcAccount);
       await contract.transferCollateral(syntheticToken.address, userAccount.address, 10);
       expect(await (await syntheticToken.balanceOf(userAccount.address)).toNumber()).to.equal(10);
+    });
+  });
+
+  describe('#updateMetadata', () => {
+    beforeEach(async () => {
+      const contract = await getContract(ownerAccount);
+      await contract.addMinter(arcAccount.address);
+    });
+
+    it('should not be able to update metadata as an unauthorised user', async () => {
+      const contract = await getContract(otherAccount);
+      await expectRevert(
+        contract.updateMetadata('NEW', 'NEW', ethers.utils.formatBytes32String('NEW')),
+      );
+    });
+
+    it('should be able to update metadata as a minter', async () => {
+      const contract = await getContract(ownerAccount);
+      await contract.updateMetadata('New Token', 'NEW', ethers.utils.formatBytes32String('NEW'));
+      expect(await contract.name()).to.equal('New Token');
+      expect(await contract.symbol()).to.equal('NEW');
+      expect(await contract.symbolKey()).to.equal(ethers.utils.formatBytes32String('NEW'));
     });
   });
 });

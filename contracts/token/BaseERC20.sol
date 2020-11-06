@@ -21,11 +21,11 @@ contract BaseERC20 is IERC20, Permittable {
 
     mapping (address => mapping (address => uint256)) private _allowances;
 
+    uint8   private _decimals;
     uint256 private _totalSupply;
 
-    string private _name;
-    string private _symbol;
-    uint8 private _decimals;
+    string  internal _name;
+    string  internal _symbol;
 
     /**
      * @dev Sets the values for {name} and {symbol}, initializes {decimals} with
