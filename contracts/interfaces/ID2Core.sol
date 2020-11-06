@@ -4,8 +4,8 @@ pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {D2Types} from "../v2/D2Types.sol";
-
 import {Decimal} from "../lib/Decimal.sol";
+import {Amount} from "../lib/Amount.sol";
 
 interface ID2Core {
 
@@ -54,7 +54,7 @@ interface ID2Core {
     function getTotals()
         external
         view
-        returns (uint256, uint256);
+        returns (uint256, uint256, Amount.Principal memory);
 
     function getLimits()
         external
