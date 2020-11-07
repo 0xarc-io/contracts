@@ -17,6 +17,7 @@ contract MockD2CoreV1 is D2CoreV1 {
 
     function currentTimestamp()
         public
+        view
         returns (uint256)
     {
         return _currentTimestamp;
