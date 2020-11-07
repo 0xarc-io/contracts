@@ -2,8 +2,8 @@ import 'module-alias/register';
 
 import { subtask, task } from 'hardhat/config';
 import { red, blue, yellow, green } from 'chalk';
-import { D2CoreV1, SyntheticToken, MockOracle, ArcProxy, ChainLinkOracle } from '@src/typings';
-import { TestToken } from '@src/typings/TestToken';
+import { D2CoreV1, SyntheticToken, MockOracle, ArcProxy, ChainLinkOracle } from '../src/typings';
+import { TestToken } from '../src/typings/TestToken';
 import { NetworkParams } from '../deployments/src/deployContract';
 import {
   deployContract,
