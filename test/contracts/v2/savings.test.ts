@@ -16,6 +16,7 @@ import { Signer } from 'ethers';
 import { BigNumber, BigNumberish } from 'ethers/utils';
 import { Zero } from 'ethers/constants';
 import Token from '../../../src/utils/Token';
+import { update } from 'lodash';
 
 const expect = getWaffleExpect();
 
@@ -82,6 +83,11 @@ describe('D2SavingsV1', () => {
     await ctx.arc.updateTime(time);
   }
 
+  async function updateOwnerIndex() {
+    const contract = await getContract(ownerAccount.signer);
+    await contract.updateIndex();
+  }
+
   async function stake(amount: BigNumberish, signer: Signer = minterAccount.signer) {
     await Token.approve(ctx.arc.syntheticAddress(), signer, savings.address, amount);
 
@@ -132,13 +138,20 @@ describe('D2SavingsV1', () => {
   describe('#setPaused', () => {
     it('should not be settable by anyone', async () => {
       const contract = await getContract(otherAccount.signer);
-      await expect(contract.setSavingsRate(5)).to.be.reverted;
+      await expect(contract.setPaused(true)).to.be.reverted;
     });
 
     it('should be settable by the admin', async () => {
       const contract = await getContract(ownerAccount.signer);
-      await contract.setSavingsRate(5);
-      expect(await contract.getSavingsRate()).to.equal(new BigNumber(5));
+      await contract.setPaused(true);
+      expect(await contract.paused()).to.be.true;
+    });
+
+    it('should not be able to call any function if pause', async () => {
+      await updateOwnerIndex();
+      await savings.setPaused(true);
+      await expect(stake(BORROW_AMOUNT)).to.be.reverted;
+      await expect(savings.updateIndex()).to.be.reverted;
     });
   });
 
@@ -147,11 +160,6 @@ describe('D2SavingsV1', () => {
       await savings.setSavingsRate(TEN_PERCENT);
       await savings.setFullyCollateralized(true);
     });
-
-    async function updateOwnerIndex() {
-      const contract = await getContract(ownerAccount.signer);
-      await contract.updateIndex();
-    }
 
     it('should not be able to update the first index by anyone else', async () => {
       const contract = await getContract(otherAccount.signer);

@@ -46,6 +46,16 @@ contract D2SavingsV1 is Ownable {
 
     mapping (address => Amount.Principal) internal _balances;
 
+    /* ========== Modifier ========== */
+
+    modifier isActive() {
+        require(
+            paused == false,
+            "D2Savings: contract is paused"
+        );
+        _;
+    }
+
     /* ========== Constructor ========== */
 
     constructor(
@@ -145,6 +155,7 @@ contract D2SavingsV1 is Ownable {
         uint256 amount
     )
         public
+        isActive
     {
         // Update the index first
         updateIndex();
@@ -174,6 +185,7 @@ contract D2SavingsV1 is Ownable {
         uint256 amount
     )
         public
+        isActive
     {
         // Update the index first
         updateIndex();
@@ -200,6 +212,7 @@ contract D2SavingsV1 is Ownable {
 
     function updateIndex()
         public
+        isActive
     {
         // Check if the index is zero, then only the owner can call it
         if (savingsIndex == 0) {
