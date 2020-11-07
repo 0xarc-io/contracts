@@ -29,8 +29,6 @@
   "exclude": ["node_modules"],
   "files": [
     "./index.js",
-    "hardhat.config.ts",
-    "node_modules/@nomiclabs/hardhat-ethers/src/type-extensions.d.ts",
-    "node_modules/@nomiclabs/hardhat-etherscan/src/type-extensions.d.ts"
+    "hardhat.config.ts"
   ]
 }
