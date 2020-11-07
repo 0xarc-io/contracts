@@ -19,7 +19,7 @@ dataSources:
         - AccountBalance
       abis:
         - name: SynthRegistry
-          file: ./artifacts/SynthRegistry.json
+          file: ./artifacts/contracts/global/SynthRegistry.sol/SynthRegistry.json
       eventHandlers:
         - event: SynthAdded(bytes32,address)
           handler: synthAdded
@@ -41,11 +41,11 @@ dataSources:
         - ActionOperated
       abis:
         - name: D2CoreV1
-          file: ./artifacts/D2CoreV1.json
+          file: ./artifacts/contracts/v2/D2CoreV1.sol/D2CoreV1.json
       eventHandlers:
         - event: ActionOperated(uint8,(uint256,uint256,uint256),(address,(bool,uint256),(bool,uint256)))
           handler: actionOperated
-        - event: FeesUpdated((uint256),(uint256),(uint256))
+        - event: FeesUpdated((uint256),(uint256))
           handler: feesUpdated
         - event: LimitsUpdated(uint256,uint256,uint256)
           handler: limitsUpdated
@@ -73,7 +73,7 @@ dataSources:
         - UserSlashed
       abis:
         - name: RewardCampaign
-          file: ./artifacts/RewardCampaign.json
+          file: ./artifacts/contracts/staking/RewardCampaign.sol/RewardCampaign.json
       eventHandlers:
         - event: UserSlashed(address,address,uint256)
           handler: userSlashed
@@ -93,7 +93,7 @@ dataSources:
         - UserSlashed
       abis:
         - name: RewardCampaign
-          file: ./artifacts/RewardCampaign.json
+          file: ./artifacts/contracts/staking/RewardCampaign.sol/RewardCampaign.json
       eventHandlers:
         - event: UserSlashed(address,address,uint256)
           handler: userSlashed
@@ -114,7 +114,7 @@ dataSources:
         - ActionOperated
       abis:
         - name: CoreV1
-          file: ./artifacts/CoreV1.json
+          file: ./artifacts/contracts/v1/CoreV1.sol/CoreV1.json
       eventHandlers:
         - event: ActionOperated(uint8,(uint256,uint256,uint256),(address,uint8,uint8,(bool,uint128),(bool,uint128)))
           handler: actionOperated
@@ -134,7 +134,7 @@ dataSources:
         - Synth
       abis:
         - name: StateV1
-          file: ./artifacts/StateV1.json
+          file: ./artifacts/contracts/v1/StateV1.sol/StateV1.json
       eventHandlers:
         - event: MarketParamsUpdated(((uint256),(uint256),(uint256)))
           handler: marketParamsUpdated
@@ -155,7 +155,7 @@ templates:
         - AccountBalance
       abis:
         - name: IERC20
-          file: ./artifacts/IERC20.json
+          file: ./artifacts/@openzeppelin/contracts/token/ERC20/IERC20.sol/IERC20.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: transfer
