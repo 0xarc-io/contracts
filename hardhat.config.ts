@@ -1,4 +1,9 @@
-import { privateKeys } from './src/utils/generatedWallets';
+import 'module-alias/register';
+
+import fs from 'fs';
+import path from 'path';
+
+import { privateKeys } from '@src/utils/generatedWallets';
 import { BigNumber } from 'ethers/utils';
 import { HardhatUserConfig } from 'hardhat/config';
 
@@ -10,7 +15,9 @@ import 'hardhat-preprocessor';
 import 'hardhat-spdx-license-identifier';
 import 'hardhat-contract-sizer';
 
-import './tasks';
+if (fs.existsSync('src/typings/index.ts')) {
+  require('./tasks');
+}
 
 require('dotenv').config({ path: '.env' }).parsed;
 
