@@ -94,12 +94,6 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         paused = true;
     }
 
-    /* ========== Modifiers ========== */
-
-    modifier isAuthorisedOperator(D2Types.Position memory position) {
-        _;
-    }
-
     /* ========== Admin Setters ========== */
 
     function init(
@@ -179,6 +173,11 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
     {
         liquidationUserFee = _liquidationUserFee;
         liquidationArcRatio = _liquidationArcRatio;
+
+        emit FeesUpdated(
+            liquidationUserFee,
+            liquidationArcRatio
+        );
     }
 
     function setLimits(
@@ -192,6 +191,12 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         collateralLimit = _collateralLimit;
         syntheticLimit = _syntheticLimit;
         positionCollateralMinimum = _positionCollateralMinimum;
+
+        emit LimitsUpdated(
+            collateralLimit,
+            syntheticLimit,
+           positionCollateralMinimum
+        );
     }
 
     function setInterestSetter(
@@ -323,17 +328,9 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         // ie. interestAccumulated = 0.1, borrowIndex = 1.1, new borrowIndex = 0.1 + 1.1 = 1.2
         borrowIndex = borrowIndex.add(interestAccumulated);
 
-        // Let's save the existing total borrows in the system before we updated it
-        uint256 existingBorrow = totalBorrowed;
-
         // Update the total borrows based on the proportional rate of interest applied
         // to the entire system
         totalBorrowed = totalBorrowed.mul(borrowIndex).div(BASE);
-
-        // With the difference between the new amount being borrowed and the existing amount
-        // we can figure out how much interest is owed to the system as a whole and therefore
-        // calculate how much of the synth to mint
-        uint256 interestOwed = totalBorrowed.sub(existingBorrow);
 
         // Set the last time the index was updated to now
         indexLastUpdate = currentTimestamp();
@@ -908,6 +905,7 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
 
     function currentTimestamp()
         public
+        view
         returns (uint256)
     {
         return block.timestamp;
