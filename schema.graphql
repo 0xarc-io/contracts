@@ -1,3 +1,10 @@
+type AccountBalance @entity {
+  id: ID!
+  account: Bytes!
+  asset: Bytes!
+  balance: BigInt!
+}
+
 type Synth @entity {
   id: ID!
   paused: Boolean!
