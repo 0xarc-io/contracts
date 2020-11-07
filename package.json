@@ -95,6 +95,11 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn run lint:sol"
+    }
+  },
   "description": "Contracts for the Synthetic Asset Game",
   "repository": "git@github.com:arcxio/contracts.git"
 }
