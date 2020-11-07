@@ -14,6 +14,7 @@ export function getDeploymentsFilePath(network: string): string {
 
 export function loadDeployedContracts(network: string): Array<any> {
   const deploymentsFile = getDeploymentsFilePath(network);
+  fs.ensureFileSync(deploymentsFile);
   const deployments = fs.readJSONSync(deploymentsFile, {});
 
   return deployments;
