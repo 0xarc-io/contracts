@@ -37,6 +37,8 @@
     "release": "rm -rf dist && yarn tsc && release-it"
   },
   "devDependencies": {
+    "@commitlint/cli": "^11.0.0",
+    "@commitlint/config-conventional": "^11.0.0",
     "@graphprotocol/graph-cli": "^0.18.0",
     "@graphprotocol/graph-ts": "^0.18.0",
     "@nomiclabs/hardhat-ethers": "^2.0.0",
@@ -53,6 +55,7 @@
     "chalk": "^4.1.0",
     "chokidar": "^3.4.0",
     "commander": "^6.0.0",
+    "commitizen": "^4.2.2",
     "dotenv": "^8.2.0",
     "ethereum-waffle": "^2.5.1",
     "ethlint": "^1.2.4",
@@ -95,11 +98,6 @@
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "yarn run lint:sol"
-    }
   },
   "description": "Contracts for the Synthetic Asset Game",
   "repository": "git@github.com:arcxio/contracts.git"
