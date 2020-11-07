@@ -3,10 +3,6 @@ import path, { PlatformPath } from 'path';
 
 // load the data in explicitly (not programmatically) so webpack knows what to bundle
 export const networkPaths = {
-  local: {
-    deployment: require('./deployments/local/deployed.json'),
-    synthConfig: require('./deployments/local/synth-config.json'),
-  },
   rinkeby: {
     deployment: require('./deployments/rinkeby/deployed.json'),
     synthConfig: require('./deployments/rinkeby/synth-config.json'),
