@@ -1,4 +1,12 @@
 version: 2.1
+
+workflows:
+    build_and_test:
+      jobs:
+        - build:
+            context:
+              - crypto
+
 jobs:
   build:
     working_directory: ~/contracts

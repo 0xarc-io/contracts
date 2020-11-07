@@ -22,8 +22,8 @@ if (fs.existsSync('src/typings/index.ts')) {
 require('dotenv').config({ path: '.env' }).parsed;
 
 export const params = {
-  private_key: process.env.TESTNET_DEPLOY_PRIVATE_KEY || '',
-  rpc_url: process.env.RPC_ENDPOINT || '',
+  testnet_private_key: process.env.TESTNET_DEPLOY_PRIVATE_KEY || '',
+  rinkeby_rpc_url: process.env.RINKEBY_RPC_ENDPOINT || '',
   etherscan_key: process.env.ETHERSCAN_KEY || '',
 };
 
@@ -69,8 +69,8 @@ const config: HardhatUserConfig = {
       url: 'http://127.0.0.1:8555', // Coverage launches its own ganache-cli client
     },
     rinkeby: {
-      url: params.rpc_url,
-      accounts: [params.private_key],
+      url: params.rinkeby_rpc_url,
+      accounts: [params.testnet_private_key],
     },
   },
   etherscan: {
