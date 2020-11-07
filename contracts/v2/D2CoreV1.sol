@@ -195,7 +195,7 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         emit LimitsUpdated(
             collateralLimit,
             syntheticLimit,
-           positionCollateralMinimum
+            positionCollateralMinimum
         );
     }
 
