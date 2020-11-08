@@ -20,7 +20,7 @@ export class D2TestArc extends D2Arc {
     const mockCore = await MockD2CoreV1.deploy(this.signer);
 
     const collateralAsset = await TestToken.deploy(this.signer, 'TestCollateral', 'TEST');
-    const syntheticAsset = await SyntheticToken.deploy(this.signer, 'TESTUSD', 'TESTUSD');
+    const syntheticAsset = await SyntheticToken.deploy(this.signer, 'ETHX', 'ETHX');
 
     const oracle = await MockOracle.deploy(this.signer);
     const proxy = await ArcProxy.deploy(this.signer, mockCore.address, this.signerAddress, []);
@@ -40,7 +40,7 @@ export class D2TestArc extends D2Arc {
 
     await syntheticAsset.addMinter(core.address);
 
-    await this.addSynths({ TESTUSD: core.address });
+    await this.addSynths({ ETHX: core.address });
   }
 
   public synth() {
