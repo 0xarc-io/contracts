@@ -16,7 +16,7 @@ import { parseLogs } from './utils/parseLogs';
 import { calculateLiquidationAmount } from './utils/calculations';
 
 export enum SynthNames {
-  TESTUSD = 'TESTUSD',
+  ETHX = 'ETHX',
 }
 
 export type Synth = {

@@ -11,7 +11,7 @@
       "position_minimum_collateral" : ""
 		}
 	},
-	"LINKUSDV2": {
+	"ETHX": {
 		"collateral_address": "",
 		"oracle_source_address": "",
 		"config": {

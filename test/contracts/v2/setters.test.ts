@@ -27,7 +27,7 @@ describe('D2Core.setters', () => {
     const mockCore = await MockD2CoreV1.deploy(ownerAccount.signer);
 
     const collateralAsset = await TestToken.deploy(ownerAccount.signer, 'TestCollateral', 'TEST');
-    const syntheticAsset = await SyntheticToken.deploy(ownerAccount.signer, 'TESTUSD', 'TESTUSD');
+    const syntheticAsset = await SyntheticToken.deploy(ownerAccount.signer, 'ETHX', 'ETHX');
 
     const oracle = await MockOracle.deploy(ownerAccount.signer);
     const proxy = await ArcProxy.deploy(
