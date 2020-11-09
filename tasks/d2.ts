@@ -66,7 +66,7 @@ task('deploy-d2', 'Deploy, update and interact with D2 contracts')
       {
         name: 'Synthetic',
         source: 'SyntheticToken',
-        data: SyntheticToken.getDeployTransaction(signer, 'ETHX', 'ETHX'),
+        data: SyntheticToken.getDeployTransaction(signer, synthName, synthName),
         version: 1,
         type: DeploymentType.synth,
         group: synthName,

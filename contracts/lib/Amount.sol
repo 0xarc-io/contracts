@@ -3,7 +3,7 @@
 pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {SafeMath} from "../lib/SafeMath.sol";
 import {Math} from "../lib/Math.sol";
 
 library Amount {

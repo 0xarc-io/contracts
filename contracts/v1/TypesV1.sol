@@ -3,15 +3,14 @@
 pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
 import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
 import {IMintableToken} from "../interfaces/IMintableToken.sol";
 import {IOracle} from "../interfaces/IOracle.sol";
+import {IERC20} from "../interfaces/IERC20.sol";
 
 import {Math} from "../lib/Math.sol";
 import {Decimal} from "../lib/Decimal.sol";
+import {SafeMath} from "../lib/SafeMath.sol";
 
 library TypesV1 {
 

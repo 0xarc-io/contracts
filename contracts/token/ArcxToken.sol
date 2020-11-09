@@ -2,7 +2,7 @@
 
 pragma solidity ^0.5.16;
 
-import {Ownable} from "@openzeppelin/contracts/ownership/Ownable.sol";
+import {Ownable} from "../lib/Ownable.sol";
 
 import {IMintableToken} from "../interfaces/IMintableToken.sol";
 

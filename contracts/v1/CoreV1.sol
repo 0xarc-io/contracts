@@ -3,21 +3,20 @@
 pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
+import {IERC20} from "../interfaces/IERC20.sol";
 import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
 import {IMintableToken} from "../interfaces/IMintableToken.sol";
 
-import {TypesV1} from "./TypesV1.sol";
 import {Decimal} from "../lib/Decimal.sol";
 import {Storage} from "../lib/Storage.sol";
 import {Math} from "../lib/Math.sol";
 import {Adminable} from "../lib/Adminable.sol";
+import {SafeMath} from "../lib/SafeMath.sol";
+import {SafeERC20} from "../lib/SafeERC20.sol";
 
 import {StateV1} from "./StateV1.sol";
 import {StorageV1} from "./StorageV1.sol";
+import {TypesV1} from "./TypesV1.sol";
 
 /**
  * @title CoreV1

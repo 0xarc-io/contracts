@@ -3,7 +3,7 @@
 pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
-import {Ownable} from "@openzeppelin/contracts/ownership/Ownable.sol";
+import {Ownable} from "../lib/Ownable.sol";
 
 import {BaseERC20} from "./BaseERC20.sol";
 
