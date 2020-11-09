@@ -12,8 +12,15 @@ library SafeERC20 {
         uint256 value
     ) internal {
         // bytes4(keccak256(bytes('approve(address,uint256)')));
-        (bool success, bytes memory data) = address(token).call(abi.encodeWithSelector(0x095ea7b3, to, value));
-        require(success && (data.length == 0 || abi.decode(data, (bool))), 'TransferHelper: APPROVE_FAILED');
+        /* solium-disable-next-line */
+        (bool success, bytes memory data) = address(token).call(
+            abi.encodeWithSelector(0x095ea7b3, to, value)
+        );
+
+        require(
+            success && (data.length == 0 || abi.decode(data, (bool))),
+            "SafeERC20: APPROVE_FAILED"
+        );
     }
 
     function safeTransfer(
@@ -22,8 +29,15 @@ library SafeERC20 {
         uint256 value
     ) internal {
         // bytes4(keccak256(bytes('transfer(address,uint256)')));
-        (bool success, bytes memory data) = address(token).call(abi.encodeWithSelector(0xa9059cbb, to, value));
-        require(success && (data.length == 0 || abi.decode(data, (bool))), 'TransferHelper: TRANSFER_FAILED');
+        /* solium-disable-next-line */
+        (bool success, bytes memory data) = address(token).call(
+            abi.encodeWithSelector(0xa9059cbb, to, value)
+        );
+
+        require(
+            success && (data.length == 0 || abi.decode(data, (bool))),
+            "SafeERC20: TRANSFER_FAILED"
+        );
     }
 
     function safeTransferFrom(
@@ -33,7 +47,19 @@ library SafeERC20 {
         uint256 value
     ) internal {
         // bytes4(keccak256(bytes('transferFrom(address,address,uint256)')));
-        (bool success, bytes memory data) = address(token).call(abi.encodeWithSelector(0x23b872dd, from, to, value));
-        require(success && (data.length == 0 || abi.decode(data, (bool))), 'TransferHelper: TRANSFER_FROM_FAILED');
+        /* solium-disable-next-line */
+        (bool success, bytes memory data) = address(token).call(
+            abi.encodeWithSelector(
+                0x23b872dd,
+                from,
+                to,
+                value
+            )
+        );
+
+        require(
+            success && (data.length == 0 || abi.decode(data, (bool))),
+            "SafeERC20: TRANSFER_FROM_FAILED"
+        );
     }
 }
