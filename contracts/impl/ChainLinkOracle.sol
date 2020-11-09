@@ -4,10 +4,10 @@ pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {Decimal} from "../lib/Decimal.sol";
-import {IOracle} from "../interfaces/IOracle.sol";
+import {SafeMath} from "../lib/SafeMath.sol";
 
+import {IOracle} from "../interfaces/IOracle.sol";
 import {IChainLinkAggregator} from "../interfaces/IChainLinkAggregator.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 
 contract ChainLinkOracle is IOracle {
 

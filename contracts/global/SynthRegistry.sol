@@ -2,8 +2,8 @@
 
 pragma solidity ^0.5.16;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {Ownable} from "@openzeppelin/contracts/ownership/Ownable.sol";
+import {IERC20} from "../interfaces/IERC20.sol";
+import {Ownable} from "../lib/Ownable.sol";
 
 import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
 

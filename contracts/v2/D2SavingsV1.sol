@@ -3,16 +3,15 @@
 pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import {Ownable} from "@openzeppelin/contracts/ownership/Ownable.sol";
-
 import {ID2Core} from "../interfaces/ID2Core.sol";
 import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
+import {IERC20} from "../interfaces/IERC20.sol";
 
 import {Amount} from "../lib/Amount.sol";
 import {Decimal} from "../lib/Decimal.sol";
+import {SafeMath} from "../lib/SafeMath.sol";
+import {SafeERC20} from "../lib/SafeERC20.sol";
+import {Ownable} from "../lib/Ownable.sol";
 
 contract D2SavingsV1 is Ownable {
 

@@ -3,24 +3,21 @@
 pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-
 import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
 import {IMintableToken} from "../interfaces/IMintableToken.sol";
 import {IOracle} from "../interfaces/IOracle.sol";
 import {ID2Core} from "../interfaces/ID2Core.sol";
+import {IERC20} from "../interfaces/IERC20.sol";
 
 import {Adminable} from "../lib/Adminable.sol";
 import {Decimal} from "../lib/Decimal.sol";
 import {Math} from "../lib/Math.sol";
 import {Amount} from "../lib/Amount.sol";
+import {SafeMath} from "../lib/SafeMath.sol";
+import {SafeERC20} from "../lib/SafeERC20.sol";
 
 import {D2Storage} from "./D2Storage.sol";
 import {D2Types} from  "./D2Types.sol";
-
-import {console} from "hardhat/console.sol";
 
 contract D2CoreV1 is Adminable, D2Storage, ID2Core {
 
