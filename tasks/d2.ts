@@ -13,6 +13,7 @@ import {
 } from '../src/typings';
 
 import { NetworkParams } from '../deployments/src/deployContract';
+import { params } from '../hardhat.config';
 import {
   deployContract,
   DeploymentType,
@@ -122,23 +123,34 @@ task('deploy-d2', 'Deploy, update and interact with D2 contracts')
         syntheticAddress,
         oracleAddress,
         signer.address,
-        { value: synthConfig.collateral_ratio },
-        { value: synthConfig.liquidation_user_fee },
-        { value: synthConfig.liquidation_arc_ratio },
-        { value: synthConfig.printer_arc_ratio },
+        { value: synthConfig.params.collateral_ratio },
+        { value: synthConfig.params.liquidation_user_fee },
+        { value: synthConfig.params.liquidation_arc_ratio },
       );
       console.log(green(`Called init() successfully!`));
-    } catch {
-      throw red(`Failed to call init()\n`);
+    } catch (error) {
+      console.log(red(`Failed to call init().\nReason: ${error}\n`));
     }
 
-    console.log(yellow(`* Calling addMinter... \n`));
+    console.log(yellow(`* Calling addMinter...`));
     const synth = await SyntheticToken.at(signer, syntheticAddress);
     try {
       await synth.addMinter(core.address);
       console.log(green(`Added minter!`));
-    } catch {
-      throw red(`Failed to add minter!\n`);
+    } catch (error) {
+      console.log(red(`Failed to add minter!\nReason: ${error}\n`));
+    }
+
+    console.log(yellow(`* Calling setLimits...`));
+    try {
+      await core.setLimits(
+        synthConfig.params.collateral_limit || 0,
+        synthConfig.params.synthetic_limit || 0,
+        synthConfig.params.position_collateral_minimum || 0,
+      );
+      console.log(green(`Limits set!`));
+    } catch (error) {
+      console.log(red(`Failed to set limits!\nReason: ${error}\n`));
     }
   });
 

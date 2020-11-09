@@ -26,5 +26,5 @@ export function loadSynthConfig(params: LoadSynthConfigParams) {
 
   console.log(blue(`${params.synth} config found!`));
 
-  return synthConfig;
+  return synthConfig[params.synth];
 }

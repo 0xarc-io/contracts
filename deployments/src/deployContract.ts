@@ -1,6 +1,6 @@
 import { ethers, Signer } from 'ethers';
 import { writeToDeployments, DeploymentType } from './writeToDeployments';
-import { blue, yellow, gray, green, red } from 'chalk';
+import { yellow, gray, green, red, magenta } from 'chalk';
 import { loadContracts } from './loadContracts';
 
 export interface DeployContractParams {
@@ -36,10 +36,12 @@ export async function deployContract(
   tx.gasLimit = networkParams.gasLimit || deployParams.data.gasLimit;
   tx.gasPrice = networkParams.gasPrice || deployParams.data.gasPrice;
 
-  const details = `${deployParams.name} | ${deployParams.source} | ${deployParams.group}`;
+  const details = `${deployParams.name} | ${deployParams.source} | ${
+    deployParams.group || 'no-group'
+  }`;
 
   if (existing.length) {
-    console.log(red(`Contract already exists: ${details}`));
+    console.log(magenta(`Contract already exists: ${details}`));
     return existing[0].address;
   }
 
