@@ -13,6 +13,20 @@ export interface LoadContractParams {
   group?: string;
 }
 
+export function loadContract(params: LoadContractParams) {
+  const results = loadContracts(params);
+
+  if (results.length == 0) {
+    throw red(`No contracts found for ${JSON.stringify(params, null, 2)}`);
+  }
+
+  if (results.length > 1) {
+    throw red(`More than one contract found for ${JSON.stringify(params, null, 2)}`);
+  }
+
+  return results[0];
+}
+
 export function loadContracts(params: LoadContractParams): Array<any> {
   const contracts = loadDeployedContracts(params.network);
 

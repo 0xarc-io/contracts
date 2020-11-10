@@ -1,8 +1,12 @@
 import { Position, ActionOperated } from '../generated/schema';
-import { RiskParamsUpdated, MarketParamsUpdated } from '../generated/StateV1/StateV1';
+import {
+  RiskParamsUpdated,
+  MarketParamsUpdated,
+  OracleUpdated,
+} from '../generated/StateV1/StateV1';
 import { ActionOperated as ActionOperatedEvent } from '../generated/CoreV1/CoreV1';
 import { BASE } from './constants';
-import { createOrLoadSynth } from './createOrLoadSynth';
+import { createOrLoadV1Synth } from './createOrLoadSynth';
 
 export function actionOperated(event: ActionOperatedEvent): void {
   handlePosition(event);
@@ -46,7 +50,7 @@ function handlePosition(event: ActionOperatedEvent): void {
 }
 
 export function marketParamsUpdated(event: MarketParamsUpdated): void {
-  let synth = createOrLoadSynth(event.address);
+  let synth = createOrLoadV1Synth(event.address);
   synth.collateralRatio = event.params.updatedMarket.collateralRatio.value;
 
   let totalFee = event.params.updatedMarket.liquidationArcFee.value.plus(
@@ -61,9 +65,15 @@ export function marketParamsUpdated(event: MarketParamsUpdated): void {
 }
 
 export function riskParamsUpdated(event: RiskParamsUpdated): void {
-  let synth = createOrLoadSynth(event.address);
+  let synth = createOrLoadV1Synth(event.address);
   synth.collateralLimit = event.params.updatedParams.collateralLimit;
   synth.syntheticLimit = event.params.updatedParams.syntheticLimit;
   synth.positionCollateralMinimum = event.params.updatedParams.positionCollateralMinimum;
+  synth.save();
+}
+
+export function oracleUpdated(event: OracleUpdated): void {
+  let synth = createOrLoadV1Synth(event.address);
+  synth.oracle = event.params.updatedOracle;
   synth.save();
 }
