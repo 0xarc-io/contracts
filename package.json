@@ -29,11 +29,11 @@
     "test": "yarn hardhat test",
     "deploy": "yarn ts-node deployment/deploy.ts",
     "graph:create": "graph create arcxgame/linkusd --node https://api.thegraph.com/deploy/",
-    "graph:create-local": "graph create arcxgame/linkusd --node http://127.0.0.1:8020",
+    "graph:create-local": "graph create arcxmoney/linkusd --node http://127.0.0.1:8020",
     "graph:codegen": "graph codegen",
     "graph:build": "graph build",
     "graph:deploy": "graph deploy arcxgame/linkusd --access-token ff3f054dd82446549e745475ef50391d --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
-    "graph:deploy-local": "graph deploy arcxgame/linkusd --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
+    "graph:deploy-local": "graph deploy arcxmoney/linkusd --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
     "release": "rm -rf dist && yarn tsc && release-it"
   },
   "devDependencies": {

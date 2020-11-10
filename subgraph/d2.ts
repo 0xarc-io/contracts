@@ -10,7 +10,7 @@ import {
 } from '../generated/D2CoreV1/D2CoreV1';
 
 import { ActionOperated, Position, Synth } from '../generated/schema';
-import { createOrLoadSynth } from './createOrLoadSynth';
+import { createOrLoadV2Synth } from './createOrLoadSynth';
 
 export function actionOperated(event: ActionOperatedEvent): void {
   handlePosition(event);
@@ -48,15 +48,14 @@ function handlePosition(event: ActionOperatedEvent): void {
 }
 
 export function feesUpdated(event: FeesUpdatedEvent): void {
-  let synth = createOrLoadSynth(event.address);
+  let synth = createOrLoadV2Synth(event.address);
   synth.liquidationArcRatio = event.params._liquidationArcRatio.value;
   synth.liquidationUserFee = event.params._liquidationUserFee.value;
-  synth.printerArcRatio = event.params._printerArcRatio.value;
   synth.save();
 }
 
 export function limitsUpdated(event: LimitsUpdatedEvent): void {
-  let synth = createOrLoadSynth(event.address);
+  let synth = createOrLoadV2Synth(event.address);
   synth.syntheticLimit = event.params._syntheticLimit;
   synth.collateralLimit = event.params._collateralLimit;
   synth.positionCollateralMinimum = event.params._positionCollateralMinimum;
@@ -64,25 +63,25 @@ export function limitsUpdated(event: LimitsUpdatedEvent): void {
 }
 
 export function rateUpdated(event: RateUpdatedEvent): void {
-  let synth = createOrLoadSynth(event.address);
+  let synth = createOrLoadV2Synth(event.address);
   synth.interestRate = event.params.value;
   synth.save();
 }
 
 export function oracleUpdated(event: OracleUpdatedEvent): void {
-  let synth = createOrLoadSynth(event.address);
+  let synth = createOrLoadV2Synth(event.address);
   synth.oracle = event.params.value;
   synth.save();
 }
 
 export function collateralRatioUpdated(event: CollateralRatioUpdatedEvent): void {
-  let synth = createOrLoadSynth(event.address);
+  let synth = createOrLoadV2Synth(event.address);
   synth.collateralRatio = event.params.value.value;
   synth.save();
 }
 
 export function pauseStatusUpdated(event: PauseStatusUpdatedEvent): void {
-  let synth = createOrLoadSynth(event.address);
+  let synth = createOrLoadV2Synth(event.address);
   synth.paused = event.params.value;
   synth.save();
 }

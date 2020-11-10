@@ -10,25 +10,29 @@ import {
   ArcProxy,
   ChainLinkOracle,
   TestToken,
+  SynthRegistry,
 } from '../src/typings';
 
 import { NetworkParams } from '../deployments/src/deployContract';
 import { params } from '../hardhat.config';
+import { loadContract, loadContracts } from '../deployments/src/loadContracts';
 import {
   deployContract,
   DeploymentType,
   loadSynthConfig,
+  pruneDeployments,
   writeToDeployments,
 } from '../deployments/src';
 
-task('deploy-d2', 'Deploy, update and interact with D2 contracts')
+task('deploy-d2', 'Deploy the D2 contracts')
   .addParam('synth', 'The synth you would like to interact with')
-  .addOptionalParam('component', 'Only component to deploy at the moment is core')
-  .setAction(async (taskArgs, bre) => {
+  .setAction(async (taskArgs, hre) => {
     const synthName = taskArgs.synth;
-    const network = bre.network.name;
+    const network = hre.network.name;
 
-    const signer = (await bre.ethers.getSigners())[0];
+    const signer = (await hre.ethers.getSigners())[0];
+
+    await pruneDeployments(network, signer);
 
     const synthConfig = loadSynthConfig({ network, synth: synthName });
     const networkConfig = { network, signer } as NetworkParams;
@@ -43,10 +47,6 @@ task('deploy-d2', 'Deploy, update and interact with D2 contracts')
       },
       networkConfig,
     );
-
-    if (taskArgs.component == 'core') {
-      return;
-    }
 
     const collateralAddress =
       synthConfig.collateral_address ||
@@ -127,7 +127,7 @@ task('deploy-d2', 'Deploy, update and interact with D2 contracts')
         { value: synthConfig.params.liquidation_user_fee },
         { value: synthConfig.params.liquidation_arc_ratio },
       );
-      console.log(green(`Called init() successfully!`));
+      console.log(green(`Called init() successfully!\n`));
     } catch (error) {
       console.log(red(`Failed to call init().\nReason: ${error}\n`));
     }
@@ -136,7 +136,7 @@ task('deploy-d2', 'Deploy, update and interact with D2 contracts')
     const synth = await SyntheticToken.at(signer, syntheticAddress);
     try {
       await synth.addMinter(core.address);
-      console.log(green(`Added minter!`));
+      console.log(green(`Added minter!\n`));
     } catch (error) {
       console.log(red(`Failed to add minter!\nReason: ${error}\n`));
     }
@@ -148,9 +148,24 @@ task('deploy-d2', 'Deploy, update and interact with D2 contracts')
         synthConfig.params.synthetic_limit || 0,
         synthConfig.params.position_collateral_minimum || 0,
       );
-      console.log(green(`Limits set!`));
+      console.log(green(`Limits set!\n`));
     } catch (error) {
       console.log(red(`Failed to set limits!\nReason: ${error}\n`));
+    }
+
+    console.log(yellow(`* Adding to synth registry...`));
+
+    const synthRegistryDetails = loadContract({
+      network,
+      type: DeploymentType.global,
+      name: 'SynthRegistry',
+    });
+    try {
+      const synthRegistry = await SynthRegistry.at(signer, synthRegistryDetails.address);
+      await synthRegistry.addSynth(proxyAddress, syntheticAddress);
+      console.log(green(`Added to Synth Registry!\n`));
+    } catch (error) {
+      console.log(red(`Failed to add to Synth Registry!\nReason: ${error}\n`));
     }
   });
 

@@ -7,16 +7,17 @@ type AccountBalance @entity {
 
 type Synth @entity {
   id: ID!
+  name: String!
+  collateralAddress: Bytes!
+  syntheticAddress: Bytes!
   paused: Boolean!
-  oracle: Bytes
+  oracle: Bytes!
   collateralRatio: BigInt
   liquidationUserFee: BigInt
   liquidationArcRatio: BigInt
-  printerArcRatio: BigInt
   collateralLimit: BigInt
   syntheticLimit: BigInt
   positionCollateralMinimum: BigInt
-  borrowIndex: BigInt!
   interestRate: BigInt
 }
 
