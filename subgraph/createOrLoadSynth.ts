@@ -1,7 +1,7 @@
-import { Address } from "@graphprotocol/graph-ts";
-import { Synth } from "../generated/schema";
-import { StateV1 } from "../generated/StateV1/StateV1";
-import { BASE } from "../src/constants"
+import { Address } from '@graphprotocol/graph-ts';
+import { Synth } from '../generated/schema';
+import { StateV1 } from '../generated/StateV1/StateV1';
+import { BASE } from './constants';
 
 export function createOrLoadSynth(address: Address): Synth {
   let stateContract = StateV1.bind(address);
