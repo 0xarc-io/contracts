@@ -34,7 +34,8 @@
     "graph:build": "graph build",
     "graph:deploy": "graph deploy arcxgame/linkusd --access-token ff3f054dd82446549e745475ef50391d --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
     "graph:deploy-local": "graph deploy arcxmoney/linkusd --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
-    "release": "rm -rf dist && yarn tsc && release-it"
+    "release": "rm -rf dist && yarn tsc && release-it",
+    "commit": "cz"
   },
   "devDependencies": {
     "@commitlint/cli": "^11.0.0",
