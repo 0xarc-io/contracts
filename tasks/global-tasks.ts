@@ -2,7 +2,7 @@ import { ArcxToken, SynthRegistry } from '@src/typings';
 import { deployContract, pruneDeployments } from '../deployments/src';
 import { subtask, task } from 'hardhat/config';
 import { DeploymentType } from '../deployments/src/writeToDeployments';
-import { NetworkParams } from '../dist/deployments/src/deployContract';
+import { NetworkParams } from '../deployments/src/deployContract';
 
 task('deploy-global', 'Deploy, update and interact with global contracts').setAction(
   async (taskArgs, hre) => {
