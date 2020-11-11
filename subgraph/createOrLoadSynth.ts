@@ -1,7 +1,7 @@
 import { Address, BigInt } from '@graphprotocol/graph-ts';
 import { Synth } from '../generated/schema';
-import { StateV1 } from '../generated/StateV1/StateV1';
-import { D2CoreV1 } from '../generated/D2CoreV1/D2CoreV1';
+import { StateV1 } from '../generated/templates/StateV1/StateV1';
+import { D2CoreV1 } from '../generated/templates/D2CoreV1/D2CoreV1';
 import { BaseERC20 } from '../generated/templates/BaseERC20/BaseERC20';
 
 export function createOrLoadV1Synth(address: Address): Synth {
