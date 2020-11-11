@@ -66,7 +66,12 @@ task('deploy-d2', 'Deploy the D2 contracts')
       {
         name: 'Synthetic',
         source: 'SyntheticToken',
-        data: SyntheticToken.getDeployTransaction(signer, synthName, synthName),
+        data: SyntheticToken.getDeployTransaction(
+          signer,
+          synthName,
+          synthName,
+          synthConfig.version,
+        ),
         version: 1,
         type: DeploymentType.synth,
         group: synthName,
@@ -135,7 +140,7 @@ task('deploy-d2', 'Deploy the D2 contracts')
     console.log(yellow(`* Calling addMinter...`));
     const synth = await SyntheticToken.at(signer, syntheticAddress);
     try {
-      await synth.addMinter(core.address);
+      await synth.addMinter(core.address, synthConfig.params.synthetic_limit);
       console.log(green(`Added minter!\n`));
     } catch (error) {
       console.log(red(`Failed to add minter!\nReason: ${error}\n`));

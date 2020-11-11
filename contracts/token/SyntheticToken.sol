@@ -1,27 +1,40 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.5.16;
-
-import {Ownable} from "../lib/Ownable.sol";
+pragma experimental ABIEncoderV2;
 
 import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
+
+import {Ownable} from "../lib/Ownable.sol";
+import {Amount} from "../lib/Amount.sol";
 
 import {BaseERC20} from "./BaseERC20.sol";
 
 contract SyntheticToken is BaseERC20, ISyntheticToken, Ownable {
 
+    using Amount for Amount.Principal;
+
     // ============ Variables ============
 
     bytes32 private _symbolKey;
+
+    uint8 private _version;
 
     address[] public mintersArray;
 
     mapping(address => bool) public minters;
 
+    mapping(address => uint256) public _minterLimits;
+
+    mapping(address => Amount.Principal) public _minterIssued;
+
     /* ========== EVENTS ========== */
 
-    event MinterAdded(address _minter);
+    event MinterAdded(address _minter, uint256 _limit);
+
     event MinterRemoved(address _minter);
+
+    event MinterLimitUpdated(address _minter, uint256 _limit);
 
     event MetadataChanged();
 
@@ -39,13 +52,15 @@ contract SyntheticToken is BaseERC20, ISyntheticToken, Ownable {
 
     constructor(
         string memory _name,
-        string memory _symbol
+        string memory _symbol,
+        uint8 __version
     )
         public
         BaseERC20(_name, _symbol)
     {
+        _version = __version;
         _symbolKey = keccak256(
-            abi.encode(_symbol)
+            abi.encode(_symbol, _version)
         );
     }
 
@@ -69,6 +84,25 @@ contract SyntheticToken is BaseERC20, ISyntheticToken, Ownable {
         return minters[_minter];
     }
 
+    function getMinterIssued(
+        address _minter
+    )
+        external
+        view
+        returns (Amount.Principal memory)
+    {
+        return _minterIssued[_minter];
+    }
+
+    function getMinterLimit(
+        address _minter
+    )
+        external
+        view
+        returns (uint256)
+    {
+        return _minterLimits[_minter];
+    }
 
     function symbolKey()
         external
@@ -78,25 +112,31 @@ contract SyntheticToken is BaseERC20, ISyntheticToken, Ownable {
         return _symbolKey;
     }
 
+    function version()
+        external
+        view
+        returns (uint8)
+    {
+        return _version;
+    }
+
     // ============ Admin Functions ============
 
     function updateMetadata(
         string calldata __name,
-        string calldata __symbol,
-        bytes32 __symbolKey
+        string calldata __symbol
     )
         external
         onlyOwner
     {
         _name = __name;
         _symbol = __symbol;
-        _symbolKey = __symbolKey;
-
         emit MetadataChanged();
     }
 
     function addMinter(
-        address _minter
+        address _minter,
+        uint256 _limit
     )
         external
         onlyOwner
@@ -108,8 +148,9 @@ contract SyntheticToken is BaseERC20, ISyntheticToken, Ownable {
 
         mintersArray.push(_minter);
         minters[_minter] = true;
+        _minterLimits[_minter] = _limit;
 
-        emit MinterAdded(_minter);
+        emit MinterAdded(_minter, _limit);
     }
 
     function removeMinter(
@@ -143,8 +184,26 @@ contract SyntheticToken is BaseERC20, ISyntheticToken, Ownable {
 
         // And remove it from the minters mapping
         delete minters[_minter];
+        delete _minterLimits[_minter];
 
         emit MinterRemoved(_minter);
+    }
+
+    function updateMinterLimit(
+        address _minter,
+        uint256 _limit
+    )
+        public
+        onlyOwner
+    {
+        require(
+            minters[_minter] == true,
+            "Minter does not exist"
+        );
+
+        _minterLimits[_minter] = _limit;
+
+        emit MinterLimitUpdated(_minter, _limit);
     }
 
     // ============ Minter Functions ============
@@ -156,6 +215,16 @@ contract SyntheticToken is BaseERC20, ISyntheticToken, Ownable {
         external
         onlyMinter
     {
+        Amount.Principal memory issuedAmount = _minterIssued[msg.sender].add(
+            Amount.Principal({ sign: true, value: value })
+        );
+
+        require(
+            issuedAmount.sign == false || issuedAmount.value <= _minterLimits[msg.sender],
+            "Minter limit reached"
+        );
+
+        _minterIssued[msg.sender] = issuedAmount;
         _mint(to, value);
     }
 
@@ -166,6 +235,10 @@ contract SyntheticToken is BaseERC20, ISyntheticToken, Ownable {
         external
         onlyMinter
     {
+        _minterIssued[msg.sender] = _minterIssued[msg.sender].sub(
+            Amount.Principal({ sign: true, value: value })
+        );
+
         _burn(to, value);
     }
 
