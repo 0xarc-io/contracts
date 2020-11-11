@@ -7,9 +7,9 @@ import {
   CollateralRatioUpdated as CollateralRatioUpdatedEvent,
   PrinterUpdated as PrinterUpdatedEvent,
   PauseStatusUpdated as PauseStatusUpdatedEvent,
-} from '../generated/D2CoreV1/D2CoreV1';
+} from '../generated/templates/D2CoreV1/D2CoreV1';
 
-import { ActionOperated, Position, Synth } from '../generated/schema';
+import { ActionOperated, Position } from '../generated/schema';
 import { createOrLoadV2Synth } from './createOrLoadSynth';
 
 export function actionOperated(event: ActionOperatedEvent): void {

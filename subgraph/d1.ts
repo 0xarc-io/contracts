@@ -3,8 +3,8 @@ import {
   RiskParamsUpdated,
   MarketParamsUpdated,
   OracleUpdated,
-} from '../generated/StateV1/StateV1';
-import { ActionOperated as ActionOperatedEvent } from '../generated/CoreV1/CoreV1';
+} from '../generated/templates/StateV1/StateV1';
+import { ActionOperated as ActionOperatedEvent } from '../generated/templates/CoreV1/CoreV1';
 import { BASE } from './constants';
 import { createOrLoadV1Synth } from './createOrLoadSynth';
 
