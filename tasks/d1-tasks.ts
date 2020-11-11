@@ -66,7 +66,12 @@ task('deploy-d1', 'Deploy the D1 contracts')
       {
         name: 'Synthetic',
         source: 'SyntheticToken',
-        data: SyntheticToken.getDeployTransaction(signer, synthName, synthName),
+        data: SyntheticToken.getDeployTransaction(
+          signer,
+          synthName,
+          synthName,
+          synthConfig.version,
+        ),
         version: 1,
         type: DeploymentType.synth,
         group: synthName,
