@@ -19,6 +19,7 @@ import Token from './utils/Token';
 import { IERC20 } from './typings/IERC20';
 import { RiskParams, MarketParams, DeploymentConfig } from './types';
 import { ArcProxy } from './typings/ArcProxy';
+import { MAX_UINT256 } from './constants';
 
 export default class D1Arc {
   public signer: Signer;
@@ -52,9 +53,12 @@ export default class D1Arc {
 
     this.core = await CoreV4.at(this.signer, proxy.address);
 
-    this.syntheticAsset = await SyntheticToken.deploy(this.signer, config.name, config.symbol);
+    this.syntheticAsset = await SyntheticToken.deploy(this.signer, config.name, config.symbol, 1);
 
-    await SyntheticToken.at(this.signer, this.syntheticAsset.address).addMinter(this.core.address);
+    await SyntheticToken.at(this.signer, this.syntheticAsset.address).addMinter(
+      this.core.address,
+      MAX_UINT256,
+    );
 
     this.state = await StateV1.deploy(
       this.signer,

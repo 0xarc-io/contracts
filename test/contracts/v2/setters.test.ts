@@ -11,6 +11,7 @@ import { ADMINABLE_ERROR, INTEREST_SETTER_ERROR } from '../../helpers/contractEr
 import { getAccounts } from '../../helpers/testingUtils';
 import { MockD2CoreV1, MockOracle, SyntheticToken, ArcProxy, TestToken } from '@src/typings';
 import { Signer } from 'ethers';
+import { MAX_UINT256 } from '../../../src/constants';
 
 let ownerAccount: Account;
 let interestSetterAccount: Account;
@@ -27,7 +28,7 @@ describe('D2Core.setters', () => {
     const mockCore = await MockD2CoreV1.deploy(ownerAccount.signer);
 
     const collateralAsset = await TestToken.deploy(ownerAccount.signer, 'TestCollateral', 'TEST');
-    const syntheticAsset = await SyntheticToken.deploy(ownerAccount.signer, 'ETHX', 'ETHX');
+    const syntheticAsset = await SyntheticToken.deploy(ownerAccount.signer, 'ETHX', 'ETHX', 1);
 
     const oracle = await MockOracle.deploy(ownerAccount.signer);
     const proxy = await ArcProxy.deploy(
@@ -138,15 +139,14 @@ describe('D2Core.setters', () => {
   describe('#setLimits', () => {
     it('should not be settable by any user', async () => {
       const contract = await getCore(otherAccount.signer);
-      await expect(contract.setLimits(1, 2, 3)).to.be.reverted;
+      await expect(contract.setLimits(1, 2)).to.be.reverted;
     });
 
     it('should only be settable by the admin', async () => {
       const contract = await getCore(ownerAccount.signer);
-      await contract.setLimits(1, 2, 3);
+      await contract.setLimits(1, 2);
       expect((await contract.getLimits())[0]).to.equal(new BigNumber(1));
       expect((await contract.getLimits())[1]).to.equal(new BigNumber(2));
-      expect((await contract.getLimits())[2]).to.equal(new BigNumber(3));
     });
   });
 

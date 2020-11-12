@@ -28,7 +28,7 @@ contract D2SavingsV1 is Ownable {
     /* ========== Variables ========== */
 
     ID2Core public core;
-    address public synthetic;
+    ISyntheticToken public synthetic;
 
     bool    public fullyCollateralized;
     bool    public paused;
@@ -38,7 +38,6 @@ contract D2SavingsV1 is Ownable {
 
     uint256 public indexLastUpdate;
     uint256 public totalSupplied;
-    uint256 public totalIssued;
 
     address      public arcFeeDestination;
     Decimal.D256 public arcFee;
@@ -65,7 +64,7 @@ contract D2SavingsV1 is Ownable {
     )
         public
     {
-        synthetic = _syntheticAddress;
+        synthetic = ISyntheticToken(_syntheticAddress);
         core = ID2Core(_coreAddress);
         fullyCollateralized = true;
 
@@ -170,7 +169,7 @@ contract D2SavingsV1 is Ownable {
         _balances[msg.sender] = _balances[msg.sender].add(stakeAmount);
 
         // Transfer the synth
-        IERC20(synthetic).transferFrom(
+        IERC20(address(synthetic)).transferFrom(
             msg.sender,
             address(this),
             amount
@@ -200,7 +199,7 @@ contract D2SavingsV1 is Ownable {
         _balances[msg.sender] = _balances[msg.sender].sub(withdrawAmount);
 
         // Transfer the synth
-        IERC20(synthetic).transfer(
+        IERC20(address(synthetic)).transfer(
             msg.sender,
             amount
         );
@@ -250,17 +249,12 @@ contract D2SavingsV1 is Ownable {
             arcFee
         );
 
-        ISyntheticToken synth = ISyntheticToken(synthetic);
-
-        // Increase the total issued amount from this contract
-        totalIssued = totalIssued.add(interestAccrued);
-
-        synth.mint(
+        synthetic.mint(
             address(this),
             interestAccrued.sub(arcInterest)
         );
 
-        synth.mint(
+        synthetic.mint(
             arcFeeDestination,
             arcInterest
         );
@@ -270,23 +264,22 @@ contract D2SavingsV1 is Ownable {
 
         // A hard check to enable the system doesn't go into deficit
         if (fullyCollateralized) {
-            (,
-                uint256 coreTotalBorrowed,
-                Amount.Principal memory coreTotalIssued
-            ) = core.getTotals();
+            (,uint256 coreTotalBorrowed) = core.getTotals();
 
-            // This is only possible if the amount burned < minted
-            // Possible if everyone is trying to exit the core system
-            if (coreTotalIssued.sign == false) {
-                return;
-            }
+            Amount.Principal memory coreTotalIssued = synthetic.getMinterIssued(
+                address(core)
+            );
+
+            Amount.Principal memory totalIssued = coreTotalIssued.add(
+                synthetic.getMinterIssued(address(this))
+            );
 
             // The coreTotalBorrowed is how much is collectively owed. AKA Healthy Debt.
             // If the amount of synths issued by core + this contract exceed the above
             // there's probably been too much debt minted in the system. We may want to
             // do this intentionally and repay it via other means too.
             require(
-                coreTotalBorrowed >= coreTotalIssued.value.add(totalIssued),
+                coreTotalBorrowed >= totalIssued.value || totalIssued.sign == false,
                 "The total amount of synths in the system should not exceed borrows"
             );
 

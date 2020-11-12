@@ -10,7 +10,7 @@ import {
   getWaffleExpect,
 } from '../../helpers/testingUtils';
 import { ITestContext, D2ArcOptions } from '../../helpers/d2ArcDescribe';
-import { TEN_PERCENT, BASE, ONE_YEAR_IN_SECONDS } from '../../../src/constants';
+import { TEN_PERCENT, BASE, ONE_YEAR_IN_SECONDS, MAX_UINT256 } from '../../../src/constants';
 import { MockD2SavingsV1 } from '@src/typings';
 import { Signer } from 'ethers';
 import { BigNumber, BigNumberish } from 'ethers/utils';
@@ -57,7 +57,7 @@ async function init(ctx: ITestContext): Promise<void> {
   expect(await savings.arcFeeDestination()).to.equal(revenueAccount.address);
   expect(await savings.fullyCollateralized()).to.be.true;
 
-  await ctx.arc.synthetic().addMinter(savings.address);
+  await ctx.arc.synthetic().addMinter(savings.address, MAX_UINT256);
 
   await initializeD2Arc(ctx, setupOptions);
 }
@@ -200,9 +200,9 @@ describe('D2SavingsV1', () => {
       // The newly minted synth should go straight to this contract
       const savingsBalance = coreBorrowIndex.bigMul(BORROW_AMOUNT);
       expect(await ctx.arc.synthetic().balanceOf(savings.address)).to.equal(savingsBalance);
-      expect(await savings.totalIssued()).to.equal(
-        BORROW_AMOUNT.bigMul(coreBorrowIndex).sub(BORROW_AMOUNT),
-      );
+
+      const issuedAmount = await ctx.arc.synthetic().getMinterIssued(savings.address);
+      expect(issuedAmount.value).to.equal(BORROW_AMOUNT.bigMul(coreBorrowIndex).sub(BORROW_AMOUNT));
     });
 
     it('should calculate the correct index if someone deposits more funds', async () => {
