@@ -10,7 +10,7 @@
     "type": "global"
   },
   {
-    "name": "ARC-Token",
+    "name": "ArcxToken",
     "group": "",
     "source": "ArcxToken",
     "address": "0x7D849e901095BEc7F5074f6C2ceE8DAF2C8B0c7e",
@@ -87,5 +87,55 @@
     "network": "rinkeby",
     "version": 4,
     "type": "synth"
+  },
+  {
+    "name": "D2Core",
+    "source": "D2CoreV1",
+    "address": "0xe43ac4423dCd94B3250fE9359A27b00b9078De64",
+    "txn": "0x7d075fc3a461814a4e82bf2cfbda5ca6bf5247a9b74a4dff03c99e24dd266769",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": ""
+  },
+  {
+    "name": "Collateral",
+    "source": "TestToken",
+    "address": "0x92d326f8F869709415354c82d7d8277dD64309B1",
+    "txn": "0x533199289f7496bd266fe539d05b756397524161793e27ea2afa1ea62c8ec07f",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": "ETHX"
+  },
+  {
+    "name": "Synthetic",
+    "source": "SyntheticToken",
+    "address": "0x1D97dDB01F0aA6799e238cd7B7f07308dbCFA8C1",
+    "txn": "0x68de4cb8c5eddfe705a629bd0df62516f1bc7268b0df3a443abeb10609070924",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": "ETHX"
+  },
+  {
+    "name": "Oracle",
+    "source": "ChainLinkOracle",
+    "address": "0xCb4B715E2179658593d62148162EA2ff86e0D13f",
+    "txn": "0x8ed3b29124e3271058ad08e9cf3fd39df91fad95c1fb3ae125510cdc43b1b832",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": "ETHX"
+  },
+  {
+    "name": "Proxy",
+    "source": "ArcProxy",
+    "address": "0xD4915ABe3e03aaD896868AddFA79649354b442b2",
+    "txn": "0xdf306f3124ebb884d7a334409a62c71a96e2d6e4833d9b4aa4a10b73f8908889",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": "ETHX"
   }
 ]
