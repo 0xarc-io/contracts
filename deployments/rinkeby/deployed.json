@@ -87,55 +87,5 @@
     "network": "rinkeby",
     "version": 4,
     "type": "synth"
-  },
-  {
-    "name": "D2Core",
-    "source": "D2CoreV1",
-    "address": "0x751d51e49e00500b4846AAE7A6eb87E165C64e8E",
-    "txn": "0xf8864c94cd7b94c3ba4646079945ccf5e1bf5fdaa3394f465bd03304981aa43f",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "synth",
-    "group": ""
-  },
-  {
-    "name": "Collateral",
-    "source": "TestToken",
-    "address": "0xCCA17aDDBe6048a41bA6C34DF6fece3a3f76B3F9",
-    "txn": "0xcb5ab0df22f49eecfefb94cbe81f619313410559ce40af911f0eac65ad461711",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "synth",
-    "group": "ETHX"
-  },
-  {
-    "name": "Synthetic",
-    "source": "SyntheticToken",
-    "address": "0xde56b1528D5C9b47Ae851850e60213A6F6Fc1bda",
-    "txn": "0x27bd896f621056bc161a2a767757cc5b0af069d9f63de01c84cdf0b57dea2b43",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "synth",
-    "group": "ETHX"
-  },
-  {
-    "name": "Oracle",
-    "source": "MockOracle",
-    "address": "0x0BFa137bd3868b089991125877277eCD576A8542",
-    "txn": "0xa7d6ae9ca0c5835bc4ba398a685f817f4468604882669b92479742106982a061",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "synth",
-    "group": "ETHX"
-  },
-  {
-    "name": "Proxy",
-    "source": "ArcProxy",
-    "address": "0x5a3c1E068De92bE617C2E8c286Ac1412C8f345D6",
-    "txn": "0x7dc37b46a5fdb86cdcf2812f6335f548a12d6a19af453cca6db706de53f1af3c",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "synth",
-    "group": "ETHX"
   }
 ]

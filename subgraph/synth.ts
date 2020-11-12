@@ -9,6 +9,8 @@ import { BaseERC20 } from '../generated/templates/BaseERC20/BaseERC20';
 import { returnSynthVersion } from './constants';
 import { CoreV1 } from '../generated/templates/CoreV1/CoreV1';
 
+import { log } from '@graphprotocol/graph-ts';
+
 export function synthAdded(event: SynthAdded): void {
   let synthRegistryContract = SynthRegistry.bind(event.address);
   let synthDetails = synthRegistryContract.synthsByAddress(event.params.synth);
@@ -20,6 +22,7 @@ export function synthAdded(event: SynthAdded): void {
   let proxyAddress = synthDetails.value1;
 
   if (indexVersion == 1) {
+    log.info('Version indexing: 1', []);
     CoreV1Template.create(proxyAddress);
     let coreContract = CoreV1.bind(proxyAddress);
     let stateAddress = coreContract.state();
@@ -27,6 +30,7 @@ export function synthAdded(event: SynthAdded): void {
   }
 
   if (indexVersion == 2) {
+    log.info('Version indexing: 2', []);
     D2CoreV1Template.create(proxyAddress);
   }
 }

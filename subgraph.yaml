@@ -8,7 +8,7 @@ dataSources:
     name: SynthRegistry
     network: mainnet
     source:
-      address: '0xbe0037eAf2d64fe5529BCa93c18C9702D3930376'
+      address: '0x1D7022f5B17d2F8B695918FB48fa1089C9f85401'
       abi: SynthRegistry
     mapping:
       kind: ethereum/events
@@ -93,11 +93,11 @@ templates:
         - name: BaseERC20
           file: ./artifacts/contracts/token/BaseERC20.sol/BaseERC20.json
       eventHandlers:
-        - event: ActionOperated(uint8,(uint256,uint256,uint256),(address,(bool,uint256),(bool,uint256)))
+        - event: ActionOperated(uint8,(uint256,uint256,uint256,address),(address,(bool,uint256),(bool,uint256)))
           handler: actionOperated
         - event: FeesUpdated((uint256),(uint256))
           handler: feesUpdated
-        - event: LimitsUpdated(uint256,uint256,uint256)
+        - event: LimitsUpdated(uint256,uint256)
           handler: limitsUpdated
         - event: RateUpdated(uint256)
           handler: rateUpdated

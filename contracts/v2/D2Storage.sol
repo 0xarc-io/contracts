@@ -19,6 +19,10 @@ contract D2StorageV1 {
 
     mapping (uint256 => D2Types.Position) internal positions;
 
+    mapping (uint256 => mapping (address => bool)) internal positionOperators;
+
+    mapping (address => bool) internal globalOperators;
+
     IOracle internal oracle;
 
     address internal collateralAsset;

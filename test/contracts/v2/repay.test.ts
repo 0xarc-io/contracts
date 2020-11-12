@@ -80,6 +80,14 @@ describe('D2Core.operateAction(Repay)', () => {
     expect(position.borrowedAmount.value).to.equal(BORROW_AMOUNT.div(2));
   });
 
+  it('should not be able to repay from someone elses position', async () => {
+    // Create a 400% collateralised position
+    await ctx.arc.openPosition(COLLATERAL_AMOUNT.mul(2), BORROW_AMOUNT, minterAccount.signer);
+
+    // Withdraw the maximum amount to put it at the boundary (200%)
+    await expect(ctx.arc.repay(0, 0, COLLATERAL_AMOUNT, otherAccount.signer)).to.be.reverted;
+  });
+
   it('should be able to repay (withdraw) to decrease the c-ratio', async () => {
     // Create a 400% collateralised position
     await ctx.arc.openPosition(COLLATERAL_AMOUNT.mul(2), BORROW_AMOUNT, minterAccount.signer);

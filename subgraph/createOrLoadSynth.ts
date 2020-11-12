@@ -26,7 +26,6 @@ export function createOrLoadV1Synth(address: Address): Synth {
 
     let limits = stateContract.risk();
     synth.collateralLimit = limits.value0;
-    synth.syntheticLimit = limits.value1;
     synth.positionCollateralMinimum = limits.value2;
     synth.interestRate = BigInt.fromI32(0);
   }
@@ -57,8 +56,7 @@ export function createOrLoadV2Synth(address: Address): Synth {
 
     let limits = core.getLimits();
     synth.collateralLimit = limits.value0;
-    synth.syntheticLimit = limits.value1;
-    synth.positionCollateralMinimum = limits.value2;
+    synth.positionCollateralMinimum = limits.value1;
   }
 
   return synth as Synth;

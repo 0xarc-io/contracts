@@ -119,6 +119,10 @@ describe('D2Core.operateAction(Borrow)', () => {
     await expect(ctx.arc.borrow(0, 0, 1, minterAccount.signer)).to.be.reverted;
   });
 
+  it('should be able to borrow from someone elses account', async () => {
+    await expect(ctx.arc.borrow(0, 0, BORROW_AMOUNT, otherAccount.signer)).to.be.reverted;
+  });
+
   it('should not be able to borrow without enough collateral', async () => {
     await expect(ctx.arc.borrow(0, 0, BORROW_AMOUNT.add(1), minterAccount.signer)).be.reverted;
     await expect(
