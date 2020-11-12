@@ -67,7 +67,6 @@ export function marketParamsUpdated(event: MarketParamsUpdated): void {
 export function riskParamsUpdated(event: RiskParamsUpdated): void {
   let synth = createOrLoadV1Synth(event.address);
   synth.collateralLimit = event.params.updatedParams.collateralLimit;
-  synth.syntheticLimit = event.params.updatedParams.syntheticLimit;
   synth.positionCollateralMinimum = event.params.updatedParams.positionCollateralMinimum;
   synth.save();
 }

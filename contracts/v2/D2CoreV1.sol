@@ -37,13 +37,15 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         Open,
         Borrow,
         Repay,
-        Liquidate
+        Liquidate,
+        TransferOwnership
     }
 
     struct OperationParams {
         uint256 id;
         uint256 amountOne;
         uint256 amountTwo;
+        address addressOne;
     }
 
     /* ========== Events ========== */
@@ -70,6 +72,17 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         uint256 _positionCollateralMinimum
     );
 
+    event GlobalOperatorSet(
+        address _operator,
+        bool _status
+    );
+
+    event PositionOperatorSet(
+        uint256 _positionId,
+        address _operator,
+        bool _status
+    );
+
     event RateUpdated(uint256 value);
 
     event OracleUpdated(address value);
@@ -81,6 +94,20 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
     event PauseStatusUpdated(bool value);
 
     event InterestSetterUpdated(address value);
+
+    /* ========== Modifiers ========== */
+
+    modifier isAuthorized(uint256 _positionId) {
+        D2Types.Position memory position = positions[_positionId];
+
+        require(
+            position.owner == msg.sender ||
+            isGlobalOperator(msg.sender) ||
+            isPositionOperator(_positionId, msg.sender),
+            "D2Core: msg.sender is not the owner or position/global operator"
+        );
+        _;
+    }
 
     /* ========== Constructor ========== */
 
@@ -202,7 +229,50 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         emit InterestSetterUpdated(_setter);
     }
 
+    function setGlobalOperatorStatus(
+        address _operator,
+        bool    _status
+    )
+        public
+        onlyAdmin
+    {
+        globalOperators[_operator] = _status;
+
+        emit GlobalOperatorSet(_operator, _status);
+    }
+
     /* ========== Public Functions ========== */
+
+    /**
+     * @dev Add/remove an address to operate a position on the owner's behalf. This will include
+     *      the ability to borrow and repay on their behalf as well.
+     *
+     * @param _positionId The position to become an operator for
+     * @param _operator The address set to become the operator
+     * @param _status The ability to s
+     */
+    function setPositionOperatorStatus(
+        uint256 _positionId,
+        address _operator,
+        bool    _status
+    )
+        public
+    {
+        D2Types.Position memory position = positions[_positionId];
+
+        require(
+            position.owner == msg.sender || isGlobalOperator(msg.sender),
+            "setAuthorizedOperatorStatus(): must be owner or global operator"
+        );
+
+        positionOperators[_positionId][_operator] = _status;
+
+        emit PositionOperatorSet(
+            _positionId,
+            _operator,
+            _status
+        );
+    }
 
     /**
      * @dev This is the only function that can be called by user's of the system
@@ -255,6 +325,11 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
             operatedPosition = liquidate(
                 params.id
             );
+        } else if (operation == Operation.TransferOwnership) {
+            operatedPosition = transferOwnership(
+                params.id,
+                params.addressOne
+            );
         }
 
         // Ensure that the operated action is collateralised again, unless a
@@ -275,19 +350,6 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
             operatedPosition
         );
     }
-
-    /**
-     * @dev This function allows a user to add an authorised operator for themselves which allows
-     *      for simplified user interactions via a wrapper contract that makes multiple calls.
-     *
-     * @param operator Address of the user/operator who you would like to grant access to
-     */
-    function setAuthorisedOperator(
-        address operator
-    )
-        public
-        returns (bool)
-    { /* solium-disable-line no-empty-blocks */ }
 
     /**
      * @dev Update the index of the contracts to compute the current interest rate.
@@ -419,13 +481,14 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         uint256 borrowAmount
     )
         internal
+        isAuthorized(positionId)
         returns (D2Types.Position memory)
     {
         // CHECKS:
         // 1. Ensure that the position actually exists
         // 2. Conver the borrow amount to a Principal value
         // 3. Ensure the position is collateralised before borrowing against it
-        // 4. Ensure that msg.sender == owner of position
+        // 4. Ensure that msg.sender == owner of position (done in the modifier)
         // 5. Determine if there's enough liquidity of the `borrowAsset`
         // 6. Calculate the amount of collateral actually needed given the `collateralRatio`
         // 7. Ensure the user has provided enough of the collateral asset
@@ -444,11 +507,6 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
 
         // Get the current position
         D2Types.Position storage position = positions[positionId];
-
-        require(
-            position.owner == msg.sender,
-            "borrowPosition(): must be a valid position"
-        );
 
         Decimal.D256 memory currentPrice = oracle.fetchCurrentPrice();
 
@@ -525,10 +583,11 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         uint256 withdrawAmount
     )
         private
+        isAuthorized(positionId)
         returns (D2Types.Position memory)
     {
         // CHECKS:
-        // 1. Ensure the position actually exists by ensuring the owner == msg.sender
+        // 1. Ensure the position actually exists by ensuring the owner == msg.sender (done in the modifier)
         // 2. The position does not have to be collateralised since we want people to repay
         //    before a liquidator does if they do actually have a chance
 
@@ -546,12 +605,6 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         D2Types.Position storage position = positions[positionId];
 
         Decimal.D256 memory currentPrice = oracle.fetchCurrentPrice();
-
-        // Ensure the user is the owner of the position
-        require(
-            position.owner == msg.sender,
-            "repay(): must be a valid position"
-        );
 
         // Calculate the principal amount based on the current index of the market
         Amount.Principal memory convertedPrincipal = Amount.calculatePrincipal(
@@ -869,12 +922,30 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         return position;
     }
 
-    function currentTimestamp()
-        public
-        view
-        returns (uint256)
+    /**
+     * @dev This should allow a user to transfer ownership of a position to a
+     *      a different address to operate their position.
+     *
+     * @param positionId ID of the position to transfer ownership to
+     * @param newOwner New owner of the position to set
+     */
+    function transferOwnership(
+        uint256 positionId,
+        address newOwner
+    )
+        internal
+        returns (D2Types.Position storage)
     {
-        return block.timestamp;
+        D2Types.Position storage position = positions[positionId];
+
+        require(
+            msg.sender == position.owner,
+            "transferOwnership(): must be a valid position"
+        );
+
+        position.owner = newOwner;
+
+        return position;
     }
 
     /* ========== Public Getters ========== */
@@ -989,7 +1060,36 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         );
     }
 
+    function isPositionOperator(
+        uint256 _positionId,
+        address _operator
+    )
+        public
+        view
+        returns (bool)
+    {
+        return positionOperators[_positionId][_operator];
+    }
+
+    function isGlobalOperator(
+        address _operator
+    )
+        public
+        view
+        returns (bool)
+    {
+        return globalOperators[_operator];
+    }
+
     /* ========== Developer Functions ========== */
+
+    function currentTimestamp()
+        public
+        view
+        returns (uint256)
+    {
+        return block.timestamp;
+    }
 
     function isCollateralized(
         D2Types.Position memory position

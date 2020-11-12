@@ -1,7 +1,8 @@
 {
 	"LINKUSD": {
 		"collateral_address": "",
-		"oracle_source_address": "",
+    "oracle_source_address": "",
+    "version": 1,
 		"params": {
 			"collateral_ratio": "2000000000000000000",
 			"liquidation_user_fee": "50000000000000000",
@@ -13,7 +14,8 @@
 	},
 	"ETHX": {
 		"collateral_address": "",
-		"oracle_source_address": "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
+    "oracle_source_address": "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
+    "version": 1,
 		"params": {
 			"collateral_ratio": "2000000000000000000",
 			"liquidation_user_fee": "50000000000000000",

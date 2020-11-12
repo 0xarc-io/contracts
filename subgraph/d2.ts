@@ -56,7 +56,6 @@ export function feesUpdated(event: FeesUpdatedEvent): void {
 
 export function limitsUpdated(event: LimitsUpdatedEvent): void {
   let synth = createOrLoadV2Synth(event.address);
-  synth.syntheticLimit = event.params._syntheticLimit;
   synth.collateralLimit = event.params._collateralLimit;
   synth.positionCollateralMinimum = event.params._positionCollateralMinimum;
   synth.save();

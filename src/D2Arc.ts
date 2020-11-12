@@ -11,9 +11,10 @@ import {
 import { ID2Core } from './typings/ID2Core';
 import { asyncForEach } from '@src/utils/asyncForEach';
 import { TestToken } from '@src/typings/TestToken';
-import { ActionOperated, Operation, Position } from './types';
+import { ActionOperated, Operation, Position, OperationParams } from './types';
 import { parseLogs } from './utils/parseLogs';
 import { calculateLiquidationAmount } from './utils/calculations';
+import { AddressZero } from 'ethers/constants';
 
 export enum SynthNames {
   ETHX = 'ETHX',
@@ -74,6 +75,7 @@ export default class D2Arc {
         id: 0,
         amountOne: collateralAmount,
         amountTwo: borrowAmount,
+        addressOne: AddressZero,
       },
       overrides,
     );
@@ -96,6 +98,7 @@ export default class D2Arc {
         id: positionId,
         amountOne: collateralAmount,
         amountTwo: borrowAmount,
+        addressOne: AddressZero,
       },
       overrides,
     );
@@ -118,6 +121,7 @@ export default class D2Arc {
         id: positionId,
         amountOne: repaymentAmount,
         amountTwo: withdrawAmount,
+        addressOne: AddressZero,
       },
       overrides,
     );
@@ -138,6 +142,29 @@ export default class D2Arc {
         id: positionId,
         amountOne: 0,
         amountTwo: 0,
+        addressOne: AddressZero,
+      },
+      overrides,
+    );
+
+    return await this.parseActionTx(tx);
+  }
+
+  async transferOwnership(
+    positionId: BigNumberish,
+    newOwner: string,
+    caller: Signer = this.signer,
+    synth: Synth = this.availableSynths()[0],
+    overrides: TransactionOverrides = {},
+  ) {
+    const contract = await this.getCore(synth, caller);
+    const tx = await contract.operateAction(
+      Operation.TransferOwnership,
+      {
+        id: positionId,
+        amountOne: 0,
+        amountTwo: 0,
+        addressOne: newOwner,
       },
       overrides,
     );

@@ -16,7 +16,6 @@ type Synth @entity {
   liquidationUserFee: BigInt
   liquidationArcRatio: BigInt
   collateralLimit: BigInt
-  syntheticLimit: BigInt
   positionCollateralMinimum: BigInt
   interestRate: BigInt
 }

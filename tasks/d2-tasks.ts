@@ -24,6 +24,7 @@ import {
   writeToDeployments,
 } from '../deployments/src';
 import { BigNumber } from 'ethers/utils';
+import { MAX_UINT256 } from '../src/constants';
 
 task('deploy-d2', 'Deploy the D2 contracts')
   .addParam('synth', 'The synth you would like to interact with')
@@ -142,26 +143,13 @@ task('deploy-d2', 'Deploy the D2 contracts')
     const synth = await SyntheticToken.at(signer, syntheticAddress);
     try {
       // We already enforce limits at the synthetic level.
-      await synth.addMinter(core.address, new BigNumber(2).pow(256).sub(1));
+      await synth.addMinter(core.address, synthConfig.params.synthetic_limit || MAX_UINT256);
       console.log(green(`Added minter!\n`));
     } catch (error) {
       console.log(red(`Failed to add minter!\nReason: ${error}\n`));
     }
 
-    console.log(yellow(`* Calling setLimits...`));
-    try {
-      await core.setLimits(
-        synthConfig.params.collateral_limit || 0,
-        synthConfig.params.synthetic_limit || 0,
-        synthConfig.params.position_collateral_minimum || 0,
-      );
-      console.log(green(`Limits set!\n`));
-    } catch (error) {
-      console.log(red(`Failed to set limits!\nReason: ${error}\n`));
-    }
-
     console.log(yellow(`* Adding to synth registry...`));
-
     const synthRegistryDetails = loadContract({
       network,
       type: DeploymentType.global,
@@ -173,6 +161,17 @@ task('deploy-d2', 'Deploy the D2 contracts')
       console.log(green(`Added to Synth Registry!\n`));
     } catch (error) {
       console.log(red(`Failed to add to Synth Registry!\nReason: ${error}\n`));
+    }
+
+    console.log(yellow(`* Calling setLimits...`));
+    try {
+      await core.setLimits(
+        synthConfig.params.collateral_limit || 0,
+        synthConfig.params.position_collateral_minimum || 0,
+      );
+      console.log(green(`Limits set!\n`));
+    } catch (error) {
+      console.log(red(`Failed to set limits!\nReason: ${error}\n`));
     }
   });
 

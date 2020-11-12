@@ -46,6 +46,7 @@ export enum Operation {
   Borrow,
   Repay,
   Liquidate,
+  TransferOwnership,
 }
 
 export type Int = {
@@ -63,6 +64,7 @@ export type OperationParams = {
   id: BigNumberish;
   amountOne: BigNumberish;
   amountTwo: BigNumberish;
+  addressOne?: string;
 };
 
 export type ActionOperated = {
