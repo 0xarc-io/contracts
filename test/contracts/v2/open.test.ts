@@ -78,7 +78,6 @@ describe('D2Core.operateAction(Open)', () => {
     const totals = await ctx.arc.getSynthTotals();
     expect(totals[0]).to.equal(COLLATERAL_AMOUNT);
     expect(totals[1]).to.equal(BORROW_AMOUNT);
-    expect(totals[2].value).to.equal(BORROW_AMOUNT);
 
     expect(await ctx.arc.synth().collateral.balanceOf(ctx.arc.syntheticAddress())).to.equal(
       COLLATERAL_AMOUNT,
@@ -161,7 +160,10 @@ describe('D2Core.operateAction(Open)', () => {
     const totals = await ctx.arc.getSynthTotals();
     expect(totals[0]).to.equal(COLLATERAL_AMOUNT.mul(3));
     expect(totals[1]).to.equal(newBorrowTotal);
-    expect(totals[2].value).to.equal(BORROW_AMOUNT.mul(2));
+
+    const issuedAmount = await ctx.arc.synthetic().getMinterIssued(ctx.arc.coreAddress());
+    expect(issuedAmount.value).to.equal(BORROW_AMOUNT.mul(2));
+    expect(issuedAmount.sign).to.be.true;
 
     // The interest increase is simply how much the total is less the amount we know we deposited (par values)
     const interestIncrease = newBorrowTotal.sub(BORROW_AMOUNT.add(secondPositionBorrowedAmount));
@@ -176,7 +178,7 @@ describe('D2Core.operateAction(Open)', () => {
   });
 
   it('should not be able to borrow below in the minimum position amount', async () => {
-    await ctx.arc.core().setLimits(0, 0, COLLATERAL_AMOUNT.add(1));
+    await ctx.arc.core().setLimits(0, COLLATERAL_AMOUNT.add(1));
     await expect(ctx.arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, minterAccount.signer)).to.be
       .reverted;
   });

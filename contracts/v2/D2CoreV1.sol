@@ -67,7 +67,6 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
 
     event LimitsUpdated(
         uint256 _collateralLimit,
-        uint256 _syntheticLimit,
         uint256 _positionCollateralMinimum
     );
 
@@ -115,7 +114,6 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
 
         borrowIndex = uint256(10**18);
         indexLastUpdate = currentTimestamp();
-        totalIssued = Amount.zero();
 
         setOracle(_oracleAddress);
         setCollateralRatio(_collateralRatio);
@@ -179,19 +177,16 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
 
     function setLimits(
         uint256 _collateralLimit,
-        uint256 _syntheticLimit,
         uint256 _positionCollateralMinimum
     )
         public
         onlyAdmin
     {
         collateralLimit = _collateralLimit;
-        syntheticLimit = _syntheticLimit;
         positionCollateralMinimum = _positionCollateralMinimum;
 
         emit LimitsUpdated(
             collateralLimit,
-            syntheticLimit,
             positionCollateralMinimum
         );
     }
@@ -262,15 +257,11 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
             );
         }
 
-        // Ensure that the operated action is collateralised again
+        // Ensure that the operated action is collateralised again, unless a
+        // liquidation has occured in which case the position will be under-collataralised
         require(
-            isCollateralized(operatedPosition) == true,
+            isCollateralized(operatedPosition) == true || operation == Operation.Liquidate,
             "operateAction(): the operated position is undercollateralised"
-        );
-
-        require(
-            totalIssued.value <= syntheticLimit || syntheticLimit == 0,
-            "operateAction(): synthetic issued cannot be greater than limit"
         );
 
         require(
@@ -512,14 +503,6 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
             collateralAmount
         );
 
-        // Mint the synthetic token to user opening the borrow position
-        totalIssued = totalIssued.add(
-            Amount.Principal({
-                value: borrowAmount,
-                sign: true
-            })
-        );
-
         ISyntheticToken(address(syntheticAsset)).mint(
             msg.sender,
             borrowAmount
@@ -611,14 +594,6 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
 
         ISyntheticToken synthetic = ISyntheticToken(syntheticAsset);
         IERC20 collateralAsset = IERC20(collateralAsset);
-
-        // Burn the synthetic asset from the user
-        totalIssued = totalIssued.sub(
-            Amount.Principal({
-                value: repayAmount,
-                sign: true
-            })
-        );
 
         synthetic.burn(
             msg.sender,
@@ -771,6 +746,8 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
             liquidationCollateralDelta,
             liquidatorCollateralCost
         );
+
+        return position;
     }
 
     function _settleLiquidation(
@@ -782,14 +759,6 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
     {
         ISyntheticToken synthetic = ISyntheticToken(syntheticAsset);
         IERC20 collateralAsset = IERC20(collateralAsset);
-
-        // Burn the synthetic asset from the liquidator
-        totalIssued = totalIssued.sub(
-            Amount.Principal({
-                value: borrowToLiquidate,
-                sign: true
-            })
-        );
 
         synthetic.burn(
             msg.sender,
@@ -981,23 +950,21 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         view
         returns (
             uint256,
-            uint256,
-            Amount.Principal memory
+            uint256
         )
     {
         return (
             totalSupplied,
-            totalBorrowed,
-            totalIssued
+            totalBorrowed
         );
     }
 
     function getLimits()
         external
         view
-        returns (uint256, uint256, uint256)
+        returns (uint256, uint256)
     {
-        return (collateralLimit, syntheticLimit, positionCollateralMinimum);
+        return (collateralLimit, positionCollateralMinimum);
     }
 
     function getInterestRate()

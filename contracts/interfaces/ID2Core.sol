@@ -54,12 +54,12 @@ interface ID2Core {
     function getTotals()
         external
         view
-        returns (uint256, uint256, Amount.Principal memory);
+        returns (uint256, uint256);
 
     function getLimits()
         external
         view
-        returns (uint256, uint256, uint256);
+        returns (uint256, uint256);
 
     function getInterestRate()
         external

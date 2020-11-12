@@ -23,6 +23,7 @@ import {
   pruneDeployments,
   writeToDeployments,
 } from '../deployments/src';
+import { BigNumber } from 'ethers/utils';
 
 task('deploy-d2', 'Deploy the D2 contracts')
   .addParam('synth', 'The synth you would like to interact with')
@@ -140,7 +141,8 @@ task('deploy-d2', 'Deploy the D2 contracts')
     console.log(yellow(`* Calling addMinter...`));
     const synth = await SyntheticToken.at(signer, syntheticAddress);
     try {
-      await synth.addMinter(core.address, synthConfig.params.synthetic_limit);
+      // We already enforce limits at the synthetic level.
+      await synth.addMinter(core.address, new BigNumber(2).pow(256).sub(1));
       console.log(green(`Added minter!\n`));
     } catch (error) {
       console.log(red(`Failed to add minter!\nReason: ${error}\n`));

@@ -7,6 +7,7 @@ import { SynthNames } from './D2Arc';
 import { assert } from 'console';
 import { BigNumberish } from 'ethers/utils';
 import { AddressZero, Zero } from 'ethers/constants';
+import { MAX_UINT256 } from './constants';
 
 export class D2TestArc extends D2Arc {
   static async init(signer: Signer): Promise<D2TestArc> {
@@ -20,7 +21,7 @@ export class D2TestArc extends D2Arc {
     const mockCore = await MockD2CoreV1.deploy(this.signer);
 
     const collateralAsset = await TestToken.deploy(this.signer, 'TestCollateral', 'TEST');
-    const syntheticAsset = await SyntheticToken.deploy(this.signer, 'ETHX', 'ETHX');
+    const syntheticAsset = await SyntheticToken.deploy(this.signer, 'ETHX', 'ETHX', 1);
 
     const oracle = await MockOracle.deploy(this.signer);
     const proxy = await ArcProxy.deploy(this.signer, mockCore.address, this.signerAddress, []);
@@ -38,7 +39,7 @@ export class D2TestArc extends D2Arc {
       { value: 0 },
     );
 
-    await syntheticAsset.addMinter(core.address);
+    await syntheticAsset.addMinter(core.address, MAX_UINT256);
 
     await this.addSynths({ ETHX: core.address });
   }

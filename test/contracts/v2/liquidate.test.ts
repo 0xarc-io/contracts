@@ -109,9 +109,8 @@ describe('D2Core.operateAction(Liquidate)', () => {
       preLiquidateSupply.sub(liquidationDetails.debtNeededToLiquidate),
     );
 
-    expect(postTotals[2].value).to.equal(
-      preTotals[1].sub(liquidationDetails.debtNeededToLiquidate),
-    );
+    const issuedAmount = await ctx.arc.synthetic().getMinterIssued(ctx.arc.coreAddress());
+    expect(issuedAmount.value).to.equal(preTotals[1].sub(liquidationDetails.debtNeededToLiquidate));
 
     // Check position borrow amount (decrease)
     expect(postLiquidatePosition.borrowedAmount.value).to.equal(liquidationDetails.newDebtAmount);
@@ -225,5 +224,31 @@ describe('D2Core.operateAction(Liquidate)', () => {
     await ctx.arc.liquidatePosition(0, liquidatorAccount.signer);
 
     await attemptLiquidation(0);
+  });
+
+  it('should be able to liquidate if the price crashes by a large amount', async () => {
+    await openLiquidatorPosition();
+    await attemptLiquidation(0);
+
+    await ctx.arc.updatePrice(ArcDecimal.new(0.5).value);
+    await ctx.arc.liquidatePosition(0, liquidatorAccount.signer);
+
+    let position = await ctx.arc.getPosition(0);
+    let beforeTotalCollateralHeld = await ctx.arc
+      .synth()
+      .collateral.balanceOf(ctx.arc.syntheticAddress());
+    let beforeSyntheticBalance = await ctx.arc.synthetic().balanceOf(liquidatorAccount.address);
+
+    await ctx.arc.liquidatePosition(0, liquidatorAccount.signer);
+
+    let afterTotalCollateralHeld = await ctx.arc
+      .synth()
+      .collateral.balanceOf(ctx.arc.syntheticAddress());
+    let afterSyntheticBalance = await ctx.arc.synthetic().balanceOf(liquidatorAccount.address);
+
+    expect(afterSyntheticBalance).to.equal(beforeSyntheticBalance);
+    expect(afterTotalCollateralHeld).to.equal(beforeTotalCollateralHeld);
+
+    position = await ctx.arc.getPosition(0);
   });
 });

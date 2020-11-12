@@ -158,13 +158,8 @@ describe('D2Core.operateAction(Borrow)', () => {
     expect(await ctx.arc.isCollateralized(0)).to.be.false;
   });
 
-  it('should not be able to borrow more than the synthetic limit', async () => {
-    await ctx.arc.core().setLimits(0, BORROW_AMOUNT, 0);
-    await expect(ctx.arc.borrow(0, 0, 1, minterAccount.signer)).to.be.reverted;
-  });
-
   it('should not be able to borrow more the collateral limit', async () => {
-    await ctx.arc.core().setLimits(COLLATERAL_AMOUNT, 0, 0);
+    await ctx.arc.core().setLimits(COLLATERAL_AMOUNT, 0);
     await expect(ctx.arc.borrow(0, 1, 0, minterAccount.signer)).to.be.reverted;
   });
 });

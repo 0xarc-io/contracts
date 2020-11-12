@@ -32,9 +32,6 @@ contract D2StorageV1 {
     // The total amount owed to the system (grows in real time)
     uint256 internal totalBorrowed;
 
-    // How much synthetic this contract itself has created/destroyed
-    Amount.Principal internal totalIssued;
-
     uint256 internal borrowIndex;
     uint256 internal indexLastUpdate;
     uint256 internal interestRate;
@@ -46,7 +43,6 @@ contract D2StorageV1 {
     address public interestSetter;
 
     uint256 internal collateralLimit;
-    uint256 internal syntheticLimit;
     uint256 internal positionCollateralMinimum;
 }
 

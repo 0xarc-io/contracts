@@ -9,10 +9,8 @@ import {
   addSnapshotBeforeRestoreAfterEach,
   getWaffleExpect,
 } from '../../helpers/testingUtils';
-import { ethers } from 'hardhat';
+
 import { BigNumber } from 'ethers/utils';
-import arcContracts from 'index';
-import { utf8ToHex } from 'web3-utils';
 
 let ownerAccount: Account;
 let arcAccount: Account;
