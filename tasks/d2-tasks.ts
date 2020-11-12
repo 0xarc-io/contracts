@@ -99,7 +99,7 @@ task('deploy-d2', 'Deploy the D2 contracts')
       oracleAddress = await deployContract(
         {
           name: 'Oracle',
-          source: 'MockOracle',
+          source: 'ChainLinkOracle',
           data: ChainLinkOracle.getDeployTransaction(signer, synthConfig.oracle_source_address),
           version: 1,
           type: DeploymentType.synth,
