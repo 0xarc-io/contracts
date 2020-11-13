@@ -3,6 +3,7 @@ import { deployContract, pruneDeployments } from '../deployments/src';
 import { subtask, task } from 'hardhat/config';
 import { DeploymentType } from '../deployments/src/writeToDeployments';
 import { NetworkParams } from '../deployments/src/deployContract';
+import { SynthRegistryV2 } from '@src/typings/SynthRegistryV2';
 
 task('deploy-global', 'Deploy, update and interact with global contracts').setAction(
   async (taskArgs, hre) => {
@@ -30,6 +31,17 @@ task('deploy-global', 'Deploy, update and interact with global contracts').setAc
         source: 'SynthRegistry',
         data: SynthRegistry.getDeployTransaction(signer),
         version: 1,
+        type: DeploymentType.global,
+      },
+      networkConfig,
+    );
+
+    const synthRegistryV2 = await deployContract(
+      {
+        name: 'SynthRegistryV2',
+        source: 'SynthRegistryV2',
+        data: SynthRegistryV2.getDeployTransaction(signer),
+        version: 2,
         type: DeploymentType.global,
       },
       networkConfig,

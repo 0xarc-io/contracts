@@ -1,36 +1,37 @@
 import { SynthAdded, SynthRegistry } from '../generated/SynthRegistry/SynthRegistry';
 import {
+  SynthAdded as SynthAddedV2,
+  SynthRegistryV2,
+} from '../generated/SynthRegistryV2/SynthRegistryV2';
+
+import {
   BaseERC20 as BaseERC20Template,
   StateV1 as StateV1Template,
   CoreV1 as CoreV1Template,
   D2CoreV1 as D2CoreV1Template,
 } from '../generated/templates';
-import { BaseERC20 } from '../generated/templates/BaseERC20/BaseERC20';
-import { returnSynthVersion } from './constants';
+
 import { CoreV1 } from '../generated/templates/CoreV1/CoreV1';
 
 import { log } from '@graphprotocol/graph-ts';
 
-export function synthAdded(event: SynthAdded): void {
+export function synthV1Added(event: SynthAdded): void {
   let synthRegistryContract = SynthRegistry.bind(event.address);
   let synthDetails = synthRegistryContract.synthsByAddress(event.params.synth);
 
   BaseERC20Template.create(event.params.synth);
-  let tokenContract = BaseERC20.bind(event.params.synth);
-
-  let indexVersion = returnSynthVersion(tokenContract.symbol());
   let proxyAddress = synthDetails.value1;
 
-  if (indexVersion == 1) {
-    log.info('Version indexing: 1', []);
-    CoreV1Template.create(proxyAddress);
-    let coreContract = CoreV1.bind(proxyAddress);
-    let stateAddress = coreContract.state();
-    StateV1Template.create(stateAddress);
-  }
+  log.info('Version indexing: 1', []);
+  CoreV1Template.create(proxyAddress);
+  let coreContract = CoreV1.bind(proxyAddress);
+  let stateAddress = coreContract.state();
+  StateV1Template.create(stateAddress);
+}
 
-  if (indexVersion == 2) {
-    log.info('Version indexing: 2', []);
-    D2CoreV1Template.create(proxyAddress);
-  }
+export function synthV2Added(event: SynthAddedV2): void {
+  log.info('Version indexing: 2', []);
+
+  BaseERC20Template.create(event.params.synth);
+  D2CoreV1Template.create(event.params.proxy);
 }
