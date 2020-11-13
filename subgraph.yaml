@@ -27,6 +27,8 @@ dataSources:
       eventHandlers:
         - event: SynthAdded(bytes32,address)
           handler: synthV1Added
+        - event: SynthRemoved(bytes32)
+          handler: synthRemoved
       file: ./subgraph/synth.ts
   - kind: ethereum/contract
     name: SynthRegistryV2
