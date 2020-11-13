@@ -50,7 +50,7 @@ export class D1TestArc extends D1Arc {
     if (!positionId) {
       return await this.openPosition(collateral, amount, from, {});
     } else {
-      return await this.borrow(positionId!, AssetType.Collateral, collateral, amount, from, {});
+      return await this.borrow(positionId!, collateral, amount, from, {});
     }
   }
 

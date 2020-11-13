@@ -1,14 +1,12 @@
-import { Signer, Wallet } from 'ethers';
+import { Signer } from 'ethers';
 import { BigNumber, BigNumberish } from 'ethers/utils';
-import { D2CoreV1, IERC20, IOracle, ISyntheticToken, TransactionOverrides } from './typings';
-import { ID2Core } from './typings/ID2Core';
-import { asyncForEach } from '@src/utils/asyncForEach';
-import { TestToken } from '@src/typings/TestToken';
-import { ActionOperated, Operation, Position, OperationParams } from './types';
+import { D2CoreV1, IOracle, TestToken, TransactionOverrides } from './typings';
+import { ActionOperated, Operation, Position } from './types';
 import { parseLogs } from './utils/parseLogs';
 import { calculateLiquidationAmount } from './utils/calculations';
 import { AddressZero } from 'ethers/constants';
 import { SyntheticTokenV1 } from './typings/SyntheticTokenV1';
+import { asyncForEach } from './utils/asyncForEach';
 
 export enum SynthNames {
   ETHX = 'ETHX',
@@ -21,7 +19,7 @@ export type Synth = {
   synthetic: SyntheticTokenV1;
 };
 
-export default class D2Arc {
+export class D2Arc {
   public signer: Signer;
   public signerAddress: string;
 
@@ -225,3 +223,5 @@ export default class D2Arc {
     return await D2CoreV1.at(caller || this.signer, synth.core.address);
   }
 }
+
+export default D2Arc;
