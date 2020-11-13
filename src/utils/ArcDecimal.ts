@@ -1,4 +1,4 @@
-import { BigNumber, BigNumberish } from 'ethers/utils';
+import { BigNumber } from 'ethers/utils';
 
 export default class ArcDecimal {
   static new(value: number) {

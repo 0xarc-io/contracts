@@ -1,5 +1,5 @@
-import { Wallet, Signer } from 'ethers';
-import { BigNumber, BigNumberish } from 'ethers/utils';
+import { Signer } from 'ethers';
+import { BigNumberish } from 'ethers/utils';
 import { IOracle } from './typings/IOracle';
 import { StaticSyntheticToken } from './typings/StaticSyntheticToken';
 
@@ -18,9 +18,8 @@ import Token from './utils/Token';
 import { IERC20 } from './typings/IERC20';
 import { RiskParams, MarketParams, DeploymentConfig } from './types';
 import { ArcProxy } from './typings/ArcProxy';
-import { MAX_UINT256 } from './constants';
 
-export default class D1Arc {
+export class D1Arc {
   public signer: Signer;
 
   public core: CoreV4;
@@ -253,3 +252,5 @@ export default class D1Arc {
     return await StateV1.at(caller || this.signer, this.state.address);
   }
 }
+
+export default D1Arc;

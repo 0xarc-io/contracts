@@ -19,7 +19,7 @@ export type Synth = {
   synthetic: SyntheticTokenV1;
 };
 
-export default class D2Arc {
+export class D2Arc {
   public signer: Signer;
   public signerAddress: string;
 
@@ -223,3 +223,5 @@ export default class D2Arc {
     return await D2CoreV1.at(caller || this.signer, synth.core.address);
   }
 }
+
+export default D2Arc;
