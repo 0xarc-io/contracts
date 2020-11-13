@@ -4,7 +4,6 @@ import { IOracle } from './typings/IOracle';
 import { StaticSyntheticToken } from './typings/StaticSyntheticToken';
 
 import {
-  AssetType,
   Operation,
   OperationParams,
   ActionOperated,
@@ -133,7 +132,6 @@ export default class D1Arc {
 
   async borrow(
     positionId: BigNumberish,
-    collateralAsset: AssetType,
     collateralAmount: BigNumberish,
     borrowAmount: BigNumberish,
     caller: Signer = this.signer,
