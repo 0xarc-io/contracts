@@ -25,6 +25,7 @@ import {
 import { BigNumber } from 'ethers/utils';
 import { MAX_UINT256 } from '../src/constants';
 import { SyntheticTokenV1 } from '@src/typings/SyntheticTokenV1';
+import { SynthRegistryV2 } from '@src/typings/SynthRegistryV2';
 
 task('deploy-d2', 'Deploy the D2 contracts')
   .addParam('synth', 'The synth you would like to interact with')
@@ -125,7 +126,12 @@ task('deploy-d2', 'Deploy the D2 contracts')
       {
         name: 'SyntheticProxy',
         source: 'ArcProxy',
-        data: ArcProxy.getDeployTransaction(signer, coreAddress, await signer.getAddress(), []),
+        data: ArcProxy.getDeployTransaction(
+          signer,
+          syntheticAddress,
+          await signer.getAddress(),
+          [],
+        ),
         version: 1,
         type: DeploymentType.synth,
         group: synthName,
@@ -169,18 +175,18 @@ task('deploy-d2', 'Deploy the D2 contracts')
       console.log(red(`Failed to add synthetic minter!\nReason: ${error}\n`));
     }
 
-    console.log(yellow(`* Adding to synth registry...`));
+    console.log(yellow(`* Adding to synth registry v2...`));
     const synthRegistryDetails = loadContract({
       network,
       type: DeploymentType.global,
-      name: 'SynthRegistry',
+      name: 'SynthRegistryV2',
     });
     try {
-      const synthRegistry = await SynthRegistry.at(signer, synthRegistryDetails.address);
+      const synthRegistry = await SynthRegistryV2.at(signer, synthRegistryDetails.address);
       await synthRegistry.addSynth(coreProxyAddress, syntheticAddress);
-      console.log(green(`Added to Synth Registry!\n`));
+      console.log(green(`Added to Synth Registry V2!\n`));
     } catch (error) {
-      console.log(red(`Failed to add to Synth Registry!\nReason: ${error}\n`));
+      console.log(red(`Failed to add to Synth Registry V2!\nReason: ${error}\n`));
     }
 
     console.log(yellow(`* Calling setLimits...`));

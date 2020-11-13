@@ -8,9 +8,8 @@ dataSources:
     name: SynthRegistry
     network: mainnet
     source:
-      address: '0x14E3eCaAcE77F194f689B210F6695d843E77BB64'
+      address: '0x1D7022f5B17d2F8B695918FB48fa1089C9f85401'
       abi: SynthRegistry
-      startBlock: 7165635
     mapping:
       kind: ethereum/events
       language: wasm/assemblyscript
@@ -27,7 +26,31 @@ dataSources:
           file: ./artifacts/contracts/v1/CoreV1.sol/CoreV1.json
       eventHandlers:
         - event: SynthAdded(bytes32,address)
-          handler: synthAdded
+          handler: synthV1Added
+      file: ./subgraph/synth.ts
+  - kind: ethereum/contract
+    name: SynthRegistryV2
+    network: mainnet
+    source:
+      address: '0x871DD7C2B4b25E1Aa18728e9D5f2Af4C4e431f5c'
+      abi: SynthRegistryV2
+    mapping:
+      kind: ethereum/events
+      language: wasm/assemblyscript
+      apiVersion: 0.0.4
+      entities:
+        - AccountBalance
+        - Synth
+      abis:
+        - name: SynthRegistryV2
+          file: ./artifacts/contracts/global/SynthRegistryV2.sol/SynthRegistryV2.json
+        - name: BaseERC20
+          file: ./artifacts/contracts/token/BaseERC20.sol/BaseERC20.json
+        - name: CoreV1
+          file: ./artifacts/contracts/v1/CoreV1.sol/CoreV1.json
+      eventHandlers:
+        - event: SynthAdded(address,address)
+          handler: synthV2Added
       file: ./subgraph/synth.ts
 templates:
   - kind: ethereum/contract
