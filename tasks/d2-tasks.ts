@@ -110,7 +110,7 @@ task('deploy-d2', 'Deploy the D2 contracts')
       );
     }
 
-    const coreProxyAddress = (oracleAddress = await deployContract(
+    const coreProxyAddress = await deployContract(
       {
         name: 'CoreProxy',
         source: 'ArcProxy',
@@ -120,9 +120,9 @@ task('deploy-d2', 'Deploy the D2 contracts')
         group: synthName,
       },
       networkConfig,
-    ));
+    );
 
-    const syntheticProxyAddress = (oracleAddress = await deployContract(
+    const syntheticProxyAddress = await deployContract(
       {
         name: 'SyntheticProxy',
         source: 'ArcProxy',
@@ -137,7 +137,7 @@ task('deploy-d2', 'Deploy the D2 contracts')
         group: synthName,
       },
       networkConfig,
-    ));
+    );
 
     const core = await D2CoreV1.at(signer, coreProxyAddress);
     const synthetic = await SyntheticTokenV1.at(signer, syntheticProxyAddress);
