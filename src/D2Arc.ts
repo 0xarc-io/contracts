@@ -1,13 +1,6 @@
 import { Signer, Wallet } from 'ethers';
 import { BigNumber, BigNumberish } from 'ethers/utils';
-import {
-  D2CoreV1,
-  IERC20,
-  IOracle,
-  ISyntheticToken,
-  SyntheticToken,
-  TransactionOverrides,
-} from './typings';
+import { D2CoreV1, IERC20, IOracle, ISyntheticToken, TransactionOverrides } from './typings';
 import { ID2Core } from './typings/ID2Core';
 import { asyncForEach } from '@src/utils/asyncForEach';
 import { TestToken } from '@src/typings/TestToken';
@@ -15,6 +8,7 @@ import { ActionOperated, Operation, Position, OperationParams } from './types';
 import { parseLogs } from './utils/parseLogs';
 import { calculateLiquidationAmount } from './utils/calculations';
 import { AddressZero } from 'ethers/constants';
+import { SyntheticTokenV1 } from './typings/SyntheticTokenV1';
 
 export enum SynthNames {
   ETHX = 'ETHX',
@@ -24,7 +18,7 @@ export type Synth = {
   core: D2CoreV1;
   oracle: IOracle;
   collateral: TestToken;
-  synthetic: SyntheticToken;
+  synthetic: SyntheticTokenV1;
 };
 
 export default class D2Arc {
@@ -46,7 +40,7 @@ export default class D2Arc {
       const core = D2CoreV1.at(this.signer, synth);
       const oracle = IOracle.at(this.signer, await core.getCurrentOracle());
       const collateral = TestToken.at(this.signer, await core.getCollateralAsset());
-      const synthetic = SyntheticToken.at(this.signer, await core.getSyntheticAsset());
+      const synthetic = SyntheticTokenV1.at(this.signer, await core.getSyntheticAsset());
 
       this.synths[name] = {
         core,

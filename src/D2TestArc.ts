@@ -2,12 +2,13 @@ import { Signer, Wallet } from 'ethers';
 
 import D2Arc from './D2Arc';
 import { TestToken } from '@src/typings/TestToken';
-import { ArcProxy, D2CoreV1, MockD2CoreV1, MockOracle, SyntheticToken } from '@src/typings';
+import { ArcProxy, D2CoreV1, MockD2CoreV1, MockOracle } from '@src/typings';
 import { SynthNames } from './D2Arc';
 import { assert } from 'console';
 import { BigNumberish } from 'ethers/utils';
 import { AddressZero, Zero } from 'ethers/constants';
 import { MAX_UINT256 } from './constants';
+import { SyntheticTokenV1 } from './typings/SyntheticTokenV1';
 
 export class D2TestArc extends D2Arc {
   static async init(signer: Signer): Promise<D2TestArc> {
@@ -21,12 +22,21 @@ export class D2TestArc extends D2Arc {
     const mockCore = await MockD2CoreV1.deploy(this.signer);
 
     const collateralAsset = await TestToken.deploy(this.signer, 'TestCollateral', 'TEST');
-    const syntheticAsset = await SyntheticToken.deploy(this.signer, 'ETHX', 'ETHX', 1);
+
+    let syntheticAsset = await SyntheticTokenV1.deploy(this.signer);
+
+    const syntheticProxy = await ArcProxy.deploy(
+      this.signer,
+      syntheticAsset.address,
+      this.signerAddress,
+      [],
+    );
+    syntheticAsset = await SyntheticTokenV1.at(this.signer, syntheticProxy.address);
 
     const oracle = await MockOracle.deploy(this.signer);
-    const proxy = await ArcProxy.deploy(this.signer, mockCore.address, this.signerAddress, []);
+    const coreProxy = await ArcProxy.deploy(this.signer, mockCore.address, this.signerAddress, []);
 
-    let core = await D2CoreV1.at(this.signer, proxy.address);
+    let core = await D2CoreV1.at(this.signer, coreProxy.address);
 
     await core.init(
       collateralAsset.address,
