@@ -3,19 +3,14 @@ import 'module-alias/register';
 import { subtask, task } from 'hardhat/config';
 import { red, blue, yellow, green } from 'chalk';
 
-import {
-  ChainLinkOracle,
-  MockOracle,
-  StateV1,
-  SyntheticToken,
-  SynthRegistry,
-} from '../src/typings';
+import { ChainLinkOracle, MockOracle, StateV1, SynthRegistry } from '../src/typings';
 
 import { NetworkParams } from '../deployments/src/deployContract';
 import { params } from '../hardhat.config';
 import { loadContract, loadContracts } from '../deployments/src/loadContracts';
 import { CoreV4, ArcProxy } from '@src/typings';
 import { TestToken } from '@src/typings/TestToken';
+import { StaticSyntheticToken } from '@src/typings/StaticSyntheticToken';
 import {
   deployContract,
   DeploymentType,
@@ -65,13 +60,8 @@ task('deploy-d1', 'Deploy the D1 contracts')
     const syntheticAddress = await deployContract(
       {
         name: 'Synthetic',
-        source: 'SyntheticToken',
-        data: SyntheticToken.getDeployTransaction(
-          signer,
-          synthName,
-          synthName,
-          synthConfig.version,
-        ),
+        source: 'StaticSyntheticToken',
+        data: StaticSyntheticToken.getDeployTransaction(signer, synthName, synthName),
         version: 1,
         type: DeploymentType.synth,
         group: synthName,

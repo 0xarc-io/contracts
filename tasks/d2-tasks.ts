@@ -5,7 +5,6 @@ import { red, blue, yellow, green } from 'chalk';
 
 import {
   D2CoreV1,
-  SyntheticToken,
   MockOracle,
   ArcProxy,
   ChainLinkOracle,
@@ -25,6 +24,7 @@ import {
 } from '../deployments/src';
 import { BigNumber } from 'ethers/utils';
 import { MAX_UINT256 } from '../src/constants';
+import { SyntheticTokenV1 } from '@src/typings/SyntheticTokenV1';
 
 task('deploy-d2', 'Deploy the D2 contracts')
   .addParam('synth', 'The synth you would like to interact with')
@@ -67,12 +67,12 @@ task('deploy-d2', 'Deploy the D2 contracts')
     const syntheticAddress = await deployContract(
       {
         name: 'Synthetic',
-        source: 'SyntheticToken',
-        data: SyntheticToken.getDeployTransaction(
+        source: 'SyntheticTokenV1',
+        data: SyntheticTokenV1.getDeployTransaction(
           signer,
-          synthName,
-          synthName,
-          synthConfig.version,
+          // synthName,
+          // synthName,
+          // synthConfig.version,
         ),
         version: 1,
         type: DeploymentType.synth,
@@ -109,9 +109,9 @@ task('deploy-d2', 'Deploy the D2 contracts')
       );
     }
 
-    const proxyAddress = (oracleAddress = await deployContract(
+    const coreProxyAddress = (oracleAddress = await deployContract(
       {
-        name: 'Proxy',
+        name: 'CoreProxy',
         source: 'ArcProxy',
         data: ArcProxy.getDeployTransaction(signer, coreAddress, await signer.getAddress(), []),
         version: 1,
@@ -121,32 +121,52 @@ task('deploy-d2', 'Deploy the D2 contracts')
       networkConfig,
     ));
 
-    const core = await D2CoreV1.at(signer, proxyAddress);
+    const syntheticProxyAddress = (oracleAddress = await deployContract(
+      {
+        name: 'SyntheticProxy',
+        source: 'ArcProxy',
+        data: ArcProxy.getDeployTransaction(signer, coreAddress, await signer.getAddress(), []),
+        version: 1,
+        type: DeploymentType.synth,
+        group: synthName,
+      },
+      networkConfig,
+    ));
 
-    console.log(yellow(`* Calling init()...`));
+    const core = await D2CoreV1.at(signer, coreProxyAddress);
+    const synthetic = await SyntheticTokenV1.at(signer, syntheticProxyAddress);
+
+    console.log(yellow(`* Calling core init()...`));
     try {
       await core.init(
         collateralAddress,
-        syntheticAddress,
+        syntheticProxyAddress,
         oracleAddress,
         signer.address,
         { value: synthConfig.params.collateral_ratio },
         { value: synthConfig.params.liquidation_user_fee },
         { value: synthConfig.params.liquidation_arc_ratio },
       );
-      console.log(green(`Called init() successfully!\n`));
+      console.log(green(`Called core init() successfully!\n`));
     } catch (error) {
-      console.log(red(`Failed to call init().\nReason: ${error}\n`));
+      console.log(red(`Failed to call core init().\nReason: ${error}\n`));
     }
 
-    console.log(yellow(`* Calling addMinter...`));
-    const synth = await SyntheticToken.at(signer, syntheticAddress);
+    console.log(yellow(`* Calling synthetic init()...`));
+    try {
+      await synthetic.init(synthName, synthName, synthConfig.version);
+      console.log(green(`Called synthetic init() successfully!\n`));
+    } catch (error) {
+      console.log(red(`Failed to call synthetic init().\nReason: ${error}\n`));
+    }
+
+    console.log(yellow(`* Calling synthetic addMinter...`));
     try {
       // We already enforce limits at the synthetic level.
-      await synth.addMinter(core.address, synthConfig.params.synthetic_limit || MAX_UINT256);
-      console.log(green(`Added minter!\n`));
+      await synthetic.addMinter(core.address, synthConfig.params.synthetic_limit || MAX_UINT256);
+      console.log(green(`Added synthetic minter!\n`));
     } catch (error) {
-      console.log(red(`Failed to add minter!\nReason: ${error}\n`));
+      console.log(red(`Failed to add synthetic minter!\nReason: ${error}\n`));
     }
 
     console.log(yellow(`* Adding to synth registry...`));
@@ -157,7 +177,7 @@ task('deploy-d2', 'Deploy the D2 contracts')
     });
     try {
       const synthRegistry = await SynthRegistry.at(signer, synthRegistryDetails.address);
-      await synthRegistry.addSynth(proxyAddress, syntheticAddress);
+      await synthRegistry.addSynth(coreProxyAddress, syntheticAddress);
       console.log(green(`Added to Synth Registry!\n`));
     } catch (error) {
       console.log(red(`Failed to add to Synth Registry!\nReason: ${error}\n`));

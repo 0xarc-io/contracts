@@ -9,7 +9,7 @@ import {
 import { BigNumber } from 'ethers/utils';
 import { ADMINABLE_ERROR, INTEREST_SETTER_ERROR } from '../../helpers/contractErrors';
 import { getAccounts } from '../../helpers/testingUtils';
-import { MockD2CoreV1, MockOracle, SyntheticToken, ArcProxy, TestToken } from '@src/typings';
+import { MockD2CoreV1, MockOracle, ArcProxy, TestToken } from '@src/typings';
 import { Signer } from 'ethers';
 import { MAX_UINT256 } from '../../../src/constants';
 
@@ -28,7 +28,6 @@ describe('D2Core.setters', () => {
     const mockCore = await MockD2CoreV1.deploy(ownerAccount.signer);
 
     const collateralAsset = await TestToken.deploy(ownerAccount.signer, 'TestCollateral', 'TEST');
-    const syntheticAsset = await SyntheticToken.deploy(ownerAccount.signer, 'ETHX', 'ETHX', 1);
 
     const oracle = await MockOracle.deploy(ownerAccount.signer);
     const proxy = await ArcProxy.deploy(

@@ -1,7 +1,7 @@
 import { Wallet, Signer } from 'ethers';
 import { BigNumber, BigNumberish } from 'ethers/utils';
 import { IOracle } from './typings/IOracle';
-import { SyntheticToken } from './typings/SyntheticToken';
+import { StaticSyntheticToken } from './typings/StaticSyntheticToken';
 
 import {
   AssetType,
@@ -37,7 +37,7 @@ export default class D1Arc {
     if (addressBook) {
       arc.core = await CoreV4.at(signer, addressBook.proxy);
       arc.state = await StateV1.at(signer, addressBook.state);
-      arc.syntheticAsset = await SyntheticToken.at(signer, addressBook.syntheticToken);
+      arc.syntheticAsset = await StaticSyntheticToken.at(signer, addressBook.syntheticToken);
       arc.collateralAsset = await IERC20.at(signer, addressBook.collateralAsset);
       arc.oracle = await IOracle.at(signer, addressBook.oracle);
     }
@@ -53,11 +53,14 @@ export default class D1Arc {
 
     this.core = await CoreV4.at(this.signer, proxy.address);
 
-    this.syntheticAsset = await SyntheticToken.deploy(this.signer, config.name, config.symbol, 1);
+    this.syntheticAsset = await StaticSyntheticToken.deploy(
+      this.signer,
+      config.name,
+      config.symbol,
+    );
 
-    await SyntheticToken.at(this.signer, this.syntheticAsset.address).addMinter(
+    await StaticSyntheticToken.at(this.signer, this.syntheticAsset.address).addMinter(
       this.core.address,
-      MAX_UINT256,
     );
 
     this.state = await StateV1.deploy(
