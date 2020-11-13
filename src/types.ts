@@ -76,6 +76,7 @@ export type ActionOperated = {
 export type GraphPosition = {
   id: BigNumberish;
   owner: string;
+  synth: string;
   collateralAmountSign: Boolean;
   collateralAmountValue: BigNumberish;
   borrowedAmountSign: Boolean;
