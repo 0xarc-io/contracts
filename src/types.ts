@@ -74,7 +74,7 @@ export type ActionOperated = {
 };
 
 export type GraphPosition = {
-  id: BigNumberish;
+  id: string;
   owner: string;
   synth: string;
   collateralAmountSign: Boolean;

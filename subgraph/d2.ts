@@ -31,10 +31,11 @@ export function actionOperated(event: ActionOperatedEvent): void {
 }
 
 function handlePosition(event: ActionOperatedEvent): void {
-  let position = Position.load(event.params.params.id.toHex());
+  let positionId = event.address.toHexString().concat('-').concat(event.params.params.id.toHex());
+  let position = Position.load(positionId);
 
   if (position == null) {
-    position = new Position(event.params.params.id.toHex());
+    position = new Position(positionId);
     position.createdAt = event.block.timestamp.toI32();
     position.synth = event.address;
   }
