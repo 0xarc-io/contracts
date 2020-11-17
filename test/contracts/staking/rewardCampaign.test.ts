@@ -7,7 +7,7 @@ import { ethers } from 'ethers';
 import Token from '@src/utils/Token';
 import { BigNumber, BigNumberish } from 'ethers/utils';
 import ArcNumber from '@src/utils/ArcNumber';
-import { expectRevert } from '@src/utils/expectRevert';
+import { expectRevert } from '@test/helpers/expectRevert';
 import { ArcProxy, KYFV2, MockRewardCampaign } from '@src/typings';
 import { D1TestArc } from '../../../src/D1TestArc';
 import ArcDecimal from '../../../src/utils/ArcDecimal';

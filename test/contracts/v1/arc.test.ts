@@ -1,7 +1,7 @@
 import 'module-alias/register';
 
 import { ethers, Wallet } from 'ethers';
-import { expectRevert } from '@src/utils/expectRevert';
+import { expectRevert } from '@test/helpers/expectRevert';
 
 import ArcNumber from '@src/utils/ArcNumber';
 import d1ArcDescribe from '@test/helpers/d1ArcDescribe';

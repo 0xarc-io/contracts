@@ -164,6 +164,29 @@ export class D2Arc {
     return await this.parseActionTx(tx);
   }
 
+  async setGlobalOperatorStatus(
+    operator: string,
+    status: boolean,
+    caller: Signer = this.signer,
+    synth: Synth = this.availableSynths()[0],
+    overrides: TransactionOverrides = {},
+  ) {
+    const contract = await this.getCore(synth, caller);
+    return await contract.setGlobalOperatorStatus(operator, status, overrides);
+  }
+
+  async setPositionOperatorStatus(
+    positionId: BigNumberish,
+    operator: string,
+    status: boolean,
+    caller: Signer = this.signer,
+    synth: Synth = this.availableSynths()[0],
+    overrides: TransactionOverrides = {},
+  ) {
+    const contract = await this.getCore(synth, caller);
+    return await contract.setPositionOperatorStatus(positionId, operator, status, overrides);
+  }
+
   async getLiquidationDetails(position: Position, synth: Synth = this.availableSynths()[0]) {
     const currentPrice = await (await synth.oracle.fetchCurrentPrice()).value;
     const fees = await await synth.core.getFees();

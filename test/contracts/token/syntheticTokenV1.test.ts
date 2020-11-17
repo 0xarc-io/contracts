@@ -2,7 +2,7 @@ import 'module-alias/register';
 
 import simpleDescribe from '@test/helpers/simpleDescribe';
 import { ITestContext } from '@test/helpers/simpleDescribe';
-import { expectRevert } from '@src/utils/expectRevert';
+import { expectRevert } from '@test/helpers/expectRevert';
 import {
   Account,
   addSnapshotBeforeRestoreAfterEach,

@@ -4,7 +4,7 @@ import { ITestContext } from '@test/helpers/d1ArcDescribe';
 import d1ArcDescribe from '@test/helpers/d1ArcDescribe';
 import ArcNumber from '@src/utils/ArcNumber';
 import Token from '@src/utils/Token';
-import { expectRevert } from '@src/utils/expectRevert';
+import { expectRevert } from '@test/helpers/expectRevert';
 import ArcDecimal from '@src/utils/ArcDecimal';
 import { AssetType } from '@src/types';
 import { Account, getWaffleExpect } from '../../helpers/testingUtils';

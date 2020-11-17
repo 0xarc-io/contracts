@@ -13,6 +13,17 @@ export interface LoadContractParams {
   group?: string;
 }
 
+export interface ContractDetails {
+  name: string;
+  source: string;
+  address: string;
+  txn: string;
+  network: string;
+  version: number;
+  type: string;
+  group: string;
+}
+
 export function loadContract(params: LoadContractParams) {
   const results = loadContracts(params);
 
@@ -27,7 +38,7 @@ export function loadContract(params: LoadContractParams) {
   return results[0];
 }
 
-export function loadContracts(params: LoadContractParams): Array<any> {
+export function loadContracts(params: LoadContractParams): Array<ContractDetails> {
   const contracts = loadDeployedContracts(params.network);
 
   // If nothing was passed in

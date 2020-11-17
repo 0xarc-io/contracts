@@ -60,7 +60,7 @@
     "type": "global"
   },
   {
-    "name": "Proxy",
+    "name": "CoreProxy",
     "group": "LINKUSD",
     "source": "ArcProxy",
     "address": "0x5568Df89AF6Bc835B876fDc3B2d44ef63530e419",
@@ -80,7 +80,7 @@
     "type": "synth"
   },
   {
-    "name": "State",
+    "name": "StateV1",
     "group": "LINKUSD",
     "source": "StateV1",
     "address": "0x94F40fD4018586AaFb8A6AD95441e0b58cc4c058",

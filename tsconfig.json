@@ -24,7 +24,7 @@
     "./scripts",
     "./test",
     "./tasks",
-    "./publish/**/*.json"
+    "./publish/**/*.json",
   ],
   "exclude": ["node_modules"],
   "files": [

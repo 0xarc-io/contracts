@@ -35,7 +35,7 @@ task('deploy-d2', 'Deploy the D2 contracts')
 
     const signer = (await hre.ethers.getSigners())[0];
 
-    await pruneDeployments(network, signer);
+    await pruneDeployments(network, signer.provider);
 
     const synthConfig = loadSynthConfig({ network, synth: synthName });
     const networkConfig = { network, signer } as NetworkParams;
