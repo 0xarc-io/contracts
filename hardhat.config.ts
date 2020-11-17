@@ -1,21 +1,21 @@
 import 'module-alias/register';
 
 import fs from 'fs';
-import path from 'path';
 
-import { privateKeys } from '@test/helpers/generatedWallets';
-import { BigNumber } from 'ethers/utils';
 import { HardhatUserConfig } from 'hardhat/config';
-
+import { BigNumber } from 'ethers';
 import { removeConsoleLog } from 'hardhat-preprocessor';
 
-import '@nomiclabs/hardhat-etherscan';
-import '@nomiclabs/hardhat-waffle';
 import 'hardhat-preprocessor';
 import 'hardhat-spdx-license-identifier';
 import 'hardhat-contract-sizer';
+import 'hardhat-typechain';
+
+import '@nomiclabs/hardhat-etherscan';
+import '@nomiclabs/hardhat-waffle';
 
 import './tasks/type-extensions';
+import { privateKeys } from './test/helpers/generatedWallets';
 
 if (fs.existsSync('src/typings/index.ts')) {
   require('./tasks');
@@ -33,7 +33,7 @@ export function getNetworkUrl(network: string) {
   return `https://${network}.infura.io/v3/${process.env.INFURA_PROJECT_ID}`;
 }
 
-const HUNDRED_THOUSAND_ETH = new BigNumber(100000).pow(18).toString();
+const HUNDRED_THOUSAND_ETH = BigNumber.from(100000).pow(18).toString();
 
 const config: HardhatUserConfig = {
   defaultNetwork: 'hardhat',
@@ -88,6 +88,10 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: params.etherscan_key,
+  },
+  typechain: {
+    outDir: './src/typings',
+    target: 'ethers-v5',
   },
 };
 

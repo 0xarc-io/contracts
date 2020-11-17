@@ -4,7 +4,7 @@ pragma solidity ^0.5.16;
 
 import {Ownable} from "../lib/Ownable.sol";
 
-import {IMintableToken} from "../interfaces/IMintableToken.sol";
+import {IMintableToken} from "../token/IMintableToken.sol";
 
 import {BaseERC20} from "./BaseERC20.sol";
 

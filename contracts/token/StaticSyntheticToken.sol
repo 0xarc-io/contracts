@@ -3,11 +3,11 @@
 pragma solidity ^0.5.16;
 
 
-import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
 
 import {Ownable} from "../lib/Ownable.sol";
 
 import {BaseERC20} from "./BaseERC20.sol";
+import {ISyntheticToken} from "./ISyntheticToken.sol";
 
 contract StaticSyntheticToken is BaseERC20, Ownable {
 

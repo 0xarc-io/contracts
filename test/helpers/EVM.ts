@@ -1,4 +1,4 @@
-import { JsonRpcProvider } from 'ethers/providers';
+import { JsonRpcProvider } from '@ethersproject/providers';
 
 export class EVM {
   private provider: JsonRpcProvider;

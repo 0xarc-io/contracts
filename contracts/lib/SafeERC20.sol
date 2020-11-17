@@ -2,7 +2,7 @@
 
 pragma solidity ^0.5.16;
 
-import {IERC20} from "../interfaces/IERC20.sol";
+import {IERC20} from "../token/IERC20.sol";
 
 // helper methods for interacting with ERC20 tokens and sending ETH that do not consistently return true/false
 library SafeERC20 {

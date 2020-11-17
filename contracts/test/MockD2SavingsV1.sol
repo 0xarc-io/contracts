@@ -3,10 +3,10 @@
 pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
-import {D2SavingsV1} from "../v2/D2SavingsV1.sol";
+import {MozartSavingsV1} from "../debt/mozart/MozartSavingsV1.sol";
 import {Decimal} from "../lib/Decimal.sol";
 
-contract MockD2SavingsV1 is D2SavingsV1 {
+contract MockMozartSavingsV1 is MozartSavingsV1 {
 
     uint256 private _currentTimestamp = 0;
 
@@ -16,7 +16,7 @@ contract MockD2SavingsV1 is D2SavingsV1 {
         address _feeDestination,
         Decimal.D256 memory _fee
     )
-        D2SavingsV1(
+        MozartSavingsV1(
             _coreAddress,
             _accrualToken,
             _feeDestination,

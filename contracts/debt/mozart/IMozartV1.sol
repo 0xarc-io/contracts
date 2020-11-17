@@ -1,0 +1,77 @@
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.5.16;
+pragma experimental ABIEncoderV2;
+
+import {Decimal} from "../../lib/Decimal.sol";
+import {Amount} from "../../lib/Amount.sol";
+
+import {MozartTypes} from "./MozartTypes.sol";
+
+interface IMozartV1 {
+
+    function getPosition(
+        uint256 id
+    )
+        external
+        view
+        returns (MozartTypes.Position memory);
+
+    function getCurrentPrice()
+        external
+        view
+        returns (Decimal.D256 memory);
+
+    function getSyntheticAsset()
+        external
+        view
+        returns (address);
+
+    function getCollateralAsset()
+        external
+        view
+        returns (address);
+
+    function getCurrentOracle()
+        external
+        view
+        returns (address);
+
+    function getInterestSetter()
+        external
+        view
+        returns (address);
+
+    function getBorrowIndex()
+        external
+        view
+        returns (uint256, uint256);
+
+    function getCollateralRatio()
+        external
+        view
+        returns (Decimal.D256 memory);
+
+    function getTotals()
+        external
+        view
+        returns (uint256, uint256);
+
+    function getLimits()
+        external
+        view
+        returns (uint256, uint256);
+
+    function getInterestRate()
+        external
+        view
+        returns (uint256);
+
+    function getFees()
+        external
+        view
+        returns (
+            Decimal.D256 memory _liquidationUserFee,
+            Decimal.D256 memory _liquidationArcRatio
+        );
+}

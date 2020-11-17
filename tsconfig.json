@@ -14,21 +14,25 @@
     "baseUrl": ".",
     "paths": {
       "@src/*": ["src/*"],
-      "@test/*": ["test/*"],
       "@utils/*": ["src/utils/*"],
-      "@typings/*": ["src/typechain/*"]
+      "@typings/*": ["src/typechain/*"],
+      "@types/*": ["@types/*"],
+      "@test/*": ["test/*"],
+      "@deployments/*": ["@deployments/*"],
     }
   },
   "include": [
-    "./src",
-    "./scripts",
-    "./test",
-    "./tasks",
-    "./publish/**/*.json",
+    "./src/*",
+    "./scripts/*",
+    "@types/*",
+    "./tasks/*",
+    "./tests/*",
+    "./publish/**/*.json"
   ],
   "exclude": ["node_modules"],
   "files": [
     "./index.js",
+    "@types/augmentations.ts",
     "hardhat.config.ts"
   ]
 }
