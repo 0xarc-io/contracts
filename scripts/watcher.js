@@ -42,6 +42,10 @@ chokidar.watch('./test').on(
 chokidar.watch('./src').on(
 	'change',
 	_.debounce(async (path, event) => {
+		if (path.includes('/typings/')) {
+			return;
+		}
+
 		console.log(yellow(`SRC changed: ${path}`));
 		await runTest(lastRunPath);
 	}),
@@ -54,7 +58,7 @@ async function runTest(path) {
 	}
 
 	lastRunPath = path;
-	shell.exec(`yarn hardhat test ${path} --network local`);
+	shell.exec(`yarn hardhat test test/unit/index --network local`);
 	let splitPath = lastRunPath.split('/');
 	console.log(green(`Finished running: ${splitPath[splitPath.length - 1]}`));
 }

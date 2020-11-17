@@ -15,24 +15,24 @@
     "paths": {
       "@src/*": ["src/*"],
       "@utils/*": ["src/utils/*"],
-      "@typings/*": ["src/typechain/*"],
-      "@types/*": ["@types/*"],
+      "@typings/*": ["src/typings/*"],
+      "@arc-types/*": ["arc-types/*"],
       "@test/*": ["test/*"],
       "@deployments/*": ["@deployments/*"],
     }
   },
   "include": [
-    "./src/*",
-    "./scripts/*",
-    "@types/*",
-    "./tasks/*",
-    "./tests/*",
-    "./publish/**/*.json"
+    "./src/**/*",
+    "./scripts/**/*",
+    "./tasks/**/*",
+    "./test/**/*",
+    "./publish/**/*.json",
+    "./arc-types/**/*/*"
   ],
   "exclude": ["node_modules"],
   "files": [
     "./index.js",
-    "@types/augmentations.ts",
+    "arc-types/augmentations.d.ts",
     "hardhat.config.ts"
   ]
 }

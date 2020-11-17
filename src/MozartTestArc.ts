@@ -1,18 +1,13 @@
 import { Signer, Wallet } from 'ethers';
 
-import D2Arc from './MozartArc';
-import { TestToken } from '@src/typings/TestToken';
-import { SynthNames, MozartArc } from './MozartArc';
-import { assert } from 'console';
+import { MozartArc } from './MozartArc';
 import { BigNumberish } from 'ethers';
-import { MAX_UINT256 } from './constants';
-import { SyntheticTokenV1 } from './typings/SyntheticTokenV1';
-import { MockOracleFactory } from './typings';
+import { MockOracleFactory } from '@typings/MockOracleFactory';
 import { MockMozartV1Factory } from './typings/MockMozartV1Factory';
 
 export class MozartTestArc extends MozartArc {
   static async init(signer: Signer): Promise<MozartTestArc> {
-    let arc = new MozartTestArc();
+    const arc = new MozartTestArc();
     arc.signer = signer;
     arc.signerAddress = await signer.getAddress();
     return arc;

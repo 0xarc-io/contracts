@@ -5,17 +5,18 @@ import fs from 'fs';
 import { HardhatUserConfig } from 'hardhat/config';
 import { BigNumber } from 'ethers';
 import { removeConsoleLog } from 'hardhat-preprocessor';
+import { privateKeys } from './test/helpers/generatedWallets';
 
 import 'hardhat-preprocessor';
 import 'hardhat-spdx-license-identifier';
 import 'hardhat-contract-sizer';
 import 'hardhat-typechain';
+import 'hardhat-watcher';
 
 import '@nomiclabs/hardhat-etherscan';
 import '@nomiclabs/hardhat-waffle';
 
 import './tasks/type-extensions';
-import { privateKeys } from './test/helpers/generatedWallets';
 
 if (fs.existsSync('src/typings/index.ts')) {
   require('./tasks');
@@ -93,6 +94,16 @@ const config: HardhatUserConfig = {
     outDir: './src/typings',
     target: 'ethers-v5',
   },
+  // watcher: {
+  //   compilation: {
+  //     tasks: ["compile"],
+  //     files: ["./contracts"],
+  //     verbose: true,
+  //   },
+  //   ci: {
+  //     tasks: ["clean", { command: "compile", params: { quiet: true } }, { command: "test", params: { noCompile: true, testFiles: ["./.ts"] } } ],
+  //   }
+  // },
 };
 
 export default config;

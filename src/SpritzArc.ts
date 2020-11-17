@@ -8,7 +8,7 @@ import {
   ActionOperated,
   Position,
   SynthAddressBook,
-} from '../@types/core';
+} from '../arc-types/core';
 
 import { parseLogs } from './utils/parseLogs';
 import Token from './utils/Token';
@@ -20,8 +20,8 @@ import { StateV1 } from './typings/StateV1';
 import { CoreV4 } from './typings/CoreV4';
 import { Ierc20 } from './typings/Ierc20';
 
-import { RiskParams, MarketParams, DeploymentConfig } from '../@types/core';
-import { TransactionOverrides } from '../@types/ethereum';
+import { RiskParams, MarketParams, DeploymentConfig } from '../arc-types/core';
+import { TransactionOverrides } from '../arc-types/ethereum';
 
 export class SpritzArc {
   public signer: Signer;
@@ -33,7 +33,7 @@ export class SpritzArc {
   public oracle: IOracle;
 
   static async init(signer: Signer, addressBook?: SynthAddressBook): Promise<SpritzArc> {
-    let arc = new SpritzArc();
+    const arc = new SpritzArc();
     arc.signer = signer;
 
     if (addressBook) {

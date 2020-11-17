@@ -75,9 +75,9 @@ export type GraphPosition = {
   id: string;
   owner: string;
   synth: string;
-  collateralAmountSign: Boolean;
+  collateralAmountSign: boolean;
   collateralAmountValue: BigNumberish;
-  borrowedAmountSign: Boolean;
+  borrowedAmountSign: boolean;
   borrowedAmountValue: BigNumberish;
 };
 
