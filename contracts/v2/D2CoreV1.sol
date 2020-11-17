@@ -332,8 +332,8 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
             );
         }
 
-        // Ensure that the operated action is collateralised again, unless a
-        // liquidation has occured in which case the position will be under-collataralised
+        // Ensure that the operated action is collateralised again, unless a liquidation
+        // has occured in which case the position might be under-collataralised
         require(
             isCollateralized(operatedPosition) == true || operation == Operation.Liquidate,
             "operateAction(): the operated position is undercollateralised"
@@ -752,7 +752,10 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
         });
 
         // If the maximum they're down by is greater than their collateral, bound to the maximum
-        // This case will only arise if the position has truly become under-collateralized
+        // This case will only arise if the position has truly become under-collateralized.
+
+        // This check also ensures that no one can create a position which can drain the system
+        // for more collateral than the position itself has.
         if (liquidationCollateralDelta.value > position.collateralAmount.value) {
             liquidationCollateralDelta.value = position.collateralAmount.value;
 
@@ -940,7 +943,7 @@ contract D2CoreV1 is Adminable, D2Storage, ID2Core {
 
         require(
             msg.sender == position.owner,
-            "transferOwnership(): must be a valid position"
+            "transferOwnership(): must be the owner of the position"
         );
 
         position.owner = newOwner;

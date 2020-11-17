@@ -3,7 +3,7 @@ import 'module-alias/register';
 import { Wallet } from 'ethers';
 
 import { ethers } from 'hardhat';
-import { expectRevert } from '@src/utils/expectRevert';
+import { expectRevert } from '@test/helpers/expectRevert';
 
 import ArcNumber from '@src/utils/ArcNumber';
 import ArcDecimal from '@src/utils/ArcDecimal';
@@ -12,7 +12,7 @@ import { D1TestArc } from '../../../src/D1TestArc';
 import { Operation } from '../../../src/types';
 import { BigNumberish, BigNumber } from 'ethers/utils';
 import { EVM } from '../../helpers/EVM';
-import { generatedWallets } from '../../../src/utils/generatedWallets';
+import { generatedWallets } from '../../helpers/generatedWallets';
 import Token from '@src/utils/Token';
 import { getWaffleExpect } from '../../helpers/testingUtils';
 

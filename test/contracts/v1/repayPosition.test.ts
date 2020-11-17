@@ -7,7 +7,7 @@ import d1ArcDescribe from '@test/helpers/d1ArcDescribe';
 import ArcDecimal from '@src/utils/ArcDecimal';
 import ArcNumber from '@src/utils/ArcNumber';
 import { BigNumberish } from 'ethers/utils';
-import { expectRevert } from '@src/utils/expectRevert';
+import { expectRevert } from '@test/helpers/expectRevert';
 import { getWaffleExpect, Account } from '../../helpers/testingUtils';
 
 let ownerAccount: Account;

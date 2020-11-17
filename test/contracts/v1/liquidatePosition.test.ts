@@ -6,7 +6,7 @@ import { ITestContext } from '@test/helpers/d1ArcDescribe';
 import d1ArcDescribe from '@test/helpers/d1ArcDescribe';
 import ArcDecimal from '@src/utils/ArcDecimal';
 import ArcNumber from '@src/utils/ArcNumber';
-import { expectRevert } from '@src/utils/expectRevert';
+import { expectRevert } from '@test/helpers/expectRevert';
 import { BigNumber } from 'ethers/utils';
 import { MockOracle } from '@src/typings';
 import { getWaffleExpect } from '../../helpers/testingUtils';

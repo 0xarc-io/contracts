@@ -13,6 +13,8 @@ import { ITestContext } from '@test/helpers/d2ArcDescribe';
 import { D2ArcOptions } from '../../helpers/d2ArcDescribe';
 import { BigNumber, BigNumberish } from 'ethers/utils';
 import { TEN_PERCENT, ONE_YEAR_IN_SECONDS, BASE } from '../../../src/constants';
+import { Signer } from 'ethers';
+import Token from '../../../dist/src/utils/Token';
 
 let ownerAccount: Account;
 let minterAccount: Account;
@@ -61,47 +63,86 @@ describe('D2Core.ownership', () => {
 
   describe('#setGlobalOperator', () => {
     it('should not be able to set as a non-admin', async () => {
-      const contract = await getCore(otherAccount);
-      await expect(contract.setGlobalOperatorStatus(globalOperatorAccount.address, true)).to.be
-        .reverted;
+      await expect(
+        ctx.arc.setGlobalOperatorStatus(globalOperatorAccount.address, true, otherAccount.signer),
+      ).to.be.reverted;
     });
 
     it('should be able to set as an admin', async () => {
-      const contract = await getCore(ownerAccount);
-      await expect(contract.setGlobalOperatorStatus(globalOperatorAccount.address, true))
-        .to.be.emit(contract, 'GlobalOperatorSet')
+      await expect(
+        ctx.arc.setGlobalOperatorStatus(globalOperatorAccount.address, true, ownerAccount.signer),
+      )
+        .to.be.emit(ctx.arc.core(), 'GlobalOperatorSet')
         .withArgs(globalOperatorAccount.address, true);
-      expect(await contract.isGlobalOperator(globalOperatorAccount.address)).to.be.true;
+      expect(await ctx.arc.core().isGlobalOperator(globalOperatorAccount.address)).to.be.true;
     });
 
     it('should be able to remove as an admin', async () => {
-      const contract = await getCore(ownerAccount);
-      await contract.setGlobalOperatorStatus(globalOperatorAccount.address, true);
-      expect(await contract.isGlobalOperator(globalOperatorAccount.address)).to.be.true;
-      await expect(contract.setGlobalOperatorStatus(globalOperatorAccount.address, false))
-        .to.be.emit(contract, 'GlobalOperatorSet')
+      await ctx.arc.setGlobalOperatorStatus(
+        globalOperatorAccount.address,
+        true,
+        ownerAccount.signer,
+      );
+      expect(await ctx.arc.core().isGlobalOperator(globalOperatorAccount.address)).to.be.true;
+      await expect(
+        ctx.arc.setGlobalOperatorStatus(globalOperatorAccount.address, false, ownerAccount.signer),
+      )
+        .to.be.emit(ctx.arc.core(), 'GlobalOperatorSet')
         .withArgs(globalOperatorAccount.address, false);
-      expect(await contract.isGlobalOperator(globalOperatorAccount.address)).to.be.false;
+      expect(await ctx.arc.core().isGlobalOperator(globalOperatorAccount.address)).to.be.false;
     });
 
     it('should not be able to set as a global operator', async () => {
-      const ownerContract = await getCore(ownerAccount);
-      await ownerContract.setGlobalOperatorStatus(globalOperatorAccount.address, true);
-      const operatorContract = await getCore(globalOperatorAccount);
-      await expect(operatorContract.setGlobalOperatorStatus(otherAccount.address, true)).to.be
-        .reverted;
+      await ctx.arc.setGlobalOperatorStatus(
+        globalOperatorAccount.address,
+        true,
+        ownerAccount.signer,
+      );
+      await expect(
+        ctx.arc.setGlobalOperatorStatus(otherAccount.address, true, globalOperatorAccount.signer),
+      ).to.be.reverted;
     });
 
-    it('should be able to borrow as a global operator', async () => {});
+    it('should be able to borrow & repay as a global operator', async () => {
+      await ctx.arc.openPosition(COLLATERAL_AMOUNT.mul(2), BORROW_AMOUNT, minterAccount.signer);
+      await ctx.arc.setGlobalOperatorStatus(
+        globalOperatorAccount.address,
+        true,
+        ownerAccount.signer,
+      );
 
-    it('should be able to repay as a global operator', async () => {});
+      expect(await ctx.arc.synthetic().balanceOf(globalOperatorAccount.address)).to.equal(0);
+
+      await ctx.arc.borrow(0, 0, BORROW_AMOUNT, globalOperatorAccount.signer);
+
+      expect(await ctx.arc.synthetic().balanceOf(globalOperatorAccount.address)).to.equal(
+        BORROW_AMOUNT,
+      );
+
+      await ctx.arc.repay(0, BORROW_AMOUNT, 0, globalOperatorAccount.signer);
+
+      expect(await ctx.arc.synthetic().balanceOf(globalOperatorAccount.address)).to.equal(0);
+
+      await Token.transfer(
+        ctx.arc.syntheticAddress(),
+        globalOperatorAccount.address,
+        BORROW_AMOUNT,
+        minterAccount.signer,
+      );
+
+      await ctx.arc.repay(0, BORROW_AMOUNT, COLLATERAL_AMOUNT.mul(2), globalOperatorAccount.signer);
+
+      expect(await ctx.arc.synth().collateral.balanceOf(globalOperatorAccount.address)).to.equal(
+        COLLATERAL_AMOUNT.mul(2),
+      );
+    });
   });
 
   describe('#transferOwnership', () => {
     let currentPosition: BigNumberish;
 
     beforeEach(async () => {
-      await ctx.arc.core().setGlobalOperatorStatus(globalOperatorAccount.address, true);
+      await ctx.arc.setGlobalOperatorStatus(globalOperatorAccount.address, true);
       const result = await ctx.arc.openPosition(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
@@ -130,6 +171,8 @@ describe('D2Core.ownership', () => {
       await ctx.arc.transferOwnership(currentPosition, otherAccount.address, minterAccount.signer);
       const position = await ctx.arc.getPosition(currentPosition);
       expect(position.owner).to.equal(otherAccount.address);
+
+      // ensure that the original owner can't do shiet
     });
   });
 
@@ -137,7 +180,7 @@ describe('D2Core.ownership', () => {
     let currentPosition: BigNumberish;
 
     beforeEach(async () => {
-      await ctx.arc.core().setGlobalOperatorStatus(globalOperatorAccount.address, true);
+      await ctx.arc.setGlobalOperatorStatus(globalOperatorAccount.address, true);
 
       const result = await ctx.arc.openPosition(
         COLLATERAL_AMOUNT,
@@ -147,14 +190,14 @@ describe('D2Core.ownership', () => {
       currentPosition = result.params.id;
     });
 
-    it('should not be able to set authorized operator as a non-owner', async () => {
+    it('should not be able to set authorized position operator as a non-owner', async () => {
       const otherContract = await getCore(otherAccount);
       await expect(
         otherContract.setPositionOperatorStatus(currentPosition, otherContract.address, true),
       ).to.be.reverted;
     });
 
-    it('should be able to set an authorized operator as the global operator', async () => {
+    it('should be able to set an authorized position operator as the global operator', async () => {
       const globalOperatorContract = await getCore(globalOperatorAccount);
       await expect(
         globalOperatorContract.setPositionOperatorStatus(
@@ -174,7 +217,7 @@ describe('D2Core.ownership', () => {
       ).to.be.true;
     });
 
-    it('should be able to remove an authorized operator as the global operator', async () => {
+    it('should be able to remove an authorized position operator as the global operator', async () => {
       const globalOperatorContract = await getCore(globalOperatorAccount);
       await expect(
         globalOperatorContract.setPositionOperatorStatus(
@@ -211,7 +254,7 @@ describe('D2Core.ownership', () => {
       ).to.be.false;
     });
 
-    it('should be able to set an authorized operator as the global operator', async () => {
+    it('should be able to set an authorized  operator as the global operator', async () => {
       const globalOperatorContract = await getCore(globalOperatorAccount);
       await globalOperatorContract.setPositionOperatorStatus(
         currentPosition,
@@ -226,8 +269,40 @@ describe('D2Core.ownership', () => {
       ).to.be.true;
     });
 
-    it('should be able to borrow as an operator', async () => {});
+    it('should be able to borrow & repay as an operator', async () => {
+      await ctx.arc.borrow(0, COLLATERAL_AMOUNT, 0, minterAccount.signer);
 
-    it('should be able to repay as an operator', async () => {});
+      await ctx.arc.setPositionOperatorStatus(
+        0,
+        localOperatorAccount.address,
+        true,
+        minterAccount.signer,
+      );
+
+      expect(await ctx.arc.synthetic().balanceOf(localOperatorAccount.address)).to.equal(0);
+
+      await ctx.arc.borrow(0, 0, BORROW_AMOUNT, localOperatorAccount.signer);
+
+      expect(await ctx.arc.synthetic().balanceOf(localOperatorAccount.address)).to.equal(
+        BORROW_AMOUNT,
+      );
+
+      await ctx.arc.repay(0, BORROW_AMOUNT, 0, localOperatorAccount.signer);
+
+      expect(await ctx.arc.synthetic().balanceOf(localOperatorAccount.address)).to.equal(0);
+
+      await Token.transfer(
+        ctx.arc.syntheticAddress(),
+        localOperatorAccount.address,
+        BORROW_AMOUNT,
+        minterAccount.signer,
+      );
+
+      await ctx.arc.repay(0, BORROW_AMOUNT, COLLATERAL_AMOUNT.mul(2), localOperatorAccount.signer);
+
+      expect(await ctx.arc.synth().collateral.balanceOf(localOperatorAccount.address)).to.equal(
+        COLLATERAL_AMOUNT.mul(2),
+      );
+    });
   });
 });

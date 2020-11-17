@@ -5,7 +5,7 @@ import { Signer, Wallet } from 'ethers';
 import d1ArcDescribe from '@test/helpers/d1ArcDescribe';
 import { ITestContext } from '@test/helpers/d1ArcDescribe';
 import { StateV1, MockOracle } from '@src/typings';
-import { expectRevert } from '@src/utils/expectRevert';
+import { expectRevert } from '@test/helpers/expectRevert';
 import ArcNumber from '@src/utils/ArcNumber';
 import ArcDecimal from '@src/utils/ArcDecimal';
 import { getWaffleExpect, Account } from '../../helpers/testingUtils';

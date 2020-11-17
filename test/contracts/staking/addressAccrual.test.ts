@@ -5,7 +5,7 @@ import { ITestContext } from '@test/helpers/simpleDescribe';
 import { BigNumber } from 'ethers/utils';
 import ArcDecimal from '@src/utils/ArcDecimal';
 import ArcNumber from '@src/utils/ArcNumber';
-import { expectRevert } from '@src/utils/expectRevert';
+import { expectRevert } from '@test/helpers/expectRevert';
 import { AddressAccrual } from '@src/typings/AddressAccrual';
 import { TestToken } from '@src/typings/TestToken';
 import { getWaffleExpect, Account } from '../../helpers/testingUtils';

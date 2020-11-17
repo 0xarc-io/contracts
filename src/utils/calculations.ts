@@ -40,28 +40,23 @@ export function calculateLiquidationAmount(
   arcRatio: BigNumberish,
 ): LiquidationInformation {
   const liquidationPrice = calculateLiquidationPrice(currentPrice, liquidationRatio);
-  console.log(`Liquidation price: ${liquidationPrice.toString()}`);
+
   const collateralNeeded = calculateCollateralNeeded(
     borrowedAmount,
     liquidationPrice,
     collateralRatio,
   );
-  console.log(`Collateral needed: ${collateralNeeded.toString()}`);
+
   const collateralToLiquidate = calculateCollateralPadded(
     collateralNeeded.sub(collateralAmount),
     liquidationRatio,
   );
-  console.log(`Collateral to liquidate: ${collateralToLiquidate.toString()}`);
+
   const borrowToLiquidate = collateralToLiquidate.bigMul(liquidationPrice);
-  console.log(`Borrow to liquidate: ${borrowToLiquidate.toString()}`);
   const newCollateralAmount = new BigNumber(collateralAmount).sub(collateralToLiquidate);
-  console.log(`New collateral amount: ${newCollateralAmount.toString()}`);
   const newBorrowAmount = new BigNumber(borrowedAmount).sub(borrowToLiquidate);
-  console.log(`New Borrow amount: ${newBorrowAmount.toString()}`);
   const collateralProfit = collateralToLiquidate.sub(borrowToLiquidate.bigDiv(currentPrice));
-  console.log(`Collateral profit: ${collateralProfit.toString()}`);
   const arcProft = collateralProfit.bigMul(arcRatio);
-  console.log(`Arc Profit: ${arcProft}`);
 
   return {
     debtNeededToLiquidate: borrowToLiquidate,

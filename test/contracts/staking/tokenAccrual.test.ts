@@ -7,7 +7,7 @@ import Token from '@src/utils/Token';
 import { BigNumber, BigNumberish } from 'ethers/utils';
 import ArcNumber from '@src/utils/ArcNumber';
 import { TokenStakingAccrual } from '@src/typings/TokenStakingAccrual';
-import { expectRevert } from '@src/utils/expectRevert';
+import { expectRevert } from '@test/helpers/expectRevert';
 import { Account, getWaffleExpect } from '../../helpers/testingUtils';
 
 let ownerAccount: Account;

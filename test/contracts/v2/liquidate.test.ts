@@ -114,19 +114,12 @@ describe('D2Core.operateAction(Liquidate)', () => {
 
     // Check position borrow amount (decrease)
     expect(postLiquidatePosition.borrowedAmount.value).to.equal(liquidationDetails.newDebtAmount);
-
-    console.log(
-      `Current collat amount: ${postLiquidatePosition.collateralAmount.value.toString()}`,
-    );
-
     // Check position collateral amount (decrease)
     expect(postLiquidatePosition.collateralAmount.value).to.equal(
       liquidationDetails.newCollateralAmount,
     );
 
     // Check liquidator collateral amount (increase)
-    console.log(`Pre liquidator colat: ${preLiquidatorCollateralBalance.toString()}`);
-    console.log(`Post liquidator collat: ${postLiquidatorCollateralBalance.toString()}`);
     expect(postLiquidatorCollateralBalance).to.equal(
       preLiquidatorCollateralBalance.add(
         liquidationDetails.collateralLiquidated.sub(liquidationDetails.collateralToArc),

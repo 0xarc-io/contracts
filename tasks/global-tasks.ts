@@ -10,7 +10,7 @@ task('deploy-global', 'Deploy, update and interact with global contracts').setAc
     const network = hre.network.name;
     const signer = (await hre.ethers.getSigners())[0];
 
-    await pruneDeployments(network, signer);
+    await pruneDeployments(network, signer.provider);
 
     const networkConfig = { network, signer } as NetworkParams;
 
