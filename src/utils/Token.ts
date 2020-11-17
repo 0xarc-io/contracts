@@ -2,7 +2,7 @@ import { BigNumber, BigNumberish, Signer } from 'ethers';
 import { asyncForEach } from '@src/utils/asyncForEach';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { BaseErc20Factory, TestTokenFactory } from '@src/typings';
-import { TransactionOverrides } from '../../@types/ethereum';
+import { TransactionOverrides } from '../../arc-types/ethereum';
 
 export default class Token {
   constructor() {}

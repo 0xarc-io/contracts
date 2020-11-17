@@ -1,15 +1,15 @@
 import { expect } from 'chai';
 
-import { Operation } from '../../../../@types/core';
-import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
-import { BASE, ONE_YEAR_IN_SECONDS } from '../../../../src/constants';
+import { Operation } from '@arc-types/core';
+import { BigNumber } from '@ethersproject/bignumber';
+import { BASE, ONE_YEAR_IN_SECONDS } from '@src/constants';
 
-import ArcNumber from '../../../../src/utils/ArcNumber';
-
-const COLLATERAL_AMOUNT = ArcNumber.new(100);
-const BORROW_AMOUNT = ArcNumber.new(50);
+import ArcNumber from '@src/utils/ArcNumber';
 
 export default function unitTestMozartOpen(): void {
+  const COLLATERAL_AMOUNT = ArcNumber.new(100);
+  const BORROW_AMOUNT = ArcNumber.new(50);
+
   describe('open()', function () {
     it('should be able to to open at the exact c-ratio', async function () {
       const result = await this.sdks.mozart.openPosition(
@@ -142,6 +142,11 @@ export default function unitTestMozartOpen(): void {
       );
     });
 
-    it('should not be able to borrow below in the minimum position amount', async () => {});
+    it('should not be able to borrow below in the minimum position amount', async function () {
+      await this.sdks.mozart.core().setLimits(0, COLLATERAL_AMOUNT.add(1));
+      await expect(
+        this.sdks.mozart.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, this.signers.minter),
+      ).to.be.reverted;
+    });
   });
 }

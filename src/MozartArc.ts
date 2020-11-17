@@ -1,6 +1,6 @@
 import { ContractTransaction, Signer } from 'ethers';
 import { BigNumber, BigNumberish } from 'ethers';
-import { ActionOperated, Operation, Position } from '../@types/core';
+import { ActionOperated, Operation, Position } from '../arc-types/core';
 import { calculateLiquidationAmount } from './utils/calculations';
 import { SyntheticTokenV1 } from './typings/SyntheticTokenV1';
 import { asyncForEach } from './utils/asyncForEach';
@@ -10,7 +10,7 @@ import { TestToken } from './typings/TestToken';
 import { MozartV1Factory } from './typings/MozartV1Factory';
 import { IOracleFactory } from './typings/IOracleFactory';
 import { SyntheticTokenV1Factory, TestTokenFactory } from './typings';
-import { TransactionOverrides } from '../@types/ethereum';
+import { TransactionOverrides } from '../arc-types/ethereum';
 import { AddressZero } from '@ethersproject/constants';
 import ArcNumber from './utils/ArcNumber';
 
@@ -32,7 +32,7 @@ export class MozartArc {
   public synths: { [name: string]: Synth } = {};
 
   static async init(signer: Signer): Promise<MozartArc> {
-    let arc = new MozartArc();
+    const arc = new MozartArc();
     arc.signer = signer;
     arc.signerAddress = await signer.getAddress();
     return arc;
@@ -214,7 +214,7 @@ export class MozartArc {
   async parseActionTx(tx: ContractTransaction) {
     const receipt = await tx.wait();
 
-    let decodedPosition = {} as ActionOperated;
+    const decodedPosition = {} as ActionOperated;
     receipt.logs.forEach((log) => {
       try {
         const decoded = new MozartV1Factory().interface.decodeEventLog('ActionOperated', log.data);

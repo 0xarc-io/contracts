@@ -2,11 +2,11 @@ import { SpritzArc } from './SpritzArc';
 
 import Token from './utils/Token';
 import { BigNumberish, BigNumber, Signer } from 'ethers';
-import { AssetType, DeploymentConfig } from '../@types/core';
+import { AssetType, DeploymentConfig } from '../arc-types/core';
 
 export class SpritzTestArc extends SpritzArc {
   static async init(signer: Signer): Promise<SpritzArc> {
-    let arc = new SpritzArc();
+    const arc = new SpritzArc();
     arc.signer = signer;
     return arc;
   }

@@ -1,10 +1,12 @@
 import { MozartTestArc } from '@src/MozartTestArc';
 import { unitFixtureMozart } from '../fixture';
 
-import unitTestMozartOpen from './core/open.test';
 import Token from '@src/utils/Token';
-import ArcNumber from '../../../src/utils/ArcNumber';
+import ArcNumber from '@src/utils/ArcNumber';
 import ArcDecimal from '@src/utils/ArcDecimal';
+
+import unitTestMozartOpen from './core/open.test';
+import unitTestMozartBorrow from './core/borrow.test';
 
 export function unitTestMozart(): void {
   describe('Mozart', function () {
@@ -34,5 +36,6 @@ export function unitTestMozart(): void {
     });
 
     describe('core', unitTestMozartOpen);
+    describe('core', unitTestMozartBorrow);
   });
 }
