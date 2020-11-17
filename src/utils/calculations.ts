@@ -1,5 +1,6 @@
-import { BigNumber, BigNumberish } from 'ethers/utils';
+import { BigNumber, BigNumberish } from 'ethers';
 import { BASE } from '../constants';
+import ArcNumber from './ArcNumber';
 
 export interface LiquidationInformation {
   debtNeededToLiquidate: BigNumber;
@@ -13,7 +14,7 @@ export function calculateLiquidationPrice(
   currentPrice: BigNumberish,
   liquidationRatio: BigNumberish,
 ) {
-  return new BigNumber(currentPrice).bigMul(BASE.sub(liquidationRatio));
+  return ArcNumber.bigMul(BigNumber.from(currentPrice), BASE.sub(liquidationRatio));
 }
 
 export function calculateCollateralNeeded(
@@ -21,14 +22,14 @@ export function calculateCollateralNeeded(
   price: BigNumberish,
   collateralRatio: BigNumberish,
 ) {
-  return new BigNumber(borrowedAmount).bigMul(collateralRatio).bigDiv(price);
+  return ArcNumber.bigDiv(ArcNumber.bigMul(BigNumber.from(borrowedAmount), collateralRatio), price);
 }
 
 export function calculateCollateralPadded(
   collateralAmount: BigNumberish,
   liquidationRatio: BigNumberish,
 ) {
-  return new BigNumber(collateralAmount).bigMul(BASE.add(liquidationRatio));
+  return ArcNumber.bigMul(BigNumber.from(collateralAmount), BASE.add(liquidationRatio));
 }
 
 export function calculateLiquidationAmount(
@@ -52,11 +53,13 @@ export function calculateLiquidationAmount(
     liquidationRatio,
   );
 
-  const borrowToLiquidate = collateralToLiquidate.bigMul(liquidationPrice);
-  const newCollateralAmount = new BigNumber(collateralAmount).sub(collateralToLiquidate);
-  const newBorrowAmount = new BigNumber(borrowedAmount).sub(borrowToLiquidate);
-  const collateralProfit = collateralToLiquidate.sub(borrowToLiquidate.bigDiv(currentPrice));
-  const arcProft = collateralProfit.bigMul(arcRatio);
+  const borrowToLiquidate = ArcNumber.bigMul(collateralToLiquidate, liquidationPrice);
+  const newCollateralAmount = BigNumber.from(collateralAmount).sub(collateralToLiquidate);
+  const newBorrowAmount = BigNumber.from(borrowedAmount).sub(borrowToLiquidate);
+  const collateralProfit = collateralToLiquidate.sub(
+    ArcNumber.bigDiv(borrowToLiquidate, currentPrice),
+  );
+  const arcProft = ArcNumber.bigMul(collateralProfit, arcRatio);
 
   return {
     debtNeededToLiquidate: borrowToLiquidate,

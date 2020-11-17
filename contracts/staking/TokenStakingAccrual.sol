@@ -2,7 +2,7 @@
 
 pragma solidity ^0.5.16;
 
-import {IERC20} from "../interfaces/IERC20.sol";
+import {IERC20} from "../token/IERC20.sol";
 import {SafeERC20} from "../lib/SafeERC20.sol";
 
 import {Accrual} from "./Accrual.sol";

@@ -3,8 +3,8 @@
 pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from "../interfaces/IERC20.sol";
-import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
+import {IERC20} from "../token/IERC20.sol";
+import {ISyntheticToken} from "../token/ISyntheticToken.sol";
 
 import {SafeMath} from "../lib/SafeMath.sol";
 import {Amount} from "../lib/Amount.sol";
