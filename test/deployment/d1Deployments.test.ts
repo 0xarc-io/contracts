@@ -5,17 +5,16 @@ import { toWei, isAddress } from 'web3-utils';
 import { asyncForEach } from '@src/utils/asyncForEach';
 
 import { ethers } from 'hardhat';
-import { AddressZero } from '@test/contracts/mozart/node_modules/@test/contracts/spritz/node_modules/ethers/constants';
-import { getWaffleExpect } from '../helpers/testingUtils';
 import { loadContract, loadContracts } from '../../deployments/src/loadContracts';
 import { DeploymentType } from '../../deployments/src/writeToDeployments';
 import { pruneDeployments } from '../../deployments/src';
-import { ArcProxy, CoreV4, StateV1 } from '@src/typings';
 import { generatedWallets } from '../helpers/generatedWallets';
+import { expect } from 'chai';
+import { StateV1Factory } from '@src/typings/StateV1Factory';
+import { CoreV4Factory } from '@src/typings/CoreV4Factory';
 
 require('dotenv').config();
 
-const expect = getWaffleExpect();
 const hre = require('hardhat');
 
 const networks = ['mainnet', 'rinkeby'];
@@ -54,8 +53,8 @@ async function testNetwork(network: string) {
     name: 'Synthetic',
   });
 
-  const state = StateV1.at(signer, stateContractDetails.address);
-  const core = CoreV4.at(signer, coreProxyDetails.address);
+  const state = new StateV1Factory(signer).attach(stateContractDetails.address);
+  const core = new CoreV4Factory(signer).attach(coreProxyDetails.address);
 
   it('should have the correct addresses setup for Core', async () => {
     expect(await state.core()).to.equal(coreProxyDetails.address);

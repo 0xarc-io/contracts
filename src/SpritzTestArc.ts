@@ -3,11 +3,31 @@ import { SpritzArc } from './SpritzArc';
 import Token from './utils/Token';
 import { BigNumberish, BigNumber, Signer } from 'ethers';
 import { AssetType, DeploymentConfig } from '../arc-types/core';
+import { MockOracleFactory } from './typings/MockOracleFactory';
 
 export class SpritzTestArc extends SpritzArc {
-  static async init(signer: Signer): Promise<SpritzArc> {
-    const arc = new SpritzArc();
+  static async init(
+    signer: Signer,
+    contracts?: {
+      core;
+      state;
+      syntheticAsset;
+      collateralAsset;
+      oracle;
+    },
+  ): Promise<SpritzTestArc> {
+    const arc = new SpritzTestArc();
     arc.signer = signer;
+    arc.core = contracts.core;
+    arc.state = contracts.state;
+    arc.syntheticAsset = contracts.syntheticAsset;
+    arc.collateralAsset = contracts.collateralAsset;
+    arc.oracle = contracts.oracle;
+    // console.log(
+    //   Object.keys(contracts).forEach((x) => {
+    //     console.log(x);
+    //   }),
+    // );
     return arc;
   }
 
@@ -76,5 +96,9 @@ export class SpritzTestArc extends SpritzArc {
     }
 
     return await this.repay(positionId, repayAmount, withdrawAmount, from, {});
+  }
+
+  async updatePrice(value: BigNumberish) {
+    return await new MockOracleFactory(this.signer).attach(this.oracle.address).setPrice({ value });
   }
 }

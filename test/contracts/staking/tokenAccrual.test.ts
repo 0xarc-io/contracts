@@ -1,45 +1,45 @@
-import '@test/contracts/mozart/node_modules/@test/contracts/spritz/node_modules/module-alias/register';
+import 'module-alias/register';
+import { expect } from 'chai';
 
 import { TestToken } from '@src/typings/TestToken';
-import simpleDescribe from '@test/helpers/simpleDescribe';
-import { ITestContext } from '@test/helpers/simpleDescribe';
 import Token from '@src/utils/Token';
-import {
-  BigNumber,
-  BigNumberish,
-} from '@test/contracts/mozart/node_modules/@test/contracts/spritz/node_modules/ethers/utils';
+import { BigNumber, BigNumberish } from 'ethers';
 import ArcNumber from '@src/utils/ArcNumber';
 import { TokenStakingAccrual } from '@src/typings/TokenStakingAccrual';
 import { expectRevert } from '@test/helpers/expectRevert';
-import { Account, getWaffleExpect } from '../../helpers/testingUtils';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
+import { ITestContext } from '../context';
+import { ethers } from 'hardhat';
+import { TestTokenFactory } from '@src/typings/TestTokenFactory';
+import { TokenStakingAccrualFactory } from '@src/typings/TokenStakingAccrualFactory';
+import { deployTokenStakingAccrual } from '../deployers';
 
-let ownerAccount: Account;
-let userAccount: Account;
-let arcAccount: Account;
-let distributionAccount: Account;
-
-const expect = getWaffleExpect();
+let ownerAccount: SignerWithAddress;
+let userAccount: SignerWithAddress;
+let arcAccount: SignerWithAddress;
+let distributionAccount: SignerWithAddress;
 
 let rewardContract: TokenStakingAccrual;
 let stakingToken: TestToken;
 let rewardToken: TestToken;
 
-const BASE = new BigNumber(10).pow(18);
+const BASE = BigNumber.from(10).pow(18);
 
-async function init(ctx: ITestContext): Promise<void> {
-  ownerAccount = ctx.accounts[0];
-  userAccount = ctx.accounts[1];
-  arcAccount = ctx.accounts[2];
-  distributionAccount = ctx.accounts[3];
-}
+describe('TokenAccrual', () => {
+  before(async () => {
+    const signers = await ethers.getSigners();
+    ownerAccount = signers[0];
+    userAccount = signers[1];
+    arcAccount = signers[2];
+    distributionAccount = signers[3];
+  });
 
-simpleDescribe('TokenAccrual', init, (ctx: ITestContext) => {
   beforeEach(async () => {
-    stakingToken = await TestToken.deploy(ownerAccount.signer, 'LINKUSD/USDC 50/50', 'BPT');
-    rewardToken = await TestToken.deploy(ownerAccount.signer, 'Arc Token', 'ARC');
+    stakingToken = await new TestTokenFactory(ownerAccount).deploy('LINKUSD/USDC 50/50', 'BPT');
+    rewardToken = await new TestTokenFactory(ownerAccount).deploy('Arc Token', 'ARC');
 
-    rewardContract = await TokenStakingAccrual.deploy(
-      ownerAccount.signer,
+    rewardContract = await deployTokenStakingAccrual(
+      ownerAccount,
       stakingToken.address,
       rewardToken.address,
     );
@@ -48,29 +48,33 @@ simpleDescribe('TokenAccrual', init, (ctx: ITestContext) => {
     expect(await rewardContract.accrualToken()).to.equal(rewardToken.address);
   });
 
-  async function getStakingContractAs(caller: Account) {
-    return await TokenStakingAccrual.at(caller.signer, rewardContract.address);
+  async function getStakingContractAs(caller: SignerWithAddress) {
+    return await new TokenStakingAccrualFactory(caller).attach(rewardContract.address);
   }
 
-  async function stakeTokens(contract: TokenStakingAccrual, tokens: BigNumberish, caller: Account) {
+  async function stakeTokens(
+    contract: TokenStakingAccrual,
+    tokens: BigNumberish,
+    caller: SignerWithAddress,
+  ) {
     await stakingToken.mintShare(caller.address, tokens);
-    await Token.approve(stakingToken.address, caller.signer, contract.address, tokens);
+    await Token.approve(stakingToken.address, caller, contract.address, tokens);
     await contract.stake(tokens);
   }
 
   it('should be able to stake tokens', async () => {
     const rewardContract = await getStakingContractAs(userAccount);
     await stakeTokens(rewardContract, 100, userAccount);
-    expect(await rewardContract.getUserBalance(userAccount.address)).to.equal(new BigNumber(100));
-    expect(await rewardContract.getTotalBalance()).to.equal(new BigNumber(100));
+    expect(await rewardContract.getUserBalance(userAccount.address)).to.equal(BigNumber.from(100));
+    expect(await rewardContract.getTotalBalance()).to.equal(BigNumber.from(100));
   });
 
   it('should be able to withdraw tokens', async () => {
     const rewardContract = await getStakingContractAs(userAccount);
     await stakeTokens(rewardContract, 100, userAccount);
     await rewardContract.unstake(100);
-    expect(await rewardContract.getUserBalance(userAccount.address)).to.equal(new BigNumber(0));
-    expect(await rewardContract.getTotalBalance()).to.equal(new BigNumber(0));
+    expect(await rewardContract.getUserBalance(userAccount.address)).to.equal(BigNumber.from(0));
+    expect(await rewardContract.getTotalBalance()).to.equal(BigNumber.from(0));
   });
 
   it('should be able to claim fees', async () => {

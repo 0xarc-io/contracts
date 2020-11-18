@@ -17,7 +17,7 @@ import { MozartSavingsV1 } from '@src/typings/MozartSavingsV1';
 const COLLATERAL_AMOUNT = ArcNumber.new(200);
 const BORROW_AMOUNT = ArcNumber.new(50);
 
-describe('MozartV1.integration', () => {
+describe('Mozart.integration', () => {
   let ctx: ITestContext;
   let arc: MozartTestArc;
   let savings: MozartSavingsV1;

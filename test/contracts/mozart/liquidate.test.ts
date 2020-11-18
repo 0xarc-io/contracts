@@ -14,7 +14,7 @@ import { TEN_PERCENT } from '@src/constants';
 import { BigNumberish } from '@ethersproject/bignumber';
 import { ONE_YEAR_IN_SECONDS } from '@src/constants';
 
-describe('MozartV1.operateAction(Liquidate)', () => {
+describe('Mozart.operateAction(Liquidate)', () => {
   const COLLATERAL_AMOUNT = ArcNumber.new(100);
   const BORROW_AMOUNT = ArcNumber.new(50);
 
