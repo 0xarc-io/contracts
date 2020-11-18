@@ -1,104 +1,107 @@
 import 'module-alias/register';
 
 import { Signer, Wallet } from 'ethers';
+import { expect } from 'chai';
 
-import { ITestContext } from '@test/helpers/d1ArcDescribe';
-import d1ArcDescribe from '@test/helpers/d1ArcDescribe';
 import ArcDecimal from '@src/utils/ArcDecimal';
 import ArcNumber from '@src/utils/ArcNumber';
+import { BigNumberish, BigNumber } from 'ethers';
 import { expectRevert } from '@test/helpers/expectRevert';
-import { BigNumber } from 'ethers/utils';
-import { MockOracle } from '@src/typings';
-import { getWaffleExpect } from '../../helpers/testingUtils';
+import { generateContext, ITestContext } from '../context';
+import { SpritzTestArc } from '@src/SpritzTestArc';
+import { spritzFixture } from '../fixtures';
+import { addSnapshotBeforeRestoreAfterEach } from '../../helpers/testingUtils';
 
-let ownerWallet: Signer;
-let lenderWallet: Signer;
-let syntheticMinterWallet: Signer;
-let stableShareMinterWallet: Signer;
-let liquidatorWallet: Signer;
+describe('Spritz.operateAction(Liquidation)', () => {
+  let ctx: ITestContext;
+  let arc: SpritzTestArc;
+  let positionId: BigNumberish;
 
-async function init(ctx: ITestContext): Promise<void> {
-  ownerWallet = ctx.accounts[0].signer;
-  lenderWallet = ctx.accounts[1].signer;
-  syntheticMinterWallet = ctx.accounts[2].signer;
-  stableShareMinterWallet = ctx.accounts[3].signer;
-  liquidatorWallet = ctx.accounts[4].signer;
-}
-
-const expect = getWaffleExpect();
-
-d1ArcDescribe('#Actions.liquidatePosition()', init, (ctx: ITestContext) => {
-  beforeEach(async () => {
-    const oracle = await MockOracle.at(ownerWallet, ctx.arc.oracle.address);
-    await oracle.setPrice(ArcDecimal.new(1000));
+  async function init(ctx: ITestContext): Promise<void> {
+    await ctx.sdks.spritz.updatePrice(ArcDecimal.new(1000).value);
 
     // The total liquidation premium is 10% in this case
     // 5% is the liquidator reward, 5% is the arc fee
-    await ctx.arc.state.setMarketParams({
+    await ctx.sdks.spritz.state.setMarketParams({
       collateralRatio: { value: ArcNumber.new(2) },
       liquidationUserFee: { value: ArcDecimal.new(0.05).value },
       liquidationArcFee: { value: ArcDecimal.new(0.05).value },
     });
+
+    const result = await ctx.sdks.spritz._borrowSynthetic(
+      ArcNumber.new(300),
+      ArcNumber.new(1),
+      ctx.signers.minter,
+    );
+
+    positionId = result.params.id;
+  }
+
+  before(async () => {
+    ctx = await generateContext(spritzFixture, init);
+    arc = ctx.sdks.spritz;
   });
 
+  addSnapshotBeforeRestoreAfterEach();
+
   it('should not be able to liquidate a collateralised position', async () => {
-    const result = await ctx.arc._borrowSynthetic(
+    const result = await arc._borrowSynthetic(
       ArcNumber.new(200),
       ArcNumber.new(1),
-      syntheticMinterWallet,
+      ctx.signers.minter,
     );
-    await expectRevert(ctx.arc.liquidatePosition(result.params.id, liquidatorWallet));
+    await expectRevert(arc.liquidatePosition(result.params.id, ctx.signers.liquidator));
   });
 
   it('should not be able to liquidate a position without a synthetic', async () => {
-    const result = await ctx.arc._borrowSynthetic(
+    const result = await arc._borrowSynthetic(
       ArcNumber.new(200),
       ArcNumber.new(1),
-      syntheticMinterWallet,
+      ctx.signers.minter,
     );
-    await ctx.arc.oracle.setPrice(ArcDecimal.new(300));
-    await expectRevert(ctx.arc.liquidatePosition(result.params.id, liquidatorWallet));
+    await arc.oracle.setPrice(ArcDecimal.new(300));
+    await expectRevert(arc.liquidatePosition(result.params.id, ctx.signers.liquidator));
   });
 
   it('should be able to liquidate and make the position healthy', async () => {
-    const result = await ctx.arc._borrowSynthetic(
+    const result = await arc._borrowSynthetic(
       ArcNumber.new(200),
       ArcNumber.new(1),
-      syntheticMinterWallet,
+      ctx.signers.minter,
     );
 
-    await ctx.arc.oracle.setPrice(ArcDecimal.new(300));
-    await ctx.arc._borrowSynthetic(ArcNumber.new(300), ArcNumber.new(2), liquidatorWallet);
+    await arc.oracle.setPrice(ArcDecimal.new(300));
+    await arc._borrowSynthetic(ArcNumber.new(300), ArcNumber.new(2), ctx.signers.liquidator);
 
-    await ctx.arc.liquidatePosition(result.params.id, liquidatorWallet);
-    await expectRevert(ctx.arc.liquidatePosition(result.params.id, liquidatorWallet));
+    await arc.liquidatePosition(result.params.id, ctx.signers.liquidator);
+    await expectRevert(arc.liquidatePosition(result.params.id, ctx.signers.liquidator));
 
-    const expectedReward = new BigNumber('529629629629629628');
-    const expectedCut = new BigNumber('26481481481481481');
+    const expectedReward = BigNumber.from('529629629629629628');
+    const expectedCut = BigNumber.from('26481481481481481');
 
     expect(
-      (await ctx.arc.collateralAsset.balanceOf(await liquidatorWallet.getAddress())).toString(),
+      (await arc.collateralAsset.balanceOf(await ctx.signers.liquidator.getAddress())).toString(),
     ).to.equal(expectedReward.sub(expectedCut).toString());
 
-    expect((await ctx.arc.collateralAsset.balanceOf(ctx.arc.core.address)).toString()).to.equal(
+    expect((await arc.collateralAsset.balanceOf(arc.core.address)).toString()).to.equal(
       expectedCut.toString(),
     );
   });
 
   it('should be able to liquidate a position if the price drops again', async () => {
-    const result = await ctx.arc._borrowSynthetic(
+    const result = await arc._borrowSynthetic(
       ArcNumber.new(200),
       ArcNumber.new(1),
-      syntheticMinterWallet,
+      ctx.signers.minter,
     );
 
-    await ctx.arc.oracle.setPrice(ArcDecimal.new(300));
-    await ctx.arc._borrowSynthetic(ArcNumber.new(300), ArcNumber.new(2), liquidatorWallet);
+    await arc.oracle.setPrice(ArcDecimal.new(300));
+    await arc._borrowSynthetic(ArcNumber.new(300), ArcNumber.new(2), ctx.signers.liquidator);
 
-    await ctx.arc.liquidatePosition(result.params.id, liquidatorWallet);
+    await arc.liquidatePosition(result.params.id, ctx.signers.liquidator);
 
-    await ctx.arc.oracle.setPrice(ArcDecimal.new(200));
-    await ctx.arc.liquidatePosition(result.params.id, liquidatorWallet);
-    await expectRevert(ctx.arc.liquidatePosition(result.params.id, liquidatorWallet));
+    await arc.oracle.setPrice(ArcDecimal.new(200));
+    await arc.liquidatePosition(result.params.id, ctx.signers.liquidator);
+    await expectRevert(arc.liquidatePosition(result.params.id, ctx.signers.liquidator));
   });
 });

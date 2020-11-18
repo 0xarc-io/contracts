@@ -1,67 +1,56 @@
 import 'module-alias/register';
 
-import { Wallet } from 'ethers';
+import { Signer, Wallet } from 'ethers';
+import { expect } from 'chai';
 
-import { ethers } from 'hardhat';
-import { expectRevert } from '@test/helpers/expectRevert';
-
-import ArcNumber from '@src/utils/ArcNumber';
 import ArcDecimal from '@src/utils/ArcDecimal';
-import { MockOracle } from '@src/typings';
-import { D1TestArc } from '../../../src/D1TestArc';
-import { Operation } from '../../../src/types';
-import { BigNumberish, BigNumber } from 'ethers/utils';
-import { EVM } from '../../helpers/EVM';
-import { generatedWallets } from '../../helpers/generatedWallets';
+import ArcNumber from '@src/utils/ArcNumber';
+import { BigNumberish, BigNumber } from 'ethers';
+import { expectRevert } from '@test/helpers/expectRevert';
+import { generateContext, ITestContext } from '../context';
+import { SpritzTestArc } from '@src/SpritzTestArc';
+import { spritzFixture } from '../fixtures';
+import { addSnapshotBeforeRestoreAfterEach } from '../../helpers/testingUtils';
 import Token from '@src/utils/Token';
-import { getWaffleExpect } from '../../helpers/testingUtils';
-
-const expect = getWaffleExpect();
-
-const provider = ethers.provider;
-const evm = new EVM(provider);
-
-let arc: D1TestArc;
-
-let ownerWallet: Wallet;
-let userWallet: Wallet;
-let liquidatorWallet: Wallet;
+import { Operation } from '@arc-types/core';
 
 let currentPosition: BigNumberish;
-let wallets = generatedWallets(provider);
 
-describe('D1Arc Integration', () => {
-  async function updateOraclePrice(price: any) {
-    const oracle = await MockOracle.at(ownerWallet, arc.oracle.address);
-    await oracle.setPrice(price);
-  }
+describe('Spritz.integration', () => {
+  let positionId: BigNumberish;
 
-  before(async () => {
-    ownerWallet = wallets[0];
-    userWallet = wallets[1];
-    liquidatorWallet = wallets[2];
+  let ctx: ITestContext;
+  let arc: SpritzTestArc;
 
-    arc = await D1TestArc.init(ownerWallet);
-
-    await arc.deployTestArc();
-    await arc.state.setMarketParams({
+  async function init(ctx: ITestContext): Promise<void> {
+    await ctx.sdks.spritz.state.setMarketParams({
       collateralRatio: { value: ArcNumber.new(2) },
       liquidationUserFee: { value: ArcDecimal.new(0.05).value },
       liquidationArcFee: { value: ArcDecimal.new(0.05).value },
     });
-    await arc.state.setRiskParams({
+
+    await ctx.sdks.spritz.state.setRiskParams({
       collateralLimit: ArcNumber.new(0),
       syntheticLimit: ArcNumber.new(0),
       positionCollateralMinimum: ArcNumber.new(1),
     });
 
     // Price of LINK collateral = $10
-    await updateOraclePrice(ArcDecimal.new(10));
+    await ctx.sdks.spritz.updatePrice(ArcDecimal.new(10).value);
+  }
+
+  before(async () => {
+    ctx = await generateContext(spritzFixture, init);
+    arc = ctx.sdks.spritz;
   });
 
   it('should be able to open a position', async () => {
     // Borrow $100 with $500 worth of collateral (50 LINK)
-    const result = await arc._borrowSynthetic(ArcNumber.new(100), ArcNumber.new(50), userWallet);
+    const result = await arc._borrowSynthetic(
+      ArcNumber.new(100),
+      ArcNumber.new(50),
+      ctx.signers.minter,
+    );
     currentPosition = result.params.id;
 
     // Ensure the emitted parameters are correct
@@ -78,7 +67,9 @@ describe('D1Arc Integration', () => {
     );
 
     // The user should have received $100 worth of LINKUSD in return
-    expect(await arc.syntheticAsset.balanceOf(userWallet.address)).to.equal(ArcNumber.new(100));
+    expect(await arc.syntheticAsset.balanceOf(ctx.signers.minter.address)).to.equal(
+      ArcNumber.new(100),
+    );
 
     // The total LINKUSD supply should be the same as the user's balance
     expect(await arc.syntheticAsset.totalSupply()).to.equal(ArcNumber.new(100));
@@ -88,13 +79,13 @@ describe('D1Arc Integration', () => {
     // Now we'd like to increase the price of LINK to $20
     // This means that the 50 LINK is worth $1000 allowing a theoterical maximum
     // of up to $500 of LINKUSD to be borrow (the user has only borrowed $100 at the moment)
-    await updateOraclePrice(ArcDecimal.new(20));
+    await arc.updatePrice(ArcDecimal.new(20).value);
 
     // Let's increase the amount of leverage by borrowing an additional $200
     const result = await arc._borrowSynthetic(
       ArcNumber.new(200),
       ArcNumber.new(0),
-      userWallet,
+      ctx.signers.minter,
       currentPosition,
     );
 
@@ -112,7 +103,9 @@ describe('D1Arc Integration', () => {
     );
 
     // The user should have $300 worth of LINKUSD in return
-    expect(await arc.syntheticAsset.balanceOf(userWallet.address)).to.equal(ArcNumber.new(300));
+    expect(await arc.syntheticAsset.balanceOf(ctx.signers.minter.address)).to.equal(
+      ArcNumber.new(300),
+    );
 
     // The total LINKUSD supply should be the same as the user's balance
     expect(await arc.syntheticAsset.totalSupply()).to.equal(ArcNumber.new(300));
@@ -125,7 +118,7 @@ describe('D1Arc Integration', () => {
     // amount at $200 ($300 - $100).
     await Token.approve(
       arc.syntheticAsset.address,
-      userWallet,
+      ctx.signers.minter,
       arc.core.address,
       ArcNumber.new(100),
     );
@@ -134,7 +127,7 @@ describe('D1Arc Integration', () => {
       currentPosition,
       ArcNumber.new(100),
       ArcNumber.new(0),
-      userWallet,
+      ctx.signers.minter,
     );
 
     //Ensure that the correct events were emitted
@@ -151,7 +144,9 @@ describe('D1Arc Integration', () => {
     ).to.equal(ArcNumber.new(50).toString());
 
     // The user should have $200 worth of LINKUSD in return
-    expect(await arc.syntheticAsset.balanceOf(userWallet.address)).to.equal(ArcNumber.new(200));
+    expect(await arc.syntheticAsset.balanceOf(ctx.signers.minter.address)).to.equal(
+      ArcNumber.new(200),
+    );
 
     // The total LINKUSD supply should be the same as the user's balance
     expect(await arc.syntheticAsset.totalSupply()).to.equal(ArcNumber.new(200));
@@ -162,10 +157,15 @@ describe('D1Arc Integration', () => {
     // currently has $1000 of debt giving a 500% c-ratio.
 
     // The price of LINK now flash crashes to $5 throwing the user underwater
-    await updateOraclePrice(ArcDecimal.new(5));
+    await arc.updatePrice(ArcDecimal.new(5).value);
 
     await expectRevert(
-      arc._borrowSynthetic(ArcNumber.new(100), ArcNumber.new(20), userWallet, currentPosition),
+      arc._borrowSynthetic(
+        ArcNumber.new(100),
+        ArcNumber.new(20),
+        ctx.signers.minter,
+        currentPosition,
+      ),
     );
 
     // This means that...
@@ -176,8 +176,8 @@ describe('D1Arc Integration', () => {
     //   their collateral at a discount 10% (5% ARC + 5% Bot)
 
     // Oh noes, time to call up Arthur.
-    await arc._borrowSynthetic(ArcNumber.new(500), ArcNumber.new(250), liquidatorWallet);
-    const result = await arc.liquidatePosition(currentPosition, liquidatorWallet);
+    await arc._borrowSynthetic(ArcNumber.new(500), ArcNumber.new(250), ctx.signers.liquidator);
+    const result = await arc.liquidatePosition(currentPosition, ctx.signers.liquidator);
 
     // A run down of how we calculate how much to liquidate
     // - Debt = $200, Collateral = 50LINK = $250
@@ -211,12 +211,14 @@ describe('D1Arc Integration', () => {
     ).to.equal('257222222222222222224');
 
     // The user can still have $200 worth of LINKUSD since they got rekt
-    expect(await arc.syntheticAsset.balanceOf(userWallet.address)).to.equal(ArcNumber.new(200));
+    expect(await arc.syntheticAsset.balanceOf(ctx.signers.minter.address)).to.equal(
+      ArcNumber.new(200),
+    );
 
     // The liquidator will now have less LINKUSD since they had to pay the rekt dude's debt
-    expect((await arc.syntheticAsset.balanceOf(liquidatorWallet.address)).toString()).to.equal(
-      '307500000000000000008',
-    );
+    expect(
+      (await arc.syntheticAsset.balanceOf(ctx.signers.liquidator.address)).toString(),
+    ).to.equal('307500000000000000008');
 
     // The total LINKUSD supply be the amount the user holds + the amount arthur holds
     expect((await arc.syntheticAsset.totalSupply()).toString()).to.equal('507500000000000000008');
@@ -229,7 +231,7 @@ describe('D1Arc Integration', () => {
     const result = await arc._borrowSynthetic(
       ArcNumber.new(100).sub(8).sub(ArcDecimal.new(7.5).value),
       ArcNumber.new(100).sub('222222222222222224').sub(ArcNumber.new(7)),
-      userWallet,
+      ctx.signers.minter,
       currentPosition,
     );
 
@@ -248,7 +250,7 @@ describe('D1Arc Integration', () => {
     const result = await arc._borrowSynthetic(
       ArcNumber.new(150),
       ArcNumber.new(0),
-      userWallet,
+      ctx.signers.minter,
       currentPosition,
     );
 
@@ -263,10 +265,10 @@ describe('D1Arc Integration', () => {
 
   it('should be able to be liquidated if the price drops', async () => {
     // Once again the price drops, but this time to a lesser degree.
-    await updateOraclePrice(ArcDecimal.new(4));
+    await arc.updatePrice(ArcDecimal.new(4).value);
 
     // Here comes the grim reaper
-    const result = await arc.liquidatePosition(currentPosition, liquidatorWallet);
+    const result = await arc.liquidatePosition(currentPosition, ctx.signers.liquidator);
 
     expect(result.operation).to.equal(Operation.Liquidate);
     expect(result.updatedPosition.borrowedAmount.value).to.equal(ArcNumber.new(96).add(7));
@@ -277,22 +279,24 @@ describe('D1Arc Integration', () => {
     expect(result.updatedPosition.collateralAmount.sign).to.be.true;
     expect(result.params.id).to.equal(currentPosition);
 
-    await expectRevert(arc.liquidatePosition(currentPosition, liquidatorWallet));
+    await expectRevert(arc.liquidatePosition(currentPosition, ctx.signers.liquidator));
   });
 
   it('should be able to be liquidated if the price drops again', async () => {
     // Once again the price drops, but this time to a lesser degree.
-    await updateOraclePrice(ArcDecimal.new(3));
+    await arc.updatePrice(ArcDecimal.new(3).value);
 
     // Here comes the grim reaper
-    await arc.liquidatePosition(currentPosition, liquidatorWallet);
+    await arc.liquidatePosition(currentPosition, ctx.signers.liquidator);
 
-    await expectRevert(arc.liquidatePosition(currentPosition, liquidatorWallet));
+    await expectRevert(arc.liquidatePosition(currentPosition, ctx.signers.liquidator));
   });
 
   it('should be able to repay all the debt and claim back the remaining collateral', async () => {
-    const userPreCollateralBalance = await arc.collateralAsset.balanceOf(userWallet.address);
-    const userPreSyntheticBalance = await arc.syntheticAsset.balanceOf(userWallet.address);
+    const userPreCollateralBalance = await arc.collateralAsset.balanceOf(
+      ctx.signers.minter.address,
+    );
+    const userPreSyntheticBalance = await arc.syntheticAsset.balanceOf(ctx.signers.minter.address);
 
     const preResult = await arc.state.positions(currentPosition);
 
@@ -300,11 +304,13 @@ describe('D1Arc Integration', () => {
       currentPosition,
       preResult.borrowedAmount.value,
       preResult.collateralAmount.value,
-      userWallet,
+      ctx.signers.minter,
     );
 
-    const userPostCollateralBalance = await arc.collateralAsset.balanceOf(userWallet.address);
-    const userPostSyntheticBalance = await arc.syntheticAsset.balanceOf(userWallet.address);
+    const userPostCollateralBalance = await arc.collateralAsset.balanceOf(
+      ctx.signers.minter.address,
+    );
+    const userPostSyntheticBalance = await arc.syntheticAsset.balanceOf(ctx.signers.minter.address);
 
     expect(userPostCollateralBalance).to.equal(
       userPreCollateralBalance.add(preResult.collateralAmount.value),

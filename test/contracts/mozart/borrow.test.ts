@@ -15,7 +15,7 @@ import { MozartTestArc } from '@src/MozartTestArc';
 const COLLATERAL_AMOUNT = ArcNumber.new(200);
 const BORROW_AMOUNT = ArcNumber.new(50);
 
-describe('MozartV1.operateAction(Borrow)', () => {
+describe('Mozart.operateAction(Borrow)', () => {
   let ctx: ITestContext;
   let arc: MozartTestArc;
 

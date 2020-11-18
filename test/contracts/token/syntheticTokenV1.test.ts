@@ -1,52 +1,49 @@
-import '@test/contracts/mozart/node_modules/@test/contracts/spritz/node_modules/module-alias/register';
-
-import simpleDescribe from '@test/helpers/simpleDescribe';
-import { ITestContext } from '@test/helpers/simpleDescribe';
-import { expectRevert } from '@test/helpers/expectRevert';
-import {
-  Account,
-  addSnapshotBeforeRestoreAfterEach,
-  getWaffleExpect,
-} from '../../helpers/testingUtils';
-
-import { BigNumber } from '@test/contracts/mozart/node_modules/@test/contracts/spritz/node_modules/ethers/utils';
+import 'module-alias/register';
+import { expect } from 'chai';
 import { SyntheticTokenV1 } from '@src/typings/SyntheticTokenV1';
-import { ArcProxy } from '@src/typings';
+import { deployArcProxy, deploySyntheticTokenV1 } from '../deployers';
+import { ethers } from 'hardhat';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
+import { SyntheticTokenV1Factory } from '@src/typings/SyntheticTokenV1Factory';
+import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
+import { expectRevert } from '../../helpers/expectRevert';
+import { BigNumber } from '@ethersproject/bignumber';
 
-let ownerAccount: Account;
-let arcAccount: Account;
-let arcAccount1: Account;
-let arcAccount2: Account;
-let userAccount: Account;
-let otherAccount: Account;
-
-const expect = getWaffleExpect();
+let ownerAccount: SignerWithAddress;
+let arcAccount: SignerWithAddress;
+let arcAccount1: SignerWithAddress;
+let arcAccount2: SignerWithAddress;
+let userAccount: SignerWithAddress;
+let otherAccount: SignerWithAddress;
 
 let syntheticToken: SyntheticTokenV1;
 
-async function init(ctx: ITestContext): Promise<void> {
-  ownerAccount = ctx.accounts[0];
-  arcAccount = ctx.accounts[1];
-  userAccount = ctx.accounts[2];
-  otherAccount = ctx.accounts[3];
-  arcAccount1 = ctx.accounts[4];
-  arcAccount2 = ctx.accounts[5];
-}
+describe('SyntheticTokenV1', () => {
+  before(async () => {
+    const signers = await ethers.getSigners();
+    ownerAccount = signers[0];
+    arcAccount = signers[1];
+    userAccount = signers[2];
+    otherAccount = signers[3];
+    arcAccount1 = signers[4];
+    arcAccount2 = signers[5];
+  });
 
-async function getContract(caller: Account) {
-  return SyntheticTokenV1.at(caller.signer, syntheticToken.address);
-}
+  async function getContract(caller: SignerWithAddress) {
+    return new SyntheticTokenV1Factory(caller).attach(syntheticToken.address);
+  }
 
-simpleDescribe('SyntheticTokenV1', init, (ctx: ITestContext) => {
   beforeEach(async () => {
-    syntheticToken = await SyntheticTokenV1.deploy(ownerAccount.signer);
-    const proxy = await ArcProxy.deploy(
-      ownerAccount.signer,
+    syntheticToken = await deploySyntheticTokenV1(ownerAccount);
+
+    const proxy = await deployArcProxy(
+      ownerAccount,
       syntheticToken.address,
       ownerAccount.address,
       [],
     );
-    syntheticToken = await SyntheticTokenV1.at(ownerAccount.signer, proxy.address);
+
+    syntheticToken = await new SyntheticTokenV1Factory(ownerAccount).attach(proxy.address);
     await syntheticToken.init('ARCx', 'ARCx', 1);
   });
 
@@ -56,7 +53,7 @@ simpleDescribe('SyntheticTokenV1', init, (ctx: ITestContext) => {
     beforeEach(async () => {
       const contract = await getContract(ownerAccount);
       await contract.addMinter(arcAccount.address, 10);
-      expect(await contract.getMinterLimit(arcAccount.address)).to.equal(new BigNumber(10));
+      expect(await contract.getMinterLimit(arcAccount.address)).to.equal(BigNumber.from(10));
     });
 
     it('should not be able to mint as an unauthorised user', async () => {
@@ -75,7 +72,7 @@ simpleDescribe('SyntheticTokenV1', init, (ctx: ITestContext) => {
       await contract.mint(arcAccount.address, 10);
       expect(await (await syntheticToken.balanceOf(arcAccount.address)).toNumber()).to.equal(10);
       const issuance = await syntheticToken.getMinterIssued(arcAccount.address);
-      expect(issuance.value).to.equal(new BigNumber(10));
+      expect(issuance.value).to.equal(BigNumber.from(10));
       expect(issuance.sign).to.be.true;
       await expect(contract.mint(arcAccount.address, 10)).to.be.reverted;
     });

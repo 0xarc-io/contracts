@@ -1,67 +1,61 @@
 import 'module-alias/register';
 
-import { ITestContext } from '@test/helpers/d1ArcDescribe';
-import d1ArcDescribe from '@test/helpers/d1ArcDescribe';
-import ArcNumber from '@src/utils/ArcNumber';
-import Token from '@src/utils/Token';
-import { expectRevert } from '@test/helpers/expectRevert';
+import { Signer, Wallet } from 'ethers';
+import { expect } from 'chai';
+
 import ArcDecimal from '@src/utils/ArcDecimal';
-import { AssetType } from '@src/types';
-import { Account, getWaffleExpect } from '../../helpers/testingUtils';
+import ArcNumber from '@src/utils/ArcNumber';
+import { BigNumberish, BigNumber } from 'ethers';
+import { expectRevert } from '@test/helpers/expectRevert';
+import { generateContext, ITestContext } from '../context';
+import { SpritzTestArc } from '@src/SpritzTestArc';
+import { spritzFixture } from '../fixtures';
+import { addSnapshotBeforeRestoreAfterEach } from '../../helpers/testingUtils';
+import Token from '@src/utils/Token';
+import { AssetType } from '@arc-types/core';
 
-let ownerAccount: Account;
-let lenderAccount: Account;
-let minterAccount: Account;
-let otherAccount: Account;
+describe('Spritz.operatePosition(open)', () => {
+  let positionId: BigNumberish;
+  let ctx: ITestContext;
+  let arc: SpritzTestArc;
 
-async function init(ctx: ITestContext): Promise<void> {
-  ownerAccount = ctx.accounts[0];
-  lenderAccount = ctx.accounts[1];
-  minterAccount = ctx.accounts[2];
-  otherAccount = ctx.accounts[3];
-}
+  async function init(ctx: ITestContext): Promise<void> {
+    await ctx.sdks.spritz.oracle.setPrice(ArcDecimal.new(200));
+    await ctx.sdks.spritz.collateralAsset.mintShare(ctx.signers.minter.address, ArcNumber.new(1));
 
-const expect = getWaffleExpect();
+    await Token.approve(
+      ctx.sdks.spritz.collateralAsset.address,
+      ctx.signers.minter,
+      ctx.sdks.spritz.core.address,
+      ArcNumber.new(1),
+    );
+  }
 
-d1ArcDescribe('#Actions.openPosition()', init, (ctx: ITestContext) => {
-  describe('with stable shares', () => {
-    beforeEach(async () => {
-      await ctx.arc.oracle.setPrice(ArcDecimal.new(200));
-      await ctx.arc.collateralAsset.mintShare(minterAccount.address, ArcNumber.new(1));
+  before(async () => {
+    ctx = await generateContext(spritzFixture, init);
+    arc = ctx.sdks.spritz;
+  });
 
-      await Token.approve(
-        ctx.arc.collateralAsset.address,
-        minterAccount.signer,
-        ctx.arc.core.address,
-        ArcNumber.new(1),
-      );
-    });
+  it('should be able to borrow by the exact amout of collateral provided', async () => {
+    await arc.openPosition(ArcNumber.new(1), ArcNumber.new(100), ctx.signers.minter);
 
-    it('should be able to borrow by the exact amout of collateral provided', async () => {
-      await ctx.arc.openPosition(ArcNumber.new(1), ArcNumber.new(100), minterAccount.signer);
+    const supply = await arc.state.totalSupplied();
+    expect(supply).to.equal(ArcNumber.new(1));
 
-      const supply = await ctx.arc.state.totalSupplied();
-      expect(supply).to.equal(ArcNumber.new(1));
+    const position = await arc.state.positions(0);
+    expect(position.collateralAmount.value).to.equal(ArcNumber.new(1));
+    expect(position.collateralAmount.sign).to.equal(true);
+    expect(position.borrowedAmount.value).to.equal(ArcNumber.new(100));
+    expect(position.borrowedAmount.sign).to.equal(false);
+    expect(position.collateralAsset).to.equal(AssetType.Collateral);
+    expect(position.borrowedAsset).to.equal(AssetType.Synthetic);
+  });
 
-      const position = await ctx.arc.state.positions(0);
-      expect(position.collateralAmount.value).to.equal(ArcNumber.new(1));
-      expect(position.collateralAmount.sign).to.equal(true);
-      expect(position.borrowedAmount.value).to.equal(ArcNumber.new(100));
-      expect(position.borrowedAmount.sign).to.equal(false);
-      expect(position.collateralAsset).to.equal(AssetType.Collateral);
-      expect(position.borrowedAsset).to.equal(AssetType.Synthetic);
-    });
+  it('should not be able to open a position with not enough collateral', async () => {
+    await expectRevert(arc.openPosition(ArcNumber.new(1), ArcNumber.new(101), ctx.signers.minter));
+  });
 
-    it('should not be able to open a position with not enough collateral', async () => {
-      await expectRevert(
-        ctx.arc.openPosition(ArcNumber.new(1), ArcNumber.new(101), minterAccount.signer),
-      );
-    });
-
-    it('should not be able to open a position with not enough collateral', async () => {
-      await expectRevert(
-        ctx.arc.openPosition(ArcNumber.new(0), ArcNumber.new(1), minterAccount.signer),
-      );
-    });
+  it('should not be able to open a position with not enough collateral', async () => {
+    await expectRevert(arc.openPosition(ArcNumber.new(0), ArcNumber.new(1), ctx.signers.minter));
   });
 });

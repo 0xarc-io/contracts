@@ -1,69 +1,71 @@
 import 'module-alias/register';
 
-import { ethers, Wallet } from 'ethers';
-import { expectRevert } from '@test/helpers/expectRevert';
+import { expect } from 'chai';
 
-import ArcNumber from '@src/utils/ArcNumber';
-import d1ArcDescribe from '@test/helpers/d1ArcDescribe';
-import { ITestContext } from '@test/helpers/d1ArcDescribe';
-import { AddressZero } from 'ethers/constants';
 import ArcDecimal from '@src/utils/ArcDecimal';
-import { Account, getWaffleExpect } from '../../helpers/testingUtils';
+import ArcNumber from '@src/utils/ArcNumber';
+import { expectRevert } from '@test/helpers/expectRevert';
+import { generateContext, ITestContext } from '../context';
+import { SpritzTestArc } from '../../../src/SpritzTestArc';
+import { spritzFixture } from '../fixtures';
+import { AddressZero } from '@ethersproject/constants';
 
-let ownerWallet: Account;
-let otherWallet: Account;
+describe('Spritz', () => {
+  let ctx: ITestContext;
+  let arc: SpritzTestArc;
 
-const expect = getWaffleExpect();
+  async function init(ctx: ITestContext): Promise<void> {
+    await ctx.sdks.spritz.updatePrice(ArcDecimal.new(1000).value);
+    // The total liquidation premium is 10% in this case
+    // 5% is the liquidator reward, 5% is the arc fee
+    await ctx.sdks.spritz.state.setMarketParams({
+      collateralRatio: { value: ArcNumber.new(2) },
+      liquidationUserFee: { value: ArcDecimal.new(0.05).value },
+      liquidationArcFee: { value: ArcDecimal.new(0.05).value },
+    });
+  }
 
-async function init(ctx: ITestContext): Promise<void> {
-  await ctx.arc.oracle.setPrice(ArcDecimal.new(100));
-  await ctx.arc.state.setMarketParams({
-    collateralRatio: { value: ArcNumber.new(2) },
-    liquidationUserFee: { value: ArcDecimal.new(0.05).value },
-    liquidationArcFee: { value: ArcDecimal.new(0.05).value },
+  before(async () => {
+    ctx = await generateContext(spritzFixture, init);
+    arc = ctx.sdks.spritz;
   });
 
-  ownerWallet = ctx.accounts[0];
-  otherWallet = ctx.accounts[1];
-}
-
-d1ArcDescribe('D1Arc', init, (ctx: ITestContext) => {
   describe('#init', () => {
     it('cannot call init if already called', async () => {
-      const stateAddress = await ctx.arc.core.state();
+      const stateAddress = await arc.core.state();
       expect(stateAddress).not.to.equal(AddressZero);
-      await expectRevert(ctx.arc.core.init(AddressZero));
+      await expectRevert(arc.core.init(AddressZero));
     });
   });
 
   describe('#setPause', () => {
     it('cannot call operate action if contracts are paused', async () => {
-      await ctx.arc.core.setPause(true);
-      expect(await ctx.arc.core.paused()).to.be.true;
-      await expectRevert(ctx.arc._borrowSynthetic(1, 5, ownerWallet.signer));
+      await arc.core.setPause(true);
+      expect(await arc.core.paused()).to.be.true;
+      await expectRevert(arc._borrowSynthetic(1, 5, ctx.signers.admin));
     });
 
     it('can unpause contracts', async () => {
-      await ctx.arc.core.setPause(false);
-      expect(await ctx.arc.core.paused()).to.be.false;
-      await await ctx.arc._borrowSynthetic(1, 5, ownerWallet.signer);
+      await arc.core.setPause(false);
+      expect(await arc.core.paused()).to.be.false;
+      await await arc._borrowSynthetic(1, 5, ctx.signers.admin);
     });
   });
 
   describe('#withdrawTokens', () => {
     beforeEach(async () => {
-      await ctx.arc.collateralAsset.mintShare(ctx.arc.core.address, 5, {});
+      await arc.collateralAsset.mintShare(arc.core.address, 5, {});
     });
     it('cannot withdraw as a non-admin', async () => {
-      const core = await ctx.arc.getCore(otherWallet.signer);
+      const core = await arc.getCore(ctx.signers.unauthorised);
       await expectRevert(
-        core.withdrawTokens(ctx.arc.collateralAsset.address, otherWallet.address, 1),
+        core.withdrawTokens(arc.collateralAsset.address, ctx.signers.unauthorised.address, 1),
       );
     });
 
     it('can withdraw tokens as an admin', async () => {
-      const core = await ctx.arc.getCore(ownerWallet.signer);
-      await core.withdrawTokens(ctx.arc.collateralAsset.address, otherWallet.address, 1);
+      const core = await arc.getCore(ctx.signers.admin);
+      await core.withdrawTokens(arc.collateralAsset.address, ctx.signers.unauthorised.address, 1);
     });
   });
 });

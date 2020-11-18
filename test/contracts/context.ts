@@ -1,3 +1,5 @@
+import 'module-alias/register';
+
 import { ethers } from 'hardhat';
 import { Contracts, Stubs, TestingSigners, SDKs } from '@arc-types/testing';
 import { EVM } from '@test/helpers/EVM';

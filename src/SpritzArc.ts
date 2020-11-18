@@ -13,7 +13,6 @@ import {
 import { parseLogs } from './utils/parseLogs';
 import Token from './utils/Token';
 
-import { CoreV4Factory, StateV1Factory, StaticSyntheticTokenFactory } from './typings';
 import { Ierc20Factory } from './typings/Ierc20Factory';
 import { IOracleFactory } from './typings/IOracleFactory';
 import { StateV1 } from './typings/StateV1';
@@ -22,6 +21,9 @@ import { Ierc20 } from './typings/Ierc20';
 
 import { RiskParams, MarketParams, DeploymentConfig } from '../arc-types/core';
 import { TransactionOverrides } from '../arc-types/ethereum';
+import { CoreV4Factory } from './typings/CoreV4Factory';
+import { StateV1Factory } from './typings/StateV1Factory';
+import { StaticSyntheticTokenFactory } from './typings/StaticSyntheticTokenFactory';
 
 export class SpritzArc {
   public signer: Signer;
@@ -218,32 +220,40 @@ export class SpritzArc {
 
   async parseActionTx(tx: any) {
     const receipt = await tx.wait();
-    // TODO: Fix this
-    const logs = parseLogs(receipt.logs, '');
-    const log = logs[0];
+
+    const decodedPosition = {} as ActionOperated;
+    receipt.logs.forEach((log) => {
+      try {
+        const decoded = new CoreV4Factory().interface.decodeEventLog('ActionOperated', log.data);
+
+        Object.entries(decoded).forEach(([key, value]) => {
+          decodedPosition[key] = value;
+        });
+      } catch {}
+    });
 
     const position = {
-      owner: log.values.updatedPosition[0],
-      collateralAsset: log.values.updatedPosition[1],
-      borrowedAsset: log.values.updatedPosition[2],
+      owner: decodedPosition.updatedPosition[0],
+      collateralAsset: decodedPosition.updatedPosition[1],
+      borrowedAsset: decodedPosition.updatedPosition[2],
       collateralAmount: {
-        sign: log.values.updatedPosition[3][0],
-        value: log.values.updatedPosition[3][1],
+        sign: decodedPosition.updatedPosition[3][0],
+        value: decodedPosition.updatedPosition[3][1],
       },
       borrowedAmount: {
-        sign: log.values.updatedPosition[4][0],
-        value: log.values.updatedPosition[4][1],
+        sign: decodedPosition.updatedPosition[4][0],
+        value: decodedPosition.updatedPosition[4][1],
       },
     } as Position;
 
     const result = {
-      operation: log.values.operation,
+      operation: decodedPosition.operation,
       params: {
-        id: log.values.params[0],
-        assetOne: log.values.params[1],
-        amountOne: log.values.params[2],
-        assetTwo: log.values.params[3],
-        amountTwo: log.values.params[4],
+        id: decodedPosition.params[0],
+        assetOne: decodedPosition.params[1],
+        amountOne: decodedPosition.params[2],
+        assetTwo: decodedPosition.params[3],
+        amountTwo: decodedPosition.params[4],
       },
       updatedPosition: position,
     } as ActionOperated;
