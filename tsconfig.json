@@ -27,7 +27,7 @@
     "./tasks/**/*",
     "./test/**/*",
     "./publish/**/*.json",
-    "./arc-types/**/*/*"
+    "./arc-types/**/*/*", "test_old/contracts/setup.ts", "test_old/contracts/deployers.ts"
   ],
   "exclude": ["node_modules"],
   "files": [

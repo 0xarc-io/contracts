@@ -1,7 +1,7 @@
-import { Provider } from 'ethers/providers';
+import { JsonRpcProvider } from '@ethersproject/providers';
 import { asyncForEach } from './asyncForEach';
 
-export async function returnValidAddresses(addresses: any, provider: Provider) {
+export async function returnValidAddresses(addresses: any, provider: JsonRpcProvider) {
   const filteredAddresses = {};
 
   await asyncForEach(Object.entries(addresses), async (object) => {

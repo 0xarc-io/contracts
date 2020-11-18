@@ -130,7 +130,6 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
         Decimal.D256 memory _liquidationArcRatio
     )
         public
-        onlyAdmin
     {
         require(
             collateralAsset == address(0),

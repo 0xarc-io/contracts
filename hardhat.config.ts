@@ -1,5 +1,3 @@
-import 'module-alias/register';
-
 import fs from 'fs';
 
 import { HardhatUserConfig } from 'hardhat/config';
@@ -12,6 +10,8 @@ import 'hardhat-spdx-license-identifier';
 import 'hardhat-contract-sizer';
 import 'hardhat-typechain';
 import 'hardhat-watcher';
+
+import 'solidity-coverage';
 
 import '@nomiclabs/hardhat-etherscan';
 import '@nomiclabs/hardhat-waffle';
