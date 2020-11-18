@@ -1,7 +1,9 @@
-import { BigNumber, BigNumberish, Signer } from 'ethers';
+import { BigNumberish, Signer } from 'ethers';
 import { asyncForEach } from '@src/utils/asyncForEach';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { BaseErc20Factory, TestTokenFactory } from '@src/typings';
+import { BaseErc20Factory } from '@src/typings/BaseErc20Factory';
+import { TestTokenFactory } from '@src/typings/TestTokenFactory';
+
 import { TransactionOverrides } from '../../arc-types/ethereum';
 
 export default class Token {
@@ -16,7 +18,6 @@ export default class Token {
     await asyncForEach(signers, async (signer) => {
       const testToken = await new TestTokenFactory(signer).attach(collateral);
       await testToken.mintShare(signer.address, balance);
-
       await Token.approve(collateral, signer, core, balance);
     });
   }

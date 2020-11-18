@@ -91,6 +91,7 @@
     "shelljs": "^0.8.4",
     "solc": "^0.5.16",
     "solidifier": "^2.1.0",
+    "solidity-coverage": "^0.7.12",
     "system-commands": "^1.1.7",
     "table": "^5.4.6",
     "ts-generator": "^0.1.1",

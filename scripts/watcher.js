@@ -58,7 +58,7 @@ async function runTest(path) {
 	}
 
 	lastRunPath = path;
-	shell.exec(`yarn hardhat test test/unit/index --network local`);
+	shell.exec(`yarn hardhat test ${path} --network local`);
 	let splitPath = lastRunPath.split('/');
 	console.log(green(`Finished running: ${splitPath[splitPath.length - 1]}`));
 }

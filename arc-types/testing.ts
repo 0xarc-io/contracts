@@ -27,11 +27,10 @@ import { MozartTestArc } from '@src/MozartTestArc';
 export interface TestingSigners {
   admin: SignerWithAddress;
   minter: SignerWithAddress;
-  minter2: SignerWithAddress;
-  minter3: SignerWithAddress;
   interestSetter: SignerWithAddress;
   liquidator: SignerWithAddress;
-  saver: SignerWithAddress;
+  staker: SignerWithAddress;
+  revenue: SignerWithAddress;
   globalOperator: SignerWithAddress;
   positionOperator: SignerWithAddress;
   unauthorised: SignerWithAddress;
