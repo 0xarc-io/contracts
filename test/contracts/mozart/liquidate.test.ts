@@ -78,7 +78,6 @@ describe('Mozart.operateAction(Liquidate)', () => {
       .synth()
       .synthetic.balanceOf(ctx.signers.liquidator.address);
     const postProxyCollateralBalance = await arc.synth().collateral.balanceOf(arc.coreAddress());
-    const postTotals = await arc.getSynthTotals();
 
     // Check synth supply decreased
     expect(await await arc.synthetic().totalSupply()).to.equal(
@@ -200,18 +199,17 @@ describe('Mozart.operateAction(Liquidate)', () => {
     await arc.updatePrice(ArcDecimal.new(0.4).value);
     await arc.liquidatePosition(0, ctx.signers.liquidator);
 
-    let position = await arc.getPosition(0);
-    let beforeTotalCollateralHeld = await arc.synth().collateral.balanceOf(arc.syntheticAddress());
-    let beforeSyntheticBalance = await arc.synthetic().balanceOf(ctx.signers.liquidator.address);
+    const beforeTotalCollateralHeld = await arc
+      .synth()
+      .collateral.balanceOf(arc.syntheticAddress());
+    const beforeSyntheticBalance = await arc.synthetic().balanceOf(ctx.signers.liquidator.address);
 
     await arc.liquidatePosition(0, ctx.signers.liquidator);
 
-    let afterTotalCollateralHeld = await arc.synth().collateral.balanceOf(arc.syntheticAddress());
-    let afterSyntheticBalance = await arc.synthetic().balanceOf(ctx.signers.liquidator.address);
+    const afterTotalCollateralHeld = await arc.synth().collateral.balanceOf(arc.syntheticAddress());
+    const afterSyntheticBalance = await arc.synthetic().balanceOf(ctx.signers.liquidator.address);
 
     expect(afterSyntheticBalance).to.equal(beforeSyntheticBalance);
     expect(afterTotalCollateralHeld).to.equal(beforeTotalCollateralHeld);
-
-    position = await arc.getPosition(0);
   });
 });

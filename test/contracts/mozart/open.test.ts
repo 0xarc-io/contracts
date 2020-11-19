@@ -73,11 +73,7 @@ describe('Mozart.operateAction(Open)', () => {
   });
 
   it('should be able to open above the c-ratio', async () => {
-    const result = await arc.openPosition(
-      COLLATERAL_AMOUNT.mul(2),
-      BORROW_AMOUNT,
-      ctx.signers.minter,
-    );
+    await arc.openPosition(COLLATERAL_AMOUNT.mul(2), BORROW_AMOUNT, ctx.signers.minter);
 
     const position = await arc.getPosition(0);
     expect(position.borrowedAmount.value).to.equal(BORROW_AMOUNT);
@@ -147,9 +143,6 @@ describe('Mozart.operateAction(Open)', () => {
     const issuedAmount = await arc.synthetic().getMinterIssued(arc.coreAddress());
     expect(issuedAmount.value).to.equal(BORROW_AMOUNT.mul(2));
     expect(issuedAmount.sign).to.be.true;
-
-    // The interest increase is simply how much the total is less the amount we know we deposited (par values)
-    const interestIncrease = newBorrowTotal.sub(BORROW_AMOUNT.add(secondPositionBorrowedAmount));
 
     expect(await arc.synth().collateral.balanceOf(arc.syntheticAddress())).to.equal(
       COLLATERAL_AMOUNT.mul(3),

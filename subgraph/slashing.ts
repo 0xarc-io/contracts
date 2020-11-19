@@ -1,7 +1,7 @@
 import { UserSlashed } from '../generated/schema';
-import { UserSlashed as UserSlashedEvent } from '../generated/StakingRewards-Pool-4/RewardCampaign';
+import { UserSlashed as UserSlashedEvent } from '../generated/Pool-4/RewardCampaign';
 
-export function userSlashed(event: UserSlashedEvent): void {
+export function userSlashed(event: UserSlashed): void {
   let userSlashed = new UserSlashed(event.transaction.hash.toHexString());
   userSlashed.contractAddress = event.address;
   userSlashed.slasher = event.params._slasher;

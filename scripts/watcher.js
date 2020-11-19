@@ -3,7 +3,7 @@ const _ = require('lodash');
 const system = require('system-commands');
 const shell = require('shelljs'); // This module is already a solidity-coverage dep
 
-const { gray, green, yellow, redBright, red } = require('chalk');
+const { green, yellow } = require('chalk');
 
 let lastRunPath = process.argv[process.argv.length - 1];
 runTest(lastRunPath);
@@ -15,9 +15,6 @@ chokidar.watch('./contracts').on(
 	_.debounce(async (path, event) => {
 		console.log(yellow(`Contracts changed: ${path}`));
 		system('yarn compile')
-			.then((data) => {
-				return system('yarn generate-typings');
-			})
 			.then((data) => {
 				return runTest(lastRunPath);
 			})

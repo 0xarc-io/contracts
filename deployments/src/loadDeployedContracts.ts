@@ -1,8 +1,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 
-import { gray, red, blue } from 'chalk';
-import { constants, getPathToNetwork, networks } from '../../deployments.config';
+import { constants, getPathToNetwork } from '../../deployments.config';
 
 /*
  * Load Deployed Contracts

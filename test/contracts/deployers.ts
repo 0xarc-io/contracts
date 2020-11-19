@@ -3,7 +3,6 @@ import { ethers } from 'hardhat';
 
 import ArcDecimal from '@src/utils/ArcDecimal';
 
-import { MockOracleFactory } from '@src/typings/MockOracleFactory';
 import { TestTokenFactory } from '@src/typings/TestTokenFactory';
 import { ArcProxyFactory } from '@src/typings/ArcProxyFactory';
 import { MockMozartV1 } from '@src/typings/MockMozartV1';
@@ -20,20 +19,20 @@ import { Kyfv2 } from '@src/typings/Kyfv2';
 import { MockOracle } from '@src/typings/MockOracle';
 
 export async function deployMockMozartCoreV1(deployer: Signer) {
-  const MockMozartV1 = await ethers.getContractFactory('MockMozartV1', deployer);
-  const mozartCoreV1 = await MockMozartV1.deploy();
+  const Contract = await ethers.getContractFactory('MockMozartV1', deployer);
+  const mozartCoreV1 = await Contract.deploy();
   return mozartCoreV1 as MockMozartV1;
 }
 
 export async function deploySpritzCoreV3(deployer: Signer) {
-  const CoreV3 = await ethers.getContractFactory('CoreV3', deployer);
-  const coreV3 = await CoreV3.deploy();
+  const Contract = await ethers.getContractFactory('CoreV3', deployer);
+  const coreV3 = await Contract.deploy();
   return coreV3 as CoreV3;
 }
 
 export async function deploySpritzCoreV4(deployer: Signer) {
-  const CoreV4 = await ethers.getContractFactory('CoreV4', deployer);
-  const coreV4 = await CoreV4.deploy();
+  const Contract = await ethers.getContractFactory('CoreV4', deployer);
+  const coreV4 = await Contract.deploy();
   return coreV4 as CoreV4;
 }
 
@@ -47,9 +46,9 @@ export async function deploySpritzStateV1(
   liquidationArcFee: BigNumberish,
   liquidationUserFee: BigNumberish,
 ) {
-  const StateV1 = await ethers.getContractFactory('StateV1', deployer);
+  const Contract = await ethers.getContractFactory('StateV1', deployer);
   // new StateV1Factory().deploy()
-  const coreV4 = await StateV1.deploy(
+  const coreV4 = await Contract.deploy(
     core,
     collateral,
     synthetic,
@@ -69,14 +68,14 @@ export async function deploySpritzStateV1(
 }
 
 export async function deploySyntheticTokenV1(deployer: Signer) {
-  const SyntheticTokenV1 = await ethers.getContractFactory('SyntheticTokenV1', deployer);
-  const syntheticTokenV1 = await SyntheticTokenV1.deploy();
+  const Contract = await ethers.getContractFactory('SyntheticTokenV1', deployer);
+  const syntheticTokenV1 = await Contract.deploy();
   return syntheticTokenV1 as SyntheticTokenV1;
 }
 
 export async function deployMockOracle(deployer: Signer) {
-  const MockOracle = await ethers.getContractFactory('MockOracle', deployer);
-  const mockOracle = await MockOracle.deploy();
+  const Contract = await ethers.getContractFactory('MockOracle', deployer);
+  const mockOracle = await Contract.deploy();
   return mockOracle as MockOracle;
 }
 
@@ -96,8 +95,8 @@ export async function deployArcProxy(deployer: Signer, logic: string, admin: str
 }
 
 export async function deployMockSavingsV1(deployer: Signer, core: string, stakeToken: string) {
-  const MockMozartSavingsV1 = await ethers.getContractFactory('MockMozartSavingsV1', deployer);
-  const savingsV1 = await MockMozartSavingsV1.deploy(
+  const Contract = await ethers.getContractFactory('MockMozartSavingsV1', deployer);
+  const savingsV1 = await Contract.deploy(
     core,
     stakeToken,
     await deployer.getAddress(),
@@ -107,14 +106,14 @@ export async function deployMockSavingsV1(deployer: Signer, core: string, stakeT
 }
 
 export async function deployStaticSynthetic(deployer: Signer) {
-  const StaticSyntheticToken = await ethers.getContractFactory('StaticSyntheticToken', deployer);
-  const staticSyntheticToken = await StaticSyntheticToken.deploy('Synth', 'SYNTHUS');
+  const Contract = await ethers.getContractFactory('StaticSyntheticToken', deployer);
+  const staticSyntheticToken = await Contract.deploy('Synth', 'SYNTHUS');
   return staticSyntheticToken as StaticSyntheticToken;
 }
 
 export async function deployAddressAccrual(deployer: Signer, rewardToken: string) {
-  const AddressAccrual = await ethers.getContractFactory('AddressAccrual', deployer);
-  const addressAccrual = await AddressAccrual.deploy(rewardToken);
+  const Contract = await ethers.getContractFactory('AddressAccrual', deployer);
+  const addressAccrual = await Contract.deploy(rewardToken);
   return addressAccrual as AddressAccrual;
 }
 
@@ -125,13 +124,8 @@ export async function deployMockRewardCampaign(
   rewardToken: string,
   stakingToken: string,
 ) {
-  const MockRewardCampaign = await ethers.getContractFactory('MockRewardCampaign', deployer);
-  const mockRewardCampaign = await MockRewardCampaign.deploy(
-    dao,
-    distributor,
-    rewardToken,
-    stakingToken,
-  );
+  const Contract = await ethers.getContractFactory('MockRewardCampaign', deployer);
+  const mockRewardCampaign = await Contract.deploy(dao, distributor, rewardToken, stakingToken);
   return mockRewardCampaign as MockRewardCampaign;
 }
 
@@ -140,13 +134,13 @@ export async function deployTokenStakingAccrual(
   stakingToken: string,
   rewardToken: string,
 ) {
-  const TokenStakingAccrual = await ethers.getContractFactory('TokenStakingAccrual', deployer);
-  const tokenStakingAccrual = await TokenStakingAccrual.deploy(stakingToken, rewardToken);
+  const Contract = await ethers.getContractFactory('TokenStakingAccrual', deployer);
+  const tokenStakingAccrual = await Contract.deploy(stakingToken, rewardToken);
   return tokenStakingAccrual as TokenStakingAccrual;
 }
 
 export async function deployKyfV2(deployer: Signer) {
-  const KYFV2 = await ethers.getContractFactory('KYFV2');
+  const KYFV2 = await ethers.getContractFactory('KYFV2', deployer);
   const kyfv2 = await KYFV2.deploy();
   return kyfv2 as Kyfv2;
 }

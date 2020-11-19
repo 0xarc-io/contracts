@@ -1,11 +1,10 @@
 import 'module-alias/register';
 
-import { Signer, Wallet } from 'ethers';
+import { Signer } from 'ethers';
 import { expect } from 'chai';
 
 import ArcDecimal from '@src/utils/ArcDecimal';
 import ArcNumber from '@src/utils/ArcNumber';
-import { BigNumberish, BigNumber } from 'ethers';
 import { expectRevert } from '@test/helpers/expectRevert';
 import { generateContext, ITestContext } from '../context';
 import { SpritzTestArc } from '@src/SpritzTestArc';
@@ -43,7 +42,7 @@ describe('Spritz.StateV1', () => {
 
     it('should be able to set limits as the admin', async () => {
       const contract = await new StateV1Factory(ctx.signers.admin).attach(arc.state.address);
-      const tx = await contract.setRiskParams({
+      await contract.setRiskParams({
         collateralLimit: 0,
         syntheticLimit: 500,
         positionCollateralMinimum: 0,

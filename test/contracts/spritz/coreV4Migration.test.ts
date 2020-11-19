@@ -1,14 +1,11 @@
 import 'module-alias/register';
 
-import { Wallet } from 'ethers';
-
-import { ethers } from 'hardhat';
 import { expectRevert } from '@test/helpers/expectRevert';
 import { generateContext, ITestContext } from '../context';
 
 import ArcNumber from '@src/utils/ArcNumber';
 import ArcDecimal from '@src/utils/ArcDecimal';
-import { BigNumberish, BigNumber } from 'ethers';
+import { BigNumberish } from 'ethers';
 import { SpritzTestArc } from '@src/SpritzTestArc';
 import { spritzFixture } from '../fixtures';
 import Token from '@src/utils/Token';

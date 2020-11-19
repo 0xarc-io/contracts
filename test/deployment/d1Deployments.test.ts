@@ -1,29 +1,22 @@
-import fs from 'fs';
-import path from 'path';
-
-import { toWei, isAddress } from 'web3-utils';
-import { asyncForEach } from '@src/utils/asyncForEach';
-
 import { ethers } from 'hardhat';
-import { loadContract, loadContracts } from '../../deployments/src/loadContracts';
+import { loadContract } from '../../deployments/src/loadContracts';
 import { DeploymentType } from '../../deployments/src/writeToDeployments';
-import { pruneDeployments } from '../../deployments/src';
 import { generatedWallets } from '../helpers/generatedWallets';
 import { expect } from 'chai';
 import { StateV1Factory } from '@src/typings/StateV1Factory';
 import { CoreV4Factory } from '@src/typings/CoreV4Factory';
 
+/* eslint-disable @typescript-eslint/no-var-requires */
 require('dotenv').config();
 
+/* eslint-disable @typescript-eslint/no-var-requires */
 const hre = require('hardhat');
 
 const networks = ['mainnet', 'rinkeby'];
 
 describe('deployments', () => {
   networks.forEach((network) => {
-    describe(network, () => {
-      testNetwork(network);
-    });
+    describe(network, () => testNetwork);
   });
 });
 

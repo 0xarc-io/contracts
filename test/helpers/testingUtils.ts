@@ -1,5 +1,4 @@
 // // Buidler automatically injects the waffle version into chai
-import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { EVM } from './EVM';
 
@@ -19,28 +18,3 @@ export const addSnapshotBeforeRestoreAfterEach = () => {
     await evm.evmRevert();
   });
 };
-
-// const provider = ethers.provider;
-
-// export type Account = {
-//   address: string;
-//   signer: Signer;
-// };
-
-// export const getAccounts = async (): Promise<Account[]> => {
-//   const accounts: Account[] = [];
-
-//   const signers = await getSigners();
-//   for (let i = 0; i < signers.length; i++) {
-//     accounts.push({
-//       signer: signers[i],
-//       address: await signers[i].getAddress(),
-//     });
-//   }
-
-//   return accounts;
-// };
-
-// export const getSigners = async (): Promise<Signer[]> => {
-//   return await ethers.getSigners();
-// };

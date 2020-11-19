@@ -54,28 +54,28 @@ export function loadContracts(params: LoadContractParams): Array<ContractDetails
   if (params.name && !params.source && !params.type && !params.group) {
     return Object.values(contracts).filter((item: any) => {
       return item.name == params.name;
-    });
+    }) as Array<ContractDetails>;
   }
 
   // Only a source was passed in
   if (!params.name && params.source && !params.type && !params.group) {
     return Object.values(contracts).filter((item: any) => {
       return item.source == params.source;
-    });
+    }) as Array<ContractDetails>;
   }
 
   // Only a type was passed in
   if (!params.name && !params.source && params.type && !params.group) {
     return Object.values(contracts).filter((item: any) => {
       return item.type == params.type;
-    });
+    }) as Array<ContractDetails>;
   }
 
   // Only a group was passed in
   if (!params.name && !params.source && !params.type && params.group) {
     return Object.values(contracts).filter((item: any) => {
       return item.group == params.group;
-    });
+    }) as Array<ContractDetails>;
   }
 
   //
@@ -86,42 +86,42 @@ export function loadContracts(params: LoadContractParams): Array<ContractDetails
   if (params.name && params.source && !params.type && !params.group) {
     return Object.values(contracts).filter((item: any) => {
       return item.name == params.name && item.source == params.source;
-    });
+    }) as Array<ContractDetails>;
   }
 
   // A name and type was passed in
   if (params.name && !params.source && params.type && !params.group) {
     return Object.values(contracts).filter((item: any) => {
       return item.name == params.name && item.type == params.type;
-    });
+    }) as Array<ContractDetails>;
   }
 
   // A name and group was passed in
   if (params.name && !params.source && !params.type && params.group) {
     return Object.values(contracts).filter((item: any) => {
       return item.name == params.name && item.group == params.group;
-    });
+    }) as Array<ContractDetails>;
   }
 
   // A source and type was passed in
   if (!params.name && params.source && params.type && !params.group) {
     return Object.values(contracts).filter((item: any) => {
       return item.source == params.source && item.type == params.type;
-    });
+    }) as Array<ContractDetails>;
   }
 
   // A source and group was passed in
   if (!params.name && params.source && !params.type && params.group) {
     return Object.values(contracts).filter((item: any) => {
       return item.source == params.source && item.group == params.group;
-    });
+    }) as Array<ContractDetails>;
   }
 
   // A type and group was passed in
   if (!params.name && !params.source && params.type && params.group) {
     return Object.values(contracts).filter((item: any) => {
       return item.type == params.type && item.group == params.group;
-    });
+    }) as Array<ContractDetails>;
   }
 
   //
@@ -132,28 +132,28 @@ export function loadContracts(params: LoadContractParams): Array<ContractDetails
   if (params.name && params.source && params.type && !params.group) {
     return Object.values(contracts).filter((item: any) => {
       return item.name == params.name && item.source == params.source && item.type == params.type;
-    });
+    }) as Array<ContractDetails>;
   }
 
   // A name, source, group was passed in
   if (params.name && params.source && !params.type && params.group) {
     return Object.values(contracts).filter((item: any) => {
       return item.name == params.name && item.source == params.source && item.group == params.group;
-    });
+    }) as Array<ContractDetails>;
   }
 
   // A source, type, group was passed in
   if (!params.name && params.source && params.type && params.group) {
     return Object.values(contracts).filter((item: any) => {
       return item.source == params.source && item.type == params.type && item.group == params.group;
-    });
+    }) as Array<ContractDetails>;
   }
 
   // A name, type, group was passed in
   if (params.name && !params.source && params.type && params.group) {
     return Object.values(contracts).filter((item: any) => {
       return item.name == params.name && item.type == params.type && item.group == params.group;
-    });
+    }) as Array<ContractDetails>;
   }
 
   //
@@ -169,7 +169,7 @@ export function loadContracts(params: LoadContractParams): Array<ContractDetails
         item.type == params.type &&
         item.group == params.group
       );
-    });
+    }) as Array<ContractDetails>;
   }
 
   return [];

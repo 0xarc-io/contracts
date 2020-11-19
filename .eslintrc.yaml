@@ -8,9 +8,11 @@ parserOptions:
   project: "tsconfig.json"
 plugins:
   - "@typescript-eslint"
+  - "unused-imports"
 root: true
 rules:
-  "@explicit-module-boundary-types": "off"
+  "no-undef": "off"
+  "@typescript-eslint/explicit-module-boundary-types": "off"
   "@typescript-eslint/no-floating-promises":
     - "error"
     - ignoreIIFE: true

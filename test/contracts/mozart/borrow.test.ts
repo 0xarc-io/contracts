@@ -105,7 +105,7 @@ describe('Mozart.operateAction(Borrow)', () => {
     await arc.borrow(0, 0, BORROW_AMOUNT, ctx.signers.minter);
     await arc.borrow(0, COLLATERAL_AMOUNT, BORROW_AMOUNT.mul(2), ctx.signers.minter);
 
-    let position = await arc.getPosition(0);
+    const position = await arc.getPosition(0);
     const price = await arc.synth().oracle.fetchCurrentPrice();
     const collateralDelta = await arc
       .core()

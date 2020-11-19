@@ -111,6 +111,7 @@
   "dependencies": {
     "@openzeppelin/contracts": "^2.5.0",
     "@openzeppelin/upgrades": "^2.8.0",
+    "eslint-plugin-unused-imports": "^1.0.0",
     "husky": "^4.3.0"
   },
   "publishConfig": {

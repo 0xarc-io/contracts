@@ -4,11 +4,10 @@ import { expect } from 'chai';
 
 import ArcNumber from '@src/utils/ArcNumber';
 import ArcDecimal from '@src/utils/ArcDecimal';
-import { TEN_PERCENT, ONE_YEAR_IN_SECONDS, BASE } from '@src/constants';
+import { TEN_PERCENT, ONE_YEAR_IN_SECONDS } from '@src/constants';
 
 import { generateContext, ITestContext } from '../context';
 import { setupMozart } from '../setup';
-import { addSnapshotBeforeRestoreAfterEach } from '../../helpers/testingUtils';
 import { mozartFixture } from '../fixtures';
 import { MozartTestArc } from '@src/MozartTestArc';
 import Token from '@src/utils/Token';

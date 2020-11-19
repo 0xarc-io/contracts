@@ -23,7 +23,7 @@ dataSources:
         - name: BaseERC20
           file: ./artifacts/contracts/token/BaseERC20.sol/BaseERC20.json
         - name: CoreV1
-          file: ./artifacts/contracts/v1/CoreV1.sol/CoreV1.json
+          file: ./artifacts/contracts/debt/spritz/CoreV1.sol/CoreV1.json
       eventHandlers:
         - event: SynthAdded(bytes32,address)
           handler: synthV1Added
@@ -47,7 +47,7 @@ dataSources:
         - name: BaseERC20
           file: ./artifacts/contracts/token/BaseERC20.sol/BaseERC20.json
         - name: CoreV1
-          file: ./artifacts/contracts/v1/CoreV1.sol/CoreV1.json
+          file: ./artifacts/contracts/debt/spritz/CoreV1.sol/CoreV1.json
       eventHandlers:
         - event: SynthAdded(address,address)
           handler: synthV2Added
@@ -67,7 +67,7 @@ templates:
         - ActionOperated
       abis:
         - name: CoreV1
-          file: ./artifacts/contracts/v1/CoreV1.sol/CoreV1.json
+          file: ./artifacts/contracts/debt/spritz/CoreV1.sol/CoreV1.json
         - name: BaseERC20
           file: ./artifacts/contracts/token/BaseERC20.sol/BaseERC20.json
       eventHandlers:
@@ -87,7 +87,7 @@ templates:
         - Synth
       abis:
         - name: StateV1
-          file: ./artifacts/contracts/v1/StateV1.sol/StateV1.json
+          file: ./artifacts/contracts/debt/spritz/StateV1.sol/StateV1.json
         - name: BaseERC20
           file: ./artifacts/contracts/token/BaseERC20.sol/BaseERC20.json
       eventHandlers:
@@ -99,10 +99,10 @@ templates:
           handler: oracleUpdated
       file: ./subgraph/d1.ts
   - kind: ethereum/contract
-    name: D2CoreV1
+    name: MozartV1
     network: mainnet
     source:
-      abi: D2CoreV1
+      abi: MozartV1
     mapping:
       kind: ethereum/events
       language: wasm/assemblyscript
@@ -112,8 +112,8 @@ templates:
         - Position
         - ActionOperated
       abis:
-        - name: D2CoreV1
-          file: ./artifacts/contracts/v2/D2CoreV1.sol/D2CoreV1.json
+        - name: MozartV1
+          file: ./artifacts/contracts/debt/mozart/MozartV1.sol/MozartV1.json
         - name: BaseERC20
           file: ./artifacts/contracts/token/BaseERC20.sol/BaseERC20.json
       eventHandlers:

@@ -2,7 +2,7 @@ import { SpritzArc } from './SpritzArc';
 
 import Token from './utils/Token';
 import { BigNumberish, BigNumber, Signer } from 'ethers';
-import { AssetType, DeploymentConfig } from '../arc-types/core';
+import { AssetType } from '../arc-types/core';
 import { MockOracleFactory } from './typings/MockOracleFactory';
 
 export class SpritzTestArc extends SpritzArc {
@@ -23,35 +23,8 @@ export class SpritzTestArc extends SpritzArc {
     arc.syntheticAsset = contracts.syntheticAsset;
     arc.collateralAsset = contracts.collateralAsset;
     arc.oracle = contracts.oracle;
-    // console.log(
-    //   Object.keys(contracts).forEach((x) => {
-    //     console.log(x);
-    //   }),
-    // );
     return arc;
   }
-
-  // async deployTestArc() {
-  //   this.collateralAsset = await TestToken.deploy(this.signer, 'TEST', 'TEST');
-  //   this.oracle = await MockOracle.deploy(this.signer);
-
-  //   const testConfig: DeploymentConfig = {
-  //     owner: await this.signer.getAddress(),
-  //     name: 'LINKUSD',
-  //     symbol: 'LINKUSD',
-  //     collateralAsset: this.collateralAsset.address,
-  //     oracle: this.oracle.address,
-  //     collateralRatio: ArcDecimal.new(2).value,
-  //     liquidationArcFee: ArcDecimal.new(0.1).value,
-  //     liquidationUserFee: ArcDecimal.new(0.05).value,
-  //     chainlinkAggregator: '',
-  //     collateralLimit: '',
-  //     syntheticAssetLimit: '',
-  //     positionCollateralMinimum: '',
-  //   };
-
-  //   await this.deployArc(testConfig);
-  // }
 
   async _borrowSynthetic(
     amount: BigNumberish,
