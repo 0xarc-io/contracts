@@ -1,4 +1,3 @@
-import { Signer } from '@ethersproject/abstract-signer';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 
 import { CoreV1 } from '@src/typings/CoreV1';
@@ -20,7 +19,6 @@ import { AddressAccrual } from '@src/typings/AddressAccrual';
 import { MockOracle } from '@src/typings/MockOracle';
 
 import { TestToken } from '@src/typings/TestToken';
-import { SpritzArc } from '../src/SpritzArc';
 import { SpritzTestArc } from '@src/SpritzTestArc';
 import { MozartTestArc } from '@src/MozartTestArc';
 

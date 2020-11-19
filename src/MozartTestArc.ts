@@ -1,4 +1,4 @@
-import { Signer, Wallet } from 'ethers';
+import { Signer } from 'ethers';
 
 import { MozartArc } from './MozartArc';
 import { BigNumberish } from 'ethers';
@@ -12,42 +12,6 @@ export class MozartTestArc extends MozartArc {
     arc.signerAddress = await signer.getAddress();
     return arc;
   }
-
-  // async deployTestArc() {
-  //   const mockCore = await MockD2CoreV1.deploy(this.signer);
-
-  //   const collateralAsset = await TestToken.deploy(this.signer, 'TestCollateral', 'TEST');
-
-  //   let syntheticAsset = await SyntheticTokenV1.deploy(this.signer);
-
-  //   const syntheticProxy = await ArcProxy.deploy(
-  //     this.signer,
-  //     syntheticAsset.address,
-  //     this.signerAddress,
-  //     [],
-  //   );
-  //   syntheticAsset = await SyntheticTokenV1.at(this.signer, syntheticProxy.address);
-
-  //   const oracle = await MockOracle.deploy(this.signer);
-  //   const coreProxy = await ArcProxy.deploy(this.signer, mockCore.address, this.signerAddress, []);
-
-  //   let core = await D2CoreV1.at(this.signer, coreProxy.address);
-
-  //   await core.init(
-  //     collateralAsset.address,
-  //     syntheticAsset.address,
-  //     oracle.address,
-  //     await this.signer.getAddress(),
-  //     { value: 0 },
-  //     { value: 0 },
-  //     { value: 0 },
-  //     { value: 0 },
-  //   );
-
-  //   await syntheticAsset.addMinter(core.address, MAX_UINT256);
-
-  //   await this.addSynths({ ETHX: core.address });
-  // }
 
   public synth() {
     return this.availableSynths()[0];

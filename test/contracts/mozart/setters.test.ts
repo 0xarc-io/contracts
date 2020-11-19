@@ -1,18 +1,11 @@
 import 'module-alias/register';
 
-import ArcNumber from '@src/utils/ArcNumber';
 import ArcDecimal from '@src/utils/ArcDecimal';
 
 import { expect } from 'chai';
-import { mozartFixture } from '../fixtures';
 import { addSnapshotBeforeRestoreAfterEach } from '../../helpers/testingUtils';
 import { generateContext, ITestContext } from '../context';
-import {
-  deployArcProxy,
-  deployMockMozartCoreV1,
-  deployMockOracle,
-  deployTestToken,
-} from '../deployers';
+import { deployArcProxy, deployMockMozartCoreV1 } from '../deployers';
 import { MockMozartV1 } from '@src/typings/MockMozartV1';
 import { MockMozartV1Factory } from '@src/typings/MockMozartV1Factory';
 import { Signer } from '@ethersproject/abstract-signer';
@@ -22,14 +15,12 @@ describe('MozartV1.setters', () => {
   let ctx: ITestContext;
   let core: MockMozartV1;
 
-  async function init(ctx: ITestContext): Promise<void> {}
+  async function init(): Promise<void> {}
 
   before(async () => {
     ctx = await generateContext(init, init);
 
     const mockCore = await deployMockMozartCoreV1(ctx.signers.admin);
-    const collateral = await deployTestToken(ctx.signers.admin, 'TestCollateral', 'TEST');
-    const mockOracle = await deployMockOracle(ctx.signers.admin);
     const proxy = await deployArcProxy(
       ctx.signers.admin,
       mockCore.address,

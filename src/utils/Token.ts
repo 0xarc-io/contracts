@@ -7,8 +7,6 @@ import { TestTokenFactory } from '@src/typings/TestTokenFactory';
 import { TransactionOverrides } from '../../arc-types/ethereum';
 
 export default class Token {
-  constructor() {}
-
   static async setStartingBalances(
     collateral: string,
     core: string,

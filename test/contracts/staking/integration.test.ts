@@ -1,6 +1,6 @@
 import 'module-alias/register';
 
-import { BigNumber, BigNumberish, Signer, Wallet } from 'ethers';
+import { BigNumber, BigNumberish } from 'ethers';
 import { expect } from 'chai';
 
 import ArcDecimal from '@src/utils/ArcDecimal';
@@ -17,15 +17,12 @@ import { Kyfv2 } from '@src/typings/Kyfv2';
 import Token from '@src/utils/Token';
 import { MockRewardCampaign } from '@src/typings/MockRewardCampaign';
 import { generateContext, ITestContext } from '../context';
-import { mozartFixture, spritzFixture } from '../fixtures';
+import { spritzFixture } from '../fixtures';
 import { SpritzTestArc } from '../../../src/SpritzTestArc';
 import { ArcxTokenFactory } from '@src/typings/ArcxTokenFactory';
-import { TestTokenFactory } from '@src/typings/TestTokenFactory';
-import { AddressAccrualFactory } from '@src/typings/AddressAccrualFactory';
 import { MockRewardCampaignFactory } from '@src/typings/MockRewardCampaignFactory';
 import { ArcProxyFactory } from '@src/typings/ArcProxyFactory';
 import { TokenStakingAccrualFactory } from '@src/typings/TokenStakingAccrualFactory';
-import { Kyfv2Factory } from '@src/typings/Kyfv2Factory';
 import {
   deployAddressAccrual,
   deployTestToken,

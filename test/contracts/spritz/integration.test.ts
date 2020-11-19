@@ -1,24 +1,20 @@
 import 'module-alias/register';
 
-import { Signer, Wallet } from 'ethers';
 import { expect } from 'chai';
 
 import ArcDecimal from '@src/utils/ArcDecimal';
 import ArcNumber from '@src/utils/ArcNumber';
-import { BigNumberish, BigNumber } from 'ethers';
+import { BigNumberish } from 'ethers';
 import { expectRevert } from '@test/helpers/expectRevert';
 import { generateContext, ITestContext } from '../context';
 import { SpritzTestArc } from '@src/SpritzTestArc';
 import { spritzFixture } from '../fixtures';
-import { addSnapshotBeforeRestoreAfterEach } from '../../helpers/testingUtils';
 import Token from '@src/utils/Token';
 import { Operation } from '@arc-types/core';
 
 let currentPosition: BigNumberish;
 
 describe('Spritz.integration', () => {
-  let positionId: BigNumberish;
-
   let ctx: ITestContext;
   let arc: SpritzTestArc;
 

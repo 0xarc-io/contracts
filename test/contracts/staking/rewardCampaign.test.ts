@@ -1,6 +1,6 @@
 import 'module-alias/register';
 
-import { BigNumber, BigNumberish, Signer, Wallet } from 'ethers';
+import { BigNumber, BigNumberish } from 'ethers';
 import { expect } from 'chai';
 
 import ArcDecimal from '@src/utils/ArcDecimal';
@@ -12,12 +12,11 @@ import { TestToken } from '@src/typings/TestToken';
 import { Kyfv2 } from '@src/typings/Kyfv2';
 import { MockRewardCampaign } from '@src/typings/MockRewardCampaign';
 import { generateContext, ITestContext } from '../context';
-import { SpritzTestArc } from '../../../src/SpritzTestArc';
+import { SpritzTestArc } from '@src/SpritzTestArc';
 import { spritzFixture } from '../fixtures';
 
-import Token from '../../../src/utils/Token';
+import Token from '@src/utils/Token';
 import { TestTokenFactory } from '@src/typings/TestTokenFactory';
-import { Kyfv2Factory } from '@src/typings/Kyfv2Factory';
 import { MockRewardCampaignFactory } from '@src/typings/MockRewardCampaignFactory';
 import { ArcProxyFactory } from '@src/typings/ArcProxyFactory';
 import { deployKyfV2, deployMockRewardCampaign, deployTestToken } from '../deployers';
@@ -40,7 +39,6 @@ const BASE = BigNumber.from(10).pow(18);
 describe('RewardCampaign', () => {
   let ctx: ITestContext;
   let arc: SpritzTestArc;
-  let positionId: BigNumberish;
 
   const DAO_ALLOCATION = ArcDecimal.new(0.4);
   const SLAHSER_CUT = ArcDecimal.new(0.3);
@@ -258,7 +256,6 @@ describe('RewardCampaign', () => {
 
   describe('#slash', () => {
     let userPosition: BigNumberish;
-    let slasherPosition: BigNumberish;
 
     beforeEach(async () => {
       await setup();
@@ -266,8 +263,7 @@ describe('RewardCampaign', () => {
       const result1 = await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, userAccount);
       userPosition = result1.params.id;
 
-      const result2 = await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, slasherAccount);
-      slasherPosition = result2.params.id;
+      await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, slasherAccount);
 
       await approve(kyfTranche1);
       await verifyUserIn(kyfTranche1, userAccount.address);
@@ -321,7 +317,6 @@ describe('RewardCampaign', () => {
 
   describe('#getReward', () => {
     let userPosition: BigNumberish;
-    let slasherPosition: BigNumberish;
 
     beforeEach(setup);
 
@@ -329,8 +324,7 @@ describe('RewardCampaign', () => {
       const result1 = await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, userAccount);
       userPosition = result1.params.id;
 
-      const result2 = await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, slasherAccount);
-      slasherPosition = result2.params.id;
+      await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, slasherAccount);
 
       await approve(kyfTranche1);
       await verifyUserIn(kyfTranche1, userAccount.address);
@@ -495,7 +489,7 @@ describe('RewardCampaign', () => {
 
     beforeEach(async () => {
       await setup();
-      dummyToken = await new TestTokenFactory(ownerAccount).deploy('TEST', 'TEST');
+      dummyToken = await new TestTokenFactory(ownerAccount).deploy('TEST', 'TEST', 18);
       await dummyToken.mintShare(stakingRewards.address, 100);
     });
 

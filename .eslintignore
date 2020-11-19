@@ -12,6 +12,9 @@ dist/
 lib/
 node_modules/
 typechain/
+subgraph/
+generated/
+scripts/
 
 # files
 coverage.json

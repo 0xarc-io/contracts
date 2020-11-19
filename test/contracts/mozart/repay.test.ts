@@ -11,8 +11,8 @@ import { setupMozart } from '../setup';
 import { MozartTestArc } from '@src/MozartTestArc';
 
 import { BASE, TEN_PERCENT } from '@src/constants';
-import { BigNumberish } from '@ethersproject/bignumber';
 import { ONE_YEAR_IN_SECONDS } from '@src/constants';
+
 import Token from '@src/utils/Token';
 
 describe('Mozart.operateAction(Repay)', () => {
@@ -121,7 +121,7 @@ describe('Mozart.operateAction(Repay)', () => {
 
     let position = await arc.synth().core.getPosition(0);
 
-    let collateralDelta = await arc
+    const collateralDelta = await arc
       .synth()
       .core.calculateCollateralDelta(position.collateralAmount, position.borrowedAmount.value, {
         value: newPrice,
@@ -139,8 +139,6 @@ describe('Mozart.operateAction(Repay)', () => {
 
     // We should be happy campers now
     expect(await arc.synth().core.isCollateralized(position)).to.be.true;
-
-    const totals = await arc.synth().core.getTotals();
   });
 
   it('should not be able to withdraw if undercollateralized', async () => {

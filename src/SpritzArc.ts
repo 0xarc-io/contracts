@@ -10,7 +10,6 @@ import {
   SynthAddressBook,
 } from '../arc-types/core';
 
-import { parseLogs } from './utils/parseLogs';
 import Token from './utils/Token';
 
 import { Ierc20Factory } from './typings/Ierc20Factory';
@@ -19,7 +18,7 @@ import { StateV1 } from './typings/StateV1';
 import { CoreV4 } from './typings/CoreV4';
 import { Ierc20 } from './typings/Ierc20';
 
-import { RiskParams, MarketParams, DeploymentConfig } from '../arc-types/core';
+import { RiskParams, MarketParams } from '../arc-types/core';
 import { TransactionOverrides } from '../arc-types/ethereum';
 import { CoreV4Factory } from './typings/CoreV4Factory';
 import { StateV1Factory } from './typings/StateV1Factory';
@@ -50,45 +49,6 @@ export class SpritzArc {
 
     return arc;
   }
-
-  // async deployArc(config: DeploymentConfig) {
-  //   this.core = await CoreV4.deploy(this.signer);
-
-  //   const address = await this.signer.getAddress();
-  //   const proxy = await ArcProxy.deploy(this.signer, this.core.address, address, []);
-
-  //   this.core = await CoreV4.at(this.signer, proxy.address);
-
-  //   this.syntheticAsset = await StaticSyntheticToken.deploy(
-  //     this.signer,
-  //     config.name,
-  //     config.symbol,
-  //   );
-
-  //   await StaticSyntheticToken.at(this.signer, this.syntheticAsset.address).addMinter(
-  //     this.core.address,
-  //   );
-
-  //   this.state = await StateV1.deploy(
-  //     this.signer,
-  //     this.core.address,
-  //     config.collateralAsset,
-  //     this.syntheticAsset.address,
-  //     config.oracle,
-  //     {
-  //       collateralRatio: { value: config.collateralRatio },
-  //       liquidationArcFee: { value: config.liquidationArcFee },
-  //       liquidationUserFee: { value: config.liquidationUserFee },
-  //     },
-  //     {
-  //       collateralLimit: '',
-  //       syntheticLimit: '',
-  //       positionCollateralMinimum: '',
-  //     },
-  //   );
-
-  //   await this.core.init(this.state.address);
-  // }
 
   async approveStableShare(
     amount: BigNumberish,

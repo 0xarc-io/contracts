@@ -16,10 +16,9 @@ import {
   deploySpritzCoreV3,
 } from './deployers';
 
-import { BigNumberish, Signer } from 'ethers';
+import { Signer } from 'ethers';
 import { ITestContext, ITestContextArgs } from './context';
 import { MozartTestArc } from '@src/MozartTestArc';
-import { CoreV4 } from '@src/typings/CoreV4';
 import { CoreV4Factory } from '@src/typings/CoreV4Factory';
 import { SpritzTestArc } from '../../src/SpritzTestArc';
 

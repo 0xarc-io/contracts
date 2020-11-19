@@ -181,6 +181,8 @@ describe('MozartSavingsV1', () => {
       await savings.updateIndex();
       const afterSupply = await arc.synthetic().totalSupply();
 
+      expect(afterSupply.gte(beforeSupply));
+
       const coreBorrowIndex = (await arc.core().getBorrowIndex())[0];
       expect(await savings.savingsIndex()).to.equal(coreBorrowIndex);
       expect(afterSupply).to.equal(ArcNumber.bigMul(coreBorrowIndex, BORROW_AMOUNT));

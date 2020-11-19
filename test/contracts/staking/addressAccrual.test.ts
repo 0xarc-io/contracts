@@ -1,6 +1,6 @@
 import 'module-alias/register';
 
-import { BigNumber, Signer, Wallet } from 'ethers';
+import { BigNumber } from 'ethers';
 import { expect } from 'chai';
 
 import ArcDecimal from '@src/utils/ArcDecimal';
@@ -11,7 +11,6 @@ import { TestToken } from '@src/typings/TestToken';
 import { ethers } from 'hardhat';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { AddressAccrualFactory } from '@src/typings/AddressAccrualFactory';
-import { TestTokenFactory } from '@src/typings/TestTokenFactory';
 import { deployAddressAccrual, deployTestToken } from '../deployers';
 
 let ownerAccount: SignerWithAddress;

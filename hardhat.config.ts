@@ -19,6 +19,7 @@ import '@nomiclabs/hardhat-waffle';
 import './tasks/type-extensions';
 
 if (fs.existsSync('src/typings/index.ts')) {
+  /* eslint-disable @typescript-eslint/no-var-requires */
   require('./tasks');
 }
 

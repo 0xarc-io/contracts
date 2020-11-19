@@ -58,9 +58,8 @@ export class EVM {
     return this.callJsonrpcMethod('evm_increaseTime', [duration]);
   }
 
-  public async callJsonrpcMethod(method: string, params: any[] = []): Promise<string> {
-    const response = await this.provider.send(method, params);
-    return response;
+  public async callJsonrpcMethod(method: string, params: any[] = []) {
+    return await this.provider.send(method, params);
   }
 
   async mineAvgBlock() {

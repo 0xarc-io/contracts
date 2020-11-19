@@ -252,11 +252,7 @@ export class MozartArc {
     return result;
   }
 
-  async isCollateralized(
-    positionId: BigNumberish,
-    caller: Signer = this.signer,
-    synth: Synth = this.availableSynths()[0],
-  ) {
+  async isCollateralized(positionId: BigNumberish, synth: Synth = this.availableSynths()[0]) {
     const position = await synth.core.getPosition(positionId);
     return await synth.core.isCollateralized(position);
   }

@@ -8,7 +8,7 @@ import { Provider } from 'ethers/providers';
 export async function pruneDeployments(network: string, provider: Provider) {
   const entries = loadDeployedContracts(network);
 
-  let prunedEntries: any[] = [];
+  const prunedEntries: any[] = [];
 
   await asyncForEach(entries, async (entry) => {
     const address = await entry.address;

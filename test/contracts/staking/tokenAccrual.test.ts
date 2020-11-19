@@ -8,7 +8,6 @@ import ArcNumber from '@src/utils/ArcNumber';
 import { TokenStakingAccrual } from '@src/typings/TokenStakingAccrual';
 import { expectRevert } from '@test/helpers/expectRevert';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { ITestContext } from '../context';
 import { ethers } from 'hardhat';
 import { TestTokenFactory } from '@src/typings/TestTokenFactory';
 import { TokenStakingAccrualFactory } from '@src/typings/TokenStakingAccrualFactory';
@@ -16,27 +15,21 @@ import { deployTokenStakingAccrual } from '../deployers';
 
 let ownerAccount: SignerWithAddress;
 let userAccount: SignerWithAddress;
-let arcAccount: SignerWithAddress;
-let distributionAccount: SignerWithAddress;
 
 let rewardContract: TokenStakingAccrual;
 let stakingToken: TestToken;
 let rewardToken: TestToken;
-
-const BASE = BigNumber.from(10).pow(18);
 
 describe('TokenAccrual', () => {
   before(async () => {
     const signers = await ethers.getSigners();
     ownerAccount = signers[0];
     userAccount = signers[1];
-    arcAccount = signers[2];
-    distributionAccount = signers[3];
   });
 
   beforeEach(async () => {
-    stakingToken = await new TestTokenFactory(ownerAccount).deploy('LINKUSD/USDC 50/50', 'BPT');
-    rewardToken = await new TestTokenFactory(ownerAccount).deploy('Arc Token', 'ARC');
+    stakingToken = await new TestTokenFactory(ownerAccount).deploy('LINKUSD/USDC 50/50', 'BPT', 18);
+    rewardToken = await new TestTokenFactory(ownerAccount).deploy('Arc Token', 'ARC', 18);
 
     rewardContract = await deployTokenStakingAccrual(
       ownerAccount,

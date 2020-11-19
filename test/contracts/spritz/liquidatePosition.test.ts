@@ -1,11 +1,10 @@
 import 'module-alias/register';
 
-import { Signer, Wallet } from 'ethers';
 import { expect } from 'chai';
 
 import ArcDecimal from '@src/utils/ArcDecimal';
 import ArcNumber from '@src/utils/ArcNumber';
-import { BigNumberish, BigNumber } from 'ethers';
+import { BigNumber } from 'ethers';
 import { expectRevert } from '@test/helpers/expectRevert';
 import { generateContext, ITestContext } from '../context';
 import { SpritzTestArc } from '@src/SpritzTestArc';
@@ -15,7 +14,6 @@ import { addSnapshotBeforeRestoreAfterEach } from '../../helpers/testingUtils';
 describe('Spritz.operateAction(Liquidation)', () => {
   let ctx: ITestContext;
   let arc: SpritzTestArc;
-  let positionId: BigNumberish;
 
   async function init(ctx: ITestContext): Promise<void> {
     await ctx.sdks.spritz.updatePrice(ArcDecimal.new(1000).value);
@@ -28,13 +26,11 @@ describe('Spritz.operateAction(Liquidation)', () => {
       liquidationArcFee: { value: ArcDecimal.new(0.05).value },
     });
 
-    const result = await ctx.sdks.spritz._borrowSynthetic(
+    await ctx.sdks.spritz._borrowSynthetic(
       ArcNumber.new(300),
       ArcNumber.new(1),
       ctx.signers.minter,
     );
-
-    positionId = result.params.id;
   }
 
   before(async () => {
