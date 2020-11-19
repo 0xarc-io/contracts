@@ -54,6 +54,7 @@ describe('MozartV1.setters', () => {
       const contract = await getCore(ctx.signers.unauthorised);
       await expect(
         contract.init(
+          18,
           ctx.signers.unauthorised.address,
           ctx.signers.unauthorised.address,
           ctx.signers.unauthorised.address,
@@ -68,6 +69,7 @@ describe('MozartV1.setters', () => {
     it('should only be settable by the admin', async () => {
       const contract = await getCore(ctx.signers.admin);
       await contract.init(
+        18,
         ctx.signers.unauthorised.address,
         ctx.signers.unauthorised.address,
         ctx.signers.unauthorised.address,

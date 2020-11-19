@@ -30,7 +30,7 @@ export async function mozartFixture(ctx: ITestContext, args?: ITestContextArgs) 
   const coreImp = await deployMockMozartCoreV1(deployer);
   const syntheticImp = await deploySyntheticTokenV1(deployer);
 
-  const collateral = await deployTestToken(deployer, 'Test', 'TEST', args.decimals);
+  const collateral = await deployTestToken(deployer, 'Test', 'TEST', args?.decimals);
   const oracle = await deployMockOracle(deployer);
 
   const coreProxy = await deployArcProxy(deployer, coreImp.address, deployerAddress, []);
@@ -64,7 +64,7 @@ export async function mozartFixture(ctx: ITestContext, args?: ITestContextArgs) 
   await ctx.sdks.mozart.addSynths({ ETHX: coreV1.address });
 }
 
-export async function spritzFixture(ctx: ITestContext, args?: any[]) {
+export async function spritzFixture(ctx: ITestContext, args?: ITestContextArgs) {
   const deployer: Signer = ctx.signers.admin;
   const deployerAddress = await deployer.getAddress();
 

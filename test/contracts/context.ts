@@ -27,7 +27,7 @@ export type initFunction = (ctx: ITestContext, args?: ITestContextArgs) => Promi
 export async function generateContext(
   fixture: fixtureFunction,
   init: initFunction,
-  args?: ITestContextArgs,
+  args: ITestContextArgs = { decimals: 18 },
 ) {
   const signers = {} as TestingSigners;
 
