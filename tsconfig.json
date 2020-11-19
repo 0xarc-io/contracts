@@ -32,7 +32,6 @@
   ],
   "exclude": ["node_modules"],
   "files": [
-    "./index.js",
     "arc-types/augmentations.d.ts",
     "hardhat.config.ts"
   ]
