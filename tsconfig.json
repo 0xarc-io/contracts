@@ -19,7 +19,15 @@
       "@arc-types/*": ["arc-types/*"],
       "@test/*": ["test/*"],
       "@deployments/*": ["@deployments/*"],
-    }
+    },
+    "plugins": [
+      {
+        "transform": "@zerollup/ts-transform-paths",
+        "exclude": [
+          "*"
+        ]
+      }
+    ]
   },
   "include": [
     "./src/**/*",
