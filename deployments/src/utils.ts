@@ -1,9 +1,8 @@
-import { Signer } from 'ethers';
 import { loadDeployedContracts, getDeploymentsFilePath } from './loadDeployedContracts';
 import { asyncForEach } from '@src/utils/asyncForEach';
 import { red, magenta } from 'chalk';
 import fs from 'fs-extra';
-import { Provider } from 'ethers/providers';
+import { Provider } from '@ethersproject/providers';
 
 export async function pruneDeployments(network: string, provider: Provider) {
   const entries = loadDeployedContracts(network);
