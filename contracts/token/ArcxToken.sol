@@ -14,7 +14,7 @@ contract ArcxToken is BaseERC20, IMintableToken, Ownable {
 
     constructor()
         public
-        BaseERC20("ARC Governance Token", "ARCX")
+        BaseERC20("ARC Governance Token", "ARCX", 18)
     { }
 
     // ============ Core Functions ============

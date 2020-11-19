@@ -37,7 +37,7 @@ contract SkillsetToken is BaseERC20, Ownable {
         string memory _symbol
     )
         public
-        BaseERC20(_name, _symbol)
+        BaseERC20(_name, _symbol, 18)
     { }
 
     /* ========== VIEW FUNCTIONS ========== */

@@ -16,21 +16,21 @@ import {
   deploySpritzCoreV3,
 } from './deployers';
 
-import { Signer } from 'ethers';
-import { ITestContext } from './context';
+import { BigNumberish, Signer } from 'ethers';
+import { ITestContext, ITestContextArgs } from './context';
 import { MozartTestArc } from '@src/MozartTestArc';
 import { CoreV4 } from '@src/typings/CoreV4';
 import { CoreV4Factory } from '@src/typings/CoreV4Factory';
 import { SpritzTestArc } from '../../src/SpritzTestArc';
 
-export async function mozartFixture(ctx: ITestContext) {
+export async function mozartFixture(ctx: ITestContext, args?: ITestContextArgs) {
   const deployer: Signer = ctx.signers.admin;
   const deployerAddress = await deployer.getAddress();
 
   const coreImp = await deployMockMozartCoreV1(deployer);
   const syntheticImp = await deploySyntheticTokenV1(deployer);
 
-  const collateral = await deployTestToken(deployer, 'Test', 'TEST');
+  const collateral = await deployTestToken(deployer, 'Test', 'TEST', args.decimals);
   const oracle = await deployMockOracle(deployer);
 
   const coreProxy = await deployArcProxy(deployer, coreImp.address, deployerAddress, []);
@@ -38,6 +38,7 @@ export async function mozartFixture(ctx: ITestContext) {
 
   const coreV1 = await new MozartV1Factory(deployer).attach(coreProxy.address);
   await coreV1.init(
+    args.decimals,
     collateral.address,
     syntheticProxy.address,
     oracle.address,
@@ -63,13 +64,13 @@ export async function mozartFixture(ctx: ITestContext) {
   await ctx.sdks.mozart.addSynths({ ETHX: coreV1.address });
 }
 
-export async function spritzFixture(ctx: ITestContext) {
+export async function spritzFixture(ctx: ITestContext, args?: any[]) {
   const deployer: Signer = ctx.signers.admin;
   const deployerAddress = await deployer.getAddress();
 
   const coreV3Imp = await deploySpritzCoreV3(deployer);
-  const corev4Imp = await deploySpritzCoreV4(deployer);
-  const coreProxy = await deployArcProxy(deployer, corev4Imp.address, deployerAddress, []);
+  const coreV4Imp = await deploySpritzCoreV4(deployer);
+  const coreProxy = await deployArcProxy(deployer, coreV4Imp.address, deployerAddress, []);
   const core = await new CoreV4Factory(deployer).attach(coreProxy.address);
 
   const synth = await deployStaticSynthetic(deployer);
@@ -91,7 +92,7 @@ export async function spritzFixture(ctx: ITestContext) {
   await synth.addMinter(core.address);
 
   ctx.contracts.spritz.coreV3 = coreV3Imp;
-  ctx.contracts.spritz.coreV4 = corev4Imp;
+  ctx.contracts.spritz.coreV4 = coreV4Imp;
   ctx.contracts.spritz.state = state;
   ctx.contracts.collateral = collateral;
   ctx.contracts.synthetic.static = synth;

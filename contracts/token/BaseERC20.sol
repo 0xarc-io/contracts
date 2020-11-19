@@ -35,14 +35,15 @@ contract BaseERC20 is IERC20, Permittable {
      */
     constructor (
         string memory name,
-        string memory symbol
+        string memory symbol,
+        uint8         decimals
     )
         public
         Permittable(name, symbol)
     {
         _name = name;
         _symbol = symbol;
-        _decimals = 18;
+        _decimals = decimals;
     }
 
     /**

@@ -17,6 +17,7 @@ import { AddressAccrual } from '@src/typings/AddressAccrual';
 import { MockRewardCampaign } from '@src/typings/MockRewardCampaign';
 import { TokenStakingAccrual } from '@src/typings/TokenStakingAccrual';
 import { Kyfv2 } from '@src/typings/Kyfv2';
+import { MockOracle } from '@src/typings/MockOracle';
 
 export async function deployMockMozartCoreV1(deployer: Signer) {
   const MockMozartV1 = await ethers.getContractFactory('MockMozartV1', deployer);
@@ -74,12 +75,18 @@ export async function deploySyntheticTokenV1(deployer: Signer) {
 }
 
 export async function deployMockOracle(deployer: Signer) {
-  const oracle = await new MockOracleFactory(deployer).deploy();
-  return oracle;
+  const MockOracle = await ethers.getContractFactory('MockOracle', deployer);
+  const mockOracle = await MockOracle.deploy();
+  return mockOracle as MockOracle;
 }
 
-export async function deployTestToken(deployer: Signer, name: string, symbol: string) {
-  const testToken = await new TestTokenFactory(deployer).deploy(name, symbol);
+export async function deployTestToken(
+  deployer: Signer,
+  name: string,
+  symbol: string,
+  decimals: BigNumberish = 18,
+) {
+  const testToken = await new TestTokenFactory(deployer).deploy(name, symbol, decimals);
   return testToken;
 }
 

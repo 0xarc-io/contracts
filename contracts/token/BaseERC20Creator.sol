@@ -16,12 +16,13 @@ contract BaseERC20Creator {
      */
     function deploy(
         string memory name,
-        string memory symbol
+        string memory symbol,
+        uint8         decimals
     )
         public
         returns (address)
     {
-        BaseERC20 token = new BaseERC20(name, symbol);
+        BaseERC20 token = new BaseERC20(name, symbol, decimals);
         emit TokenDeployed(address(token));
         return address(token);
     }
