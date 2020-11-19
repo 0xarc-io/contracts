@@ -266,7 +266,7 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
 
         require(
             position.owner == msg.sender || isGlobalOperator(msg.sender),
-            "setAuthorizedOperatorStatus(): must be owner or global operator"
+            "setPositionOperatorStatus(): must be owner or global operator"
         );
 
         positionOperators[_positionId][_operator] = _status;
@@ -334,6 +334,8 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
                 params.id,
                 params.addressOne
             );
+        } else {
+            revert("operateAction(): invalid action");
         }
 
         // Ensure that the operated action is collateralised again, unless a liquidation
@@ -373,7 +375,7 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
         }
 
         // First we multiply the interest rate (expressed in rate/sec) by the time since
-        // the last update. This result represents the proprtional amount of interest to
+        // the last update. This result represents the proportional amount of interest to
         // apply to the system at a whole
         uint256 interestAccumulated = interestRate.mul(currentTimestamp().sub(indexLastUpdate));
 
@@ -444,7 +446,7 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
 
         // EFFECTS:
         // 1. Create a new Position struct with the basic fields filled out and save it to storage
-        // 2. Call `borrowPosition()`
+        // 2. Call `borrow()`
 
         MozartTypes.Position memory newPosition = MozartTypes.Position({
             owner: msg.sender,
@@ -490,7 +492,7 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
     {
         // CHECKS:
         // 1. Ensure that the position actually exists
-        // 2. Conver the borrow amount to a Principal value
+        // 2. Convert the borrow amount to a Principal value
         // 3. Ensure the position is collateralised before borrowing against it
         // 4. Ensure that msg.sender == owner of position (done in the modifier)
         // 5. Determine if there's enough liquidity of the `borrowAsset`
