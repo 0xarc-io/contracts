@@ -20,6 +20,8 @@ import {MozartStorage} from "./MozartStorage.sol";
 import {MozartTypes} from  "./MozartTypes.sol";
 import {IMozartV1} from "./IMozartV1.sol";
 
+import {console} from "hardhat/console.sol";
+
 contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
 
     /* ========== Libraries ========== */
@@ -121,6 +123,7 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
     /* ========== Admin Setters ========== */
 
     function init(
+        uint8   _collateralDecimals,
         address _collateralAddress,
         address _syntheticAddress,
         address _oracleAddress,
@@ -136,6 +139,7 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
             "D2CoreV1: cannot re-call init()"
         );
 
+        precisionScalar = 10 ** (18 - uint256(_collateralDecimals));
         collateralAsset = _collateralAddress;
         syntheticAsset = _syntheticAddress;
 
@@ -509,14 +513,13 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
         MozartTypes.Position storage position = positions[positionId];
 
         Decimal.D256 memory currentPrice = oracle.fetchCurrentPrice();
-
         // Increase the user's collateral amount & increase the global supplied amount
         position = setCollateralAmount(
             positionId,
             position.collateralAmount.add(
                 Amount.Principal({
                     sign: true,
-                    value: collateralAmount
+                    value: collateralAmount.mul(precisionScalar)
                 })
             )
         );
@@ -606,6 +609,8 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
 
         Decimal.D256 memory currentPrice = oracle.fetchCurrentPrice();
 
+        uint256 scaledWithdrawAmount = withdrawAmount.mul(precisionScalar);
+
         // Calculate the principal amount based on the current index of the market
         Amount.Principal memory convertedPrincipal = Amount.calculatePrincipal(
             repayAmount,
@@ -630,7 +635,7 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
         // Ensure that the amount they are trying to withdraw is less than their limit
         // Also, make sure that the delta is positive (aka collateralized).
         require(
-            collateralDelta.sign == true && withdrawAmount <= collateralDelta.value,
+            collateralDelta.sign == true && scaledWithdrawAmount <= collateralDelta.value,
             "repay(): cannot withdraw more than allowed"
         );
 
@@ -640,7 +645,7 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
             position.collateralAmount.add(
                 Amount.Principal({
                     sign: false,
-                    value: withdrawAmount
+                    value: scaledWithdrawAmount
                 })
             )
         );
@@ -838,7 +843,7 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
         bool userTransferResult = synthetic.transferCollateral(
             address(collateralAsset),
             msg.sender,
-            uint256(liquidationCollateralDelta.value).sub(arcProfit)
+            uint256(liquidationCollateralDelta.value).sub(arcProfit).div(precisionScalar)
         );
 
         require(
@@ -850,7 +855,7 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
         bool arcTransferResult = synthetic.transferCollateral(
             address(collateralAsset),
             address(this),
-            arcProfit
+            arcProfit.div(precisionScalar)
         );
 
         require(

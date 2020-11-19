@@ -4,6 +4,7 @@ import { ethers } from 'hardhat';
 import { Contracts, Stubs, TestingSigners, SDKs } from '@arc-types/testing';
 import { EVM } from '@test/helpers/EVM';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
+import { BigNumberish } from '@ethersproject/bignumber';
 
 export interface ITestContext {
   signers: TestingSigners;
@@ -13,13 +14,21 @@ export interface ITestContext {
   postInitSnapshotId?: string;
 }
 
+export interface ITestContextArgs {
+  decimals: BigNumberish;
+}
+
 const provider = ethers.provider;
 const evm = new EVM(provider);
 
-export type fixtureFunction = (ctx: ITestContext) => Promise<void>;
-export type initFunction = (ctx: ITestContext) => Promise<void>;
+export type fixtureFunction = (ctx: ITestContext, args?: ITestContextArgs) => Promise<void>;
+export type initFunction = (ctx: ITestContext, args?: ITestContextArgs) => Promise<void>;
 
-export async function generateContext(fixture: fixtureFunction, init: initFunction) {
+export async function generateContext(
+  fixture: fixtureFunction,
+  init: initFunction,
+  args?: ITestContextArgs,
+) {
   const signers = {} as TestingSigners;
 
   const retrievedSigners: SignerWithAddress[] = await ethers.getSigners();
@@ -42,8 +51,8 @@ export async function generateContext(fixture: fixtureFunction, init: initFuncti
 
   const ctx = { signers, sdks, contracts, evm } as ITestContext;
 
-  await fixture(ctx);
-  await init(ctx);
+  await fixture(ctx, args);
+  await init(ctx, args);
 
   ctx.postInitSnapshotId = await evm.snapshot();
 

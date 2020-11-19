@@ -25,7 +25,9 @@ contract MozartStorageV1 {
 
     IOracle internal oracle;
 
+    uint256 internal precisionScalar;
     address internal collateralAsset;
+
     address internal syntheticAsset;
 
     uint256 public positionCount;
