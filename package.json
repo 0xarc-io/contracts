@@ -28,7 +28,7 @@
     "build": "yarn compile",
     "coverage": "yarn run build && yarn hardhat coverage --testfiles test/contracts/ --temp artifacts --network coverage",
     "test": "yarn hardhat test",
-    "deploy-all": "yarn hardhat deploy-global --network local && yarn hardhat deploy-d1 --synth LINKUSD --network local && yarn hardhat deploy-d2 --synth ETHX --network local",
+    "deploy-all": "yarn hardhat deploy-global --network local && yarn hardhat deploy-spritz --synth LINKUSD --network local && yarn hardhat deploy-mozart --synth ETHX --network local",
     "graph:create": "graph create arcxgame/global --node https://api.thegraph.com/deploy/",
     "graph:create-local": "graph create arcxgame/global --node http://127.0.0.1:8020",
     "graph:codegen": "graph codegen",
