@@ -100,6 +100,15 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
 
     /* ========== Modifiers ========== */
 
+    /**
+     * @dev Check if a user is authorized to act on behalf of another user's position.
+     *      Main checks are if:
+     *      - The address is the actual owner of the position
+     *      - The address is a valid global operator
+     *      - The address is a valid operator for that particular position
+     *
+     * @param _positionId The position in question here
+     */
     modifier isAuthorized(uint256 _positionId) {
         MozartTypes.Position memory position = positions[_positionId];
 

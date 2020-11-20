@@ -26,8 +26,15 @@ contract ChainLinkOracle is IOracle {
         view
         returns (Decimal.D256 memory)
     {
+        uint256 latestAnswer = uint256(chainLinkAggregator.latestAnswer());
+
+        require(
+            latestAnswer > 0,
+            "ChainLinkOracle: cannot report a price of 0"
+        );
+
         return Decimal.D256({
-            value: uint256(chainLinkAggregator.latestAnswer()).mul(uint256(10**10))
+            value: latestAnswer.mul(uint256(10**10))
         });
     }
 
