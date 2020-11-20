@@ -79,12 +79,12 @@ describe('MozartV1.setters', () => {
   describe('#setInterestRate', () => {
     it('should not be settable by any user', async () => {
       const contract = await getCore(ctx.signers.unauthorised);
-      await expect(contract.setRate(999)).to.be.reverted;
+      await expect(contract.setInterestRate(999)).to.be.reverted;
     });
 
     it('should only be settable by the setter', async () => {
       const contract = await getCore(ctx.signers.interestSetter);
-      await contract.setRate(999);
+      await contract.setInterestRate(999);
       await expect(await contract.getInterestRate()).to.equal(BigNumber.from(999));
     });
   });
