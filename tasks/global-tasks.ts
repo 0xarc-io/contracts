@@ -1,4 +1,4 @@
-import { ArcxToken, SynthRegistry } from '@src/typings';
+import { ArcxTokenFactory, SynthRegistryFactory, SynthRegistryV2Factory } from '@src/typings';
 import { deployContract, pruneDeployments } from '../deployments/src';
 import { subtask, task } from 'hardhat/config';
 import { DeploymentType } from '../deployments/src/writeToDeployments';
@@ -10,7 +10,7 @@ task('deploy-global', 'Deploy, update and interact with global contracts').setAc
     const network = hre.network.name;
     const signer = (await hre.ethers.getSigners())[0];
 
-    await pruneDeployments(network, signer);
+    await pruneDeployments(network, signer.provider);
 
     const networkConfig = { network, signer } as NetworkParams;
 
@@ -18,7 +18,7 @@ task('deploy-global', 'Deploy, update and interact with global contracts').setAc
       {
         name: 'ArcxToken',
         source: 'ArcxToken',
-        data: ArcxToken.getDeployTransaction(signer),
+        data: new ArcxTokenFactory(signer).getDeployTransaction(),
         version: 1,
         type: DeploymentType.global,
       },
@@ -29,7 +29,7 @@ task('deploy-global', 'Deploy, update and interact with global contracts').setAc
       {
         name: 'SynthRegistry',
         source: 'SynthRegistry',
-        data: SynthRegistry.getDeployTransaction(signer),
+        data: new SynthRegistryFactory(signer).getDeployTransaction(),
         version: 1,
         type: DeploymentType.global,
       },
@@ -40,7 +40,7 @@ task('deploy-global', 'Deploy, update and interact with global contracts').setAc
       {
         name: 'SynthRegistryV2',
         source: 'SynthRegistryV2',
-        data: SynthRegistryV2.getDeployTransaction(signer),
+        data: new SynthRegistryV2Factory(signer).getDeployTransaction(),
         version: 2,
         type: DeploymentType.global,
       },

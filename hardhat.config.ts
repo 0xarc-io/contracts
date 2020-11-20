@@ -1,21 +1,25 @@
-import 'module-alias/register';
-
 import fs from 'fs';
-import path from 'path';
 
-import { privateKeys } from '@src/utils/generatedWallets';
-import { BigNumber } from 'ethers/utils';
 import { HardhatUserConfig } from 'hardhat/config';
-
+import { BigNumber } from 'ethers';
 import { removeConsoleLog } from 'hardhat-preprocessor';
+import { privateKeys } from './test/helpers/generatedWallets';
 
-import '@nomiclabs/hardhat-etherscan';
-import '@nomiclabs/hardhat-waffle';
 import 'hardhat-preprocessor';
 import 'hardhat-spdx-license-identifier';
 import 'hardhat-contract-sizer';
+import 'hardhat-typechain';
+import 'hardhat-watcher';
 
-if (fs.existsSync('src/typings/index.ts')) {
+import 'solidity-coverage';
+
+import '@nomiclabs/hardhat-etherscan';
+import '@nomiclabs/hardhat-waffle';
+
+import './tasks/type-extensions';
+
+if (fs.existsSync('src/typings/BaseErc20Factory.ts')) {
+  /* eslint-disable @typescript-eslint/no-var-requires */
   require('./tasks');
 }
 
@@ -23,11 +27,15 @@ require('dotenv').config({ path: '.env' }).parsed;
 
 export const params = {
   testnet_private_key: process.env.TESTNET_DEPLOY_PRIVATE_KEY || '',
-  rinkeby_rpc_url: process.env.RINKEBY_RPC_ENDPOINT || '',
+  infura_key: process.env.INFURA_PROJECT_ID || '',
   etherscan_key: process.env.ETHERSCAN_KEY || '',
 };
 
-const HUNDRED_THOUSAND_ETH = new BigNumber(100000).pow(18).toString();
+export function getNetworkUrl(network: string) {
+  return `https://${network}.infura.io/v3/${process.env.INFURA_PROJECT_ID}`;
+}
+
+const HUNDRED_THOUSAND_ETH = BigNumber.from(100000).pow(18).toString();
 
 const config: HardhatUserConfig = {
   defaultNetwork: 'hardhat',
@@ -69,13 +77,34 @@ const config: HardhatUserConfig = {
       url: 'http://127.0.0.1:8555', // Coverage launches its own ganache-cli client
     },
     rinkeby: {
-      url: params.rinkeby_rpc_url,
+      url: getNetworkUrl('rinkeby'),
       accounts: [params.testnet_private_key],
+    },
+    mainnet: {
+      url: getNetworkUrl('mainnet'),
+      accounts: [params.testnet_private_key],
+      users: {
+        owner: '0x62f31e08e279f3091d9755a09914df97554eae0b',
+      },
     },
   },
   etherscan: {
     apiKey: params.etherscan_key,
   },
+  typechain: {
+    outDir: './src/typings',
+    target: 'ethers-v5',
+  },
+  // watcher: {
+  //   compilation: {
+  //     tasks: ["compile"],
+  //     files: ["./contracts"],
+  //     verbose: true,
+  //   },
+  //   ci: {
+  //     tasks: ["clean", { command: "compile", params: { quiet: true } }, { command: "test", params: { noCompile: true, testFiles: ["./.ts"] } } ],
+  //   }
+  // },
 };
 
 export default config;

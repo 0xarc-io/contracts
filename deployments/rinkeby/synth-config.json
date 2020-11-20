@@ -17,10 +17,10 @@
     "oracle_source_address": "0x8A753747A1Fa494EC906cE90E9f37563A8AF630e",
     "version": 1,
 		"params": {
+      "decimals": 18,
 			"collateral_ratio": "2000000000000000000",
 			"liquidation_user_fee": "50000000000000000",
 			"liquidation_arc_ratio": "50000000000000000",
-			"printer_arc_ratio": "100000000000000000",
 			"collateral_limit": "",
 			"synthetic_limit": "",
 			"position_minimum_collateral" : "",

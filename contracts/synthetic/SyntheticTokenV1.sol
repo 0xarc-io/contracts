@@ -3,8 +3,7 @@
 pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from "../interfaces/IERC20.sol";
-import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
+import {IERC20} from "../token/IERC20.sol";
 
 import {SafeMath} from "../lib/SafeMath.sol";
 import {Amount} from "../lib/Amount.sol";
@@ -13,7 +12,7 @@ import {SyntheticStorage} from "./SyntheticStorage.sol";
 
 import {Adminable} from "../lib/Adminable.sol";
 
-contract SyntheticTokenV1 is Adminable, SyntheticStorage, IERC20, ISyntheticToken {
+contract SyntheticTokenV1 is Adminable, SyntheticStorage, IERC20 {
 
     using SafeMath for uint256;
     using Amount for Amount.Principal;
@@ -40,27 +39,30 @@ contract SyntheticTokenV1 is Adminable, SyntheticStorage, IERC20, ISyntheticToke
 
     /* ========== Init Function ========== */
 
+    /**
+     * @dev Initialise the synthetic token
+     *
+     * @param name The name of the token
+     * @param symbol The symbol of the token
+     * @param version The version number of this token
+     */
     function init(
-        string memory __name,
-        string memory __symbol,
-        uint8 __version
+        string memory name,
+        string memory symbol,
+        uint8 version
     )
         public
         onlyAdmin
     {
-        _name = __name;
-        _symbol = __symbol;
-        _version = __version;
-
-        _symbolKey = keccak256(
-            abi.encode(_symbol, _version)
-        );
+        _name = name;
+        _symbol = symbol;
+        _version = version;
     }
 
     /* ========== View Functions ========== */
 
     function name()
-        public
+        external
         view
         returns (string memory)
     {
@@ -68,7 +70,7 @@ contract SyntheticTokenV1 is Adminable, SyntheticStorage, IERC20, ISyntheticToke
     }
 
     function symbol()
-        public
+        external
         view
         returns (string memory)
     {
@@ -76,19 +78,11 @@ contract SyntheticTokenV1 is Adminable, SyntheticStorage, IERC20, ISyntheticToke
     }
 
     function decimals()
-        public
-        view
+        external
+        pure
         returns (uint8)
     {
         return 18;
-    }
-
-    function symbolKey()
-        external
-        view
-        returns (bytes32)
-    {
-        return _symbolKey;
     }
 
     function version()
@@ -168,18 +162,12 @@ contract SyntheticTokenV1 is Adminable, SyntheticStorage, IERC20, ISyntheticToke
 
     /* ========== Admin Functions ========== */
 
-    function updateMetadata(
-        string calldata __name,
-        string calldata __symbol
-    )
-        external
-        onlyAdmin
-    {
-        _name = __name;
-        _symbol = __symbol;
-        emit MetadataChanged();
-    }
-
+    /**
+     * @dev Add a new minter to the synthetic token.
+     *
+     * @param _minter The address of the minter to add
+     * @param _limit The starting limit for how much this synth can mint
+     */
     function addMinter(
         address _minter,
         uint256 _limit
@@ -199,6 +187,11 @@ contract SyntheticTokenV1 is Adminable, SyntheticStorage, IERC20, ISyntheticToke
         emit MinterAdded(_minter, _limit);
     }
 
+    /**
+     * @dev Remove a minter from the synthetic token
+     *
+     * @param _minter Address to remove the minter
+     */
     function removeMinter(
         address _minter
     )
@@ -226,6 +219,12 @@ contract SyntheticTokenV1 is Adminable, SyntheticStorage, IERC20, ISyntheticToke
         emit MinterRemoved(_minter);
     }
 
+    /**
+     * @dev Update the limit of the minter
+     *
+     * @param _minter The address of the minter to set
+     * @param _limit The new limit to set for this address
+     */
     function updateMinterLimit(
         address _minter,
         uint256 _limit
@@ -245,6 +244,14 @@ contract SyntheticTokenV1 is Adminable, SyntheticStorage, IERC20, ISyntheticToke
 
     /* ========== Minter Functions ========== */
 
+    /**
+     * @dev Mint synthetic tokens
+     *
+     * @notice Can only be called by a valid minter.
+     *
+     * @param to The destination to mint the synth to
+     * @param value The amount of synths to mint
+     */
     function mint(
         address to,
         uint256 value
@@ -257,7 +264,7 @@ contract SyntheticTokenV1 is Adminable, SyntheticStorage, IERC20, ISyntheticToke
         );
 
         require(
-            issuedAmount.sign == false || issuedAmount.value <= _minterLimits[msg.sender],
+            issuedAmount.value <= _minterLimits[msg.sender] || issuedAmount.sign == false,
             "Minter limit reached"
         );
 
@@ -265,8 +272,16 @@ contract SyntheticTokenV1 is Adminable, SyntheticStorage, IERC20, ISyntheticToke
         _mint(to, value);
     }
 
+    /**
+     * @dev Burn synthetic tokens
+     *
+     * @notice Can only be called by a valid minter.
+     *
+     * @param from The destination to burn the synth from
+     * @param value The amount of the synth to burn
+     */
     function burn(
-        address to,
+        address from,
         uint256 value
     )
         external
@@ -276,9 +291,16 @@ contract SyntheticTokenV1 is Adminable, SyntheticStorage, IERC20, ISyntheticToke
             Amount.Principal({ sign: true, value: value })
         );
 
-        _burn(to, value);
+        _burn(from, value);
     }
 
+    /**
+     * @dev Transfer any collateral held to another address
+     *
+     * @param token The address of the token to transfer
+     * @param to The destination to send the collateral to
+     * @param value The amount of the tokens to transfer
+     */
     function transferCollateral(
         address token,
         address to,

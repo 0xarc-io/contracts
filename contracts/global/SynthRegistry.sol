@@ -2,10 +2,10 @@
 
 pragma solidity ^0.5.16;
 
-import {IERC20} from "../interfaces/IERC20.sol";
 import {Ownable} from "../lib/Ownable.sol";
 
-import {ISyntheticToken} from "../interfaces/ISyntheticToken.sol";
+import {ISyntheticToken} from "../token/ISyntheticToken.sol";
+import {IERC20} from "../token/IERC20.sol";
 
 contract SynthRegistry is Ownable {
 

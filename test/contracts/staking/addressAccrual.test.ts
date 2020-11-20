@@ -1,42 +1,42 @@
 import 'module-alias/register';
 
-import simpleDescribe from '@test/helpers/simpleDescribe';
-import { ITestContext } from '@test/helpers/simpleDescribe';
-import { BigNumber } from 'ethers/utils';
+import { BigNumber } from 'ethers';
+import { expect } from 'chai';
+
 import ArcDecimal from '@src/utils/ArcDecimal';
 import ArcNumber from '@src/utils/ArcNumber';
-import { expectRevert } from '@src/utils/expectRevert';
+import { expectRevert } from '@test/helpers/expectRevert';
 import { AddressAccrual } from '@src/typings/AddressAccrual';
 import { TestToken } from '@src/typings/TestToken';
-import { getWaffleExpect, Account } from '../../helpers/testingUtils';
+import { ethers } from 'hardhat';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
+import { AddressAccrualFactory } from '@src/typings/AddressAccrualFactory';
+import { deployAddressAccrual, deployTestToken } from '../deployers';
 
-let ownerAccount: Account;
-let investorAccount: Account;
-let kermanHoldersAccount: Account;
-let arcAccount: Account;
-
-const expect = getWaffleExpect();
+let ownerAccount: SignerWithAddress;
+let investorAccount: SignerWithAddress;
+let kermanHoldersAccount: SignerWithAddress;
+let arcAccount: SignerWithAddress;
 
 let distribution: AddressAccrual;
 let rewardToken: TestToken;
 
-const BASE = new BigNumber(10).pow(18);
+const BASE = BigNumber.from(10).pow(18);
 
 const INVESTOR_SHARE = ArcDecimal.new(15.15).value;
 const KERMAN_SHARE = ArcDecimal.new(3.03).value;
 const ARC_SHARE = ArcDecimal.new(81.82).value;
 
-async function init(ctx: ITestContext): Promise<void> {
-  ownerAccount = ctx.accounts[0];
-  investorAccount = ctx.accounts[1];
-  kermanHoldersAccount = ctx.accounts[2];
-  arcAccount = ctx.accounts[3];
-}
-
-simpleDescribe('Distribution', init, (ctx: ITestContext) => {
+describe('Distribution', () => {
   beforeEach(async () => {
-    rewardToken = await TestToken.deploy(ownerAccount.signer, 'ARC', 'ARC');
-    distribution = await AddressAccrual.deploy(ownerAccount.signer, rewardToken.address);
+    const signers = await ethers.getSigners();
+    ownerAccount = signers[0];
+    investorAccount = signers[1];
+    kermanHoldersAccount = signers[2];
+    arcAccount = signers[3];
+
+    rewardToken = await deployTestToken(ownerAccount, 'ARC', 'ARC');
+    distribution = await deployAddressAccrual(ownerAccount, rewardToken.address);
 
     await rewardToken.mintShare(distribution.address, ArcNumber.new(100));
 
@@ -45,8 +45,8 @@ simpleDescribe('Distribution', init, (ctx: ITestContext) => {
     await distribution.increaseShare(arcAccount.address, ARC_SHARE);
   });
 
-  async function claimAs(caller: Account) {
-    const contract = await AddressAccrual.at(caller.signer, distribution.address);
+  async function claimAs(caller: SignerWithAddress) {
+    const contract = await new AddressAccrualFactory(caller).attach(distribution.address);
     return await contract.claimFees();
   }
 

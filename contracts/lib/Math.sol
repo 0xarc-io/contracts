@@ -45,36 +45,6 @@ library Math {
         return result;
     }
 
-    function to96(
-        uint256 number
-    )
-        internal
-        pure
-        returns (uint96)
-    {
-        uint96 result = uint96(number);
-        require(
-            result == number,
-            "Math: Unsafe cast to uint96"
-        );
-        return result;
-    }
-
-    function to32(
-        uint256 number
-    )
-        internal
-        pure
-        returns (uint32)
-    {
-        uint32 result = uint32(number);
-        require(
-            result == number,
-            "Math: Unsafe cast to uint32"
-        );
-        return result;
-    }
-
     function min(
         uint256 a,
         uint256 b
