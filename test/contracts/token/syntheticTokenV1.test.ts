@@ -289,23 +289,4 @@ describe('SyntheticTokenV1', () => {
       expect(await (await syntheticToken.balanceOf(userAccount.address)).toNumber()).to.equal(10);
     });
   });
-
-  describe('#updateMetadata', () => {
-    beforeEach(async () => {
-      const contract = await getContract(ownerAccount);
-      await contract.addMinter(arcAccount.address, 100);
-    });
-
-    it('should not be able to update metadata as an unauthorised user', async () => {
-      const contract = await getContract(otherAccount);
-      await expectRevert(contract.updateMetadata('NEW', 'NEW'));
-    });
-
-    it('should be able to update metadata as a minter', async () => {
-      const contract = await getContract(ownerAccount);
-      await contract.updateMetadata('New Token', 'NEW');
-      expect(await contract.name()).to.equal('New Token');
-      expect(await contract.symbol()).to.equal('NEW');
-    });
-  });
 });

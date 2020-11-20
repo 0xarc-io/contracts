@@ -74,4 +74,19 @@ interface IMozartV1 {
             Decimal.D256 memory _liquidationUserFee,
             Decimal.D256 memory _liquidationArcRatio
         );
+
+    function isPositionOperator(
+        uint256 _positionId,
+        address _operator
+    )
+        external
+        view
+        returns (bool);
+
+    function isGlobalOperator(
+        address _operator
+    )
+        external
+        view
+        returns (bool);
 }

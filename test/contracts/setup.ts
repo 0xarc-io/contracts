@@ -37,7 +37,7 @@ export async function setupMozart(ctx: ITestContext, options: MozartSetupOptions
   );
 
   // Set the interest rate
-  await arc.synth().core.setRate(options.interestRate || BASE);
+  await arc.synth().core.setInterestRate(options.interestRate || BASE);
 
   // Set ARC's fees
   await arc

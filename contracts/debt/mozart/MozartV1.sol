@@ -20,8 +20,6 @@ import {MozartStorage} from "./MozartStorage.sol";
 import {MozartTypes} from  "./MozartTypes.sol";
 import {IMozartV1} from "./IMozartV1.sol";
 
-import {console} from "hardhat/console.sol";
-
 contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
 
     /* ========== Libraries ========== */
@@ -131,6 +129,18 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
 
     /* ========== Admin Setters ========== */
 
+    /**
+     * @dev Intitialise the protocol with the appropriate parameters. Can only be called once.
+     *
+     * @param _collateralDecimals  How many decimals does the collateral contain
+     * @param _collateralAddress   The address of the collateral to be used
+     * @param _syntheticAddress    The address of the synthetic token proxy
+     * @param _oracleAddress       Address of the IOracle conforming contract
+     * @param _interestSetter      Address which can update interest rates
+     * @param _collateralRatio     How much colalteral is needed to borrow
+     * @param _liquidationUserFee  How much is a user penalised if they go below their c-ratio
+     * @param _liquidationArcRatio How much of the liquidation profit should ARC take
+     */
     function init(
         uint8   _collateralDecimals,
         address _collateralAddress,
@@ -165,7 +175,21 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
         );
     }
 
-    function setRate(
+    /**
+     * @dev Update the interest rate of the protocol. Since this rate is compounded
+     *      every second rather than being purely linear, the calculate for r is expressed
+     *      as the following (assuming you want 5% APY):
+     *
+     *      r^N = 1.005
+     *      since N = 364 * 24 * 60 * 60 (number of seconds in a year)
+     *      r = 1.000000000158153903837946258002097
+     *      rate = 1000000000158153903 (18 decimal places solidity value)
+     *
+     * @notice Can only be called by the interest setter of the protocol.
+     *
+     * @param _rate The interest rate expressed per second
+     */
+    function setInterestRate(
         uint256 _rate
     )
         public
@@ -179,6 +203,13 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
         emit RateUpdated(_rate);
     }
 
+    /**
+     * @dev Set the instance of the oracle to report prices from. Must conform to IOracle.sol
+     *
+     * @notice Can only be called by the admin of the proxy.
+     *
+     * @param _oracle The address of the IOracle instance
+     */
     function setOracle(
         address _oracle
     )
@@ -189,6 +220,13 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
         emit OracleUpdated(_oracle);
     }
 
+    /**
+     * @dev Set the collateral ratio of value to debt.
+     *
+     * @notice Can only be called by the admin of the proxy.
+     *
+     * @param _collateralRatio The ratio expressed up to 18 decimal places
+     */
     function setCollateralRatio(
         Decimal.D256 memory _collateralRatio
     )
@@ -199,6 +237,15 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
         emit CollateralRatioUpdated(_collateralRatio);
     }
 
+    /**
+     * @dev Set the fees in the system.
+     *
+     * @notice Can only be called by the admin of the proxy.
+     *
+     * @param _liquidationUserFee Determines the penalty a user must pay by discounting
+     *                            their collateral to provide a profit incentive for liquidators
+     * @param _liquidationArcRatio The amount ARC earns from the profit earned from the liquidation.
+     */
     function setFees(
         Decimal.D256 memory _liquidationUserFee,
         Decimal.D256 memory _liquidationArcRatio
@@ -215,6 +262,16 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
         );
     }
 
+    /**
+     * @dev Set the limits of the system to ensure value can be capped.
+     *
+     * @notice Can only be called by the admin of the proxy
+     *
+     * @param _collateralLimit Maximum amount of collateral that can be held in the system.
+     *                         This should be expressed as 18 decimal places since the precision
+     *                         scalar will handle the rest.
+     * @param _positionCollateralMinimum The minimum of collateral per position
+     */
     function setLimits(
         uint256 _collateralLimit,
         uint256 _positionCollateralMinimum
@@ -231,6 +288,13 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
         );
     }
 
+    /**
+     * @dev Set the address which can set interest rates
+     *
+     * @notice Can only be called by the admin of the proxy
+     *
+     * @param _setter The address of the new interest rate setter
+     */
     function setInterestSetter(
         address _setter
     )
@@ -242,6 +306,14 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
         emit InterestSetterUpdated(_setter);
     }
 
+    /**
+     * @dev Set an address to be able to manage any user's position.
+     *
+     * @notice Can only be called by the admin of the proxy
+     *
+     * @param _operator Address of the new operator
+     * @param _status True indicates they are a valid address, false means they are not
+     */
     function setGlobalOperatorStatus(
         address _operator,
         bool    _status
@@ -354,10 +426,17 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
             "operateAction(): the operated position is undercollateralised"
         );
 
+        // Ensure the amount supplied is less than the collateral limit of the system
         require(
             totalSupplied <= collateralLimit || collateralLimit == 0,
             "operateAction(): collateral locked cannot be greater than limit"
         );
+
+        // Collateral should never be expressed as negative since it means value has been drained
+        assert(operatedPosition.collateralAmount.sign == true);
+
+        // Debt should never be expressed as positive since it means the protocol is in debt to the user
+        assert(operatedPosition.borrowedAmount.sign == false);
 
         emit ActionOperated(
             uint8(operation),
@@ -535,7 +614,8 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
             )
         );
 
-        // Only if they're borrowing
+        // Sometimes a user may want to only deposit more collateral and not borrow more
+        // so in that case we don't need to recheck any borrowing requirements
         if (borrowAmount > 0) {
             // Calculate the principal amount based on the current index of the market
             Amount.Principal memory convertedPrincipal = Amount.calculatePrincipal(
@@ -875,11 +955,18 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
         );
     }
 
+    /**
+     * @dev Update a position's collateral amount. This function is used to ensure
+     *      consistency in the total supplied amount as a user's collateral balance changes.
+     *
+     * @param positionId The id of the position to update the collateral amount for
+     * @param newSupplyAmount How much to set their new supply values to
+     */
     function setCollateralAmount(
         uint256 positionId,
         Amount.Principal memory newSupplyAmount
     )
-        internal
+        private
         returns (MozartTypes.Position storage)
     {
         MozartTypes.Position storage position = positions[positionId];
@@ -902,14 +989,26 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
         // Update the actual position's supplied amount
         position.collateralAmount = newSupplyAmount;
 
+        // Prevent having collateral represented by negative values
+        if (position.collateralAmount.value == 0) {
+            position.collateralAmount.sign = true;
+        }
+
         return position;
     }
 
+    /**
+     * @dev Update a position's borrow amount. This function is used to ensure consistency in the
+     *      total borrowed amount as the user's borrowed amount changes.
+     *
+     * @param positionId The id of the position to update the borrow amount for
+     * @param newBorrowAmount The new borrow amount for the position
+     */
     function setBorrowAmount(
         uint256 positionId,
         Amount.Principal memory newBorrowAmount
     )
-        internal
+        private
         returns (MozartTypes.Position storage)
     {
         MozartTypes.Position storage position = positions[positionId];
@@ -952,7 +1051,7 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
         uint256 positionId,
         address newOwner
     )
-        internal
+        private
         returns (MozartTypes.Position storage)
     {
         MozartTypes.Position storage position = positions[positionId];
@@ -1110,6 +1209,11 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
         return block.timestamp;
     }
 
+    /**
+     * @dev Check if a position is collateralised or not
+     *
+     * @param position The struct of a position to validate if it's underwater or not
+     */
     function isCollateralized(
         MozartTypes.Position memory position
     )
