@@ -1,3 +1,3 @@
-export * from './d1-tasks';
-export * from './d2-tasks';
+export * from './mozart-tasks';
+export * from './spritz-tasks';
 export * from './global-tasks';

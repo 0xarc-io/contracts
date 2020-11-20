@@ -7,18 +7,20 @@ import {Amount} from "../lib/Amount.sol";
 
 contract SyntheticStorageV1 {
 
-    // Key properties of the synth itself
+    /**
+     * @dev ERC20 Properties
+     */
     uint8   internal _version;
     string  internal _name;
     string  internal _symbol;
-    bytes32 internal _symbolKey;
     uint256 internal _totalSupply;
 
-    // ERC20 properties
     mapping (address => uint256)                      internal _balances;
     mapping (address => mapping (address => uint256)) internal _allowances;
 
-    // Minter properties
+    /**
+     * @dev Minter Properties
+     */
     address[]                            internal _mintersArray;
     mapping(address => bool)             internal _minters;
     mapping(address => uint256)          internal _minterLimits;

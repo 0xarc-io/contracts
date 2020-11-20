@@ -1,5 +1,5 @@
 import { red } from 'chalk';
-import path, { PlatformPath } from 'path';
+import { PlatformPath } from 'path';
 
 // load the data in explicitly (not programmatically) so webpack knows what to bundle
 export const networkPaths = {
@@ -25,7 +25,7 @@ export const constants = {
 export function getPathToNetwork(
   network: string = 'mainnet',
   file: string = '',
-  platformPath: PlatformPath,
+  path: PlatformPath,
 ) {
   if (!networks.includes(network)) {
     throw red(`** ${network} is not a valid network **`);

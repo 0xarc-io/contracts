@@ -1,10 +1,24 @@
-import { BigNumberish } from 'ethers/utils';
-import { BaseERC20 } from '../typings/BaseERC20';
-import { Signer } from 'ethers';
-import { TransactionOverrides } from '../types';
+import { BigNumberish, Signer } from 'ethers';
+import { asyncForEach } from '@src/utils/asyncForEach';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
+import { BaseErc20Factory } from '@src/typings/BaseErc20Factory';
+import { TestTokenFactory } from '@src/typings/TestTokenFactory';
+
+import { TransactionOverrides } from '../../arc-types/ethereum';
 
 export default class Token {
-  constructor() {}
+  static async setStartingBalances(
+    collateral: string,
+    core: string,
+    signers: SignerWithAddress[],
+    balance: BigNumberish,
+  ) {
+    await asyncForEach(signers, async (signer) => {
+      const testToken = await new TestTokenFactory(signer).attach(collateral);
+      await testToken.mintShare(signer.address, balance);
+      await Token.approve(collateral, signer, core, balance);
+    });
+  }
 
   static async approve(
     token: string,
@@ -13,7 +27,7 @@ export default class Token {
     value: BigNumberish,
     overrides: TransactionOverrides = {},
   ) {
-    const contract = BaseERC20.at(owner, token);
+    const contract = new BaseErc20Factory(owner).attach(token);
     return await contract.approve(to, value, overrides);
   }
 
@@ -25,7 +39,7 @@ export default class Token {
     caller: Signer,
     overrides: TransactionOverrides = {},
   ) {
-    const contract = BaseERC20.at(caller, token);
+    const contract = new BaseErc20Factory(caller).attach(token);
     return await contract.transferFrom(from, to, value, overrides);
   }
 
@@ -36,7 +50,7 @@ export default class Token {
     caller: Signer,
     overrides: TransactionOverrides = {},
   ) {
-    const contract = BaseERC20.at(caller, token);
+    const contract = new BaseErc20Factory(caller).attach(token);
     return await contract.transfer(to, value, overrides);
   }
 }

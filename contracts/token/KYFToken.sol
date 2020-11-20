@@ -4,7 +4,7 @@ pragma solidity ^0.5.16;
 
 import {Ownable} from "../lib/Ownable.sol";
 
-import {IKYFV2} from "../interfaces/IKYFV2.sol";
+import {IKYFV2} from "../global/IKYFV2.sol";
 
 contract KYFToken is Ownable {
 

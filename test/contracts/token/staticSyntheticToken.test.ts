@@ -1,39 +1,43 @@
 import 'module-alias/register';
 
-import simpleDescribe from '@test/helpers/simpleDescribe';
-import { ITestContext } from '@test/helpers/simpleDescribe';
-import { expectRevert } from '@src/utils/expectRevert';
-import { Account, getWaffleExpect } from '../../helpers/testingUtils';
+import { expect } from 'chai';
+
+import { expectRevert } from '@test/helpers/expectRevert';
 import { StaticSyntheticToken } from '@src/typings/StaticSyntheticToken';
+import { deployStaticSynthetic } from '../deployers';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
+import { StaticSyntheticTokenFactory } from '@src/typings/StaticSyntheticTokenFactory';
+import { ethers } from 'hardhat';
 
-let ownerAccount: Account;
-let arcAccount: Account;
-let arcAccount1: Account;
-let arcAccount2: Account;
-let userAccount: Account;
-let otherAccount: Account;
-
-const expect = getWaffleExpect();
+let ownerAccount: SignerWithAddress;
+let arcAccount: SignerWithAddress;
+let arcAccount1: SignerWithAddress;
+let arcAccount2: SignerWithAddress;
+let userAccount: SignerWithAddress;
+let otherAccount: SignerWithAddress;
 
 let syntheticToken: StaticSyntheticToken;
 
-async function init(ctx: ITestContext): Promise<void> {
-  ownerAccount = ctx.accounts[0];
-  arcAccount = ctx.accounts[1];
-  userAccount = ctx.accounts[2];
-  otherAccount = ctx.accounts[3];
-  arcAccount1 = ctx.accounts[4];
-  arcAccount2 = ctx.accounts[5];
+async function getContract(caller: SignerWithAddress) {
+  return new StaticSyntheticTokenFactory(caller).attach(syntheticToken.address);
 }
 
-async function getContract(caller: Account) {
-  return StaticSyntheticToken.at(caller.signer, syntheticToken.address);
-}
-
-simpleDescribe('StaticSyntheticToken', init, (ctx: ITestContext) => {
+describe('StaticSyntheticToken', () => {
   beforeEach(async () => {
-    syntheticToken = await StaticSyntheticToken.deploy(ownerAccount.signer, 'ARCUSD', 'ARCUSD');
-    syntheticToken = await StaticSyntheticToken.at(arcAccount.signer, syntheticToken.address);
+    const signers = await ethers.getSigners();
+    ownerAccount = signers[0];
+    arcAccount = signers[1];
+    userAccount = signers[2];
+    otherAccount = signers[3];
+    arcAccount1 = signers[4];
+    arcAccount2 = signers[5];
+  });
+
+  beforeEach(async () => {
+    syntheticToken = await deployStaticSynthetic(ownerAccount);
+    syntheticToken = await new StaticSyntheticTokenFactory(arcAccount).attach(
+      syntheticToken.address,
+    );
   });
 
   describe('#mint', () => {

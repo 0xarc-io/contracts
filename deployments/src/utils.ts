@@ -1,17 +1,17 @@
-import { Signer } from 'ethers';
 import { loadDeployedContracts, getDeploymentsFilePath } from './loadDeployedContracts';
 import { asyncForEach } from '@src/utils/asyncForEach';
 import { red, magenta } from 'chalk';
 import fs from 'fs-extra';
+import { Provider } from '@ethersproject/providers';
 
-export async function pruneDeployments(network: string, signer: Signer) {
+export async function pruneDeployments(network: string, provider: Provider) {
   const entries = loadDeployedContracts(network);
 
-  let prunedEntries: any[] = [];
+  const prunedEntries: any[] = [];
 
   await asyncForEach(entries, async (entry) => {
     const address = await entry.address;
-    const code = await signer.provider.getCode(address);
+    const code = await provider.getCode(address);
     if (code.length > 2) {
       prunedEntries.push(entry);
     }
