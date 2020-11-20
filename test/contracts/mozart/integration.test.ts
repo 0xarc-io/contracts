@@ -72,6 +72,22 @@ describe('Mozart.integration', () => {
     );
 
     await Token.approve(arc.syntheticAddress(), ctx.signers.staker, savings.address, BORROW_AMOUNT);
+
+    await savings.updateIndex();
+    await savings.connect(ctx.signers.staker).stake(BORROW_AMOUNT);
+
+    await savings.setCurrentTimestamp(ONE_YEAR_IN_SECONDS);
+    await savings.updateIndex();
+
+    const accruedBalance = await savings.balanceOf(ctx.signers.staker.address);
+    const currentIndex = await savings.getSavingsRate();
+    const convertedBalanance = ArcNumber.bigMul(accruedBalance, currentIndex);
+
+    await savings.connect(ctx.signers.staker).unstake(convertedBalanance);
+
+    expect(await arc.synthetic().balanceOf(ctx.signers.staker.address)).to.equal(
+      convertedBalanance,
+    );
   });
 
   it('should be able to pay back the accumulated interest', async () => {});
