@@ -155,7 +155,7 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
     {
         require(
             collateralAsset == address(0),
-            "D2CoreV1: cannot re-call init()"
+            "MozartV1: cannot re-call init()"
         );
 
         precisionScalar = 10 ** (18 - uint256(_collateralDecimals));
@@ -185,7 +185,8 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
      *      r = 1.000000000158153903837946258002097
      *      rate = 1000000000158153903 (18 decimal places solidity value)
      *
-     * @notice Can only be called by the interest setter of the protocol.
+     * @notice Can only be called by the interest setter of the protocol and the maximum
+     *         rate settable by the admin is 99% (21820606489)
      *
      * @param _rate The interest rate expressed per second
      */
@@ -196,7 +197,12 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
     {
         require(
             msg.sender == interestSetter,
-            "D2CoreV1: only callable by interest setter"
+            "MozartV1: only callable by interest setter"
+        );
+
+        require(
+            _rate <= 21820606489,
+            "MozartV1: interest rate cannot be set to over 99%"
         );
 
         interestRate = _rate;
