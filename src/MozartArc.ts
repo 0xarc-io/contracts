@@ -2,15 +2,15 @@ import { ContractTransaction, Signer } from 'ethers';
 import { BigNumber, BigNumberish } from 'ethers';
 import { ActionOperated, Operation, Position } from '../arc-types/core';
 import { calculateLiquidationAmount } from './utils/calculations';
-import { SyntheticTokenV1 } from '@src/typings/SyntheticTokenV1';
+import { SyntheticTokenV1 } from './typings/SyntheticTokenV1';
 import { asyncForEach } from './utils/asyncForEach';
-import { MozartV1 } from '@src/typings/MozartV1';
-import { IOracle } from '@src/typings/IOracle';
-import { TestToken } from '@src/typings/TestToken';
-import { MozartV1Factory } from '@src/typings/MozartV1Factory';
-import { IOracleFactory } from '@src/typings/IOracleFactory';
-import { SyntheticTokenV1Factory } from '@src/typings/SyntheticTokenV1Factory';
-import { TestTokenFactory } from '@src/typings/TestTokenFactory';
+import { MozartV1 } from './typings/MozartV1';
+import { IOracle } from './typings/IOracle';
+import { TestToken } from './typings/TestToken';
+import { MozartV1Factory } from './typings/MozartV1Factory';
+import { IOracleFactory } from './typings/IOracleFactory';
+import { SyntheticTokenV1Factory } from './typings/SyntheticTokenV1Factory';
+import { TestTokenFactory } from './typings/TestTokenFactory';
 
 import { TransactionOverrides } from '../arc-types/ethereum';
 import { AddressZero } from '@ethersproject/constants';
@@ -42,6 +42,7 @@ export class MozartArc {
 
   public async addSynths(synths: { [name in SynthNames]: string }) {
     const entries = Object.entries(synths);
+
     await asyncForEach(entries, async ([name, synth]) => {
       const core = MozartV1Factory.connect(synth, this.signer);
       const oracle = IOracleFactory.connect(await core.getCurrentOracle(), this.signer);
@@ -153,10 +154,12 @@ export class MozartArc {
   async transferOwnership(
     positionId: BigNumberish,
     newOwner: string,
-    caller: Signer = this.signer,
-    synth: Synth = this.availableSynths()[0],
+    caller?: Signer ,
+    synth?: Synth,
     overrides: TransactionOverrides = {},
   ) {
+    caller = this.signer;
+    synth = this.availableSynths()[0];
     const contract = await this.getCore(synth, caller);
     const tx = await contract.operateAction(
       Operation.TransferOwnership,
@@ -187,10 +190,12 @@ export class MozartArc {
     positionId: BigNumberish,
     operator: string,
     status: boolean,
-    caller: Signer = this.signer,
-    synth: Synth = this.availableSynths()[0],
+    caller?: Signer,
+    synth?: Synth,
     overrides: TransactionOverrides = {},
   ) {
+    caller = this.signer;
+    synth = this.availableSynths()[0]
     const contract = await this.getCore(synth, caller);
     return await contract.setPositionOperatorStatus(positionId, operator, status, overrides);
   }

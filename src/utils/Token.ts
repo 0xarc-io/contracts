@@ -1,8 +1,8 @@
 import { BigNumberish, Signer } from 'ethers';
-import { asyncForEach } from '@src/utils/asyncForEach';
+import { asyncForEach } from './asyncForEach';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { BaseERC20Factory } from '@src/typings/BaseERC20Factory';
-import { TestTokenFactory } from '@src/typings/TestTokenFactory';
+import { BaseERC20Factory } from '../typings/BaseERC20Factory';
+import { TestTokenFactory } from '../typings/TestTokenFactory';
 
 import { TransactionOverrides } from '../../arc-types/ethereum';
 
