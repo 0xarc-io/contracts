@@ -43,12 +43,10 @@ export class MozartArc {
   public async addSynths(synths: { [name in SynthNames]: string }) {
     const entries = Object.entries(synths);
     await asyncForEach(entries, async ([name, synth]) => {
-      const core = new MozartV1Factory(this.signer).attach(synth);
+      const core = MozartV1Factory.connect(synth, this.signer);
       const oracle = IOracleFactory.connect(await core.getCurrentOracle(), this.signer);
-      const collateral = new TestTokenFactory(this.signer).attach(await core.getCollateralAsset());
-      const synthetic = new SyntheticTokenV1Factory(this.signer).attach(
-        await core.getSyntheticAsset(),
-      );
+      const collateral = TestTokenFactory.connect(await core.getCollateralAsset(), this.signer);
+      const synthetic = SyntheticTokenV1Factory.connect(await core.getSyntheticAsset(), this.signer);
 
       this.synths[name] = {
         core,
@@ -219,12 +217,12 @@ export class MozartArc {
     const decodedPosition = {} as ActionOperated;
     receipt.logs.forEach((log) => {
       try {
-        const decoded = new MozartV1Factory().interface.decodeEventLog('ActionOperated', log.data);
+        const decoded = (new MozartV1Factory()).interface.decodeEventLog('ActionOperated', log.data);
 
         Object.entries(decoded).forEach(([key, value]) => {
           decodedPosition[key] = value;
         });
-      } catch {}
+      } catch { }
     });
 
     const position = {
@@ -258,7 +256,7 @@ export class MozartArc {
   }
 
   async getCore(synth: Synth, caller?: Signer) {
-    return new MozartV1Factory(caller || this.signer).attach(synth.core.address);
+    return MozartV1Factory.connect(synth.core.address, caller || this.signer);
   }
 }
 
