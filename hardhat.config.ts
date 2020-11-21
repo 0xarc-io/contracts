@@ -72,6 +72,9 @@ const config: HardhatUserConfig = {
     },
     local: {
       url: 'http://127.0.0.1:8545',
+      users: {
+        owner: '0x5409ed021d9299bf6814279a6a1411a7e866a631',
+      },
     },
     coverage: {
       url: 'http://127.0.0.1:8555', // Coverage launches its own ganache-cli client
@@ -79,6 +82,9 @@ const config: HardhatUserConfig = {
     rinkeby: {
       url: getNetworkUrl('rinkeby'),
       accounts: [params.testnet_private_key],
+      users: {
+        owner: '0xa8C01EfD74A206Bb2d769b6b3a5759508c83F20C',
+      },
     },
     mainnet: {
       url: getNetworkUrl('mainnet'),

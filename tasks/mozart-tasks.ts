@@ -1,7 +1,7 @@
 import 'module-alias/register';
 
 import { task } from 'hardhat/config';
-import { red, yellow, green } from 'chalk';
+import { red, yellow, green, magenta } from 'chalk';
 
 import { NetworkParams } from '../deployments/src/deployContract';
 import { loadContract } from '../deployments/src/loadContracts';
@@ -138,25 +138,27 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
     const synthetic = await new SyntheticTokenV1Factory(signer).attach(syntheticProxyAddress);
 
     console.log(yellow(`* Calling core init()...`));
+    const interestRateSetter = hre.config.networks[network]['users']['owner'] || signer.address;
     try {
       await core.init(
         synthConfig.params.decimals,
         collateralAddress,
         syntheticProxyAddress,
         oracleAddress,
-        signer.address,
+        interestRateSetter,
         { value: synthConfig.params.collateral_ratio },
         { value: synthConfig.params.liquidation_user_fee },
         { value: synthConfig.params.liquidation_arc_ratio },
       );
       console.log(green(`Called core init() successfully!\n`));
+      console.log(magenta(`The interest rate setter has been set to: ${interestRateSetter}`));
     } catch (error) {
       console.log(red(`Failed to call core init().\nReason: ${error}\n`));
     }
 
     console.log(yellow(`* Calling synthetic init()...`));
     try {
-      await synthetic.init(synthName, synthName, synthConfig.version);
+      await synthetic.init(synthName, synthName, synthConfig.version, { gasLimit: 1000000 });
       console.log(green(`Called synthetic init() successfully!\n`));
     } catch (error) {
       console.log(red(`Failed to call synthetic init().\nReason: ${error}\n`));
@@ -165,7 +167,9 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
     console.log(yellow(`* Calling synthetic addMinter...`));
     try {
       // We already enforce limits at the synthetic level.
-      await synthetic.addMinter(core.address, synthConfig.params.synthetic_limit || MAX_UINT256);
+      await synthetic.addMinter(core.address, synthConfig.params.synthetic_limit || MAX_UINT256, {
+        gasLimit: 1000000,
+      });
       console.log(green(`Added synthetic minter!\n`));
     } catch (error) {
       console.log(red(`Failed to add synthetic minter!\nReason: ${error}\n`));
