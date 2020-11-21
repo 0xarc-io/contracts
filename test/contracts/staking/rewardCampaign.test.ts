@@ -9,7 +9,7 @@ import { expectRevert } from '@test/helpers/expectRevert';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { ethers } from 'hardhat';
 import { TestToken } from '@src/typings/TestToken';
-import { Kyfv2 } from '@src/typings/Kyfv2';
+import { KYFV2 } from '@src/typings/KYFV2';
 import { MockRewardCampaign } from '@src/typings/MockRewardCampaign';
 import { generateContext, ITestContext } from '../context';
 import { SpritzTestArc } from '@src/SpritzTestArc';
@@ -31,8 +31,8 @@ let stakingRewards: MockRewardCampaign;
 let stakingToken: TestToken;
 let rewardToken: TestToken;
 
-let kyfTranche1: Kyfv2;
-let kyfTranche2: Kyfv2;
+let kyfTranche1: KYFV2;
+let kyfTranche2: KYFV2;
 
 const BASE = BigNumber.from(10).pow(18);
 
@@ -119,14 +119,14 @@ describe('RewardCampaign', () => {
     return new MockRewardCampaignFactory(caller).attach(stakingRewards.address);
   }
 
-  async function verifyUserIn(kyf: Kyfv2, address: string = userAccount.address) {
+  async function verifyUserIn(kyf: KYFV2, address: string = userAccount.address) {
     const hash = ethers.utils.solidityKeccak256(['address'], [address]);
     const signedMessage = await ownerAccount.signMessage(ethers.utils.arrayify(hash));
     const signature = ethers.utils.splitSignature(signedMessage);
     await kyf.verify(address, signature.v, signature.r, signature.s);
   }
 
-  async function approve(kyf: Kyfv2) {
+  async function approve(kyf: KYFV2) {
     await stakingRewards.setApprovedKYFInstance(kyf.address, true);
   }
 

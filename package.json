@@ -24,7 +24,7 @@
     "lint:ts": "eslint --config ./.eslintrc.yaml --ignore-path ./.eslintignore --ext .js,.ts .",
     "clean": "rm -rf build/compiled && rm -rf build/flattened && rm -rf src/typings && rm -rf artifacts && rm -rf cache",
     "chain": "ganache-cli --networkId 50 --accounts 20 -l 19000000 -e 10000000000 -m 'concert load couple harbor equip island argue ramp clarify fence smart topic' -h 0.0.0.0",
-    "build": "yarn compile && node scripts/fix-typechain.js",
+    "build": "yarn compile",
     "coverage": "yarn run build && yarn hardhat coverage --testfiles test/contracts/ --temp artifacts --network coverage",
     "test": "yarn hardhat test",
     "deploy-all": "yarn hardhat deploy-global --network local && yarn hardhat deploy-spritz --synth LINKUSD --network local && yarn hardhat deploy-mozart --synth ETHX --network local",
@@ -57,7 +57,7 @@
     "@nomiclabs/hardhat-ethers": "^2.0.0",
     "@nomiclabs/hardhat-etherscan": "^2.0.1",
     "@nomiclabs/hardhat-waffle": "^2.0.0",
-    "@typechain/ethers-v5": "^1.0.0",
+    "@typechain/ethers-v5": "^3.0.0",
     "@types/chai": "^4.2.8",
     "@types/fs-extra": "^9.0.3",
     "@types/mocha": "^8.0.0",
@@ -102,7 +102,7 @@
     "tsconfig-paths": "^3.9.0",
     "tsconfig-paths-jest": "^0.0.1",
     "ttypescript": "^1.5.12",
-    "typechain": "^2.0.0",
+    "typechain": "^4.0.0",
     "typescript": "^3.7.5"
   },
   "_moduleAliases": {
@@ -116,6 +116,7 @@
     "@openzeppelin/contracts": "^2.5.0",
     "@openzeppelin/upgrades": "^2.8.0",
     "eslint-plugin-unused-imports": "^1.0.0",
+    "ethers": "^5.0.2",
     "husky": "^4.3.0"
   },
   "publishConfig": {
