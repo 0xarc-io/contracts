@@ -158,5 +158,15 @@
     "version": 1,
     "type": "synth",
     "group": "ETHX"
+  },
+  {
+    "name": "CollateralToken",
+    "source": "TestToken",
+    "address": "0x4239228cc7deb4dfdc8273bff5c421af0b92dc8a",
+    "txn": "0xa4e4011dc0793643067a3f24f533dbd34a8acdaed86f370682b015031042c18c",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": "LINKUSD"
   }
 ]
