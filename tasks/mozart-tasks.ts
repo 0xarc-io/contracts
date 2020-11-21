@@ -72,6 +72,10 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
       networkConfig,
     );
 
+    if (!syntheticAddress || syntheticAddress.length == 0) {
+      throw red('Synthetic Token has not been deployed!');
+    }
+
     let oracleAddress = '';
 
     if (!synthConfig.oracle_source_address) {
@@ -124,7 +128,7 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
         source: 'ArcProxy',
         data: new ArcProxyFactory(signer).getDeployTransaction(
           syntheticAddress,
-          await signer.getAddress(),
+          signer.address,
           [],
         ),
         version: 1,

@@ -27,6 +27,7 @@ export async function deployContract(
   // Ignore source since it may vary based on the network
   const existing = loadContracts({
     network: networkParams.network,
+    source: deployParams.source,
     name: deployParams.name,
     type: deployParams.type,
     group: deployParams.group,
