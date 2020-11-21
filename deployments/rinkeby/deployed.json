@@ -60,7 +60,7 @@
     "type": "synth"
   },
   {
-    "name": "StateV1",
+    "name": "SpritzState",
     "group": "LINKUSD",
     "source": "StateV1",
     "address": "0xc53D6BFB4ABd988C1C8e02f0EEce4f0c56e5B20c",
@@ -70,9 +70,9 @@
     "type": "synth"
   },
   {
-    "name": "Synthetic",
+    "name": "SyntheticToken",
     "group": "LINKUSD",
-    "source": "SyntheticToken",
+    "source": "StaticSyntheticToken",
     "address": "0x56F71b6e9bA5491c8c5CE4053d59c12b51756489",
     "txn": "0x357134fb59d7bfdd722ee565de705b89ed7c67ad977918643f8b207ebab8fe6e",
     "network": "rinkeby",
@@ -80,82 +80,13 @@
     "type": "synth"
   },
   {
-    "name": "D1Core",
+    "name": "SpritzCore",
+    "group": "",
     "source": "CoreV4",
     "address": "0x119d2778f418E7920943B3CF936424b70E842778",
     "txn": "0xd91d1b1824e544b323ad1a0fac58952943e80f4a5b38312dd1a44fe8e5fe7ebc",
     "network": "rinkeby",
     "version": 4,
     "type": "synth"
-  },
-  {
-    "name": "SynthRegistryV2",
-    "source": "SynthRegistryV2",
-    "address": "0xA551221822cb6F2D14C347CEb825d4803554d7A0",
-    "txn": "0xc626a0e278c347eac379154039241099a1cbcc6dcbf902888b2fc5501f0c1455",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "global",
-    "group": ""
-  },
-  {
-    "name": "D2Core",
-    "source": "D2CoreV1",
-    "address": "0xf3c9DBEF378436fd232c9449916235f939F164C2",
-    "txn": "0xdcff9159145ef98c57812675792583bc6496fcbc7779720cde300bec34da8268",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "synth",
-    "group": ""
-  },
-  {
-    "name": "Collateral",
-    "source": "TestToken",
-    "address": "0xcFD20fDD57e35E25bc49EE62f31B56b7c806783B",
-    "txn": "0x63c0f0a7ce817bb60795f53f285b4941f32f03068b287f17212b98475c6d084c",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "synth",
-    "group": "ETHX"
-  },
-  {
-    "name": "Synthetic",
-    "source": "SyntheticTokenV1",
-    "address": "0x28529e34416C91c284aEA22Eb54f9B680CbeDf05",
-    "txn": "0x488513d41bb02149dcbf91028e1b585664c0cad5a0ed4a7429941f43f2cd0dbd",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "synth",
-    "group": "ETHX"
-  },
-  {
-    "name": "Oracle",
-    "source": "ChainLinkOracle",
-    "address": "0xfcf6e1DB100d8A454b900C0d1Da2D8Aeb8a3FD8B",
-    "txn": "0xea65015d36f561954ede65c65f3b4b13263a04717b1c17e916742d3b8a44612d",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "synth",
-    "group": "ETHX"
-  },
-  {
-    "name": "CoreProxy",
-    "source": "ArcProxy",
-    "address": "0xA8d3cDc95fCb3eEd700346c1c4aCB93d16BCbaa2",
-    "txn": "0x4b149eadb219a2df1dae9406fe84d27a9df7e1f9a70a7ee69d7f8f229c6aef83",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "synth",
-    "group": "ETHX"
-  },
-  {
-    "name": "SyntheticProxy",
-    "source": "ArcProxy",
-    "address": "0x2A2c3c5B85b93f048c6CB2A1D9cCb2Cee8A87310",
-    "txn": "0xa71386ac0ec35f892d4659a7f4f0453326031db627c44fe62ab409cf6bd2a14d",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "synth",
-    "group": "ETHX"
   }
 ]

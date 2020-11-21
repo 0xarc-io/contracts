@@ -63,7 +63,7 @@ export async function deployContract(
       network: networkParams.network,
       version: 1,
       type: deployParams.type,
-      group: deployParams.group,
+      group: deployParams.group || '',
     });
 
     return receipt.contractAddress;

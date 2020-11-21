@@ -20,7 +20,7 @@
     "type": "global"
   },
   {
-    "name": "ARC-Token",
+    "name": "ArcxToken",
     "group": "",
     "source": "ArcxToken",
     "address": "0xED30Dd7E50EdF3581AD970eFC5D9379Ce2614AdB",
@@ -80,7 +80,7 @@
     "type": "synth"
   },
   {
-    "name": "StateV1",
+    "name": "SpritzState",
     "group": "LINKUSD",
     "source": "StateV1",
     "address": "0x94F40fD4018586AaFb8A6AD95441e0b58cc4c058",
@@ -90,9 +90,9 @@
     "type": "synth"
   },
   {
-    "name": "Synthetic",
+    "name": "SyntheticToken",
     "group": "LINKUSD",
-    "source": "SyntheticToken",
+    "source": "StaticSyntheticToken",
     "address": "0x0E2EC54fC0B509F445631Bf4b91AB8168230C752",
     "txn": "0x5d22a8a734109c88440a849da6a06b21e8419c83fadb117a7b39264650d968fd",
     "network": "mainnet",
@@ -130,7 +130,7 @@
     "type": "staking"
   },
   {
-    "name": "D1Core",
+    "name": "SpritzCore",
     "group": "",
     "source": "CoreV1",
     "address": "0x08Db418a5234337D76c78cCF630658D4e328FC69",
@@ -140,7 +140,7 @@
     "type": "synth"
   },
   {
-    "name": "D1Core",
+    "name": "SpritzCore",
     "group": "",
     "source": "CoreV2",
     "address": "0x8e1fe752e51b05b9fe6eE95d8907695E0f3e2Ecd",
@@ -150,7 +150,7 @@
     "type": "synth"
   },
   {
-    "name": "D1Core",
+    "name": "SpritzCore",
     "group": "",
     "source": "CoreV3",
     "address": "0xC8C2E1547298E09E5f18e4CDEA4A271FdadAB971",
@@ -160,7 +160,7 @@
     "type": "synth"
   },
   {
-    "name": "D1Core",
+    "name": "SpritzCore",
     "group": "",
     "source": "CoreV4",
     "address": "0x6981263d090734F2Bd2708D1bE30Db5594BDE400",

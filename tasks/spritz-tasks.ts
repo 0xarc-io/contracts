@@ -1,26 +1,21 @@
 import 'module-alias/register';
 
-import { subtask, task } from 'hardhat/config';
-import { red, blue, yellow, green } from 'chalk';
+import { task } from 'hardhat/config';
+import { red, yellow, green } from 'chalk';
 
 import { NetworkParams } from '../deployments/src/deployContract';
-import { params } from '../hardhat.config';
-import { loadContract, loadContracts } from '../deployments/src/loadContracts';
-import { TestToken } from '@src/typings/TestToken';
-import { StaticSyntheticToken } from '@src/typings/StaticSyntheticToken';
+import { loadContract } from '../deployments/src/loadContracts';
 import {
   deployContract,
   DeploymentType,
   loadSynthConfig,
   pruneDeployments,
-  writeToDeployments,
 } from '../deployments/src';
 import {
   ArcProxyFactory,
   ChainLinkOracleFactory,
   CoreV4Factory,
   MockOracleFactory,
-  MozartV1Factory,
   StateV1Factory,
   StaticSyntheticTokenFactory,
   SynthRegistryFactory,
@@ -109,7 +104,7 @@ task('deploy-spritz', 'Deploy the Spritz contracts')
 
     const proxyAddress = (oracleAddress = await deployContract(
       {
-        name: 'Proxy',
+        name: 'CoreProxy',
         source: 'ArcProxy',
         data: new ArcProxyFactory(signer).getDeployTransaction(
           coreAddress,
