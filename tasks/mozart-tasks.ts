@@ -4,15 +4,13 @@ import { task } from 'hardhat/config';
 import { red, yellow, green } from 'chalk';
 
 import { NetworkParams } from '../deployments/src/deployContract';
-import { params } from '../hardhat.config';
-import { loadContract, loadContracts } from '../deployments/src/loadContracts';
+import { loadContract } from '../deployments/src/loadContracts';
 import {
   deployContract,
   DeploymentType,
   loadSynthConfig,
   pruneDeployments,
 } from '../deployments/src';
-import { BigNumber } from 'ethers';
 import { MAX_UINT256 } from '../src/constants';
 
 import {
@@ -70,7 +68,6 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
         data: new SyntheticTokenV1Factory(signer).getDeployTransaction(),
         version: 1,
         type: DeploymentType.synth,
-        group: synthName,
       },
       networkConfig,
     );
