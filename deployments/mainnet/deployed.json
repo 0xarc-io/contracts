@@ -101,7 +101,7 @@
   },
   {
     "name": "Pool-1",
-    "group": "",
+    "group": "Pool-1",
     "source": "StakingRewardsAccrualCapped",
     "address": "0xd1902581868163BEf61776cfD27228EE5074be8F",
     "txn": "0xe52e9b1cdda86f893a90a515fbd77b2cfcef99a9ab9c794e3c603c19c9632154",
@@ -111,7 +111,7 @@
   },
   {
     "name": "Pool-2",
-    "group": "",
+    "group": "Pool-2",
     "source": "StakingRewardsAccrualCapped",
     "address": "0xA9A9300Ab9A70c43C19d6F42e3308Be24d73D885",
     "txn": "0xe3874d35badf9f65aefbc8a54ca0d058ffa60fd8e14753ca46c923b8d17bf03d",
@@ -121,7 +121,7 @@
   },
   {
     "name": "Pool-2.1",
-    "group": "",
+    "group": "Pool-2.1",
     "source": "AdminRewards",
     "address": "0x580836540CA183Ab71AA4C58253F5EEaaD2552Dc",
     "txn": "0xe3874d35badf9f65aefbc8a54ca0d058ffa60fd8e14753ca46c923b8d17bf03d",
