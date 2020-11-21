@@ -2,7 +2,7 @@ import { Signer } from 'ethers';
 
 import { MozartArc } from './MozartArc';
 import { BigNumberish } from 'ethers';
-import { MockOracleFactory } from '@typings/MockOracleFactory';
+import { MockOracleFactory } from './typings/MockOracleFactory';
 import { MockMozartV1Factory } from './typings/MockMozartV1Factory';
 
 export class MozartTestArc extends MozartArc {
