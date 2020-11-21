@@ -228,5 +228,15 @@
     "network": "mainnet",
     "version": 1,
     "type": "global"
+  },
+  {
+    "name": "CollateralToken",
+    "source": "IERC20",
+    "address": "0x514910771af9ca656af840dff83e8264ecf986ca",
+    "txn": "0x5488510df045770efbff57f25d0c6d2c1404d58c1199b21eb8dc5072b22d91d7",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth",
+    "group": "LINKUSD"
   }
 ]
