@@ -27,7 +27,7 @@ export default class Token {
     value: BigNumberish,
     overrides: TransactionOverrides = {},
   ) {
-    const contract = new BaseERC20Factory(owner).attach(token);
+    const contract = BaseERC20Factory.connect(token, owner);
     return await contract.approve(to, value, overrides);
   }
 
@@ -39,7 +39,7 @@ export default class Token {
     caller: Signer,
     overrides: TransactionOverrides = {},
   ) {
-    const contract = new BaseERC20Factory(caller).attach(token);
+    const contract = BaseERC20Factory.connect(token, caller);
     return await contract.transferFrom(from, to, value, overrides);
   }
 
@@ -50,7 +50,7 @@ export default class Token {
     caller: Signer,
     overrides: TransactionOverrides = {},
   ) {
-    const contract = new BaseERC20Factory(caller).attach(token);
+    const contract = BaseERC20Factory.connect(token, caller);
     return await contract.transfer(to, value, overrides);
   }
 }

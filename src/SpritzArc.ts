@@ -38,13 +38,11 @@ export class SpritzArc {
     arc.signer = signer;
 
     if (addressBook) {
-      arc.core = await new CoreV4Factory(signer).attach(addressBook.proxy);
-      arc.state = await new StateV1Factory(signer).attach(addressBook.state);
-      arc.syntheticAsset = await new StaticSyntheticTokenFactory(signer).attach(
-        addressBook.syntheticToken,
-      );
-      arc.collateralAsset = await IERC20Factory.connect(addressBook.collateralAsset, signer);
-      arc.oracle = await IOracleFactory.connect(addressBook.oracle, signer);
+      arc.core = CoreV4Factory.connect(addressBook.proxy, signer);
+      arc.state = StateV1Factory.connect(addressBook.state, signer);
+      arc.syntheticAsset = StaticSyntheticTokenFactory.connect(addressBook.syntheticToken, signer);
+      arc.collateralAsset = IERC20Factory.connect(addressBook.collateralAsset, signer);
+      arc.oracle = IOracleFactory.connect(addressBook.oracle, signer);
     }
 
     return arc;
@@ -184,12 +182,12 @@ export class SpritzArc {
     const decodedPosition = {} as ActionOperated;
     receipt.logs.forEach((log) => {
       try {
-        const decoded = new CoreV4Factory().interface.decodeEventLog('ActionOperated', log.data);
+        const decoded = (new CoreV4Factory()).interface.decodeEventLog('ActionOperated', log.data);
 
         Object.entries(decoded).forEach(([key, value]) => {
           decodedPosition[key] = value;
         });
-      } catch {}
+      } catch { }
     });
 
     const position = {
@@ -222,10 +220,10 @@ export class SpritzArc {
   }
 
   public async getCore(caller?: Signer) {
-    return await new CoreV4Factory(caller || this.signer).attach(this.core.address);
+    return CoreV4Factory.connect(this.core.address, caller || this.signer);
   }
 
   public async getState(caller?: Signer) {
-    return await new StateV1Factory(caller || this.signer).attach(this.state.address);
+    return StateV1Factory.connect(this.state.address, caller || this.signer);
   }
 }
