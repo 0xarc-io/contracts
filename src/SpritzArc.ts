@@ -12,11 +12,11 @@ import {
 
 import Token from './utils/Token';
 
-import { Ierc20Factory } from './typings/Ierc20Factory';
+import { IERC20Factory } from './typings/IERC20Factory';
 import { IOracleFactory } from './typings/IOracleFactory';
 import { StateV1 } from './typings/StateV1';
 import { CoreV4 } from './typings/CoreV4';
-import { Ierc20 } from './typings/Ierc20';
+import { IERC20 } from './typings/IERC20';
 
 import { RiskParams, MarketParams } from '../arc-types/core';
 import { TransactionOverrides } from '../arc-types/ethereum';
@@ -29,8 +29,8 @@ export class SpritzArc {
 
   public core: CoreV4;
   public state: StateV1;
-  public syntheticAsset: Ierc20;
-  public collateralAsset: Ierc20;
+  public syntheticAsset: IERC20;
+  public collateralAsset: IERC20;
   public oracle: IOracle;
 
   static async init(signer: Signer, addressBook?: SynthAddressBook): Promise<SpritzArc> {
@@ -43,7 +43,7 @@ export class SpritzArc {
       arc.syntheticAsset = await new StaticSyntheticTokenFactory(signer).attach(
         addressBook.syntheticToken,
       );
-      arc.collateralAsset = await Ierc20Factory.connect(addressBook.collateralAsset, signer);
+      arc.collateralAsset = await IERC20Factory.connect(addressBook.collateralAsset, signer);
       arc.oracle = await IOracleFactory.connect(addressBook.oracle, signer);
     }
 

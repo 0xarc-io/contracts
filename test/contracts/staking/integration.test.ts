@@ -13,7 +13,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 
 import { ArcxToken } from '@src/typings/ArcxToken';
 import { TokenStakingAccrual } from '@src/typings/TokenStakingAccrual';
-import { Kyfv2 } from '@src/typings/Kyfv2';
+import { KYFV2 } from '@src/typings/KYFV2';
 import Token from '@src/utils/Token';
 import { MockRewardCampaign } from '@src/typings/MockRewardCampaign';
 import { generateContext, ITestContext } from '../context';
@@ -45,7 +45,7 @@ let kermanToken: TestToken;
 let arcDAO: AddressAccrual;
 let rewardPool: MockRewardCampaign;
 let kermanStaking: TokenStakingAccrual;
-let kyf: Kyfv2;
+let kyf: KYFV2;
 
 describe('Staking Integration', () => {
   let ctx: ITestContext;

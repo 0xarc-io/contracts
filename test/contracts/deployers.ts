@@ -15,7 +15,7 @@ import { CoreV3 } from '@src/typings/CoreV3';
 import { AddressAccrual } from '@src/typings/AddressAccrual';
 import { MockRewardCampaign } from '@src/typings/MockRewardCampaign';
 import { TokenStakingAccrual } from '@src/typings/TokenStakingAccrual';
-import { Kyfv2 } from '@src/typings/Kyfv2';
+import { KYFV2 } from '@src/typings/KYFV2';
 import { MockOracle } from '@src/typings/MockOracle';
 
 export async function deployMockMozartCoreV1(deployer: Signer) {
@@ -142,5 +142,5 @@ export async function deployTokenStakingAccrual(
 export async function deployKyfV2(deployer: Signer) {
   const KYFV2 = await ethers.getContractFactory('KYFV2', deployer);
   const kyfv2 = await KYFV2.deploy();
-  return kyfv2 as Kyfv2;
+  return kyfv2 as KYFV2;
 }

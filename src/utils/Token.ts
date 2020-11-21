@@ -1,7 +1,7 @@
 import { BigNumberish, Signer } from 'ethers';
 import { asyncForEach } from '@src/utils/asyncForEach';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { BaseErc20Factory } from '@src/typings/BaseErc20Factory';
+import { BaseERC20Factory } from '@src/typings/BaseERC20Factory';
 import { TestTokenFactory } from '@src/typings/TestTokenFactory';
 
 import { TransactionOverrides } from '../../arc-types/ethereum';
@@ -27,7 +27,7 @@ export default class Token {
     value: BigNumberish,
     overrides: TransactionOverrides = {},
   ) {
-    const contract = new BaseErc20Factory(owner).attach(token);
+    const contract = new BaseERC20Factory(owner).attach(token);
     return await contract.approve(to, value, overrides);
   }
 
@@ -39,7 +39,7 @@ export default class Token {
     caller: Signer,
     overrides: TransactionOverrides = {},
   ) {
-    const contract = new BaseErc20Factory(caller).attach(token);
+    const contract = new BaseERC20Factory(caller).attach(token);
     return await contract.transferFrom(from, to, value, overrides);
   }
 
@@ -50,7 +50,7 @@ export default class Token {
     caller: Signer,
     overrides: TransactionOverrides = {},
   ) {
-    const contract = new BaseErc20Factory(caller).attach(token);
+    const contract = new BaseERC20Factory(caller).attach(token);
     return await contract.transfer(to, value, overrides);
   }
 }
