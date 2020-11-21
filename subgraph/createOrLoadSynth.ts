@@ -1,7 +1,7 @@
 import { Address, BigInt } from '@graphprotocol/graph-ts';
 import { Synth } from '../generated/schema';
 import { StateV1 } from '../generated/templates/StateV1/StateV1';
-import { D2CoreV1 } from '../generated/templates/D2CoreV1/D2CoreV1';
+import { MozartV1 } from '../generated/templates/MozartV1/MozartV1';
 import { BaseERC20 } from '../generated/templates/BaseERC20/BaseERC20';
 
 export function createOrLoadV1Synth(address: Address): Synth {
@@ -36,7 +36,7 @@ export function createOrLoadV1Synth(address: Address): Synth {
 export function createOrLoadV2Synth(address: Address): Synth {
   let synth = Synth.load(address.toHexString());
 
-  let core = D2CoreV1.bind(address);
+  let core = MozartV1.bind(address);
   let syntheticAddress = core.getSyntheticAsset();
   let syntheticToken = BaseERC20.bind(syntheticAddress);
 
@@ -57,6 +57,10 @@ export function createOrLoadV2Synth(address: Address): Synth {
     let limits = core.getLimits();
     synth.collateralLimit = limits.value0;
     synth.positionCollateralMinimum = limits.value1;
+  }
+
+  if (syntheticToken.symbol().length == 0) {
+    synth.name = syntheticToken.symbol();
   }
 
   return synth as Synth;

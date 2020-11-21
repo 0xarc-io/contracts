@@ -7,7 +7,7 @@ import {
   CollateralRatioUpdated as CollateralRatioUpdatedEvent,
   PrinterUpdated as PrinterUpdatedEvent,
   PauseStatusUpdated as PauseStatusUpdatedEvent,
-} from '../generated/templates/D2CoreV1/D2CoreV1';
+} from '../generated/templates/MozartV1/MozartV1';
 
 import { ActionOperated, Position } from '../generated/schema';
 import { createOrLoadV2Synth } from './createOrLoadSynth';

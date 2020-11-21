@@ -1,5 +1,4 @@
 import { Address, BigInt } from '@graphprotocol/graph-ts';
-import { SynthAdded } from '../generated/SynthRegistry/SynthRegistry';
 import { Transfer } from '../generated/templates/BaseERC20/BaseERC20';
 import { AccountBalance } from '../generated/schema';
 
