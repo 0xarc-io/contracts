@@ -4,7 +4,7 @@ pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {Decimal} from "../lib/Decimal.sol";
-import {IOracle} from "../interfaces/IOracle.sol";
+import {IOracle} from "../oracle/IOracle.sol";
 
 contract MockOracle is IOracle {
 

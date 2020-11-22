@@ -1,99 +1,99 @@
-import 'jest';
+import 'module-alias/register';
 
-import simpleDescribe from '@test/helpers/simpleDescribe';
-import { ITestContext } from '@test/helpers/simpleDescribe';
-import { Wallet } from 'ethers';
-import { BigNumber } from 'ethers/utils';
+import { BigNumber } from 'ethers';
+import { expect } from 'chai';
+
 import ArcDecimal from '@src/utils/ArcDecimal';
 import ArcNumber from '@src/utils/ArcNumber';
-import { expectRevert } from '@src/utils/expectRevert';
+import { expectRevert } from '@test/helpers/expectRevert';
 import { AddressAccrual } from '@src/typings/AddressAccrual';
 import { TestToken } from '@src/typings/TestToken';
+import { ethers } from 'hardhat';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
+import { AddressAccrualFactory } from '@src/typings/AddressAccrualFactory';
+import { deployAddressAccrual, deployTestToken } from '../deployers';
 
-let ownerWallet: Wallet;
-let investorWallet: Wallet;
-let kermanHoldersWallet: Wallet;
-let arcWallet: Wallet;
-
-jest.setTimeout(30000);
+let ownerAccount: SignerWithAddress;
+let investorAccount: SignerWithAddress;
+let kermanHoldersAccount: SignerWithAddress;
+let arcAccount: SignerWithAddress;
 
 let distribution: AddressAccrual;
 let rewardToken: TestToken;
 
-const BASE = new BigNumber(10).pow(18);
+const BASE = BigNumber.from(10).pow(18);
 
 const INVESTOR_SHARE = ArcDecimal.new(15.15).value;
 const KERMAN_SHARE = ArcDecimal.new(3.03).value;
 const ARC_SHARE = ArcDecimal.new(81.82).value;
 
-async function init(ctx: ITestContext): Promise<void> {
-  ownerWallet = ctx.wallets[0];
-  investorWallet = ctx.wallets[1];
-  kermanHoldersWallet = ctx.wallets[2];
-  arcWallet = ctx.wallets[3];
-}
-
-simpleDescribe('Distribution', init, (ctx: ITestContext) => {
+describe('Distribution', () => {
   beforeEach(async () => {
-    rewardToken = await TestToken.deploy(ownerWallet, 'ARC', 'ARC');
-    distribution = await AddressAccrual.deploy(ownerWallet, rewardToken.address);
+    const signers = await ethers.getSigners();
+    ownerAccount = signers[0];
+    investorAccount = signers[1];
+    kermanHoldersAccount = signers[2];
+    arcAccount = signers[3];
+
+    rewardToken = await deployTestToken(ownerAccount, 'ARC', 'ARC');
+    distribution = await deployAddressAccrual(ownerAccount, rewardToken.address);
 
     await rewardToken.mintShare(distribution.address, ArcNumber.new(100));
 
-    await distribution.increaseShare(investorWallet.address, INVESTOR_SHARE);
-    await distribution.increaseShare(kermanHoldersWallet.address, KERMAN_SHARE);
-    await distribution.increaseShare(arcWallet.address, ARC_SHARE);
+    await distribution.increaseShare(investorAccount.address, INVESTOR_SHARE);
+    await distribution.increaseShare(kermanHoldersAccount.address, KERMAN_SHARE);
+    await distribution.increaseShare(arcAccount.address, ARC_SHARE);
   });
 
-  async function claimAs(caller: Wallet) {
-    const contract = await AddressAccrual.at(caller, distribution.address);
+  async function claimAs(caller: SignerWithAddress) {
+    const contract = await new AddressAccrualFactory(caller).attach(distribution.address);
     return await contract.claimFees();
   }
 
   it('should be able to increase shares', async () => {
-    expect(await distribution.balanceOf(investorWallet.address)).toEqual(INVESTOR_SHARE);
-    expect(await distribution.balanceOf(kermanHoldersWallet.address)).toEqual(KERMAN_SHARE);
-    expect(await distribution.balanceOf(arcWallet.address)).toEqual(ARC_SHARE);
-    expect(await distribution.totalSupply()).toEqual(ArcNumber.new(100));
+    expect(await distribution.balanceOf(investorAccount.address)).to.equal(INVESTOR_SHARE);
+    expect(await distribution.balanceOf(kermanHoldersAccount.address)).to.equal(KERMAN_SHARE);
+    expect(await distribution.balanceOf(arcAccount.address)).to.equal(ARC_SHARE);
+    expect(await distribution.totalSupply()).to.equal(ArcNumber.new(100));
   });
 
   it('should be able to decrease shares', async () => {
-    await distribution.decreaseShare(investorWallet.address, ArcNumber.new(1));
+    await distribution.decreaseShare(investorAccount.address, ArcNumber.new(1));
 
-    expect(await distribution.balanceOf(investorWallet.address)).toEqual(
+    expect(await distribution.balanceOf(investorAccount.address)).to.equal(
       INVESTOR_SHARE.sub(ArcNumber.new(1)),
     );
 
-    await distribution.increaseShare(investorWallet.address, ArcNumber.new(1));
-    expect(await distribution.balanceOf(investorWallet.address)).toEqual(INVESTOR_SHARE);
+    await distribution.increaseShare(investorAccount.address, ArcNumber.new(1));
+    expect(await distribution.balanceOf(investorAccount.address)).to.equal(INVESTOR_SHARE);
   });
 
   it('should be able to claim', async () => {
-    await claimAs(investorWallet);
-    await claimAs(kermanHoldersWallet);
-    await claimAs(arcWallet);
+    await claimAs(investorAccount);
+    await claimAs(kermanHoldersAccount);
+    await claimAs(arcAccount);
 
-    expect(await distribution.supplyIndex(investorWallet.address)).toEqual(BASE);
-    expect(await distribution.supplyIndex(kermanHoldersWallet.address)).toEqual(BASE);
-    expect(await distribution.supplyIndex(arcWallet.address)).toEqual(BASE);
+    expect(await distribution.supplyIndex(investorAccount.address)).to.equal(BASE);
+    expect(await distribution.supplyIndex(kermanHoldersAccount.address)).to.equal(BASE);
+    expect(await distribution.supplyIndex(arcAccount.address)).to.equal(BASE);
 
-    expect(await rewardToken.balanceOf(investorWallet.address)).toEqual(INVESTOR_SHARE);
-    expect(await rewardToken.balanceOf(kermanHoldersWallet.address)).toEqual(KERMAN_SHARE);
-    expect(await rewardToken.balanceOf(arcWallet.address)).toEqual(ARC_SHARE);
+    expect(await rewardToken.balanceOf(investorAccount.address)).to.equal(INVESTOR_SHARE);
+    expect(await rewardToken.balanceOf(kermanHoldersAccount.address)).to.equal(KERMAN_SHARE);
+    expect(await rewardToken.balanceOf(arcAccount.address)).to.equal(ARC_SHARE);
   });
 
   it('should not be able to claim more than possible', async () => {
-    await claimAs(investorWallet);
+    await claimAs(investorAccount);
 
-    await expectRevert(claimAs(investorWallet));
+    await expectRevert(claimAs(investorAccount));
 
     await rewardToken.mintShare(distribution.address, ArcNumber.new(10));
-    await claimAs(investorWallet);
+    await claimAs(investorAccount);
 
-    expect((await rewardToken.balanceOf(investorWallet.address)).toString()).toEqual(
+    expect((await rewardToken.balanceOf(investorAccount.address)).toString()).to.equal(
       INVESTOR_SHARE.add(INVESTOR_SHARE.div(10)).toString(),
     );
 
-    await expectRevert(claimAs(investorWallet));
+    await expectRevert(claimAs(investorAccount));
   });
 });

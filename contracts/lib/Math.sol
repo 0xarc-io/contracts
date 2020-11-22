@@ -3,7 +3,7 @@
 pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {SafeMath} from "./SafeMath.sol";
 
 /**
  * @title Math
@@ -41,36 +41,6 @@ library Math {
         require(
             result == number,
             "Math: Unsafe cast to uint128"
-        );
-        return result;
-    }
-
-    function to96(
-        uint256 number
-    )
-        internal
-        pure
-        returns (uint96)
-    {
-        uint96 result = uint96(number);
-        require(
-            result == number,
-            "Math: Unsafe cast to uint96"
-        );
-        return result;
-    }
-
-    function to32(
-        uint256 number
-    )
-        internal
-        pure
-        returns (uint32)
-    {
-        uint32 result = uint32(number);
-        require(
-            result == number,
-            "Math: Unsafe cast to uint32"
         );
         return result;
     }

@@ -1,0 +1,242 @@
+[
+  {
+    "name": "KYF-T1",
+    "group": "",
+    "source": "KYFV2",
+    "address": "0x1f10ff148a0ad63a57f98530ab472568e90a72c5",
+    "txn": "0x2ec44b1141940d1934fcab14e33af07aafcef651f845608b84c0b1e9140c9c7b",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global"
+  },
+  {
+    "name": "KYF-T2",
+    "group": "",
+    "source": "KYFV2",
+    "address": "0x877E31c9c04e8a2A3Af59341635F5BC6ae0dDc13",
+    "txn": "0x0e454ba4c2ac248e5d2651cf556a69f2072c0c29abb5f3307fe5d12fbd736990",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global"
+  },
+  {
+    "name": "ArcxToken",
+    "group": "",
+    "source": "ArcxToken",
+    "address": "0xED30Dd7E50EdF3581AD970eFC5D9379Ce2614AdB",
+    "txn": "0x4f0fd31a69cce6af21e4b8a9406352239ff1eec5d128941a1cafb25bea008553",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global"
+  },
+  {
+    "name": "ArcDAO",
+    "group": "",
+    "source": "AddressAccrual",
+    "address": "0x1DEBBC50322150EB44DE3b663d5faA89c12b07ff",
+    "txn": "0xaddd5d086184e35efd0e38e6bc289582613c328b5cf0c4670f769b151949f92f",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global"
+  },
+  {
+    "name": "SynthRegistry",
+    "group": "",
+    "source": "SynthRegistry",
+    "address": "0x372a4D34e9E9d96656F101aFf06a4a455396C974",
+    "txn": "0x293c48b94a9626720afd83d1b4b2b272c7e3df26dd922e012f0d3f2bb8e34b07",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global"
+  },
+  {
+    "name": "KYFToken",
+    "group": "",
+    "source": "KYFToken",
+    "address": "0xD85e2772912213e0c584d80B2694c79D6a09E39A",
+    "txn": "0xd168c7b318dcc9d8eb26c89a9ef6d7f517f3a2cd6f9481cde5c25733c1f49bda",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global"
+  },
+  {
+    "name": "CoreProxy",
+    "group": "LINKUSD",
+    "source": "ArcProxy",
+    "address": "0x5568Df89AF6Bc835B876fDc3B2d44ef63530e419",
+    "txn": "0x42b18f8203170cfdc37d75b8c16a59ed4c6ee407bd83cb4b2b8daa6121e33703",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth"
+  },
+  {
+    "name": "Oracle",
+    "group": "LINKUSD",
+    "source": "ChainLinkOracle",
+    "address": "0xeFFD9768a337950CdC883682Dc08583D4a3fe596",
+    "txn": "0x64228347bf80803309b51813edd6852346348609e89d724d2f62e44a5b822fc9",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth"
+  },
+  {
+    "name": "SpritzState",
+    "group": "LINKUSD",
+    "source": "StateV1",
+    "address": "0x94F40fD4018586AaFb8A6AD95441e0b58cc4c058",
+    "txn": "0x93bd657169d285729c70e721ad547e84e82cf7fc2addae92741636895151b919",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth"
+  },
+  {
+    "name": "SyntheticToken",
+    "group": "LINKUSD",
+    "source": "StaticSyntheticToken",
+    "address": "0x0E2EC54fC0B509F445631Bf4b91AB8168230C752",
+    "txn": "0x5d22a8a734109c88440a849da6a06b21e8419c83fadb117a7b39264650d968fd",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth"
+  },
+  {
+    "name": "Pool-1",
+    "group": "Pool-1",
+    "source": "StakingRewardsAccrualCapped",
+    "address": "0xd1902581868163BEf61776cfD27228EE5074be8F",
+    "txn": "0xe52e9b1cdda86f893a90a515fbd77b2cfcef99a9ab9c794e3c603c19c9632154",
+    "network": "mainnet",
+    "version": 1,
+    "type": "staking"
+  },
+  {
+    "name": "Pool-2",
+    "group": "Pool-2",
+    "source": "StakingRewardsAccrualCapped",
+    "address": "0xA9A9300Ab9A70c43C19d6F42e3308Be24d73D885",
+    "txn": "0xe3874d35badf9f65aefbc8a54ca0d058ffa60fd8e14753ca46c923b8d17bf03d",
+    "network": "mainnet",
+    "version": 1,
+    "type": "staking"
+  },
+  {
+    "name": "Pool-2.1",
+    "group": "Pool-2.1",
+    "source": "AdminRewards",
+    "address": "0x580836540CA183Ab71AA4C58253F5EEaaD2552Dc",
+    "txn": "0xe3874d35badf9f65aefbc8a54ca0d058ffa60fd8e14753ca46c923b8d17bf03d",
+    "network": "mainnet",
+    "version": "1",
+    "type": "staking"
+  },
+  {
+    "name": "SpritzCore",
+    "group": "",
+    "source": "CoreV1",
+    "address": "0x08Db418a5234337D76c78cCF630658D4e328FC69",
+    "txn": "0x4690959ea3442c1b9272abe11386b2f9d60807d86936f0ae7707f350546e7400",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth"
+  },
+  {
+    "name": "SpritzCore",
+    "group": "",
+    "source": "CoreV2",
+    "address": "0x8e1fe752e51b05b9fe6eE95d8907695E0f3e2Ecd",
+    "txn": "0xc35406ee85ca64842b0957a8c68f48fa7f962687c83640374d7815f3f2b33a8f",
+    "network": "mainnet",
+    "version": 2,
+    "type": "synth"
+  },
+  {
+    "name": "SpritzCore",
+    "group": "",
+    "source": "CoreV3",
+    "address": "0xC8C2E1547298E09E5f18e4CDEA4A271FdadAB971",
+    "txn": "0xc3ca124d70184617103988682af2ac1f9ea2fe4d8c0707e68348c9fe15b0d447",
+    "network": "mainnet",
+    "version": 3,
+    "type": "synth"
+  },
+  {
+    "name": "SpritzCore",
+    "group": "",
+    "source": "CoreV4",
+    "address": "0x6981263d090734F2Bd2708D1bE30Db5594BDE400",
+    "txn": "0xf4a07e7eec8bf06af0693862dab51718ab616cad97f8224a713e5cc71a35d0e5",
+    "network": "mainnet",
+    "version": 4,
+    "type": "synth"
+  },
+  {
+    "name": "Proxy",
+    "group": "Pool-3",
+    "source": "ArcProxy",
+    "address": "0x38b25c0A9e61E226023B700ce4a6A4134eCAEeDF",
+    "txn": "0x2bab27a2e9a2434613c24915247f11752f3c43d252342486e9f508dfb65f5c03",
+    "network": "mainnet",
+    "version": 1,
+    "type": "staking"
+  },
+  {
+    "name": "Implementation",
+    "group": "Pool-3",
+    "source": "RewardCampaign",
+    "address": "0x140C21C364B9E72856C582CF7B6d37ee88B52140",
+    "txn": "0x4559c140f80f1af1a5400ccfa39f67379267f4599b1e3c00f2a5f9e8bf15e368",
+    "network": "mainnet",
+    "version": 1,
+    "type": "staking"
+  },
+  {
+    "name": "Proxy",
+    "group": "Pool-4",
+    "source": "ArcProxy",
+    "address": "0x8016F490D76346EBEC91707fD4Fb56A7fe64f694",
+    "txn": "0x0bc9985a636df79b3dd1d896b7dbebec47e2b1fe4c25803beae958207a20285c",
+    "network": "mainnet",
+    "version": 1,
+    "type": "staking"
+  },
+  {
+    "name": "Implementation",
+    "group": "Pool-4",
+    "source": "RewardCampaign",
+    "address": "0x57f52dAD9fcB361c67FF8c555720dc934dD5945D",
+    "txn": "0xe40ce68414f5272836c8f340655cff9f1cc3aab1d9a83a09957ffb75bc30a89e",
+    "network": "mainnet",
+    "version": 1,
+    "type": "staking"
+  },
+  {
+    "name": "Proxy",
+    "group": "SkillsetMetadata",
+    "source": "ArcProxy",
+    "address": "0xAc09434EAce70771AEcb75B3BdEB775B4c1B4Aef",
+    "txn": "0xe22e539a5fa4b517ffed75d8154e07daa4867035322dcca6ee58d917a28480bb",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global"
+  },
+  {
+    "name": "Implementation",
+    "group": "SkillsetMetadata",
+    "source": "SkillsetMetadata",
+    "address": "0x1D453D0c02D6ac3494A4be4f53e59F01abd0E6a3",
+    "txn": "0x0bb685743c7ebb234b6367447a77a9c5af07a1648f0bb3ce1ba46d037aa1a75e",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global"
+  },
+  {
+    "name": "CollateralToken",
+    "source": "IERC20",
+    "address": "0x514910771af9ca656af840dff83e8264ecf986ca",
+    "txn": "0x5488510df045770efbff57f25d0c6d2c1404d58c1199b21eb8dc5072b22d91d7",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth",
+    "group": "LINKUSD"
+  }
+]

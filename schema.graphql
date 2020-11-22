@@ -1,6 +1,23 @@
-enum AssetType {
-  StableAsset,
-  Synthetic
+type AccountBalance @entity {
+  id: ID!
+  account: Bytes!
+  asset: Bytes!
+  balance: BigInt!
+}
+
+type Synth @entity {
+  id: ID!
+  name: String!
+  collateralAddress: Bytes!
+  syntheticAddress: Bytes!
+  paused: Boolean!
+  oracle: Bytes!
+  collateralRatio: BigInt
+  liquidationUserFee: BigInt
+  liquidationArcRatio: BigInt
+  collateralLimit: BigInt
+  positionCollateralMinimum: BigInt
+  interestRate: BigInt
 }
 
 type UserSlashed @entity {
@@ -14,9 +31,8 @@ type UserSlashed @entity {
 type Position @entity {
   id: ID!
   owner: Bytes!
+  synth: Bytes!
   createdAt: Int!
-  collateralAsset: Int!
-  borrowedAsset: Int!
   collateralAmountSign: Boolean!
   collateralAmountValue: BigInt!
   borrowedAmountSign: Boolean!
@@ -35,14 +51,19 @@ type ActionOperated @entity {
 
 type GlobalMarket @entity {
   id: ID!
-  collateralRatio: BigInt!
-  liquidationUserFee: BigInt!
-  liquidationArcFee: BigInt!
+  synth: Bytes!
+  sender: Bytes!
+  operation: Int!
+  amountOne: BigInt
+  amountTwo: BigInt
+  position: Position!
+  createdAt: Int!
 }
 
-type GlobalRisk @entity {
+type UserSlashed @entity {
   id: ID!
-  collateralLimit: BigInt!
-  syntheticLimit: BigInt!
-  positionCollateralMinimum: BigInt!
+  contractAddress: Bytes!
+  user: Bytes!
+  slasher: Bytes!
+  amount: BigInt!
 }
