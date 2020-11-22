@@ -188,12 +188,10 @@ export class MozartArc {
     positionId: BigNumberish,
     operator: string,
     status: boolean,
-    caller?: Signer,
-    synth?: Synth,
+    caller: Signer = this.signer,
+    synth: Synth = this.availableSynths()[0],
     overrides: TransactionOverrides = {},
   ) {
-    caller = this.signer;
-    synth = this.availableSynths()[0]
     const contract = await this.getCore(synth, caller);
     return await contract.setPositionOperatorStatus(positionId, operator, status, overrides);
   }
