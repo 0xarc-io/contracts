@@ -1,8 +1,4 @@
 import { ethers } from 'ethers';
-import { LogDescription } from 'ethers/utils';
-
-// suppress ABI warnings e.g. Multiple definitions for safeTransferFrom
-ethers.errors.setLogLevel('error');
 
 export function parseLogs(logs: ethers.providers.Log[], ...abis: string[]): any[] {
   let abi = '';
@@ -24,7 +20,7 @@ export function parseLogs(logs: ethers.providers.Log[], ...abis: string[]): any[
     })
     .filter((arr) => arr[0] != null)
     .map((arr) => {
-      const item = arr[0] as LogDescription;
+      const item = arr[0] as any;
       const index = arr[1] as number;
       const result = {
         name: item.name,

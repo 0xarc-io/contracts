@@ -3,7 +3,7 @@
 pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
-import {Ownable} from "@openzeppelin/contracts/ownership/Ownable.sol";
+import {Ownable} from "../lib/Ownable.sol";
 
 import {BaseERC20} from "./BaseERC20.sol";
 
@@ -37,7 +37,7 @@ contract SkillsetToken is BaseERC20, Ownable {
         string memory _symbol
     )
         public
-        BaseERC20(_name, _symbol)
+        BaseERC20(_name, _symbol, 18)
     { }
 
     /* ========== VIEW FUNCTIONS ========== */

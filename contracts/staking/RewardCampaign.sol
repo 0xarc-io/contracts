@@ -4,18 +4,18 @@ pragma solidity ^0.5.16;
 
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {Ownable} from "@openzeppelin/contracts/ownership/Ownable.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-
+import {Ownable} from "../lib/Ownable.sol";
+import {SafeMath} from "../lib/SafeMath.sol";
+import {SafeERC20} from "../lib/SafeERC20.sol";
 import {Decimal} from "../lib/Decimal.sol";
 import {Adminable} from "../lib/Adminable.sol";
 
-import {TypesV1} from "../v1/TypesV1.sol";
+import {IERC20} from "../token/IERC20.sol";
 
-import {IKYFV2} from "../interfaces/IKYFV2.sol";
-import {IStateV1} from "../interfaces/IStateV1.sol";
+import {IKYFV2} from "../global/IKYFV2.sol";
+
+import {IStateV1} from "../debt/spritz/IStateV1.sol";
+import {TypesV1} from "../debt/spritz/TypesV1.sol";
 
 contract RewardCampaign is Adminable {
 
