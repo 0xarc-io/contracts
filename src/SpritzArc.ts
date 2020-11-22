@@ -182,12 +182,11 @@ export class SpritzArc {
     const decodedPosition = {} as ActionOperated;
     receipt.logs.forEach((log) => {
       try {
-        const decoded = (new CoreV4Factory()).interface.decodeEventLog('ActionOperated', log.data);
-
+        const decoded = this.core.interface.decodeEventLog('ActionOperated', log.data, log.topics);
         Object.entries(decoded).forEach(([key, value]) => {
           decodedPosition[key] = value;
         });
-      } catch { }
+      } catch {}
     });
 
     const position = {
