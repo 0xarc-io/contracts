@@ -154,12 +154,10 @@ export class MozartArc {
   async transferOwnership(
     positionId: BigNumberish,
     newOwner: string,
-    caller?: Signer ,
-    synth?: Synth,
+    caller: Signer = this.signer,
+    synth: Synth = this.availableSynths()[0],
     overrides: TransactionOverrides = {},
   ) {
-    caller = this.signer;
-    synth = this.availableSynths()[0];
     const contract = await this.getCore(synth, caller);
     const tx = await contract.operateAction(
       Operation.TransferOwnership,
