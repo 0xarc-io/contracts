@@ -1,24 +1,12 @@
-import { BigNumberish, Signer } from 'ethers';
+import { Signer } from 'ethers';
 import { asyncForEach } from './asyncForEach';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { BaseERC20Factory } from '../typings/BaseERC20Factory';
 import { TestTokenFactory } from '../typings/TestTokenFactory';
 
 import { TransactionOverrides } from '../../arc-types/ethereum';
+import { BigNumberish } from '@ethersproject/bignumber';
 
 export default class Token {
-  static async setStartingBalances(
-    collateral: string,
-    core: string,
-    signers: SignerWithAddress[],
-    balance: BigNumberish,
-  ) {
-    await asyncForEach(signers, async (signer) => {
-      const testToken = await new TestTokenFactory(signer).attach(collateral);
-      await testToken.mintShare(signer.address, balance);
-      await Token.approve(collateral, signer, core, balance);
-    });
-  }
 
   static async approve(
     token: string,

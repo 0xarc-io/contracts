@@ -222,12 +222,11 @@ export class MozartArc {
     const decodedPosition = {} as ActionOperated;
     receipt.logs.forEach((log) => {
       try {
-        const decoded = (new MozartV1Factory()).interface.decodeEventLog('ActionOperated', log.data);
-
+        const decoded = this.availableSynths()[0].core.interface.decodeEventLog('ActionOperated', log.data, log.topics);
         Object.entries(decoded).forEach(([key, value]) => {
           decodedPosition[key] = value;
         });
-      } catch { }
+      } catch {}
     });
 
     const position = {

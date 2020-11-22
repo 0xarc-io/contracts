@@ -1,8 +1,8 @@
 import { BigNumber, BigNumberish } from 'ethers';
 import { BASE } from '@src/constants';
-import Token from '@src/utils/Token';
 import ArcNumber from '@src/utils/ArcNumber';
 import { ITestContext } from './context';
+import { setStartingBalances } from '../helpers/testingUtils';
 
 export interface MozartSetupOptions {
   oraclePrice: BigNumberish;
@@ -29,7 +29,7 @@ export async function setupMozart(ctx: ITestContext, options: MozartSetupOptions
   await arc.synth().core.setCollateralRatio({ value: options.collateralRatio });
 
   // Set a starting balance and approval for each user we're going to be using
-  await Token.setStartingBalances(
+  await setStartingBalances(
     arc.collateral().address,
     arc.core().address,
     Object.values(ctx.signers),
