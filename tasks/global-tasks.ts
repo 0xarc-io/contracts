@@ -1,9 +1,9 @@
 import { ArcxTokenFactory, SynthRegistryFactory, SynthRegistryV2Factory } from '@src/typings';
 import { deployContract, pruneDeployments } from '../deployments/src';
-import { subtask, task } from 'hardhat/config';
+import { task } from 'hardhat/config';
 import { DeploymentType } from '../deployments/src/writeToDeployments';
 import { NetworkParams } from '../deployments/src/deployContract';
-import { SynthRegistryV2 } from '@src/typings/SynthRegistryV2';
+import { ArcProxyInfoFactory } from '@src/typings/ArcProxyInfoFactory';
 
 task('deploy-global', 'Deploy, update and interact with global contracts').setAction(
   async (taskArgs, hre) => {
@@ -45,6 +45,17 @@ task('deploy-global', 'Deploy, update and interact with global contracts').setAc
         type: DeploymentType.global,
       },
       networkConfig,
+    );
+
+    const proxyInfo = await deployContract(
+      {
+        name: 'ArcProxyInfo',
+        source: 'ArcProxyInfo',
+        data: new ArcProxyInfoFactory(signer).getDeployTransaction(),
+        version: 1,
+        type: DeploymentType.global
+      },
+      networkConfig
     );
   },
 );
