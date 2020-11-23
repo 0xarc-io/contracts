@@ -24,7 +24,7 @@
     "lint:ts": "eslint --config ./.eslintrc.yaml --ignore-path ./.eslintignore --ext .js,.ts .",
     "clean": "rm -rf build/compiled && rm -rf build/flattened && rm -rf src/typings && rm -rf artifacts && rm -rf cache",
     "chain": "ganache-cli --networkId 50 --accounts 20 -l 19000000 -e 10000000000 -m 'concert load couple harbor equip island argue ramp clarify fence smart topic' -h 0.0.0.0",
-    "build": "yarn compile",
+    "build": "yarn compile && node scripts/fix-typechain.js",
     "coverage": "yarn run build && yarn hardhat coverage --testfiles test/contracts/ --temp artifacts --network coverage",
     "test": "yarn hardhat test",
     "deploy-all": "yarn hardhat deploy-global --network local && yarn hardhat deploy-spritz --synth LINKUSD --network local && yarn hardhat deploy-mozart --synth ETHX --network local",
