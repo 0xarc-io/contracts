@@ -27,6 +27,7 @@ require('dotenv').config({ path: '.env' }).parsed;
 
 export const params = {
   testnet_private_key: process.env.TESTNET_DEPLOY_PRIVATE_KEY || '',
+  deploy_private_key: process.env.DEPLOY_PRIVATE_KEY || '',
   infura_key: process.env.INFURA_PROJECT_ID || '',
   etherscan_key: process.env.ETHERSCAN_KEY || '',
 };
@@ -39,11 +40,6 @@ const HUNDRED_THOUSAND_ETH = BigNumber.from(100000).pow(18).toString();
 
 const config: HardhatUserConfig = {
   defaultNetwork: 'hardhat',
-  preprocess: {
-    eachLine: removeConsoleLog(
-      (bre) => bre.network.name !== 'hardhat' && bre.network.name !== 'localhost',
-    ),
-  },
   solidity: {
     version: '0.5.16',
     settings: {
@@ -82,13 +78,15 @@ const config: HardhatUserConfig = {
     rinkeby: {
       url: getNetworkUrl('rinkeby'),
       accounts: [params.testnet_private_key],
+      gasPrice: 1000000000,
       users: {
         owner: '0xa8C01EfD74A206Bb2d769b6b3a5759508c83F20C',
       },
     },
     mainnet: {
       url: getNetworkUrl('mainnet'),
-      accounts: [params.testnet_private_key],
+      accounts: [params.deploy_private_key],
+      gasPrice: 80000000000,
       users: {
         owner: '0x62f31e08e279f3091d9755a09914df97554eae0b',
       },

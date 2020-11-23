@@ -22,7 +22,7 @@
 			"liquidation_user_fee": "100000000000000000",
 			"liquidation_arc_ratio": "100000000000000000",
 			"collateral_limit": "",
-			"synthetic_limit": "1000000000000000000000000",
+			"synthetic_limit": "300000000000000000000000",
 			"position_minimum_collateral" : "",
 			"interest_rate": ""
 		}

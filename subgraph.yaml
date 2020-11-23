@@ -6,11 +6,11 @@ schema:
 dataSources:
   - kind: ethereum/contract
     name: SynthRegistry
-    network: rinkeby
+    network: mainnet
     source:
-      address: '0x14E3eCaAcE77F194f689B210F6695d843E77BB64'
+      address: '0x372a4D34e9E9d96656F101aFf06a4a455396C974'
       abi: SynthRegistry
-      startBlock: 7165635
+      startBlock: 10812831
     mapping:
       kind: ethereum/events
       language: wasm/assemblyscript
@@ -31,11 +31,11 @@ dataSources:
       file: ./subgraph/synth.ts
   - kind: ethereum/contract
     name: SynthRegistryV2
-    network: rinkeby
+    network: mainnet
     source:
-      address: '0xc145D88fa80bEB02C65E9E6D3ABe34B16C994fD0'
+      address: '0x01ed4757F67C94060b2416B5650319832782C69E'
       abi: SynthRegistryV2
-      startBlock: 7585264
+      startBlock: 10812831
     mapping:
       kind: ethereum/events
       language: wasm/assemblyscript
@@ -57,7 +57,7 @@ dataSources:
 templates:
   - kind: ethereum/contract
     name: CoreV1
-    network: rinkeby
+    network: mainnet
     source:
       abi: CoreV1
     mapping:
@@ -78,7 +78,7 @@ templates:
       file: ./subgraph/d1.ts
   - kind: ethereum/contract
     name: StateV1
-    network: rinkeby
+    network: mainnet
     source:
       abi: StateV1
     mapping:
@@ -102,7 +102,7 @@ templates:
       file: ./subgraph/d1.ts
   - kind: ethereum/contract
     name: MozartV1
-    network: rinkeby
+    network: mainnet
     source:
       abi: MozartV1
     mapping:
@@ -136,7 +136,7 @@ templates:
       file: ./subgraph/d2.ts
   - kind: ethereum/contract
     name: BaseERC20
-    network: rinkeby
+    network: mainnet
     source:
       abi: BaseERC20
     mapping:

@@ -28,13 +28,14 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
   .setAction(async (taskArgs, hre) => {
     const synthName = taskArgs.synth;
     const network = hre.network.name;
+    const networkObject = hre.config.networks[network];
 
     const signer = (await hre.ethers.getSigners())[0];
 
     await pruneDeployments(network, signer.provider);
 
     const synthConfig = loadSynthConfig({ network, synth: synthName });
-    const networkConfig = { network, signer } as NetworkParams;
+    const networkConfig = { network, signer, gasPrice: networkObject.gasPrice} as NetworkParams;
 
     const coreAddress = await deployContract(
       {
@@ -142,7 +143,7 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
     const synthetic = await new SyntheticTokenV1Factory(signer).attach(syntheticProxyAddress);
 
     console.log(yellow(`* Calling core init()...`));
-    const interestRateSetter = hre.config.networks[network]['users']['owner'] || signer.address;
+    const interestRateSetter = networkObject['users']['owner'] || signer.address;
     try {
       await core.init(
         synthConfig.params.decimals,
@@ -189,7 +190,7 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
       const synthRegistry = await new SynthRegistryV2Factory(signer).attach(
         synthRegistryDetails.address,
       );
-      await synthRegistry.addSynth(coreProxyAddress, syntheticAddress);
+      await synthRegistry.addSynth(coreProxyAddress, syntheticProxyAddress);
       console.log(green(`Added to Synth Registry V2!\n`));
     } catch (error) {
       console.log(red(`Failed to add to Synth Registry V2!\nReason: ${error}\n`));

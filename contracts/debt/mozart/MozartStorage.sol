@@ -10,6 +10,16 @@ import {Amount} from "../../lib/Amount.sol";
 
 import {MozartTypes} from "./MozartTypes.sol";
 
+/**
+ * @title MoazartStorage
+ * @author Kerman Kohli
+ * @notice The storage contract that gets used inside MozartV1.
+ *         IMPORTANT:
+ *         - DO NOT change the order of ANY variables
+ *         - If you would like to add more variables, create a a new
+ *           versioned contract (MozartStorageV99) and inherit from
+ *           it via MozartStorage
+ */
 contract MozartStorageV1 {
 
     /**
