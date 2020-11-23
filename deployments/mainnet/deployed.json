@@ -238,5 +238,25 @@
     "version": 1,
     "type": "synth",
     "group": "LINKUSD"
+  },
+  {
+    "name": "SynthRegistryV2",
+    "source": "SynthRegistryV2",
+    "address": "0x01ed4757F67C94060b2416B5650319832782C69E",
+    "txn": "0xabc69db879486b089413d78d39b9e74a8bd9a853566ede404677de302b3d4dea",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "ArcProxyInfo",
+    "source": "ArcProxyInfo",
+    "address": "0x1351540F64E484478dDE0Ff367B488A57Da373c8",
+    "txn": "0xf7b2ab99da5a5ed7a2f283fc5849a703f38efcdbe47cbfb7aa484dfa44037b03",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global",
+    "group": ""
   }
 ]

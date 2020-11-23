@@ -4,6 +4,7 @@ import { task } from 'hardhat/config';
 import { DeploymentType } from '../deployments/src/writeToDeployments';
 import { NetworkParams } from '../deployments/src/deployContract';
 import { ArcProxyInfoFactory } from '@src/typings/ArcProxyInfoFactory';
+import { arrayify } from '@ethersproject/bytes';
 
 task('deploy-global', 'Deploy, update and interact with global contracts').setAction(
   async (taskArgs, hre) => {
@@ -46,7 +47,7 @@ task('deploy-global', 'Deploy, update and interact with global contracts').setAc
       },
       networkConfig,
     );
-
+    console.log(arrayify([]));
     const proxyInfo = await deployContract(
       {
         name: 'ArcProxyInfo',
