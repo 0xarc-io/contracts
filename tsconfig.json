@@ -34,7 +34,6 @@
     "./scripts/**/*",
     "./tasks/**/*",
     "./test/**/*",
-    "./test/**/*",
     "./deployment/**/*",
     "./arc-types/**/*/*"
   ],
