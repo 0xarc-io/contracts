@@ -42,6 +42,7 @@ type Position @entity {
 type ActionOperated @entity {
   id: ID!
   sender: Bytes!
+  synth: Bytes!
   operation: Int!
   amountOne: BigInt
   amountTwo: BigInt
@@ -58,12 +59,4 @@ type GlobalMarket @entity {
   amountTwo: BigInt
   position: Position!
   createdAt: Int!
-}
-
-type UserSlashed @entity {
-  id: ID!
-  contractAddress: Bytes!
-  user: Bytes!
-  slasher: Bytes!
-  amount: BigInt!
 }

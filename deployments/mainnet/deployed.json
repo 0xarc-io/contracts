@@ -258,5 +258,55 @@
     "version": 1,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "MozartCore",
+    "source": "MozartV1",
+    "address": "0x23cc14E9c638aC942a04e2633c7b49fe5b6e68f8",
+    "txn": "0x07066994d6b15568883d5af5e0f5acd7b9f2bfd844e8379978e9612bf16f7794",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth",
+    "group": ""
+  },
+  {
+    "name": "SyntheticToken",
+    "source": "SyntheticTokenV1",
+    "address": "0x64EDe15348d87Bf17BCAFF7eAc0DBA80D173d0dB",
+    "txn": "0x8c476e650558756e7e95937807cf23bcbeab4d139588d09f2b0e842443d4a331",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth",
+    "group": ""
+  },
+  {
+    "name": "Oracle",
+    "source": "ChainLinkOracle",
+    "address": "0x736b4677c0E6f6938408674281ba74CeF240cc00",
+    "txn": "0x0c453904238a2cbd562aea498719bdbe175bd444ea0095bbf0bb08caf62e571a",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth",
+    "group": "ETHX"
+  },
+  {
+    "name": "CoreProxy",
+    "source": "ArcProxy",
+    "address": "0xECF179b0F04C513Fb75919aeEC54Da6F788bDD01",
+    "txn": "0xbeeb84f62dc959a5a104cfaa59ffae50bdd7c55061db7265a6fd692519b17679",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth",
+    "group": "ETHX"
+  },
+  {
+    "name": "SyntheticProxy",
+    "source": "ArcProxy",
+    "address": "0xAbCE65222CF17D19Db37e2018a46B3c8c782c8cD",
+    "txn": "0x8f115a1266ea1a2a0632ac26ad132d8bd60605ed948cb928ef7da4188ea6d217",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth",
+    "group": "ETHX"
   }
 ]
