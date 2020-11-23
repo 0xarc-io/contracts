@@ -20,6 +20,14 @@ import {MozartStorage} from "./MozartStorage.sol";
 import {MozartTypes} from  "./MozartTypes.sol";
 import {IMozartV1} from "./IMozartV1.sol";
 
+/**
+ * @title MoazartV1
+ * @author Kerman Kohli
+ * @notice This contract holds both the implementation logic and storage (indirectly).
+ *         The key optimization of this contract is around simplicity and the actions
+ *         a user can call. In addition, the architecture is designed for safety around upgrades
+ *         where new storage variables are introduced through the inherited storage contract pattern.
+ */
 contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
 
     /* ========== Libraries ========== */
