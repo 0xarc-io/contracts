@@ -239,6 +239,12 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
         public
         onlyAdmin
     {
+        require(
+            _collateralRatio.value < BASE.mul(10) &&
+            _collateralRatio.value > BASE,
+            "setCollateralRatio(): must be between 100% and 1000%"
+        );
+
         collateralRatio = _collateralRatio;
         emit CollateralRatioUpdated(_collateralRatio);
     }
