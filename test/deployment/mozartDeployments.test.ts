@@ -50,13 +50,13 @@ function testNetwork(network: string) {
       name: 'Oracle',
     });
 
-    const mozartCore = MozartV1Factory.connect(coreProxyDetails.address, signer);
+    // const mozartCore = MozartV1Factory.connect(coreProxyDetails.address, signer);
 
-    it('should have the core configured correctly', async () => {
-      expect( (await mozartCore.getAdmin()).toLowerCase()).to.equal(ultimateOwner.toLowerCase());
-      expect((await mozartCore.getCurrentOracle()).toLowerCase()).to.equal(oracleDetails.address.toLowerCase());
-      expect((await mozartCore.getSyntheticAsset()).toLowerCase()).to.equal(syntheticProxyDetails.address.toLowerCase());
-    })
+    // it('should have the core configured correctly', async () => {
+    //   expect( (await mozartCore.getAdmin()).toLowerCase()).to.equal(ultimateOwner.toLowerCase());
+    //   expect((await mozartCore.getCurrentOracle()).toLowerCase()).to.equal(oracleDetails.address.toLowerCase());
+    //   expect((await mozartCore.getSyntheticAsset()).toLowerCase()).to.equal(syntheticProxyDetails.address.toLowerCase());
+    // })
 
   })
 
