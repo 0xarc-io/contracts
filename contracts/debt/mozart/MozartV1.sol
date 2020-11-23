@@ -18,7 +18,6 @@ import {SafeERC20} from "../../lib/SafeERC20.sol";
 
 import {MozartStorage} from "./MozartStorage.sol";
 import {MozartTypes} from  "./MozartTypes.sol";
-import {IMozartV1} from "./IMozartV1.sol";
 
 /**
  * @title MoazartV1
@@ -28,7 +27,7 @@ import {IMozartV1} from "./IMozartV1.sol";
  *         a user can call. In addition, the architecture is designed for safety around upgrades
  *         where new storage variables are introduced through the inherited storage contract pattern.
  */
-contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
+contract MozartV1 is Adminable, MozartStorage {
 
     /* ========== Libraries ========== */
 
