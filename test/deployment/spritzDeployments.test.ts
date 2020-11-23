@@ -14,16 +14,18 @@ const hre = require('hardhat');
 
 const networks = ['mainnet', 'rinkeby'];
 
-describe('deployments', () => {
+describe('Spritz.deployments', () => {
   networks.forEach((network) => {
-    describe(network, () => testNetwork);
+    describe(network, () => testNetwork(network));
   });
 });
 
-async function testNetwork(network: string) {
+function testNetwork(network: string) {
   const hreNetwork = hre.config.networks[network];
   const provider = new ethers.providers.JsonRpcProvider(hreNetwork.url);
   const signer = generatedWallets(provider)[0];
+  const isOwnerSet = (hreNetwork.users?.owner?.length > 0)
+  const ultimateOwner = hreNetwork.users?.owner.toLowerCase();
 
   const coreProxyDetails = loadContract({
     network,
@@ -36,18 +38,18 @@ async function testNetwork(network: string) {
     network,
     type: DeploymentType.synth,
     group: 'LINKUSD',
-    name: 'StateV1',
+    name: 'SpritzState',
   });
 
   const syntheticDetails = loadContract({
     network,
     type: DeploymentType.synth,
     group: 'LINKUSD',
-    name: 'Synthetic',
+    name: 'SyntheticToken',
   });
 
-  const state = new StateV1Factory(signer).attach(stateContractDetails.address);
-  const core = new CoreV4Factory(signer).attach(coreProxyDetails.address);
+  const state = StateV1Factory.connect(stateContractDetails.address, signer);
+  const core = CoreV4Factory.connect(coreProxyDetails.address, signer);
 
   it('should have the correct addresses setup for Core', async () => {
     expect(await state.core()).to.equal(coreProxyDetails.address);
@@ -55,9 +57,9 @@ async function testNetwork(network: string) {
   });
 
   it('should have the correct admin set for core', async () => {
-    if (hreNetwork.users?.owner?.length > 0) {
-      expect(await (await core.getAdmin()).toLowerCase()).to.equal(
-        hreNetwork.users.owner.toLowerCase(),
+    if (isOwnerSet) {
+      expect((await core.getAdmin()).toLowerCase()).to.equal(
+        ultimateOwner
       );
     }
   });

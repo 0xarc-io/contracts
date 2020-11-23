@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.5.16;
+pragma experimental ABIEncoderV2;
 
 import {Ownable} from "../lib/Ownable.sol";
 
@@ -32,41 +33,53 @@ contract SynthRegistryV2 is Ownable {
 
     /* ========== Mutative Functions ========== */
 
+    /**
+     * @dev Add a new synth to the registry.
+     *
+     * @param core The address of the core proxy contract
+     * @param synthetic The address of the synthetic token proxy address
+     */
     function addSynth(
-        address proxy,
-        address synth
+        address core,
+        address synthetic
     )
         external
         onlyOwner
     {
         require(
-            synths[proxy] == address(0),
+            synths[core] == address(0),
             "Synth already exists"
         );
 
-        availableSynths.push(synth);
-        synths[proxy] = synth;
+        availableSynths.push(synthetic);
+        synths[core] = synthetic;
 
-        emit SynthAdded(proxy, synth);
+        emit SynthAdded(core, synthetic);
     }
 
+
+    /**
+     * @dev Remove a new synth from registry.
+     *
+     * @param core The address of the core proxy contract
+     */
     function removeSynth(
-        address proxy
+        address core
     )
         external
         onlyOwner
     {
         require(
-            address(synths[proxy]) != address(0),
+            address(synths[core]) != address(0),
             "Synth does not exist"
         );
 
         // Save the address we're removing for emitting the event at the end.
-        address syntheticToRemove = synths[proxy];
+        address syntheticToRemove = synths[core];
 
         // Remove the synth from the availableSynths array.
         for (uint i = 0; i < availableSynths.length; i++) {
-            if (address(availableSynths[i]) == proxy) {
+            if (address(availableSynths[i]) == core) {
                 delete availableSynths[i];
                 availableSynths[i] = availableSynths[availableSynths.length - 1];
                 availableSynths.length--;
@@ -76,8 +89,8 @@ contract SynthRegistryV2 is Ownable {
         }
 
         // And remove it from the synths mapping
-        delete synths[proxy];
+        delete synths[core];
 
-        emit SynthRemoved(proxy, syntheticToRemove);
+        emit SynthRemoved(core, syntheticToRemove);
     }
 }
