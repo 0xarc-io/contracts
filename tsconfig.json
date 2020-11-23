@@ -34,8 +34,10 @@
     "./scripts/**/*",
     "./tasks/**/*",
     "./test/**/*",
-    "./deployment/**/*",
-    "./arc-types/**/*/*"
+    "./deployments/**/*",
+    "./arc-types/**/*/*",
+    "./deployments/rinkeby/*.json",
+    "./deployments/mainnet/*.json"
   ],
   "exclude": ["node_modules"],
   "files": [
