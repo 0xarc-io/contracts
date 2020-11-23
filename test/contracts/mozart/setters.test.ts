@@ -50,7 +50,7 @@ describe('MozartV1.setters', () => {
           ctx.signers.unauthorised.address,
           ctx.signers.unauthorised.address,
           ctx.signers.interestSetter.address,
-          { value: 2 },
+          { value: ArcDecimal.new(1.1).value },
           { value: 4 },
           { value: 5 },
         ),
@@ -65,7 +65,7 @@ describe('MozartV1.setters', () => {
         ctx.signers.unauthorised.address,
         ctx.signers.unauthorised.address,
         ctx.signers.interestSetter.address,
-        { value: 2 },
+        { value: ArcDecimal.new(1.1).value },
         { value: 4 },
         { value: 5 },
       );
@@ -154,6 +154,20 @@ describe('MozartV1.setters', () => {
       const contract = await getCore(ctx.signers.admin);
       await contract.setInterestSetter(ctx.signers.admin.address);
       expect(await contract.getInterestSetter()).to.equal(ctx.signers.admin.address);
+    });
+  });
+
+  describe('#setCollateralRatio', () => {
+    it('should not be settable by any user', async () => {
+      const contract = await getCore(ctx.signers.unauthorised);
+      await expect(contract.setCollateralRatio(ArcDecimal.new(1.1))).to.be.reverted;
+    });
+
+    it('should only be settable by the admin', async () => {
+      const contract = await getCore(ctx.signers.admin);
+      await expect(contract.setCollateralRatio(ArcDecimal.new(1.0))).to.be.reverted;
+      await contract.setCollateralRatio(ArcDecimal.new(1.1));
+      expect(await (await contract.getCollateralRatio()).value).to.equal(ArcDecimal.new(1.1).value);
     });
   });
 });
