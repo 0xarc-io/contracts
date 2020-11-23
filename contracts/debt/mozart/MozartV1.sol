@@ -18,9 +18,16 @@ import {SafeERC20} from "../../lib/SafeERC20.sol";
 
 import {MozartStorage} from "./MozartStorage.sol";
 import {MozartTypes} from  "./MozartTypes.sol";
-import {IMozartV1} from "./IMozartV1.sol";
 
-contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
+/**
+ * @title MoazartV1
+ * @author Kerman Kohli
+ * @notice This contract holds both the implementation logic and storage (indirectly).
+ *         The key optimization of this contract is around simplicity and the actions
+ *         a user can call. In addition, the architecture is designed for safety around upgrades
+ *         where new storage variables are introduced through the inherited storage contract pattern.
+ */
+contract MozartV1 is Adminable, MozartStorage {
 
     /* ========== Libraries ========== */
 
@@ -239,6 +246,12 @@ contract MozartV1 is Adminable, MozartStorage, IMozartV1 {
         public
         onlyAdmin
     {
+        require(
+            _collateralRatio.value < BASE.mul(10) &&
+            _collateralRatio.value > BASE,
+            "setCollateralRatio(): must be between 100% and 1000%"
+        );
+
         collateralRatio = _collateralRatio;
         emit CollateralRatioUpdated(_collateralRatio);
     }
