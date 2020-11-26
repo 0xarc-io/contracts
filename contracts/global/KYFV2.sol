@@ -1,7 +1,9 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.5.16;
 
-import {Ownable} from "@openzeppelin/contracts/ownership/Ownable.sol";
-import {IKYFV2} from "../interfaces/IKYFV2.sol";
+import {Ownable} from "../lib/Ownable.sol";
+import {IKYFV2} from "./IKYFV2.sol";
 
 contract KYFV2 is Ownable, IKYFV2 {
 
