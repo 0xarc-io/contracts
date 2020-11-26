@@ -1,10 +1,12 @@
-import { BigNumberish } from 'ethers/utils';
-import { BaseERC20 } from '../typings/BaseERC20';
 import { Signer } from 'ethers';
-import { TransactionOverrides } from '../types';
+import { asyncForEach } from './asyncForEach';
+import { BaseERC20Factory } from '../typings/BaseERC20Factory';
+import { TestTokenFactory } from '../typings/TestTokenFactory';
+
+import { TransactionOverrides } from '../../arc-types/ethereum';
+import { BigNumberish } from '@ethersproject/bignumber';
 
 export default class Token {
-  constructor() {}
 
   static async approve(
     token: string,
@@ -13,7 +15,7 @@ export default class Token {
     value: BigNumberish,
     overrides: TransactionOverrides = {},
   ) {
-    const contract = BaseERC20.at(owner, token);
+    const contract = BaseERC20Factory.connect(token, owner);
     return await contract.approve(to, value, overrides);
   }
 
@@ -25,7 +27,7 @@ export default class Token {
     caller: Signer,
     overrides: TransactionOverrides = {},
   ) {
-    const contract = BaseERC20.at(caller, token);
+    const contract = BaseERC20Factory.connect(token, caller);
     return await contract.transferFrom(from, to, value, overrides);
   }
 
@@ -36,7 +38,7 @@ export default class Token {
     caller: Signer,
     overrides: TransactionOverrides = {},
   ) {
-    const contract = BaseERC20.at(caller, token);
+    const contract = BaseERC20Factory.connect(token, caller);
     return await contract.transfer(to, value, overrides);
   }
 }

@@ -1,0 +1,182 @@
+[
+  {
+    "name": "KYF-T2",
+    "group": "",
+    "source": "KYFV2",
+    "address": "0x583C581157F79AB3D252a20a37D3F6B8f925A433",
+    "txn": "0xcf37a342f74b2ecd4e6c2a95a93063c9010f7dc222867288d96573b500067e32",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global"
+  },
+  {
+    "name": "ArcxToken",
+    "group": "",
+    "source": "ArcxToken",
+    "address": "0x7D849e901095BEc7F5074f6C2ceE8DAF2C8B0c7e",
+    "txn": "0x39e890abfc0aa059e45179a64a76b488d6a409cd99976e1b35e56a032c6dd083",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global"
+  },
+  {
+    "name": "ArcDAO",
+    "group": "",
+    "source": "AddressAccrual",
+    "address": "0x97bE1ABA861BF7d93177A95648472DE9c2404332",
+    "txn": "0x62d5236a8f35b23103c23f01330148cf6b4933fc47bbf5ea5a487871a4222ff2",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global"
+  },
+  {
+    "name": "SynthRegistry",
+    "group": "",
+    "source": "SynthRegistry",
+    "address": "0x14E3eCaAcE77F194f689B210F6695d843E77BB64",
+    "txn": "0x746e2a9105731cecf09370abba0dfff6c998aab3fa97d47420339c1076faf25b",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global"
+  },
+  {
+    "name": "CoreProxy",
+    "group": "LINKUSD",
+    "source": "ArcProxy",
+    "address": "0x5401D0e09F8e517872fb412347dd0886F896a2c7",
+    "txn": "0xe7481f52c53e2f52d50491dbe33250dda5c67362bcfa070c3d944ec96d7a71c1",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth"
+  },
+  {
+    "name": "Oracle",
+    "group": "LINKUSD",
+    "source": "ChainLinkOracle",
+    "address": "0x392D6aa51A6Db9Aa8519932B092D08357Db51b3b",
+    "txn": "0xbd902659f1e5b17c4086ed38e38686a5af2458be55067d3c2e3e045e8d536eea",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth"
+  },
+  {
+    "name": "SpritzState",
+    "group": "LINKUSD",
+    "source": "StateV1",
+    "address": "0xc53D6BFB4ABd988C1C8e02f0EEce4f0c56e5B20c",
+    "txn": "0x9910a246df7a94b068fee9c1fd8354e7d9c4611d4ff0be5f2d074e73d38aef24",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth"
+  },
+  {
+    "name": "CollateralToken",
+    "source": "TestToken",
+    "address": "0x4239228CC7DEB4dFdc8273bFF5C421af0B92DC8A",
+    "txn": "0xa4e4011dc0793643067a3f24f533dbd34a8acdaed86f370682b015031042c18c",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": "LINKUSD"
+  },
+  {
+    "name": "SyntheticToken",
+    "group": "LINKUSD",
+    "source": "StaticSyntheticToken",
+    "address": "0x56F71b6e9bA5491c8c5CE4053d59c12b51756489",
+    "txn": "0x357134fb59d7bfdd722ee565de705b89ed7c67ad977918643f8b207ebab8fe6e",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth"
+  },
+  {
+    "name": "SpritzCore",
+    "group": "",
+    "source": "CoreV4",
+    "address": "0x119d2778f418E7920943B3CF936424b70E842778",
+    "txn": "0xd91d1b1824e544b323ad1a0fac58952943e80f4a5b38312dd1a44fe8e5fe7ebc",
+    "network": "rinkeby",
+    "version": 4,
+    "type": "synth"
+  },
+  {
+    "name": "SynthRegistryV2",
+    "source": "SynthRegistryV2",
+    "address": "0x5AAF562F8487129B3b67462dD3e80feB74732E88",
+    "txn": "0x2841265d4fb552e266651c3ea248c5d5bd9779176136f85d85baee3c93a5c294",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "ArcProxyInfo",
+    "source": "ArcProxyInfo",
+    "address": "0x0C9f6821e21b9c496f96D4e372D68D8eD992DAea",
+    "txn": "0x937fb673b0f7dbce47281f847be95ced3bd54595c183ba04b7570107a6f3da9a",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "MozartCore",
+    "source": "MozartV1",
+    "address": "0xAFca8F8356E4DB8fD8aC1AcC5e00B8e694467e8F",
+    "txn": "0x14376e38891e42304c689ed7b77c8e8742db29b7c44e11e7022a864298643f78",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": ""
+  },
+  {
+    "name": "CollateralToken",
+    "source": "TestToken",
+    "address": "0xc67B46D78cFAFF86C4beA8506b115B6ca062702a",
+    "txn": "0x5cdc793ad67dea083889c935fe70bf66b103b796811fafe7874967f6c2610e96",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": "ETHX"
+  },
+  {
+    "name": "SyntheticToken",
+    "source": "SyntheticTokenV1",
+    "address": "0xA30331c49BA551721F5857aa2c38227039696c1A",
+    "txn": "0x326c1e81e47132cc31daded6a81389b2b396d5efabbe881596a4e37ed7e86d8c",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": ""
+  },
+  {
+    "name": "Oracle",
+    "source": "ChainLinkOracle",
+    "address": "0x26A8736c9fc3f35bB5Eef0b2E3aA81AEd201e693",
+    "txn": "0x07eb883efff570f015b16f4a9ca00f2b13d24820dad2abcc094745e72391d1e0",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": "ETHX"
+  },
+  {
+    "name": "CoreProxy",
+    "source": "ArcProxy",
+    "address": "0x2FDF6Ef5D1E54098dF29b3D6c2a29cE6912b19f2",
+    "txn": "0xc991cbcf7efd3d334ed41b705339a49cfc9cfbcfaa030fb7dc1fceda12940f57",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": "ETHX"
+  },
+  {
+    "name": "SyntheticProxy",
+    "source": "ArcProxy",
+    "address": "0xAA4f351398C06f3d387833BC4b1Fd5F966Da3786",
+    "txn": "0x30dde93d2af3c9931d7758fe9c652efc804e48a0118a2cf28f211849c9052508",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": "ETHX"
+  }
+]

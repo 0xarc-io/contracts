@@ -1,49 +1,154 @@
 specVersion: 0.0.2
-description: ARC conracts
-repository: https://github.com/arcxfinance/contracts
+description: ARCx Contracts
+repository: https://github.com/arcxmoney/contracts
 schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum/contract
-    name: CoreV1
-    network: mainnet
+    name: SynthRegistry
+    network: rinkeby
     source:
-      address: '0x5568Df89AF6Bc835B876fDc3B2d44ef63530e419'
+      address: '0x14E3eCaAcE77F194f689B210F6695d843E77BB64'
+      abi: SynthRegistry
+      startBlock: 7165639
+    mapping:
+      kind: ethereum/events
+      language: wasm/assemblyscript
+      apiVersion: 0.0.4
+      entities:
+        - AccountBalance
+        - Synth
+      abis:
+        - name: SynthRegistry
+          file: ./artifacts/contracts/global/SynthRegistry.sol/SynthRegistry.json
+        - name: BaseERC20
+          file: ./artifacts/contracts/token/BaseERC20.sol/BaseERC20.json
+        - name: CoreV1
+          file: ./artifacts/contracts/debt/spritz/CoreV1.sol/CoreV1.json
+      eventHandlers:
+        - event: SynthAdded(bytes32,address)
+          handler: synthV1Added
+      file: ./subgraph/synth.ts
+  - kind: ethereum/contract
+    name: SynthRegistryV2
+    network: rinkeby
+    source:
+      address: '0x0530b67D7Ea71378b988ABf84F16b3D656416bDF'
+      abi: SynthRegistryV2
+      startBlock: 7165639
+    mapping:
+      kind: ethereum/events
+      language: wasm/assemblyscript
+      apiVersion: 0.0.4
+      entities:
+        - AccountBalance
+        - Synth
+      abis:
+        - name: SynthRegistryV2
+          file: ./artifacts/contracts/global/SynthRegistryV2.sol/SynthRegistryV2.json
+        - name: BaseERC20
+          file: ./artifacts/contracts/token/BaseERC20.sol/BaseERC20.json
+        - name: CoreV1
+          file: ./artifacts/contracts/debt/spritz/CoreV1.sol/CoreV1.json
+      eventHandlers:
+        - event: SynthAdded(address,address)
+          handler: synthV2Added
+      file: ./subgraph/synth.ts
+templates:
+  - kind: ethereum/contract
+    name: CoreV1
+    network: rinkeby
+    source:
       abi: CoreV1
-      startBlock: 6965000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
       language: wasm/assemblyscript
       entities:
         - Position
+        - ActionOperated
       abis:
         - name: CoreV1
-          file: ./artifacts/CoreV1.json
+          file: ./artifacts/contracts/debt/spritz/CoreV1.sol/CoreV1.json
+        - name: BaseERC20
+          file: ./artifacts/contracts/token/BaseERC20.sol/BaseERC20.json
       eventHandlers:
         - event: ActionOperated(uint8,(uint256,uint256,uint256),(address,uint8,uint8,(bool,uint128),(bool,uint128)))
           handler: actionOperated
-      file: ./subgraph/mapping.ts
+      file: ./subgraph/d1.ts
   - kind: ethereum/contract
     name: StateV1
-    network: mainnet
+    network: rinkeby
     source:
-      address: '0x94F40fD4018586AaFb8A6AD95441e0b58cc4c058'
       abi: StateV1
-      startBlock: 6965000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
       language: wasm/assemblyscript
       entities:
-        - GlobalMarket
-        - GlobalRisk
+        - Synth
       abis:
         - name: StateV1
-          file: ./artifacts/StateV1.json
+          file: ./artifacts/contracts/debt/spritz/StateV1.sol/StateV1.json
+        - name: BaseERC20
+          file: ./artifacts/contracts/token/BaseERC20.sol/BaseERC20.json
       eventHandlers:
         - event: MarketParamsUpdated(((uint256),(uint256),(uint256)))
           handler: marketParamsUpdated
         - event: RiskParamsUpdated((uint256,uint256,uint256))
           handler: riskParamsUpdated
-      file: ./subgraph/mapping.ts
+        - event: OracleUpdated(address)
+          handler: oracleUpdated
+      file: ./subgraph/d1.ts
+  - kind: ethereum/contract
+    name: MozartV1
+    network: rinkeby
+    source:
+      abi: MozartV1
+    mapping:
+      kind: ethereum/events
+      language: wasm/assemblyscript
+      apiVersion: 0.0.4
+      entities:
+        - Synth
+        - Position
+        - ActionOperated
+      abis:
+        - name: MozartV1
+          file: ./artifacts/contracts/debt/mozart/MozartV1.sol/MozartV1.json
+        - name: BaseERC20
+          file: ./artifacts/contracts/token/BaseERC20.sol/BaseERC20.json
+      eventHandlers:
+        - event: ActionOperated(uint8,(uint256,uint256,uint256,address),(address,(bool,uint256),(bool,uint256)))
+          handler: actionOperated
+        - event: FeesUpdated((uint256),(uint256))
+          handler: feesUpdated
+        - event: LimitsUpdated(uint256,uint256)
+          handler: limitsUpdated
+        - event: RateUpdated(uint256)
+          handler: rateUpdated
+        - event: OracleUpdated(address)
+          handler: oracleUpdated
+        - event: CollateralRatioUpdated((uint256))
+          handler: collateralRatioUpdated
+        - event: PauseStatusUpdated(bool)
+          handler: pauseStatusUpdated
+      file: ./subgraph/d2.ts
+  - kind: ethereum/contract
+    name: BaseERC20
+    network: rinkeby
+    source:
+      abi: BaseERC20
+    mapping:
+      kind: ethereum/events
+      language: wasm/assemblyscript
+      apiVersion: 0.0.4
+      entities:
+        - AccountBalance
+      abis:
+        - name: BaseERC20
+          file: ./artifacts/contracts/token/BaseERC20.sol/BaseERC20.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: transfer
+      file: ./subgraph/balanceERC20.ts

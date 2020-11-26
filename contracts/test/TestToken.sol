@@ -12,12 +12,13 @@ contract TestToken is BaseERC20 {
     // ============ Constructor ============
 
     constructor(
-        string memory _name,
-        string memory _symbol
+        string memory name,
+        string memory symbol,
+        uint8         decimals
     )
         public
-        BaseERC20(_name, _symbol)
-    {}
+        BaseERC20(name, symbol, decimals)
+    { }
 
     // ============ Functions ============
 

@@ -1,0 +1,30 @@
+{
+	"LINKUSD": {
+		"collateral_address": "",
+    "oracle_source_address": "",
+    "version": 1,
+		"params": {
+			"collateral_ratio": "2000000000000000000",
+			"liquidation_user_fee": "50000000000000000",
+			"liquidation_arc_fee": "50000000000000000",
+			"collateral_limit": "",
+			"synthetic_limit": "",
+      "position_minimum_collateral" : ""
+		}
+	},
+	"ETHX": {
+		"collateral_address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+    "oracle_source_address": "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
+    "version": 1,
+		"params": {
+      "decimals": 18,
+			"collateral_ratio": "2000000000000000000",
+			"liquidation_user_fee": "100000000000000000",
+			"liquidation_arc_ratio": "100000000000000000",
+			"collateral_limit": "",
+			"synthetic_limit": "300000000000000000000000",
+			"position_minimum_collateral" : "",
+			"interest_rate": ""
+		}
+	}
+}
