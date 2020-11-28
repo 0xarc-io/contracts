@@ -1,4 +1,4 @@
-# ARCx Protocol Contract
+# ARCx Protocol Contracts
 
 A synthetic asset protocol where you can use one or many collateral types to output a single synthetic token. For more information read here: https://docs.google.com/document/d/1bZsaxeCzUSdfrZdnRJj5NXeQ9lJqTbwxw1SXGM_BZvI/edit#.
 
