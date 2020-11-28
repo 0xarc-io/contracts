@@ -94,14 +94,9 @@ export async function deployArcProxy(deployer: Signer, logic: string, admin: str
   return arcProxy;
 }
 
-export async function deployMockSavingsV1(deployer: Signer, core: string, stakeToken: string) {
+export async function deployMockSavingsV1(deployer: Signer) {
   const Contract = await ethers.getContractFactory('MockMozartSavingsV1', deployer);
-  const savingsV1 = await Contract.deploy(
-    core,
-    stakeToken,
-    await deployer.getAddress(),
-    ArcDecimal.new(0),
-  );
+  const savingsV1 = await Contract.deploy();
   return savingsV1 as MockMozartSavingsV1;
 }
 

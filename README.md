@@ -1,41 +1,74 @@
-# ARC
+# ARCx Protocol Contract
 
-Hello! This Readme will be updated soon but for now here's a rundown of the contracts.
+A synthetic asset protocol where you can use one or many collateral types to output a single synthetic token. For more information read here: https://docs.google.com/document/d/1bZsaxeCzUSdfrZdnRJj5NXeQ9lJqTbwxw1SXGM_BZvI/edit#.
 
-## Contracts
 
-### Synthetic Contracts
+## Architecture
 
-Each ARC pool is meant to be an indvidual pool containing two assets, a collateral asset and a synthetic.
-In most places of the codebase, the synthetic is assumed to be a synthetic dollar but it doesn't have to be in practice.
+The two core debt systems are known as Mozart and Spritz. Mozart is our latest debt system and introduces an interest rate & savings functionality (MozartSavings). A synthetic asset is defined by the Synthetic Token that it outputs. A Synthetic can have multiple addresses which are minters. A minter can be a Core system, Savings system or EOA. In Mozart's case, MozartV1.sol is the core system which represents all the state and data for a collateral type. Multiple core systems can be added to a Synthetic token which in effect creates a synth with multiple collaterals backing it.
 
-When thinking about a synthetic pool you have the following contracts:
+We like to view the Core system as a single file which contains all the functionality needed to mint. This implementation is optimised around two key principles, simplicity and efficiency. Apart from an oracle source and collateral token, each core system has no outside dependencies.
 
-1. Proxy - a standard proxy where the implementation can be changed at will. Only fees are held by the proxy.
-2. Core - the implementation logic of the proxy that will manipulate state.
-3. State - containing state about the actual pool itself.
-4. Synthetic Token - the actual synthetic asset which is minted. All collateral is stored inside here.
+## Warning
 
-Users can only interact with the `operateAction` function inside `CoreV1`. That is the main way the state machine can be modified.
+This is experimental, beta software and is provided on an "as is" and "as available" basis. We do not give any
+warranties and will not be liable for any loss, direct or indirect through continued use of this code.
 
-Each time the function is called it will ensure that the position that was modified is collateralised and the system is within it's limits at the moment.
+## Developers
 
-### Staking Contracts
+Our contracts were written in Solidity and our tests in TypeScript.
 
-The second component of the ARC contracts are the Staking contracts which will be used to actually distribute the tokens. ARC tokens will need to be earned by users of the protocol itself. The main contracts are outlined here and their functions.
+If you want to contribute, familiarity with [Hardhat](https://github.com/nomiclabs/hardhat), [Ethers](https://github.com/ethers-io/ethers.js),
+[Waffle](https://github.com/EthWorks/Waffle) and [TypeChain](https://github.com/ethereum-ts/TypeChain) is needed.
 
-The idea here is that users can earn ARC tokens in two ways:
+### Pre Requisites
 
-1. Deposit LINK -> ARC -> Get LINKUSD -> Deposit LINKUSD and USDC to Balancer -> Get BPT -> Stake BPT inside StakingRewardFees -> Earn ARC + BAL
-2. Depsoit ARC + DAI to Balancer -> Get BPT -> Stake BPT inside StakingRewardFees -> Earn ARC + BAL
+Before running any command, make sure to install dependencies:
 
-Here's the breakdown of the contracts themselves:
+```sh
+$ yarn install
+```
 
-1. StakingRewards - this is copied directly from Synthetix and basically allows a rewarder to send reward tokens inside the contract and allow users to deposit staking tokens in order to slowly earn the reward tokens. The main modification here is that 1/3 of the tokens earned by users go to the ARCDAO.
+### Build
 
-2. TokenAccrual - a wrapper inspired from YFI contracts which allows you to claim a portion of any tokens that enter inside the contract
+Compile the smart contracts with Buidler and generate TypeChain artifacts:
 
-3. StakingRewardFees - this inherits from both and is used for users who staked BPT tokens to earn the equivalent value in another token by the user withdrawing the excess from the Staking Rewards, converting them and selling them back.
+```sh
+$ yarn build
+```
 
-4. Distribution - this is how ARCDAO users can claim a portion of the fees earned. This contract will have the shares set by the owner only.
+### Lint Solidity
 
+Lint the Solidity code:
+
+```sh
+$ yarn lint:sol
+```
+
+### Test Unit
+
+Run the unit tests:
+
+```sh
+$ yarn test
+```
+
+### Coverage
+
+Generate the code coverage report:
+
+```sh
+$ yarn coverage
+```
+
+### Clean
+
+Delete the smart contract artifacts, the coverage reports and the Buidler cache:
+
+```sh
+$ yarn clean
+```
+
+## Discussion
+
+For any concerns or feedback, open an issue or visit us on [Discord](https://discord.gg/skwz6je) to discuss.

@@ -16,6 +16,7 @@ import { MozartTestArc } from '@src/MozartTestArc';
 import { MozartSavingsV1 } from '@src/typings/MozartSavingsV1';
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { Signer } from '@ethersproject/abstract-signer';
+import { MockMozartSavingsV1Factory } from '@src/typings';
 
 const COLLATERAL_AMOUNT = ArcNumber.new(200);
 const BORROW_AMOUNT = ArcNumber.new(50);
@@ -38,6 +39,7 @@ describe('MozartSavingsV1', () => {
     arc = ctx.sdks.mozart;
     savings = ctx.contracts.mozart.savingsV1;
 
+    await savings.setPaused(false);
     await arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, ctx.signers.minter);
 
     await Token.approve(
@@ -55,13 +57,9 @@ describe('MozartSavingsV1', () => {
   }
 
   async function updateTime(time: BigNumberish) {
-    await savings.setCurrentTimestamp(time);
+    const mockContract = MockMozartSavingsV1Factory.connect(savings.address, ctx.signers.minter);
+    await mockContract.setCurrentTimestamp(BigNumber.from(time).add(0));
     await arc.updateTime(time);
-  }
-
-  async function updateOwnerIndex() {
-    const contract = await getContract(ctx.signers.admin);
-    await contract.updateIndex();
   }
 
   async function stake(amount: BigNumberish, signer: Signer = ctx.signers.minter) {
@@ -71,6 +69,22 @@ describe('MozartSavingsV1', () => {
     await contract.stake(amount);
   }
 
+  describe('#init', () => {
+    it('should not be callable by non admin', async () => {
+      await expect(
+        savings
+          .connect(ctx.signers.unauthorised)
+          .init('TEST', 'TEST', await savings.synthetic(), { value: 0 }),
+      ).to.reverted;
+    });
+
+    it('should have the correct variables set', async () => {
+      // Check initial index and index last update
+      expect(await savings.indexLastUpdate()).to.equal(0);
+      expect(await savings.savingsIndex()).to.equal(BASE);
+    });
+  });
+
   describe('#setSavingsRate', () => {
     it('should not be settable by anyone', async () => {
       const contract = await getContract(ctx.signers.unauthorised);
@@ -79,35 +93,22 @@ describe('MozartSavingsV1', () => {
 
     it('should be settable by the admin', async () => {
       const contract = await getContract(ctx.signers.admin);
-      await contract.setSavingsRate(5);
-      expect(await contract.getSavingsRate()).to.equal(BigNumber.from(5));
+      await contract.setSavingsRate(ArcNumber.new(5));
+      expect(await contract.exchangeRate()).to.equal(ArcNumber.new(5));
     });
   });
 
   describe('#setArcFee', () => {
     it('should not be settable by anyone', async () => {
       const contract = await getContract(ctx.signers.unauthorised);
-      await expect(contract.setArcFee(ctx.signers.revenue.address, { value: 5 })).to.be.reverted;
+      await expect(contract.setArcFee({ value: 5 })).to.be.reverted;
     });
 
     it('should be settable by the admin', async () => {
       const contract = await getContract(ctx.signers.admin);
-      await contract.setArcFee(ctx.signers.revenue.address, { value: 5 });
-      expect(await contract.arcFee()).to.equal(BigNumber.from(5));
-      expect(await contract.arcFeeDestination()).to.equal(ctx.signers.revenue.address);
-    });
-  });
-
-  describe('#setFullCollateralized', () => {
-    it('should not be settable by anyone', async () => {
-      const contract = await getContract(ctx.signers.unauthorised);
-      await expect(contract.setSavingsRate(5)).to.be.reverted;
-    });
-
-    it('should be settable by the admin', async () => {
-      const contract = await getContract(ctx.signers.admin);
-      await contract.setSavingsRate(5);
-      expect(await contract.getSavingsRate()).to.equal(BigNumber.from(5));
+      const fee = ArcDecimal.new(0.5).value;
+      await contract.setArcFee({ value: fee });
+      expect(await contract.arcFee()).to.equal(fee);
     });
   });
 
@@ -124,7 +125,7 @@ describe('MozartSavingsV1', () => {
     });
 
     it('should not be able to call any function if pause', async () => {
-      await updateOwnerIndex();
+      await savings.updateIndex();
       await savings.setPaused(true);
       await expect(stake(BORROW_AMOUNT)).to.be.reverted;
       await expect(savings.updateIndex()).to.be.reverted;
@@ -132,58 +133,89 @@ describe('MozartSavingsV1', () => {
   });
 
   describe('#stake', () => {
-    it('should not be able to stake more than their balance', async () => {});
+    beforeEach(async () => {
+      await savings.updateIndex();
+    });
 
-    it('should be able to stake additional amounts', async () => {});
+    it('should not be able to stake more than their balance', async () => {
+      await expect(stake(BORROW_AMOUNT, ctx.signers.unauthorised)).to.be.reverted;
+    });
+
+    it('should be able to stake', async () => {
+      await stake(BORROW_AMOUNT, ctx.signers.minter);
+      expect(await savings.balanceOf(ctx.signers.minter.address)).to.equal(BORROW_AMOUNT);
+    });
+
+    it('should be able to stake additional amounts', async () => {
+      await stake(BORROW_AMOUNT.div(2), ctx.signers.minter);
+      await stake(BORROW_AMOUNT.div(2), ctx.signers.minter);
+      expect(await savings.balanceOf(ctx.signers.minter.address)).to.equal(BORROW_AMOUNT);
+    });
   });
 
   describe('#unstake', () => {
-    it('should be able to unstake', async () => {});
+    beforeEach(async () => {
+      await savings.updateIndex();
+      // Create a second depositor
+      await arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, ctx.signers.staker);
+      await stake(BORROW_AMOUNT, ctx.signers.staker);
+    });
 
-    it('should not be able to unstake more than it has staked', async () => {});
+    it('should be able to unstake', async () => {
+      await stake(ArcNumber.new(5));
+      const contract = await getContract(ctx.signers.minter);
+      await contract.unstake(ArcNumber.new(5));
+    });
+
+    it('should not be able to unstake more than it has staked', async () => {
+      await stake(ArcNumber.new(5));
+      const contract = await getContract(ctx.signers.minter);
+      await expect(contract.unstake(ArcNumber.new(10))).to.be.reverted;
+    });
   });
 
   describe('#updateIndex', () => {
     beforeEach(async () => {
       await savings.setSavingsRate(TEN_PERCENT);
-      await savings.setFullyCollateralized(true);
     });
 
-    it('should not be able to update the first index by anyone else', async () => {
-      const contract = await getContract(ctx.signers.unauthorised);
-      await expect(contract.updateIndex()).to.be.reverted;
-    });
-
-    it('the first update index is only callable by the owner', async () => {
-      await updateOwnerIndex();
-      expect(await savings.exchangeRate()).to.equal(BASE);
-      expect(await savings.totalSupplied()).to.equal(0);
-      expect(await savings.indexLastUpdate()).to.equal(0);
-    });
+    it('should accrue the correct amount of interest on the first update', async () => {});
 
     it('should be callabe by anyone', async () => {
-      await updateOwnerIndex();
       await savings.updateIndex();
     });
 
     it('should update the index based on the increased debt issuance & mint more', async () => {
-      await updateOwnerIndex();
+      // Set the initial index to 1
+      await savings.updateIndex();
+      expect(await savings.savingsIndex()).to.equal(BASE);
 
       // Stake the whole borrow amount
       await stake(BORROW_AMOUNT);
 
       // Update to the future with a ~10% APY savings rate
       await updateTime(ONE_YEAR_IN_SECONDS);
+
+      // Call updateIndex() to accumulate the borrows in the core contract
       await arc.core().updateIndex();
 
+      // The savings index should equal to 1 since we havent updated it yet
       expect(await savings.savingsIndex()).to.equal(BASE);
       const beforeSupply = await arc.synthetic().totalSupply();
+      const savingsRate = await savings.savingsRate();
+
+      // Update the savings index
       await savings.updateIndex();
+
       const afterSupply = await arc.synthetic().totalSupply();
-
-      expect(afterSupply.gte(beforeSupply));
-
       const coreBorrowIndex = (await arc.core().getBorrowIndex())[0];
+      const savingsIndex = await savings.savingsIndex();
+
+      expect(savingsIndex).to.equal(savingsRate.mul(ONE_YEAR_IN_SECONDS).add(BASE));
+
+      // The amount minted should have increased
+      expect(afterSupply).to.equal(ArcNumber.bigMul(savingsIndex, beforeSupply));
+
       expect(await savings.savingsIndex()).to.equal(coreBorrowIndex);
       expect(afterSupply).to.equal(ArcNumber.bigMul(coreBorrowIndex, BORROW_AMOUNT));
 
@@ -198,7 +230,7 @@ describe('MozartSavingsV1', () => {
     });
 
     it('should calculate the correct index if someone deposits more funds', async () => {
-      await updateOwnerIndex();
+      await savings.updateIndex();
 
       // Stake the whole borrow amount
       await stake(BORROW_AMOUNT);
@@ -220,7 +252,7 @@ describe('MozartSavingsV1', () => {
     });
 
     it('should calculate the correct index if someone withdraws funds', async () => {
-      await updateOwnerIndex();
+      await savings.updateIndex();
 
       // Stake the whole borrow amount
       await stake(BORROW_AMOUNT);
@@ -243,55 +275,6 @@ describe('MozartSavingsV1', () => {
       expect(postSavingsBalance).to.equal(
         preSavingsBalance.sub(ArcNumber.bigDiv(BORROW_AMOUNT, savingsIndex)),
       );
-    });
-
-    it('should not be able to update beyond the debt hard cap (if fully collateralized)', async () => {
-      await updateOwnerIndex();
-
-      // Stake half the borrow amount
-      await stake(BORROW_AMOUNT.div(2));
-
-      // Update to the future with a ~10% APY savings rate
-      await updateTime(ONE_YEAR_IN_SECONDS);
-      await arc.core().updateIndex();
-      await savings.updateIndex();
-
-      await savings.setSavingsRate(TEN_PERCENT.mul(3));
-
-      // Update to the future by another year
-      await updateTime(ONE_YEAR_IN_SECONDS.mul(2));
-      await arc.core().updateIndex();
-      await savings.updateIndex();
-
-      // Update to the future by another year
-      await updateTime(ONE_YEAR_IN_SECONDS.mul(3));
-      await arc.core().updateIndex();
-      await expect(savings.updateIndex()).to.be.reverted;
-    });
-
-    it('should not be able to update beyond the debt hard cap (if not fully collateralized)', async () => {
-      await updateOwnerIndex();
-      await savings.setFullyCollateralized(false);
-
-      // Stake half the borrow amount
-      await stake(BORROW_AMOUNT.div(2));
-
-      // Update to the future with a ~10% APY savings rate
-      await updateTime(ONE_YEAR_IN_SECONDS);
-      await arc.core().updateIndex();
-      await savings.updateIndex();
-
-      await savings.setSavingsRate(TEN_PERCENT.mul(3));
-
-      // Update to the future by another year
-      await updateTime(ONE_YEAR_IN_SECONDS.mul(2));
-      await arc.core().updateIndex();
-      await savings.updateIndex();
-
-      // Update to the future by another year
-      await updateTime(ONE_YEAR_IN_SECONDS.mul(3));
-      await arc.core().updateIndex();
-      await savings.updateIndex();
     });
   });
 });
