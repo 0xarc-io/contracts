@@ -12,6 +12,7 @@ import { mozartFixture } from '../fixtures';
 import { MozartTestArc } from '@src/MozartTestArc';
 import Token from '@src/utils/Token';
 import { MozartSavingsV1 } from '@src/typings/MozartSavingsV1';
+import { MockMozartSavingsV1Factory } from '@src/typings';
 
 const COLLATERAL_AMOUNT = ArcNumber.new(200);
 const BORROW_AMOUNT = ArcNumber.new(50);
@@ -76,11 +77,14 @@ describe('Mozart.integration', () => {
     await savings.updateIndex();
     await savings.connect(ctx.signers.staker).stake(BORROW_AMOUNT);
 
-    await savings.setCurrentTimestamp(ONE_YEAR_IN_SECONDS);
+    await MockMozartSavingsV1Factory.connect(
+      savings.address,
+      ctx.signers.admin,
+    ).setCurrentTimestamp(ONE_YEAR_IN_SECONDS);
     await savings.updateIndex();
 
     const accruedBalance = await savings.balanceOf(ctx.signers.staker.address);
-    const currentIndex = await savings.getSavingsRate();
+    const currentIndex = await savings.exchangeRate();
     const convertedBalanance = ArcNumber.bigMul(accruedBalance, currentIndex);
 
     await savings.connect(ctx.signers.staker).unstake(convertedBalanance);
