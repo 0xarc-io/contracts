@@ -19,6 +19,14 @@ import {MozartSavingsStorage} from "./MozartSavingsStorage.sol";
 
 import {console} from "hardhat/console.sol";
 
+/**
+ * @title MozartSavingsV1
+ * @author Kerman Kohli
+ * @notice This contract is relatively simple in where you deposit a specific token and then
+ *         users who deposit their tokens earn more of it as more of it gets minted directly to
+ *         this contract. Balances are stored as "principal" amounts and the actual amount
+ *         can be retreived through simply multiplying by the exchangeRate() stored.
+ */
 contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
 
     /* ========== Libraries ========== */
@@ -95,14 +103,6 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
         return 18;
     }
 
-    function exchangeRate()
-        public
-        view
-        returns (uint256)
-    {
-        return savingsIndex;
-    }
-
     function currentTimestamp()
         public
         view
@@ -111,7 +111,7 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
         return block.timestamp;
     }
 
-    function getSavingsRate()
+    function exchangeRate()
         public
         view
         returns (uint256)
@@ -179,6 +179,13 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
 
     /* ========== Public Functions ========== */
 
+    /**
+     * @dev Stake your synthetic tokens to earn interest.
+     *
+     * @notice Can only be called if contracts not paused.
+     *
+     * @param amount The actual number of tokens you'd like to stake (not principal amount)
+     */
     function stake(
         uint256 amount
     )
@@ -224,6 +231,13 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
         );
     }
 
+    /**
+     * @dev Unstake your synthetic tokens and stop earning interest on them.
+     *
+     * @notice Can only be called if contracts not paused.
+     *
+     * @param amount The principal adjusted amount of tokens you'd like to unstake
+     */
     function unstake(
         uint256 amount
     )
@@ -278,6 +292,12 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
 
     }
 
+    /**
+     * @dev Accumulates interest for all capital. Can be called by anyone.
+     *
+     * @notice Can only be called if contracts not paused.
+     *
+     */
     function updateIndex()
         public
         isActive
