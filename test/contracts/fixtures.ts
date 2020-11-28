@@ -52,6 +52,7 @@ export async function mozartFixture(ctx: ITestContext, args?: ITestContextArgs) 
 
   const savingsV1 = MozartSavingsV1Factory.connect(savingsProxy.address, deployer);
   await savingsV1.init('TEST', 'TEST', syntheticProxy.address, { value: 0 });
+  await savingsV1.setPaused(false);
 
   const synthetic = SyntheticTokenV1Factory.connect(syntheticProxy.address, deployer);
   await synthetic.addMinter(coreV1.address, MAX_UINT256);

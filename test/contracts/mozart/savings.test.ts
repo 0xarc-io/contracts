@@ -94,7 +94,7 @@ describe('MozartSavingsV1', () => {
     it('should be settable by the admin', async () => {
       const contract = await getContract(ctx.signers.admin);
       await contract.setSavingsRate(ArcNumber.new(5));
-      expect(await contract.getSavingsRate()).to.equal(ArcNumber.new(5));
+      expect(await contract.exchangeRate()).to.equal(ArcNumber.new(5));
     });
   });
 
