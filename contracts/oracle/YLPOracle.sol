@@ -16,7 +16,7 @@ contract YLPOracle is IOracle {
     constructor()
         public
     {
-        aaveRiskOracle = IRiskOracle(0x4cc91e0c97c5128247e71a5ddf01ca46f4fa8d1d);
+        aaveRiskOracle = IRiskOracle(0x4CC91E0c97c5128247E71a5DdF01CA46f4fa8d1d);
     }
 
     function fetchCurrentPrice()
@@ -24,8 +24,10 @@ contract YLPOracle is IOracle {
         view
         returns (Decimal.D256 memory)
     {
+        // It's safe to typecast here since Aave's risk oracle has a backup oracles
+        // if the price drops below $0 in the original signed int.
         return Decimal.D256({
-            value: aaveRiskOracle.latestAnswer()
+            value: uint256(aaveRiskOracle.latestAnswer())
         });
     }
 }

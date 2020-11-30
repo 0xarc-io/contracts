@@ -5,7 +5,7 @@ pragma solidity ^0.5.16;
 interface IRiskOracle {
 
     function latestAnswer()
-        public
+        external
         view
         returns (int256);
 

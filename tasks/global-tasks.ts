@@ -5,6 +5,7 @@ import { DeploymentType } from '../deployments/src/writeToDeployments';
 import { NetworkParams } from '../deployments/src/deployContract';
 import { ArcProxyInfoFactory } from '@src/typings/ArcProxyInfoFactory';
 import { arrayify } from '@ethersproject/bytes';
+import { SavingsRegistryFactory } from '@src/typings/SavingsRegistryFactory';
 
 task('deploy-global', 'Deploy, update and interact with global contracts').setAction(
   async (taskArgs, hre) => {
@@ -39,7 +40,7 @@ task('deploy-global', 'Deploy, update and interact with global contracts').setAc
 
     const synthRegistryV2 = await deployContract(
       {
-        name: 'SynthRegistryV2',
+        name: 'SynthRegistry',
         source: 'SynthRegistryV2',
         data: new SynthRegistryV2Factory(signer).getDeployTransaction(),
         version: 2,
@@ -47,16 +48,27 @@ task('deploy-global', 'Deploy, update and interact with global contracts').setAc
       },
       networkConfig,
     );
-    console.log(arrayify([]));
+
     const proxyInfo = await deployContract(
       {
         name: 'ArcProxyInfo',
         source: 'ArcProxyInfo',
         data: new ArcProxyInfoFactory(signer).getDeployTransaction(),
         version: 1,
-        type: DeploymentType.global
+        type: DeploymentType.global,
       },
-      networkConfig
+      networkConfig,
+    );
+
+    const savingsRegistry = await deployContract(
+      {
+        name: 'SavingsRegistry',
+        source: 'SavingsRegistry',
+        data: new SavingsRegistryFactory(signer).getDeployTransaction(),
+        version: 1,
+        type: DeploymentType.global,
+      },
+      networkConfig,
     );
   },
 );
