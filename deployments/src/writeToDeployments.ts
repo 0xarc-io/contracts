@@ -10,6 +10,7 @@ export enum DeploymentType {
   synth = 'synth',
   staking = 'staking',
   global = 'global',
+  savings = 'savings',
 }
 
 export interface WriteToDeploymentsParams {

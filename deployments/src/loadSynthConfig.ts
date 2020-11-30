@@ -8,23 +8,39 @@ import { constants, getPathToNetwork } from '../../deployments.config';
  * Load Synth Config
  */
 
-export interface LoadSynthConfigParams {
+export interface LoadConfigParams {
   network: string;
-  synth: string;
+  key: string;
 }
 
-export function loadSynthConfig(params: LoadSynthConfigParams) {
+export function loadSynthConfig(params: LoadConfigParams) {
   console.log(gray(`Loading the synth config for ${params.network.toUpperCase()}...`));
 
   const synthsFile = getPathToNetwork(params.network, constants.SYNTH_CONFIG_FILENAME, path);
   const synthConfig = fs.readJSONSync(synthsFile, {});
 
-  if (!synthConfig.hasOwnProperty(params.synth)) {
-    console.log(red(`${params.synth} does not exist in synth config`));
+  if (!synthConfig.hasOwnProperty(params.key)) {
+    console.log(red(`${params.key} does not exist in synth config`));
     return;
   }
 
-  console.log(blue(`${params.synth} config found!`));
+  console.log(blue(`${params.key} config found!`));
 
-  return synthConfig[params.synth];
+  return synthConfig[params.key];
+}
+
+export function loadSavingsConfig(params: LoadConfigParams) {
+  console.log(gray(`Loading the savings config for ${params.network.toUpperCase()}...`));
+
+  const synthsFile = getPathToNetwork(params.network, constants.SAVINGS_CONFIG_FILENAME, path);
+  const synthConfig = fs.readJSONSync(synthsFile, {});
+
+  if (!synthConfig.hasOwnProperty(params.key)) {
+    console.log(red(`${params.key} does not exist in savings config`));
+    return;
+  }
+
+  console.log(blue(`${params.key} config found!`));
+
+  return synthConfig[params.key];
 }

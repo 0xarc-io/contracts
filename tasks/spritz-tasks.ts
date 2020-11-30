@@ -32,7 +32,7 @@ task('deploy-spritz', 'Deploy the Spritz contracts')
 
     await pruneDeployments(network, signer.provider);
 
-    const synthConfig = loadSynthConfig({ network, synth: synthName });
+    const synthConfig = loadSynthConfig({ network, key: synthName });
     const networkConfig = { network, signer } as NetworkParams;
 
     const coreAddress = await deployContract(

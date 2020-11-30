@@ -6,10 +6,14 @@ pragma experimental ABIEncoderV2;
 import {Decimal} from "../lib/Decimal.sol";
 import {SafeMath} from "../lib/SafeMath.sol";
 
-import {IOracle} from "../oracle/IOracle.sol";
-import {IChainLinkAggregator} from "../oracle/IChainLinkAggregator.sol";
+import {IOracle} from "./IOracle.sol";
+import {IRiskOracle} from "./IRiskOracle.sol";
+import {IYToken} from "./IYToken.sol";
+import {IChainLinkAggregator} from "./IChainLinkAggregator.sol";
 
 contract YUSDOracle is IOracle {
+
+    using SafeMath for uint256;
 
     uint256 constant BASE = 10**18;
 
@@ -20,7 +24,7 @@ contract YUSDOracle is IOracle {
     constructor()
         public
     {
-        yUSDAddress = 0x5dbcf33d8c2e976c6b560249878e6f1491bca25c;
+        yUSDAddress = 0x5dbcF33D8c2E976c6b560249878e6F1491Bca25c;
         aaveRiskOracle = IRiskOracle(0x4CC91E0c97c5128247E71a5DdF01CA46f4fa8d1d);
     }
 
@@ -30,7 +34,11 @@ contract YUSDOracle is IOracle {
         returns (Decimal.D256 memory)
     {
         uint256 yUSDPricePerFullShare = IYToken(yUSDAddress).getPricePerFullShare();
-        uint256 priceOfYPoolToken = aaveRiskOracle.latestAnswer();
+
+        // It's safe to typecast here since Aave's risk oracle has a backup oracles
+        // if the price drops below $0 in the original signed int.
+        uint256 priceOfYPoolToken = uint256(aaveRiskOracle.latestAnswer());
+
         uint256 result = yUSDPricePerFullShare.mul(priceOfYPoolToken).div(BASE);
 
         require(

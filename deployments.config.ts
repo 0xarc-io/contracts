@@ -19,6 +19,7 @@ export const constants = {
   BUILD_FOLDER: 'build',
   CONTRACTS_FOLDER: 'contracts',
   SYNTH_CONFIG_FILENAME: 'synth-config.json',
+  SAVINGS_CONFIG_FILENAME: 'savings-config.json',
   DEPLOYMENT_FILENAME: 'deployed.json',
 };
 
