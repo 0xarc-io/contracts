@@ -13,6 +13,7 @@ import {
 import { ActionOperated, Position, Synth } from '../generated/schema';
 import { Address, BigInt } from '@graphprotocol/graph-ts';
 import { BaseERC20 } from '../generated/templates/BaseERC20/BaseERC20';
+import { IndexUpdated } from '../generated/templates/MozartSavingsV1/MozartSavingsV1';
 
 export function actionOperated(event: ActionOperatedEvent): void {
   handlePosition(event);
@@ -88,6 +89,13 @@ export function pauseStatusUpdated(event: PauseStatusUpdatedEvent): void {
   synth.save();
 }
 
+export function indexUpdated(event: IndexUpdated): void {
+  let synth = createOrLoadMozartSynth(event.address);
+  synth.borrowIndex = event.params.newIndex;
+  synth.indexLastUpdate = event.params.updateTime;
+  synth.save();
+}
+
 export function createOrLoadMozartSynth(address: Address): Synth {
   let synth = Synth.load(address.toHexString());
 
@@ -107,6 +115,10 @@ export function createOrLoadMozartSynth(address: Address): Synth {
     synth.paused = false;
     synth.collateralRatio = core.getCollateralRatio().value;
     synth.interestRate = BigInt.fromI32(0);
+
+    let indexDetails = core.getBorrowIndex();
+    synth.borrowIndex = indexDetails.value0;
+    synth.indexLastUpdate = indexDetails.value1;
 
     let fees = core.getFees();
     synth.liquidationUserFee = fees.value0.value;

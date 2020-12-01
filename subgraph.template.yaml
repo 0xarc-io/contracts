@@ -156,6 +156,8 @@ templates:
           handler: collateralRatioUpdated
         - event: PauseStatusUpdated(bool)
           handler: pauseStatusUpdated
+        - event: IndexUpdated(uint256,uint256)
+          handler: indexUpdated
       file: ./subgraph/mozart.ts
   - kind: ethereum/contract
     name: BaseERC20

@@ -91,6 +91,11 @@ contract MozartV1 is Adminable, MozartStorage {
         bool _status
     );
 
+    event IndexUpdated(
+        int256 newIndex,
+        uint256 lastUpdateTime
+    );
+
     event RateUpdated(uint256 value);
 
     event OracleUpdated(address value);
@@ -497,6 +502,11 @@ contract MozartV1 is Adminable, MozartStorage {
 
         // Set the last time the index was updated to now
         indexLastUpdate = currentTimestamp();
+
+        emit IndexUpdated(
+            borrowIndex,
+            indexLastUpdate
+        );
     }
 
     /* ========== Admin Functions ========== */
