@@ -96,6 +96,7 @@ export function createOrLoadSpritzSynth(address: Address): Synth {
     synth.collateralAddress = stateContract.collateralAsset();
     synth.syntheticAddress = stateContract.syntheticAsset();
     synth.oracle = stateContract.oracle();
+    synth.borrowIndex = BASE;
     synth.paused = false;
 
     let market = stateContract.market();
