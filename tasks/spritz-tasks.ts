@@ -163,16 +163,14 @@ task('deploy-spritz', 'Deploy the Spritz contracts')
       name: 'SynthRegistry',
     });
     try {
-      const synthRegistry = await new SynthRegistryFactory(signer).attach(
-        synthRegistryDetails.address,
-      );
+      const synthRegistry = SynthRegistryFactory.connect(synthRegistryDetails.address, signer);
       await synthRegistry.addSynth(proxyAddress, syntheticAddress);
       console.log(green(`Added to Synth Registry!\n`));
     } catch (error) {
       console.log(red(`Failed to add to Synth Registry!\nReason: ${error}\n`));
     }
 
-    const state = await new StateV1Factory(signer).attach(stateAddress);
+    const state = StateV1Factory.connect(stateAddress, signer);
     await state.setRiskParams({
       collateralLimit: 0,
       syntheticLimit: 0,

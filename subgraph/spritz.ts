@@ -1,12 +1,14 @@
-import { Position, ActionOperated } from '../generated/schema';
+import { Position, ActionOperated, Synth } from '../generated/schema';
 import {
   RiskParamsUpdated,
   MarketParamsUpdated,
   OracleUpdated,
+  StateV1,
 } from '../generated/templates/StateV1/StateV1';
 import { ActionOperated as ActionOperatedEvent } from '../generated/templates/CoreV1/CoreV1';
 import { BASE } from './constants';
-import { createOrLoadV1Synth } from './createOrLoadSynth';
+import { Address, BigInt } from '@graphprotocol/graph-ts';
+import { BaseERC20 } from '../generated/templates/MozartV1/BaseERC20';
 
 export function actionOperated(event: ActionOperatedEvent): void {
   handlePosition(event);
@@ -31,7 +33,7 @@ function handlePosition(event: ActionOperatedEvent): void {
       event.params.updatedPosition.borrowedAsset == 0 &&
       event.params.updatedPosition.collateralAsset == 0
     )
-  ) {  
+  ) {
     let positionId = event.address.toHexString().concat('-').concat(event.params.params.id.toHex());
     let position = Position.load(positionId);
 
@@ -51,7 +53,7 @@ function handlePosition(event: ActionOperatedEvent): void {
 }
 
 export function marketParamsUpdated(event: MarketParamsUpdated): void {
-  let synth = createOrLoadV1Synth(event.address);
+  let synth = createOrLoadSpritzSynth(event.address);
   synth.collateralRatio = event.params.updatedMarket.collateralRatio.value;
 
   let totalFee = event.params.updatedMarket.liquidationArcFee.value.plus(
@@ -66,14 +68,46 @@ export function marketParamsUpdated(event: MarketParamsUpdated): void {
 }
 
 export function riskParamsUpdated(event: RiskParamsUpdated): void {
-  let synth = createOrLoadV1Synth(event.address);
+  let synth = createOrLoadSpritzSynth(event.address);
   synth.collateralLimit = event.params.updatedParams.collateralLimit;
   synth.positionCollateralMinimum = event.params.updatedParams.positionCollateralMinimum;
   synth.save();
 }
 
 export function oracleUpdated(event: OracleUpdated): void {
-  let synth = createOrLoadV1Synth(event.address);
+  let synth = createOrLoadSpritzSynth(event.address);
   synth.oracle = event.params.updatedOracle;
   synth.save();
+}
+
+export function createOrLoadSpritzSynth(address: Address): Synth {
+  let stateContract = StateV1.bind(address);
+  let syntheticToken = BaseERC20.bind(stateContract.syntheticAsset());
+  let collateralToken = BaseERC20.bind(stateContract.collateralAsset());
+
+  let coreAddress = stateContract.core();
+  let synth = Synth.load(coreAddress.toHex());
+
+  if (synth == null) {
+    synth = new Synth(coreAddress.toHex());
+    synth.name = syntheticToken.symbol();
+    synth.collateral = collateralToken.symbol();
+    synth.synthetic = syntheticToken.symbol();
+    synth.collateralAddress = stateContract.collateralAsset();
+    synth.syntheticAddress = stateContract.syntheticAsset();
+    synth.oracle = stateContract.oracle();
+    synth.paused = false;
+
+    let market = stateContract.market();
+    synth.collateralRatio = market.value0.value;
+    synth.liquidationUserFee = market.value1.value;
+    synth.liquidationArcRatio = stateContract.calculateLiquidationSplit().value1.value;
+
+    let limits = stateContract.risk();
+    synth.collateralLimit = limits.value0;
+    synth.positionCollateralMinimum = limits.value2;
+    synth.interestRate = BigInt.fromI32(0);
+  }
+
+  return synth as Synth;
 }
