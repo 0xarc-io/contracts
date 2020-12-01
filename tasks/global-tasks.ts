@@ -40,7 +40,7 @@ task('deploy-global', 'Deploy, update and interact with global contracts').setAc
 
     const synthRegistryV2 = await deployContract(
       {
-        name: 'SynthRegistry',
+        name: 'SynthRegistryV2',
         source: 'SynthRegistryV2',
         data: new SynthRegistryV2Factory(signer).getDeployTransaction(),
         version: 2,

@@ -37,7 +37,13 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
 
     /* ========== Events ========== */
 
-    event IndexUpdated(uint256 updateTime);
+    event IndexUpdated(uint256 updateTime, uint256 newIndex);
+
+    event SavingsRateUpdated(uint256 newRate);
+
+    event ArcFeeUpdated(uint256 feeUpdated);
+
+    event Paused(bool newStatus);
 
     /* ========== Constants ========== */
 
@@ -157,6 +163,8 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
         onlyAdmin
     {
         savingsRate = rate;
+
+        emit SavingsRateUpdated(rate);
     }
 
     function setArcFee(
@@ -166,6 +174,8 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
         onlyAdmin
     {
         arcFee = _fee;
+
+        emit ArcFeeUpdated(_fee.value);
     }
 
     function setPaused(
@@ -175,6 +185,8 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
         onlyAdmin
     {
         paused = status;
+
+        emit Paused(status);
     }
 
     /* ========== Public Functions ========== */
@@ -344,7 +356,7 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
             interestAccrued
         );
 
-        emit IndexUpdated(indexLastUpdate);
+        emit IndexUpdated(indexLastUpdate, savingsIndex);
     }
 
     /* ========== Token Functions ========== */

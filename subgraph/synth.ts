@@ -26,6 +26,7 @@ export function synthV1Added(event: SynthAddedV1): void {
   let synthVersion = returnSynthVersion(tokenContract.name());
 
   if (synthVersion != 1) {
+    log.info(`Teminated indexing: {} {}`, [tokenContract.name(), synthVersion.toString()]);
     return;
   }
 
