@@ -92,7 +92,7 @@ contract MozartV1 is Adminable, MozartStorage {
     );
 
     event IndexUpdated(
-        int256 newIndex,
+        uint256 newIndex,
         uint256 lastUpdateTime
     );
 
