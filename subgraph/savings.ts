@@ -64,6 +64,7 @@ export function createOrLoadSavings(address: Address): Saving {
     savings.savingsRate = savingsContract.savingsRate();
     savings.savingsIndex = savingsContract.exchangeRate();
     savings.syntheticAddress = savingsContract.synthetic();
+    savings.totalSupplied = savingsContract.totalSupplied();
   }
 
   return savings as Saving;

@@ -13,7 +13,7 @@ export const networkPaths = {
   },
 };
 
-export const networks = ['local', 'rinkeby', 'mainnet'];
+export const networks = ['local', 'rinkeby', 'kovan', 'mainnet'];
 
 export const constants = {
   BUILD_FOLDER: 'build',

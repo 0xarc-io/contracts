@@ -248,7 +248,7 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
      *
      * @notice Can only be called if contracts not paused.
      *
-     * @param amount The principal adjusted amount of tokens you'd like to unstake
+     * @param amount The interested adjusted amount of tokens you'd like to unstake
      */
     function unstake(
         uint256 amount
