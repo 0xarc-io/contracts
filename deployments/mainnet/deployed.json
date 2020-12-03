@@ -310,30 +310,50 @@
     "group": "ETHX"
   },
   {
-    "name": "SyntheticProxy",
-    "source": "ArcProxy",
-    "address": "0xB40D0E40adAaC7302D820fBb9544769696c3077d",
-    "txn": "0x5c8c49e459646f95c54eb42fb26e366b342bdafd483875b5f8c4c2e926717c9a",
+    "name": "SynthRegistryV2",
+    "source": "SynthRegistryV2",
+    "address": "0x74dE477b205Ca051B41067e15fD711ad3F7C5c93",
+    "txn": "0x67e2bd16acc4ca5832b73f2bbe248b8f288ff8ef67791d4da27607f131db1280",
+    "network": "mainnet",
+    "version": 2,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "SavingsRegistry",
+    "source": "SavingsRegistry",
+    "address": "0xB898Fe00ad2378aA4b7e3c06ff4a5F337FdE0bC8",
+    "txn": "0xd8ebb9af81aedc5d2178e77bfb186218f4f09814c1b703c2afc2b22c8b571f07",
     "network": "mainnet",
     "version": 1,
-    "type": "synth",
-    "group": "STABLEx"
+    "type": "global",
+    "group": ""
   },
   {
     "name": "MozartCore",
     "source": "MozartV1",
-    "address": "0x846A2A96421F8E7CC43ebA0da5f5e901d1954d8C",
-    "txn": "0xb9094ce86c385e365f98066afdcb33fbe20ce3fed2480b503e116fe7e23efb32",
+    "address": "0x9748175ae4c4eAc5335b8041678c8d2418E9840c",
+    "txn": "0x7892142a430d557b99b88fa0799de0a623e390902e6738d6a6979813958122b3",
     "network": "mainnet",
     "version": 1,
     "type": "synth",
     "group": ""
   },
   {
+    "name": "SyntheticProxy",
+    "source": "ArcProxy",
+    "address": "0x8B4B6b2E331D33ce004286C6bd1E1395e2837775",
+    "txn": "0xa33955f15f0db9e343bc617bbd72741429603dacc27354f5000ff3d345b1540c",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth",
+    "group": "STABLEx"
+  },
+  {
     "name": "Oracle",
     "source": "YUSDOracle",
-    "address": "0xfde955F80f6e260970838BdB0F47279FAFf153c4",
-    "txn": "0xaefd95e073b0630c9093f37c5e155024b0f12f1eb60f32ad023de46925334ea4",
+    "address": "0x4E9cd2B8F633D2974d3686237e8F347eA83fa61b",
+    "txn": "0x2cda08f123fbb17e63e3f4e034ae5fc53384e153b685b84a82e03284d300b541",
     "network": "mainnet",
     "version": 1,
     "type": "synth",
@@ -342,21 +362,11 @@
   {
     "name": "CoreProxy",
     "source": "ArcProxy",
-    "address": "0x50E625821435e953Acd82dF154fdB5c7173D35dF",
-    "txn": "0x0e6e9f9998bb9579635a7fe972af63896b047ba9c20d95d6007df7db9a9d3b2c",
+    "address": "0xd5237EAc01B9204fC9a43273CF216C954F4B35da",
+    "txn": "0xb90e31e087a94780b3f2c8b26a2ba4b97864707aba342b1a758804392fd6ad2d",
     "network": "mainnet",
     "version": 1,
     "type": "synth",
     "group": "yUSD-STABLEx"
-  },
-  {
-    "name": "SynthRegistryV2",
-    "source": "SynthRegistryV2",
-    "address": "0xD912DC07dCC07fc32574C0EC1F2705D089367431",
-    "txn": "0xed2a3dff0f9680cd9238eec08a36b20558a25cc6e1fcafd422028a212d3a6f13",
-    "network": "mainnet",
-    "version": 2,
-    "type": "global",
-    "group": ""
   }
 ]

@@ -11,7 +11,7 @@ require('dotenv').config();
 /* eslint-disable @typescript-eslint/no-var-requires */
 const hre = require('hardhat');
 
-const networks = ['mainnet', 'rinkeby'];
+const networks = ['mainnet'];
 
 describe('Mozart.deployments', () => {
   networks.forEach((network) => {
@@ -26,7 +26,7 @@ function testNetwork(network: string) {
   const isOwnerSet = hreNetwork.users?.owner?.length > 0;
   const ultimateOwner = hreNetwork.users?.owner.toLowerCase();
 
-  const synths = ['ETHX'];
+  const synths = ['ETHX', 'yUSD-STABLEx'];
 
   synths.forEach((synth) => {
     const coreProxyDetails = loadContract({
@@ -39,7 +39,7 @@ function testNetwork(network: string) {
     const syntheticProxyDetails = loadContract({
       network,
       type: DeploymentType.synth,
-      group: synth,
+      group: synth.split('-').length == 1 ? synth : synth.split('-')[1],
       name: 'SyntheticProxy',
     });
 
