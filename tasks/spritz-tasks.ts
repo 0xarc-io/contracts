@@ -74,7 +74,7 @@ task('deploy-spritz', 'Deploy the Spritz contracts')
 
     let oracleAddress = '';
 
-    if (!synthConfig.oracle_source_address) {
+    if (!synthConfig.oracle_link_aggregator_address) {
       oracleAddress = await deployContract(
         {
           name: 'Oracle',
@@ -92,7 +92,7 @@ task('deploy-spritz', 'Deploy the Spritz contracts')
           name: 'Oracle',
           source: 'MockOracle',
           data: new ChainLinkOracleFactory(signer).getDeployTransaction(
-            synthConfig.oracle_source_address,
+            synthConfig.oracle_link_aggregator_address,
           ),
           version: 1,
           type: DeploymentType.synth,

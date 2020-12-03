@@ -24,6 +24,7 @@ import {
   SyntheticTokenV1Factory,
   SynthRegistryV2Factory,
   TestTokenFactory,
+  YUSDOracleFactory,
 } from '@src/typings';
 
 task('deploy-mozart-synthetic', 'Deploy the Mozart synthetic token')
@@ -126,7 +127,7 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
 
     let oracleAddress = '';
 
-    if (!synthConfig.oracle_source_address) {
+    if (!synthConfig.oracle_link_aggregator_address) {
       oracleAddress = await deployContract(
         {
           name: 'Oracle',
@@ -138,13 +139,13 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
         },
         networkConfig,
       );
-    } else {
+    } else if (synthConfig.oracle_link_aggregator_address) {
       oracleAddress = await deployContract(
         {
           name: 'Oracle',
           source: 'ChainLinkOracle',
           data: new ChainLinkOracleFactory(signer).getDeployTransaction(
-            synthConfig.oracle_source_address,
+            synthConfig.oracle_link_aggregator_address,
           ),
           version: 1,
           type: DeploymentType.synth,
@@ -152,6 +153,24 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
         },
         networkConfig,
       );
+    } else if (synthConfig.oracle_source == 'YUSDOracle') {
+      oracleAddress = await deployContract(
+        {
+          name: 'Oracle',
+          source: 'YUSDOracle',
+          data: new YUSDOracleFactory(signer).getDeployTransaction(),
+          version: 1,
+          type: DeploymentType.synth,
+          group: synthName,
+        },
+        networkConfig,
+      );
+    } else {
+      throw red('No valid oracle config was found!');
+    }
+
+    if (!oracleAddress || oracleAddress.length == 0) {
+      throw red('No valid oracle was deployed!');
     }
 
     const coreProxyAddress = await deployContract(
