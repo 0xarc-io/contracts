@@ -260,7 +260,7 @@
     "group": ""
   },
   {
-    "name": "MozartCore",
+    "name": "MozartCore-WithoutUpdateIndexEvent",
     "source": "MozartV1",
     "address": "0x23cc14E9c638aC942a04e2633c7b49fe5b6e68f8",
     "txn": "0x07066994d6b15568883d5af5e0f5acd7b9f2bfd844e8379978e9612bf16f7794",
