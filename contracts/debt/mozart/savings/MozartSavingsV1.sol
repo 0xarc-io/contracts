@@ -327,10 +327,12 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
         // 1. Mint the amount of interest accrued
 
         // If there have been no updates then return
-        if (
-            currentTimestamp() == indexLastUpdate ||
-            savingsRate == 0
-        ) {
+        if (currentTimestamp() == indexLastUpdate) {
+            return;
+        }
+
+        if (savingsRate == 0) {
+            indexLastUpdate = currentTimestamp();
             return;
         }
 
