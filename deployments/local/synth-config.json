@@ -1,7 +1,7 @@
 {
 	"LINKUSD": {
 		"collateral_address": "",
-    "oracle_source_address": "",
+    "oracle_link_aggregator_address": "",
     "version": 1,
 		"params": {
 
@@ -15,7 +15,7 @@
 	},
 	"ETHX": {
 		"collateral_address": "",
-    "oracle_source_address": "",
+    "oracle_link_aggregator_address": "",
     "version": 1,
 		"params": {
       "decimals": 18,
@@ -29,7 +29,7 @@
   },
   "YUSD-STABLEX": {
 		"collateral_address": "",
-    "oracle_source_address": "",
+    "oracle_link_aggregator_address": "",
     "version": 1,
 		"params": {
       "decimals": 18,
