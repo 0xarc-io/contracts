@@ -240,7 +240,7 @@
     "group": "LINKUSD"
   },
   {
-    "name": "SynthRegistryV2",
+    "name": "SynthRegistryV2-ETHx",
     "source": "SynthRegistryV2",
     "address": "0x01ed4757F67C94060b2416B5650319832782C69E",
     "txn": "0xabc69db879486b089413d78d39b9e74a8bd9a853566ede404677de302b3d4dea",
@@ -348,5 +348,15 @@
     "version": 1,
     "type": "synth",
     "group": "yUSD-STABLEx"
+  },
+  {
+    "name": "SynthRegistryV2",
+    "source": "SynthRegistryV2",
+    "address": "0xD912DC07dCC07fc32574C0EC1F2705D089367431",
+    "txn": "0xed2a3dff0f9680cd9238eec08a36b20558a25cc6e1fcafd422028a212d3a6f13",
+    "network": "mainnet",
+    "version": 2,
+    "type": "global",
+    "group": ""
   }
 ]

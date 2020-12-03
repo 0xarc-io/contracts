@@ -14,7 +14,7 @@ import {
 
 import { CoreV1 } from '../generated/templates/CoreV1/CoreV1';
 
-import { log } from '@graphprotocol/graph-ts';
+import { Address, log } from '@graphprotocol/graph-ts';
 import { returnSynthVersion } from './constants';
 import { BaseERC20 } from '../generated/SynthRegistry/BaseERC20';
 
@@ -42,6 +42,13 @@ export function synthV1Added(event: SynthAddedV1): void {
 
 export function synthV2Added(event: SynthAddedV2): void {
   log.info('Version indexing: 2', []);
+  log.info('Proxy address: {}', [event.params.proxy.toHexString()]);
+  log.info('Synth address: {}', [event.params.synth.toHexString()]);
+
+  if (event.params.synth == Address.fromString('0x846a2a96421f8e7cc43eba0da5f5e901d1954d8c')) {
+    log.info('Incorrect synth event...', []);
+    return;
+  }
 
   BaseERC20Template.create(event.params.synth);
   MozartV1Template.create(event.params.proxy);

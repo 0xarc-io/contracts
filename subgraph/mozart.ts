@@ -5,15 +5,14 @@ import {
   RateUpdated as RateUpdatedEvent,
   OracleUpdated as OracleUpdatedEvent,
   CollateralRatioUpdated as CollateralRatioUpdatedEvent,
-  PrinterUpdated as PrinterUpdatedEvent,
   PauseStatusUpdated as PauseStatusUpdatedEvent,
+  IndexUpdated as IndexUpdatedEvent,
   MozartV1,
 } from '../generated/templates/MozartV1/MozartV1';
 
 import { ActionOperated, Position, Synth } from '../generated/schema';
 import { Address, BigInt } from '@graphprotocol/graph-ts';
 import { BaseERC20 } from '../generated/templates/BaseERC20/BaseERC20';
-import { IndexUpdated } from '../generated/templates/MozartSavingsV1/MozartSavingsV1';
 
 export function actionOperated(event: ActionOperatedEvent): void {
   handlePosition(event);
@@ -89,18 +88,19 @@ export function pauseStatusUpdated(event: PauseStatusUpdatedEvent): void {
   synth.save();
 }
 
-export function indexUpdated(event: IndexUpdated): void {
+export function indexUpdated(event: IndexUpdatedEvent): void {
   let synth = createOrLoadMozartSynth(event.address);
   synth.borrowIndex = event.params.newIndex;
-  synth.indexLastUpdate = event.params.updateTime;
+  synth.indexLastUpdate = event.params.lastUpdateTime;
   synth.save();
 }
 
 export function createOrLoadMozartSynth(address: Address): Synth {
   let synth = Synth.load(address.toHexString());
-
   let core = MozartV1.bind(address);
+
   let syntheticAddress = core.getSyntheticAsset();
+
   let syntheticToken = BaseERC20.bind(syntheticAddress);
   let collateralToken = BaseERC20.bind(core.getCollateralAsset());
 
@@ -115,6 +115,10 @@ export function createOrLoadMozartSynth(address: Address): Synth {
     synth.paused = false;
     synth.collateralRatio = core.getCollateralRatio().value;
     synth.interestRate = BigInt.fromI32(0);
+
+    if (synth.collateral == 'yyDAI+yUSDC+yUSDT+yTUSD') {
+      synth.collateral = 'yUSD';
+    }
 
     let indexDetails = core.getBorrowIndex();
     synth.borrowIndex = indexDetails.value0;
