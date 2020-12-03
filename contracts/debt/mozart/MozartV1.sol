@@ -603,7 +603,7 @@ contract MozartV1 is Adminable, MozartStorage {
         uint256 collateralAmount,
         uint256 borrowAmount
     )
-        internal
+        private
         isAuthorized(positionId)
         returns (MozartTypes.Position memory)
     {
