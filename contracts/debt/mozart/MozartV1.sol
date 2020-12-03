@@ -478,11 +478,13 @@ contract MozartV1 is Adminable, MozartStorage {
     function updateIndex()
         public
     {
-        if (
-            currentTimestamp() == indexLastUpdate ||
-            totalBorrowed == 0 ||
-            interestRate == 0
-        ) {
+        if (currentTimestamp() == indexLastUpdate) {
+            return;
+        }
+
+        if (totalBorrowed == 0 || interestRate == 0) {
+            indexLastUpdate = currentTimestamp();
+            emit IndexUpdated(borrowIndex, indexLastUpdate);
             return;
         }
 
