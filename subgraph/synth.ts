@@ -42,11 +42,11 @@ export function synthV1Added(event: SynthAddedV1): void {
 
 export function synthV2Added(event: SynthAddedV2): void {
   log.info('Version indexing: 2', []);
-  log.info('Proxy address: {}', [event.params.proxy.toHexString()]);
-  log.info('Synth address: {}', [event.params.synth.toHexString()]);
 
-  if (event.params.synth == Address.fromString('0x846a2a96421f8e7cc43eba0da5f5e901d1954d8c')) {
-    log.info('Incorrect synth event...', []);
+  if (
+    event.params.synth.equals(Address.fromString('0xb40d0e40adaac7302d820fbb9544769696c3077d')) ||
+    event.params.proxy.equals(Address.fromString('0x50e625821435e953acd82df154fdb5c7173d35df'))
+  ) {
     return;
   }
 
