@@ -308,5 +308,45 @@
     "version": 1,
     "type": "synth",
     "group": "ETHX"
+  },
+  {
+    "name": "SyntheticProxy",
+    "source": "ArcProxy",
+    "address": "0xB40D0E40adAaC7302D820fBb9544769696c3077d",
+    "txn": "0x5c8c49e459646f95c54eb42fb26e366b342bdafd483875b5f8c4c2e926717c9a",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth",
+    "group": "STABLEx"
+  },
+  {
+    "name": "MozartCore",
+    "source": "MozartV1",
+    "address": "0x846A2A96421F8E7CC43ebA0da5f5e901d1954d8C",
+    "txn": "0xb9094ce86c385e365f98066afdcb33fbe20ce3fed2480b503e116fe7e23efb32",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth",
+    "group": ""
+  },
+  {
+    "name": "Oracle",
+    "source": "YUSDOracle",
+    "address": "0xfde955F80f6e260970838BdB0F47279FAFf153c4",
+    "txn": "0xaefd95e073b0630c9093f37c5e155024b0f12f1eb60f32ad023de46925334ea4",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth",
+    "group": "yUSD-STABLEx"
+  },
+  {
+    "name": "CoreProxy",
+    "source": "ArcProxy",
+    "address": "0x50E625821435e953Acd82dF154fdB5c7173D35dF",
+    "txn": "0x0e6e9f9998bb9579635a7fe972af63896b047ba9c20d95d6007df7db9a9d3b2c",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth",
+    "group": "yUSD-STABLEx"
   }
 ]

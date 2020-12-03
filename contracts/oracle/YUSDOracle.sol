@@ -26,6 +26,7 @@ contract YUSDOracle is IOracle {
         public
     {
         yUSDAddress = 0x5dbcF33D8c2E976c6b560249878e6F1491Bca25c;
+        /* solium-disable-next-line */
         chainlinkETHUSDAggregator = IChainLinkAggregator(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
         aaveRiskOracle = IRiskOracle(0x4CC91E0c97c5128247E71a5DdF01CA46f4fa8d1d);
     }
