@@ -1,7 +1,7 @@
 {
-  "STABLEX":{
-    "name": "Interest Bearing STABLEx",
-    "symbol": "ibSTABLEX",
+  "STABLEx":{
+    "name": "ARC Interest Bearing STABLEx",
+    "symbol": "ibSTABLEx",
     "savings_rate": "0"
   }
 }
