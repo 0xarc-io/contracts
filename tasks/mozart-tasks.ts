@@ -74,6 +74,11 @@ task('deploy-mozart-synthetic', 'Deploy the Mozart synthetic token')
 
     const synthetic = SyntheticTokenV1Factory.connect(syntheticProxyAddress, signer);
 
+    if ((await synthetic.name()).length > 0) {
+      console.log(magenta(`Synthetic init() function has already been called\n`));
+      return;
+    }
+
     console.log(yellow(`* Calling synthetic init()...`));
     try {
       await synthetic.init(name, symbol, 1, { gasLimit: 1000000 });
@@ -127,7 +132,7 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
 
     let oracleAddress = '';
 
-    if (!synthConfig.oracle_link_aggregator_address) {
+    if (!synthConfig.oracle_link_aggregator_address && !synthConfig.oracle_source) {
       oracleAddress = await deployContract(
         {
           name: 'Oracle',
