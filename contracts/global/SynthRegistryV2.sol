@@ -10,8 +10,8 @@ import {IERC20} from "../token/IERC20.sol";
 
 contract SynthRegistryV2 is Ownable {
 
-    // Available Synths which can be used with the system
-    address[] public availableSynths;
+    // Available cores which can be used with the system
+    address[] public availableCores;
 
     // Synth address (proxy) to synthetic token
     mapping(address => address) public synths;
@@ -23,12 +23,12 @@ contract SynthRegistryV2 is Ownable {
 
     /* ========== View Functions ========== */
 
-    function getAllSynths()
+    function getAllCores()
         public
         view
         returns (address[] memory)
     {
-        return availableSynths;
+        return availableCores;
     }
 
     /* ========== Mutative Functions ========== */
@@ -51,7 +51,7 @@ contract SynthRegistryV2 is Ownable {
             "Synth already exists"
         );
 
-        availableSynths.push(synthetic);
+        availableCores.push(core);
         synths[core] = synthetic;
 
         emit SynthAdded(core, synthetic);
@@ -77,12 +77,12 @@ contract SynthRegistryV2 is Ownable {
         // Save the address we're removing for emitting the event at the end.
         address syntheticToRemove = synths[core];
 
-        // Remove the synth from the availableSynths array.
-        for (uint i = 0; i < availableSynths.length; i++) {
-            if (address(availableSynths[i]) == core) {
-                delete availableSynths[i];
-                availableSynths[i] = availableSynths[availableSynths.length - 1];
-                availableSynths.length--;
+        // Remove the synth from the availableCores array.
+        for (uint i = 0; i < availableCores.length; i++) {
+            if (address(availableCores[i]) == core) {
+                delete availableCores[i];
+                availableCores[i] = availableCores[availableCores.length - 1];
+                availableCores.length--;
 
                 break;
             }

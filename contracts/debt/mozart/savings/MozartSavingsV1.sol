@@ -37,7 +37,13 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
 
     /* ========== Events ========== */
 
-    event IndexUpdated(uint256 updateTime);
+    event IndexUpdated(uint256 updateTime, uint256 newIndex);
+
+    event SavingsRateUpdated(uint256 newRate);
+
+    event ArcFeeUpdated(uint256 feeUpdated);
+
+    event Paused(bool newStatus);
 
     /* ========== Constants ========== */
 
@@ -111,14 +117,6 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
         return block.timestamp;
     }
 
-    function exchangeRate()
-        public
-        view
-        returns (uint256)
-    {
-        return savingsRate;
-    }
-
     function balanceOf(
         address user
     )
@@ -148,6 +146,18 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
         return _allowances[owner][spender];
     }
 
+    function currentSavingsIndex()
+        public
+        view
+        returns (uint256)
+    {
+        // Check the time since the last update, multiply to get interest generated
+        uint256 totalInterestAccumulated = savingsRate.mul(currentTimestamp().sub(indexLastUpdate));
+
+        // Set the new index based on how much accrued
+        return savingsIndex.add(totalInterestAccumulated);
+    }
+
     /* ========== Admin Functions ========== */
 
     function setSavingsRate(
@@ -157,6 +167,8 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
         onlyAdmin
     {
         savingsRate = rate;
+
+        emit SavingsRateUpdated(rate);
     }
 
     function setArcFee(
@@ -166,6 +178,8 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
         onlyAdmin
     {
         arcFee = _fee;
+
+        emit ArcFeeUpdated(_fee.value);
     }
 
     function setPaused(
@@ -175,6 +189,8 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
         onlyAdmin
     {
         paused = status;
+
+        emit Paused(status);
     }
 
     /* ========== Public Functions ========== */
@@ -191,6 +207,7 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
     )
         public
         isActive
+        returns (uint256)
     {
         // CHECKS:
         // 1. Update the index to make sure we use the correct
@@ -229,6 +246,8 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
             address(this),
             amount
         );
+
+        return savingsIndex;
     }
 
     /**
@@ -236,13 +255,14 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
      *
      * @notice Can only be called if contracts not paused.
      *
-     * @param amount The principal adjusted amount of tokens you'd like to unstake
+     * @param amount The interested adjusted amount of tokens you'd like to unstake
      */
     function unstake(
         uint256 amount
     )
         public
         isActive
+        returns (uint256)
     {
         // CHECKS:
         // 1. Update the index to make sure we can use the correct
@@ -290,6 +310,7 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
             amount
         );
 
+        return savingsIndex;
     }
 
     /**
@@ -301,6 +322,7 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
     function updateIndex()
         public
         isActive
+        returns (uint256)
     {
         // CHECKS:
         // 1. If there has been no time since the last update OR no savings rate set, return
@@ -315,18 +337,18 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
         // 1. Mint the amount of interest accrued
 
         // If there have been no updates then return
-        if (
-            currentTimestamp() == indexLastUpdate ||
-            savingsRate == 0
-        ) {
+        if (currentTimestamp() == indexLastUpdate) {
             return;
         }
 
-        // Check the time since the last update, multiply to get interest generated
-        uint256 totalInterestAccumulated = savingsRate.mul(currentTimestamp().sub(indexLastUpdate));
+        if (savingsRate == 0) {
+            indexLastUpdate = currentTimestamp();
+            emit IndexUpdated(indexLastUpdate, savingsIndex);
+            return;
+        }
 
         // Set the new index based on how much accrued
-        savingsIndex = savingsIndex.add(totalInterestAccumulated);
+        savingsIndex = latestSavingsIndex();
 
         uint256 existingSupply = totalSupplied;
         totalSupplied = totalSupplied.mul(savingsIndex).div(BASE);
@@ -344,7 +366,9 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
             interestAccrued
         );
 
-        emit IndexUpdated(indexLastUpdate);
+        emit IndexUpdated(indexLastUpdate, savingsIndex);
+
+        return savingsIndex;
     }
 
     /* ========== Token Functions ========== */

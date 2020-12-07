@@ -4,7 +4,6 @@
     "oracle_link_aggregator_address": "",
     "version": 1,
 		"params": {
-
 			"collateral_ratio": "2000000000000000000",
 			"liquidation_user_fee": "50000000000000000",
 			"liquidation_arc_fee": "50000000000000000",
@@ -15,7 +14,7 @@
 	},
 	"ETHX": {
 		"collateral_address": "",
-    "oracle_link_aggregator_address": "",
+    "oracle_link_aggregator_address": "0x8A753747A1Fa494EC906cE90E9f37563A8AF630e",
     "version": 1,
 		"params": {
       "decimals": 18,
@@ -24,7 +23,8 @@
 			"liquidation_arc_ratio": "50000000000000000",
 			"collateral_limit": "",
 			"synthetic_limit": "",
-			"position_minimum_collateral" : ""
+			"position_minimum_collateral" : "",
+			"interest_rate": ""
 		}
   },
   "YUSD-STABLEX": {
@@ -33,7 +33,7 @@
     "version": 1,
 		"params": {
       "decimals": 18,
-			"collateral_ratio": "2000000000000000000",
+			"collateral_ratio": "1100000000000000000",
 			"liquidation_user_fee": "50000000000000000",
 			"liquidation_arc_ratio": "50000000000000000",
 			"collateral_limit": "",

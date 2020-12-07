@@ -3,6 +3,7 @@ module.exports = {
 		'interfaces',
 		'test',
 		'global',
+		'oracle',
 		'ArcProxy.sol',
 		'ArcProxyInfo.sol',
 		'token/ArcxToken.sol',

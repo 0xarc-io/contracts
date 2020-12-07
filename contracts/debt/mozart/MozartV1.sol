@@ -91,6 +91,11 @@ contract MozartV1 is Adminable, MozartStorage {
         bool _status
     );
 
+    event IndexUpdated(
+        uint256 newIndex,
+        uint256 lastUpdateTime
+    );
+
     event RateUpdated(uint256 value);
 
     event OracleUpdated(address value);
@@ -473,11 +478,13 @@ contract MozartV1 is Adminable, MozartStorage {
     function updateIndex()
         public
     {
-        if (
-            currentTimestamp() == indexLastUpdate ||
-            totalBorrowed == 0 ||
-            interestRate == 0
-        ) {
+        if (currentTimestamp() == indexLastUpdate) {
+            return;
+        }
+
+        if (totalBorrowed == 0 || interestRate == 0) {
+            indexLastUpdate = currentTimestamp();
+            emit IndexUpdated(borrowIndex, indexLastUpdate);
             return;
         }
 
@@ -497,6 +504,11 @@ contract MozartV1 is Adminable, MozartStorage {
 
         // Set the last time the index was updated to now
         indexLastUpdate = currentTimestamp();
+
+        emit IndexUpdated(
+            borrowIndex,
+            indexLastUpdate
+        );
     }
 
     /* ========== Admin Functions ========== */
@@ -593,7 +605,7 @@ contract MozartV1 is Adminable, MozartStorage {
         uint256 collateralAmount,
         uint256 borrowAmount
     )
-        internal
+        private
         isAuthorized(positionId)
         returns (MozartTypes.Position memory)
     {
