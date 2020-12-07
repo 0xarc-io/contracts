@@ -11,7 +11,7 @@ import {
   loadSynthConfig,
   pruneDeployments,
 } from '../deployments/src';
-import { MAX_UINT256 } from '../src/constants';
+import { MAX_UINT256, FIVE_PERCENT } from '../src/constants';
 import { loadSavingsConfig } from '../deployments/src/loadSynthConfig';
 import { SavingsRegistryFactory } from '@src/typings/SavingsRegistryFactory';
 
@@ -359,6 +359,11 @@ task('deploy-mozart-savings', 'Deploy a Mozart Savings contract instance')
 
     // Do this to trigger an event on The Graph
     await savings.setArcFee({ value: 0 });
+
+    if ((await signer.provider.getNetwork()).chainId != 1) {
+      await savings.setPaused(false);
+      await savings.setSavingsRate(FIVE_PERCENT);
+    }
   });
 
 // @TODO: Scenarios to plan for:
