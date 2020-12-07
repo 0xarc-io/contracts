@@ -83,6 +83,14 @@ const config: HardhatUserConfig = {
         owner: '0xa8C01EfD74A206Bb2d769b6b3a5759508c83F20C',
       },
     },
+    kovan: {
+      url: getNetworkUrl('kovan'),
+      accounts: [params.testnet_private_key],
+      gasPrice: 1000000000,
+      users: {
+        owner: '0xa8C01EfD74A206Bb2d769b6b3a5759508c83F20C',
+      },
+    },
     mainnet: {
       url: getNetworkUrl('mainnet'),
       accounts: [params.deploy_private_key],

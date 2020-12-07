@@ -8,6 +8,8 @@ type AccountBalance @entity {
 type Synth @entity {
   id: ID!
   name: String!
+  collateral: String
+  synthetic: String
   collateralAddress: Bytes!
   syntheticAddress: Bytes!
   paused: Boolean!
@@ -18,6 +20,21 @@ type Synth @entity {
   collateralLimit: BigInt
   positionCollateralMinimum: BigInt
   interestRate: BigInt
+  borrowIndex: BigInt
+  indexLastUpdate: BigInt
+}
+
+type Saving @entity {
+  id: ID!
+  name: String!
+  symbol: String!
+  syntheticAddress: Bytes!
+  paused: Boolean
+  indexLastUpdate: BigInt
+  arcFee: BigInt
+  savingsRate: BigInt
+  savingsIndex: BigInt
+  totalSupplied: BigInt
 }
 
 type UserSlashed @entity {

@@ -32,7 +32,7 @@ task('deploy-spritz', 'Deploy the Spritz contracts')
 
     await pruneDeployments(network, signer.provider);
 
-    const synthConfig = loadSynthConfig({ network, synth: synthName });
+    const synthConfig = loadSynthConfig({ network, key: synthName });
     const networkConfig = { network, signer } as NetworkParams;
 
     const coreAddress = await deployContract(
@@ -74,7 +74,7 @@ task('deploy-spritz', 'Deploy the Spritz contracts')
 
     let oracleAddress = '';
 
-    if (!synthConfig.oracle_source_address) {
+    if (!synthConfig.oracle_link_aggregator_address) {
       oracleAddress = await deployContract(
         {
           name: 'Oracle',
@@ -92,7 +92,7 @@ task('deploy-spritz', 'Deploy the Spritz contracts')
           name: 'Oracle',
           source: 'MockOracle',
           data: new ChainLinkOracleFactory(signer).getDeployTransaction(
-            synthConfig.oracle_source_address,
+            synthConfig.oracle_link_aggregator_address,
           ),
           version: 1,
           type: DeploymentType.synth,
@@ -163,16 +163,14 @@ task('deploy-spritz', 'Deploy the Spritz contracts')
       name: 'SynthRegistry',
     });
     try {
-      const synthRegistry = await new SynthRegistryFactory(signer).attach(
-        synthRegistryDetails.address,
-      );
+      const synthRegistry = SynthRegistryFactory.connect(synthRegistryDetails.address, signer);
       await synthRegistry.addSynth(proxyAddress, syntheticAddress);
       console.log(green(`Added to Synth Registry!\n`));
     } catch (error) {
       console.log(red(`Failed to add to Synth Registry!\nReason: ${error}\n`));
     }
 
-    const state = await new StateV1Factory(signer).attach(stateAddress);
+    const state = StateV1Factory.connect(stateAddress, signer);
     await state.setRiskParams({
       collateralLimit: 0,
       syntheticLimit: 0,

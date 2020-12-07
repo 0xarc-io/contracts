@@ -35,8 +35,10 @@ export async function deployContract(
 
   const tx = deployParams.data;
 
-  tx.gasLimit = networkParams.gasLimit || deployParams.data.gasLimit;
-  tx.gasPrice = networkParams.gasPrice || deployParams.data.gasPrice;
+  if (networkParams.gasPrice !== 'auto') {
+    tx.gasLimit = networkParams.gasLimit || deployParams.data.gasLimit;
+    tx.gasPrice = networkParams.gasPrice || deployParams.data.gasPrice;
+  }
 
   const details = `${deployParams.name} | ${deployParams.source} | ${
     deployParams.group || 'no-group'
@@ -62,7 +64,7 @@ export async function deployContract(
       address: receipt.contractAddress,
       txn: signedTx.hash,
       network: networkParams.network,
-      version: 1,
+      version: deployParams.version,
       type: deployParams.type,
       group: deployParams.group || '',
     });

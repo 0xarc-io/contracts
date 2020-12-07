@@ -6,11 +6,11 @@ schema:
 dataSources:
   - kind: ethereum/contract
     name: SynthRegistry
-    network: rinkeby
+    network: {{network}}
     source:
-      address: '0x14E3eCaAcE77F194f689B210F6695d843E77BB64'
+      address: '{{synthRegistry}}'
       abi: SynthRegistry
-      startBlock: 7165639
+      startBlock: {{startBlock}}
     mapping:
       kind: ethereum/events
       language: wasm/assemblyscript
@@ -31,11 +31,11 @@ dataSources:
       file: ./subgraph/synth.ts
   - kind: ethereum/contract
     name: SynthRegistryV2
-    network: rinkeby
+    network: {{network}}
     source:
-      address: '0x0530b67D7Ea71378b988ABf84F16b3D656416bDF'
+      address: '{{synthRegistryV2}}'
       abi: SynthRegistryV2
-      startBlock: 7165639
+      startBlock: {{startBlock}}
     mapping:
       kind: ethereum/events
       language: wasm/assemblyscript
@@ -54,10 +54,33 @@ dataSources:
         - event: SynthAdded(address,address)
           handler: synthV2Added
       file: ./subgraph/synth.ts
+  - kind: ethereum/contract
+    name: SavingsRegistry
+    network: {{network}}
+    source:
+      address: '{{savingsRegistry}}'
+      abi: SavingsRegistry
+      startBlock: {{startBlock}}
+    mapping:
+      kind: ethereum/events
+      language: wasm/assemblyscript
+      apiVersion: 0.0.4
+      entities:
+        - AccountBalance
+        - Saving
+      abis:
+        - name: SavingsRegistry
+          file: ./artifacts/contracts/global/SavingsRegistry.sol/SavingsRegistry.json
+        - name: BaseERC20
+          file: ./artifacts/contracts/token/BaseERC20.sol/BaseERC20.json
+      eventHandlers:
+        - event: SavingsAdded(address,address)
+          handler: savingsAdded
+      file: ./subgraph/savings.ts
 templates:
   - kind: ethereum/contract
     name: CoreV1
-    network: rinkeby
+    network: {{network}}
     source:
       abi: CoreV1
     mapping:
@@ -75,10 +98,10 @@ templates:
       eventHandlers:
         - event: ActionOperated(uint8,(uint256,uint256,uint256),(address,uint8,uint8,(bool,uint128),(bool,uint128)))
           handler: actionOperated
-      file: ./subgraph/d1.ts
+      file: ./subgraph/spritz.ts
   - kind: ethereum/contract
     name: StateV1
-    network: rinkeby
+    network: {{network}}
     source:
       abi: StateV1
     mapping:
@@ -99,10 +122,10 @@ templates:
           handler: riskParamsUpdated
         - event: OracleUpdated(address)
           handler: oracleUpdated
-      file: ./subgraph/d1.ts
+      file: ./subgraph/spritz.ts
   - kind: ethereum/contract
     name: MozartV1
-    network: rinkeby
+    network: {{network}}
     source:
       abi: MozartV1
     mapping:
@@ -133,10 +156,12 @@ templates:
           handler: collateralRatioUpdated
         - event: PauseStatusUpdated(bool)
           handler: pauseStatusUpdated
-      file: ./subgraph/d2.ts
+        - event: IndexUpdated(uint256,uint256)
+          handler: indexUpdated
+      file: ./subgraph/mozart.ts
   - kind: ethereum/contract
     name: BaseERC20
-    network: rinkeby
+    network: {{network}}
     source:
       abi: BaseERC20
     mapping:
@@ -152,3 +177,29 @@ templates:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: transfer
       file: ./subgraph/balanceERC20.ts
+  - kind: ethereum/contract
+    name: MozartSavingsV1
+    network: {{network}}
+    source:
+      abi: MozartSavingsV1
+    mapping:
+      kind: ethereum/events
+      language: wasm/assemblyscript
+      apiVersion: 0.0.4
+      entities:
+        - Saving
+      abis:
+        - name: MozartSavingsV1
+          file: ./artifacts/contracts/debt/mozart/savings/MozartSavingsV1.sol/MozartSavingsV1.json
+        - name: BaseERC20
+          file: ./artifacts/contracts/token/BaseERC20.sol/BaseERC20.json
+      eventHandlers:
+        - event: IndexUpdated(uint256,uint256)
+          handler: indexUpdated
+        - event: SavingsRateUpdated(uint256)
+          handler: savingsRateUpdated
+        - event: ArcFeeUpdated(uint256)
+          handler: arcFeeUpdated
+        - event: Paused(bool)
+          handler: paused
+      file: ./subgraph/savings.ts

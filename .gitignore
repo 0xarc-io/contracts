@@ -13,3 +13,4 @@ generated
 50.json
 .env
 .coverage_contracts
+subgraph.yaml
