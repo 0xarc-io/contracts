@@ -1,8 +1,26 @@
+import fs from 'fs-extra';
+
 import { loadDeployedContracts, getDeploymentsFilePath } from './loadDeployedContracts';
 import { asyncForEach } from '@src/utils/asyncForEach';
 import { red, magenta } from 'chalk';
-import fs from 'fs-extra';
 import { Provider } from '@ethersproject/providers';
+import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import { NetworkParams } from './deployContract';
+
+export async function loadDetails(taskArgs: any, hre: HardhatRuntimeEnvironment) {
+  const network = hre.network.name;
+  const signer = (await hre.ethers.getSigners())[0];
+
+  const networkDetails = hre.config.networks[network];
+  const networkConfig = { network, signer, gasPrice: networkDetails.gasPrice } as NetworkParams;
+
+  return {
+    network,
+    signer,
+    networkConfig,
+    networkDetails,
+  };
+}
 
 export async function pruneDeployments(network: string, provider: Provider) {
   const entries = loadDeployedContracts(network);

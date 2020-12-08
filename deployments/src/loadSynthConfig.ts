@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs-extra';
 
 import { gray, red, blue } from 'chalk';
-import { constants, getPathToNetwork } from '../../deployments.config';
+import { constants, getPathToNetwork } from '../config';
 
 /*
  * Load Synth Config

@@ -1,19 +1,8 @@
 import { red } from 'chalk';
 import { PlatformPath } from 'path';
 
-// load the data in explicitly (not programmatically) so webpack knows what to bundle
-export const networkPaths = {
-  rinkeby: {
-    deployment: require('./deployments/rinkeby/deployed.json'),
-    synthConfig: require('./deployments/rinkeby/synth-config.json'),
-  },
-  mainnet: {
-    deployment: require('./deployments/mainnet/deployed.json'),
-    synthConfig: require('./deployments/mainnet/synth-config.json'),
-  },
-};
-
 export const networks = ['local', 'rinkeby', 'kovan', 'mainnet'];
+export const deploymentTestNetworks = ['mainnet'];
 
 export const constants = {
   BUILD_FOLDER: 'build',
@@ -33,5 +22,5 @@ export function getPathToNetwork(
     throw red(`** ${network} is not a valid network **`);
   }
 
-  return path.join(__dirname, 'deployments', network, file);
+  return path.join(__dirname, network, file);
 }
