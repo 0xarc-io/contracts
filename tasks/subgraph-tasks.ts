@@ -6,7 +6,7 @@ import shell from 'shelljs';
 
 import { task } from 'hardhat/config';
 import { gray } from 'chalk';
-import { constants, getPathToNetwork } from '../deployments.config';
+import { constants, getPathToNetwork } from '../deployments/config';
 import { loadContract } from '../deployments/src/loadContracts';
 import { DeploymentType } from '../deployments/src/writeToDeployments';
 
