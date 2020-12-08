@@ -48,84 +48,84 @@ contract MozartStorageV1 {
     mapping (address => bool) internal globalOperators;
 
     /**
-     * @notice The instance of the oracle that reports prices for this synth
+     * @dev The instance of the oracle that reports prices for this synth
      */
-    IOracle public oracle;
+    IOracle internal oracle;
 
     /**
-     * @notice If a colalteral asset is used that has less than 18 decimal places
+     * @dev If a colalteral asset is used that has less than 18 decimal places
      *      a precision scalar is required to calcualte the corect values.
      */
-    uint256 public precisionScalar;
+    uint256 internal precisionScalar;
 
     /**
-     * @notice The actual address of the collateral used for this core system.
+     * @dev The actual address of the collateral used for this core system.
      */
-    address public collateralAsset;
+    address internal collateralAsset;
 
     /**
-     * @notice The address of the synthetic token where this core is approved to mint from
+     * @dev The address of the synthetic token where this core is approved to mint from
      */
-    address public syntheticAsset;
+    address internal syntheticAsset;
 
     /**
-     * @notice The actual amount of collateral provided to the protocol. This amount
+     * @dev The actual amount of collateral provided to the protocol. This amount
      *      will be multiplied by the precision scalar if the token has less than 18 d.p
      */
-    uint256 public totalSupplied;
+    uint256 internal totalSupplied;
 
     /**
-     * @notice An account of the total amount being borrowed by all depositors. This includes
+     * @dev An account of the total amount being borrowed by all depositors. This includes
      *      the amount of interest accrued.
      */
-    uint256 public totalBorrowed;
+    uint256 internal totalBorrowed;
 
     /**
-     * @notice The accumulated borrow index. Each time a borrows, their borrow amount is expressed
+     * @dev The accumulated borrow index. Each time a borrows, their borrow amount is expressed
      *      in relation to the borrow index.
      */
-    uint256 public borrowIndex;
+    uint256 internal borrowIndex;
 
     /**
-     * @notice The last time the updateIndex() function was called. This helps to determine how much
+     * @dev The last time the updateIndex() function was called. This helps to determine how much
      *      interest has accrued in the contract since a user interacted with the protocol.
      */
-    uint256 public indexLastUpdate;
+    uint256 internal indexLastUpdate;
 
     /**
-     * @notice The interest rate charged to borrowers. Expressed as the interest rate per second and 18 d.p
+     * @dev The interest rate charged to borrowers. Expressed as the interest rate per second and 18 d.p
      */
-    uint256 public interestRate;
+    uint256 internal interestRate;
 
     /**
-     * @notice The ratio of how much collateral should have relative to it's debt
+     * @dev The ratio of how much collateral should have relative to it's debt
      */
-    Decimal.D256 public collateralRatio;
+    Decimal.D256 internal collateralRatio;
 
     /**
-     * @notice How much should the liquidation penalty be, expressed as a decimal.
+     * @dev How much should the liquidation penalty be, expressed as a decimal.
      */
-    Decimal.D256 public liquidationUserFee;
+    Decimal.D256 internal liquidationUserFee;
 
     /**
-     * @notice How much of the profit acquired from a liquidation should ARC receive
+     * @dev How much of the profit acquired from a liquidation should ARC receive
      */
-    Decimal.D256 public liquidationArcRatio;
+    Decimal.D256 internal liquidationArcRatio;
 
     /**
      * @notice Which address can set interest rates for this contract
      */
-    address public interestSetter;
+    address internal interestSetter;
 
     /**
-     * @notice The limit of how much collateral can be deposited from this contract.
+     * @dev The limit of how much collateral can be deposited from this contract.
      */
-    uint256 public collateralLimit;
+    uint256 internal collateralLimit;
 
     /**
-     * @notice The amount of collateral a new position should hvae at the minimum
+     * @dev The amount of collateral a new position should hvae at the minimum
      */
-    uint256 public positionCollateralMinimum;
+    uint256 internal positionCollateralMinimum;
 }
 
 contract MozartStorage is MozartStorageV1 { /* solium-disable-line no-empty-blocks */ }
