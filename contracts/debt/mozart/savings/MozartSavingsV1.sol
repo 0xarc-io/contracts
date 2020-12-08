@@ -338,13 +338,13 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
 
         // If there have been no updates then return
         if (currentTimestamp() == indexLastUpdate) {
-            return;
+            return savingsIndex;
         }
 
         if (savingsRate == 0) {
             indexLastUpdate = currentTimestamp();
             emit IndexUpdated(indexLastUpdate, savingsIndex);
-            return;
+            return savingsIndex;
         }
 
         // Set the new index based on how much accrued

@@ -98,5 +98,165 @@
     "network": "rinkeby",
     "version": 4,
     "type": "synth"
+  },
+  {
+    "name": "SynthRegistryV2",
+    "source": "SynthRegistryV2",
+    "address": "0x72F624829B7cf400BA5AD12199833094857F9Fe9",
+    "txn": "0xc6d670ddebb9610a48ed911f85533c91bb19aa08f6de7eb00729b12d967f4243",
+    "network": "rinkeby",
+    "version": 2,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "ArcProxyInfo",
+    "source": "ArcProxyInfo",
+    "address": "0xF2034828A8157b2403d96fed10476680524D2C77",
+    "txn": "0x3394a8d0045b7f10c7f4f2c70cfaf2e81dd91cb9710483ced81a600fd347ee3a",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "SavingsRegistry",
+    "source": "SavingsRegistry",
+    "address": "0x670e0344E0fc2CBf94bB9eED634f5a2Cb7A755f0",
+    "txn": "0x1010f016d7d0fd08efb7beff8ea45436bcdcc74d081a84d8c4a27bc8975e51ef",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "Oracle",
+    "source": "MockOracle",
+    "address": "0x6bC5D931F5D7234aE636DF39f0191cA98B2bc3FD",
+    "txn": "0xd86be37e5ce8f00ad809134647782a6c5c28db0dab87246b2311a1455525125f",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": "LINKUSD"
+  },
+  {
+    "name": "MozartCore",
+    "source": "MozartV1",
+    "address": "0x2Ae4CF589A6de20765B71dA047B6c62eAE683aC3",
+    "txn": "0xd5eacf87504a6497b17809af62b8cfdd4abc837dcb2e56ea3871579a5e4248c8",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": ""
+  },
+  {
+    "name": "CollateralToken",
+    "source": "TestToken",
+    "address": "0xEB5ed00C962749b557571b869EB494AA1194A246",
+    "txn": "0x36102eccc458ed7159458ac94ce2810a99adca25551300e2b687f3f518c68302",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": "ETHX"
+  },
+  {
+    "name": "SyntheticToken",
+    "source": "SyntheticTokenV1",
+    "address": "0x839bBdD150234CA646C72CE3bd3D0d794aecA8Ed",
+    "txn": "0xa8f02eddd2747760ae213501765ea46868cfa23ce08e10bbb93764cce294d03c",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": ""
+  },
+  {
+    "name": "SyntheticProxy",
+    "source": "ArcProxy",
+    "address": "0x9dF9bD1a0fF5a64f653C8bb60B08d435B6a468aE",
+    "txn": "0xa861ede7f71009a1696e225885bd00cdbb855872c6b8547a00350dca4100601d",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": "ETHX"
+  },
+  {
+    "name": "Oracle",
+    "source": "ChainLinkOracle",
+    "address": "0x6743544520A28511EF8366208d5908021a53301b",
+    "txn": "0xed86d2982652e6d318b18c9ce5b5606229f0231ad6a4b44b4ff09611df4bed8d",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": "ETHX"
+  },
+  {
+    "name": "CoreProxy",
+    "source": "ArcProxy",
+    "address": "0xeC27c8Ee6eE5950de3fBfFF37f50C6EBF5a9F7C1",
+    "txn": "0x94e520018588bffccf38766fc4bcf8b2382c3aa9274f177ccfb950044f22ee9e",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": "ETHX"
+  },
+  {
+    "name": "SyntheticProxy",
+    "source": "ArcProxy",
+    "address": "0xaC6a43e78c55B4774bfD1db5A982F2805D7d1C81",
+    "txn": "0xd7a853a464cbdff7baa9779e60ef9f5bd540ada0fe38d0ba03628c285d73e892",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": "STABLEx"
+  },
+  {
+    "name": "CollateralToken",
+    "source": "TestToken",
+    "address": "0x8B8c1Ad953dFc13A990D1726E124f020111f9690",
+    "txn": "0xc2b5ed58bf880fa289e482239f61fbb9b8c3d36b70d793ee29c23c539f4b3a38",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": "yUSD-STABLEx"
+  },
+  {
+    "name": "Oracle",
+    "source": "MockOracle",
+    "address": "0xDD77c388b6E2FEdcad5d9536a13D3233A6B20Deb",
+    "txn": "0x4be7675fc25c3cfa224fc83236bb7fb019154195046800bc1d3bd1d7f9ba732a",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": "yUSD-STABLEx"
+  },
+  {
+    "name": "CoreProxy",
+    "source": "ArcProxy",
+    "address": "0xCa5F0eCc66f92a820c4C5B89Bf336aCc15CA496e",
+    "txn": "0x08a211b68cbf3c496ff98583f8c643be1efc908e73480fbe5f298a65dfea7d92",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": "yUSD-STABLEx"
+  },
+  {
+    "name": "MozartSavings",
+    "source": "MozartSavingsV1",
+    "address": "0xe387d2a74506Ec157db08ebEA6fF01384D2531C0",
+    "txn": "0x7d6b3c8e57ebfb30797f9dd97b35feb2930d0541e047797c1abc54c466ebdc7d",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "savings",
+    "group": ""
+  },
+  {
+    "name": "SavingsProxy",
+    "source": "ArcProxy",
+    "address": "0x8ED0B6EcddB914A689a882E9538C7d01e297AB32",
+    "txn": "0x52bb227402bba6756562d3409234f01363994591169546f44d92ff0e1db9fb21",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "savings",
+    "group": "STABLEx"
   }
 ]
