@@ -479,26 +479,25 @@ contract MozartV1 is Adminable, MozartStorage {
     */
     function updateIndex()
         public
+        returns (uint256)
     {
         if (currentTimestamp() == indexLastUpdate) {
-            return;
+            return borrowIndex;
         }
 
         if (totalBorrowed == 0 || interestRate == 0) {
             indexLastUpdate = currentTimestamp();
-            emit IndexUpdated(borrowIndex, indexLastUpdate);
-            return;
+
+            emit IndexUpdated(
+                borrowIndex,
+                indexLastUpdate
+            );
+
+            return borrowIndex;
         }
 
-        // First we multiply the interest rate (expressed in rate/sec) by the time since
-        // the last update. This result represents the proportional amount of interest to
-        // apply to the system at a whole
-        uint256 interestAccumulated = interestRate.mul(currentTimestamp().sub(indexLastUpdate));
-
-        // Then we multiply the existing index by the newly generated rate so that we can
-        // get a compounded interest rate.
-        // ie. interestAccumulated = 0.1, borrowIndex = 1.1, new borrowIndex = 0.1 + 1.1 = 1.2
-        borrowIndex = borrowIndex.add(interestAccumulated);
+        // Set the borrowed index to the latest index
+        borrowIndex = currentBorrowIndex();
 
         // Update the total borrows based on the proportional rate of interest applied
         // to the entire system
@@ -511,6 +510,8 @@ contract MozartV1 is Adminable, MozartStorage {
             borrowIndex,
             indexLastUpdate
         );
+
+        return borrowIndex;
     }
 
     /* ========== Admin Functions ========== */
@@ -1131,6 +1132,114 @@ contract MozartV1 is Adminable, MozartStorage {
         returns (Decimal.D256 memory)
     {
         return oracle.fetchCurrentPrice();
+    }
+
+    function getSyntheticAsset()
+        external
+        view
+        returns (address)
+    {
+        return address(syntheticAsset);
+    }
+
+    function getCollateralAsset()
+        external
+        view
+        returns (address)
+    {
+        return address(collateralAsset);
+    }
+
+    function getCurrentOracle()
+        external
+        view
+        returns (address)
+    {
+        return address(oracle);
+    }
+
+    function getInterestSetter()
+        external
+        view
+        returns (address)
+    {
+        return interestSetter;
+    }
+
+    function currentBorrowIndex()
+        public
+        view
+        returns (uint256)
+    {
+        // First we multiply the interest rate (expressed in rate/sec) by the time since
+        // the last update. This result represents the proportional amount of interest to
+        // apply to the system at a whole
+        uint256 interestAccumulated = interestRate.mul(currentTimestamp().sub(indexLastUpdate));
+
+        // Then we multiply the existing index by the newly generated rate so that we can
+        // get a compounded interest rate.
+        // ie. interestAccumulated = 0.1, borrowIndex = 1.1, new borrowIndex = 0.1 + 1.1 = 1.2
+        return borrowIndex.add(interestAccumulated);
+    }
+
+    function getBorrowIndex()
+        external
+        view
+        returns (uint256, uint256)
+    {
+        return (borrowIndex, indexLastUpdate);
+    }
+
+    function getCollateralRatio()
+        external
+        view
+        returns (Decimal.D256 memory)
+    {
+        return collateralRatio;
+    }
+
+    function getTotals()
+        external
+        view
+        returns (
+            uint256,
+            uint256
+        )
+    {
+        return (
+            totalSupplied,
+            totalBorrowed
+        );
+    }
+
+    function getLimits()
+        external
+        view
+        returns (uint256, uint256)
+    {
+        return (collateralLimit, positionCollateralMinimum);
+    }
+
+    function getInterestRate()
+        external
+        view
+        returns (uint256)
+    {
+        return interestRate;
+    }
+
+    function getFees()
+        external
+        view
+        returns (
+            Decimal.D256 memory _liquidationUserFee,
+            Decimal.D256 memory _liquidationArcRatio
+        )
+    {
+        return (
+            liquidationUserFee,
+            liquidationArcRatio
+        );
     }
 
     function isPositionOperator(
