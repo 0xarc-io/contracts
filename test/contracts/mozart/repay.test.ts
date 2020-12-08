@@ -132,13 +132,14 @@ describe('Mozart.operateAction(Repay)', () => {
     expect(collateralDelta.sign).to.be.false;
 
     // Double check to make sure we're under-collateralized
-    expect(await arc.synth().core.isCollateralized(position)).to.be.false;
+    const price = await arc.core().getCurrentPrice();
+    expect(await arc.synth().core.isCollateralized(position, price)).to.be.false;
 
     await arc.repay(0, BORROW_AMOUNT.div(2), 0, ctx.signers.minter);
     position = await arc.synth().core.getPosition(0);
 
     // We should be happy campers now
-    expect(await arc.synth().core.isCollateralized(position)).to.be.true;
+    expect(await arc.synth().core.isCollateralized(position, price)).to.be.true;
   });
 
   it('should not be able to withdraw if undercollateralized', async () => {

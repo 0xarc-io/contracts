@@ -171,12 +171,14 @@ describe('Mozart.operateAction(Liquidate)', () => {
     await arc.core().updateIndex();
 
     let position = await arc.getPosition(0);
-    expect(await arc.core().isCollateralized(position)).to.be.false;
+    let price = await arc.core().getCurrentPrice();
+    expect(await arc.core().isCollateralized(position, price)).to.be.false;
 
     // Increase the price
     await arc.updatePrice(ArcDecimal.new(1.1).value);
     position = await arc.getPosition(0);
-    expect(await arc.core().isCollateralized(position)).to.be.true;
+    price = await arc.core().getCurrentPrice();
+    expect(await arc.core().isCollateralized(position, price)).to.be.true;
 
     await attemptLiquidation(0);
   });

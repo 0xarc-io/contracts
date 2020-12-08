@@ -45,7 +45,8 @@ describe('Mozart.operateAction(Borrow)', () => {
 
     const postPosition = await arc.getPosition(0);
     expect(postPosition.borrowedAmount.value).to.equal(BORROW_AMOUNT.mul(2));
-    expect(await arc.synth().core.isCollateralized(postPosition)).to.be.true;
+    const price = await arc.synth().core.getCurrentPrice();
+    expect(await arc.synth().core.isCollateralized(postPosition, price)).to.be.true;
   });
 
   it('should update the index', async () => {
