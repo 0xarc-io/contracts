@@ -84,7 +84,7 @@ describe('Mozart.integration', () => {
     await savings.updateIndex();
 
     const accruedBalance = await savings.balanceOf(ctx.signers.staker.address);
-    const currentIndex = await savings.exchangeRate();
+    const currentIndex = await savings.savingsIndex();
     const convertedBalanance = ArcNumber.bigMul(accruedBalance, currentIndex);
 
     await savings.connect(ctx.signers.staker).unstake(convertedBalanance);

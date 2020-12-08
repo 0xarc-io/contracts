@@ -29,12 +29,17 @@ function testNetwork(network: string) {
   const synths = ['ETHX', 'yUSD-STABLEx'];
 
   synths.forEach((synth) => {
-    const coreProxyDetails = loadContract({
-      network,
-      type: DeploymentType.synth,
-      group: synth,
-      name: 'CoreProxy',
-    });
+    let coreProxyDetails;
+    try {
+      coreProxyDetails = loadContract({
+        network,
+        type: DeploymentType.synth,
+        group: synth,
+        name: 'CoreProxy',
+      });
+    } catch {
+      return;
+    }
 
     const syntheticProxyDetails = loadContract({
       network,
