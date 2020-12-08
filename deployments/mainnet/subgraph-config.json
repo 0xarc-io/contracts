@@ -2,6 +2,6 @@
   "network": "mainnet",
   "startBlock": 10812831,
   "synthRegistry": "0x372a4D34e9E9d96656F101aFf06a4a455396C974",
-  "synthRegistryV2": "0x01ed4757F67C94060b2416B5650319832782C69E",
-  "savingsRegistry": "0x0000000000000000000000000000000000000000"
+  "synthRegistryV2": "0xd1e2f7bD1faD82D466c6e86e10CA337691340356",
+  "savingsRegistry": "0xe5E6f1fb055c68587b2182b3843213D4A88Fe4dB"
 }
