@@ -257,6 +257,44 @@ export class MozartArc {
     return result;
   }
 
+  async approveSynthetic(
+    amount: BigNumberish,
+    caller: Signer = this.signer,
+    synth: Synth = this.availableSynths()[0],
+    overrides?: TransactionOverrides,
+  ) {
+    const existingAllowance = await synth.synthetic.allowance(
+      await caller.getAddress(),
+      synth.core.address,
+    );
+
+    if (existingAllowance.gte(amount)) {
+      return;
+    }
+
+    const tx = await synth.synthetic.approve(synth.core.address, amount, overrides);
+    return tx.wait();
+  }
+
+  async approveCollateral(
+    amount: BigNumberish,
+    caller: Signer = this.signer,
+    synth: Synth = this.availableSynths()[0],
+    overrides?: TransactionOverrides,
+  ) {
+    const existingAllowance = await synth.collateral.allowance(
+      await caller.getAddress(),
+      synth.core.address,
+    );
+
+    if (existingAllowance.gte(amount)) {
+      return;
+    }
+
+    const tx = await synth.collateral.approve(synth.core.address, amount, overrides);
+    return tx.wait();
+  }
+
   async isCollateralized(positionId: BigNumberish, synth: Synth = this.availableSynths()[0]) {
     const position = await synth.core.getPosition(positionId);
     const price = await synth.core.getCurrentPrice();

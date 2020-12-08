@@ -53,13 +53,26 @@ export class SpritzArc {
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
   ) {
-    await Token.approve(
+    const token = IERC20Factory.connect(this.collateralAsset.address, this.signer);
+
+    const existingAllowance = await token.allowance(
+      await this.signer.getAddress(),
+      this.core.address,
+    );
+
+    if (existingAllowance.gte(amount)) {
+      return;
+    }
+
+    const tx = await Token.approve(
       this.collateralAsset.address,
       caller || this.signer,
       this.core.address,
       amount,
       overrides,
     );
+
+    return tx.wait();
   }
 
   async approveSynthetic(
@@ -67,13 +80,26 @@ export class SpritzArc {
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
   ) {
-    await Token.approve(
+    const token = IERC20Factory.connect(this.syntheticAsset.address, this.signer);
+
+    const existingAllowance = await token.allowance(
+      await this.signer.getAddress(),
+      this.core.address,
+    );
+
+    if (existingAllowance.gte(amount)) {
+      return;
+    }
+
+    const tx = await Token.approve(
       this.syntheticAsset.address,
       caller || this.signer,
       this.core.address,
       amount,
       overrides,
     );
+
+    return tx.wait();
   }
 
   async openPosition(
