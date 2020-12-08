@@ -404,6 +404,9 @@ contract MozartV1 is Adminable, MozartStorage {
 
         MozartTypes.Position memory operatedPosition;
 
+        // Get the price now since certain contracts consume a lot.
+        Decimal.D256 memory currentPrice = oracle.fetchCurrentPrice();
+
         // Update the index to calculate how much interest has accrued
         // And then subsequently mint more of the synth to the printer
         updateIndex();
@@ -411,28 +414,27 @@ contract MozartV1 is Adminable, MozartStorage {
         if (operation == Operation.Open) {
             (operatedPosition, params.id) = openPosition(
                 params.amountOne,
-                params.amountTwo
-            );
-
-            require(
-                params.amountOne >= positionCollateralMinimum,
-                "operateAction(): must exceed minimum collateral amount"
+                params.amountTwo,
+                currentPrice
             );
         } else if (operation == Operation.Borrow) {
             operatedPosition = borrow(
                 params.id,
                 params.amountOne,
-                params.amountTwo
+                params.amountTwo,
+                currentPrice
             );
         } else if (operation == Operation.Repay) {
             operatedPosition = repay(
                 params.id,
                 params.amountOne,
-                params.amountTwo
+                params.amountTwo,
+                currentPrice
             );
         } else if (operation == Operation.Liquidate) {
             operatedPosition = liquidate(
-                params.id
+                params.id,
+                currentPrice
             );
         } else if (operation == Operation.TransferOwnership) {
             operatedPosition = transferOwnership(
@@ -446,7 +448,7 @@ contract MozartV1 is Adminable, MozartStorage {
         // Ensure that the operated action is collateralised again, unless a liquidation
         // has occured in which case the position might be under-collataralised
         require(
-            isCollateralized(operatedPosition) == true || operation == Operation.Liquidate,
+            isCollateralized(operatedPosition, currentPrice) == true || operation == Operation.Liquidate,
             "operateAction(): the operated position is undercollateralised"
         );
 
@@ -551,11 +553,16 @@ contract MozartV1 is Adminable, MozartStorage {
     /**
      * @dev Open a new position.
      *
+     * @param collateralAmount Collateral deposit amount
+     * @param borrowAmount How much would you'd like to borrow/mint
+     * @param currentPrice The current price of the collateral
+     *
      * @return The new position and the ID of the opened position
      */
     function openPosition(
         uint256 collateralAmount,
-        uint256 borrowAmount
+        uint256 borrowAmount,
+        Decimal.D256 memory currentPrice
     )
         internal
         returns (MozartTypes.Position memory, uint256)
@@ -566,6 +573,11 @@ contract MozartV1 is Adminable, MozartStorage {
         // EFFECTS:
         // 1. Create a new Position struct with the basic fields filled out and save it to storage
         // 2. Call `borrow()`
+
+        require(
+            collateralAmount >= positionCollateralMinimum,
+            "openPosition(): must exceed minimum collateral amount"
+        );
 
         MozartTypes.Position memory newPosition = MozartTypes.Position({
             owner: msg.sender,
@@ -584,7 +596,8 @@ contract MozartV1 is Adminable, MozartStorage {
         newPosition = borrow(
             positionId,
             collateralAmount,
-            borrowAmount
+            borrowAmount,
+            currentPrice
         );
 
         return (
@@ -599,11 +612,13 @@ contract MozartV1 is Adminable, MozartStorage {
      * @param positionId ID of the position you'd like to borrow against
      * @param collateralAmount Collateral deposit amount
      * @param borrowAmount How much would you'd like to borrow/mint
+     * @param currentPrice The current price of the collateral
      */
     function borrow(
         uint256 positionId,
         uint256 collateralAmount,
-        uint256 borrowAmount
+        uint256 borrowAmount,
+        Decimal.D256 memory currentPrice
     )
         private
         isAuthorized(positionId)
@@ -633,7 +648,6 @@ contract MozartV1 is Adminable, MozartStorage {
         // Get the current position
         MozartTypes.Position storage position = positions[positionId];
 
-        Decimal.D256 memory currentPrice = oracle.fetchCurrentPrice();
         // Increase the user's collateral amount & increase the global supplied amount
         position = setCollateralAmount(
             positionId,
@@ -701,11 +715,13 @@ contract MozartV1 is Adminable, MozartStorage {
      * @param positionId ID of the position to repay
      * @param repayAmount Amount of debt to repay
      * @param withdrawAmount Amount of collateral to withdraw
+     * @param currentPrice The current price of the collateral
      */
     function repay(
         uint256 positionId,
         uint256 repayAmount,
-        uint256 withdrawAmount
+        uint256 withdrawAmount,
+        Decimal.D256 memory currentPrice
     )
         private
         isAuthorized(positionId)
@@ -728,8 +744,6 @@ contract MozartV1 is Adminable, MozartStorage {
         // 2. Transfer the collateral back to the user
 
         MozartTypes.Position storage position = positions[positionId];
-
-        Decimal.D256 memory currentPrice = oracle.fetchCurrentPrice();
 
         uint256 scaledWithdrawAmount = withdrawAmount.mul(precisionScalar);
 
@@ -801,9 +815,11 @@ contract MozartV1 is Adminable, MozartStorage {
      *      for the collateral they have deposited inside their position.
      *
      * @param positionId ID of the position to liquidate
+     * @param currentPrice The current price of the collateral
      */
     function liquidate(
-        uint256 positionId
+        uint256 positionId,
+        Decimal.D256 memory currentPrice
     )
         private
         returns (MozartTypes.Position memory)
@@ -836,12 +852,12 @@ contract MozartV1 is Adminable, MozartStorage {
 
         // Ensure that the position is not collateralized
         require(
-            isCollateralized(position) == false,
+            isCollateralized(position, currentPrice) == false,
             "liquidatePosition(): position is collateralised"
         );
 
         // Get the liquidation price of the asset (discount for liquidator)
-        Decimal.D256 memory liquidationPrice = calculateLiquidationPrice();
+        Decimal.D256 memory liquidationPrice = calculateLiquidationPrice(currentPrice);
 
         // Calculate how much the user is in debt by to be whole again at a discounted price
         (Amount.Principal memory liquidationCollateralDelta) = calculateCollateralDelta(
@@ -1244,9 +1260,11 @@ contract MozartV1 is Adminable, MozartStorage {
      * @dev Check if a position is collateralised or not
      *
      * @param position The struct of a position to validate if it's underwater or not
+     * @param currentPrice The current price of the collateral
      */
     function isCollateralized(
-        MozartTypes.Position memory position
+        MozartTypes.Position memory position,
+        Decimal.D256 memory currentPrice
     )
         public
         view
@@ -1255,8 +1273,6 @@ contract MozartV1 is Adminable, MozartStorage {
         if (position.borrowedAmount.value == 0) {
             return true;
         }
-
-        Decimal.D256 memory currentPrice = oracle.fetchCurrentPrice();
 
         (Amount.Principal memory collateralDelta) = calculateCollateralDelta(
             position.collateralAmount,
@@ -1340,14 +1356,16 @@ contract MozartV1 is Adminable, MozartStorage {
      *      at a discount in order for it to be profitable for the liquidator. This function
      *      will get the current oracle price for the asset and find the discounted price.
      *
+     * @param currentPrice The current price of the collateral
      */
-    function calculateLiquidationPrice()
+    function calculateLiquidationPrice(
+        Decimal.D256 memory currentPrice
+    )
         public
         view
         returns (Decimal.D256 memory)
     {
         Decimal.D256 memory result;
-        Decimal.D256 memory currentPrice = oracle.fetchCurrentPrice();
 
         result = Decimal.sub(
             Decimal.one(),
