@@ -348,7 +348,7 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
         }
 
         // Set the new index based on how much accrued
-        savingsIndex = latestSavingsIndex();
+        savingsIndex = currentSavingsIndex();
 
         uint256 existingSupply = totalSupplied;
         totalSupplied = totalSupplied.mul(savingsIndex).div(BASE);
