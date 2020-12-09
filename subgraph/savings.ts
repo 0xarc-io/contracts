@@ -62,7 +62,7 @@ export function createOrLoadSavings(address: Address): Saving {
     savings.paused = savingsContract.paused();
     savings.indexLastUpdate = savingsContract.indexLastUpdate();
     savings.savingsRate = savingsContract.savingsRate();
-    savings.savingsIndex = savingsContract.exchangeRate();
+    savings.savingsIndex = savingsContract.savingsIndex();
     savings.syntheticAddress = savingsContract.synthetic();
     savings.totalSupplied = savingsContract.totalSupplied();
   }

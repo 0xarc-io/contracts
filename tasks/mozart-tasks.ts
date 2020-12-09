@@ -8,6 +8,7 @@ import { loadContract } from '../deployments/src/loadContracts';
 import {
   deployContract,
   DeploymentType,
+  loadDetails,
   loadSynthConfig,
   pruneDeployments,
 } from '../deployments/src';
@@ -33,13 +34,10 @@ task('deploy-mozart-synthetic', 'Deploy the Mozart synthetic token')
   .setAction(async (taskArgs, hre) => {
     const name = taskArgs.name;
     const symbol = taskArgs.symbol;
-    const network = hre.network.name;
-    const networkObject = hre.config.networks[network];
 
-    const signer = (await hre.ethers.getSigners())[0];
+    const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
 
     await pruneDeployments(network, signer.provider);
-    const networkConfig = { network, signer, gasPrice: networkObject.gasPrice } as NetworkParams;
 
     const syntheticAddress = await deployContract(
       {
@@ -92,15 +90,12 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
   .addParam('synth', 'The synth you would like to interact with')
   .setAction(async (taskArgs, hre) => {
     const synthName = taskArgs.synth;
-    const network = hre.network.name;
-    const networkObject = hre.config.networks[network];
 
-    const signer = (await hre.ethers.getSigners())[0];
+    const { network, signer, networkConfig, networkDetails } = await loadDetails(taskArgs, hre);
 
     await pruneDeployments(network, signer.provider);
 
     const synthConfig = loadSynthConfig({ network, key: synthName });
-    const networkConfig = { network, signer, gasPrice: networkObject.gasPrice } as NetworkParams;
     const globalGroup = synthName.split('-').length == 1 ? synthName : synthName.split('-')[1];
 
     const coreAddress = await deployContract(
@@ -205,7 +200,7 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
     const synthetic = SyntheticTokenV1Factory.connect(syntheticProxyAddress, signer);
 
     console.log(yellow(`* Calling core init()...`));
-    const interestRateSetter = networkObject['users']['owner'] || signer.address;
+    const interestRateSetter = networkDetails['users']['owner'] || signer.address;
     try {
       await core.init(
         synthConfig.params.decimals,
@@ -264,15 +259,12 @@ task('deploy-mozart-savings', 'Deploy a Mozart Savings contract instance')
   .addParam('savings', 'The savings you would like to deploy')
   .setAction(async (taskArgs, hre) => {
     const savingsName = taskArgs.savings;
-    const network = hre.network.name;
-    const networkObject = hre.config.networks[network];
 
-    const signer = (await hre.ethers.getSigners())[0];
+    const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
 
     await pruneDeployments(network, signer.provider);
 
     const savingsConfig = loadSavingsConfig({ network, key: savingsName });
-    const networkConfig = { network, signer, gasPrice: networkObject.gasPrice } as NetworkParams;
 
     const syntheticProxyAddress = loadContract({
       network,

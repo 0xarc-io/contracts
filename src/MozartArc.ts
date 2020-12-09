@@ -47,7 +47,10 @@ export class MozartArc {
       const core = MozartV1Factory.connect(synth, this.signer);
       const oracle = IOracleFactory.connect(await core.getCurrentOracle(), this.signer);
       const collateral = TestTokenFactory.connect(await core.getCollateralAsset(), this.signer);
-      const synthetic = SyntheticTokenV1Factory.connect(await core.getSyntheticAsset(), this.signer);
+      const synthetic = SyntheticTokenV1Factory.connect(
+        await core.getSyntheticAsset(),
+        this.signer,
+      );
 
       this.synths[name] = {
         core,
@@ -218,7 +221,11 @@ export class MozartArc {
     const decodedPosition = {} as ActionOperated;
     receipt.logs.forEach((log) => {
       try {
-        const decoded = this.availableSynths()[0].core.interface.decodeEventLog('ActionOperated', log.data, log.topics);
+        const decoded = this.availableSynths()[0].core.interface.decodeEventLog(
+          'ActionOperated',
+          log.data,
+          log.topics,
+        );
         Object.entries(decoded).forEach(([key, value]) => {
           decodedPosition[key] = value;
         });
@@ -250,9 +257,48 @@ export class MozartArc {
     return result;
   }
 
+  async approveSynthetic(
+    amount: BigNumberish,
+    caller: Signer = this.signer,
+    synth: Synth = this.availableSynths()[0],
+    overrides?: TransactionOverrides,
+  ) {
+    const existingAllowance = await synth.synthetic.allowance(
+      await caller.getAddress(),
+      synth.core.address,
+    );
+
+    if (existingAllowance.gte(amount)) {
+      return;
+    }
+
+    const tx = await synth.synthetic.approve(synth.core.address, amount, overrides);
+    return tx.wait();
+  }
+
+  async approveCollateral(
+    amount: BigNumberish,
+    caller: Signer = this.signer,
+    synth: Synth = this.availableSynths()[0],
+    overrides?: TransactionOverrides,
+  ) {
+    const existingAllowance = await synth.collateral.allowance(
+      await caller.getAddress(),
+      synth.core.address,
+    );
+
+    if (existingAllowance.gte(amount)) {
+      return;
+    }
+
+    const tx = await synth.collateral.approve(synth.core.address, amount, overrides);
+    return tx.wait();
+  }
+
   async isCollateralized(positionId: BigNumberish, synth: Synth = this.availableSynths()[0]) {
     const position = await synth.core.getPosition(positionId);
-    return await synth.core.isCollateralized(position);
+    const price = await synth.core.getCurrentPrice();
+    return await synth.core.isCollateralized(position, price);
   }
 
   async getCore(synth: Synth, caller?: Signer) {

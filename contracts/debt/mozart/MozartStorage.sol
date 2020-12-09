@@ -115,7 +115,7 @@ contract MozartStorageV1 {
     /**
      * @notice Which address can set interest rates for this contract
      */
-    address public interestSetter;
+    address internal interestSetter;
 
     /**
      * @dev The limit of how much collateral can be deposited from this contract.
