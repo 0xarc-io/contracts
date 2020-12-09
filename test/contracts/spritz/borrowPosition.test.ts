@@ -40,7 +40,6 @@ describe('Spritz.operateAction(Borrow)', () => {
   addSnapshotBeforeRestoreAfterEach();
 
   it('should not be able to borrow more than it is allowed', async () => {
-    console.log(arc.core.address);
     await arc._borrowSynthetic(
       ArcNumber.new(201),
       ArcNumber.new(1),
