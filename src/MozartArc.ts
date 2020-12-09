@@ -261,18 +261,19 @@ export class MozartArc {
     amount: BigNumberish,
     caller: Signer = this.signer,
     synth: Synth = this.availableSynths()[0],
+    spender: string = synth.core.address,
     overrides?: TransactionOverrides,
   ) {
     const existingAllowance = await synth.synthetic.allowance(
       await caller.getAddress(),
-      synth.core.address,
+      spender,
     );
 
     if (existingAllowance.gte(amount)) {
       return;
     }
 
-    const tx = await synth.synthetic.approve(synth.core.address, amount, overrides);
+    const tx = await synth.synthetic.approve(spender, amount, overrides);
     return tx.wait();
   }
 
