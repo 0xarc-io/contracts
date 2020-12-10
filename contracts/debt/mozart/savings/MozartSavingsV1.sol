@@ -222,7 +222,7 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
         // 2. Increase the total supplied amount
 
         // Update the index first
-        updateIndex();
+        uint256 latestIndex = updateIndex();
 
         // Calculate your stake amount given the current index
         Amount.Principal memory stakeAmount = Amount.calculatePrincipal(
@@ -247,7 +247,7 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
             amount
         );
 
-        return savingsIndex;
+        return latestIndex;
     }
 
     /**
@@ -277,7 +277,7 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
         // 1. Transfer the tokens back to the user
 
         // Update the index first
-        updateIndex();
+        uint256 latestIndex = updateIndex();
 
         // Calculate the withdraw amount given the index
         Amount.Principal memory withdrawAmount = Amount.calculatePrincipal(
@@ -310,7 +310,7 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
             amount
         );
 
-        return savingsIndex;
+        return latestIndex;
     }
 
     /**
@@ -348,10 +348,11 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
         }
 
         // Set the new index based on how much accrued
-        savingsIndex = currentSavingsIndex();
+        uint256 newSavingsIndex = currentSavingsIndex();
+        savingsIndex = newSavingsIndex;
 
         uint256 existingSupply = totalSupplied;
-        totalSupplied = totalSupplied.mul(savingsIndex).div(BASE);
+        totalSupplied = totalSupplied.mul(newSavingsIndex).div(BASE);
 
         // With the difference between the new amount being borrowed and the existing amount
         // we can figure out how much interest is owed to the system as a whole and therefore
@@ -366,9 +367,12 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
             interestAccrued
         );
 
-        emit IndexUpdated(indexLastUpdate, savingsIndex);
+        emit IndexUpdated(
+            indexLastUpdate,
+            newSavingsIndex
+        );
 
-        return savingsIndex;
+        return newSavingsIndex;
     }
 
     /* ========== Token Functions ========== */
