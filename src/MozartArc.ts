@@ -4,10 +4,10 @@ import { ActionOperated, Operation, Position } from '../arc-types/core';
 import { calculateLiquidationAmount } from './utils/calculations';
 import { SyntheticTokenV1 } from './typings/SyntheticTokenV1';
 import { asyncForEach } from './utils/asyncForEach';
-import { MozartV1 } from './typings/MozartV1';
+import { MozartCoreV1 } from './typings/MozartCoreV1';
 import { IOracle } from './typings/IOracle';
 import { TestToken } from './typings/TestToken';
-import { MozartV1Factory } from './typings/MozartV1Factory';
+import { MozartCoreV1Factory } from './typings/MozartCoreV1Factory';
 import { IOracleFactory } from './typings/IOracleFactory';
 import { SyntheticTokenV1Factory } from './typings/SyntheticTokenV1Factory';
 import { TestTokenFactory } from './typings/TestTokenFactory';
@@ -21,7 +21,7 @@ export enum SynthNames {
 }
 
 export type Synth = {
-  core: MozartV1;
+  core: MozartCoreV1;
   oracle: IOracle;
   collateral: TestToken;
   synthetic: SyntheticTokenV1;
@@ -44,7 +44,7 @@ export class MozartArc {
     const entries = Object.entries(synths);
 
     await asyncForEach(entries, async ([name, synth]) => {
-      const core = MozartV1Factory.connect(synth, this.signer);
+      const core = MozartCoreV1Factory.connect(synth, this.signer);
       const oracle = IOracleFactory.connect(await core.getCurrentOracle(), this.signer);
       const collateral = TestTokenFactory.connect(await core.getCollateralAsset(), this.signer);
       const synthetic = SyntheticTokenV1Factory.connect(
@@ -264,10 +264,7 @@ export class MozartArc {
     spender: string = synth.core.address,
     overrides?: TransactionOverrides,
   ) {
-    const existingAllowance = await synth.synthetic.allowance(
-      await caller.getAddress(),
-      spender,
-    );
+    const existingAllowance = await synth.synthetic.allowance(await caller.getAddress(), spender);
 
     if (existingAllowance.gte(amount)) {
       return;
@@ -303,7 +300,7 @@ export class MozartArc {
   }
 
   async getCore(synth: Synth, caller?: Signer) {
-    return MozartV1Factory.connect(synth.core.address, caller || this.signer);
+    return MozartCoreV1Factory.connect(synth.core.address, caller || this.signer);
   }
 }
 

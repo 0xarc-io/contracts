@@ -21,7 +21,7 @@ import {
   ChainLinkOracleFactory,
   MockOracleFactory,
   MozartSavingsV1Factory,
-  MozartV1Factory,
+  MozartCoreV1Factory,
   SyntheticTokenV1Factory,
   SynthRegistryV2Factory,
   TestTokenFactory,
@@ -101,8 +101,8 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
     const coreAddress = await deployContract(
       {
         name: 'MozartCore',
-        source: 'MozartV1',
-        data: new MozartV1Factory(signer).getDeployTransaction(),
+        source: 'MozartCoreV1',
+        data: new MozartCoreV1Factory(signer).getDeployTransaction(),
         version: 1,
         type: DeploymentType.synth,
       },
@@ -196,7 +196,7 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
       group: globalGroup,
     }).address;
 
-    const core = MozartV1Factory.connect(coreProxyAddress, signer);
+    const core = MozartCoreV1Factory.connect(coreProxyAddress, signer);
     const synthetic = SyntheticTokenV1Factory.connect(syntheticProxyAddress, signer);
 
     console.log(yellow(`* Calling core init()...`));

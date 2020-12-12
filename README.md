@@ -5,7 +5,7 @@ A synthetic asset protocol where you can use one or many collateral types to out
 
 ## Architecture
 
-The two core debt systems are known as Mozart and Spritz. Mozart is our latest debt system and introduces an interest rate & savings functionality (MozartSavings). A synthetic asset is defined by the Synthetic Token that it outputs. A Synthetic can have multiple addresses which are minters. A minter can be a Core system, Savings system or EOA. In Mozart's case, MozartV1.sol is the core system which represents all the state and data for a collateral type. Multiple core systems can be added to a Synthetic token which in effect creates a synth with multiple collaterals backing it.
+The two core debt systems are known as Mozart and Spritz. Mozart is our latest debt system and introduces an interest rate & savings functionality (MozartSavings). A synthetic asset is defined by the Synthetic Token that it outputs. A Synthetic can have multiple addresses which are minters. A minter can be a Core system, Savings system or EOA. In Mozart's case, MozartCoreV1.sol is the core system which represents all the state and data for a collateral type. Multiple core systems can be added to a Synthetic token which in effect creates a synth with multiple collaterals backing it.
 
 We like to view the Core system as a single file which contains all the functionality needed to mint. This implementation is optimised around two key principles, simplicity and efficiency. Apart from an oracle source and collateral token, each core system has no outside dependencies.
 

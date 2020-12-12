@@ -3,7 +3,7 @@ import { loadContract } from '../../deployments/src/loadContracts';
 import { DeploymentType } from '../../deployments/src/writeToDeployments';
 import { generatedWallets } from '../helpers/generatedWallets';
 import { expect } from 'chai';
-import { MozartV1Factory, SyntheticTokenV1Factory } from '@src/typings';
+import { MozartCoreV1Factory, SyntheticTokenV1Factory } from '@src/typings';
 import { deploymentTestNetworks } from '../../deployments/config';
 
 /* eslint-disable @typescript-eslint/no-var-requires */
@@ -55,7 +55,7 @@ function testNetwork(network: string) {
         name: 'Oracle',
       });
 
-      const mozartCore = MozartV1Factory.connect(coreProxyDetails.address, signer);
+      const mozartCore = MozartCoreV1Factory.connect(coreProxyDetails.address, signer);
       const synthetic = SyntheticTokenV1Factory.connect(syntheticProxyDetails.address, signer);
 
       it('should have the core configured correctly', async () => {

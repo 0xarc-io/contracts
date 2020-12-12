@@ -12,7 +12,7 @@ import {
 import { Address } from '@graphprotocol/graph-ts';
 import { MozartSavingsV1 } from '../generated/templates/MozartSavingsV1/MozartSavingsV1';
 import { Saving } from '../generated/schema';
-import { BaseERC20 } from '../generated/templates/MozartV1/BaseERC20';
+import { BaseERC20 } from '../generated/templates/MozartCoreV1/BaseERC20';
 
 export function savingsAdded(event: SavingsAdded): void {
   let savings = event.params.savings;

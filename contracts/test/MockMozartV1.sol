@@ -3,10 +3,10 @@
 pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
-import {MozartV1} from "../debt/mozart/MozartV1.sol";
+import {MozartCoreV1} from "../debt/mozart/MozartCoreV1.sol";
 import {Storage} from "../lib/Storage.sol";
 
-contract MockMozartV1 is MozartV1 {
+contract MockMozartCoreV1 is MozartCoreV1 {
 
     uint256 private _currentTimestamp = 0;
 

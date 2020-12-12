@@ -5,7 +5,7 @@ import { generatedWallets } from '../helpers/generatedWallets';
 import { expect } from 'chai';
 import {
   ArcxTokenFactory,
-  MozartV1Factory,
+  MozartCoreV1Factory,
   SyntheticTokenV1Factory,
   SynthRegistryFactory,
   SynthRegistryV2Factory,

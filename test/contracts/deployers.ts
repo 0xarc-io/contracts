@@ -5,7 +5,7 @@ import ArcDecimal from '@src/utils/ArcDecimal';
 
 import { TestTokenFactory } from '@src/typings/TestTokenFactory';
 import { ArcProxyFactory } from '@src/typings/ArcProxyFactory';
-import { MockMozartV1 } from '@src/typings/MockMozartV1';
+import { MockMozartCoreV1 } from '@src/typings/MockMozartCoreV1';
 import { SyntheticTokenV1 } from '@src/typings/SyntheticTokenV1';
 import { MockMozartSavingsV1 } from '@src/typings/MockMozartSavingsV1';
 import { CoreV4 } from '@src/typings/CoreV4';
@@ -19,9 +19,9 @@ import { KYFV2 } from '@src/typings/KYFV2';
 import { MockOracle } from '@src/typings/MockOracle';
 
 export async function deployMockMozartCoreV1(deployer: Signer) {
-  const Contract = await ethers.getContractFactory('MockMozartV1', deployer);
+  const Contract = await ethers.getContractFactory('MockMozartCoreV1', deployer);
   const mozartCoreV1 = await Contract.deploy();
-  return mozartCoreV1 as MockMozartV1;
+  return mozartCoreV1 as MockMozartCoreV1;
 }
 
 export async function deploySpritzCoreV3(deployer: Signer) {
