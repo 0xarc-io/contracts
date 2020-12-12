@@ -13,10 +13,10 @@ contract SyntheticStorageV1 {
     /**
      * @dev ERC20 Properties
      */
-    uint8   internal _version;
     string  internal _name;
     string  internal _symbol;
     uint256 internal _totalSupply;
+    string  internal _version;
 
     mapping (address => uint256)                      internal _balances;
     mapping (address => mapping (address => uint256)) internal _allowances;
