@@ -49,7 +49,7 @@ contract SyntheticTokenV1 is Adminable, SyntheticStorage, IERC20 {
     function init(
         string memory name,
         string memory symbol,
-        uint8 version
+        string memory version
     )
         public
         onlyAdmin
@@ -92,7 +92,7 @@ contract SyntheticTokenV1 is Adminable, SyntheticStorage, IERC20 {
     function version()
         external
         view
-        returns (uint8)
+        returns (string memory)
     {
         return _version;
     }
