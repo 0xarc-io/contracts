@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.5.16;
-pragma experimental ABIEncoderV2;
 
 import {IOracle} from "../../oracle/IOracle.sol";
 
@@ -28,7 +27,7 @@ contract MozartCoreStorageV1 {
     bool public paused;
 
     /**
-     * @notice An active counter oall the number of positions in the protocol
+     * @notice An active counter of all the number of positions in the protocol
      */
     uint256 public positionCount;
 
@@ -38,7 +37,7 @@ contract MozartCoreStorageV1 {
     mapping (uint256 => MozartTypes.Position) internal positions;
 
     /**
-     * @dev Allow a position have multiple addresses act on it's behalf
+     * @dev Allow a position have multiple addresses act on its behalf
      */
     mapping (uint256 => mapping (address => bool)) internal positionOperators;
 
@@ -53,7 +52,7 @@ contract MozartCoreStorageV1 {
     IOracle internal oracle;
 
     /**
-     * @dev If a colalteral asset is used that has less than 18 decimal places
+     * @dev If a collateral asset is used that has less than 18 decimal places
      *      a precision scalar is required to calcualte the corect values.
      */
     uint256 internal precisionScalar;
@@ -98,7 +97,7 @@ contract MozartCoreStorageV1 {
     uint256 internal interestRate;
 
     /**
-     * @dev The ratio of how much collateral should have relative to it's debt
+     * @dev The ratio of how much collateral should have relative to its debt
      */
     Decimal.D256 internal collateralRatio;
 
@@ -123,7 +122,7 @@ contract MozartCoreStorageV1 {
     uint256 internal collateralLimit;
 
     /**
-     * @dev The amount of collateral a new position should hvae at the minimum
+     * @dev The amount of collateral a new position should have at the minimum
      */
     uint256 internal positionCollateralMinimum;
 }
