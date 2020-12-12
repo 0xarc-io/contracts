@@ -7,8 +7,8 @@ import {
   CollateralRatioUpdated as CollateralRatioUpdatedEvent,
   PauseStatusUpdated as PauseStatusUpdatedEvent,
   IndexUpdated as IndexUpdatedEvent,
-  MozartV1,
-} from '../generated/templates/MozartV1/MozartV1';
+  MozartCoreV1,
+} from '../generated/templates/MozartCoreV1/MozartCoreV1';
 
 import { ActionOperated, Position, Synth } from '../generated/schema';
 import { Address, BigInt } from '@graphprotocol/graph-ts';
@@ -97,7 +97,7 @@ export function indexUpdated(event: IndexUpdatedEvent): void {
 
 export function createOrLoadMozartSynth(address: Address): Synth {
   let synth = Synth.load(address.toHexString());
-  let core = MozartV1.bind(address);
+  let core = MozartCoreV1.bind(address);
 
   let syntheticAddress = core.getSyntheticAsset();
 

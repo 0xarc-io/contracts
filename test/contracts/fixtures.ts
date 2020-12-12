@@ -1,6 +1,6 @@
 import { MAX_UINT256 } from '@src/constants';
 import { SyntheticTokenV1Factory } from '@src/typings/SyntheticTokenV1Factory';
-import { MozartV1Factory } from '@src/typings/MozartV1Factory';
+import { MozartCoreV1Factory } from '@src/typings/MozartCoreV1Factory';
 import ArcDecimal from '@src/utils/ArcDecimal';
 
 import {
@@ -38,7 +38,7 @@ export async function mozartFixture(ctx: ITestContext, args?: ITestContextArgs) 
   const syntheticProxy = await deployArcProxy(deployer, syntheticImp.address, deployerAddress, []);
   const savingsProxy = await deployArcProxy(deployer, savingsImp.address, deployerAddress, []);
 
-  const coreV1 = MozartV1Factory.connect(coreProxy.address, deployer);
+  const coreV1 = MozartCoreV1Factory.connect(coreProxy.address, deployer);
   await coreV1.init(
     args.decimals,
     collateral.address,

@@ -8,7 +8,7 @@ import {
 import { ActionOperated as ActionOperatedEvent } from '../generated/templates/CoreV1/CoreV1';
 import { BASE } from './constants';
 import { Address, BigInt } from '@graphprotocol/graph-ts';
-import { BaseERC20 } from '../generated/templates/MozartV1/BaseERC20';
+import { BaseERC20 } from '../generated/templates/MozartCoreV1/BaseERC20';
 
 export function actionOperated(event: ActionOperatedEvent): void {
   handlePosition(event);

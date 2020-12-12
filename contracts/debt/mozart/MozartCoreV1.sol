@@ -16,18 +16,18 @@ import {Amount} from "../../lib/Amount.sol";
 import {SafeMath} from "../../lib/SafeMath.sol";
 import {SafeERC20} from "../../lib/SafeERC20.sol";
 
-import {MozartStorage} from "./MozartStorage.sol";
+import {MozartCoreStorage} from "./MozartCoreStorage.sol";
 import {MozartTypes} from  "./MozartTypes.sol";
 
 /**
- * @title MoazartV1
+ * @title MoazartCoreV1
  * @author Kerman Kohli
  * @notice This contract holds both the implementation logic and storage (indirectly).
  *         The key optimization of this contract is around simplicity and the actions
  *         a user can call. In addition, the architecture is designed for safety around upgrades
  *         where new storage variables are introduced through the inherited storage contract pattern.
  */
-contract MozartV1 is Adminable, MozartStorage {
+contract MozartCoreV1 is Adminable, MozartCoreStorage {
 
     /* ========== Libraries ========== */
 
@@ -167,7 +167,7 @@ contract MozartV1 is Adminable, MozartStorage {
     {
         require(
             collateralAsset == address(0),
-            "MozartV1: cannot re-call init()"
+            "MozartCoreV1: cannot re-call init()"
         );
 
         precisionScalar = 10 ** (18 - uint256(_collateralDecimals));
@@ -209,12 +209,12 @@ contract MozartV1 is Adminable, MozartStorage {
     {
         require(
             msg.sender == interestSetter,
-            "MozartV1: only callable by interest setter"
+            "MozartCoreV1: only callable by interest setter"
         );
 
         require(
             _rate <= 21820606489,
-            "MozartV1: interest rate cannot be set to over 99%"
+            "MozartCoreV1: interest rate cannot be set to over 99%"
         );
 
         interestRate = _rate;

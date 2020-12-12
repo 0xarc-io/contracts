@@ -13,14 +13,14 @@ import {MozartTypes} from "./MozartTypes.sol";
 /**
  * @title MoazartStorage
  * @author Kerman Kohli
- * @notice The storage contract that gets used inside MozartV1.
+ * @notice The storage contract that gets used inside MozartCoreV1.
  *         IMPORTANT:
  *         - DO NOT change the order of ANY variables
  *         - If you would like to add more variables, create a a new
  *           versioned contract (MozartStorageV99) and inherit from
  *           it via MozartStorage
  */
-contract MozartStorageV1 {
+contract MozartCoreStorageV1 {
 
     /**
      * @notice Determines whether the contract is paused or not
@@ -128,4 +128,4 @@ contract MozartStorageV1 {
     uint256 internal positionCollateralMinimum;
 }
 
-contract MozartStorage is MozartStorageV1 { /* solium-disable-line no-empty-blocks */ }
+contract MozartCoreStorage is MozartCoreStorageV1 { /* solium-disable-line no-empty-blocks */ }
