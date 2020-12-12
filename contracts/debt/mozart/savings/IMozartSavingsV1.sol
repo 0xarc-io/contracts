@@ -21,6 +21,10 @@ interface IMozartSavingsV1 {
         external
         returns (uint256);
 
+    function unstakeAll()
+        external
+        returns (uint256);
+
     function updateIndex()
         external
         returns (uint256);
