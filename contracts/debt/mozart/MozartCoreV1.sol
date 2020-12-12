@@ -22,7 +22,7 @@ import {MozartTypes} from  "./MozartTypes.sol";
 /**
  * @title MoazartCoreV1
  * @author Kerman Kohli
- * @notice This contract holds both the implementation logic and storage (indirectly).
+ * @notice This contract holds the implementation logic for a collateral type.
  *         The key optimization of this contract is around simplicity and the actions
  *         a user can call. In addition, the architecture is designed for safety around upgrades
  *         where new storage variables are introduced through the inherited storage contract pattern.
@@ -937,7 +937,7 @@ contract MozartCoreV1 is Adminable, MozartCoreStorage {
         );
 
         require(
-            IERC20(collateralAsset).balanceOf(msg.sender) >= borrowToLiquidate,
+            IERC20(syntheticAsset).balanceOf(msg.sender) >= borrowToLiquidate,
             "liquidatePosition(): msg.sender not enough of borrowed asset to liquidate"
         );
 
