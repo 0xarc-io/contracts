@@ -44,7 +44,7 @@ describe('SyntheticTokenV1', () => {
     );
 
     syntheticToken = await new SyntheticTokenV1Factory(ownerAccount).attach(proxy.address);
-    await syntheticToken.init('ARCx', 'ARCx', 1);
+    await syntheticToken.init('ARCx', 'ARCx', '1');
   });
 
   addSnapshotBeforeRestoreAfterEach();
