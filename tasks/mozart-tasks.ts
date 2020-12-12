@@ -79,7 +79,7 @@ task('deploy-mozart-synthetic', 'Deploy the Mozart synthetic token')
 
     console.log(yellow(`* Calling synthetic init()...`));
     try {
-      await synthetic.init(name, symbol, 1, { gasLimit: 1000000 });
+      await synthetic.init(name, symbol, '1', { gasLimit: 1000000 });
       console.log(green(`Called synthetic init() successfully!\n`));
     } catch (error) {
       console.log(red(`Failed to call synthetic init().\nReason: ${error}\n`));
