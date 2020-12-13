@@ -14,3 +14,5 @@ generated
 .env
 .coverage_contracts
 subgraph.yaml
+
+# solc-input-*.json
