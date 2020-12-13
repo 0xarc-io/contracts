@@ -27,7 +27,7 @@
 			"interest_rate": ""
 		}
   },
-  "YUSD-STABLEX": {
+  "yUSD-STABLEx": {
 		"collateral_address": "",
     "oracle_link_aggregator_address": "",
     "version": 1,

@@ -1,7 +1,7 @@
 {
   "network": "kovan",
   "startBlock": 22381448,
-  "synthRegistry": "0x79c1bbF8Fcd80ed61CAf4f31F0A4433c63a6ff0C",
-  "synthRegistryV2": "0x13A05400affAa43705392Cf989BceD4c5534C5C8",
-  "savingsRegistry": "0x4Fb30A81B176D5901512DBaD01506F1FCEdB25C0"
+  "synthRegistry": "0x07A12d8C5713A5bDb048b277bd7d546e3e8dF343",
+  "synthRegistryV2": "0x61086a804080cadFF84C6E07CbE486e184b39b5d",
+  "savingsRegistry": "0xf7239dDbe9E755467E9d770Ce5f8DfeaB2486a2f"
 }

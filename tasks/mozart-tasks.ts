@@ -27,6 +27,7 @@ import {
   TestTokenFactory,
   YUSDOracleFactory,
 } from '@src/typings';
+import ArcNumber from '@src/utils/ArcNumber';
 
 task('deploy-mozart-synthetic', 'Deploy the Mozart synthetic token')
   .addParam('name', 'The name of the synthetic token')
