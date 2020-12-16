@@ -240,16 +240,6 @@
     "group": "LINKUSD"
   },
   {
-    "name": "SavingsRegistry",
-    "source": "SavingsRegistry",
-    "address": "0xe5E6f1fb055c68587b2182b3843213D4A88Fe4dB",
-    "txn": "0x6ab53e189dcdea383048c1b4187ec14aba4e91223c700c9fbefd861f5368dcc2",
-    "network": "mainnet",
-    "version": 1,
-    "type": "global",
-    "group": ""
-  },
-  {
     "name": "SyntheticToken",
     "source": "SyntheticTokenV1",
     "address": "0xA58B598d0503bAA97B877735c97C69Cc19c07904",
@@ -320,10 +310,20 @@
     "group": "yUSD-STABLEx"
   },
   {
+    "name": "SavingsRegistry",
+    "source": "SavingsRegistry",
+    "address": "0x2948Ddf33b00686D7E58D2Eb3AA2469A1b52C7e4",
+    "txn": "0x4ad315af56eeadee17c3937bb90bc4a7b0c8d8359521890b4232f4f30059df97",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
     "name": "MozartSavings",
     "source": "MozartSavingsV1",
-    "address": "0x25aCafC0237D150a5C06384Adf567592908886cA",
-    "txn": "0x2fd9705b03405d85e956aab7b5f9fc316584006fc7ead2627f03a8bcef36a36a",
+    "address": "0x2C8eDbf218e2f9baAFaC71692f424E75D9f9755e",
+    "txn": "0xf140e5bd84978543ac938b2d5cc3f506b84d7271536ae7305fa3be1d8ef586a6",
     "network": "mainnet",
     "version": 1,
     "type": "savings",
@@ -332,8 +332,8 @@
   {
     "name": "SavingsProxy",
     "source": "ArcProxy",
-    "address": "0xC20E5572139A84bd5A43A836CeFd2d19d8D13B03",
-    "txn": "0x67e1af7fe5672029fc57d543d61194638a4ff969c40abbf7b8f69afbe7835513",
+    "address": "0xec18FfEa29dACC0F47525529fd1fD1D4A40FE65c",
+    "txn": "0xc6b64f435b8f7213a262d0e5f332366523de6561df75df02ca9a69cffdf26f35",
     "network": "mainnet",
     "version": 1,
     "type": "savings",

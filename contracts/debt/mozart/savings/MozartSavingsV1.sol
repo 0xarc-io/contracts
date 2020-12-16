@@ -325,8 +325,8 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
         // Get the user's principal balance
         uint256 principalBalance = balanceOf(msg.sender);
 
-        // Get the interest adjusted amount by multiplying by the index
-        uint256 userBalance = principalBalance.mul(savingsIndex).div(BASE);
+        // Get the interest adjusted amount by multiplying by the current index
+        uint256 userBalance = principalBalance.mul(currentSavingsIndex()).div(BASE);
 
         // Call the unstake function with the final balance
         return unstake(userBalance);
