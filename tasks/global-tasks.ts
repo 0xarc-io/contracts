@@ -1,4 +1,9 @@
-import { ArcxTokenFactory, SynthRegistryFactory, SynthRegistryV2Factory } from '@src/typings';
+import {
+  AddressAccrualFactory,
+  ArcxTokenFactory,
+  SynthRegistryFactory,
+  SynthRegistryV2Factory,
+} from '@src/typings';
 import { deployContract, pruneDeployments } from '../deployments/src';
 import { task } from 'hardhat/config';
 import { DeploymentType } from '../deployments/src/writeToDeployments';
@@ -16,11 +21,22 @@ task('deploy-global', 'Deploy, update and interact with global contracts').setAc
 
     const networkConfig = { network, signer } as NetworkParams;
 
-    const arcxTokenAddress = await deployContract(
+    const arcxToken = await deployContract(
       {
         name: 'ArcxToken',
         source: 'ArcxToken',
         data: new ArcxTokenFactory(signer).getDeployTransaction(),
+        version: 1,
+        type: DeploymentType.global,
+      },
+      networkConfig,
+    );
+
+    const arcDAO = await deployContract(
+      {
+        name: 'ArcDAO',
+        source: 'ArcDAO',
+        data: new AddressAccrualFactory(signer).getDeployTransaction(arcxToken),
         version: 1,
         type: DeploymentType.global,
       },
