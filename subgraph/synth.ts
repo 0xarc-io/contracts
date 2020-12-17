@@ -9,7 +9,7 @@ import {
   BaseERC20 as BaseERC20Template,
   StateV1 as StateV1Template,
   CoreV1 as CoreV1Template,
-  MozartV1 as MozartV1Template,
+  MozartCoreV1 as MozartCoreV1Template,
 } from '../generated/templates';
 
 import { CoreV1 } from '../generated/templates/CoreV1/CoreV1';
@@ -51,5 +51,5 @@ export function synthV2Added(event: SynthAddedV2): void {
   }
 
   BaseERC20Template.create(event.params.synth);
-  MozartV1Template.create(event.params.proxy);
+  MozartCoreV1Template.create(event.params.proxy);
 }

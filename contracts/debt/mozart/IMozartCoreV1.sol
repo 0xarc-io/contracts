@@ -8,7 +8,7 @@ import {Amount} from "../../lib/Amount.sol";
 
 import {MozartTypes} from "./MozartTypes.sol";
 
-interface IMozartV1 {
+interface IMozartCoreV1 {
 
     function getPosition(
         uint256 id

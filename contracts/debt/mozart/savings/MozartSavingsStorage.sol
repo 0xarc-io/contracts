@@ -8,8 +8,6 @@ import {ISyntheticToken} from "../../../token/ISyntheticToken.sol";
 import {Amount} from "../../../lib/Amount.sol";
 import {Decimal} from "../../../lib/Decimal.sol";
 
-import {IMozartV1} from "../IMozartV1.sol";
-
 contract MozartSavingsStorageV1 {
 
     /**
