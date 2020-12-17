@@ -4,7 +4,6 @@
     "oracle_link_aggregator_address": "",
     "version": 1,
 		"params": {
-
 			"collateral_ratio": "2000000000000000000",
 			"liquidation_user_fee": "50000000000000000",
 			"liquidation_arc_fee": "50000000000000000",
@@ -27,7 +26,7 @@
 			"position_minimum_collateral" : ""
 		}
   },
-  "YUSD-STABLEX": {
+  "yUSD-STABLEx": {
 		"collateral_address": "",
     "oracle_link_aggregator_address": "",
     "version": 1,
