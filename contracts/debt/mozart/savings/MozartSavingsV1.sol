@@ -13,11 +13,9 @@ import {SafeMath} from "../../../lib/SafeMath.sol";
 import {SafeERC20} from "../../../lib/SafeERC20.sol";
 import {Ownable} from "../../../lib/Ownable.sol";
 
-import {IMozartV1} from "../IMozartV1.sol";
+import {IMozartCoreV1} from "../IMozartCoreV1.sol";
 
 import {MozartSavingsStorage} from "./MozartSavingsStorage.sol";
-
-import {console} from "hardhat/console.sol";
 
 /**
  * @title MozartSavingsV1
@@ -225,9 +223,9 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
         uint256 latestIndex = updateIndex();
 
         // Calculate your stake amount given the current index
-        Amount.Principal memory stakeAmount = Amount.calculatePrincipal(
+        Amount.Principal memory depositPrincipalAmount = Amount.calculatePrincipal(
             amount,
-            savingsIndex,
+            latestIndex,
             true
         );
 
@@ -237,7 +235,7 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
         // Mints the receipt token
         _mint(
             msg.sender,
-            stakeAmount.value
+            depositPrincipalAmount.value
         );
 
         // Transfer the synth
@@ -280,18 +278,18 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
         uint256 latestIndex = updateIndex();
 
         // Calculate the withdraw amount given the index
-        Amount.Principal memory withdrawAmount = Amount.calculatePrincipal(
+        Amount.Principal memory withdrawPrinicipalAmount = Amount.calculatePrincipal(
             amount,
-            savingsIndex,
+            latestIndex,
             true
         );
 
         // Get the user's existing balance
-        uint256 existingUserBalance = _balances[msg.sender];
+        uint256 existingPrincipalBalance = _balances[msg.sender];
 
         // Ensure that the user's existing balance is greater than the withdraw amount
         require(
-            existingUserBalance >= withdrawAmount.value,
+            existingPrincipalBalance >= withdrawPrinicipalAmount.value,
             "unstake(): cannot withdraw more than you are allowed"
         );
 
@@ -301,7 +299,7 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
         // Burns the receipt token
         _burn(
             msg.sender,
-            withdrawAmount.value
+            withdrawPrinicipalAmount.value
         );
 
         // Transfer the synth
@@ -311,6 +309,27 @@ contract MozartSavingsV1 is Adminable, MozartSavingsStorage, IERC20 {
         );
 
         return latestIndex;
+    }
+
+    /**
+     * @dev Unstake all your synthetic tokens and stop earning interest on them.
+     *
+     * @notice Can only be called if contracts not paused.
+     *
+     */
+    function unstakeAll()
+        public
+        isActive
+        returns (uint256)
+    {
+        // Get the user's principal balance
+        uint256 principalBalance = balanceOf(msg.sender);
+
+        // Get the interest adjusted amount by multiplying by the current index
+        uint256 userBalance = principalBalance.mul(currentSavingsIndex()).div(BASE);
+
+        // Call the unstake function with the final balance
+        return unstake(userBalance);
     }
 
     /**

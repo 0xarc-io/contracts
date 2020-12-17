@@ -124,10 +124,10 @@ templates:
           handler: oracleUpdated
       file: ./subgraph/spritz.ts
   - kind: ethereum/contract
-    name: MozartV1
+    name: MozartCoreV1
     network: {{network}}
     source:
-      abi: MozartV1
+      abi: MozartCoreV1
     mapping:
       kind: ethereum/events
       language: wasm/assemblyscript
@@ -137,8 +137,8 @@ templates:
         - Position
         - ActionOperated
       abis:
-        - name: MozartV1
-          file: ./artifacts/contracts/debt/mozart/MozartV1.sol/MozartV1.json
+        - name: MozartCoreV1
+          file: ./artifacts/contracts/debt/mozart/MozartCoreV1.sol/MozartCoreV1.json
         - name: BaseERC20
           file: ./artifacts/contracts/token/BaseERC20.sol/BaseERC20.json
       eventHandlers:

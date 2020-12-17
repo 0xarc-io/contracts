@@ -25,7 +25,7 @@ contract SyntheticTokenV1 is Adminable, SyntheticStorage, IERC20 {
 
     event MinterLimitUpdated(address _minter, uint256 _limit);
 
-    event MetadataChanged();
+    event InitCalled();
 
     /* ========== Modifiers ========== */
 
@@ -49,7 +49,7 @@ contract SyntheticTokenV1 is Adminable, SyntheticStorage, IERC20 {
     function init(
         string memory name,
         string memory symbol,
-        uint8 version
+        string memory version
     )
         public
         onlyAdmin
@@ -57,6 +57,10 @@ contract SyntheticTokenV1 is Adminable, SyntheticStorage, IERC20 {
         _name = name;
         _symbol = symbol;
         _version = version;
+
+        DOMAIN_SEPARATOR = initDomainSeparator(name, version);
+
+        emit InitCalled();
     }
 
     /* ========== View Functions ========== */
@@ -88,7 +92,7 @@ contract SyntheticTokenV1 is Adminable, SyntheticStorage, IERC20 {
     function version()
         external
         view
-        returns (uint8)
+        returns (string memory)
     {
         return _version;
     }
@@ -177,7 +181,7 @@ contract SyntheticTokenV1 is Adminable, SyntheticStorage, IERC20 {
     {
         require(
             _minters[_minter] != true,
-            "Minter already exists"
+            "SyntheticToken: Minter already exists"
         );
 
         _mintersArray.push(_minter);
@@ -200,7 +204,7 @@ contract SyntheticTokenV1 is Adminable, SyntheticStorage, IERC20 {
     {
         require(
             _minters[_minter] == true,
-            "Minter does not exist"
+            "SyntheticToken: minter does not exist"
         );
 
         for (uint i = 0; i < _mintersArray.length; i++) {
@@ -234,7 +238,7 @@ contract SyntheticTokenV1 is Adminable, SyntheticStorage, IERC20 {
     {
         require(
             _minters[_minter] == true,
-            "Minter does not exist"
+            "SyntheticToken: minter does not exist"
         );
 
         _minterLimits[_minter] = _limit;
@@ -265,7 +269,7 @@ contract SyntheticTokenV1 is Adminable, SyntheticStorage, IERC20 {
 
         require(
             issuedAmount.value <= _minterLimits[msg.sender] || issuedAmount.sign == false,
-            "Minter limit reached"
+            "SyntheticToken: minter limit reached"
         );
 
         _minterIssued[msg.sender] = issuedAmount;
@@ -358,6 +362,81 @@ contract SyntheticTokenV1 is Adminable, SyntheticStorage, IERC20 {
         return true;
     }
 
+    /**
+     * @dev Sets `amount` as the allowance of `spender` over `owner`'s tokens,
+     * assuming the latter's signed approval.
+     *
+     * IMPORTANT: The same issues Erc20 `approve` has related to transaction
+     * ordering also apply here.
+     *
+     * Emits an {Approval} event.
+     *
+     * Requirements:
+     *
+     * - `owner` cannot be the zero address.
+     * - `spender` cannot be the zero address.
+     * - `deadline` must be a timestamp in the future.
+     * - `v`, `r` and `s` must be a valid `secp256k1` signature from `owner`
+     * over the Eip712-formatted function arguments.
+     * - The signature must use `owner`'s current nonce.
+     */
+    function permit(
+        address owner,
+        address spender,
+        uint256 value,
+        uint256 deadline,
+        uint8   v,
+        bytes32 r,
+        bytes32 s
+    )
+        public
+    {
+
+        require(
+            deadline == 0 || deadline >= block.timestamp,
+            "SyntheticToken: Permit expired"
+        );
+
+        require(
+            spender != address(0),
+            "SyntheticToken: spender cannot be 0x0"
+        );
+
+        require(
+            value > 0,
+            "SyntheticToken: approval value must be greater than 0"
+        );
+
+        bytes32 digest = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                DOMAIN_SEPARATOR,
+                keccak256(
+                    abi.encode(
+                    PERMIT_TYPEHASH,
+                    owner,
+                    spender,
+                    value,
+                    permitNonces[owner]++,
+                    deadline
+                )
+            )
+        ));
+
+        address recoveredAddress = ecrecover(
+            digest,
+            v,
+            r,
+            s
+        );
+
+        require(
+            recoveredAddress != address(0) && owner == recoveredAddress,
+            "SyntheticToken: Signature invalid"
+        );
+
+    }
+
     /* ========== Internal Functions ========== */
 
     function _transfer(
@@ -369,12 +448,12 @@ contract SyntheticTokenV1 is Adminable, SyntheticStorage, IERC20 {
     {
         require(
             sender != address(0),
-            "ERC20: transfer from the zero address"
+            "SyntheticToken: transfer from the zero address"
         );
 
         require(
             recipient != address(0),
-            "ERC20: transfer to the zero address"
+            "SyntheticToken: transfer to the zero address"
         );
 
         _balances[sender] = _balances[sender].sub(amount);
@@ -389,7 +468,10 @@ contract SyntheticTokenV1 is Adminable, SyntheticStorage, IERC20 {
     )
         internal
     {
-        require(account != address(0), "ERC20: mint to the zero address");
+        require(
+            account != address(0),
+            "SyntheticToken: mint to the zero address"
+        );
 
         _totalSupply = _totalSupply.add(amount);
         _balances[account] = _balances[account].add(amount);
@@ -402,7 +484,10 @@ contract SyntheticTokenV1 is Adminable, SyntheticStorage, IERC20 {
     )
         internal
     {
-        require(account != address(0), "ERC20: burn from the zero address");
+        require(
+            account != address(0),
+            "SyntheticToken: burn from the zero address"
+        );
 
         _balances[account] = _balances[account].sub(amount);
         _totalSupply = _totalSupply.sub(amount);
@@ -416,10 +501,46 @@ contract SyntheticTokenV1 is Adminable, SyntheticStorage, IERC20 {
     )
         internal
     {
-        require(owner != address(0), "ERC20: approve from the zero address");
-        require(spender != address(0), "ERC20: approve to the zero address");
+        require(
+            owner != address(0),
+            "SyntheticToken: approve from the zero address"
+        );
+
+        require(
+            spender != address(0),
+            "SyntheticToken: approve to the zero address"
+        );
 
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
+    }
+
+    /* ========== Private Functions ========== */
+
+    /**
+     * @dev Initializes EIP712 DOMAIN_SEPARATOR based on the current contract and chain ID.
+     */
+    function initDomainSeparator(
+        string memory name,
+        string memory version
+    )
+        private
+        returns (bytes32)
+    {
+        uint256 chainID;
+        /* solium-disable-next-line */
+        assembly {
+            chainID := chainid()
+        }
+
+        return keccak256(
+            abi.encode(
+                keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+                keccak256(bytes(name)),
+                keccak256(bytes(version)),
+                chainID,
+                address(this)
+            )
+        );
     }
 }
