@@ -1,4 +1,9 @@
-import { ArcProxyFactory, RewardCampaignFactory, TestTokenFactory } from '@src/typings';
+import {
+  ArcProxyFactory,
+  ArcxTokenFactory,
+  RewardCampaignFactory,
+  TestTokenFactory,
+} from '@src/typings';
 import { green, red, yellow } from 'chalk';
 import {
   deployContract,
@@ -9,6 +14,8 @@ import {
   pruneDeployments,
 } from '../deployments/src';
 import { task } from 'hardhat/config';
+import ArcDecimal from '../src/utils/ArcDecimal';
+import ArcNumber from '../src/utils/ArcNumber';
 
 task('deploy-staking', 'Deploy a staking/reward pool')
   .addParam('name', 'The name of the pool you would like to deploy')
@@ -111,5 +118,13 @@ task('deploy-staking', 'Deploy a staking/reward pool')
       console.log(green(`Called init() successfully!\n`));
     } catch (error) {
       console.log(red(`Failed to call init().\nReason: ${error}\n`));
+    }
+
+    if ((await signer.getChainId()) != 1) {
+      console.log(yellow(`* Minting reward tokens and notifying rewards contract...`));
+      const arcToken = ArcxTokenFactory.connect(rewardToken.address, signer);
+      await arcToken.mint(proxyContract, ArcNumber.new(100));
+      await implementation.notifyRewardAmount(ArcNumber.new(100));
+      console.log(green(`Executed successfully!\n`));
     }
   });
