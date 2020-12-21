@@ -17,11 +17,13 @@ import { MockRewardCampaign } from '@src/typings/MockRewardCampaign';
 import { TokenStakingAccrual } from '@src/typings/TokenStakingAccrual';
 import { KYFV2 } from '@src/typings/KYFV2';
 import { MockOracle } from '@src/typings/MockOracle';
+import { MockMozartCoreV2 } from '@src/typings/MockMozartCoreV2';
+import { MockMozartSavingsV2 } from '@src/typings';
 
-export async function deployMockMozartCoreV1(deployer: Signer) {
-  const Contract = await ethers.getContractFactory('MockMozartCoreV1', deployer);
-  const mozartCoreV1 = await Contract.deploy();
-  return mozartCoreV1 as MockMozartCoreV1;
+export async function deployMockMozartCore(deployer: Signer) {
+  const Contract = await ethers.getContractFactory('MockMozartCoreV2', deployer);
+  const mozartCore = await Contract.deploy();
+  return mozartCore as MockMozartCoreV2;
 }
 
 export async function deploySpritzCoreV3(deployer: Signer) {
@@ -94,10 +96,10 @@ export async function deployArcProxy(deployer: Signer, logic: string, admin: str
   return arcProxy;
 }
 
-export async function deployMockSavingsV1(deployer: Signer) {
-  const Contract = await ethers.getContractFactory('MockMozartSavingsV1', deployer);
-  const savingsV1 = await Contract.deploy();
-  return savingsV1 as MockMozartSavingsV1;
+export async function deployMockSavings(deployer: Signer) {
+  const Contract = await ethers.getContractFactory('MockMozartSavingsV2', deployer);
+  const savings = await Contract.deploy();
+  return savings as MockMozartSavingsV2;
 }
 
 export async function deployStaticSynthetic(deployer: Signer) {
