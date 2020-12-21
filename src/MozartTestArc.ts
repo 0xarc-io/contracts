@@ -3,8 +3,7 @@ import { Signer } from 'ethers';
 import { MozartArc } from './MozartArc';
 import { BigNumberish } from 'ethers';
 import { MockOracleFactory } from './typings/MockOracleFactory';
-import { MockMozartCoreV1Factory } from './typings/MockMozartCoreV1Factory';
-
+import { MockMozartCoreV2Factory } from './typings';
 export class MozartTestArc extends MozartArc {
   static async init(signer: Signer): Promise<MozartTestArc> {
     const arc = new MozartTestArc();
@@ -23,7 +22,7 @@ export class MozartTestArc extends MozartArc {
   }
 
   public async updateTime(value: BigNumberish) {
-    const mockArc = await new MockMozartCoreV1Factory(this.signer).attach(
+    const mockArc = await new MockMozartCoreV2Factory(this.signer).attach(
       this.synth().core.address,
     );
     await mockArc.setCurrentTimestamp(value);

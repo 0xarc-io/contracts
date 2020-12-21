@@ -6,14 +6,13 @@ import { expect } from 'chai';
 import { addSnapshotBeforeRestoreAfterEach } from '../../helpers/testingUtils';
 import { generateContext, ITestContext } from '../context';
 import { deployArcProxy, deployMockMozartCore } from '../deployers';
-import { MockMozartCoreV1 } from '@src/typings/MockMozartCoreV1';
-import { MockMozartCoreV1Factory } from '@src/typings/MockMozartCoreV1Factory';
 import { Signer } from '@ethersproject/abstract-signer';
 import { BigNumber } from '@ethersproject/bignumber';
+import { MockMozartCoreV2, MockMozartCoreV2Factory } from '@src/typings';
 
 describe('MozartCoreV1.setters', () => {
   let ctx: ITestContext;
-  let core: MockMozartCoreV1;
+  let core: MockMozartCoreV2;
 
   async function init(): Promise<void> {}
 
@@ -28,7 +27,7 @@ describe('MozartCoreV1.setters', () => {
       [],
     );
 
-    core = await new MockMozartCoreV1Factory(ctx.signers.admin).attach(proxy.address);
+    core = await new MockMozartCoreV2Factory(ctx.signers.admin).attach(proxy.address);
     await core.setInterestSetter(ctx.signers.interestSetter.address);
 
     ctx.contracts.mozart.core = core;

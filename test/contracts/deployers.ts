@@ -5,9 +5,7 @@ import ArcDecimal from '@src/utils/ArcDecimal';
 
 import { TestTokenFactory } from '@src/typings/TestTokenFactory';
 import { ArcProxyFactory } from '@src/typings/ArcProxyFactory';
-import { MockMozartCoreV1 } from '@src/typings/MockMozartCoreV1';
 import { SyntheticTokenV1 } from '@src/typings/SyntheticTokenV1';
-import { MockMozartSavingsV1 } from '@src/typings/MockMozartSavingsV1';
 import { CoreV4 } from '@src/typings/CoreV4';
 import { StateV1 } from '@src/typings/StateV1';
 import { StaticSyntheticToken } from '@src/typings/StaticSyntheticToken';
