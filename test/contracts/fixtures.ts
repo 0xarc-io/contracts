@@ -5,15 +5,15 @@ import ArcDecimal from '@src/utils/ArcDecimal';
 
 import {
   deployArcProxy,
-  deployMockMozartCoreV1,
   deploySpritzCoreV4,
   deployMockOracle,
-  deployMockSavingsV1,
   deploySyntheticTokenV1,
   deployTestToken,
   deploySpritzStateV1,
   deployStaticSynthetic,
   deploySpritzCoreV3,
+  deployMockMozartCore,
+  deployMockSavings,
 } from './deployers';
 
 import { Signer } from 'ethers';
@@ -21,15 +21,15 @@ import { ITestContext, ITestContextArgs } from './context';
 import { MozartTestArc } from '@src/MozartTestArc';
 import { CoreV4Factory } from '@src/typings/CoreV4Factory';
 import { SpritzTestArc } from '../../src/SpritzTestArc';
-import { MozartSavingsV1Factory } from '@src/typings';
+import { MockMozartCoreV2Factory, MockMozartSavingsV2Factory } from '@src/typings';
 
 export async function mozartFixture(ctx: ITestContext, args?: ITestContextArgs) {
   const deployer: Signer = ctx.signers.admin;
   const deployerAddress = await deployer.getAddress();
 
-  const coreImp = await deployMockMozartCoreV1(deployer);
+  const coreImp = await deployMockMozartCore(deployer);
   const syntheticImp = await deploySyntheticTokenV1(deployer);
-  const savingsImp = await deployMockSavingsV1(deployer);
+  const savingsImp = await deployMockSavings(deployer);
 
   const collateral = await deployTestToken(deployer, 'Test', 'TEST', args?.decimals);
   const oracle = await deployMockOracle(deployer);
@@ -38,8 +38,8 @@ export async function mozartFixture(ctx: ITestContext, args?: ITestContextArgs) 
   const syntheticProxy = await deployArcProxy(deployer, syntheticImp.address, deployerAddress, []);
   const savingsProxy = await deployArcProxy(deployer, savingsImp.address, deployerAddress, []);
 
-  const coreV1 = MozartCoreV1Factory.connect(coreProxy.address, deployer);
-  await coreV1.init(
+  const coreV2 = MockMozartCoreV2Factory.connect(coreProxy.address, deployer);
+  await coreV2.init(
     args.decimals,
     collateral.address,
     syntheticProxy.address,
@@ -50,22 +50,22 @@ export async function mozartFixture(ctx: ITestContext, args?: ITestContextArgs) 
     ArcDecimal.new(0),
   );
 
-  const savingsV1 = MozartSavingsV1Factory.connect(savingsProxy.address, deployer);
-  await savingsV1.init('TEST', 'TEST', syntheticProxy.address, { value: 0 });
-  await savingsV1.setPaused(false);
+  const savingsV2 = MockMozartSavingsV2Factory.connect(savingsProxy.address, deployer);
+  await savingsV2.init('TEST', 'TEST', syntheticProxy.address, { value: 0 });
+  await savingsV2.setPaused(false);
 
   const synthetic = SyntheticTokenV1Factory.connect(syntheticProxy.address, deployer);
-  await synthetic.addMinter(coreV1.address, MAX_UINT256);
+  await synthetic.addMinter(coreV2.address, MAX_UINT256);
   await synthetic.addMinter(savingsProxy.address, MAX_UINT256);
 
-  ctx.contracts.mozart.coreV1 = coreV1;
-  ctx.contracts.mozart.savingsV1 = savingsV1;
+  ctx.contracts.mozart.core = coreV2;
+  ctx.contracts.mozart.savings = savingsV2;
   ctx.contracts.collateral = collateral;
   ctx.contracts.synthetic.tokenV1 = synthetic;
   ctx.contracts.oracle = oracle;
 
   ctx.sdks.mozart = await MozartTestArc.init(deployer);
-  await ctx.sdks.mozart.addSynths({ ETHX: coreV1.address });
+  await ctx.sdks.mozart.addSynths({ ETHX: coreV2.address });
 }
 
 export async function spritzFixture(ctx: ITestContext, args?: ITestContextArgs) {

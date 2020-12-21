@@ -177,14 +177,14 @@ describe('Mozart.ownership', () => {
     });
 
     it('should not be able to set authorized position operator as a non-owner', async () => {
-      const core = await ctx.contracts.mozart.coreV1.connect(ctx.signers.unauthorised);
+      const core = await ctx.contracts.mozart.core.connect(ctx.signers.unauthorised);
       await expect(
         core.setPositionOperatorStatus(currentPosition, ctx.signers.unauthorised.address, true),
       ).to.be.reverted;
     });
 
     it('should be able to set an authorized position operator as the global operator', async () => {
-      const globalOperatorContract = await ctx.contracts.mozart.coreV1.connect(
+      const globalOperatorContract = await ctx.contracts.mozart.core.connect(
         ctx.signers.globalOperator,
       );
       await expect(
@@ -206,7 +206,7 @@ describe('Mozart.ownership', () => {
     });
 
     it('should be able to remove an authorized position operator as the global operator', async () => {
-      const globalOperatorContract = await ctx.contracts.mozart.coreV1.connect(
+      const globalOperatorContract = await ctx.contracts.mozart.core.connect(
         ctx.signers.globalOperator,
       );
       await expect(
@@ -245,7 +245,7 @@ describe('Mozart.ownership', () => {
     });
 
     it('should be able to set an authorized  operator as the global operator', async () => {
-      const globalOperatorContract = await ctx.contracts.mozart.coreV1.connect(
+      const globalOperatorContract = await ctx.contracts.mozart.core.connect(
         ctx.signers.globalOperator,
       );
       await globalOperatorContract.setPositionOperatorStatus(

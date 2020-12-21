@@ -21,6 +21,8 @@ import { MockOracle } from '@src/typings/MockOracle';
 import { TestToken } from '@src/typings/TestToken';
 import { SpritzTestArc } from '@src/SpritzTestArc';
 import { MozartTestArc } from '@src/MozartTestArc';
+import { MockMozartSavingsV2, MozartCoreV2, MozartSavingsV2 } from '@src/typings';
+import { MockMozartCoreV1 } from '@src/typings/MockMozartCoreV1';
 
 export interface TestingSigners {
   admin: SignerWithAddress;
@@ -48,8 +50,8 @@ export interface Contracts {
     state: StateV1;
   };
   mozart: {
-    coreV1: MozartCoreV1;
-    savingsV1: MozartSavingsV1;
+    core: MockMozartCoreV1;
+    savings: MockMozartSavingsV2;
   };
   synthetic: {
     static: StaticSyntheticToken;
