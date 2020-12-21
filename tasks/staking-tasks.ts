@@ -5,6 +5,7 @@ import {
   TestTokenFactory,
 } from '@src/typings';
 import { green, red, yellow } from 'chalk';
+
 import {
   deployContract,
   DeploymentType,
