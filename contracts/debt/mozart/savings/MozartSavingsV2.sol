@@ -148,7 +148,7 @@ contract MozartSavingsV2 is Adminable, MozartSavingsStorage, IERC20 {
         return _allowances[owner][spender];
     }
 
-     function accumulatedInterest()
+    function accumulatedInterest()
         public
         view
         returns (uint256)
