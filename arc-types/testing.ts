@@ -6,9 +6,6 @@ import { CoreV3 } from '@src/typings/CoreV3';
 import { CoreV4 } from '@src/typings/CoreV4';
 import { StateV1 } from '@src/typings/StateV1';
 
-import { MozartCoreV1 } from '@src/typings/MozartCoreV1';
-import { MozartSavingsV1 } from '@src/typings/MozartSavingsV1';
-
 import { MockContract } from 'ethereum-waffle';
 import { StaticSyntheticToken } from '@src/typings/StaticSyntheticToken';
 import { SyntheticTokenV1 } from '@src/typings/SyntheticTokenV1';
@@ -21,7 +18,7 @@ import { MockOracle } from '@src/typings/MockOracle';
 import { TestToken } from '@src/typings/TestToken';
 import { SpritzTestArc } from '@src/SpritzTestArc';
 import { MozartTestArc } from '@src/MozartTestArc';
-import { MockMozartSavingsV2, MozartCoreV2, MozartSavingsV2 } from '@src/typings';
+import { MockMozartSavingsV2 } from '@src/typings';
 import { MockMozartCoreV1 } from '@src/typings/MockMozartCoreV1';
 
 export interface TestingSigners {
