@@ -437,7 +437,7 @@ contract RewardCampaign is Adminable {
             "Must be KYF registered to participate"
         );
 
-        uint256 debtRequirement = amount.div(debtToStake);
+        uint256 debtRequirement = totalBalance.div(debtToStake);
 
         require(
             isMinter(msg.sender, debtRequirement, positionId),
