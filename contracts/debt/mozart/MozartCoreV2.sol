@@ -171,7 +171,7 @@ contract MozartCoreV2 is Adminable, MozartCoreStorage {
     {
         require(
             collateralAsset == address(0),
-            "MozartCoreV1: cannot re-call init()"
+            "MozartCore: cannot re-call init()"
         );
 
         precisionScalar = 10 ** (18 - uint256(_collateralDecimals));
@@ -213,12 +213,12 @@ contract MozartCoreV2 is Adminable, MozartCoreStorage {
     {
         require(
             msg.sender == interestSetter,
-            "MozartCoreV1: only callable by interest setter"
+            "MozartCore: only callable by interest setter"
         );
 
         require(
             _rate <= 21820606489,
-            "MozartCoreV1: interest rate cannot be set to over 99%"
+            "MozartCore: interest rate cannot be set to over 99%"
         );
 
         interestRate = _rate;
