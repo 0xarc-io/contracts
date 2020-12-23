@@ -14,8 +14,8 @@ import {IERC20} from "../token/IERC20.sol";
 
 import {IKYFV2} from "../global/IKYFV2.sol";
 
-import {IStateV1} from "../debt/spritz/IStateV1.sol";
-import {TypesV1} from "../debt/spritz/TypesV1.sol";
+import {IMozartCoreV1} from "../debt/mozart/IMozartCoreV1.sol";
+import {MozartTypes} from "../debt/mozart/MozartTypes.sol";
 
 contract RewardCampaign is Adminable {
 
@@ -39,7 +39,7 @@ contract RewardCampaign is Adminable {
     IERC20 public rewardsToken;
     IERC20 public stakingToken;
 
-    IStateV1 public stateContract;
+    IMozartCoreV1 public stateContract;
 
     address public arcDAO;
     address public rewardsDistributor;
@@ -219,7 +219,7 @@ contract RewardCampaign is Adminable {
         daoAllocation = _daoAllocation;
         slasherCut = _slasherCut;
         rewardsToken = IERC20(_rewardsToken);
-        stateContract = IStateV1(_stateContract);
+        stateContract = IMozartCoreV1(_stateContract);
         vestingEndDate = _vestingEndDate;
         debtToStake = _debtToStake;
         hardCap = _hardCap;
@@ -396,7 +396,7 @@ contract RewardCampaign is Adminable {
         view
         returns (bool)
     {
-        TypesV1.Position memory position = stateContract.getPosition(_positionId);
+        MozartTypes.Position memory position = stateContract.getPosition(_positionId);
 
         if (position.owner != _user) {
             return false;
@@ -437,6 +437,9 @@ contract RewardCampaign is Adminable {
             "Must be KYF registered to participate"
         );
 
+        // Setting each variable invididually means we don't overwrite
+        Staker storage staker = stakers[msg.sender];
+
         uint256 debtRequirement = totalBalance.div(debtToStake);
 
         require(
@@ -444,16 +447,13 @@ contract RewardCampaign is Adminable {
             "Must be a valid minter"
         );
 
-        // Setting each variable invididually means we don't overwrite
-        Staker storage staker = stakers[msg.sender];
-
         // This stops an attack vector where a user stakes a lot of money
         // then drops the debt requirement by staking less before the deadline
         // to reduce the amount of debt they need to lock in
 
         require(
             debtRequirement >= staker.debtSnapshot,
-            "Your new debt requiremen cannot be lower than last time"
+            "Your new debt requirement cannot be lower than last time"
         );
 
         staker.positionId = positionId;
