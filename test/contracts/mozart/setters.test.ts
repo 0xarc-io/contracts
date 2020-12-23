@@ -5,22 +5,22 @@ import ArcDecimal from '@src/utils/ArcDecimal';
 import { expect } from 'chai';
 import { addSnapshotBeforeRestoreAfterEach } from '../../helpers/testingUtils';
 import { generateContext, ITestContext } from '../context';
-import { deployArcProxy, deployMockMozartCoreV1 } from '../deployers';
-import { MockMozartCoreV1 } from '@src/typings/MockMozartCoreV1';
-import { MockMozartCoreV1Factory } from '@src/typings/MockMozartCoreV1Factory';
+import { deployArcProxy, deployMockMozartCore } from '../deployers';
+import { MockMozartCoreV2 } from '@src/typings/MockMozartCoreV2';
+import { MockMozartCoreV2Factory } from '@src/typings/MockMozartCoreV2Factory';
 import { Signer } from '@ethersproject/abstract-signer';
 import { BigNumber } from '@ethersproject/bignumber';
 
 describe('MozartCoreV1.setters', () => {
   let ctx: ITestContext;
-  let core: MockMozartCoreV1;
+  let core: MockMozartCoreV2;
 
   async function init(): Promise<void> {}
 
   before(async () => {
     ctx = await generateContext(init, init);
 
-    const mockCore = await deployMockMozartCoreV1(ctx.signers.admin);
+    const mockCore = await deployMockMozartCore(ctx.signers.admin);
     const proxy = await deployArcProxy(
       ctx.signers.admin,
       mockCore.address,
@@ -28,16 +28,16 @@ describe('MozartCoreV1.setters', () => {
       [],
     );
 
-    core = await new MockMozartCoreV1Factory(ctx.signers.admin).attach(proxy.address);
+    core = await new MockMozartCoreV2Factory(ctx.signers.admin).attach(proxy.address);
     await core.setInterestSetter(ctx.signers.interestSetter.address);
 
-    ctx.contracts.mozart.coreV1 = core;
+    ctx.contracts.mozart.core = core;
   });
 
   addSnapshotBeforeRestoreAfterEach();
 
   async function getCore(signer: Signer) {
-    return await ctx.contracts.mozart.coreV1.connect(signer);
+    return await ctx.contracts.mozart.core.connect(signer);
   }
 
   describe('#init', () => {

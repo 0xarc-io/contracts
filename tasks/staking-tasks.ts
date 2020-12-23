@@ -128,4 +128,24 @@ task('deploy-staking', 'Deploy a staking/reward pool')
       await implementation.notifyRewardAmount(ArcNumber.new(100));
       console.log(green(`Executed successfully!\n`));
     }
+
+    if ((await signer.getChainId()) == 1) {
+      const kyf1 = await loadContract({
+        name: 'KYF-T1',
+        type: DeploymentType.global,
+        network,
+      });
+
+      const kyf2 = await loadContract({
+        name: 'KYF-T2',
+        type: DeploymentType.global,
+        network,
+      });
+
+      console.log(yellow(`* Setting KYF v1 as approved...`));
+      await implementation.setApprovedKYFInstance(kyf1.address, true);
+      console.log(yellow(`* Setting KYF v2 as approved...`));
+      await implementation.setApprovedKYFInstance(kyf2.address, true);
+      console.log(green(`All KYF instances approved!\n`));
+    }
   });
