@@ -5,7 +5,8 @@ export * from './spritz-tasks';
 export * from './global-tasks';
 export * from './ownership-tasks';
 export * from './subgraph-tasks';
-export * from './verify-contract-task';
+export * from './verify-contract-tasks';
+export * from './staking-tasks';
 
 import { task } from 'hardhat/config';
 

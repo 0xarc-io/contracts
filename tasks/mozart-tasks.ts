@@ -3,7 +3,6 @@ import 'module-alias/register';
 import { task } from 'hardhat/config';
 import { red, yellow, green, magenta } from 'chalk';
 
-import { NetworkParams } from '../deployments/src/deployContract';
 import { loadContract } from '../deployments/src/loadContracts';
 import {
   deployContract,
@@ -12,8 +11,9 @@ import {
   loadSynthConfig,
   pruneDeployments,
 } from '../deployments/src';
+
 import { MAX_UINT256, FIVE_PERCENT } from '../src/constants';
-import { loadSavingsConfig } from '../deployments/src/loadSynthConfig';
+import { loadSavingsConfig } from '../deployments/src/loadConfig';
 import { SavingsRegistryFactory } from '@src/typings/SavingsRegistryFactory';
 
 import {
