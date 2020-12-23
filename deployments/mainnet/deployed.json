@@ -342,8 +342,8 @@
   {
     "name": "Implementation",
     "source": "RewardCampaign",
-    "address": "0x9Cf28ef84ec11763e488915d70715096c6bc0A5E",
-    "txn": "0xf9caf3674d4291ff86f85db9801a6b7e78ff82ae397f83879369597e1ed7a3de",
+    "address": "0x5A99d13D6175c72C982371e6f3bE19702e22aFa7",
+    "txn": "0xccbb46310a686a5c347355aeb2c943eb66826fd8d4e23e9eb16aff0d78447c01",
     "network": "mainnet",
     "version": 1,
     "type": "staking",
@@ -352,8 +352,8 @@
   {
     "name": "Proxy",
     "source": "ArcProxy",
-    "address": "0xdbbD5366fDF13940d08D1d4f9C604b050765Ddf3",
-    "txn": "0x84208609e00f52fd97e496bb76ae03ff3a6d9f4698ed73bddc30fe9e3effff13",
+    "address": "0xe123CA736D983BADFbDF9df170C73F2BB5E0a7F0",
+    "txn": "0xba53cd4e80c9bb5c1a17aa639229bfdb1d1c727d591d04420e9e89665cc125ad",
     "network": "mainnet",
     "version": 1,
     "type": "staking",
