@@ -260,6 +260,26 @@
     "group": "STABLEx"
   },
   {
+    "name": "MozartSavings",
+    "source": "MozartSavingsV2",
+    "address": "0xC547b3C04eAD1c0D5Ef060FaB87606CBc1aAE697",
+    "txn": "0xe8a1088198326f22bdf7e934ea550c87d09169c34833b0be9c5e2196f6917a74",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "savings",
+    "group": ""
+  },
+  {
+    "name": "MozartCore",
+    "source": "MozartCoreV2",
+    "address": "0x004158a8EA0f886917EEE7426aD8cC2C824007F7",
+    "txn": "0x90cf0ba706d8e807acc6427461a7def1eab6ce68b963b2ecdc9b20ec8fa29fd0",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": ""
+  },
+  {
     "name": "TestStakingToken",
     "source": "TestToken",
     "address": "0xbdaA83eb3F93C16973a61C778890BDA7AA609dE0",

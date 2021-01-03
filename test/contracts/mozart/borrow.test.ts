@@ -51,10 +51,13 @@ describe('Mozart.operateAction(Borrow)', () => {
 
   it('should update the index', async () => {
     // Set the time to one year from now in order for interest to accumulate
+    const totalBorrowed0 = (await arc.core().getTotals())[1];
+
     await arc.updateTime(ONE_YEAR_IN_SECONDS);
     await arc.synth().core.updateIndex();
 
-    let borrowIndex = await arc.synth().core.getBorrowIndex();
+    const borrowIndex1 = await arc.core().getBorrowIndex();
+    const totalBorrowed1 = (await arc.core().getTotals())[1];
 
     // In order to calculate the new index we need to multiply one year
     // by the interest rate (in seconds)
@@ -63,20 +66,23 @@ describe('Mozart.operateAction(Borrow)', () => {
     );
 
     // Our calculated index should equal the newly set borrow index
-    expect(borrowIndex[0]).to.equal(calculatedIndex);
+    expect(borrowIndex1[0]).to.equal(calculatedIndex);
+    expect(totalBorrowed1).to.equal(ArcNumber.bigMul(totalBorrowed0, borrowIndex1[0]));
 
     // Set the time to two years from now in order for interest to accumulate
     await arc.updateTime(ONE_YEAR_IN_SECONDS.mul(2));
     await arc.synth().core.updateIndex();
 
-    borrowIndex = await arc.synth().core.getBorrowIndex();
+    const totalBorrowed2 = (await arc.core().getTotals())[1];
 
-    calculatedIndex = calculatedIndex.add(
-      (await arc.synth().core.getInterestRate()).mul(ONE_YEAR_IN_SECONDS),
-    );
+    const borrowIndex2 = await arc.synth().core.getBorrowIndex();
+
+    const earnedInterest = (await arc.synth().core.getInterestRate()).mul(ONE_YEAR_IN_SECONDS);
+    calculatedIndex = calculatedIndex.add(earnedInterest);
 
     // Our calculated index should equal the newly set borrow index
-    expect(borrowIndex[0]).to.equal(calculatedIndex);
+    expect(borrowIndex2[0]).to.equal(calculatedIndex);
+    expect(totalBorrowed2).to.equal(ArcNumber.bigMul(totalBorrowed1, earnedInterest.add(BASE)));
   });
 
   it('should be able to borrow more if the c-ratio is not at the minimum', async () => {
