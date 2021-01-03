@@ -27,9 +27,6 @@ import {MozartTypes} from  "./MozartTypes.sol";
  *         a user can call. In addition, the architecture is designed for safety around upgrades
  *         where new storage variables are introduced through the inherited storage contract pattern.
  *
- *         MozartCoreV2 fixes the issues with the interest rate compounding the total borrowed amount
- *         variable incorrectly by ensuring the total borrowed amount is multiplied by the delta of the
- *         borrow index rather than new borrow index itself.
  */
 contract MozartCoreV2 is Adminable, MozartCoreStorage {
 
@@ -528,7 +525,7 @@ contract MozartCoreV2 is Adminable, MozartCoreStorage {
     /**
      * @dev Withdraw tokens owned by the proxy. This will never include depositor funds
      *      since all the collateral is held by the synthetic token itself. The only funds
-     *      that will accrue based on CoreV1 & StateV1 is the liquidation fees.
+     *      that will accrue are the liquidation fees.
      *
      * @param token Address of the token to withdraw
      * @param destination Destination to withdraw to

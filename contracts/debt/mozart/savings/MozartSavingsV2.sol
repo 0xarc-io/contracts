@@ -25,9 +25,6 @@ import {MozartSavingsStorage} from "./MozartSavingsStorage.sol";
  *         this contract. Balances are stored as "principal" amounts and the actual amount
  *         can be retreived through simply multiplying by the exchangeRate() stored.
  *
- *         MozartCoreV2 fixes the issues with the savings rate compounding the total issued amount
- *         variable incorrectly by ensuring the total borrowed amount is multiplied by the delta of the
- *         borrow index rather than new borrow index itself.
  */
 contract MozartSavingsV2 is Adminable, MozartSavingsStorage, IERC20 {
 
