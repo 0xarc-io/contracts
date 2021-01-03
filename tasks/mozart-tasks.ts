@@ -11,8 +11,9 @@ import {
   loadSynthConfig,
   pruneDeployments,
 } from '../deployments/src';
+
 import { MAX_UINT256, FIVE_PERCENT } from '../src/constants';
-import { loadSavingsConfig } from '../deployments/src/loadSynthConfig';
+import { loadSavingsConfig } from '../deployments/src/loadConfig';
 import { SavingsRegistryFactory } from '@src/typings/SavingsRegistryFactory';
 
 import {

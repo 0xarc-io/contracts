@@ -1,0 +1,15 @@
+{
+  "Pool-5": {
+    "type": "RewardCampaign",
+    "stakingToken": "0x456aad873eb70566a2ad4c3ef4fd162fc93ff074",
+    "rewardsToken": "ArcxToken",
+    "rewardConfig": {
+      "daoAllocation": "330000000000000000",
+      "slasherCut": "100000000000000000",
+      "coreContract": "yUSD-STABLEx",
+      "vestingEndDate": "1616539222",
+      "debtToStake": "2",
+      "hardCap": "5000000000000000000000"
+    }
+  }
+}

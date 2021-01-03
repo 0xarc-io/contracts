@@ -338,5 +338,25 @@
     "version": 1,
     "type": "savings",
     "group": "STABLEx"
+  },
+  {
+    "name": "Implementation",
+    "source": "RewardCampaign",
+    "address": "0x5A99d13D6175c72C982371e6f3bE19702e22aFa7",
+    "txn": "0xccbb46310a686a5c347355aeb2c943eb66826fd8d4e23e9eb16aff0d78447c01",
+    "network": "mainnet",
+    "version": 1,
+    "type": "staking",
+    "group": "Pool-5"
+  },
+  {
+    "name": "Proxy",
+    "source": "ArcProxy",
+    "address": "0xe123CA736D983BADFbDF9df170C73F2BB5E0a7F0",
+    "txn": "0xba53cd4e80c9bb5c1a17aa639229bfdb1d1c727d591d04420e9e89665cc125ad",
+    "network": "mainnet",
+    "version": 1,
+    "type": "staking",
+    "group": "Pool-5"
   }
 ]

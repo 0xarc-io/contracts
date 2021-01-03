@@ -12,14 +12,16 @@ import { TestToken } from '@src/typings/TestToken';
 import { KYFV2 } from '@src/typings/KYFV2';
 import { MockRewardCampaign } from '@src/typings/MockRewardCampaign';
 import { generateContext, ITestContext } from '../context';
-import { SpritzTestArc } from '@src/SpritzTestArc';
-import { spritzFixture } from '../fixtures';
+import { mozartFixture } from '../fixtures';
 
 import Token from '@src/utils/Token';
 import { TestTokenFactory } from '@src/typings/TestTokenFactory';
 import { MockRewardCampaignFactory } from '@src/typings/MockRewardCampaignFactory';
 import { ArcProxyFactory } from '@src/typings/ArcProxyFactory';
 import { deployKyfV2, deployMockRewardCampaign, deployTestToken } from '../deployers';
+import { MozartTestArc } from '../../../src/MozartTestArc';
+import { setupMozart } from '../setup';
+import { TEN_PERCENT } from '../../../src/constants';
 
 let ownerAccount: SignerWithAddress;
 let userAccount: SignerWithAddress;
@@ -38,7 +40,7 @@ const BASE = BigNumber.from(10).pow(18);
 
 describe('RewardCampaign', () => {
   let ctx: ITestContext;
-  let arc: SpritzTestArc;
+  let arc: MozartTestArc;
 
   const DAO_ALLOCATION = ArcDecimal.new(0.4);
   const SLAHSER_CUT = ArcDecimal.new(0.3);
@@ -49,6 +51,7 @@ describe('RewardCampaign', () => {
   const HARD_CAP = ArcNumber.new(2100);
   const REWARD_AMOUNT = ArcNumber.new(100);
   const DEBT_AMOUNT = HARD_CAP.div(DEBT_TO_STAKE);
+  const COLLATERAL_AMOUNT = DEBT_AMOUNT.mul(2);
 
   async function init(ctx: ITestContext): Promise<void> {
     const signers = await ethers.getSigners();
@@ -56,11 +59,17 @@ describe('RewardCampaign', () => {
     userAccount = signers[1];
     slasherAccount = signers[2];
     distributionAccount = signers[3];
+
+    await setupMozart(ctx, {
+      oraclePrice: ArcDecimal.new(1).value,
+      collateralRatio: ArcDecimal.new(2).value,
+      interestRate: TEN_PERCENT,
+    });
   }
 
   async function setup() {
-    ctx = await generateContext(spritzFixture, init);
-    arc = ctx.sdks.spritz;
+    ctx = await generateContext(mozartFixture, init);
+    arc = ctx.sdks.mozart;
 
     stakingToken = await deployTestToken(ownerAccount, 'LINKUSD/USDC 50/50', 'BPT');
     rewardToken = await deployTestToken(ownerAccount, 'Arc Token', 'ARC');
@@ -99,7 +108,7 @@ describe('RewardCampaign', () => {
       stakingToken.address,
       DAO_ALLOCATION,
       SLAHSER_CUT,
-      arc.state.address,
+      arc.coreAddress(),
       VESTING_END_DATE,
       DEBT_TO_STAKE,
       HARD_CAP,
@@ -164,10 +173,10 @@ describe('RewardCampaign', () => {
     beforeEach(setup);
 
     beforeEach(async () => {
-      const result1 = await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, userAccount);
+      const result1 = await arc.openPosition(COLLATERAL_AMOUNT, DEBT_AMOUNT, userAccount);
       positionId = result1.params.id;
 
-      const result2 = await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, slasherAccount);
+      const result2 = await arc.openPosition(COLLATERAL_AMOUNT, DEBT_AMOUNT, slasherAccount);
       altPositionId = result2.params.id;
     });
 
@@ -204,7 +213,11 @@ describe('RewardCampaign', () => {
       await approve(kyfTranche1);
       await mint(HARD_CAP, userAccount);
 
-      const newPosition = await arc._borrowSynthetic(DEBT_AMOUNT.div(2), DEBT_AMOUNT, userAccount);
+      const newPosition = await arc.openPosition(
+        COLLATERAL_AMOUNT,
+        DEBT_AMOUNT.div(2),
+        userAccount,
+      );
       await expectRevert(stake(HARD_CAP, newPosition.params.id, userAccount));
     });
 
@@ -213,7 +226,11 @@ describe('RewardCampaign', () => {
       await approve(kyfTranche1);
       await mint(HARD_CAP.div(2), userAccount);
 
-      const newPosition = await arc._borrowSynthetic(DEBT_AMOUNT.div(2), DEBT_AMOUNT, userAccount);
+      const newPosition = await arc.openPosition(
+        COLLATERAL_AMOUNT,
+        DEBT_AMOUNT.div(2),
+        userAccount,
+      );
       await stake(HARD_CAP.div(2), newPosition.params.id, userAccount);
 
       const stakerDetails = await stakingRewards.stakers(userAccount.address);
@@ -229,8 +246,8 @@ describe('RewardCampaign', () => {
       await approve(kyfTranche1);
       await mint(HARD_CAP, userAccount);
 
-      const newPosition = await arc._borrowSynthetic(
-        DEBT_AMOUNT.div(2),
+      const newPosition = await arc.openPosition(
+        COLLATERAL_AMOUNT,
         DEBT_AMOUNT.div(2),
         userAccount,
       );
@@ -260,10 +277,10 @@ describe('RewardCampaign', () => {
     beforeEach(async () => {
       await setup();
 
-      const result1 = await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, userAccount);
+      const result1 = await arc.openPosition(COLLATERAL_AMOUNT, DEBT_AMOUNT, userAccount);
       userPosition = result1.params.id;
 
-      await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, slasherAccount);
+      await arc.openPosition(COLLATERAL_AMOUNT, DEBT_AMOUNT, slasherAccount);
 
       await approve(kyfTranche1);
       await verifyUserIn(kyfTranche1, userAccount.address);
@@ -321,10 +338,10 @@ describe('RewardCampaign', () => {
     beforeEach(setup);
 
     beforeEach(async () => {
-      const result1 = await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, userAccount);
+      const result1 = await arc.openPosition(COLLATERAL_AMOUNT, DEBT_AMOUNT, userAccount);
       userPosition = result1.params.id;
 
-      await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, slasherAccount);
+      await arc.openPosition(COLLATERAL_AMOUNT, DEBT_AMOUNT, slasherAccount);
 
       await approve(kyfTranche1);
       await verifyUserIn(kyfTranche1, userAccount.address);
@@ -407,7 +424,7 @@ describe('RewardCampaign', () => {
 
     it('should be able to withdraw', async () => {
       const contract = await getContract(userAccount);
-      const result = await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, userAccount);
+      const result = await arc.openPosition(COLLATERAL_AMOUNT, DEBT_AMOUNT, userAccount);
 
       await approve(kyfTranche1);
       await verifyUserIn(kyfTranche1, userAccount.address);
@@ -428,7 +445,7 @@ describe('RewardCampaign', () => {
     beforeEach(async () => {
       await setup();
 
-      const result = await arc._borrowSynthetic(DEBT_AMOUNT, DEBT_AMOUNT, userAccount);
+      const result = await arc.openPosition(COLLATERAL_AMOUNT, DEBT_AMOUNT, userAccount);
       userPosition = result.params.id;
 
       await approve(kyfTranche1);
@@ -530,7 +547,7 @@ describe('RewardCampaign', () => {
           stakingToken.address,
           DAO_ALLOCATION,
           SLAHSER_CUT,
-          arc.state.address,
+          arc.coreAddress(),
           VESTING_END_DATE,
           DEBT_TO_STAKE,
           HARD_CAP,
@@ -544,7 +561,7 @@ describe('RewardCampaign', () => {
           stakingToken.address,
           DAO_ALLOCATION,
           SLAHSER_CUT,
-          arc.state.address,
+          arc.coreAddress(),
           VESTING_END_DATE,
           DEBT_TO_STAKE,
           HARD_CAP,
@@ -560,7 +577,7 @@ describe('RewardCampaign', () => {
         stakingToken.address,
         DAO_ALLOCATION,
         SLAHSER_CUT,
-        arc.state.address,
+        arc.coreAddress(),
         VESTING_END_DATE,
         DEBT_TO_STAKE,
         HARD_CAP,
@@ -571,7 +588,7 @@ describe('RewardCampaign', () => {
       expect(await (await stakingRewards.vestingEndDate()).toNumber()).to.equal(VESTING_END_DATE);
       expect(await (await stakingRewards.debtToStake()).toNumber()).to.equal(DEBT_TO_STAKE);
       expect(await stakingRewards.hardCap()).to.equal(HARD_CAP);
-      expect(await stakingRewards.stateContract()).to.equal(arc.state.address);
+      expect(await stakingRewards.stateContract()).to.equal(arc.coreAddress());
     });
   });
 

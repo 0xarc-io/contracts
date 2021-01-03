@@ -278,5 +278,35 @@
     "version": 1,
     "type": "synth",
     "group": ""
+  },
+  {
+    "name": "TestStakingToken",
+    "source": "TestToken",
+    "address": "0xbdaA83eb3F93C16973a61C778890BDA7AA609dE0",
+    "txn": "0x3e42b27fa058e0116089911b63a82147f312c70a096de084f0aa47e61b9f54d5",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "staking",
+    "group": "TestPool-1"
+  },
+  {
+    "name": "Implementation",
+    "source": "RewardCampaign",
+    "address": "0x81D4750E86171E6C633e0cAB984F985B32896646",
+    "txn": "0x71accf3fb4a9d2b9412b01b1b468e3f05fd418c3d664cce439371a99f5fdaeb4",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "staking",
+    "group": "TestPool-1"
+  },
+  {
+    "name": "Proxy",
+    "source": "ArcProxy",
+    "address": "0xFF564ab6D74133EFa4615cBe84619ec62ea34dfB",
+    "txn": "0x6089863dc534b3519c08ba7a690e5750114615f35ddcdd67b50847bf74e3e680",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "staking",
+    "group": "TestPool-1"
   }
 ]
