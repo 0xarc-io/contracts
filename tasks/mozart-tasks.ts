@@ -20,14 +20,13 @@ import {
   ArcProxyFactory,
   ChainLinkOracleFactory,
   MockOracleFactory,
-  MozartSavingsV1Factory,
-  MozartCoreV1Factory,
+  MozartSavingsV2Factory,
+  MozartCoreV2Factory,
   SyntheticTokenV1Factory,
   SynthRegistryV2Factory,
   TestTokenFactory,
   YUSDOracleFactory,
 } from '@src/typings';
-import ArcNumber from '@src/utils/ArcNumber';
 
 task('deploy-mozart-synthetic', 'Deploy the Mozart synthetic token')
   .addParam('name', 'The name of the synthetic token')
@@ -89,6 +88,7 @@ task('deploy-mozart-synthetic', 'Deploy the Mozart synthetic token')
 
 task('deploy-mozart', 'Deploy the Mozart contracts')
   .addParam('synth', 'The synth you would like to interact with')
+  .addOptionalParam('component', 'The type of component to deploy')
   .setAction(async (taskArgs, hre) => {
     const synthName = taskArgs.synth;
 
@@ -102,13 +102,18 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
     const coreAddress = await deployContract(
       {
         name: 'MozartCore',
-        source: 'MozartCoreV1',
-        data: new MozartCoreV1Factory(signer).getDeployTransaction(),
+        source: 'MozartCoreV2',
+        data: new MozartCoreV2Factory(signer).getDeployTransaction(),
         version: 1,
         type: DeploymentType.synth,
       },
       networkConfig,
     );
+
+    // If we only want to deploy the implementation then return
+    if (taskArgs.component == 'implementation') {
+      return;
+    }
 
     const collateralAddress =
       synthConfig.collateral_address ||
@@ -197,7 +202,7 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
       group: globalGroup,
     }).address;
 
-    const core = MozartCoreV1Factory.connect(coreProxyAddress, signer);
+    const core = MozartCoreV2Factory.connect(coreProxyAddress, signer);
     const synthetic = SyntheticTokenV1Factory.connect(syntheticProxyAddress, signer);
 
     console.log(yellow(`* Calling core init()...`));
@@ -255,9 +260,9 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
       console.log(red(`Failed to set limits!\nReason: ${error}\n`));
     }
   });
-
 task('deploy-mozart-savings', 'Deploy a Mozart Savings contract instance')
   .addParam('savings', 'The savings you would like to deploy')
+  .addOptionalParam('component', 'The type of component to deploy')
   .setAction(async (taskArgs, hre) => {
     const savingsName = taskArgs.savings;
 
@@ -283,13 +288,18 @@ task('deploy-mozart-savings', 'Deploy a Mozart Savings contract instance')
     const mozartSavingsAddress = await deployContract(
       {
         name: 'MozartSavings',
-        source: 'MozartSavingsV1',
-        data: new MozartSavingsV1Factory(signer).getDeployTransaction(),
+        source: 'MozartSavingsV2',
+        data: new MozartSavingsV2Factory(signer).getDeployTransaction(),
         version: 1,
         type: DeploymentType.savings,
       },
       networkConfig,
     );
+
+    // If we only want to deploy the implementation then return
+    if (taskArgs.component == 'implementation') {
+      return;
+    }
 
     const savingsProxyAddress = await deployContract(
       {
@@ -307,7 +317,7 @@ task('deploy-mozart-savings', 'Deploy a Mozart Savings contract instance')
       networkConfig,
     );
 
-    const savings = MozartSavingsV1Factory.connect(savingsProxyAddress, signer);
+    const savings = MozartSavingsV2Factory.connect(savingsProxyAddress, signer);
     const synthetic = SyntheticTokenV1Factory.connect(syntheticProxyAddress, signer);
 
     console.log(yellow(`* Calling savings init()...`));

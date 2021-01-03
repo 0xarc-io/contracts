@@ -12,7 +12,7 @@ import { mozartFixture } from '../fixtures';
 import { MozartTestArc } from '@src/MozartTestArc';
 import Token from '@src/utils/Token';
 import { MozartSavingsV1 } from '@src/typings/MozartSavingsV1';
-import { MockMozartSavingsV1Factory } from '@src/typings';
+import { MockMozartSavingsV2Factory } from '@src/typings';
 
 const COLLATERAL_AMOUNT = ArcNumber.new(200);
 const BORROW_AMOUNT = ArcNumber.new(50);
@@ -33,7 +33,7 @@ describe('Mozart.integration', () => {
   before(async () => {
     ctx = await generateContext(mozartFixture, init);
     arc = ctx.sdks.mozart;
-    savings = ctx.contracts.mozart.savingsV1;
+    savings = ctx.contracts.mozart.savings;
   });
 
   it('should be able to open a collateralized position', async () => {
@@ -77,10 +77,10 @@ describe('Mozart.integration', () => {
     await savings.updateIndex();
     await savings.connect(ctx.signers.staker).stake(BORROW_AMOUNT);
 
-    await MockMozartSavingsV1Factory.connect(
-      savings.address,
-      ctx.signers.admin,
-    ).setCurrentTimestamp(ONE_YEAR_IN_SECONDS);
+    await ctx.contracts.mozart.savings
+      .connect(ctx.signers.admin)
+      .setCurrentTimestamp(ONE_YEAR_IN_SECONDS);
+
     await savings.updateIndex();
 
     const accruedBalance = await savings.balanceOf(ctx.signers.staker.address);

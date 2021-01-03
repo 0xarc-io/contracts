@@ -6,9 +6,6 @@ import { CoreV3 } from '@src/typings/CoreV3';
 import { CoreV4 } from '@src/typings/CoreV4';
 import { StateV1 } from '@src/typings/StateV1';
 
-import { MozartCoreV1 } from '@src/typings/MozartCoreV1';
-import { MozartSavingsV1 } from '@src/typings/MozartSavingsV1';
-
 import { MockContract } from 'ethereum-waffle';
 import { StaticSyntheticToken } from '@src/typings/StaticSyntheticToken';
 import { SyntheticTokenV1 } from '@src/typings/SyntheticTokenV1';
@@ -21,6 +18,7 @@ import { MockOracle } from '@src/typings/MockOracle';
 import { TestToken } from '@src/typings/TestToken';
 import { SpritzTestArc } from '@src/SpritzTestArc';
 import { MozartTestArc } from '@src/MozartTestArc';
+import { MockMozartCoreV2, MockMozartSavingsV2 } from '@src/typings';
 
 export interface TestingSigners {
   admin: SignerWithAddress;
@@ -48,8 +46,8 @@ export interface Contracts {
     state: StateV1;
   };
   mozart: {
-    coreV1: MozartCoreV1;
-    savingsV1: MozartSavingsV1;
+    core: MockMozartCoreV2;
+    savings: MockMozartSavingsV2;
   };
   synthetic: {
     static: StaticSyntheticToken;
