@@ -103,6 +103,7 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
 
     const synthConfig = loadSynthConfig({ network, key: synthName });
     const globalGroup = synthName.split('-').length == 1 ? synthName : synthName.split('-')[1];
+    const collatName = synthName.split('-').length == 1 ? synthName : synthName.split('-')[0];
 
     const coreAddress = await deployContract(
       {
@@ -126,7 +127,7 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
         {
           name: 'CollateralToken',
           source: 'TestToken',
-          data: new TestTokenFactory(signer).getDeployTransaction('TestCollateral', 'TEST', 18),
+          data: new TestTokenFactory(signer).getDeployTransaction(collatName, collatName, 18),
           version: 1,
           type: DeploymentType.synth,
           group: synthName,
@@ -285,6 +286,7 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
       console.log(red(`Failed to set limits!\nReason: ${error}\n`));
     }
   });
+
 task('deploy-mozart-savings', 'Deploy a Mozart Savings contract instance')
   .addParam('savings', 'The savings you would like to deploy')
   .addOptionalParam('component', 'The type of component to deploy')
