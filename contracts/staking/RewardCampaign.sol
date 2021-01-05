@@ -32,6 +32,7 @@ contract RewardCampaign is Adminable {
         uint256 rewardPerTokenPaid;
         uint256 rewardsEarned;
         uint256 rewardsReleased;
+        address stateContract;
     }
 
     /* ========== Variables ========== */
@@ -39,7 +40,7 @@ contract RewardCampaign is Adminable {
     IERC20 public rewardsToken;
     IERC20 public stakingToken;
 
-    IMozartCoreV1 public stateContract;
+    mapping(address => bool) public stateContracts;
 
     address public arcDAO;
     address public rewardsDistributor;
@@ -90,6 +91,8 @@ contract RewardCampaign is Adminable {
     event ClaimableStatusUpdated(bool _status);
 
     event UserSlashed(address _user, address _slasher, uint256 _amount);
+
+    event StateContractUpdated(address _address, bool _status);
 
     /* ========== Modifiers ========== */
 
@@ -203,7 +206,6 @@ contract RewardCampaign is Adminable {
         address _stakingToken,
         Decimal.D256 memory _daoAllocation,
         Decimal.D256 memory _slasherCut,
-        address _stateContract,
         uint256 _vestingEndDate,
         uint256 _debtToStake,
         uint256 _hardCap
@@ -219,7 +221,6 @@ contract RewardCampaign is Adminable {
         daoAllocation = _daoAllocation;
         slasherCut = _slasherCut;
         rewardsToken = IERC20(_rewardsToken);
-        stateContract = IMozartCoreV1(_stateContract);
         vestingEndDate = _vestingEndDate;
         debtToStake = _debtToStake;
         hardCap = _hardCap;
@@ -254,6 +255,17 @@ contract RewardCampaign is Adminable {
         // And remove it from the synths mapping
         delete kyfInstances[_kyfContract];
         emit KyfStatusUpdated(_kyfContract, false);
+    }
+
+    function setApprovedStateContract(
+        address _stateContract,
+        bool _status
+    )
+        public
+        onlyAdmin
+    {
+        stateContracts[_stateContract] = _status;
+        emit StateContractUpdated(_stateContract, _status);
     }
 
     /* ========== View Functions ========== */
@@ -390,12 +402,19 @@ contract RewardCampaign is Adminable {
     function isMinter(
         address _user,
         uint256 _amount,
-        uint256 _positionId
+        uint256 _positionId,
+        address _stateContract
     )
         public
         view
         returns (bool)
     {
+        require(
+            stateContracts[_stateContract] == true,
+            "The state contract is not registered"
+        );
+        
+        IMozartCoreV1 stateContract = IMozartCoreV1(_stateContract);
         MozartTypes.Position memory position = stateContract.getPosition(_positionId);
 
         if (position.owner != _user) {
@@ -420,7 +439,8 @@ contract RewardCampaign is Adminable {
 
     function stake(
         uint256 amount,
-        uint256 positionId
+        uint256 positionId,
+        address stateContract
     )
         external
         updateReward(msg.sender)
@@ -443,7 +463,7 @@ contract RewardCampaign is Adminable {
         uint256 debtRequirement = totalBalance.div(debtToStake);
 
         require(
-            isMinter(msg.sender, debtRequirement, positionId),
+            isMinter(msg.sender, debtRequirement, positionId, stateContract),
             "Must be a valid minter"
         );
 
@@ -486,7 +506,12 @@ contract RewardCampaign is Adminable {
         Staker storage userStaker = stakers[user];
 
         require(
-            isMinter(user, userStaker.debtSnapshot, userStaker.positionId) == false,
+            isMinter(
+                user, 
+                userStaker.debtSnapshot, 
+                userStaker.positionId, 
+                userStaker.stateContract
+            ) == false,
             "You can't slash a user who is a valid minter"
         );
 
