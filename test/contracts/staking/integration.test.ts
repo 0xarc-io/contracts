@@ -101,7 +101,6 @@ describe('Staking Integration', () => {
       stakingToken.address,
       ArcDecimal.new(0.4),
       ArcDecimal.new(1),
-      arc.state.address,
       100,
       1,
       100,
@@ -134,7 +133,8 @@ describe('Staking Integration', () => {
     const userRewardPool = await new MockRewardCampaignFactory(userWallet).attach(
       rewardPool.address,
     );
-    await userRewardPool.stake(100, positionId);
+    await userRewardPool.setApprovedStateContract(arc.core.address, true);
+    await userRewardPool.stake(100, positionId, arc.core.address);
 
     expect((await userRewardPool.balanceOf(userWallet.address)).toNumber()).to.equal(100);
   });
