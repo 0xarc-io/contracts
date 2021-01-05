@@ -413,7 +413,7 @@ contract RewardCampaign is Adminable {
             stateContracts[_stateContract] == true,
             "The state contract is not registered"
         );
-        
+
         IMozartCoreV1 stateContract = IMozartCoreV1(_stateContract);
         MozartTypes.Position memory position = stateContract.getPosition(_positionId);
 
@@ -463,7 +463,12 @@ contract RewardCampaign is Adminable {
         uint256 debtRequirement = totalBalance.div(debtToStake);
 
         require(
-            isMinter(msg.sender, debtRequirement, positionId, stateContract),
+            isMinter(
+                msg.sender, 
+                debtRequirement, 
+                positionId, 
+                stateContract
+            ),
             "Must be a valid minter"
         );
 
