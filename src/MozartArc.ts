@@ -72,7 +72,9 @@ export class MozartArc {
     synth: Synth = this.availableSynths()[0],
     overrides: TransactionOverrides = {},
   ) {
+    console.log('a')
     const contract = await this.getCore(synth, caller);
+    console.log('b')
     const tx = await contract.operateAction(
       Operation.Open,
       {
@@ -84,6 +86,7 @@ export class MozartArc {
       overrides,
     );
 
+    console.log('c')
     return await this.parseActionTx(tx);
   }
 

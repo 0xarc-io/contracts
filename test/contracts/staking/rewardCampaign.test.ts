@@ -21,8 +21,10 @@ import { ArcProxyFactory } from '@src/typings/ArcProxyFactory';
 import { deployKyfV2, deployMockRewardCampaign, deployTestToken } from '../deployers';
 import { MozartTestArc } from '../../../src/MozartTestArc';
 import { setupMozart } from '../setup';
-import { TEN_PERCENT } from '../../../src/constants';
+import { MAX_UINT256, TEN_PERCENT } from '../../../src/constants';
 import { fail } from 'assert';
+import { ArcProxy, MozartCoreV2, MozartCoreV2Factory } from '@src/typings';
+import { Operation } from '@arc-types/core';
 
 let ownerAccount: SignerWithAddress;
 let userAccount: SignerWithAddress;
@@ -41,9 +43,8 @@ const BASE = BigNumber.from(10).pow(18);
 
 describe('RewardCampaign', () => {
   let arc: MozartTestArc;
-  let approvedStateContractAddress: string;
-  let approvedStateContractAddress2: string;
-  let unapprovedStateContractAddress: string;
+  let core2: MozartCoreV2;
+  let core2proxy: ArcProxy;
 
   const DAO_ALLOCATION = ArcDecimal.new(0.4);
   const SLAHSER_CUT = ArcDecimal.new(0.3);
@@ -72,16 +73,8 @@ describe('RewardCampaign', () => {
 
   async function setup() {
     const ctx: ITestContext = await generateContext(mozartFixture, init);
-    const ctx2: ITestContext = await generateContext(mozartFixture, init);
-    const ctx3: ITestContext = await generateContext(mozartFixture, init);
 
     arc = ctx.sdks.mozart;
-    const arc2 = ctx2.sdks.mozart;
-    const arc3 = ctx3.sdks.mozart;
-
-    approvedStateContractAddress = arc.coreAddress();
-    approvedStateContractAddress2 = arc2.coreAddress();
-    unapprovedStateContractAddress = arc3.coreAddress();
 
     stakingToken = await deployTestToken(ownerAccount, 'LINKUSD/USDC 50/50', 'BPT');
     rewardToken = await deployTestToken(ownerAccount, 'Arc Token', 'ARC');
@@ -124,8 +117,7 @@ describe('RewardCampaign', () => {
       DEBT_TO_STAKE,
       HARD_CAP,
     );
-    await stakingRewards.setApprovedStateContract(approvedStateContractAddress, true);
-    await stakingRewards.setApprovedStateContract(approvedStateContractAddress2, true);
+    await stakingRewards.setApprovedStateContract(arc.coreAddress());
 
     await kyfTranche1.setVerifier(ownerAccount.address);
     await kyfTranche1.setHardCap(10);
@@ -133,6 +125,29 @@ describe('RewardCampaign', () => {
     await kyfTranche2.setHardCap(10);
 
     await stakingRewards.notifyRewardAmount(REWARD_AMOUNT);
+  }
+
+  async function deploySecondCore() {
+    core2proxy =  await new ArcProxyFactory(ownerAccount).deploy(
+      await (await new MozartCoreV2Factory(ownerAccount).deploy()).address,
+      await ownerAccount.getAddress(),
+      [],
+    );
+    core2 = MozartCoreV2Factory.connect(core2proxy.address, ownerAccount);
+    await core2.init(
+      18,
+      arc.collateral().address,
+      arc.syntheticAddress(),
+      await arc.core().getCurrentOracle(),
+      await ownerAccount.getAddress(),
+      {value: ArcNumber.new(2)},
+      {value: ArcDecimal.new(0.1).value},
+      {value: 0}
+    );
+    await arc.synthetic().addMinter(
+      core2proxy.address,
+      MAX_UINT256,
+    );
   }
 
   /* ========== Helpers ========== */
@@ -182,9 +197,22 @@ describe('RewardCampaign', () => {
     await userStaking.getReward(wallet.address);
   }
 
+  async function openPositionOnCore(core: MozartCoreV2) {
+    const arc2 = await MozartTestArc.init(ownerAccount);
+    await arc2.addSynths({ ETHX: core.address});
+
+    const positionResult = await arc2.openPosition(
+      COLLATERAL_AMOUNT,
+      DEBT_AMOUNT,
+      userAccount
+    );
+    const secondPositionId = positionResult.params.id;
+    return secondPositionId;
+  }
+
   /* ========== Public fuctions ========== */
 
-  describe('#stake', () => {
+  describe.only('#stake', () => {
     let positionId: BigNumberish;
     let altPositionId: BigNumberish;
 
@@ -202,28 +230,28 @@ describe('RewardCampaign', () => {
       await verifyUserIn(kyfTranche1, userAccount.address);
       await approve(kyfTranche1);
       await mint(HARD_CAP.add(1), userAccount);
-      await expectRevert(stake(HARD_CAP.add(1), positionId, userAccount, approvedStateContractAddress));
+      await expectRevert(stake(HARD_CAP.add(1), positionId, userAccount, arc.coreAddress()));
     });
 
     it('should not be able to stake over the hard cap in total', async () => {
       await verifyUserIn(kyfTranche1, userAccount.address);
       await approve(kyfTranche1);
       await mint(HARD_CAP.mul(3), userAccount);
-      await stake(HARD_CAP, positionId, userAccount, approvedStateContractAddress);
-      await expectRevert(stake(HARD_CAP, positionId, userAccount, approvedStateContractAddress));
+      await stake(HARD_CAP, positionId, userAccount, arc.coreAddress());
+      await expectRevert(stake(HARD_CAP, positionId, userAccount, arc.coreAddress()));
     });
 
     it('should not be able to stake without being verified', async () => {
       await approve(kyfTranche1);
       await mint(HARD_CAP, userAccount);
-      await expectRevert(stake(HARD_CAP, positionId, userAccount, approvedStateContractAddress));
+      await expectRevert(stake(HARD_CAP, positionId, userAccount, arc.coreAddress()));
     });
 
     it('should not be able to stake without a valid debt position owned by the same user', async () => {
       await verifyUserIn(kyfTranche1, userAccount.address);
       await approve(kyfTranche1);
       await mint(HARD_CAP, userAccount);
-      await expectRevert(stake(HARD_CAP, altPositionId, userAccount, approvedStateContractAddress));
+      await expectRevert(stake(HARD_CAP, altPositionId, userAccount, arc.coreAddress()));
     });
 
     it('should not be able to stake 1/2 of the hard cap with less than 1/2 the debt', async () => {
@@ -236,7 +264,7 @@ describe('RewardCampaign', () => {
         DEBT_AMOUNT.div(2),
         userAccount,
       );
-      await expectRevert(stake(HARD_CAP, newPosition.params.id, userAccount, approvedStateContractAddress));
+      await expectRevert(stake(HARD_CAP, newPosition.params.id, userAccount, arc.coreAddress()));
     });
 
     it('should be able to stake 1/2 of the hard cap with 1/2 the debt', async () => {
@@ -249,7 +277,7 @@ describe('RewardCampaign', () => {
         DEBT_AMOUNT.div(2),
         userAccount,
       );
-      await stake(HARD_CAP.div(2), newPosition.params.id, userAccount, approvedStateContractAddress);
+      await stake(HARD_CAP.div(2), newPosition.params.id, userAccount, arc.coreAddress());
 
       const stakerDetails = await stakingRewards.stakers(userAccount.address);
       expect(stakerDetails.balance).to.equal(HARD_CAP.div(2));
@@ -269,14 +297,14 @@ describe('RewardCampaign', () => {
         DEBT_AMOUNT.div(2),
         userAccount,
       );
-      await expectRevert(stake(HARD_CAP, newPosition.params.id, userAccount, approvedStateContractAddress));
+      await expectRevert(stake(HARD_CAP, newPosition.params.id, userAccount, arc.coreAddress()));
     });
 
     it('should be able to stake the maximum with the correct debt amount', async () => {
       await verifyUserIn(kyfTranche1, userAccount.address);
       await approve(kyfTranche1);
       await mint(HARD_CAP, userAccount);
-      await stake(HARD_CAP, positionId, userAccount, approvedStateContractAddress);
+      await stake(HARD_CAP, positionId, userAccount, arc.coreAddress());
 
       const stakerDetails = await stakingRewards.stakers(userAccount.address);
       expect(stakerDetails.balance).to.equal(HARD_CAP);
@@ -286,21 +314,57 @@ describe('RewardCampaign', () => {
       expect(stakerDetails.rewardPerTokenPaid).to.equal(ArcNumber.new(0));
     });
 
-    it('should not be able to set a lower debt requirement by staking less before the deadline', async () => {});
+    it('should not be able to set a lower debt requirement by staking less before the deadline', async () => {
+      fail('Not implemented');
+    });
 
     it('should not be able to stake to an unnaproved state contract', async () => {
+      await deploySecondCore();
       await verifyUserIn(kyfTranche1, userAccount.address);
       await approve(kyfTranche1);
       await mint(HARD_CAP, userAccount);
-      await expectRevert(stake(HARD_CAP, positionId, userAccount, unapprovedStateContractAddress));
+      await expectRevert(
+        stake(
+          HARD_CAP, 
+          positionId, 
+          userAccount, 
+          core2.address
+        )
+      );
+    });
+
+    it.only('should be able to stake to a second state contract', async () => {
+      await deploySecondCore();
+      await verifyUserIn(kyfTranche1, userAccount.address);
+      await approve(kyfTranche1);
+      await mint(HARD_CAP, userAccount);
+
+      await stakingRewards.setApprovedStateContract(core2.address);
+      const secondPositionId = await openPositionOnCore(core2);
+      await stake(HARD_CAP, secondPositionId, userAccount, core2.address);
+
+      const stakerDetails = await stakingRewards.stakers(userAccount.address);
+      expect(stakerDetails.balance).to.equal(HARD_CAP);
+      expect(stakerDetails.debtSnapshot).to.equal(DEBT_AMOUNT);
+      expect(stakerDetails.positionId).to.equal(positionId);
+      expect(stakerDetails.rewardsEarned).to.equal(ArcNumber.new(0));
+      expect(stakerDetails.rewardPerTokenPaid).to.equal(ArcNumber.new(0));
     });
 
     it('should not be able to re-stake to a different state contract', async () => {
+      await deploySecondCore();
       await verifyUserIn(kyfTranche1, userAccount.address);
       await approve(kyfTranche1);
       await mint(HARD_CAP, userAccount);
-      await stake(HARD_CAP, positionId, userAccount, approvedStateContractAddress);
-      await expectRevert(stake(HARD_CAP, positionId, userAccount, approvedStateContractAddress2));
+      await stakingRewards.setApprovedStateContract(core2.address);
+
+      // Open position on the second core
+      const secondPositionId = await openPositionOnCore(core2);
+      
+      await stake(HARD_CAP, positionId, userAccount, arc.coreAddress());
+      await expectRevert(
+        stake(HARD_CAP, secondPositionId, userAccount, core2.address)
+      );
     });
   });
 
@@ -318,7 +382,7 @@ describe('RewardCampaign', () => {
       await approve(kyfTranche1);
       await verifyUserIn(kyfTranche1, userAccount.address);
       await mint(HARD_CAP, userAccount);
-      await stake(HARD_CAP, userPosition, userAccount, approvedStateContractAddress);
+      await stake(HARD_CAP, userPosition, userAccount, arc.coreAddress());
     });
 
     it('should not be able to slash if user has the amount of their debt snapshot', async () => {
@@ -379,7 +443,7 @@ describe('RewardCampaign', () => {
       await approve(kyfTranche1);
       await verifyUserIn(kyfTranche1, userAccount.address);
       await mint(HARD_CAP, userAccount);
-      await stake(HARD_CAP, userPosition, userAccount, approvedStateContractAddress);
+      await stake(HARD_CAP, userPosition, userAccount, arc.coreAddress());
     });
 
     it('should not be able to get the reward if the tokens are not claimable after the reward period', async () => {
@@ -462,7 +526,7 @@ describe('RewardCampaign', () => {
       await approve(kyfTranche1);
       await verifyUserIn(kyfTranche1, userAccount.address);
       await mint(HARD_CAP, userAccount);
-      await stake(HARD_CAP, result.params.id, userAccount, approvedStateContractAddress);
+      await stake(HARD_CAP, result.params.id, userAccount, arc.coreAddress());
 
       expect(await stakingToken.balanceOf(userAccount.address)).to.equal(BigNumber.from(0));
 
@@ -484,7 +548,7 @@ describe('RewardCampaign', () => {
       await approve(kyfTranche1);
       await verifyUserIn(kyfTranche1, userAccount.address);
       await mint(HARD_CAP, userAccount);
-      await stake(HARD_CAP, userPosition, userAccount, approvedStateContractAddress);
+      await stake(HARD_CAP, userPosition, userAccount, arc.coreAddress());
       await stakingRewards.setCurrentTimestamp(10);
     });
 
@@ -502,14 +566,14 @@ describe('RewardCampaign', () => {
       expect(await stakingToken.balanceOf(userAccount.address)).to.equal(HARD_CAP);
       expect(await rewardToken.balanceOf(userAccount.address)).to.equal(0);
 
-      await stake(HARD_CAP, userPosition, userAccount, approvedStateContractAddress);
+      await stake(HARD_CAP, userPosition, userAccount, arc.coreAddress());
       await stakingRewards.setCurrentTimestamp(99);
       await contract.exit();
 
       expect(await stakingToken.balanceOf(userAccount.address)).to.equal(HARD_CAP);
       expect(await rewardToken.balanceOf(userAccount.address)).to.equal(0);
 
-      await stake(HARD_CAP, userPosition, userAccount, approvedStateContractAddress);
+      await stake(HARD_CAP, userPosition, userAccount, arc.coreAddress());
       await stakingRewards.setCurrentTimestamp(150);
       await contract.exit();
 
@@ -640,4 +704,19 @@ describe('RewardCampaign', () => {
       expect(await stakingRewards.kyfInstances(kyfTranche1.address)).to.be.true;
     });
   });
+
+  describe('#setApprovedStateContract', () => {
+    it('should not be able to set a state contract as an unauthorized user', async () => {
+      await deploySecondCore();
+      const userStakingRewards = await new MockRewardCampaignFactory(userAccount).attach(arc.coreAddress());
+      await expectRevert(userStakingRewards.setApprovedStateContract(core2.address));
+    });
+
+    it('should be able to add a valid state contract as the owner', async () => {
+      await deploySecondCore();
+      const ownerStakingRewards = await new MockRewardCampaignFactory(ownerAccount).attach(arc.coreAddress());
+      await ownerStakingRewards.setApprovedStateContract(core2.address);
+      expect(await ownerStakingRewards.approvedStateContracts(core2.address)).to.be.true;
+    });
+  })
 });
