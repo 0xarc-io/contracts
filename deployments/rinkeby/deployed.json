@@ -308,5 +308,35 @@
     "version": 1,
     "type": "staking",
     "group": "TestPool-1"
+  },
+  {
+    "name": "CollateralToken",
+    "source": "TestToken",
+    "address": "0x6e6562955047888ca853D72a73088bDAAA0850c3",
+    "txn": "0x1490b37bcea9ef85eba167f7b574b36ae26797d3da4affcabe9814de38c3c327",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": "cUSDC-STABLEx"
+  },
+  {
+    "name": "Oracle",
+    "source": "CTokenOracle",
+    "address": "0x9C7A30b3d7fFFB80625e04B820ee11F16fC6E713",
+    "txn": "0xd8a2fe4f4b7dacdaee120058ebbeadb1f87bb5eed2b2013956d8c9cbfe663a8a",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": "cUSDC-STABLEx"
+  },
+  {
+    "name": "CoreProxy",
+    "source": "ArcProxy",
+    "address": "0xb79EDe313D7857bC376689dE06Bc05D275E51355",
+    "txn": "0xce553e45397592d67a7aee2848a0638ad4e05e44a7c5c62da5deef2800f37977",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": "cUSDC-STABLEx"
   }
 ]

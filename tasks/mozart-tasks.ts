@@ -26,7 +26,9 @@ import {
   SynthRegistryV2Factory,
   TestTokenFactory,
   YUSDOracleFactory,
+  CTokenOracleFactory,
 } from '@src/typings';
+import { group } from 'console';
 
 task('deploy-mozart-synthetic', 'Deploy the Mozart synthetic token')
   .addParam('name', 'The name of the synthetic token')
@@ -72,12 +74,15 @@ task('deploy-mozart-synthetic', 'Deploy the Mozart synthetic token')
 
     const synthetic = SyntheticTokenV1Factory.connect(syntheticProxyAddress, signer);
 
-    if ((await synthetic.name()).length > 0) {
-      console.log(magenta(`Synthetic init() function has already been called\n`));
+    try {
+      if ((await synthetic.name()).length > 0) {
+        console.log(magenta(`Synthetic init() function has already been called\n`));
+        return;
+      }
+    } catch {
       return;
     }
 
-    console.log(yellow(`* Calling synthetic init()...`));
     try {
       await synthetic.init(name, symbol, '1', { gasLimit: 1000000 });
       console.log(green(`Called synthetic init() successfully!\n`));
@@ -134,6 +139,7 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
     let oracleAddress = '';
 
     if (!synthConfig.oracle_link_aggregator_address && !synthConfig.oracle_source) {
+      console.log(yellow(`Deploy Mock Oracle...`));
       oracleAddress = await deployContract(
         {
           name: 'Oracle',
@@ -146,6 +152,7 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
         networkConfig,
       );
     } else if (synthConfig.oracle_link_aggregator_address) {
+      console.log(yellow(`Deploy Chainlink Oracle...`));
       oracleAddress = await deployContract(
         {
           name: 'Oracle',
@@ -160,11 +167,29 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
         networkConfig,
       );
     } else if (synthConfig.oracle_source == 'YUSDOracle') {
+      console.log(yellow(`Deploy YUSD Oracle...`));
       oracleAddress = await deployContract(
         {
           name: 'Oracle',
           source: 'YUSDOracle',
           data: new YUSDOracleFactory(signer).getDeployTransaction(),
+          version: 1,
+          type: DeploymentType.synth,
+          group: synthName,
+        },
+        networkConfig,
+      );
+    } else if (synthConfig.oracle_source == 'CTokenOracle') {
+      console.log(yellow(`Deploy CToken Oracle...`));
+      oracleAddress = await deployContract(
+        {
+          name: 'Oracle',
+          source: 'CTokenOracle',
+          data: new CTokenOracleFactory(signer).getDeployTransaction(
+            synthConfig.oracle_ctoken_address,
+            synthConfig.oracle_token_aggregator_address,
+            synthConfig.oracle_eth_aggregator_address,
+          ),
           version: 1,
           type: DeploymentType.synth,
           group: synthName,
