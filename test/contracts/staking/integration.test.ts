@@ -113,6 +113,7 @@ describe('Staking Integration', () => {
     await kyf.setHardCap(10);
 
     await rewardPool.setApprovedKYFInstance(kyf.address, true);
+    await rewardPool.setApprovedStateContract(arc.core.address, true);
     await rewardPool.setRewardsDuration(100);
   });
 
@@ -133,7 +134,6 @@ describe('Staking Integration', () => {
     const userRewardPool = await new MockRewardCampaignFactory(userWallet).attach(
       rewardPool.address,
     );
-    await userRewardPool.setApprovedStateContract(arc.core.address, true);
     await userRewardPool.stake(100, positionId, arc.core.address);
 
     expect((await userRewardPool.balanceOf(userWallet.address)).toNumber()).to.equal(100);

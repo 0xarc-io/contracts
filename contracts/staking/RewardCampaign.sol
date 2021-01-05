@@ -40,7 +40,7 @@ contract RewardCampaign is Adminable {
     IERC20 public rewardsToken;
     IERC20 public stakingToken;
 
-    mapping(address => bool) public stateContracts;
+    mapping(address => bool) public approvedStateContracts;
 
     address public arcDAO;
     address public rewardsDistributor;
@@ -92,7 +92,7 @@ contract RewardCampaign is Adminable {
 
     event UserSlashed(address _user, address _slasher, uint256 _amount);
 
-    event StateContractUpdated(address _address, bool _status);
+    event StateContractApproved(address _address);
 
     /* ========== Modifiers ========== */
 
@@ -258,14 +258,13 @@ contract RewardCampaign is Adminable {
     }
 
     function setApprovedStateContract(
-        address _stateContract,
-        bool _status
+        address _stateContract
     )
         public
         onlyAdmin
     {
-        stateContracts[_stateContract] = _status;
-        emit StateContractUpdated(_stateContract, _status);
+        approvedStateContracts[_stateContract] = true;
+        emit StateContractApproved(_stateContract);
     }
 
     /* ========== View Functions ========== */
@@ -410,7 +409,7 @@ contract RewardCampaign is Adminable {
         returns (bool)
     {
         require(
-            stateContracts[_stateContract] == true,
+            approvedStateContracts[_stateContract] == true,
             "The state contract is not registered"
         );
 
