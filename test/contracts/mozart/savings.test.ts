@@ -16,7 +16,6 @@ import { MozartTestArc } from '@src/MozartTestArc';
 import { MozartSavingsV1 } from '@src/typings/MozartSavingsV1';
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { Signer } from '@ethersproject/abstract-signer';
-import { MockMozartSavingsV1Factory } from '@src/typings';
 
 const COLLATERAL_AMOUNT = ArcNumber.new(200);
 const BORROW_AMOUNT = ArcNumber.new(50);
@@ -37,7 +36,7 @@ describe('MozartSavingsV1', () => {
   before(async () => {
     ctx = await generateContext(mozartFixture, init);
     arc = ctx.sdks.mozart;
-    savings = ctx.contracts.mozart.savingsV1;
+    savings = ctx.contracts.mozart.savings;
 
     await savings.setPaused(false);
     await arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, ctx.signers.minter);
@@ -53,11 +52,11 @@ describe('MozartSavingsV1', () => {
   addSnapshotBeforeRestoreAfterEach();
 
   async function getContract(signer: Signer) {
-    return await ctx.contracts.mozart.savingsV1.connect(signer);
+    return await ctx.contracts.mozart.savings.connect(signer);
   }
 
   async function updateTime(time: BigNumberish) {
-    const mockContract = MockMozartSavingsV1Factory.connect(savings.address, ctx.signers.minter);
+    const mockContract = ctx.contracts.mozart.savings.connect(ctx.signers.minter);
     await mockContract.setCurrentTimestamp(BigNumber.from(time).add(0));
     await arc.updateTime(time);
   }
@@ -185,10 +184,12 @@ describe('MozartSavingsV1', () => {
       await savings.updateIndex();
     });
 
-    it('should update the index based on the increased debt issuance & mint more', async () => {
+    it('should update the index and total deposits based on the increased debt issuance & mint more', async () => {
       // Set the initial index to 1
       await savings.updateIndex();
-      expect(await savings.savingsIndex()).to.equal(BASE);
+
+      const savingsIndex0 = await savings.savingsIndex();
+      expect(savingsIndex0).to.equal(BASE);
 
       // Stake the whole borrow amount
       await stake(BORROW_AMOUNT);
@@ -200,24 +201,28 @@ describe('MozartSavingsV1', () => {
       await arc.core().updateIndex();
 
       // The savings index should equal to 1 since we havent updated it yet
-      expect(await savings.savingsIndex()).to.equal(BASE);
+      expect(savingsIndex0).to.equal(BASE);
+
       const beforeSupply = await arc.synthetic().totalSupply();
       const savingsRate = await savings.savingsRate();
 
       // Update the savings index
       await savings.updateIndex();
+      const savingsIndex1 = await savings.savingsIndex();
 
       const afterSupply = await arc.synthetic().totalSupply();
       const coreBorrowIndex = (await arc.core().getBorrowIndex())[0];
-      const savingsIndex = await savings.savingsIndex();
 
-      expect(savingsIndex).to.equal(savingsRate.mul(ONE_YEAR_IN_SECONDS).add(BASE));
+      const oneYearAccumulatedInterest = savingsRate.mul(ONE_YEAR_IN_SECONDS).add(BASE);
+      expect(savingsIndex1).to.equal(oneYearAccumulatedInterest);
 
       // The amount minted should have increased
-      expect(afterSupply).to.equal(ArcNumber.bigMul(savingsIndex, beforeSupply));
-
-      expect(await savings.savingsIndex()).to.equal(coreBorrowIndex);
+      expect(afterSupply).to.equal(ArcNumber.bigMul(savingsIndex1, beforeSupply));
+      expect(savingsIndex1).to.equal(coreBorrowIndex);
       expect(afterSupply).to.equal(ArcNumber.bigMul(coreBorrowIndex, BORROW_AMOUNT));
+
+      const accumulated1 = ArcNumber.bigMul(savingsIndex1, BORROW_AMOUNT);
+      expect(await savings.totalSupplied()).to.equal(accumulated1);
 
       // The newly minted synth should go straight to this contract
       const savingsBalance = ArcNumber.bigMul(coreBorrowIndex, BORROW_AMOUNT);
@@ -227,9 +232,21 @@ describe('MozartSavingsV1', () => {
       expect(issuedAmount.value).to.equal(
         ArcNumber.bigMul(BORROW_AMOUNT, coreBorrowIndex).sub(BORROW_AMOUNT),
       );
+
+      // Let's ensure the second index update works to ensure that the savings have
+      // accumulated correctly as well
+
+      await updateTime(ONE_YEAR_IN_SECONDS.mul(2));
+
+      // Update the savings index
+      await savings.updateIndex();
+
+      expect(await savings.totalSupplied()).to.equal(
+        ArcNumber.bigMul(accumulated1, oneYearAccumulatedInterest),
+      );
     });
 
-    it('should calculate the correct index if someone deposits more funds', async () => {
+    it('should calculate the correct index  if someone deposits more funds', async () => {
       await savings.updateIndex();
 
       // Stake the whole borrow amount
