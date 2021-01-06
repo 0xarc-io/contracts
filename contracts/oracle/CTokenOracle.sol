@@ -62,9 +62,13 @@ contract CTokenOracle is IOracle {
         uint256 cTokenAmount = exchangeRate.mul(BASE).div(uint256(10 ** precisionScalar));
 
         // Some result in x decimal places
-        uint256 priceInEth = uint256(chainLinkTokenAggregator.latestAnswer()).mul(10 ** chainlinkTokenScalar);
+        uint256 priceInEth = uint256(
+            chainLinkTokenAggregator.latestAnswer()
+        ).mul(10 ** chainlinkTokenScalar);
 
-        uint256 priceOfEth = uint256(chainLinkEthAggregator.latestAnswer()).mul(10 ** chainlinkEthScalar);
+        uint256 priceOfEth = uint256(
+            chainLinkEthAggregator.latestAnswer()
+        ).mul(10 ** chainlinkEthScalar);
 
         // Multiply the two together to get the value of 1 cToken
         uint256 result = cTokenAmount.mul(priceInEth).div(BASE);
