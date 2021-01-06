@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 
 import { loadDeployedContracts, getDeploymentsFilePath } from './loadDeployedContracts';
-import { asyncForEach } from '@src/utils/asyncForEach';
+import { asyncForEach } from '../../src/utils/asyncForEach';
 import { red, magenta } from 'chalk';
 import { Provider } from '@ethersproject/providers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
