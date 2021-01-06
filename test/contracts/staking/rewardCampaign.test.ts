@@ -54,8 +54,8 @@ describe('RewardCampaign', () => {
   const VESTING_END_DATE = 200;
   const HARD_CAP = ArcNumber.new(2100);
   const REWARD_AMOUNT = ArcNumber.new(100);
-  const DEBT_AMOUNT = HARD_CAP.div(DEBT_TO_STAKE);
-  const COLLATERAL_AMOUNT = DEBT_AMOUNT.mul(2);
+  const DEBT_AMOUNT = HARD_CAP.div(DEBT_TO_STAKE); //1050
+  const COLLATERAL_AMOUNT = DEBT_AMOUNT.mul(2); // 2100
 
   async function init(ctx: ITestContext): Promise<void> {
     const signers = await ethers.getSigners();
@@ -66,7 +66,7 @@ describe('RewardCampaign', () => {
 
     await setupMozart(ctx, {
       oraclePrice: ArcDecimal.new(1).value,
-      collateralRatio: ArcDecimal.new(2).value,
+      collateralRatio: ArcDecimal.new(DEBT_TO_STAKE).value,
       interestRate: TEN_PERCENT,
     });
   }
@@ -313,7 +313,37 @@ describe('RewardCampaign', () => {
     });
 
     it('should not be able to set a lower debt requirement by staking less before the deadline', async () => {
-      fail('Not implemented');
+      /**
+       * stake to debt ratio is 2
+       * debt amt is 500
+       * stake 1000 lp tokens
+       * 
+       * do:
+       *  stake additional 100 lp
+       */
+
+      const collateralAmount = ArcNumber.new(1000);
+      const debtAmount = collateralAmount.div(2);
+      const additionalStakeAmount = ArcNumber.new(100);
+       
+      await verifyUserIn(kyfTranche1, userAccount.address);
+      await approve(kyfTranche1);
+      await mint(collateralAmount, userAccount);
+
+      const positionResult = await arc.openPosition(
+        collateralAmount,
+        debtAmount,
+        userAccount
+      );
+      const newPositionId = positionResult.params.id;
+      
+      await mint(collateralAmount, userAccount);
+      await stake(collateralAmount, newPositionId, userAccount, arc.coreAddress());
+
+      await mint(additionalStakeAmount, userAccount);
+      await expect(
+        stake(additionalStakeAmount, newPositionId, userAccount, arc.coreAddress()),
+      ).to.be.revertedWith('Must be a valid minter');
     });
 
     it('should not be able to stake to an unnaproved state contract', async () => {
@@ -387,10 +417,9 @@ describe('RewardCampaign', () => {
       const secondPositionId = positionResult.params.id;
       
       await stake(HARD_CAP.div(2), positionId, userAccount, arc.coreAddress());
-      await expectRevert(
-        stake(HARD_CAP.div(2), secondPositionId, userAccount, core2.address),
-        'Cannot re-stake to a different state contract'
-      );
+      await expect(
+        stake(HARD_CAP.div(2), secondPositionId, userAccount, core2.address)
+      ).to.be.revertedWith('Cannot re-stake to a different state contract');
     });
   });
 
