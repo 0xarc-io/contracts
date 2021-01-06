@@ -17,8 +17,7 @@ import { KYFV2 } from '@src/typings/KYFV2';
 import Token from '@src/utils/Token';
 import { MockRewardCampaign } from '@src/typings/MockRewardCampaign';
 import { generateContext, ITestContext } from '../context';
-import { spritzFixture } from '../fixtures';
-import { SpritzTestArc } from '../../../src/SpritzTestArc';
+import { mozartFixture } from '../fixtures';
 import { ArcxTokenFactory } from '@src/typings/ArcxTokenFactory';
 import { MockRewardCampaignFactory } from '@src/typings/MockRewardCampaignFactory';
 import { ArcProxyFactory } from '@src/typings/ArcProxyFactory';
@@ -30,6 +29,9 @@ import {
   deployTokenStakingAccrual,
   deployKyfV2,
 } from '../deployers';
+import { MozartTestArc } from '@src/MozartTestArc';
+import { setupMozart } from '../setup';
+import { TEN_PERCENT } from '../../../src/constants';
 
 let ownerWallet: SignerWithAddress;
 let userWallet: SignerWithAddress;
@@ -47,9 +49,14 @@ let rewardPool: MockRewardCampaign;
 let kermanStaking: TokenStakingAccrual;
 let kyf: KYFV2;
 
+const HARD_CAP = ArcNumber.new(2100);
+const DEBT_TO_STAKE = 2;
+const DEBT_AMOUNT = HARD_CAP.div(DEBT_TO_STAKE);
+const COLLATERAL_AMOUNT = DEBT_AMOUNT.mul(2);
+
 describe('Staking Integration', () => {
   let ctx: ITestContext;
-  let arc: SpritzTestArc;
+  let arc: MozartTestArc;
   let positionId: BigNumberish;
 
   async function init(ctx: ITestContext): Promise<void> {
@@ -61,11 +68,17 @@ describe('Staking Integration', () => {
     arcFoundationWallet = signers[4];
     kermanInvestorWallet1 = signers[5];
     kermanInvestorWallet2 = signers[6];
+
+    await setupMozart(ctx, {
+      oraclePrice: ArcDecimal.new(1).value,
+      collateralRatio: ArcDecimal.new(2).value,
+      interestRate: TEN_PERCENT,
+    });
   }
 
   before(async () => {
-    ctx = await generateContext(spritzFixture, init);
-    arc = ctx.sdks.spritz;
+    ctx = await generateContext(mozartFixture, init);
+    arc = ctx.sdks.mozart;
 
     arcToken = await new ArcxTokenFactory(ownerWallet).deploy();
     stakingToken = await deployTestToken(ownerWallet, 'BPT', 'BPT');
@@ -82,8 +95,13 @@ describe('Staking Integration', () => {
     );
 
     rewardPool = await new MockRewardCampaignFactory(ownerWallet).attach(
-      (await new ArcProxyFactory(ownerWallet).deploy(rewardPool.address, ownerWallet.address, []))
-        .address,
+      (
+        await new ArcProxyFactory(ownerWallet).deploy(
+          rewardPool.address, 
+          ownerWallet.address, 
+          []
+        )
+      ).address,
     );
 
     kermanStaking = await deployTokenStakingAccrual(
@@ -106,14 +124,14 @@ describe('Staking Integration', () => {
       100,
     );
 
-    const result = await arc._borrowSynthetic(100, 1000, userWallet);
+    const result = await arc.openPosition(COLLATERAL_AMOUNT, DEBT_AMOUNT, userWallet);
     positionId = result.params.id;
 
     await kyf.setVerifier(ownerWallet.address);
     await kyf.setHardCap(10);
 
     await rewardPool.setApprovedKYFInstance(kyf.address, true);
-    await rewardPool.setApprovedStateContract(arc.core.address);
+    await rewardPool.setApprovedStateContract(arc.coreAddress());
     await rewardPool.setRewardsDuration(100);
   });
 
@@ -134,7 +152,7 @@ describe('Staking Integration', () => {
     const userRewardPool = await new MockRewardCampaignFactory(userWallet).attach(
       rewardPool.address,
     );
-    await userRewardPool.stake(100, positionId, arc.core.address);
+    await userRewardPool.stake(100, positionId, arc.coreAddress());
 
     expect((await userRewardPool.balanceOf(userWallet.address)).toNumber()).to.equal(100);
   });
