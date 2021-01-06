@@ -2,6 +2,6 @@
   "network": "rinkeby",
   "startBlock": 7165639,
   "synthRegistry": "0x14E3eCaAcE77F194f689B210F6695d843E77BB64",
-  "synthRegistryV2": "0x72F624829B7cf400BA5AD12199833094857F9Fe9",
+  "synthRegistryV2": "0xc985BbA9949185472F0430e340695FfBFf5e9553",
   "savingsRegistry": "0x670e0344E0fc2CBf94bB9eED634f5a2Cb7A755f0"
 }
