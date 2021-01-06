@@ -130,16 +130,6 @@
     "group": "LINKUSD"
   },
   {
-    "name": "ArcDAO",
-    "source": "ArcDAO",
-    "address": "0x9A827d433d6AAb41dCD747732444C3668E6928B7",
-    "txn": "0x1926724866fbff44b792d815b87f429c230f481f4177e6b7892eda253c5cc70b",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "global",
-    "group": ""
-  },
-  {
     "name": "SynthRegistryV2",
     "source": "SynthRegistryV2",
     "address": "0xc985BbA9949185472F0430e340695FfBFf5e9553",
@@ -248,5 +238,35 @@
     "version": 1,
     "type": "savings",
     "group": "STABLEx"
+  },
+  {
+    "name": "TestStakingToken",
+    "source": "TestToken",
+    "address": "0x1Cb19E2C7a2EFB90D4A2f9b370Fc691DBA873782",
+    "txn": "0x70a0a8a3ac2b441a332ca7626b343dec00c84eafede16db25f168d3fbfc4ceab",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "staking",
+    "group": "TestPool-1"
+  },
+  {
+    "name": "Implementation",
+    "source": "RewardCampaign",
+    "address": "0x33669819B2B0c4e9CAdfC6A27470209D650Dd4f7",
+    "txn": "0x12f4ec59ab118cbbe96f61e72be5199bcab6cb9da37cb5564575c0aec387789a",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "staking",
+    "group": "TestPool-1"
+  },
+  {
+    "name": "Proxy",
+    "source": "ArcProxy",
+    "address": "0x2EE39F499BB6E8dA718f76C1dA47D8e09c605d4d",
+    "txn": "0x67d37d79aeccc101d4d79982b77142a3cad0bf1f8a319018a545b48590b6b2a7",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "staking",
+    "group": "TestPool-1"
   }
 ]
