@@ -35,7 +35,7 @@ task('deploy-global', 'Deploy, update and interact with global contracts').setAc
     const arcDAO = await deployContract(
       {
         name: 'ArcDAO',
-        source: 'ArcDAO',
+        source: 'AddressAccrual',
         data: new AddressAccrualFactory(signer).getDeployTransaction(arcxToken),
         version: 1,
         type: DeploymentType.global,
