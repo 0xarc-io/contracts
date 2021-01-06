@@ -44,5 +44,21 @@
       "position_minimum_collateral" : "",
       "interest_rate": ""
 		}
+	},
+  "cUSDC-STABLEx": {
+    "collateral_address": "0x39aa39c021dfbae8fac545936693ac917d5e7563",
+    "oracle_source": "CTokenOracle",
+    "oracle_token_aggregator_address": "0x986b5E1e1755e3C2440e960477f25201B0a8bbD4",
+    "oracle_eth_aggregator_address": "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
+    "version": 1,
+		"params": {
+      "decimals": 8,
+			"collateral_ratio": "2000000000000000000",
+			"liquidation_user_fee": "20000000000000000",
+			"liquidation_arc_ratio": "200000000000000000",
+			"collateral_limit": "",
+			"synthetic_limit": "",
+			"position_minimum_collateral" : ""
+		}
 	}
 }

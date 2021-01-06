@@ -340,23 +340,33 @@
     "group": "STABLEx"
   },
   {
-    "name": "Implementation",
-    "source": "RewardCampaign",
-    "address": "0x5A99d13D6175c72C982371e6f3bE19702e22aFa7",
-    "txn": "0xccbb46310a686a5c347355aeb2c943eb66826fd8d4e23e9eb16aff0d78447c01",
+    "name": "MozartCore",
+    "source": "MozartCoreV2",
+    "address": "0x0BCb3b8BeCaae10Acc13FDDc0aB09be3351Cd30d",
+    "txn": "0x04f33295de328c8ba30dfa6e1a49a353cfc5450ab6a36c44a4469eb2a9b3a7ec",
     "network": "mainnet",
     "version": 1,
-    "type": "staking",
-    "group": "Pool-5"
+    "type": "synth",
+    "group": ""
   },
   {
-    "name": "Proxy",
-    "source": "ArcProxy",
-    "address": "0xe123CA736D983BADFbDF9df170C73F2BB5E0a7F0",
-    "txn": "0xba53cd4e80c9bb5c1a17aa639229bfdb1d1c727d591d04420e9e89665cc125ad",
+    "name": "Oracle",
+    "source": "CTokenOracle",
+    "address": "0x7E0537F8499A1AbE3AF152A0Bd55C1F39ed11b64",
+    "txn": "0xebe58735d4c92d2bc2412d14a128929d7618ce08bf96f022af91f6ee2e14c01c",
     "network": "mainnet",
     "version": 1,
-    "type": "staking",
-    "group": "Pool-5"
+    "type": "synth",
+    "group": "cUSDC-STABLEx"
+  },
+  {
+    "name": "CoreProxy",
+    "source": "ArcProxy",
+    "address": "0x84EAD9Ce2e36b3e6cdf41C94D5397e5056b3d8d6",
+    "txn": "0x22e9808a2e7fd5955f229c270c0271744162a4c6560d31aba40ecdb413bc486d",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth",
+    "group": "cUSDC-STABLEx"
   }
 ]

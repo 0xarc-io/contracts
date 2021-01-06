@@ -100,16 +100,6 @@
     "type": "synth"
   },
   {
-    "name": "SynthRegistryV2",
-    "source": "SynthRegistryV2",
-    "address": "0x72F624829B7cf400BA5AD12199833094857F9Fe9",
-    "txn": "0xc6d670ddebb9610a48ed911f85533c91bb19aa08f6de7eb00729b12d967f4243",
-    "network": "rinkeby",
-    "version": 2,
-    "type": "global",
-    "group": ""
-  },
-  {
     "name": "ArcProxyInfo",
     "source": "ArcProxyInfo",
     "address": "0xF2034828A8157b2403d96fed10476680524D2C77",
@@ -140,30 +130,30 @@
     "group": "LINKUSD"
   },
   {
-    "name": "MozartCore",
-    "source": "MozartV1",
-    "address": "0x2Ae4CF589A6de20765B71dA047B6c62eAE683aC3",
-    "txn": "0xd5eacf87504a6497b17809af62b8cfdd4abc837dcb2e56ea3871579a5e4248c8",
+    "name": "ArcDAO",
+    "source": "ArcDAO",
+    "address": "0x9A827d433d6AAb41dCD747732444C3668E6928B7",
+    "txn": "0x1926724866fbff44b792d815b87f429c230f481f4177e6b7892eda253c5cc70b",
     "network": "rinkeby",
     "version": 1,
-    "type": "synth",
+    "type": "global",
     "group": ""
   },
   {
-    "name": "CollateralToken",
-    "source": "TestToken",
-    "address": "0xEB5ed00C962749b557571b869EB494AA1194A246",
-    "txn": "0x36102eccc458ed7159458ac94ce2810a99adca25551300e2b687f3f518c68302",
+    "name": "SynthRegistryV2",
+    "source": "SynthRegistryV2",
+    "address": "0xc985BbA9949185472F0430e340695FfBFf5e9553",
+    "txn": "0x9daae5dbcae1028a520bb52bdcc854a2e7b228a679cfcb0c5203ece703efb773",
     "network": "rinkeby",
-    "version": 1,
-    "type": "synth",
-    "group": "ETHX"
+    "version": 2,
+    "type": "global",
+    "group": ""
   },
   {
     "name": "SyntheticToken",
     "source": "SyntheticTokenV1",
-    "address": "0x839bBdD150234CA646C72CE3bd3D0d794aecA8Ed",
-    "txn": "0xa8f02eddd2747760ae213501765ea46868cfa23ce08e10bbb93764cce294d03c",
+    "address": "0xD7eD701f475b324d8cDC228552799BAacFE9668D",
+    "txn": "0x4300ecce2480896529160c0b9fb083229bae8d2d06170a7174c9b35100ca038e",
     "network": "rinkeby",
     "version": 1,
     "type": "synth",
@@ -172,48 +162,28 @@
   {
     "name": "SyntheticProxy",
     "source": "ArcProxy",
-    "address": "0x9dF9bD1a0fF5a64f653C8bb60B08d435B6a468aE",
-    "txn": "0xa861ede7f71009a1696e225885bd00cdbb855872c6b8547a00350dca4100601d",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "synth",
-    "group": "ETHX"
-  },
-  {
-    "name": "Oracle",
-    "source": "ChainLinkOracle",
-    "address": "0x6743544520A28511EF8366208d5908021a53301b",
-    "txn": "0xed86d2982652e6d318b18c9ce5b5606229f0231ad6a4b44b4ff09611df4bed8d",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "synth",
-    "group": "ETHX"
-  },
-  {
-    "name": "CoreProxy",
-    "source": "ArcProxy",
-    "address": "0xeC27c8Ee6eE5950de3fBfFF37f50C6EBF5a9F7C1",
-    "txn": "0x94e520018588bffccf38766fc4bcf8b2382c3aa9274f177ccfb950044f22ee9e",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "synth",
-    "group": "ETHX"
-  },
-  {
-    "name": "SyntheticProxy",
-    "source": "ArcProxy",
-    "address": "0xaC6a43e78c55B4774bfD1db5A982F2805D7d1C81",
-    "txn": "0xd7a853a464cbdff7baa9779e60ef9f5bd540ada0fe38d0ba03628c285d73e892",
+    "address": "0x633fa6236365013E87dC16A50C8202669684a6b4",
+    "txn": "0x401772824c0cffedf78b3c0285cd5e865738f10eb062f5adef2db9a259c034d5",
     "network": "rinkeby",
     "version": 1,
     "type": "synth",
     "group": "STABLEx"
   },
   {
+    "name": "MozartCore",
+    "source": "MozartCoreV2",
+    "address": "0x4fB9F3b7204D34C5ECf804EcD971D9b6C410D606",
+    "txn": "0xd4589ba6a8fcc6a9a31ff0a21d696e568d434ef6ecb1745dfc765ebc578e86c8",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": ""
+  },
+  {
     "name": "CollateralToken",
     "source": "TestToken",
-    "address": "0x8B8c1Ad953dFc13A990D1726E124f020111f9690",
-    "txn": "0xc2b5ed58bf880fa289e482239f61fbb9b8c3d36b70d793ee29c23c539f4b3a38",
+    "address": "0x410eA0F3433ED72Dfb067a7B16c17761F3703eBf",
+    "txn": "0x6ccbfe15bb9968c94b29140186662cb10db6089fdac223c253619a0744be5ac5",
     "network": "rinkeby",
     "version": 1,
     "type": "synth",
@@ -222,8 +192,8 @@
   {
     "name": "Oracle",
     "source": "MockOracle",
-    "address": "0xDD77c388b6E2FEdcad5d9536a13D3233A6B20Deb",
-    "txn": "0x4be7675fc25c3cfa224fc83236bb7fb019154195046800bc1d3bd1d7f9ba732a",
+    "address": "0x8c6c8aa627966916e7dB48e8a0A27b0581921369",
+    "txn": "0x5ff69cd28cfcff63b4ee48b8fa6166ed894484082c02e35df6b8dd35db203df0",
     "network": "rinkeby",
     "version": 1,
     "type": "synth",
@@ -232,18 +202,38 @@
   {
     "name": "CoreProxy",
     "source": "ArcProxy",
-    "address": "0xCa5F0eCc66f92a820c4C5B89Bf336aCc15CA496e",
-    "txn": "0x08a211b68cbf3c496ff98583f8c643be1efc908e73480fbe5f298a65dfea7d92",
+    "address": "0x2E5b1644c46E2BCF4B4F2742Bd755D8043Af1032",
+    "txn": "0xdca6f08bb69d036e2f0eaf3d9b258daa963bdabec900045da08fbf682d3fed69",
     "network": "rinkeby",
     "version": 1,
     "type": "synth",
     "group": "yUSD-STABLEx"
   },
   {
+    "name": "Oracle",
+    "source": "CTokenOracle",
+    "address": "0x6C339c5A9c7123De4bc4453A9494000f29A6c4db",
+    "txn": "0x6fdec232b208c50b08d4ac04ba45aa4937f1be51fbbf113bf27b6bcffd85b778",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": "cUSDC-STABLEx"
+  },
+  {
+    "name": "CoreProxy",
+    "source": "ArcProxy",
+    "address": "0x713f52560A6c25c6B918862377C4780F00ECBc86",
+    "txn": "0x59a72bc74de1f6a588ceb1615a42dd2e7e83a1e768d501c499de030a1a6a5ca5",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": "cUSDC-STABLEx"
+  },
+  {
     "name": "MozartSavings",
-    "source": "MozartSavingsV1",
-    "address": "0xe387d2a74506Ec157db08ebEA6fF01384D2531C0",
-    "txn": "0x7d6b3c8e57ebfb30797f9dd97b35feb2930d0541e047797c1abc54c466ebdc7d",
+    "source": "MozartSavingsV2",
+    "address": "0x2E0714DDC4919a85cBc5EF98d5467198F34206a5",
+    "txn": "0x258b5a5f299e0ea39135bec81bbb83d3d0c2362ce798876fee2e63bf0396f8d9",
     "network": "rinkeby",
     "version": 1,
     "type": "savings",
@@ -252,61 +242,11 @@
   {
     "name": "SavingsProxy",
     "source": "ArcProxy",
-    "address": "0x8ED0B6EcddB914A689a882E9538C7d01e297AB32",
-    "txn": "0x52bb227402bba6756562d3409234f01363994591169546f44d92ff0e1db9fb21",
+    "address": "0x0B6F4855F26E2D98a216AB04E796B52C05aDc19f",
+    "txn": "0x2fc2dd36c8f290eb157d4f7ea7403b6ad8c70ae81845c5f30d52481dbedccfc6",
     "network": "rinkeby",
     "version": 1,
     "type": "savings",
     "group": "STABLEx"
-  },
-  {
-    "name": "MozartSavings",
-    "source": "MozartSavingsV2",
-    "address": "0xC547b3C04eAD1c0D5Ef060FaB87606CBc1aAE697",
-    "txn": "0xe8a1088198326f22bdf7e934ea550c87d09169c34833b0be9c5e2196f6917a74",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "savings",
-    "group": ""
-  },
-  {
-    "name": "MozartCore",
-    "source": "MozartCoreV2",
-    "address": "0x004158a8EA0f886917EEE7426aD8cC2C824007F7",
-    "txn": "0x90cf0ba706d8e807acc6427461a7def1eab6ce68b963b2ecdc9b20ec8fa29fd0",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "synth",
-    "group": ""
-  },
-  {
-    "name": "TestStakingToken",
-    "source": "TestToken",
-    "address": "0xbdaA83eb3F93C16973a61C778890BDA7AA609dE0",
-    "txn": "0x3e42b27fa058e0116089911b63a82147f312c70a096de084f0aa47e61b9f54d5",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "staking",
-    "group": "TestPool-1"
-  },
-  {
-    "name": "Implementation",
-    "source": "RewardCampaign",
-    "address": "0x81D4750E86171E6C633e0cAB984F985B32896646",
-    "txn": "0x71accf3fb4a9d2b9412b01b1b468e3f05fd418c3d664cce439371a99f5fdaeb4",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "staking",
-    "group": "TestPool-1"
-  },
-  {
-    "name": "Proxy",
-    "source": "ArcProxy",
-    "address": "0xFF564ab6D74133EFa4615cBe84619ec62ea34dfB",
-    "txn": "0x6089863dc534b3519c08ba7a690e5750114615f35ddcdd67b50847bf74e3e680",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "staking",
-    "group": "TestPool-1"
   }
 ]
