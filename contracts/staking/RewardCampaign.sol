@@ -47,7 +47,7 @@ contract RewardCampaign is Adminable {
 
     uint256 public periodFinish = 0;
     uint256 public rewardRate = 0;
-    uint256 public rewardsDuration = 7 days;
+    uint256 public rewardsDuration = 0;
     uint256 public lastUpdateTime;
     uint256 public rewardPerTokenStored;
 
@@ -224,8 +224,24 @@ contract RewardCampaign is Adminable {
         public
         onlyAdmin
     {
+        require(
+            _stateContract != address(0),
+            "State contract must be valid"
+        );
+
         approvedStateContracts[_stateContract] = true;
         emit StateContractApproved(_stateContract);
+    }
+
+    function setApprovedStateContracts(
+        address[] memory _stateContracts
+    )
+        public
+        onlyAdmin
+    {
+        for (uint256 i = 0; i < _stateContracts.length; i++) {
+            setApprovedStateContract(_stateContracts[i]);
+        }
     }
 
     /* ========== View Functions ========== */
