@@ -407,9 +407,9 @@ contract RewardCampaign is Adminable {
 
         require(
             isMinter(
-                msg.sender, 
-                debtRequirement, 
-                positionId, 
+                msg.sender,
+                debtRequirement,
+                positionId,
                 stateContract
             ),
             "Must be a valid minter"
@@ -456,9 +456,9 @@ contract RewardCampaign is Adminable {
 
         require(
             isMinter(
-                user, 
-                userStaker.debtSnapshot, 
-                userStaker.positionId, 
+                user,
+                userStaker.debtSnapshot,
+                userStaker.positionId,
                 userStaker.stateContract
             ) == false,
             "You can't slash a user who is a valid minter"
