@@ -7,8 +7,7 @@
       "daoAllocation": "330000000000000000",
       "slasherCut": "100000000000000000",
       "coreContracts": [
-        "yUSD-STABLEx",
-        "cUSDC-STABLEx"
+        "yUSD-STABLEx"
       ],
       "vestingEndDate": "1610744254",
       "debtToStake": "2",
