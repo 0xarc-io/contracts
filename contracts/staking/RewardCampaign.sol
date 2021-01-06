@@ -12,8 +12,6 @@ import {Adminable} from "../lib/Adminable.sol";
 
 import {IERC20} from "../token/IERC20.sol";
 
-import {IKYFV2} from "../global/IKYFV2.sol";
-
 import {IMozartCoreV1} from "../debt/mozart/IMozartCoreV1.sol";
 import {MozartTypes} from "../debt/mozart/MozartTypes.sol";
 
@@ -64,10 +62,6 @@ contract RewardCampaign is Adminable {
 
     uint256 private _totalSupply;
 
-    mapping (address => bool) public kyfInstances;
-
-    address[] public kyfInstancesArray;
-
     /* ========== Events ========== */
 
     event RewardAdded (uint256 reward);
@@ -83,8 +77,6 @@ contract RewardCampaign is Adminable {
     event Recovered(address token, uint256 amount);
 
     event HardCapSet(uint256 _cap);
-
-    event KyfStatusUpdated(address _address, bool _status);
 
     event PositionStaked(address _address, uint256 _positionId);
 
@@ -226,37 +218,6 @@ contract RewardCampaign is Adminable {
         hardCap = _hardCap;
     }
 
-    function setApprovedKYFInstance(
-        address _kyfContract,
-        bool _status
-    )
-        public
-        onlyAdmin
-    {
-        if (_status == true) {
-            kyfInstancesArray.push(_kyfContract);
-            kyfInstances[_kyfContract] = true;
-            emit KyfStatusUpdated(_kyfContract, true);
-            return;
-        }
-
-        // Remove the kyfContract from the kyfInstancesArray array.
-        for (uint i = 0; i < kyfInstancesArray.length; i++) {
-            if (address(kyfInstancesArray[i]) == _kyfContract) {
-                delete kyfInstancesArray[i];
-                kyfInstancesArray[i] = kyfInstancesArray[kyfInstancesArray.length - 1];
-
-                // Decrease the size of the array by one.
-                kyfInstancesArray.length--;
-                break;
-            }
-        }
-
-        // And remove it from the synths mapping
-        delete kyfInstances[_kyfContract];
-        emit KyfStatusUpdated(_kyfContract, false);
-    }
-
     function setApprovedStateContract(
         address _stateContract
     )
@@ -381,23 +342,6 @@ contract RewardCampaign is Adminable {
         return block.timestamp;
     }
 
-    function isVerified(
-        address _user
-    )
-        public
-        view
-        returns (bool)
-    {
-        for (uint256 i = 0; i < kyfInstancesArray.length; i++) {
-            IKYFV2 kyfContract = IKYFV2(kyfInstancesArray[i]);
-            if (kyfContract.checkVerified(_user) == true) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     function isMinter(
         address _user,
         uint256 _amount,
@@ -449,11 +393,6 @@ contract RewardCampaign is Adminable {
         require(
             totalBalance <= hardCap,
             "Cannot stake more than the hard cap"
-        );
-
-        require(
-            isVerified(msg.sender) == true,
-            "Must be KYF registered to participate"
         );
 
         // Setting each variable invididually means we don't overwrite
