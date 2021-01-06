@@ -338,5 +338,35 @@
     "version": 1,
     "type": "savings",
     "group": "STABLEx"
+  },
+  {
+    "name": "MozartCore",
+    "source": "MozartCoreV2",
+    "address": "0x0BCb3b8BeCaae10Acc13FDDc0aB09be3351Cd30d",
+    "txn": "0x04f33295de328c8ba30dfa6e1a49a353cfc5450ab6a36c44a4469eb2a9b3a7ec",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth",
+    "group": ""
+  },
+  {
+    "name": "Oracle",
+    "source": "CTokenOracle",
+    "address": "0x7E0537F8499A1AbE3AF152A0Bd55C1F39ed11b64",
+    "txn": "0xebe58735d4c92d2bc2412d14a128929d7618ce08bf96f022af91f6ee2e14c01c",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth",
+    "group": "cUSDC-STABLEx"
+  },
+  {
+    "name": "CoreProxy",
+    "source": "ArcProxy",
+    "address": "0x84EAD9Ce2e36b3e6cdf41C94D5397e5056b3d8d6",
+    "txn": "0x22e9808a2e7fd5955f229c270c0271744162a4c6560d31aba40ecdb413bc486d",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth",
+    "group": "cUSDC-STABLEx"
   }
 ]

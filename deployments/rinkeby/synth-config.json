@@ -44,9 +44,8 @@
   "cUSDC-STABLEx": {
     "collateral_address": "0x5b281a6dda0b271e91ae35de655ad301c976edb1",
     "oracle_source": "CTokenOracle",
-    "oracle_ctoken_address": "0x5b281a6dda0b271e91ae35de655ad301c976edb1",
-    "oracle_token_aggregator_address": "0xdCA36F27cbC4E38aE16C4E9f99D39b42337F6dcf",
-    "oracle_eth_aggregator_address": "0x8A753747A1Fa494EC906cE90E9f37563A8AF630e",
+    "oracle_token_aggregator_address": "0x986b5E1e1755e3C2440e960477f25201B0a8bbD4",
+    "oracle_eth_aggregator_address": "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
     "version": 1,
 		"params": {
       "decimals": 8,

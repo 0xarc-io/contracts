@@ -10,8 +10,6 @@ import {IOracle} from "./IOracle.sol";
 import {ICToken} from "./ICToken.sol";
 import {IChainLinkAggregator} from "./IChainLinkAggregator.sol";
 
-import {console} from "hardhat/console.sol";
-
 contract CTokenOracle is IOracle {
 
     using SafeMath for uint256;
