@@ -113,7 +113,7 @@ describe('Staking Integration', () => {
     await kyf.setHardCap(10);
 
     await rewardPool.setApprovedKYFInstance(kyf.address, true);
-    await rewardPool.setApprovedStateContract(arc.core.address, true);
+    await rewardPool.setApprovedStateContract(arc.core.address);
     await rewardPool.setRewardsDuration(100);
   });
 

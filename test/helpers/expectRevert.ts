@@ -17,8 +17,8 @@ export async function expectException(promise, expectedError) {
   fail('Expected an exception but none was received');
 }
 
-export const expectRevert = async (promise) => {
-  await expectException(promise, 'revert');
+export const expectRevert = async (promise, expectedError = 'revert') => {
+  await expectException(promise, expectedError);
 };
 
 expectRevert.assertion = (promise) => expectException(promise, 'invalid opcode');
