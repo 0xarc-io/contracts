@@ -39,5 +39,19 @@
 			"synthetic_limit": "",
 			"position_minimum_collateral" : ""
 		}
+	},
+  "cUSDC-STABLEx": {
+		"collateral_address": "",
+    "oracle_link_aggregator_address": "",
+    "version": 1,
+		"params": {
+      "decimals": 18,
+			"collateral_ratio": "2000000000000000000",
+			"liquidation_user_fee": "50000000000000000",
+			"liquidation_arc_ratio": "50000000000000000",
+			"collateral_limit": "",
+			"synthetic_limit": "",
+			"position_minimum_collateral" : ""
+		}
 	}
 }
