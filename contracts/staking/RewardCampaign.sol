@@ -459,6 +459,11 @@ contract RewardCampaign is Adminable {
         // Setting each variable invididually means we don't overwrite
         Staker storage staker = stakers[msg.sender];
 
+        require(
+            staker.stateContract == address(0) || staker.stateContract == stateContract,
+            "Cannot re-stake to a different state contract"
+        );
+
         uint256 debtRequirement = totalBalance.div(debtToStake);
 
         require(
@@ -483,6 +488,7 @@ contract RewardCampaign is Adminable {
         staker.positionId = positionId;
         staker.debtSnapshot = debtRequirement;
         staker.balance = staker.balance.add(amount);
+        staker.stateContract = stateContract;
 
         _totalSupply = _totalSupply.add(amount);
 

@@ -18,6 +18,7 @@ import ArcNumber from './utils/ArcNumber';
 
 export enum SynthNames {
   ETHX = 'ETHX',
+  TESTX = 'TESTX'
 }
 
 export type Synth = {
@@ -40,7 +41,7 @@ export class MozartArc {
     return arc;
   }
 
-  public async addSynths(synths: { [name in SynthNames]: string }) {
+  public async addSynths(synths: { [name in SynthNames]?: string }) {
     const entries = Object.entries(synths);
 
     await asyncForEach(entries, async ([name, synth]) => {
@@ -72,9 +73,7 @@ export class MozartArc {
     synth: Synth = this.availableSynths()[0],
     overrides: TransactionOverrides = {},
   ) {
-    console.log('a')
     const contract = await this.getCore(synth, caller);
-    console.log('b')
     const tx = await contract.operateAction(
       Operation.Open,
       {
@@ -86,7 +85,6 @@ export class MozartArc {
       overrides,
     );
 
-    console.log('c')
     return await this.parseActionTx(tx);
   }
 
