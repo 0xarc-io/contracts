@@ -6,10 +6,13 @@
     "rewardConfig": {
       "daoAllocation": "330000000000000000",
       "slasherCut": "100000000000000000",
-      "coreContract": "yUSD-STABLEx",
+      "coreContracts": [
+        "yUSD-STABLEx"
+      ],
       "vestingEndDate": "1610744254",
       "debtToStake": "2",
-      "hardCap": "2000000000000000000000"
-    }
+      "hardCap": "5000000000000000000000"
+    },
+    "rewardsDurationSeconds": 604800
   }
 }
