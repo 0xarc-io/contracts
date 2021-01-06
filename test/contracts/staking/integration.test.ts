@@ -13,7 +13,6 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 
 import { ArcxToken } from '@src/typings/ArcxToken';
 import { TokenStakingAccrual } from '@src/typings/TokenStakingAccrual';
-import { KYFV2 } from '@src/typings/KYFV2';
 import Token from '@src/utils/Token';
 import { MockRewardCampaign } from '@src/typings/MockRewardCampaign';
 import { generateContext, ITestContext } from '../context';
@@ -27,7 +26,6 @@ import {
   deployTestToken,
   deployMockRewardCampaign,
   deployTokenStakingAccrual,
-  deployKyfV2,
 } from '../deployers';
 import { MozartTestArc } from '@src/MozartTestArc';
 import { setupMozart } from '../setup';
@@ -47,7 +45,6 @@ let kermanToken: TestToken;
 let arcDAO: AddressAccrual;
 let rewardPool: MockRewardCampaign;
 let kermanStaking: TokenStakingAccrual;
-let kyf: KYFV2;
 
 const HARD_CAP = ArcNumber.new(2100);
 const DEBT_TO_STAKE = 2;
@@ -110,8 +107,6 @@ describe('Staking Integration', () => {
       arcToken.address,
     );
 
-    kyf = await deployKyfV2(ownerWallet);
-
     await rewardPool.init(
       arcDAO.address,
       ownerWallet.address,
@@ -127,22 +122,8 @@ describe('Staking Integration', () => {
     const result = await arc.openPosition(COLLATERAL_AMOUNT, DEBT_AMOUNT, userWallet);
     positionId = result.params.id;
 
-    await kyf.setVerifier(ownerWallet.address);
-    await kyf.setHardCap(10);
-
-    await rewardPool.setApprovedKYFInstance(kyf.address, true);
     await rewardPool.setApprovedStateContract(arc.coreAddress());
     await rewardPool.setRewardsDuration(100);
-  });
-
-  it('should be able to get verified', async () => {
-    const hash = ethers.utils.solidityKeccak256(['address'], [userWallet.address]);
-    const signedMessage = await ownerWallet.signMessage(ethers.utils.arrayify(hash));
-    const signature = ethers.utils.splitSignature(signedMessage);
-
-    await kyf.verify(userWallet.address, signature.v, signature.r, signature.s);
-
-    expect(await kyf.checkVerified(userWallet.address)).to.be.true;
   });
 
   it('should be able to stake', async () => {
