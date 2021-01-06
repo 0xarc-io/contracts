@@ -18,6 +18,7 @@ import ArcNumber from './utils/ArcNumber';
 
 export enum SynthNames {
   ETHX = 'ETHX',
+  TESTX = 'TESTX'
 }
 
 export type Synth = {
@@ -40,7 +41,7 @@ export class MozartArc {
     return arc;
   }
 
-  public async addSynths(synths: { [name in SynthNames]: string }) {
+  public async addSynths(synths: { [name in SynthNames]?: string }) {
     const entries = Object.entries(synths);
 
     await asyncForEach(entries, async ([name, synth]) => {

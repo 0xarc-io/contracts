@@ -9,7 +9,6 @@ import { expectRevert } from '@test/helpers/expectRevert';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { ethers } from 'hardhat';
 import { TestToken } from '@src/typings/TestToken';
-import { KYFV2 } from '@src/typings/KYFV2';
 import { MockRewardCampaign } from '@src/typings/MockRewardCampaign';
 import { generateContext, ITestContext } from '../context';
 import { mozartFixture } from '../fixtures';
@@ -18,10 +17,11 @@ import Token from '@src/utils/Token';
 import { TestTokenFactory } from '@src/typings/TestTokenFactory';
 import { MockRewardCampaignFactory } from '@src/typings/MockRewardCampaignFactory';
 import { ArcProxyFactory } from '@src/typings/ArcProxyFactory';
-import { deployKyfV2, deployMockRewardCampaign, deployTestToken } from '../deployers';
+import { deployMockRewardCampaign, deployTestToken } from '../deployers';
 import { MozartTestArc } from '../../../src/MozartTestArc';
 import { setupMozart } from '../setup';
-import { TEN_PERCENT } from '../../../src/constants';
+import { MAX_UINT256, TEN_PERCENT } from '../../../src/constants';
+import { ArcProxy, MozartCoreV2, MozartCoreV2Factory } from '@src/typings';
 
 let ownerAccount: SignerWithAddress;
 let userAccount: SignerWithAddress;
@@ -33,14 +33,12 @@ let stakingRewards: MockRewardCampaign;
 let stakingToken: TestToken;
 let rewardToken: TestToken;
 
-let kyfTranche1: KYFV2;
-let kyfTranche2: KYFV2;
-
 const BASE = BigNumber.from(10).pow(18);
 
 describe('RewardCampaign', () => {
-  let ctx: ITestContext;
   let arc: MozartTestArc;
+  let core2: MozartCoreV2;
+  let core2proxy: ArcProxy;
 
   const DAO_ALLOCATION = ArcDecimal.new(0.4);
   const SLAHSER_CUT = ArcDecimal.new(0.3);
@@ -50,8 +48,8 @@ describe('RewardCampaign', () => {
   const VESTING_END_DATE = 200;
   const HARD_CAP = ArcNumber.new(2100);
   const REWARD_AMOUNT = ArcNumber.new(100);
-  const DEBT_AMOUNT = HARD_CAP.div(DEBT_TO_STAKE);
-  const COLLATERAL_AMOUNT = DEBT_AMOUNT.mul(2);
+  const DEBT_AMOUNT = HARD_CAP.div(DEBT_TO_STAKE); //1050
+  const COLLATERAL_AMOUNT = DEBT_AMOUNT.mul(2); // 2100
 
   async function init(ctx: ITestContext): Promise<void> {
     const signers = await ethers.getSigners();
@@ -62,20 +60,18 @@ describe('RewardCampaign', () => {
 
     await setupMozart(ctx, {
       oraclePrice: ArcDecimal.new(1).value,
-      collateralRatio: ArcDecimal.new(2).value,
+      collateralRatio: ArcDecimal.new(DEBT_TO_STAKE).value,
       interestRate: TEN_PERCENT,
     });
   }
 
   async function setup() {
-    ctx = await generateContext(mozartFixture, init);
+    const ctx: ITestContext = await generateContext(mozartFixture, init);
+
     arc = ctx.sdks.mozart;
 
     stakingToken = await deployTestToken(ownerAccount, 'LINKUSD/USDC 50/50', 'BPT');
     rewardToken = await deployTestToken(ownerAccount, 'Arc Token', 'ARC');
-
-    kyfTranche1 = await deployKyfV2(ownerAccount);
-    kyfTranche2 = await deployKyfV2(ownerAccount);
 
     stakingRewards = await deployMockRewardCampaign(
       ownerAccount,
@@ -108,18 +104,47 @@ describe('RewardCampaign', () => {
       stakingToken.address,
       DAO_ALLOCATION,
       SLAHSER_CUT,
-      arc.coreAddress(),
       VESTING_END_DATE,
       DEBT_TO_STAKE,
       HARD_CAP,
     );
-
-    await kyfTranche1.setVerifier(ownerAccount.address);
-    await kyfTranche1.setHardCap(10);
-    await kyfTranche2.setVerifier(ownerAccount.address);
-    await kyfTranche2.setHardCap(10);
+    await stakingRewards.setApprovedStateContract(arc.coreAddress());
 
     await stakingRewards.notifyRewardAmount(REWARD_AMOUNT);
+  }
+
+  async function deploySecondCore() {
+    core2proxy =  await new ArcProxyFactory(ownerAccount).deploy(
+      await (await new MozartCoreV2Factory(ownerAccount).deploy()).address,
+      await ownerAccount.getAddress(),
+      [],
+    );
+    core2 = MozartCoreV2Factory.connect(core2proxy.address, ownerAccount);
+    await core2.init(
+      18,
+      arc.collateral().address,
+      arc.syntheticAddress(),
+      await arc.core().getCurrentOracle(),
+      await ownerAccount.getAddress(),
+      {value: ArcNumber.new(2)},
+      {value: ArcDecimal.new(0.1).value},
+      {value: 0}
+    );
+
+    const collateralAddress = await core2.getCollateralAsset();
+    await Token.approve(
+      collateralAddress,
+      userAccount,
+      core2proxy.address,
+      COLLATERAL_AMOUNT
+    );
+    
+    await arc.synthetic().addMinter(
+      core2proxy.address,
+      MAX_UINT256,
+    );
+
+    await arc.addSynths({ TESTX: core2.address });
   }
 
   /* ========== Helpers ========== */
@@ -128,16 +153,16 @@ describe('RewardCampaign', () => {
     return new MockRewardCampaignFactory(caller).attach(stakingRewards.address);
   }
 
-  async function verifyUserIn(kyf: KYFV2, address: string = userAccount.address) {
-    const hash = ethers.utils.solidityKeccak256(['address'], [address]);
-    const signedMessage = await ownerAccount.signMessage(ethers.utils.arrayify(hash));
-    const signature = ethers.utils.splitSignature(signedMessage);
-    await kyf.verify(address, signature.v, signature.r, signature.s);
-  }
+  // async function verifyUserIn(kyf: KYFV2, address: string = userAccount.address) {
+  //   const hash = ethers.utils.solidityKeccak256(['address'], [address]);
+  //   const signedMessage = await ownerAccount.signMessage(ethers.utils.arrayify(hash));
+  //   const signature = ethers.utils.splitSignature(signedMessage);
+  //   await kyf.verify(address, signature.v, signature.r, signature.s);
+  // }
 
-  async function approve(kyf: KYFV2) {
-    await stakingRewards.setApprovedKYFInstance(kyf.address, true);
-  }
+  // async function approve(kyf: KYFV2) {
+  //   await stakingRewards.setApprovedKYFInstance(kyf.address, true);
+  // }
 
   async function mint(amount: BigNumberish, account: SignerWithAddress) {
     await stakingToken.mintShare(account.address, amount);
@@ -149,9 +174,14 @@ describe('RewardCampaign', () => {
     );
   }
 
-  async function stake(amount: BigNumberish, id: BigNumberish, wallet: SignerWithAddress) {
+  async function stake(
+    amount: BigNumberish, 
+    id: BigNumberish, 
+    wallet: SignerWithAddress, 
+    stateContract: string
+  ) {
     const userStaking = await getContract(wallet);
-    await userStaking.stake(amount, id);
+    await userStaking.stake(amount, id, stateContract);
   }
 
   async function slash(user: string, wallet: SignerWithAddress) {
@@ -181,36 +211,22 @@ describe('RewardCampaign', () => {
     });
 
     it('should not be able to stake over the hard cap', async () => {
-      await verifyUserIn(kyfTranche1, userAccount.address);
-      await approve(kyfTranche1);
       await mint(HARD_CAP.add(1), userAccount);
-      await expectRevert(stake(HARD_CAP.add(1), positionId, userAccount));
+      await expectRevert(stake(HARD_CAP.add(1), positionId, userAccount, arc.coreAddress()));
     });
 
     it('should not be able to stake over the hard cap in total', async () => {
-      await verifyUserIn(kyfTranche1, userAccount.address);
-      await approve(kyfTranche1);
       await mint(HARD_CAP.mul(3), userAccount);
-      await stake(HARD_CAP, positionId, userAccount);
-      await expectRevert(stake(HARD_CAP, positionId, userAccount));
-    });
-
-    it('should not be able to stake without being verified', async () => {
-      await approve(kyfTranche1);
-      await mint(HARD_CAP, userAccount);
-      await expectRevert(stake(HARD_CAP, positionId, userAccount));
+      await stake(HARD_CAP, positionId, userAccount, arc.coreAddress());
+      await expectRevert(stake(HARD_CAP, positionId, userAccount, arc.coreAddress()));
     });
 
     it('should not be able to stake without a valid debt position owned by the same user', async () => {
-      await verifyUserIn(kyfTranche1, userAccount.address);
-      await approve(kyfTranche1);
       await mint(HARD_CAP, userAccount);
-      await expectRevert(stake(HARD_CAP, altPositionId, userAccount));
+      await expectRevert(stake(HARD_CAP, altPositionId, userAccount, arc.coreAddress()));
     });
 
     it('should not be able to stake 1/2 of the hard cap with less than 1/2 the debt', async () => {
-      await verifyUserIn(kyfTranche1, userAccount.address);
-      await approve(kyfTranche1);
       await mint(HARD_CAP, userAccount);
 
       const newPosition = await arc.openPosition(
@@ -218,12 +234,10 @@ describe('RewardCampaign', () => {
         DEBT_AMOUNT.div(2),
         userAccount,
       );
-      await expectRevert(stake(HARD_CAP, newPosition.params.id, userAccount));
+      await expectRevert(stake(HARD_CAP, newPosition.params.id, userAccount, arc.coreAddress()));
     });
 
     it('should be able to stake 1/2 of the hard cap with 1/2 the debt', async () => {
-      await verifyUserIn(kyfTranche1, userAccount.address);
-      await approve(kyfTranche1);
       await mint(HARD_CAP.div(2), userAccount);
 
       const newPosition = await arc.openPosition(
@@ -231,7 +245,7 @@ describe('RewardCampaign', () => {
         DEBT_AMOUNT.div(2),
         userAccount,
       );
-      await stake(HARD_CAP.div(2), newPosition.params.id, userAccount);
+      await stake(HARD_CAP.div(2), newPosition.params.id, userAccount, arc.coreAddress());
 
       const stakerDetails = await stakingRewards.stakers(userAccount.address);
       expect(stakerDetails.balance).to.equal(HARD_CAP.div(2));
@@ -242,8 +256,6 @@ describe('RewardCampaign', () => {
     });
 
     it('should not be able to stake the full amount with less debt', async () => {
-      await verifyUserIn(kyfTranche1, userAccount.address);
-      await approve(kyfTranche1);
       await mint(HARD_CAP, userAccount);
 
       const newPosition = await arc.openPosition(
@@ -251,14 +263,12 @@ describe('RewardCampaign', () => {
         DEBT_AMOUNT.div(2),
         userAccount,
       );
-      await expectRevert(stake(HARD_CAP, newPosition.params.id, userAccount));
+      await expectRevert(stake(HARD_CAP, newPosition.params.id, userAccount, arc.coreAddress()));
     });
 
     it('should be able to stake the maximum with the correct debt amount', async () => {
-      await verifyUserIn(kyfTranche1, userAccount.address);
-      await approve(kyfTranche1);
       await mint(HARD_CAP, userAccount);
-      await stake(HARD_CAP, positionId, userAccount);
+      await stake(HARD_CAP, positionId, userAccount, arc.coreAddress());
 
       const stakerDetails = await stakingRewards.stakers(userAccount.address);
       expect(stakerDetails.balance).to.equal(HARD_CAP);
@@ -268,7 +278,107 @@ describe('RewardCampaign', () => {
       expect(stakerDetails.rewardPerTokenPaid).to.equal(ArcNumber.new(0));
     });
 
-    it('should not be able to set a lower debt requirement by staking less before the deadline', async () => {});
+    it('should not be able to set a lower debt requirement by staking less before the deadline', async () => {
+      /**
+       * stake to debt ratio is 2
+       * debt amt is 500
+       * stake 1000 lp tokens
+       * 
+       * do:
+       *  stake additional 100 lp
+       */
+
+      const collateralAmount = ArcNumber.new(1000);
+      const debtAmount = collateralAmount.div(2);
+      const additionalStakeAmount = ArcNumber.new(100);
+       
+      await mint(collateralAmount, userAccount);
+
+      const positionResult = await arc.openPosition(
+        collateralAmount,
+        debtAmount,
+        userAccount
+      );
+      const newPositionId = positionResult.params.id;
+      
+      await mint(collateralAmount, userAccount);
+      await stake(collateralAmount, newPositionId, userAccount, arc.coreAddress());
+
+      await mint(additionalStakeAmount, userAccount);
+      await expect(
+        stake(additionalStakeAmount, newPositionId, userAccount, arc.coreAddress()),
+      ).to.be.revertedWith('Must be a valid minter');
+    });
+
+    it('should not be able to stake to an unnaproved state contract', async () => {
+      await deploySecondCore();
+      await mint(HARD_CAP, userAccount);
+      await expectRevert(
+        stake(
+          HARD_CAP, 
+          positionId, 
+          userAccount, 
+          core2.address
+        )
+      );
+    });
+
+    it('should be able to stake to a second state contract', async () => {
+      await deploySecondCore();
+      await mint(HARD_CAP, userAccount);
+
+      await stakingRewards.setApprovedStateContract(core2.address);
+
+      // Open position on second core
+      await Token.approve(
+        await core2.getCollateralAsset(),
+        userAccount,
+        core2proxy.address,
+        COLLATERAL_AMOUNT
+      );
+      const positionResult = await arc.openPosition(
+        COLLATERAL_AMOUNT,
+        DEBT_AMOUNT,
+        userAccount,
+        arc.synths.TESTX
+      )
+      const secondPositionId = positionResult.params.id;
+      
+      await stake(HARD_CAP, secondPositionId, userAccount, core2.address);
+
+      const stakerDetails = await stakingRewards.stakers(userAccount.address);
+      expect(stakerDetails.balance).to.equal(HARD_CAP);
+      expect(stakerDetails.debtSnapshot).to.equal(DEBT_AMOUNT);
+      expect(stakerDetails.positionId).to.equal(positionId);
+      expect(stakerDetails.rewardsEarned).to.equal(ArcNumber.new(0));
+      expect(stakerDetails.rewardPerTokenPaid).to.equal(ArcNumber.new(0));
+    });
+
+    it('should not be able to re-stake to a different state contract', async () => {
+      await deploySecondCore();
+      await mint(HARD_CAP, userAccount);
+      await stakingRewards.setApprovedStateContract(core2.address);
+
+      // Open position on the second core
+      await Token.approve(
+        await core2.getCollateralAsset(),
+        userAccount,
+        core2proxy.address,
+        COLLATERAL_AMOUNT
+      );
+      const positionResult = await arc.openPosition(
+        COLLATERAL_AMOUNT,
+        DEBT_AMOUNT,
+        userAccount,
+        arc.synths.TESTX
+      )
+      const secondPositionId = positionResult.params.id;
+      
+      await stake(HARD_CAP.div(2), positionId, userAccount, arc.coreAddress());
+      await expect(
+        stake(HARD_CAP.div(2), secondPositionId, userAccount, core2.address)
+      ).to.be.revertedWith('Cannot re-stake to a different state contract');
+    });
   });
 
   describe('#slash', () => {
@@ -282,10 +392,8 @@ describe('RewardCampaign', () => {
 
       await arc.openPosition(COLLATERAL_AMOUNT, DEBT_AMOUNT, slasherAccount);
 
-      await approve(kyfTranche1);
-      await verifyUserIn(kyfTranche1, userAccount.address);
       await mint(HARD_CAP, userAccount);
-      await stake(HARD_CAP, userPosition, userAccount);
+      await stake(HARD_CAP, userPosition, userAccount, arc.coreAddress());
     });
 
     it('should not be able to slash if user has the amount of their debt snapshot', async () => {
@@ -343,10 +451,8 @@ describe('RewardCampaign', () => {
 
       await arc.openPosition(COLLATERAL_AMOUNT, DEBT_AMOUNT, slasherAccount);
 
-      await approve(kyfTranche1);
-      await verifyUserIn(kyfTranche1, userAccount.address);
       await mint(HARD_CAP, userAccount);
-      await stake(HARD_CAP, userPosition, userAccount);
+      await stake(HARD_CAP, userPosition, userAccount, arc.coreAddress());
     });
 
     it('should not be able to get the reward if the tokens are not claimable after the reward period', async () => {
@@ -426,10 +532,8 @@ describe('RewardCampaign', () => {
       const contract = await getContract(userAccount);
       const result = await arc.openPosition(COLLATERAL_AMOUNT, DEBT_AMOUNT, userAccount);
 
-      await approve(kyfTranche1);
-      await verifyUserIn(kyfTranche1, userAccount.address);
       await mint(HARD_CAP, userAccount);
-      await stake(HARD_CAP, result.params.id, userAccount);
+      await stake(HARD_CAP, result.params.id, userAccount, arc.coreAddress());
 
       expect(await stakingToken.balanceOf(userAccount.address)).to.equal(BigNumber.from(0));
 
@@ -448,10 +552,8 @@ describe('RewardCampaign', () => {
       const result = await arc.openPosition(COLLATERAL_AMOUNT, DEBT_AMOUNT, userAccount);
       userPosition = result.params.id;
 
-      await approve(kyfTranche1);
-      await verifyUserIn(kyfTranche1, userAccount.address);
       await mint(HARD_CAP, userAccount);
-      await stake(HARD_CAP, userPosition, userAccount);
+      await stake(HARD_CAP, userPosition, userAccount, arc.coreAddress());
       await stakingRewards.setCurrentTimestamp(10);
     });
 
@@ -469,14 +571,14 @@ describe('RewardCampaign', () => {
       expect(await stakingToken.balanceOf(userAccount.address)).to.equal(HARD_CAP);
       expect(await rewardToken.balanceOf(userAccount.address)).to.equal(0);
 
-      await stake(HARD_CAP, userPosition, userAccount);
+      await stake(HARD_CAP, userPosition, userAccount, arc.coreAddress());
       await stakingRewards.setCurrentTimestamp(99);
       await contract.exit();
 
       expect(await stakingToken.balanceOf(userAccount.address)).to.equal(HARD_CAP);
       expect(await rewardToken.balanceOf(userAccount.address)).to.equal(0);
 
-      await stake(HARD_CAP, userPosition, userAccount);
+      await stake(HARD_CAP, userPosition, userAccount, arc.coreAddress());
       await stakingRewards.setCurrentTimestamp(150);
       await contract.exit();
 
@@ -547,7 +649,6 @@ describe('RewardCampaign', () => {
           stakingToken.address,
           DAO_ALLOCATION,
           SLAHSER_CUT,
-          arc.coreAddress(),
           VESTING_END_DATE,
           DEBT_TO_STAKE,
           HARD_CAP,
@@ -561,7 +662,6 @@ describe('RewardCampaign', () => {
           stakingToken.address,
           DAO_ALLOCATION,
           SLAHSER_CUT,
-          arc.coreAddress(),
           VESTING_END_DATE,
           DEBT_TO_STAKE,
           HARD_CAP,
@@ -577,7 +677,6 @@ describe('RewardCampaign', () => {
         stakingToken.address,
         DAO_ALLOCATION,
         SLAHSER_CUT,
-        arc.coreAddress(),
         VESTING_END_DATE,
         DEBT_TO_STAKE,
         HARD_CAP,
@@ -588,26 +687,42 @@ describe('RewardCampaign', () => {
       expect(await (await stakingRewards.vestingEndDate()).toNumber()).to.equal(VESTING_END_DATE);
       expect(await (await stakingRewards.debtToStake()).toNumber()).to.equal(DEBT_TO_STAKE);
       expect(await stakingRewards.hardCap()).to.equal(HARD_CAP);
-      expect(await stakingRewards.stateContract()).to.equal(arc.coreAddress());
     });
   });
 
-  describe('#setApprovedKYFInstance', () => {
+  // describe('#setApprovedKYFInstance', () => {
+  //   beforeEach(setup);
+
+  //   it('should not be callable by anyone', async () => {
+  //     await expectRevert(
+  //       (await getContract(userAccount)).setApprovedKYFInstance(kyfTranche1.address, true),
+  //     );
+  //     await expectRevert(
+  //       (await getContract(slasherAccount)).setApprovedKYFInstance(kyfTranche1.address, true),
+  //     );
+  //   });
+
+  //   it('should only be callable by the contract owner', async () => {
+  //     expect(await stakingRewards.kyfInstances(kyfTranche1.address)).to.be.false;
+  //     await (await getContract(ownerAccount)).setApprovedKYFInstance(kyfTranche1.address, true);
+  //     expect(await stakingRewards.kyfInstances(kyfTranche1.address)).to.be.true;
+  //   });
+  // });
+
+  describe('#setApprovedStateContract', () => {
     beforeEach(setup);
-
-    it('should not be callable by anyone', async () => {
-      await expectRevert(
-        (await getContract(userAccount)).setApprovedKYFInstance(kyfTranche1.address, true),
-      );
-      await expectRevert(
-        (await getContract(slasherAccount)).setApprovedKYFInstance(kyfTranche1.address, true),
-      );
+    
+    it('should not be able to set a state contract as an unauthorized user', async () => {
+      await deploySecondCore();
+      const userStaking = await getContract(userAccount);
+      await expectRevert(userStaking.setApprovedStateContract(core2.address));
     });
 
-    it('should only be callable by the contract owner', async () => {
-      expect(await stakingRewards.kyfInstances(kyfTranche1.address)).to.be.false;
-      await (await getContract(ownerAccount)).setApprovedKYFInstance(kyfTranche1.address, true);
-      expect(await stakingRewards.kyfInstances(kyfTranche1.address)).to.be.true;
+    it('should be able to add a valid state contract as the owner', async () => {
+      await deploySecondCore();
+      const ownerStaking = await getContract(ownerAccount);
+      await ownerStaking.setApprovedStateContract(core2.address);
+      expect(await ownerStaking.approvedStateContracts(core2.address)).to.be.true;
     });
-  });
+  })
 });
