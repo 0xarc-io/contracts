@@ -15,7 +15,6 @@ task('deploy-setup', 'Deploy all the smart contracts locally').setAction(async (
   // await hre.run('deploy-spritz', { synth: 'LINKUSD' });
   await hre.run('deploy-mozart-synthetic', { name: 'STABLEx', symbol: 'STABLEx' });
   await hre.run('deploy-mozart', { synth: 'yUSD-STABLEx' });
-  await hre.run('deploy-mozart', { synth: 'cUSDC-STABLEx' });
   await hre.run('deploy-mozart-savings', { savings: 'STABLEx' });
   await hre.run('prepare-subgraph');
 });

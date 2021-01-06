@@ -153,7 +153,6 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
         networkConfig,
       );
     } else if (synthConfig.oracle_link_aggregator_address) {
-      console.log(yellow(`Deploy Chainlink Oracle...`));
       oracleAddress = await deployContract(
         {
           name: 'Oracle',
@@ -168,7 +167,6 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
         networkConfig,
       );
     } else if (synthConfig.oracle_source == 'YUSDOracle') {
-      console.log(yellow(`Deploy YUSD Oracle...`));
       oracleAddress = await deployContract(
         {
           name: 'Oracle',
@@ -181,13 +179,18 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
         networkConfig,
       );
     } else if (synthConfig.oracle_source == 'CTokenOracle') {
-      console.log(yellow(`Deploy CToken Oracle...`));
+      console.log(
+        synthConfig.collateral_address,
+        synthConfig.oracle_token_aggregator_address,
+        synthConfig.oracle_eth_aggregator_address,
+      );
+
       oracleAddress = await deployContract(
         {
           name: 'Oracle',
           source: 'CTokenOracle',
           data: new CTokenOracleFactory(signer).getDeployTransaction(
-            synthConfig.oracle_ctoken_address,
+            synthConfig.collateral_address,
             synthConfig.oracle_token_aggregator_address,
             synthConfig.oracle_eth_aggregator_address,
           ),
@@ -195,7 +198,7 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
           type: DeploymentType.synth,
           group: synthName,
         },
-        networkConfig,
+        { ...networkConfig },
       );
     } else {
       throw red('No valid oracle config was found!');

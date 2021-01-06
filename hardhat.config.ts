@@ -93,7 +93,7 @@ const config: HardhatUserConfig = {
     mainnet: {
       url: getNetworkUrl('mainnet'),
       accounts: [params.deploy_private_key],
-      gasPrice: 300000000000,
+      gasPrice: 100000000000,
       users: {
         owner: '0x62f31e08e279f3091d9755a09914df97554eae0b',
       },
