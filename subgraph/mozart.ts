@@ -108,7 +108,6 @@ export function createOrLoadMozartSynth(address: Address): Synth {
     synth = new Synth(address.toHexString());
     synth.collateral = collateralToken.symbol();
     synth.synthetic = syntheticToken.symbol();
-    synth.name = synth.collateral.concat('-').concat(synth.synthetic);
     synth.collateralAddress = core.getCollateralAsset();
     synth.syntheticAddress = syntheticAddress;
     synth.oracle = core.getCurrentOracle();
@@ -119,6 +118,8 @@ export function createOrLoadMozartSynth(address: Address): Synth {
     if (synth.collateral == 'yyDAI+yUSDC+yUSDT+yTUSD') {
       synth.collateral = 'yUSD';
     }
+
+    synth.name = synth.collateral.concat('-').concat(synth.synthetic);
 
     let indexDetails = core.getBorrowIndex();
     synth.borrowIndex = indexDetails.value0;
