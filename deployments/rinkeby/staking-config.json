@@ -10,7 +10,7 @@
         "yUSD-STABLEx"
       ],
       "vestingEndDate": "1610744254",
-      "debtToStake": "2",
+      "debtToStake": "1000000",
       "hardCap": "5000000000000000000000"
     },
     "rewardsDurationSeconds": 604800

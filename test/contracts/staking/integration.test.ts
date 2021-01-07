@@ -46,9 +46,9 @@ let arcDAO: AddressAccrual;
 let rewardPool: MockRewardCampaign;
 let kermanStaking: TokenStakingAccrual;
 
-const HARD_CAP = ArcNumber.new(2100);
+const STAKING_AMOUNT = ArcNumber.new(2100);
 const DEBT_TO_STAKE = 2;
-const DEBT_AMOUNT = HARD_CAP.div(DEBT_TO_STAKE);
+const DEBT_AMOUNT = STAKING_AMOUNT.div(DEBT_TO_STAKE);
 const COLLATERAL_AMOUNT = DEBT_AMOUNT.mul(2);
 
 describe('Staking Integration', () => {
@@ -92,13 +92,8 @@ describe('Staking Integration', () => {
     );
 
     rewardPool = await new MockRewardCampaignFactory(ownerWallet).attach(
-      (
-        await new ArcProxyFactory(ownerWallet).deploy(
-          rewardPool.address, 
-          ownerWallet.address, 
-          []
-        )
-      ).address,
+      (await new ArcProxyFactory(ownerWallet).deploy(rewardPool.address, ownerWallet.address, []))
+        .address,
     );
 
     kermanStaking = await deployTokenStakingAccrual(
@@ -116,7 +111,6 @@ describe('Staking Integration', () => {
       ArcDecimal.new(1),
       100,
       1,
-      100,
     );
 
     const result = await arc.openPosition(COLLATERAL_AMOUNT, DEBT_AMOUNT, userWallet);
