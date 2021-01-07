@@ -434,7 +434,7 @@ contract RewardCampaign is Adminable {
             "Cannot re-stake to a different state contract"
         );
 
-        uint256 debtRequirement = totalBalance.div(debtToStake);
+        uint256 debtRequirement = totalBalance.mul(debtToStake);
 
         require(
             isMinter(
