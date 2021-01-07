@@ -106,9 +106,9 @@ export function createOrLoadMozartSynth(address: Address): Synth {
 
   if (synth == null) {
     synth = new Synth(address.toHexString());
-    synth.name = syntheticToken.symbol();
     synth.collateral = collateralToken.symbol();
     synth.synthetic = syntheticToken.symbol();
+    synth.name = synth.collateral.concat('-').concat(synth.synthetic);
     synth.collateralAddress = core.getCollateralAsset();
     synth.syntheticAddress = syntheticAddress;
     synth.oracle = core.getCurrentOracle();
