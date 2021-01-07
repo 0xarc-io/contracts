@@ -8,7 +8,7 @@
       "slasherCut": "100000000000000000",
       "coreContract": "yUSD-STABLEx",
       "vestingEndDate": "1616539222",
-      "debtToStake": "2",
+      "debtToStake": "1000000",
       "hardCap": "5000000000000000000000"
     }
   }

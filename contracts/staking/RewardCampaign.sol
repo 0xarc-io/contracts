@@ -55,7 +55,6 @@ contract RewardCampaign is Adminable {
     Decimal.D256 public daoAllocation;
     Decimal.D256 public slasherCut;
 
-    uint256 public hardCap;
     uint256 public vestingEndDate;
     uint256 public debtToStake;
 
@@ -76,8 +75,6 @@ contract RewardCampaign is Adminable {
     event RewardsDurationUpdated(uint256 newDuration);
 
     event Recovered(address token, uint256 amount);
-
-    event HardCapSet(uint256 _cap);
 
     event PositionStaked(address _address, uint256 _positionId);
 
@@ -200,8 +197,7 @@ contract RewardCampaign is Adminable {
         Decimal.D256 memory _daoAllocation,
         Decimal.D256 memory _slasherCut,
         uint256 _vestingEndDate,
-        uint256 _debtToStake,
-        uint256 _hardCap
+        uint256 _debtToStake
     )
         public
         onlyAdmin
@@ -216,7 +212,6 @@ contract RewardCampaign is Adminable {
         rewardsToken = IERC20(_rewardsToken);
         vestingEndDate = _vestingEndDate;
         debtToStake = _debtToStake;
-        hardCap = _hardCap;
     }
 
     function setApprovedStateContract(
@@ -421,11 +416,6 @@ contract RewardCampaign is Adminable {
     {
         uint256 totalBalance = balanceOf(msg.sender).add(amount);
 
-        require(
-            totalBalance <= hardCap,
-            "Cannot stake more than the hard cap"
-        );
-
         // Setting each variable invididually means we don't overwrite
         Staker storage staker = stakers[msg.sender];
 
@@ -434,7 +424,7 @@ contract RewardCampaign is Adminable {
             "Cannot re-stake to a different state contract"
         );
 
-        uint256 debtRequirement = totalBalance.div(debtToStake);
+        uint256 debtRequirement = totalBalance.mul(debtToStake);
 
         require(
             isMinter(
