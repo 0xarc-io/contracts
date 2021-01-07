@@ -368,5 +368,25 @@
     "version": 1,
     "type": "synth",
     "group": "cUSDC-STABLEx"
+  },
+  {
+    "name": "Implementation",
+    "source": "RewardCampaign",
+    "address": "0x58bF325843b25B4767A3ff4Ef69B1b7B47493528",
+    "txn": "0x51772511e2dc7551f70064d42c125a6bb8ba154c1d43f35e41c8bcb4530b5b60",
+    "network": "mainnet",
+    "version": 1,
+    "type": "staking",
+    "group": "Pool-5"
+  },
+  {
+    "name": "Proxy",
+    "source": "ArcProxy",
+    "address": "0xd41a21F6a3DEbFe28b06ace2312A69c53107ceE5",
+    "txn": "0x050892a1a29175e00d3dee1704f9a62a9ae54dfdac96917485923a473ea132cd",
+    "network": "mainnet",
+    "version": 1,
+    "type": "staking",
+    "group": "Pool-5"
   }
 ]
