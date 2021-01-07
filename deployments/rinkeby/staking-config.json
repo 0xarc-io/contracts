@@ -3,6 +3,7 @@
     "type": "RewardCampaign",
     "stakingToken": "",
     "rewardsToken": "ArcxToken",
+    "rewardsDurationSeconds": 604800,
     "rewardConfig": {
       "daoAllocation": "330000000000000000",
       "slasherCut": "100000000000000000",
@@ -10,9 +11,7 @@
         "yUSD-STABLEx"
       ],
       "vestingEndDate": "1610744254",
-      "debtToStake": "1000000",
-      "hardCap": "5000000000000000000000"
-    },
-    "rewardsDurationSeconds": 604800
+      "debtToStake": "1000000"
+    }
   }
 }
