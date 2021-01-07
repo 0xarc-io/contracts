@@ -43,12 +43,12 @@ describe('RewardCampaign', () => {
   const DAO_ALLOCATION = ArcDecimal.new(0.4);
   const SLAHSER_CUT = ArcDecimal.new(0.3);
   const USER_ALLOCATION = ArcDecimal.new(1).value.sub(DAO_ALLOCATION.value);
-  const DEBT_TO_STAKE = 2;
+  const DEBT_TO_STAKE = 500000;
   const REWARDS_END_DATE = 100;
   const VESTING_END_DATE = 200;
-  const HARD_CAP = ArcNumber.new(2100);
   const REWARD_AMOUNT = ArcNumber.new(100);
-  const DEBT_AMOUNT = HARD_CAP.div(DEBT_TO_STAKE); //1050
+  const HARD_CAP = ArcDecimal.new(0.0021).value; // 2100 * 0.000001
+  const DEBT_AMOUNT = HARD_CAP.mul(DEBT_TO_STAKE); //1050
   const COLLATERAL_AMOUNT = DEBT_AMOUNT.mul(2); // 2100
 
   async function init(ctx: ITestContext): Promise<void> {
@@ -60,7 +60,7 @@ describe('RewardCampaign', () => {
 
     await setupMozart(ctx, {
       oraclePrice: ArcDecimal.new(1).value,
-      collateralRatio: ArcDecimal.new(DEBT_TO_STAKE).value,
+      collateralRatio: ArcDecimal.new(COLLATERAL_AMOUNT.div(DEBT_AMOUNT).toNumber()).value,
       interestRate: TEN_PERCENT,
     });
   }
@@ -114,7 +114,7 @@ describe('RewardCampaign', () => {
   }
 
   async function deploySecondCore() {
-    core2proxy =  await new ArcProxyFactory(ownerAccount).deploy(
+    core2proxy = await new ArcProxyFactory(ownerAccount).deploy(
       await (await new MozartCoreV2Factory(ownerAccount).deploy()).address,
       await ownerAccount.getAddress(),
       [],
@@ -126,23 +126,15 @@ describe('RewardCampaign', () => {
       arc.syntheticAddress(),
       await arc.core().getCurrentOracle(),
       await ownerAccount.getAddress(),
-      {value: ArcNumber.new(2)},
-      {value: ArcDecimal.new(0.1).value},
-      {value: 0}
+      { value: ArcNumber.new(2) },
+      { value: ArcDecimal.new(0.1).value },
+      { value: 0 },
     );
 
     const collateralAddress = await core2.getCollateralAsset();
-    await Token.approve(
-      collateralAddress,
-      userAccount,
-      core2proxy.address,
-      COLLATERAL_AMOUNT
-    );
-    
-    await arc.synthetic().addMinter(
-      core2proxy.address,
-      MAX_UINT256,
-    );
+    await Token.approve(collateralAddress, userAccount, core2proxy.address, COLLATERAL_AMOUNT);
+
+    await arc.synthetic().addMinter(core2proxy.address, MAX_UINT256);
 
     await arc.addSynths({ TESTX: core2.address });
   }
@@ -152,17 +144,6 @@ describe('RewardCampaign', () => {
   async function getContract(caller: SignerWithAddress) {
     return new MockRewardCampaignFactory(caller).attach(stakingRewards.address);
   }
-
-  // async function verifyUserIn(kyf: KYFV2, address: string = userAccount.address) {
-  //   const hash = ethers.utils.solidityKeccak256(['address'], [address]);
-  //   const signedMessage = await ownerAccount.signMessage(ethers.utils.arrayify(hash));
-  //   const signature = ethers.utils.splitSignature(signedMessage);
-  //   await kyf.verify(address, signature.v, signature.r, signature.s);
-  // }
-
-  // async function approve(kyf: KYFV2) {
-  //   await stakingRewards.setApprovedKYFInstance(kyf.address, true);
-  // }
 
   async function mint(amount: BigNumberish, account: SignerWithAddress) {
     await stakingToken.mintShare(account.address, amount);
@@ -175,10 +156,10 @@ describe('RewardCampaign', () => {
   }
 
   async function stake(
-    amount: BigNumberish, 
-    id: BigNumberish, 
-    wallet: SignerWithAddress, 
-    stateContract: string
+    amount: BigNumberish,
+    id: BigNumberish,
+    wallet: SignerWithAddress,
+    stateContract: string,
   ) {
     const userStaking = await getContract(wallet);
     await userStaking.stake(amount, id, stateContract);
@@ -283,26 +264,22 @@ describe('RewardCampaign', () => {
        * stake to debt ratio is 2
        * debt amt is 500
        * stake 1000 lp tokens
-       * 
+       *
        * do:
        *  stake additional 100 lp
        */
 
       const collateralAmount = ArcNumber.new(1000);
       const debtAmount = collateralAmount.div(2);
-      const additionalStakeAmount = ArcNumber.new(100);
-       
+      const additionalStakeAmount = ArcDecimal.new(0.0001).value;
+
       await mint(collateralAmount, userAccount);
 
-      const positionResult = await arc.openPosition(
-        collateralAmount,
-        debtAmount,
-        userAccount
-      );
+      const positionResult = await arc.openPosition(collateralAmount, debtAmount, userAccount);
       const newPositionId = positionResult.params.id;
-      
+
       await mint(collateralAmount, userAccount);
-      await stake(collateralAmount, newPositionId, userAccount, arc.coreAddress());
+      await stake(collateralAmount.div(1000000), newPositionId, userAccount, arc.coreAddress());
 
       await mint(additionalStakeAmount, userAccount);
       await expect(
@@ -313,14 +290,7 @@ describe('RewardCampaign', () => {
     it('should not be able to stake to an unnaproved state contract', async () => {
       await deploySecondCore();
       await mint(HARD_CAP, userAccount);
-      await expectRevert(
-        stake(
-          HARD_CAP, 
-          positionId, 
-          userAccount, 
-          core2.address
-        )
-      );
+      await expectRevert(stake(HARD_CAP, positionId, userAccount, core2.address));
     });
 
     it('should be able to stake to a second state contract', async () => {
@@ -334,16 +304,16 @@ describe('RewardCampaign', () => {
         await core2.getCollateralAsset(),
         userAccount,
         core2proxy.address,
-        COLLATERAL_AMOUNT
+        COLLATERAL_AMOUNT,
       );
       const positionResult = await arc.openPosition(
         COLLATERAL_AMOUNT,
         DEBT_AMOUNT,
         userAccount,
-        arc.synths.TESTX
-      )
+        arc.synths.TESTX,
+      );
       const secondPositionId = positionResult.params.id;
-      
+
       await stake(HARD_CAP, secondPositionId, userAccount, core2.address);
 
       const stakerDetails = await stakingRewards.stakers(userAccount.address);
@@ -364,19 +334,19 @@ describe('RewardCampaign', () => {
         await core2.getCollateralAsset(),
         userAccount,
         core2proxy.address,
-        COLLATERAL_AMOUNT
+        COLLATERAL_AMOUNT,
       );
       const positionResult = await arc.openPosition(
         COLLATERAL_AMOUNT,
         DEBT_AMOUNT,
         userAccount,
-        arc.synths.TESTX
-      )
+        arc.synths.TESTX,
+      );
       const secondPositionId = positionResult.params.id;
-      
+
       await stake(HARD_CAP.div(2), positionId, userAccount, arc.coreAddress());
       await expect(
-        stake(HARD_CAP.div(2), secondPositionId, userAccount, core2.address)
+        stake(HARD_CAP.div(2), secondPositionId, userAccount, core2.address),
       ).to.be.revertedWith('Cannot re-stake to a different state contract');
     });
   });
@@ -692,18 +662,19 @@ describe('RewardCampaign', () => {
 
   describe('#setApprovedStateContract', () => {
     beforeEach(setup);
-    
+
     it('should not be able to set a state contract as an unauthorized user', async () => {
       await deploySecondCore();
       const userStaking = await getContract(userAccount);
       await expectRevert(userStaking.setApprovedStateContract(core2.address));
     });
-    
+
     it('should not be able to set a duplicate approved state contract', async () => {
       await deploySecondCore();
-      await expect(stakingRewards.setApprovedStateContract(await arc.coreAddress()))
-        .to.be.revertedWith('The given state contract is already approved');
-    })
+      await expect(
+        stakingRewards.setApprovedStateContract(await arc.coreAddress()),
+      ).to.be.revertedWith('The given state contract is already approved');
+    });
 
     it('should be able to add a valid state contract as the owner', async () => {
       await deploySecondCore();
@@ -716,8 +687,9 @@ describe('RewardCampaign', () => {
       let approvedStateContractsArr = await stakingRewards.getAllApprovedStateContracts();
       const initialArrayLength = approvedStateContractsArr.length;
 
-      await expect(stakingRewards.setApprovedStateContract(await arc.coreAddress()))
-        .to.be.revertedWith('The given state contract is already approved');
+      await expect(
+        stakingRewards.setApprovedStateContract(await arc.coreAddress()),
+      ).to.be.revertedWith('The given state contract is already approved');
       approvedStateContractsArr = await stakingRewards.getAllApprovedStateContracts();
 
       expect(approvedStateContractsArr.length).to.be.eq(initialArrayLength);
@@ -733,6 +705,6 @@ describe('RewardCampaign', () => {
 
       expect(approvedStateContractsArr.length).to.be.eq(initialArrayLength + 1);
       expect(approvedStateContractsArr).to.contain(core2.address);
-    })
-  })
+    });
+  });
 });
