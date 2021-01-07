@@ -690,25 +690,6 @@ describe('RewardCampaign', () => {
     });
   });
 
-  // describe('#setApprovedKYFInstance', () => {
-  //   beforeEach(setup);
-
-  //   it('should not be callable by anyone', async () => {
-  //     await expectRevert(
-  //       (await getContract(userAccount)).setApprovedKYFInstance(kyfTranche1.address, true),
-  //     );
-  //     await expectRevert(
-  //       (await getContract(slasherAccount)).setApprovedKYFInstance(kyfTranche1.address, true),
-  //     );
-  //   });
-
-  //   it('should only be callable by the contract owner', async () => {
-  //     expect(await stakingRewards.kyfInstances(kyfTranche1.address)).to.be.false;
-  //     await (await getContract(ownerAccount)).setApprovedKYFInstance(kyfTranche1.address, true);
-  //     expect(await stakingRewards.kyfInstances(kyfTranche1.address)).to.be.true;
-  //   });
-  // });
-
   describe('#setApprovedStateContract', () => {
     beforeEach(setup);
     
@@ -717,6 +698,12 @@ describe('RewardCampaign', () => {
       const userStaking = await getContract(userAccount);
       await expectRevert(userStaking.setApprovedStateContract(core2.address));
     });
+    
+    it('should not be able to set a duplicate approved state contract', async () => {
+      await deploySecondCore();
+      await expect(stakingRewards.setApprovedStateContract(await arc.coreAddress()))
+        .to.be.revertedWith('The given state contract is already approved');
+    })
 
     it('should be able to add a valid state contract as the owner', async () => {
       await deploySecondCore();
@@ -724,5 +711,28 @@ describe('RewardCampaign', () => {
       await ownerStaking.setApprovedStateContract(core2.address);
       expect(await ownerStaking.approvedStateContracts(core2.address)).to.be.true;
     });
+
+    it('should not add duplicates of approved state contracts to the array', async () => {
+      let approvedStateContractsArr = await stakingRewards.getAllApprovedStateContracts();
+      const initialArrayLength = approvedStateContractsArr.length;
+
+      await expect(stakingRewards.setApprovedStateContract(await arc.coreAddress()))
+        .to.be.revertedWith('The given state contract is already approved');
+      approvedStateContractsArr = await stakingRewards.getAllApprovedStateContracts();
+
+      expect(approvedStateContractsArr.length).to.be.eq(initialArrayLength);
+    });
+
+    it('should add the newly approved state contract to the approved state contracts array when a new one is set', async () => {
+      let approvedStateContractsArr = await stakingRewards.getAllApprovedStateContracts();
+      const initialArrayLength = approvedStateContractsArr.length;
+
+      await deploySecondCore();
+      await stakingRewards.setApprovedStateContract(core2.address);
+      approvedStateContractsArr = await stakingRewards.getAllApprovedStateContracts();
+
+      expect(approvedStateContractsArr.length).to.be.eq(initialArrayLength + 1);
+      expect(approvedStateContractsArr).to.contain(core2.address);
+    })
   })
 });

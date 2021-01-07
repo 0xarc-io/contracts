@@ -39,6 +39,7 @@ contract RewardCampaign is Adminable {
     IERC20 public stakingToken;
 
     mapping(address => bool) public approvedStateContracts;
+    address[] public approvedStateContractsArray;
 
     address public arcDAO;
     address public rewardsDistributor;
@@ -229,7 +230,13 @@ contract RewardCampaign is Adminable {
             "State contract must be valid"
         );
 
+        require(
+            approvedStateContracts[_stateContract] != true,
+            "The given state contract is already approved"
+        );
+
         approvedStateContracts[_stateContract] = true;
+        approvedStateContractsArray.push(_stateContract);
         emit StateContractApproved(_stateContract);
     }
 
@@ -392,6 +399,14 @@ contract RewardCampaign is Adminable {
             Decimal.one(),
             daoAllocation.value
         );
+    }
+
+    function getAllApprovedStateContracts()
+        public
+        view
+        returns (address[] memory)
+    {
+        return approvedStateContractsArray;
     }
 
     /* ========== Mutative Functions ========== */
