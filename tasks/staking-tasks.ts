@@ -15,10 +15,6 @@ import {
   pruneDeployments,
 } from '../deployments/src';
 import { task } from 'hardhat/config';
-import ArcNumber from '../src/utils/ArcNumber';
-import { sign } from 'crypto';
-import Token from '@src/utils/Token';
-import { MozartTestArc } from '@src/MozartTestArc';
 
 task('deploy-staking', 'Deploy a staking/reward pool')
   .addParam('name', 'The name of the pool you would like to deploy')
@@ -112,7 +108,6 @@ task('deploy-staking', 'Deploy a staking/reward pool')
         { value: rewardConfig.slasherCut },
         rewardConfig.vestingEndDate,
         rewardConfig.debtToStake,
-        rewardConfig.hardCap,
       );
       console.log(green(`Called init() successfully!\n`));
     } catch (error) {
@@ -127,80 +122,64 @@ task('deploy-staking', 'Deploy a staking/reward pool')
           name: 'CoreProxy',
           type: DeploymentType.synth,
           network,
-          group: rewardGroup
+          group: rewardGroup,
         });
         stateProxies.push(contract.address);
       }
-      
-      console.log(yellow('Approving state contracts...'))
+
+      console.log(yellow('Approving state contracts...'));
       await implementation.setApprovedStateContracts(stateProxies);
-      console.log(green('State contracts approved successfully!'))
+      console.log(green('State contracts approved successfully!'));
     } catch (error) {
-      console.log(red(`Failed to set approved state contracts. Reason: ${error}\n`))
+      console.log(red(`Failed to set approved state contracts. Reason: ${error}\n`));
     }
 
     try {
-      console.log(yellow('Setting rewards duration...'))
+      console.log(yellow('Setting rewards duration...'));
       await implementation.setRewardsDuration(stakingConfig.rewardsDurationSeconds);
-      console.log(green('Rewards duration successfully set'))
+      console.log(green('Rewards duration successfully set'));
     } catch (error) {
       console.log(red(`Failed to set the rewards duration. Reason: ${error}\n`));
     }
-    
-    if ((await signer.getChainId()) != 1) {
-      const collateralAmount = ArcNumber.new(10);
-      
-      console.log(yellow('Minting 1 staking token...'))
-      const stakingToken = TestTokenFactory.connect(stakingTokenAddress, signer);
-      await stakingToken.mintShare(await signer.getAddress(), ArcNumber.new(1));
-      await stakingToken.approve(
-        proxyContract,
-        ArcNumber.new(1)
-      );
 
-      const arc = await MozartTestArc.init(signer);
-      await arc.addSynths({TESTX: stateProxies[0]});
+    // if ((await signer.getChainId()) != 1) {
+    //   const collateralAmount = ArcNumber.new(10);
 
-      const collateralToken = await loadContract({
-        name: 'CollateralToken',
-        source: 'TestToken',
-        group: stakingConfig.rewardConfig.coreContracts[0],
-        network,
-      });
-      const collateralTokenContract = TestTokenFactory.connect(
-        collateralToken.address, 
-        signer
-      );
+    //   console.log(yellow('Minting 1 staking token...'));
+    //   const stakingToken = TestTokenFactory.connect(stakingTokenAddress, signer);
+    //   await stakingToken.mintShare(await signer.getAddress(), ArcNumber.new(1));
+    //   await stakingToken.approve(proxyContract, ArcNumber.new(1));
 
-      console.log(yellow('Minting collateral token...'))
-      await collateralTokenContract.mintShare(
-        await signer.getAddress(), 
-        collateralAmount
-      );
-      await collateralTokenContract.approve(
-        stateProxies[0],
-        collateralAmount
-      );
+    //   const arc = await MozartTestArc.init(signer);
+    //   await arc.addSynths({ TESTX: stateProxies[0] });
 
-      console.log(yellow('Opening a position...'))
-      const positionResult = await arc.openPosition(
-        collateralAmount,
-        collateralAmount.div(2),
-        signer,
-      );
-      const positionId = positionResult.params.id;
+    //   const collateralToken = await loadContract({
+    //     name: 'CollateralToken',
+    //     source: 'TestToken',
+    //     group: stakingConfig.rewardConfig.coreContracts[0],
+    //     network,
+    //   });
+    //   const collateralTokenContract = TestTokenFactory.connect(collateralToken.address, signer);
 
-      console.log(yellow('Staking...'))
-      await implementation.stake(
-        ArcNumber.new(1),
-        positionId,
-        stateProxies[0]
-      );
-      
-      console.log(yellow(`* Minting reward tokens and notifying rewards contract...`));
-      const arcToken = ArcxTokenFactory.connect(rewardToken.address, signer);
-      await arcToken.mint(proxyContract, ArcNumber.new(100));
-      await implementation.notifyRewardAmount(ArcNumber.new(100));
-      console.log(green(`Executed successfully!\n`));
-    }
+    //   console.log(yellow('Minting collateral token...'));
+    //   await collateralTokenContract.mintShare(await signer.getAddress(), collateralAmount);
+    //   await collateralTokenContract.approve(stateProxies[0], collateralAmount);
+
+    //   console.log(yellow('Opening a position...'));
+    //   const positionResult = await arc.openPosition(
+    //     collateralAmount,
+    //     collateralAmount.div(2),
+    //     signer,
+    //   );
+    //   const positionId = positionResult.params.id;
+
+    //   console.log(yellow('Staking...'));
+    //   await implementation.stake(ArcNumber.new(1), positionId, stateProxies[0]);
+
+    //   console.log(yellow(`* Minting reward tokens and notifying rewards contract...`));
+    //   const arcToken = ArcxTokenFactory.connect(rewardToken.address, signer);
+    //   await arcToken.mint(proxyContract, ArcNumber.new(100));
+    //   await implementation.notifyRewardAmount(ArcNumber.new(100));
+    //   console.log(green(`Executed successfully!\n`));
+    // }
   });
