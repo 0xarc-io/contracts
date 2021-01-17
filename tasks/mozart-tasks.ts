@@ -29,6 +29,8 @@ import {
   CTokenOracleFactory,
 } from '@src/typings';
 import { group } from 'console';
+import { XSushiOracleFactory } from '@src/typings/XSushiOracleFactory';
+import { IbETHOracleFactory } from '@src/typings/IbETHOracleFactory';
 
 task('deploy-mozart-synthetic', 'Deploy the Mozart synthetic token')
   .addParam('name', 'The name of the synthetic token')
@@ -179,12 +181,6 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
         networkConfig,
       );
     } else if (synthConfig.oracle_source == 'CTokenOracle') {
-      console.log(
-        synthConfig.collateral_address,
-        synthConfig.oracle_token_aggregator_address,
-        synthConfig.oracle_eth_aggregator_address,
-      );
-
       oracleAddress = await deployContract(
         {
           name: 'Oracle',
@@ -194,6 +190,30 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
             synthConfig.oracle_token_aggregator_address,
             synthConfig.oracle_eth_aggregator_address,
           ),
+          version: 1,
+          type: DeploymentType.synth,
+          group: synthName,
+        },
+        { ...networkConfig },
+      );
+    } else if (synthConfig.oracle_source == 'xSushiOracle') {
+      oracleAddress = await deployContract(
+        {
+          name: 'Oracle',
+          source: 'xSushiOracle',
+          data: new XSushiOracleFactory(signer).getDeployTransaction(),
+          version: 1,
+          type: DeploymentType.synth,
+          group: synthName,
+        },
+        { ...networkConfig },
+      );
+    } else if (synthConfig.oracle_source == 'ibETHOracle') {
+      oracleAddress = await deployContract(
+        {
+          name: 'Oracle',
+          source: 'ibETHOracle',
+          data: new IbETHOracleFactory(signer).getDeployTransaction(),
           version: 1,
           type: DeploymentType.synth,
           group: synthName,
