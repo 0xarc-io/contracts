@@ -388,5 +388,15 @@
     "version": 1,
     "type": "staking",
     "group": "Pool-5"
+  },
+  {
+    "name": "MozartSavings",
+    "source": "MozartSavingsV2",
+    "address": "0xeb79a36303aeF7f7536467025a29Df85421F31E2",
+    "txn": "0x067a79eb296cdbbae57b4805420e43e4b60e49f98f6ec23658378d72abcc9d2b",
+    "network": "mainnet",
+    "version": 1,
+    "type": "savings",
+    "group": ""
   }
 ]
