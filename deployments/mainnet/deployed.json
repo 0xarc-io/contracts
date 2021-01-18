@@ -398,5 +398,25 @@
     "version": 1,
     "type": "savings",
     "group": ""
+  },
+  {
+    "name": "Oracle",
+    "source": "xSushiOracle",
+    "address": "0x8fD458EF0889eed73220bc766CE12a58f9ed0447",
+    "txn": "0x1b70c870f5e950b2918e8e2178aa76fbf7d6c53030d5a21cac90cc90a1104e42",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth",
+    "group": "xSUSHI-STABLEx"
+  },
+  {
+    "name": "CoreProxy",
+    "source": "ArcProxy",
+    "address": "0xc3A5A0dC6241C922937c5cd90F5bACE23716AFB7",
+    "txn": "0xdc892b0867f5f8b9e3d0375dbf420920841e30eb25ec8baf2f4040a1206311e5",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth",
+    "group": "xSUSHI-STABLEx"
   }
 ]

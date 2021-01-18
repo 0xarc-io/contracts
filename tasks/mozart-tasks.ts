@@ -255,20 +255,31 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
     const synthetic = SyntheticTokenV1Factory.connect(syntheticProxyAddress, signer);
 
     console.log(yellow(`* Calling core init()...`));
-    const interestRateSetter = networkDetails['users']['owner'] || signer.address;
+    const ultimateOwner = networkDetails['users']['owner'] || signer.address;
     try {
+      console.log(
+        red(
+          `Please ensure the following details are correct:\n
+          Decimals: ${synthConfig.params.decimals}\n
+          Collateral Address: ${collateralAddress}\n
+          Synthetic Address: ${syntheticProxyAddress}\n
+          Oracle Address: ${oracleAddress}\n
+          Interest Rate Setter: ${ultimateOwner}`,
+        ),
+      );
+
       await core.init(
         synthConfig.params.decimals,
         collateralAddress,
         syntheticProxyAddress,
         oracleAddress,
-        interestRateSetter,
+        ultimateOwner,
         { value: synthConfig.params.collateral_ratio },
         { value: synthConfig.params.liquidation_user_fee },
         { value: synthConfig.params.liquidation_arc_ratio },
       );
       console.log(green(`Called core init() successfully!\n`));
-      console.log(magenta(`The interest rate setter has been set to: ${interestRateSetter}`));
+      console.log(magenta(`The interest rate setter has been set to: ${ultimateOwner}`));
     } catch (error) {
       console.log(red(`Failed to call core init().\nReason: ${error}\n`));
     }
@@ -307,6 +318,17 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
       console.log(green(`Limits set!\n`));
     } catch (error) {
       console.log(red(`Failed to set limits!\nReason: ${error}\n`));
+    }
+
+    if ((await signer.provider.getNetwork()).chainId == 1) {
+      console.log(yellow(`* Changing admin...`));
+      try {
+        const proxy = ArcProxyFactory.connect(coreProxyAddress, signer);
+        await proxy.changeAdmin(ultimateOwner);
+        console.log(green(`Owner set to ${ultimateOwner}!\n`));
+      } catch (error) {
+        console.log(red(`Failed to set limits!\nReason: ${error}\n`));
+      }
     }
   });
 

@@ -68,7 +68,7 @@
     "oracle_eth_aggregator_address": "",
     "version": 1,
 		"params": {
-      "decimals": 8,
+      "decimals": 18,
 			"collateral_ratio": "2000000000000000000",
 			"liquidation_user_fee": "150000000000000000",
 			"liquidation_arc_ratio": "100000000000000000",
@@ -84,7 +84,7 @@
     "oracle_eth_aggregator_address": "",
     "version": 1,
 		"params": {
-      "decimals": 8,
+      "decimals": 18,
 			"collateral_ratio": "2000000000000000000",
 			"liquidation_user_fee": "150000000000000000",
 			"liquidation_arc_ratio": "100000000000000000",
