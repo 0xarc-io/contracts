@@ -45,7 +45,8 @@ export function synthV2Added(event: SynthAddedV2): void {
 
   if (
     event.params.synth.equals(Address.fromString('0xb40d0e40adaac7302d820fbb9544769696c3077d')) ||
-    event.params.proxy.equals(Address.fromString('0x50e625821435e953acd82df154fdb5c7173d35df'))
+    event.params.proxy.equals(Address.fromString('0x50e625821435e953acd82df154fdb5c7173d35df')) ||
+    event.params.proxy.equals(Address.fromString('0x39b81d317fa5f8c6d45ca634584676e729a626f3'))
   ) {
     return;
   }

@@ -25,7 +25,7 @@ function testNetwork(network: string) {
   const isOwnerSet = hreNetwork.users?.owner?.length > 0;
   const ultimateOwner = hreNetwork.users?.owner.toLowerCase();
 
-  const synths = ['ETHX', 'yUSD-STABLEx', 'cUSDC-STABLEx'];
+  const synths = ['ETHX', 'yUSD-STABLEx', 'cUSDC-STABLEx', 'xSUSHI-STABLEx'];
 
   synths.forEach((synth) => {
     describe(synth, () => {
