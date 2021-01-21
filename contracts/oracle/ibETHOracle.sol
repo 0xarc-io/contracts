@@ -12,13 +12,16 @@ import {IChainLinkAggregator} from "./IChainLinkAggregator.sol";
 
 import {IibETH} from "./IibETH.sol";
 
+/* solium-disable-next-line */
 contract ibETHOracle is IOracle {
 
     using SafeMath for uint256;
 
     IERC20 public ibETH = IERC20(0x67B66C99D3Eb37Fa76Aa3Ed1ff33E8e39F0b9c7A);
 
-    IChainLinkAggregator public chainLinkEthAggregator = IChainLinkAggregator(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
+    IChainLinkAggregator public chainLinkEthAggregator = IChainLinkAggregator(
+        0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419
+    );
 
     uint256 public chainlinkEthScalar;
 
@@ -28,7 +31,7 @@ contract ibETHOracle is IOracle {
         chainlinkEthScalar = uint256(18 - chainLinkEthAggregator.decimals());
     }
 
-     function fetchCurrentPrice()
+    function fetchCurrentPrice()
         external
         view
         returns (Decimal.D256 memory)

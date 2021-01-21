@@ -10,6 +10,7 @@ import {IERC20} from "../token/IERC20.sol";
 import {IOracle} from "../oracle/IOracle.sol";
 import {IChainLinkAggregator} from "../oracle/IChainLinkAggregator.sol";
 
+/* solium-disable-next-line */
 contract xSushiOracle is IOracle {
 
     using SafeMath for uint256;
@@ -17,8 +18,13 @@ contract xSushiOracle is IOracle {
     IERC20 public sushi = IERC20(0x6B3595068778DD592e39A122f4f5a5cF09C90fE2);
     IERC20 public xsushi = IERC20(0x8798249c2E607446EfB7Ad49eC89dD1865Ff4272);
 
-    IChainLinkAggregator public chainLinkEthAggregator = IChainLinkAggregator(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
-    IChainLinkAggregator public chainLinkTokenAggregator = IChainLinkAggregator(0xe572CeF69f43c2E488b33924AF04BDacE19079cf);
+    IChainLinkAggregator public chainLinkEthAggregator = IChainLinkAggregator(
+        0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419
+    );
+
+    IChainLinkAggregator public chainLinkTokenAggregator = IChainLinkAggregator(
+        0xe572CeF69f43c2E488b33924AF04BDacE19079cf
+    );
 
     uint256 public chainlinkTokenScalar;
     uint256 public chainlinkEthScalar;
