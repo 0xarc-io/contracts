@@ -60,5 +60,37 @@
 			"synthetic_limit": "",
 			"position_minimum_collateral" : ""
 		}
+  },
+  "ibETH-STABLEx": {
+    "collateral_address": "0x67B66C99D3Eb37Fa76Aa3Ed1ff33E8e39F0b9c7A",
+    "oracle_source": "ibETHOracle",
+    "oracle_token_aggregator_address": "",
+    "oracle_eth_aggregator_address": "",
+    "version": 1,
+		"params": {
+      "decimals": 18,
+			"collateral_ratio": "2000000000000000000",
+			"liquidation_user_fee": "150000000000000000",
+			"liquidation_arc_ratio": "100000000000000000",
+			"collateral_limit": "",
+			"synthetic_limit": "",
+			"position_minimum_collateral" : ""
+		}
+  },
+  "xSUSHI-STABLEx": {
+    "collateral_address": "0x8798249c2E607446EfB7Ad49eC89dD1865Ff4272",
+    "oracle_source": "xSushiOracle",
+    "oracle_token_aggregator_address": "",
+    "oracle_eth_aggregator_address": "",
+    "version": 1,
+		"params": {
+      "decimals": 18,
+			"collateral_ratio": "2000000000000000000",
+			"liquidation_user_fee": "150000000000000000",
+			"liquidation_arc_ratio": "100000000000000000",
+			"collateral_limit": "",
+			"synthetic_limit": "",
+			"position_minimum_collateral" : ""
+		}
 	}
 }
