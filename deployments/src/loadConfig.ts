@@ -14,7 +14,7 @@ export interface LoadConfigParams {
 }
 
 export function loadSynthConfig(params: LoadConfigParams) {
-  return loadConfig(params, constants.SYNTH_CONFIG_FILENAME, 'savings');
+  return loadConfig(params, constants.SYNTH_CONFIG_FILENAME, 'synth');
 }
 
 export function loadSavingsConfig(params: LoadConfigParams) {

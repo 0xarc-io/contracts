@@ -9,16 +9,30 @@
     "sourceMap": true,
     "outDir": "dist",
     "resolveJsonModule": true,
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@src/*": ["src/*"],
-      "@utils/*": ["src/utils/*"],
-      "@typings/*": ["src/typings/*"],
-      "@arc-types/*": ["arc-types/*"],
-      "@test/*": ["test/*"],
-      "@deployments/*": ["@deployments/*"],
+      "@src/*": [
+        "src/*"
+      ],
+      "@utils/*": [
+        "src/utils/*"
+      ],
+      "@typings/*": [
+        "src/typings/*"
+      ],
+      "@arc-types/*": [
+        "arc-types/*"
+      ],
+      "@test/*": [
+        "test/*"
+      ],
+      "@deployments/*": [
+        "@deployments/*"
+      ],
     },
     "plugins": [
       {
@@ -37,9 +51,12 @@
     "./deployments/**/*",
     "./arc-types/**/*/*",
     "./deployments/rinkeby/*.json",
-    "./deployments/mainnet/*.json"
+    "./deployments/mainnet/*.json",
+    "./deployments/playnet/*.json"
   ],
-  "exclude": ["node_modules"],
+  "exclude": [
+    "node_modules"
+  ],
   "files": [
     "arc-types/augmentations.d.ts",
     "hardhat.config.ts"
