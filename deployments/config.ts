@@ -1,8 +1,8 @@
 import { red } from 'chalk';
 import { PlatformPath } from 'path';
 
-export const networks = ['local', 'rinkeby', 'kovan', 'mainnet'];
-export const deploymentTestNetworks = ['mainnet'];
+export const networks = ['local', 'rinkeby', 'kovan', 'mainnet', 'playnet'];
+export const deploymentTestNetworks = ['mainnet', 'playnet'];
 
 export const constants = {
   BUILD_FOLDER: 'build',
