@@ -66,9 +66,9 @@ const config: HardhatUserConfig = {
       }),
     },
     local: {
-      url: 'http://127.0.0.1:8545',
+      url: 'http://127.0.0.1:7545',
       users: {
-        owner: '0x5409ed021d9299bf6814279a6a1411a7e866a631',
+        owner: '0xAF36712cb4ebD3BD706E898F5703ce3Ca96E8982',
       },
     },
     coverage: {
@@ -94,6 +94,14 @@ const config: HardhatUserConfig = {
       url: getNetworkUrl('mainnet'),
       accounts: [params.deploy_private_key],
       gasPrice: 200000000000,
+      users: {
+        owner: '0x62f31e08e279f3091d9755a09914df97554eae0b',
+      },
+    },
+    playnet: {
+      url: getNetworkUrl('mainnet'),
+      accounts: [params.deploy_private_key],
+      gasPrice: 107000000000,
       users: {
         owner: '0x62f31e08e279f3091d9755a09914df97554eae0b',
       },
