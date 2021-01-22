@@ -398,5 +398,45 @@
     "version": 1,
     "type": "savings",
     "group": ""
+  },
+  {
+    "name": "Oracle",
+    "source": "xSushiOracle",
+    "address": "0x8fD458EF0889eed73220bc766CE12a58f9ed0447",
+    "txn": "0x1b70c870f5e950b2918e8e2178aa76fbf7d6c53030d5a21cac90cc90a1104e42",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth",
+    "group": "xSUSHI-STABLEx"
+  },
+  {
+    "name": "CoreProxy",
+    "source": "ArcProxy",
+    "address": "0xc3A5A0dC6241C922937c5cd90F5bACE23716AFB7",
+    "txn": "0xdc892b0867f5f8b9e3d0375dbf420920841e30eb25ec8baf2f4040a1206311e5",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth",
+    "group": "xSUSHI-STABLEx"
+  },
+  {
+    "name": "Oracle",
+    "source": "ibETHOracle",
+    "address": "0xCba520FF6d7CdD13707e6d2f061E8356d8DdB23e",
+    "txn": "0x7aaf41b12caef142c013af236753cce733d02541ececb431f6b69e2369c67157",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth",
+    "group": "ibETH-STABLEx"
+  },
+  {
+    "name": "CoreProxy",
+    "source": "ArcProxy",
+    "address": "0x81f16E6B58738DaAA4C5D493a240cCA49C240f04",
+    "txn": "0x4466d6e66f5ae8e3cac06b02da10d0d54e6d9c4b7fb60344397a02d6985d40db",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth",
+    "group": "ibETH-STABLEx"
   }
 ]
