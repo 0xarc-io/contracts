@@ -1,7 +1,7 @@
 {
   "network": "mainnet",
-  "startBlock": 10812831,
-  "synthRegistry": "TODO",
-  "synthRegistryV2": "TODO",
-  "savingsRegistry": "TODO"
+  "startBlock": 11702780,
+  "synthRegistry": "0xc30A9e9f65f920E47F87E16b5e76fDDcb240FDF3",
+  "synthRegistryV2": "0x95BAaDd54a9fdd650C11b570d72eB1bF177Adf3D",
+  "savingsRegistry": "0x19ACc54Eb0f31553F43eBf8871BDD03236C22Ae2"
 }
