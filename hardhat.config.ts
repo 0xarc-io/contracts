@@ -101,9 +101,9 @@ const config: HardhatUserConfig = {
     playnet: {
       url: getNetworkUrl('mainnet'),
       accounts: [params.deploy_private_key],
-      gasPrice: 107000000000,
+      gasPrice: 100000000000,
       users: {
-        owner: '0x62f31e08e279f3091d9755a09914df97554eae0b',
+        owner: '0x9c767178528c8a205DF63305ebdA4BB6B147889b',
       },
     },
   },

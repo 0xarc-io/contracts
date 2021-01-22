@@ -28,7 +28,6 @@ import {
   YUSDOracleFactory,
   CTokenOracleFactory,
 } from '@src/typings';
-import { group } from 'console';
 import { XSushiOracleFactory } from '@src/typings/XSushiOracleFactory';
 import { IbETHOracleFactory } from '@src/typings/IbETHOracleFactory';
 

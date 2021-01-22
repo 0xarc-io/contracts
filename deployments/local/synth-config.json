@@ -1,57 +1,89 @@
 {
 	"LINKUSD": {
 		"collateral_address": "",
-    "oracle_link_aggregator_address": "",
-    "version": 1,
+		"oracle_link_aggregator_address": "",
+		"version": 1,
 		"params": {
 			"collateral_ratio": "2000000000000000000",
 			"liquidation_user_fee": "50000000000000000",
 			"liquidation_arc_fee": "50000000000000000",
 			"collateral_limit": "",
 			"synthetic_limit": "",
-      "position_minimum_collateral" : ""
+			"position_minimum_collateral": ""
 		}
 	},
 	"ETHX": {
 		"collateral_address": "",
-    "oracle_link_aggregator_address": "",
-    "version": 1,
+		"oracle_link_aggregator_address": "",
+		"version": 1,
 		"params": {
-      "decimals": 18,
+			"decimals": 18,
 			"collateral_ratio": "2000000000000000000",
 			"liquidation_user_fee": "50000000000000000",
 			"liquidation_arc_ratio": "50000000000000000",
 			"collateral_limit": "",
 			"synthetic_limit": "",
-			"position_minimum_collateral" : ""
-		}
-  },
-  "yUSD-STABLEx": {
-		"collateral_address": "",
-    "oracle_link_aggregator_address": "",
-    "version": 1,
-		"params": {
-      "decimals": 18,
-			"collateral_ratio": "2000000000000000000",
-			"liquidation_user_fee": "50000000000000000",
-			"liquidation_arc_ratio": "50000000000000000",
-			"collateral_limit": "",
-			"synthetic_limit": "",
-			"position_minimum_collateral" : ""
+			"position_minimum_collateral": ""
 		}
 	},
-  "cUSDC-STABLEx": {
+	"yUSD-STABLEx": {
 		"collateral_address": "",
-    "oracle_link_aggregator_address": "",
-    "version": 1,
+		"oracle_link_aggregator_address": "",
+		"version": 1,
 		"params": {
-      "decimals": 18,
+			"decimals": 18,
 			"collateral_ratio": "2000000000000000000",
 			"liquidation_user_fee": "50000000000000000",
 			"liquidation_arc_ratio": "50000000000000000",
 			"collateral_limit": "",
 			"synthetic_limit": "",
-			"position_minimum_collateral" : ""
+			"position_minimum_collateral": ""
+		}
+	},
+	"cUSDC-STABLEx": {
+		"collateral_address": "",
+		"oracle_link_aggregator_address": "",
+		"version": 1,
+		"params": {
+			"decimals": 18,
+			"collateral_ratio": "2000000000000000000",
+			"liquidation_user_fee": "50000000000000000",
+			"liquidation_arc_ratio": "50000000000000000",
+			"collateral_limit": "",
+			"synthetic_limit": "",
+			"position_minimum_collateral": ""
+		}
+	},
+	"ibETH-STABLEx": {
+		"collateral_address": "",
+		"oracle_source": "",
+		"oracle_token_aggregator_address": "",
+		"oracle_eth_aggregator_address": "",
+		"version": 1,
+		"params": {
+			"decimals": 18,
+			"collateral_ratio": "2000000000000000000",
+			"liquidation_user_fee": "150000000000000000",
+			"liquidation_arc_ratio": "100000000000000000",
+			"collateral_limit": "",
+			"synthetic_limit": "",
+			"position_minimum_collateral": ""
+		}
+	},
+	"xSUSHI-STABLEx": {
+		"collateral_address": "",
+		"oracle_source": "",
+		"oracle_token_aggregator_address": "",
+		"oracle_eth_aggregator_address": "",
+		"version": 1,
+		"params": {
+			"decimals": 18,
+			"collateral_ratio": "2000000000000000000",
+			"liquidation_user_fee": "150000000000000000",
+			"liquidation_arc_ratio": "100000000000000000",
+			"collateral_limit": "",
+			"synthetic_limit": "",
+			"position_minimum_collateral": ""
 		}
 	}
 }
