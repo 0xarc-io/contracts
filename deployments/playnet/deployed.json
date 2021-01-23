@@ -188,5 +188,55 @@
     "version": 1,
     "type": "staking",
     "group": "Pool-5"
+  },
+  {
+    "name": "SpritzCore",
+    "source": "CoreV4",
+    "address": "0xB17D430f044dB786a48C3aFf9556F97E754260e3",
+    "txn": "0x347fa7d01368297d8fbf9b72ea7b55c1e8b1dcc0f541c8b38c0786b1c7ab0020",
+    "network": "playnet",
+    "version": 4,
+    "type": "synth",
+    "group": ""
+  },
+  {
+    "name": "CollateralToken",
+    "source": "TestToken",
+    "address": "0x13ee69B159a82698B2A89C00A146b0194acB12Ca",
+    "txn": "0xe58e87a238f29d38c47e866fa667224607f59d2d0fcd645000093f907082ea5e",
+    "network": "playnet",
+    "version": 1,
+    "type": "synth",
+    "group": "LINKUSD"
+  },
+  {
+    "name": "SyntheticToken",
+    "source": "StaticSyntheticToken",
+    "address": "0x1c92e4E5d58361C0f56ACb46eF8D3eEfC4aF9d67",
+    "txn": "0x4e3df761f9fe0cf6663a64c65deda6a0e0c1a6150f561377102ea0c42e6c8a50",
+    "network": "playnet",
+    "version": 1,
+    "type": "synth",
+    "group": "LINKUSD"
+  },
+  {
+    "name": "Oracle",
+    "source": "MockOracle",
+    "address": "0x41fbd7fd7C75cD01d0bd89a968cD6AF3D8D7F1f3",
+    "txn": "0x40bec8a5de67ca0f2db96dc66a83fb2761c13b6096deca8b5c43638c7438d40f",
+    "network": "playnet",
+    "version": 1,
+    "type": "synth",
+    "group": "LINKUSD"
+  },
+  {
+    "name": "CoreProxy",
+    "source": "ArcProxy",
+    "address": "0xd89F1191c2CE11B46ca15ba73818Dcc703b57794",
+    "txn": "0x32dc1691b287553227f979c4cd59b434628179f84141b73afd10b19c4296c990",
+    "network": "playnet",
+    "version": 1,
+    "type": "synth",
+    "group": "LINKUSD"
   }
 ]
