@@ -7,7 +7,6 @@ import {IOracle} from "./IOracle.sol";
 import {Decimal} from "../lib/Decimal.sol";
 import {SafeMath} from "../lib/SafeMath.sol";
 import {IERC20} from "../token/IERC20.sol";
-import {IChainLinkAggregator} from "../oracle/IChainLinkAggregator.sol";
 import {IimUSD} from "./IimUSD.sol";
 import {ICurve} from "./ICurve.sol";
 
