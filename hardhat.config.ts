@@ -2,7 +2,6 @@ import fs from 'fs';
 
 import { HardhatUserConfig } from 'hardhat/config';
 import { BigNumber } from 'ethers';
-import { removeConsoleLog } from 'hardhat-preprocessor';
 import { privateKeys } from './test/helpers/generatedWallets';
 
 import 'hardhat-preprocessor';
@@ -66,7 +65,7 @@ const config: HardhatUserConfig = {
       }),
     },
     local: {
-      url: 'http://127.0.0.1:7545',
+      url: 'http://127.0.0.1:8545',
       users: {
         owner: '0xAF36712cb4ebD3BD706E898F5703ce3Ca96E8982',
       },
@@ -101,7 +100,7 @@ const config: HardhatUserConfig = {
     playnet: {
       url: getNetworkUrl('mainnet'),
       accounts: [params.deploy_private_key],
-      gasPrice: 100000000000,
+      gasPrice: 75000000000,
       users: {
         owner: '0x9c767178528c8a205DF63305ebdA4BB6B147889b',
       },
