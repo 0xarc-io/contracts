@@ -1,13 +1,13 @@
 import { red } from 'chalk';
 import { PlatformPath } from 'path';
 
-export const networks = ['local', 'rinkeby', 'kovan', 'mainnet'];
-export const deploymentTestNetworks = ['mainnet'];
+export const networks = ['local', 'rinkeby', 'kovan', 'mainnet', 'playnet'];
+export const deploymentTestNetworks = ['mainnet', 'playnet'];
 
 export const constants = {
   BUILD_FOLDER: 'build',
   CONTRACTS_FOLDER: 'contracts',
-  SYNTH_CONFIG_FILENAME: 'synth-config.json',
+  SYNTH_CONFIG_FILENAME: 'synth-config.ts',
   SAVINGS_CONFIG_FILENAME: 'savings-config.json',
   STAKING_CONFIG_FILENAME: 'staking-config.json',
   SUBGRAPH_CONFIG_FILENAME: 'subgraph-config.json',
