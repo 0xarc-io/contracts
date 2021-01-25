@@ -9,9 +9,9 @@ import {
 
 export default {
   LINKUSD: {
-    collateral_address: '',
-    oracle_link_aggregator_address: '',
-    synthetic_address: '',
+    collateral_address: '0x514910771af9ca656af840dff83e8264ecf986ca',
+    oracle_link_aggregator_address: '0x2c1d072e956AFFC0D435Cb7AC38EF18d24d9127c',
+    synthetic_address: '0x0e2ec54fc0b509f445631bf4b91ab8168230c752',
     version: 1,
     params: {
       collateral_ratio: '2000000000000000000',

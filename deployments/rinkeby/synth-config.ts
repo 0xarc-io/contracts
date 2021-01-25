@@ -28,7 +28,6 @@ export default {
     synthetic_address: '',
     version: 1,
     params: {
-      decimals: 18,
       collateral_ratio: '2000000000000000000',
       liquidation_user_fee: '50000000000000000',
       liquidation_arc_ratio: '50000000000000000',
@@ -46,7 +45,6 @@ export default {
     },
     version: '1',
     params: {
-      decimals: 18,
       collateral_ratio: '1100000000000000000',
       liquidation_user_fee: '50000000000000000',
       liquidation_arc_ratio: '50000000000000000',
@@ -68,7 +66,6 @@ export default {
     },
     version: 1,
     params: {
-      decimals: 8,
       collateral_ratio: '2000000000000000000',
       liquidation_user_fee: '50000000000000000',
       liquidation_arc_ratio: '50000000000000000',
