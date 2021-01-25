@@ -5,7 +5,13 @@ import deployments from '../../deployments/mainnet/deployed.json';
 import { OwnableFactory } from '@src/typings/OwnableFactory';
 import { AdminableFactory } from '@src/typings';
 
-describe.only('Ownable contracts', () => {
+
+/* eslint-disable @typescript-eslint/no-var-requires */
+const hre = require('hardhat');
+
+describe('Ownable contracts', () => {
+  const expectedOwner = hre.config.networks.mainnet.users.owner;
+
   const provider = new MockProvider({
     ganacheOptions: {
       fork: 'https://eth-mainnet.alchemyapi.io/v2/HSgFSArdYblhAJVgM8F820KLd65jiFzc',
@@ -35,13 +41,13 @@ describe.only('Ownable contracts', () => {
       if (shouldBeOwnable(deployment.source)) {
         it(`${deployment.group} ${deployment.name} ${deployment.address}`, async () => {
           const owner = await OwnableFactory.connect(deployment.address, provider).owner();
-          expect(owner).eq('0x62F31E08e279f3091d9755a09914DF97554eAe0b');
+          expect(owner.toLowerCase()).eq(expectedOwner);
         });
       }
     }
   });
 
-  describe.only('contracts have admin', () => {
+  describe('contracts have admin', () => {
     const shouldBeAdminable = (source: string) => {
       return [
         'MozartCoreV1',
@@ -67,7 +73,7 @@ describe.only('Ownable contracts', () => {
       } else if (['ArcProxy'].includes(deployment.source)) {
         it(`${deployment.group} ${deployment.name} ${deployment.address}`, async () => {
           const admin = await AdminableFactory.connect(deployment.address, provider).getAdmin();
-          expect(admin).eq('0x62F31E08e279f3091d9755a09914DF97554eAe0b');
+          expect(admin.toLowerCase()).eq(expectedOwner);
         });
       }
     }
