@@ -25,6 +25,7 @@ import {
   SyntheticTokenV1Factory,
   SynthRegistryV2Factory,
   TestTokenFactory,
+  BaseERC20Factory,
 } from '@src/typings';
 
 task('deploy-mozart-synthetic', 'Deploy the Mozart synthetic token')
@@ -199,13 +200,31 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
     const core = MozartCoreV2Factory.connect(coreProxyAddress, signer);
     const synthetic = SyntheticTokenV1Factory.connect(syntheticProxyAddress, signer);
 
+    let decimals: number;
+    
+    console.log(yellow(`* Getting decimals of collateral...`));
+    try {
+      if (!collateralAddress) {
+        throw Error(`Collateral address was null`)
+      }
+      
+      const collateralToken = BaseERC20Factory.connect(collateralAddress, signer);
+      decimals = await collateralToken.decimals();
+
+      if (!decimals) {
+        throw Error(`Decimals cannot be null or 0: ${decimals}`);
+      }
+    } catch (err) {
+      console.log(red(`Failed to get the collateral decimals: ${err}`))
+    }
+    
     console.log(yellow(`* Calling core init()...`));
     const ultimateOwner = networkDetails['users']['owner'] || signer.address;
     try {
       console.log(
         red(
           `Please ensure the following details are correct:\n
-          Decimals: ${synthConfig.params.decimals}\n
+          Decimals: ${decimals}\n
           Collateral Address: ${collateralAddress}\n
           Synthetic Address: ${syntheticProxyAddress}\n
           Oracle Address: ${oracleAddress}\n
@@ -214,7 +233,7 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
       );
 
       await core.init(
-        synthConfig.params.decimals,
+        decimals,
         collateralAddress,
         syntheticProxyAddress,
         oracleAddress,

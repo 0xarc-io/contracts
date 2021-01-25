@@ -34,7 +34,6 @@ export default {
     synthetic_address: '',
     version: 1,
     params: {
-      decimals: 18,
       collateral_ratio: '2000000000000000000',
       liquidation_user_fee: '100000000000000000',
       liquidation_arc_ratio: '100000000000000000',
@@ -53,7 +52,6 @@ export default {
     },
     version: '1',
     params: {
-      decimals: 18,
       collateral_ratio: '2000000000000000000',
       liquidation_user_fee: '20000000000000000',
       liquidation_arc_ratio: '200000000000000000',
@@ -79,7 +77,6 @@ export default {
     oracle_eth_aggregator_address: '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419',
     version: 1,
     params: {
-      decimals: 8,
       collateral_ratio: '2000000000000000000',
       liquidation_user_fee: '20000000000000000',
       liquidation_arc_ratio: '200000000000000000',
@@ -97,7 +94,6 @@ export default {
     },
     version: 1,
     params: {
-      decimals: 18,
       collateral_ratio: '2000000000000000000',
       liquidation_user_fee: '150000000000000000',
       liquidation_arc_ratio: '100000000000000000',
@@ -115,7 +111,6 @@ export default {
     },
     version: 1,
     params: {
-      decimals: 18,
       collateral_ratio: '2000000000000000000',
       liquidation_user_fee: '150000000000000000',
       liquidation_arc_ratio: '100000000000000000',
