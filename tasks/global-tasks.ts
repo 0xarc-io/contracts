@@ -9,7 +9,6 @@ import { task } from 'hardhat/config';
 import { DeploymentType } from '../deployments/src/writeToDeployments';
 import { NetworkParams } from '../deployments/src/deployContract';
 import { ArcProxyInfoFactory } from '@src/typings/ArcProxyInfoFactory';
-import { arrayify } from '@ethersproject/bytes';
 import { SavingsRegistryFactory } from '@src/typings/SavingsRegistryFactory';
 
 task('deploy-global', 'Deploy, update and interact with global contracts').setAction(

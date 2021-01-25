@@ -1,5 +1,6 @@
 import 'module-alias/register';
 
+import _ from 'lodash';
 import { task } from 'hardhat/config';
 import { red, yellow, green, magenta } from 'chalk';
 
@@ -18,19 +19,14 @@ import { SavingsRegistryFactory } from '@src/typings/SavingsRegistryFactory';
 
 import {
   ArcProxyFactory,
-  ChainLinkOracleFactory,
   MockOracleFactory,
   MozartSavingsV2Factory,
   MozartCoreV2Factory,
   SyntheticTokenV1Factory,
   SynthRegistryV2Factory,
   TestTokenFactory,
-  YUSDOracleFactory,
-  CTokenOracleFactory,
+  BaseERC20Factory,
 } from '@src/typings';
-import { group } from 'console';
-import { XSushiOracleFactory } from '@src/typings/XSushiOracleFactory';
-import { IbETHOracleFactory } from '@src/typings/IbETHOracleFactory';
 
 task('deploy-mozart-synthetic', 'Deploy the Mozart synthetic token')
   .addParam('name', 'The name of the synthetic token')
@@ -103,7 +99,7 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
 
     await pruneDeployments(network, signer.provider);
 
-    const synthConfig = loadSynthConfig({ network, key: synthName });
+    const synthConfig = await loadSynthConfig({ network, key: synthName });
     const globalGroup = synthName.split('-').length == 1 ? synthName : synthName.split('-')[1];
     const collatName = synthName.split('-').length == 1 ? synthName : synthName.split('-')[0];
 
@@ -141,7 +137,7 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
 
     let oracleAddress = '';
 
-    if (!synthConfig.oracle_link_aggregator_address && !synthConfig.oracle_source) {
+    if (_.isNil(synthConfig.oracle)) {
       console.log(yellow(`Deploy Mock Oracle...`));
       oracleAddress = await deployContract(
         {
@@ -154,74 +150,24 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
         },
         networkConfig,
       );
-    } else if (synthConfig.oracle_link_aggregator_address) {
-      oracleAddress = await deployContract(
-        {
-          name: 'Oracle',
-          source: 'ChainLinkOracle',
-          data: new ChainLinkOracleFactory(signer).getDeployTransaction(
-            synthConfig.oracle_link_aggregator_address,
-          ),
-          version: 1,
-          type: DeploymentType.synth,
-          group: synthName,
-        },
-        networkConfig,
-      );
-    } else if (synthConfig.oracle_source == 'YUSDOracle') {
-      oracleAddress = await deployContract(
-        {
-          name: 'Oracle',
-          source: 'YUSDOracle',
-          data: new YUSDOracleFactory(signer).getDeployTransaction(),
-          version: 1,
-          type: DeploymentType.synth,
-          group: synthName,
-        },
-        networkConfig,
-      );
-    } else if (synthConfig.oracle_source == 'CTokenOracle') {
-      oracleAddress = await deployContract(
-        {
-          name: 'Oracle',
-          source: 'CTokenOracle',
-          data: new CTokenOracleFactory(signer).getDeployTransaction(
-            synthConfig.collateral_address,
-            synthConfig.oracle_token_aggregator_address,
-            synthConfig.oracle_eth_aggregator_address,
-          ),
-          version: 1,
-          type: DeploymentType.synth,
-          group: synthName,
-        },
-        { ...networkConfig },
-      );
-    } else if (synthConfig.oracle_source == 'xSushiOracle') {
-      oracleAddress = await deployContract(
-        {
-          name: 'Oracle',
-          source: 'xSushiOracle',
-          data: new XSushiOracleFactory(signer).getDeployTransaction(),
-          version: 1,
-          type: DeploymentType.synth,
-          group: synthName,
-        },
-        { ...networkConfig },
-      );
-    } else if (synthConfig.oracle_source == 'ibETHOracle') {
-      oracleAddress = await deployContract(
-        {
-          name: 'Oracle',
-          source: 'ibETHOracle',
-          data: new IbETHOracleFactory(signer).getDeployTransaction(),
-          version: 1,
-          type: DeploymentType.synth,
-          group: synthName,
-        },
-        { ...networkConfig },
-      );
     } else {
-      throw red('No valid oracle config was found!');
+      const { source, getDeployTx } = synthConfig.oracle;
+
+      if (!source || !getDeployTx) {
+        throw red('No valid oracle was found!');
+      }
+
+      oracleAddress = await deployContract(
+        {
+          name: 'Oracle',
+          source,
+          data: getDeployTx(signer),
+          version: 1,
+          type: DeploymentType.synth,
+          group: synthName,
+        },
+        { ...networkConfig },
+      );
     }
 
     if (!oracleAddress || oracleAddress.length == 0) {
@@ -254,13 +200,31 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
     const core = MozartCoreV2Factory.connect(coreProxyAddress, signer);
     const synthetic = SyntheticTokenV1Factory.connect(syntheticProxyAddress, signer);
 
+    let decimals: number;
+    
+    console.log(yellow(`* Getting decimals of collateral...`));
+    try {
+      if (!collateralAddress) {
+        throw Error(`Collateral address was null`)
+      }
+      
+      const collateralToken = BaseERC20Factory.connect(collateralAddress, signer);
+      decimals = await collateralToken.decimals();
+
+      if (!decimals) {
+        throw Error(`Decimals cannot be null or 0: ${decimals}`);
+      }
+    } catch (err) {
+      console.log(red(`Failed to get the collateral decimals: ${err}`))
+    }
+    
     console.log(yellow(`* Calling core init()...`));
     const ultimateOwner = networkDetails['users']['owner'] || signer.address;
     try {
       console.log(
         red(
           `Please ensure the following details are correct:\n
-          Decimals: ${synthConfig.params.decimals}\n
+          Decimals: ${decimals}\n
           Collateral Address: ${collateralAddress}\n
           Synthetic Address: ${syntheticProxyAddress}\n
           Oracle Address: ${oracleAddress}\n
@@ -269,7 +233,7 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
       );
 
       await core.init(
-        synthConfig.params.decimals,
+        decimals,
         collateralAddress,
         syntheticProxyAddress,
         oracleAddress,
@@ -342,7 +306,7 @@ task('deploy-mozart-savings', 'Deploy a Mozart Savings contract instance')
 
     await pruneDeployments(network, signer.provider);
 
-    const savingsConfig = loadSavingsConfig({ network, key: savingsName });
+    const savingsConfig = await loadSavingsConfig({ network, key: savingsName });
 
     const syntheticProxyAddress = loadContract({
       network,
