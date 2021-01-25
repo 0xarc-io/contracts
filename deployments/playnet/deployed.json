@@ -238,5 +238,15 @@
     "version": 1,
     "type": "synth",
     "group": "LINKUSD"
+  },
+  {
+    "name": "SpritzState",
+    "source": "StateV1",
+    "address": "0x06D9D8Bf71d79Ac1D0Ba4D3a8b9a9350FC42181C",
+    "txn": "0xa1e84e26cbdcdef3b157ec0c92087d42896ebd2991d36ad26f11687dd04d391f",
+    "network": "playnet",
+    "version": 1,
+    "type": "synth",
+    "group": "LINKUSD"
   }
 ]
