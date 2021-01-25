@@ -9,9 +9,9 @@ import {
 
 export default {
   LINKUSD: {
-    collateral_address: '',
-    oracle_link_aggregator_address: '',
-    synthetic_address: '',
+    collateral_address: '0x514910771af9ca656af840dff83e8264ecf986ca',
+    oracle_link_aggregator_address: '0x2c1d072e956AFFC0D435Cb7AC38EF18d24d9127c',
+    synthetic_address: '0x0e2ec54fc0b509f445631bf4b91ab8168230c752',
     version: 1,
     params: {
       collateral_ratio: '2000000000000000000',
@@ -34,7 +34,6 @@ export default {
     synthetic_address: '',
     version: 1,
     params: {
-      decimals: 18,
       collateral_ratio: '2000000000000000000',
       liquidation_user_fee: '100000000000000000',
       liquidation_arc_ratio: '100000000000000000',
@@ -53,7 +52,6 @@ export default {
     },
     version: '1',
     params: {
-      decimals: 18,
       collateral_ratio: '2000000000000000000',
       liquidation_user_fee: '20000000000000000',
       liquidation_arc_ratio: '200000000000000000',
@@ -79,7 +77,6 @@ export default {
     oracle_eth_aggregator_address: '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419',
     version: 1,
     params: {
-      decimals: 8,
       collateral_ratio: '2000000000000000000',
       liquidation_user_fee: '20000000000000000',
       liquidation_arc_ratio: '200000000000000000',
@@ -97,7 +94,6 @@ export default {
     },
     version: 1,
     params: {
-      decimals: 18,
       collateral_ratio: '2000000000000000000',
       liquidation_user_fee: '150000000000000000',
       liquidation_arc_ratio: '100000000000000000',
@@ -115,7 +111,6 @@ export default {
     },
     version: 1,
     params: {
-      decimals: 18,
       collateral_ratio: '2000000000000000000',
       liquidation_user_fee: '150000000000000000',
       liquidation_arc_ratio: '100000000000000000',
