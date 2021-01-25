@@ -67,9 +67,6 @@ describe.only('Ownable contracts', () => {
       } else if (['ArcProxy'].includes(deployment.source)) {
         it(`${deployment.group} ${deployment.name} ${deployment.address}`, async () => {
           const admin = await AdminableFactory.connect(deployment.address, provider).getAdmin();
-          if (deployment.address === '0xAc09434EAce70771AEcb75B3BdEB775B4c1B4Aef') {
-            return expect(admin).eq('0xE4FbF25Aa95363EFF2fF6459476763B34F7c190B');
-          }
           expect(admin).eq('0x62F31E08e279f3091d9755a09914DF97554eAe0b');
         });
       }
