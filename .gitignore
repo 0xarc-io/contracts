@@ -16,3 +16,5 @@ generated
 subgraph.yaml
 
 solc-input-*.json
+
+.DS_Store
