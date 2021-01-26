@@ -91,7 +91,7 @@ task('deploy-spritz', 'Deploy the Spritz contracts')
       oracleAddress = await deployContract(
         {
           name: 'Oracle',
-          source: 'MockOracle',
+          source: 'ChainLinkOracle',
           data: new ChainLinkOracleFactory(signer).getDeployTransaction(
             synthConfig.oracle_link_aggregator_address,
           ),
@@ -103,7 +103,7 @@ task('deploy-spritz', 'Deploy the Spritz contracts')
       );
     }
 
-    const proxyAddress = (oracleAddress = await deployContract(
+    const proxyAddress = await deployContract(
       {
         name: 'CoreProxy',
         source: 'ArcProxy',
@@ -117,7 +117,7 @@ task('deploy-spritz', 'Deploy the Spritz contracts')
         group: synthName,
       },
       networkConfig,
-    ));
+    );
 
     const core = await new CoreV4Factory(signer).attach(proxyAddress);
 

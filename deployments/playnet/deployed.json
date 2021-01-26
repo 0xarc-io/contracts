@@ -221,7 +221,7 @@
   },
   {
     "name": "Oracle",
-    "source": "MockOracle",
+    "source": "ChainLinkOracle",
     "address": "0x41fbd7fd7C75cD01d0bd89a968cD6AF3D8D7F1f3",
     "txn": "0x40bec8a5de67ca0f2db96dc66a83fb2761c13b6096deca8b5c43638c7438d40f",
     "network": "playnet",
@@ -248,5 +248,25 @@
     "version": 1,
     "type": "synth",
     "group": "LINKUSD"
+  },
+  {
+    "name": "Oracle",
+    "source": "imUSDOracle",
+    "address": "0xe62c1b7386f2745ffb3694B493183339f3B994D2",
+    "txn": "0x85323a1d2fb2440f283c3a982cbbe5e7ebe7a24ff56fc6d93a109cfd9ec3995e",
+    "network": "playnet",
+    "version": 1,
+    "type": "synth",
+    "group": "imUSD-STABLEx"
+  },
+  {
+    "name": "CoreProxy",
+    "source": "ArcProxy",
+    "address": "0x293C06CEa3Cb7e452B4d1D66e858BfA361a432D3",
+    "txn": "0x2afafbd084e4117cf549f88e61aecf9aaa239e0c9f7a3abd7ba96035cbe66e91",
+    "network": "playnet",
+    "version": 1,
+    "type": "synth",
+    "group": "imUSD-STABLEx"
   }
 ]

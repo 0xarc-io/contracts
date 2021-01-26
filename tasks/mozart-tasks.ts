@@ -103,6 +103,10 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
     const globalGroup = synthName.split('-').length == 1 ? synthName : synthName.split('-')[1];
     const collatName = synthName.split('-').length == 1 ? synthName : synthName.split('-')[0];
 
+    if (!synthConfig) {
+      throw red(`No configuration has been found for synth: ${synthName}`);
+    }
+
     const coreAddress = await deployContract(
       {
         name: 'MozartCore',
@@ -201,13 +205,13 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
     const synthetic = SyntheticTokenV1Factory.connect(syntheticProxyAddress, signer);
 
     let decimals: number;
-    
+
     console.log(yellow(`* Getting decimals of collateral...`));
     try {
       if (!collateralAddress) {
-        throw Error(`Collateral address was null`)
+        throw Error(`Collateral address was null`);
       }
-      
+
       const collateralToken = BaseERC20Factory.connect(collateralAddress, signer);
       decimals = await collateralToken.decimals();
 
@@ -215,9 +219,9 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
         throw Error(`Decimals cannot be null or 0: ${decimals}`);
       }
     } catch (err) {
-      console.log(red(`Failed to get the collateral decimals: ${err}`))
+      console.log(red(`Failed to get the collateral decimals: ${err}`));
     }
-    
+
     console.log(yellow(`* Calling core init()...`));
     const ultimateOwner = networkDetails['users']['owner'] || signer.address;
     try {
