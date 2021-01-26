@@ -3,6 +3,7 @@ import {
   ChainLinkOracleFactory,
   CTokenOracleFactory,
   IbETHOracleFactory,
+  ImUSDOracleFactory,
   XSushiOracleFactory,
   YUSDOracleFactory,
 } from '@src/typings';
@@ -108,6 +109,23 @@ export default {
       source: 'xSushiOracle',
       getDeployTx: (signer: SignerWithAddress) =>
         new XSushiOracleFactory(signer).getDeployTransaction(),
+    },
+    version: 1,
+    params: {
+      collateral_ratio: '2000000000000000000',
+      liquidation_user_fee: '150000000000000000',
+      liquidation_arc_ratio: '100000000000000000',
+      collateral_limit: '',
+      synthetic_limit: '',
+      position_minimum_collateral: '',
+    },
+  },
+  'imUSD-STABLEx': {
+    collateral_address: '0x30647a72Dc82d7Fbb1123EA74716aB8A317Eac19',
+    oracle: {
+      source: 'imUSDOracle',
+      getDeployTx: (signer: SignerWithAddress) =>
+        new ImUSDOracleFactory(signer).getDeployTransaction(),
     },
     version: 1,
     params: {
