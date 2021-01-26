@@ -91,7 +91,7 @@ task('deploy-spritz', 'Deploy the Spritz contracts')
       oracleAddress = await deployContract(
         {
           name: 'Oracle',
-          source: 'MockOracle',
+          source: 'ChainLinkOracle',
           data: new ChainLinkOracleFactory(signer).getDeployTransaction(
             synthConfig.oracle_link_aggregator_address,
           ),

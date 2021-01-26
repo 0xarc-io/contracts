@@ -20,6 +20,8 @@ task('verify-contract', 'Verify a contract on Etherscan')
     await shell.exec(
       `solt verify solc-input-${name.toLowerCase()}.json ${address} ${name} --compiler v0.5.16 --etherscan ${
         process.env.ETHERSCAN_KEY
-      } --infura ${process.env.INFURA_PROJECT_ID} --network ${hre.network.name}`,
+      } --infura ${process.env.INFURA_PROJECT_ID} --network ${
+        hre.network.name === 'playnet' ? 'mainnet' : hre.network.name
+      }`,
     );
   });
