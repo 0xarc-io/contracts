@@ -3,6 +3,7 @@ import {
   ChainLinkOracleFactory,
   CTokenOracleFactory,
   IbETHOracleFactory,
+  ImUSDOracleFactory,
   XSushiOracleFactory,
   YUSDOracleFactory,
 } from '@src/typings';
