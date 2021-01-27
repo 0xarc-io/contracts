@@ -438,5 +438,25 @@
     "version": 1,
     "type": "synth",
     "group": "ibETH-STABLEx"
+  },
+  {
+    "name": "Oracle",
+    "source": "imUSDOracle",
+    "address": "0xF3c0aD6D689c59997e1E3E96699a65Bc464AC937",
+    "txn": "0x2769a16df3ee50a2084715feae7457252b964fbdde9c6cae6d6631ed01b43632",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth",
+    "group": "imUSD-STABLEx"
+  },
+  {
+    "name": "CoreProxy",
+    "source": "ArcProxy",
+    "address": "0x066b7660b2003793fB2ffD0b8152158c016fbfeF",
+    "txn": "0xd4455f51e82d7eed3a49e6c5489c79dcb439202f6cc4cc0501ffd41a869b7620",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth",
+    "group": "imUSD-STABLEx"
   }
 ]
