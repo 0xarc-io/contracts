@@ -88,25 +88,16 @@ contract ArcUniswapV2Oracle is Ownable {
      * @notice Updates the pair if it is known
      * @return `true` if the pair was successfully updated
      */
-    function updatePair(address _token0, address _token1) external returns (bool) {
+    function updateTokensPair(address _token0, address _token1) external returns (bool) {
         address pair = UniswapV2Library.pairFor(uniV2Factory, _token0, _token1);
-
-        require(_known[pair], "ArcUniswapV2Oracle::update: the pair is not known!");
-
-        bool updated = _update(pair);
-
-        if (updated) {
-            emit PairUpdated(pair);
-        }
-
-        return updated;
+        return updatePair(pair);
     }
 
     /**
      * @notice Updates the given pair
      * @param _pair The pair to be updated
      */
-    function updatePair(address _pair) external returns (bool) {
+    function updatePair(address _pair) public returns (bool) {
         require(_known[_pair], "ArcUniswapV2Oracle::updatePair: The pair is not known");
 
         bool updated = _update(_pair);

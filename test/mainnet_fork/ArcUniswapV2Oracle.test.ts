@@ -116,8 +116,7 @@ describe('ArcUniswapV2Oracle', () => {
     });
   });
 
-  // TODO check out here how to remove pair https://ethereum.stackexchange.com/a/39302
-  describe('#removePair', () => {
+  xdescribe('#removePair', () => {
     it('should not allow non-owner to remove a pair', async () => {
       await oracle.addPair(WBTC, DIGG);
 
@@ -162,17 +161,48 @@ describe('ArcUniswapV2Oracle', () => {
     });
   });
 
-  describe('#updatePair', () => {
-    xit('should revert if pair is not known', async () => {
-      console.log('todo');
+  xdescribe('#updatePair', () => {
+    it('should revert if pair is not known', async () => {
+      await oracle.addPair(WBTC, DIGG);
+
+      const pair = await oracle.pairFor(WBTC, KPR);
+
+      await expectRevert(oracle.updatePair(pair));
     });
 
-    xit('should return false if not within period window', async () => {
-      console.log('todo');
+    it('should return false if not within period window', async () => {
+      await oracle.addPair(WBTC, DIGG);
+
+      const pair = await oracle.pairFor(WBTC, DIGG);
+
+      const tx = await oracle.updatePair(pair);
+      const receipt = await tx.wait();
+
+      expect(receipt.events).to.have.length(0);
     });
 
-    xit('should return true if within the period window', async () => {
-      console.log('todo');
+    it('should return true if within the period window', async () => {
+      await oracle.addPair(WBTC, DIGG);
+
+      await time.increase(time.duration.minutes(windowPeriodMinutes));
+
+      const pair = await oracle.pairFor(WBTC, DIGG);
+
+      const tx = await oracle.updatePair(pair);
+      const receipt = await tx.wait();
+      expect(receipt.events).to.have.length(1);
+    });
+  });
+
+  describe('#updateTokensPair', () => {
+    it('should update pair', async () => {
+      await oracle.addPair(WBTC, DIGG);
+
+      await time.increase(time.duration.minutes(windowPeriodMinutes));
+
+      const tx = await oracle.updateTokensPair(WBTC, DIGG);
+      const receipt = await tx.wait();
+      expect(receipt.events).to.have.length(1);
     });
   });
 
