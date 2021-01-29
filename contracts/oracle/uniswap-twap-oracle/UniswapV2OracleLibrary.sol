@@ -12,25 +12,25 @@ library UniswapV2OracleLibrary {
 
     // helper function that returns the current block timestamp within the range of uint32, i.e. [0, 2**32 - 1]
     function currentBlockTimestamp() internal view returns (uint32) {
-        return uint32(block.timestamp % 2 ** 32);
+        return uint32(block.timestamp % 2**32);
     }
 
     // produces the cumulative price using counterfactuals to save gas and avoid a call to sync.
-    function currentCumulativePrices(
-        address _pair
-    )
-        internal view returns (uint, uint, uint32)
+    function currentCumulativePrices(address _pair)
+        internal
+        view
+        returns (
+            uint price0Cumulative,
+            uint price1Cumulative,
+            uint32 blockTimestamp
+        )
     {
-        uint32 blockTimestamp = currentBlockTimestamp();
-        uint price0Cumulative = IUniswapV2Pair(_pair).price0CumulativeLast();
-        uint price1Cumulative = IUniswapV2Pair(_pair).price1CumulativeLast();
+        blockTimestamp = currentBlockTimestamp();
+        price0Cumulative = IUniswapV2Pair(_pair).price0CumulativeLast();
+        price1Cumulative = IUniswapV2Pair(_pair).price1CumulativeLast();
 
         // if time has elapsed since the last update on the pair, mock the accumulated price values
-        (
-            uint112 reserve0,
-            uint112 reserve1,
-            uint32 blockTimestampLast
-        ) = IUniswapV2Pair(_pair).getReserves();
+        (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast) = IUniswapV2Pair(_pair).getReserves();
 
         if (blockTimestampLast != blockTimestamp) {
             // TODO discuss this w/ kerman

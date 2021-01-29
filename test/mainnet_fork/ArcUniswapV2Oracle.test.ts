@@ -5,6 +5,7 @@ import { BigNumber, Signer } from 'ethers';
 import { expectRevert } from '@test/helpers/expectRevert';
 import { expect } from 'chai';
 import { MockKeep3rV1Factory } from '@src/typings/MockKeep3rV1Factory';
+import ArcNumber from '@src/utils/ArcNumber';
 
 // const KEEP3RV1_ADDRESS = '0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44';
 let MOCK_KEEP3RV1_ADDRESS;
@@ -45,7 +46,7 @@ describe('ArcUniswapV2Oracle', () => {
     await oracle.setPeriodWindow(BigNumber.from(windowPeriodMinutes * 60));
   });
 
-  xdescribe('#addPair', () => {
+  describe('#addPair', () => {
     it('should not allow non-owner to add a pair', async () => {
       const oracleNonOwner = ArcUniswapV2OracleFactory.connect(oracle.address, keeper);
 
@@ -64,7 +65,7 @@ describe('ArcUniswapV2Oracle', () => {
     });
   });
 
-  xdescribe('#getPairs', () => {
+  describe('#getPairs', () => {
     it('should not return any pair if none is added', async () => {
       expect(await oracle.getPairs()).to.have.length(0);
     });
@@ -76,7 +77,7 @@ describe('ArcUniswapV2Oracle', () => {
     });
   });
 
-  xdescribe('#work', () => {
+  describe('#work', () => {
     it('should not allow non-keeper to call work()', async () => {
       await expectRevert(oracle.work());
     });
@@ -116,7 +117,7 @@ describe('ArcUniswapV2Oracle', () => {
     });
   });
 
-  xdescribe('#removePair', () => {
+  describe('#removePair', () => {
     it('should not allow non-owner to remove a pair', async () => {
       await oracle.addPair(WBTC, DIGG);
 
@@ -161,7 +162,7 @@ describe('ArcUniswapV2Oracle', () => {
     });
   });
 
-  xdescribe('#updatePair', () => {
+  describe('#updatePair', () => {
     it('should revert if pair is not known', async () => {
       await oracle.addPair(WBTC, DIGG);
 
@@ -207,124 +208,230 @@ describe('ArcUniswapV2Oracle', () => {
   });
 
   describe('#updateAll', () => {
-    xit('should return false if no pairs are added', async () => {
-      console.log('todo');
+    it('should return false if no pairs are added', async () => {
+      const tx = await oracle.updateAll();
+      const receipt = await tx.wait();
+
+      expect(receipt.events).to.have.length(0);
     });
 
-    xit('should return true if updated at least one pair', async () => {
-      console.log('todo');
+    it('should return false if no pairs are updated', async () => {
+      await oracle.addPair(WBTC, DIGG);
+      await oracle.addPair(WBTC, KPR);
+
+      const tx = await oracle.updateAll();
+      const receipt = await tx.wait();
+
+      expect(receipt.events).to.have.length(0);
     });
 
-    xit('should update all pairs', async () => {
-      console.log('todo');
+    it('should return true if updated at least one pair', async () => {
+      await oracle.addPair(WBTC, DIGG);
+      await oracle.addPair(WBTC, KPR);
+
+      await time.increase(time.duration.minutes(windowPeriodMinutes));
+
+      let tx = await oracle.updateTokensPair(WBTC, KPR);
+      await tx.wait();
+
+      tx = await oracle.updateAll();
+      const receipt = await tx.wait();
+
+      expect(receipt.events).to.have.length(1);
+    });
+
+    it('should update all pairs', async () => {
+      await oracle.addPair(WBTC, DIGG);
+      await oracle.addPair(WBTC, KPR);
+
+      await time.increase(time.duration.minutes(windowPeriodMinutes));
+
+      const tx = await oracle.updateAll();
+      const receipt = await tx.wait();
+
+      expect(receipt.events).to.have.length(1);
     });
   });
 
   describe('#setPeriodWindow', () => {
-    xit('should throw if caller is not owner', async () => {
-      console.log('todo');
+    it('should throw if caller is not owner', async () => {
+      const nonKeeperOracle = ArcUniswapV2OracleFactory.connect(oracle.address, nonKeeper);
+
+      await expectRevert(nonKeeperOracle.setPeriodWindow(BigNumber.from(30 * 60)));
     });
 
-    xit('should revert if window is 0', async () => {
-      console.log('todo');
-    });
-  });
-
-  describe('#work', () => {
-    xit('should revoke if caller is not keeper', async () => {
-      console.log('todo');
+    it('should revert if window is 0', async () => {
+      await expectRevert(oracle.setPeriodWindow(BigNumber.from(0)));
     });
 
-    xit('should execute the work and receive the reward', async () => {
-      console.log('todo');
+    it('should set the period window', async () => {
+      const tx = await oracle.setPeriodWindow(BigNumber.from(45));
+      const receipt = await tx.wait();
+
+      expect(receipt.events).to.have.length(1);
     });
   });
 
   describe('#lastObservation', () => {
-    xit('should revert if the pair is not known', async () => {
-      console.log('todo');
+    it('should revert if the pair is not known', async () => {
+      const pair = await oracle.pairFor(WBTC, KPR);
+
+      await expectRevert(oracle.lastObservation(pair));
     });
 
-    xit('should return the last observation of a pair', async () => {
-      console.log('todo');
+    it('should return the last observation of a pair', async () => {
+      await oracle.addPair(WBTC, KPR);
+
+      const pair = await oracle.pairFor(WBTC, KPR);
+
+      const lastObservation = await oracle.lastObservation(pair);
+
+      expect(lastObservation).to.not.be.null;
     });
   });
 
   describe('#lastObservationTokens', () => {
-    xit('should revert if the pair is not known', async () => {
-      console.log('todo');
+    it('should revert if the pair is not known', async () => {
+      await expectRevert(oracle.lastObservationTokens(WBTC, KPR));
     });
 
-    xit('should return the last observation of a pair', async () => {
-      console.log('todo');
+    it('should return the last observation of a pair', async () => {
+      await oracle.addPair(WBTC, KPR);
+
+      const lastObservation = await oracle.lastObservationTokens(WBTC, KPR);
+
+      expect(lastObservation).to.not.be.null;
     });
   });
 
   describe('#workable()', () => {
-    xit('should return false if there are no known pairs', async () => {
-      console.log('todo');
+    it('should return false if there are no known pairs', async () => {
+      expect(await oracle.workable()).to.be.false;
     });
 
-    xit('should return false if there are no workable pairs', async () => {
-      console.log('todo');
+    it('should return false if there are no workable pairs', async () => {
+      await oracle.addPair(WBTC, KPR);
+      expect(await oracle.workable()).to.be.false;
     });
 
-    xit('should return true if there exists any workable pair', async () => {
-      console.log('todo');
-    });
-  });
+    it('should return true if there exists any workable pair', async () => {
+      await oracle.addPair(WBTC, KPR);
 
-  describe('#workable(pair)', () => {
-    xit('should false if the pair is not known', async () => {
-      console.log('todo');
-    });
+      await time.advanceBlock();
+      await time.increase(time.duration.minutes(windowPeriodMinutes));
 
-    xit('should return false if the pair was updated in less than periodWindow', async () => {
-      console.log('todo');
-    });
-
-    xit('should return treu if the pair was updated in more than periodWindow', async () => {
-      console.log('todo');
+      expect(await oracle.workable()).to.be.true;
     });
   });
 
-  describe('#current', () => {
-    xit('should revert if the pair was not updated within 2 period windows', async () => {
-      console.log('todo');
+  describe('#workablePair', () => {
+    it('should revert if the pair is not known', async () => {
+      const pair = await oracle.pairFor(WBTC, KPR);
+      await expectRevert(oracle.workablePair(pair));
     });
 
-    xit('should return the correct price', async () => {
-      console.log('todo');
+    it('should return false if the pair was updated in less than periodWindow', async () => {
+      const pair = await oracle.pairFor(WBTC, KPR);
+      await oracle.addPair(WBTC, KPR);
+      expect(await oracle.workablePair(pair)).to.be.false;
+    });
+
+    it('should return true if the pair was updated in more than periodWindow', async () => {
+      const pair = await oracle.pairFor(WBTC, KPR);
+      await oracle.addPair(WBTC, KPR);
+
+      await time.advanceBlock();
+      await time.increase(time.duration.minutes(windowPeriodMinutes));
+
+      expect(await oracle.workablePair(pair)).to.be.true;
     });
   });
 
-  describe('#setPeriodWindow', () => {
-    xit('should not set period if it is 0', async () => {
-      console.log('todo');
+  describe('#workableTokens', () => {
+    it('should revert if the pair is not known', async () => {
+      await expectRevert(oracle.workableTokens(WBTC, KPR));
     });
 
-    xit('should revert if called by non-owner', async () => {
-      console.log('todo');
+    it('should return false if the pair was updated in less than periodWindow', async () => {
+      await oracle.addPair(WBTC, KPR);
+      expect(await oracle.workableTokens(WBTC, KPR)).to.be.false;
     });
 
-    xit('should set the period window', async () => {
-      console.log('todo');
-    });
-  });
+    it('should return true if the pair was updated in more than periodWindow', async () => {
+      await oracle.addPair(WBTC, KPR);
 
-  describe('#quote', () => {
-    xit('should revert if the last observation of the pair is bigger than the granularity * periodWindow', async () => {
-      console.log('todo');
-    });
+      await time.advanceBlock();
+      await time.increase(time.duration.minutes(windowPeriodMinutes));
 
-    xit('should return the right quote', async () => {
-      console.log('todo');
+      expect(await oracle.workableTokens(WBTC, KPR)).to.be.true;
     });
   });
 
   describe('#getPairObservations', () => {
-    xit('should return pair observations', async () => {
-      console.log('todo');
+    it('should return pair observations', async () => {
+      await oracle.addPair(WBTC, KPR);
+      await oracle.addPair(WBTC, DIGG);
+
+      let pair = await oracle.pairFor(WBTC, KPR);
+      let observations = await oracle.getPairObservations(pair);
+
+      expect(observations).to.have.length(1);
+
+      pair = await oracle.pairFor(WBTC, DIGG);
+      observations = await oracle.getPairObservations(pair);
+
+      expect(observations).to.have.length(1);
+    });
+  });
+
+  describe('#current', () => {
+    it('should revert if the pair was not updated within 2 period windows', async () => {
+      await oracle.addPair(WBTC, DIGG);
+
+      await time.advanceBlock();
+      await time.increase(time.duration.minutes(windowPeriodMinutes * 3));
+
+      await expectRevert(oracle.current(WBTC, ArcNumber.new(1), DIGG));
+    });
+
+    it('should return the correct price', async () => {
+      const tx = await oracle.addPair(WETH, KPR);
+      await tx.wait();
+
+      await time.advanceBlock();
+
+      const kprFor1Eth = await oracle.current(WETH, ArcNumber.new(1), KPR);
+
+      console.log(`There are ${kprFor1Eth.toString()} KPR in 1 WETH`);
+
+      expect(kprFor1Eth).to.not.eq(BigNumber.from(0));
+    });
+  });
+
+  describe('#quote', () => {
+    it('should revert if the last observation of the pair is bigger than the granularity * periodWindow', async () => {
+      await oracle.addPair(WETH, KPR);
+
+      await time.advanceBlock();
+      await time.increase(time.duration.minutes(1));
+
+      await expectRevert(oracle.quote(WETH, ArcNumber.new(1), KPR, BigNumber.from(2)));
+    });
+
+    it('should return a valid quote', async () => {
+      await oracle.addPair(WETH, KPR);
+
+      // Add 5 entries
+      for (let i = 0; i < 5; i++) {
+        await time.increase(time.duration.minutes(windowPeriodMinutes));
+        await oracle.updateTokensPair(WETH, KPR);
+      }
+
+      const quote = await oracle.quote(WETH, ArcNumber.new(1), KPR, BigNumber.from(3));
+
+      console.log(`There are ${quote.toString()} KPR in 1 WETH quoted over 3 granularities`);
+
+      expect(quote).to.not.eq(BigNumber.from(0));
     });
   });
 });
