@@ -107,7 +107,7 @@ contract ArcUniswapV2Oracle is Ownable {
      * @param _pair The pair to be updated
      */
     function updatePair(address _pair) external returns (bool) {
-        require(_known[_pair], "The pair is not known");
+        require(_known[_pair], "ArcUniswapV2Oracle::updatePair: The pair is not known");
 
         bool updated = _update(_pair);
 
@@ -307,7 +307,7 @@ contract ArcUniswapV2Oracle is Ownable {
     function addPair(address _token0, address _token1) external onlyOwner {
         address pair = UniswapV2Library.pairFor(uniV2Factory, _token0, _token1);
 
-        require(!_known[pair], "UniswapV2Oracle::addPair: already known");
+        require(!_known[pair], "ArcUniswapV2Oracle::addPair: already known");
 
         _known[pair] = true;
         _pairs.push(pair);
@@ -317,6 +317,7 @@ contract ArcUniswapV2Oracle is Ownable {
         pairObservations[pair].push(Observation(block.timestamp, price0Cumulative, price1Cumulative));
 
         emit PairAdded(pair);
+        emit PairUpdated(pair);
     }
 
     /**
@@ -325,7 +326,7 @@ contract ArcUniswapV2Oracle is Ownable {
     function removePair(address _tokenA, address _tokenB) external onlyOwner {
         address pair = UniswapV2Library.pairFor(uniV2Factory, _tokenA, _tokenB);
 
-        require(_known[pair], "UniswapV2Oracle::removePair: pair not added");
+        require(_known[pair], "ArcUniswapV2Oracle::removePair: pair not added");
 
         // Remove the pair from the pairs array
         for (uint i = 0; i < _pairs.length; i++) {
