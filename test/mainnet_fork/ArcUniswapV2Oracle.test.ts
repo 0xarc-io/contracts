@@ -2,15 +2,22 @@ import { ArcUniswapV2Oracle, ArcUniswapV2OracleFactory } from '@src/typings';
 import { IKeep3rV1Factory } from '@src/typings/IKeep3rV1Factory';
 import { ethers } from 'hardhat';
 import { time } from '@openzeppelin/test-helpers';
-import { Signer } from 'ethers';
+import { BigNumber, Signer } from 'ethers';
 import { expectRevert } from '@test/helpers/expectRevert';
 import { setStartingBalances } from '@test/helpers/testingUtils';
+import { expect } from 'chai';
+import { Keep3rV1Factory } from '@src/typings/Keep3rV1Factory';
+import { Keep3rV1OracleFactory } from '@src/typings/Keep3rV1OracleFactory';
 
 const KEEP3RV1_ADDRESS = '0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44';
 const UNIV2_FACTORY = '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f';
+const UNIV2_OFFICIAL_SLIDING_ORACLE = '0x73353801921417F465377c8d898c6f4C0270282C';
 const DIGG = '0x798D1bE841a82a273720CE31c822C61a67a601C3';
 const WBTC = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599';
 const KPR = '0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44';
+
+// Set window period to 10 minutes
+const windowPeriodMinutes = 10;
 
 describe('ArcUniswapV2Oracle', () => {
   let oracle: ArcUniswapV2Oracle;
@@ -32,49 +39,76 @@ describe('ArcUniswapV2Oracle', () => {
     await keeperV1.activate(KPR);
 
     oracle = await new ArcUniswapV2OracleFactory(owner).deploy(KEEP3RV1_ADDRESS, UNIV2_FACTORY);
+    await oracle.setPeriodWindow(BigNumber.from(windowPeriodMinutes * 60));
   });
 
-  describe('#addPair', () => {
+  xdescribe('#addPair', () => {
     it('should not allow non-owner to add a pair', async () => {
       const oracleNonOwner = ArcUniswapV2OracleFactory.connect(oracle.address, keeper);
 
       await expectRevert(oracleNonOwner.addPair(DIGG, WBTC));
     });
 
-    xit('should revert if duplicate pair is added', async () => {
-      console.log('todo');
+    it('should revert if duplicate pair is added', async () => {
+      await oracle.addPair(KPR, WBTC);
+      await expectRevert(oracle.addPair(KPR, WBTC));
+      await expectRevert(oracle.addPair(WBTC, KPR));
     });
 
-    xit('should revert if uniswap pair does not exist', async () => {
-      console.log('todo');
-    });
-
-    xit('should add a uniswp pair', async () => {
-      console.log('todo');
+    it('should add a uniswp pair', async () => {
+      await oracle.addPair(KPR, WBTC);
+      expect(await oracle.getPairs()).to.have.length(1);
     });
   });
 
-  describe('#getPairs', () => {
-    xit('should not return any pair if none is added', async () => {
-      console.log('todo');
+  xdescribe('#getPairs', () => {
+    it('should not return any pair if none is added', async () => {
+      expect(await oracle.getPairs()).to.have.length(0);
     });
 
-    xit('should return the pairs', async () => {
-      console.log('todo');
+    it('should return the pairs', async () => {
+      await oracle.addPair(WBTC, KPR);
+      await oracle.addPair(DIGG, WBTC);
+      expect(await oracle.getPairs()).to.have.length(2);
     });
   });
 
   describe('#work', () => {
-    xit('should not allow non-keeper to call work()', async () => {
-      console.log('todo');
+    it('should not allow non-keeper to call work()', async () => {
+      await expectRevert(oracle.work());
     });
 
-    xit('should revert if work() is called before the window period', async () => {
-      console.log('todo');
+    it('should revert if work() is called before the window period', async () => {
+      // add pairs
+      await oracle.addPair(WBTC, DIGG);
+      await oracle.addPair(WBTC, KPR);
+
+      const keeperOracle = ArcUniswapV2OracleFactory.connect(oracle.address, keeper);
+
+      // Make suer keeper is a registered keeper
+      const keeperV1 = Keep3rV1Factory.connect(KEEP3RV1_ADDRESS, keeper);
+      const isKeeper = await keeperV1.keepers(await keeper.getAddress());
+
+      expect(isKeeper).to.be.true;
+
+      // Need to increase time to go above the time window
+      time.increase(time.duration.seconds(575));
+
+      // Need to update the weth/kpr oracle for Keep3rV1 to work
+      // const officialOracle = Keep3rV1OracleFactory.connect(UNIV2_OFFICIAL_SLIDING_ORACLE, keeper);
+      // await officialOracle.workForFree();
+
+      console.log('a');
+      await keeperOracle.work();
+
+      console.log('b');
+      await expectRevert(keeperOracle.work());
     });
 
     xit('should update all pairs', async () => {
-      console.log('todo');
+      // add pairs
+      await oracle.addPair(WBTC, DIGG);
+      await oracle.addPair(WBTC, KPR);
     });
   });
 
