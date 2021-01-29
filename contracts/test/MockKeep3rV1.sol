@@ -14,7 +14,14 @@ contract MockKeep3rV1 {
     mapping(address => bool) keepers;
 
     function worked(address keeper) external {
-        emit KeeperWorked(address(this), msg.sender, keeper, block.number, 10**18);
+        // prettier-ignore
+        emit KeeperWorked(
+            address(this),
+            msg.sender,
+            keeper,
+            block.number,
+            10**18
+        );
     }
 
     function activate() external {

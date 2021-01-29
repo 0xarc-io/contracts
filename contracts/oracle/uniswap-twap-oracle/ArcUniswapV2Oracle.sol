@@ -133,6 +133,10 @@ contract ArcUniswapV2Oracle is Ownable {
 
     /* ========== Public Getters ========== */
 
+    function getPairObservations(address _pair) external view returns (Observation[] memory) {
+        return pairObservations[_pair];
+    }
+
     function getPairs() external view returns (address[] memory) {
         return _pairs;
     }
@@ -361,6 +365,7 @@ contract ArcUniswapV2Oracle is Ownable {
         }
 
         delete _known[pair];
+        delete pairObservations[pair];
 
         emit PairRemoved(pair);
     }

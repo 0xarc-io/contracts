@@ -13,6 +13,7 @@ const UNIV2_FACTORY = '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f';
 const DIGG = '0x798D1bE841a82a273720CE31c822C61a67a601C3';
 const WBTC = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599';
 const KPR = '0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44';
+const WETH = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
 
 // Set window period to 10 minutes
 const windowPeriodMinutes = 10;
@@ -75,7 +76,7 @@ describe('ArcUniswapV2Oracle', () => {
     });
   });
 
-  describe('#work', () => {
+  xdescribe('#work', () => {
     it('should not allow non-keeper to call work()', async () => {
       await expectRevert(oracle.work());
     });
@@ -117,24 +118,47 @@ describe('ArcUniswapV2Oracle', () => {
 
   // TODO check out here how to remove pair https://ethereum.stackexchange.com/a/39302
   describe('#removePair', () => {
-    xit('should not allow non-owner to remove a pair', async () => {
-      console.log('todo');
+    it('should not allow non-owner to remove a pair', async () => {
+      await oracle.addPair(WBTC, DIGG);
+
+      const keeperOracle = ArcUniswapV2OracleFactory.connect(oracle.address, keeper);
+
+      await expectRevert(keeperOracle.removePair(WBTC, DIGG));
     });
 
-    xit('should revert if unknown pair is removed', async () => {
-      console.log('todo');
+    it('should revert if unknown pair is removed', async () => {
+      await expectRevert(oracle.removePair(WBTC, DIGG));
     });
 
-    xit('should remove a uniswap pair', async () => {
-      console.log('todo');
+    it('should remove a uniswap pair', async () => {
+      await oracle.addPair(WBTC, DIGG);
+
+      await oracle.removePair(WBTC, DIGG);
+
+      expect(await oracle.getPairs()).length(0);
     });
 
-    xit('should not leave any gaps in the pairs array after removal', async () => {
-      console.log('todo');
+    it('should not leave any gaps in the pairs array after removal', async () => {
+      await oracle.addPair(WBTC, DIGG);
+      await oracle.addPair(WBTC, KPR);
+      await oracle.addPair(WETH, DIGG);
+
+      await oracle.removePair(WBTC, KPR);
+
+      const pairs = await oracle.getPairs();
+
+      for (const pair of pairs) {
+        expect(pair).to.be.string;
+      }
     });
 
-    xit('should remove pair from pairObservations', async () => {
-      console.log('todo');
+    it('should remove pair from pairObservations', async () => {
+      await oracle.addPair(WBTC, DIGG);
+      const pair = await oracle.pairFor(WBTC, DIGG);
+
+      await oracle.removePair(WBTC, DIGG);
+
+      expect(await oracle.getPairObservations(pair)).to.have.length(0);
     });
   });
 
@@ -264,6 +288,12 @@ describe('ArcUniswapV2Oracle', () => {
     });
 
     xit('should return the right quote', async () => {
+      console.log('todo');
+    });
+  });
+
+  describe('#getPairObservations', () => {
+    xit('should return pair observations', async () => {
       console.log('todo');
     });
   });
