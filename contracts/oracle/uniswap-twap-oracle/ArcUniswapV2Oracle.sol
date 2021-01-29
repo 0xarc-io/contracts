@@ -159,7 +159,9 @@ contract ArcUniswapV2Oracle is Ownable {
      * @notice Returns true if pair is updatable given the period window. Therefore calling work() will yield a reward
      * @param _pair The pair to make the check for
      */
-    function workable(address _pair) public view returns (bool) {
+    function workablePair(address _pair) public view returns (bool) {
+        require(_known[_pair], "ArcUniswapV2Oracle::workablePair: pair is not known");
+
         Observation memory observation = lastObservation(_pair);
         uint timeElapsed = block.timestamp.sub(observation.timestamp);
 
@@ -169,8 +171,10 @@ contract ArcUniswapV2Oracle is Ownable {
     /**
      * @notice Returns true if pair is updatable given the period window. Therefore calling work() will yield a reward
      */
-    function workable(address _token0, address _token1) external view returns (bool) {
+    function workableTokens(address _token0, address _token1) external view returns (bool) {
         address pair = UniswapV2Library.pairFor(uniV2Factory, _token0, _token1);
+
+        require(_known[pair], "ArcUniswapV2Oracle::workableTokens: pair is not known");
 
         Observation memory observation = lastObservation(pair);
         uint timeElapsed = block.timestamp.sub(observation.timestamp);
@@ -183,7 +187,7 @@ contract ArcUniswapV2Oracle is Ownable {
      */
     function workable() external view returns (bool) {
         for (uint i = 0; i < _pairs.length; i++) {
-            if (workable(_pairs[i])) {
+            if (workablePair(_pairs[i])) {
                 return true;
             }
         }
@@ -290,6 +294,8 @@ contract ArcUniswapV2Oracle is Ownable {
                 );
             }
         }
+
+        return priceAverageCumulative.div(_granularity);
     }
 
     /* ========== Owner functions ========== */
