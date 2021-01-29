@@ -1,33 +1,44 @@
-import { timeLog } from 'console';
+import { ArcUniswapV2Oracle, ArcUniswapV2OracleFactory } from '@src/typings';
+import { IKeep3rV1Factory } from '@src/typings/IKeep3rV1Factory';
 import { ethers } from 'hardhat';
+import { time } from '@openzeppelin/test-helpers';
+import { Signer } from 'ethers';
+import { expectRevert } from '@test/helpers/expectRevert';
+import { setStartingBalances } from '@test/helpers/testingUtils';
+
+const KEEP3RV1_ADDRESS = '0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44';
+const UNIV2_FACTORY = '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f';
+const DIGG = '0x798D1bE841a82a273720CE31c822C61a67a601C3';
+const WBTC = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599';
+const KPR = '0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44';
 
 describe('ArcUniswapV2Oracle', () => {
   let oracle: ArcUniswapV2Oracle;
+  let owner: Signer;
+  let keeper: Signer;
+  let nonKeeper: Signer;
 
-  before(async () => {
-    const signer = await ethers.provider.getSigner();
+  beforeEach(async () => {
+    const signers = await ethers.getSigners();
+    owner = signers[0];
+    keeper = signers[1];
+    nonKeeper = signers[2];
 
-    oracle = await new ArcUniswapV2OracleFactory(signer).deploy();
-    console.log('oracle address:', oracle.address);
-  });
+    const keeperV1 = IKeep3rV1Factory.connect(KEEP3RV1_ADDRESS, keeper);
+    // become keeper
+    await keeperV1.bond(KPR, 0);
+    // add 3 days to be able to activate as a keeper
+    await time.increase(time.duration.days(3));
+    await keeperV1.activate(KPR);
 
-  describe('#work', () => {
-    xit('should not allow non-keeper to call work()', async () => {
-      console.log('todo');
-    });
-
-    xit('should revert if work() is called before the window period', async () => {
-      console.log('todo');
-    });
-
-    xit('should update all pairs', async () => {
-      console.log('todo');
-    });
+    oracle = await new ArcUniswapV2OracleFactory(owner).deploy(KEEP3RV1_ADDRESS, UNIV2_FACTORY);
   });
 
   describe('#addPair', () => {
-    xit('should not allow non-owner to add a pair', async () => {
-      console.log('todo');
+    it('should not allow non-owner to add a pair', async () => {
+      const oracleNonOwner = ArcUniswapV2OracleFactory.connect(oracle.address, keeper);
+
+      await expectRevert(oracleNonOwner.addPair(DIGG, WBTC));
     });
 
     xit('should revert if duplicate pair is added', async () => {
@@ -49,6 +60,20 @@ describe('ArcUniswapV2Oracle', () => {
     });
 
     xit('should return the pairs', async () => {
+      console.log('todo');
+    });
+  });
+
+  describe('#work', () => {
+    xit('should not allow non-keeper to call work()', async () => {
+      console.log('todo');
+    });
+
+    xit('should revert if work() is called before the window period', async () => {
+      console.log('todo');
+    });
+
+    xit('should update all pairs', async () => {
       console.log('todo');
     });
   });
