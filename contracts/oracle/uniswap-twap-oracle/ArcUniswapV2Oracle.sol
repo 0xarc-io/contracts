@@ -301,11 +301,11 @@ contract ArcUniswapV2Oracle is Ownable {
     /**
      * @notice Adds the pair to the known pairs. Will start updating the given pair
      * @dev the order doesn't matter because they are be sorted later down the road
-     * @param _tokenA first token of the pair
-     * @param _tokenB second token of the pair
+     * @param _token0 first token of the pair
+     * @param _token1 second token of the pair
      */
-    function addPair(address _tokenA, address _tokenB) external onlyOwner {
-        address pair = UniswapV2Library.pairFor(uniV2Factory, _tokenA, _tokenB);
+    function addPair(address _token0, address _token1) external onlyOwner {
+        address pair = UniswapV2Library.pairFor(uniV2Factory, _token0, _token1);
 
         require(!_known[pair], "UniswapV2Oracle::addPair: already known");
 
