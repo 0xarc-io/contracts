@@ -1,17 +1,15 @@
 import { ArcUniswapV2Oracle, ArcUniswapV2OracleFactory } from '@src/typings';
-import { IKeep3rV1Factory } from '@src/typings/IKeep3rV1Factory';
 import { ethers } from 'hardhat';
 import { time } from '@openzeppelin/test-helpers';
 import { BigNumber, Signer } from 'ethers';
 import { expectRevert } from '@test/helpers/expectRevert';
-import { setStartingBalances } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
-import { Keep3rV1Factory } from '@src/typings/Keep3rV1Factory';
-import { Keep3rV1OracleFactory } from '@src/typings/Keep3rV1OracleFactory';
+import { MockKeep3rV1Factory } from '@src/typings/MockKeep3rV1Factory';
 
-const KEEP3RV1_ADDRESS = '0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44';
+// const KEEP3RV1_ADDRESS = '0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44';
+let MOCK_KEEP3RV1_ADDRESS;
 const UNIV2_FACTORY = '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f';
-const UNIV2_OFFICIAL_SLIDING_ORACLE = '0x73353801921417F465377c8d898c6f4C0270282C';
+// const UNIV2_OFFICIAL_SLIDING_ORACLE = '0x73353801921417F465377c8d898c6f4C0270282C';
 const DIGG = '0x798D1bE841a82a273720CE31c822C61a67a601C3';
 const WBTC = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599';
 const KPR = '0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44';
@@ -31,14 +29,18 @@ describe('ArcUniswapV2Oracle', () => {
     keeper = signers[1];
     nonKeeper = signers[2];
 
-    const keeperV1 = IKeep3rV1Factory.connect(KEEP3RV1_ADDRESS, keeper);
-    // become keeper
-    await keeperV1.bond(KPR, 0);
-    // add 3 days to be able to activate as a keeper
-    await time.increase(time.duration.days(3));
-    await keeperV1.activate(KPR);
+    const mockKeep3rV1 = await new MockKeep3rV1Factory(owner).deploy();
+    MOCK_KEEP3RV1_ADDRESS = mockKeep3rV1.address;
 
-    oracle = await new ArcUniswapV2OracleFactory(owner).deploy(KEEP3RV1_ADDRESS, UNIV2_FACTORY);
+    const keeperMockKeep3rV1 = MockKeep3rV1Factory.connect(MOCK_KEEP3RV1_ADDRESS, keeper);
+
+    // become keeper
+    await keeperMockKeep3rV1.activate();
+
+    oracle = await new ArcUniswapV2OracleFactory(owner).deploy(
+      MOCK_KEEP3RV1_ADDRESS,
+      UNIV2_FACTORY,
+    );
     await oracle.setPeriodWindow(BigNumber.from(windowPeriodMinutes * 60));
   });
 
@@ -80,35 +82,36 @@ describe('ArcUniswapV2Oracle', () => {
 
     it('should revert if work() is called before the window period', async () => {
       // add pairs
+      // When the pairs are added they are also updated so there's no need to call work
+      // right after.
       await oracle.addPair(WBTC, DIGG);
       await oracle.addPair(WBTC, KPR);
 
       const keeperOracle = ArcUniswapV2OracleFactory.connect(oracle.address, keeper);
 
-      // Make suer keeper is a registered keeper
-      const keeperV1 = Keep3rV1Factory.connect(KEEP3RV1_ADDRESS, keeper);
-      const isKeeper = await keeperV1.keepers(await keeper.getAddress());
-
-      expect(isKeeper).to.be.true;
-
-      // Need to increase time to go above the time window
-      time.increase(time.duration.seconds(575));
-
-      // Need to update the weth/kpr oracle for Keep3rV1 to work
-      // const officialOracle = Keep3rV1OracleFactory.connect(UNIV2_OFFICIAL_SLIDING_ORACLE, keeper);
-      // await officialOracle.workForFree();
-
-      console.log('a');
-      await keeperOracle.work();
-
-      console.log('b');
+      // should revert because the pairs were just added and the window period was not elapsed
       await expectRevert(keeperOracle.work());
     });
 
-    xit('should update all pairs', async () => {
+    it('should update all pairs', async () => {
       // add pairs
       await oracle.addPair(WBTC, DIGG);
       await oracle.addPair(WBTC, KPR);
+
+      const observation0 = await oracle.lastObservationTokens(WBTC, DIGG);
+      const observation1 = await oracle.lastObservationTokens(WBTC, KPR);
+
+      // Wait the time period
+      await time.increase(time.duration.minutes(windowPeriodMinutes));
+
+      const keeperOracle = ArcUniswapV2OracleFactory.connect(oracle.address, keeper);
+      await keeperOracle.work();
+
+      const lastObservation0 = await oracle.lastObservationTokens(WBTC, DIGG);
+      const lastObservation1 = await oracle.lastObservationTokens(WBTC, KPR);
+
+      expect(lastObservation0.timestamp).to.not.be.eq(observation0.timestamp);
+      expect(lastObservation1.timestamp).to.not.be.eq(observation1.timestamp);
     });
   });
 
@@ -184,6 +187,20 @@ describe('ArcUniswapV2Oracle', () => {
   });
 
   describe('#lastObservation', () => {
+    xit('should revert if the pair is not known', async () => {
+      console.log('todo');
+    });
+
+    xit('should return the last observation of a pair', async () => {
+      console.log('todo');
+    });
+  });
+
+  describe('#lastObservationTokens', () => {
+    xit('should revert if the pair is not known', async () => {
+      console.log('todo');
+    });
+
     xit('should return the last observation of a pair', async () => {
       console.log('todo');
     });

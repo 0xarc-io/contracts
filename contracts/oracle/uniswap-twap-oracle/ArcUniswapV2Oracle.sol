@@ -142,8 +142,22 @@ contract ArcUniswapV2Oracle is Ownable {
      * @param _pair The pair we want the last observation for
      */
     function lastObservation(address _pair) public view returns (Observation memory) {
+        require(_known[_pair], "ArcUniswapV2Oracle::lastObservation: The pair is not known");
+
         Observation[] memory foundPairObservations = pairObservations[_pair];
         return pairObservations[_pair][foundPairObservations.length - 1];
+    }
+
+    /**
+     * @notice returns the last observation for the token pair
+     */
+    function lastObservationTokens(address _token0, address _token1) external view returns (Observation memory) {
+        address pair = UniswapV2Library.pairFor(uniV2Factory, _token0, _token1);
+
+        require(_known[pair], "ArcUniswapV2Oracle::lastObservationTokens: The pair is not known");
+
+        Observation[] memory foundPairObservations = pairObservations[pair];
+        return pairObservations[pair][foundPairObservations.length - 1];
     }
 
     /**
@@ -180,6 +194,13 @@ contract ArcUniswapV2Oracle is Ownable {
         }
 
         return false;
+    }
+
+    /**
+     * @notice Returns the pair address of the two tokens
+     */
+    function pairFor(address _token0, address _token1) external view returns (address) {
+        return UniswapV2Library.pairFor(uniV2Factory, _token0, _token1);
     }
 
     /**
