@@ -268,5 +268,15 @@
     "version": 1,
     "type": "staking",
     "group": "TestPool-1"
+  },
+  {
+    "name": "ArcUniswapV2Oracle",
+    "source": "ArcUniswapV2Oracle",
+    "address": "0x525c5aD5b1908A08A926cce6F2D89722Db255faE",
+    "txn": "0x23a2ad1fe7dd5c370f28b169f7e2741d25072a38143e0ccf4fcfbb574678687f",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": ""
   }
 ]

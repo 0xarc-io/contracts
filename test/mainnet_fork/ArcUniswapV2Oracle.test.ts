@@ -434,4 +434,26 @@ describe.skip('ArcUniswapV2Oracle', () => {
       expect(quote).to.not.eq(BigNumber.from(0));
     });
   });
+
+  describe('#setUniV2FactoryAddress', () => {
+    it('should revert if called by non-owner', async () => {
+      const nonOwnerOracle = ArcUniswapV2OracleFactory.connect(oracle.address, nonKeeper);
+      await expectRevert(
+        nonOwnerOracle.setUniV2FactoryAddress('0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f'),
+      );
+    });
+
+    it('should revert if trying to set address 0', async () => {
+      await expectRevert(
+        oracle.setUniV2FactoryAddress('0x0000000000000000000000000000000000000000'),
+      );
+    });
+
+    it('should set a new uniV2 factory address', async () => {
+      const newAddress = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D';
+      await oracle.setUniV2FactoryAddress(newAddress);
+
+      expect(await oracle.uniV2Factory()).to.eq(newAddress);
+    });
+  });
 });

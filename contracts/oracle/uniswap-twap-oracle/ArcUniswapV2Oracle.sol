@@ -47,6 +47,7 @@ contract ArcUniswapV2Oracle is Ownable {
     event PairRemoved(address pair);
     event Keep3rV1AddressSet(address kp3r);
     event PeriodWindowSet(uint newPeriodWindow);
+    event UniV2FactorySet(address newUniV2Factory);
 
     /* ========== Modifiers ========== */
 
@@ -365,6 +366,15 @@ contract ArcUniswapV2Oracle is Ownable {
         delete pairObservations[pair];
 
         emit PairRemoved(pair);
+    }
+
+    /**
+     * @notice sets the univ2 factory address
+     */
+    function setUniV2FactoryAddress(address _uniV2Factory) external onlyOwner {
+        require(_uniV2Factory != address(0), "ArcUniswapV2Oracle::setUniV2FactoryAddress: _uniV2Factory cannot be 0");
+        uniV2Factory = _uniV2Factory;
+        emit UniV2FactorySet(_uniV2Factory);
     }
 
     /* ========== Internal Functions ========== */
