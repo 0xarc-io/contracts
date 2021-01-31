@@ -4,6 +4,7 @@ pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {FixedPoint} from "../../lib/FixedPoint.sol";
+
 import {IUniswapV2Pair} from "./IUniswapV2Pair.sol";
 
 // library with helper methods for oracles that are concerned with computing average prices
