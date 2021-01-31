@@ -438,5 +438,15 @@
     "version": 1,
     "type": "synth",
     "group": "ibETH-STABLEx"
+  },
+  {
+    "name": "ArcUniswapV2Oracle",
+    "source": "ArcUniswapV2Oracle",
+    "address": "0x3258a7d31ab32eEaBDa47032E97EfFeA3Bc9567D",
+    "txn": "0x5d01a3ea76e96c8440442d75d4ae3e7b5076a31326cd82a3fc9183a8070c5ba6",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth",
+    "group": ""
   }
 ]
