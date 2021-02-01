@@ -4,11 +4,12 @@ pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "../../lib/SafeMath.sol";
-import {IKeep3rV1} from "./IKeep3rV1.sol";
 import {Ownable} from "../../lib/Ownable.sol";
-import {UniswapV2Library} from "./UniswapV2Library.sol";
-import {UniswapV2OracleLibrary} from "./UniswapV2OracleLibrary.sol";
 import {FixedPoint} from "../../lib/FixedPoint.sol";
+
+import {IKeep3rV1} from "./IKeep3rV1.sol";
+import {UniswapV2OracleLibrary} from "./UniswapV2OracleLibrary.sol";
+import {UniswapV2Library} from "./UniswapV2Library.sol";
 
 /**
  * @notice A Time-weighted average prices oracle and Keeper job for any uniswap pair
@@ -21,13 +22,16 @@ contract ArcUniswapV2Oracle is Ownable {
     /* ========== Storage ========== */
 
     IKeep3rV1 public KP3R;
+
     address public uniV2Factory;
 
     uint public periodWindow = 1 hours;
+
     // mapping from pair address to a list of price observations of that pair
     mapping(address => Observation[]) public pairObservations;
 
     address[] internal _pairs;
+
     mapping(address => bool) internal _known;
 
     /* ========== Types ========== */
@@ -41,27 +45,42 @@ contract ArcUniswapV2Oracle is Ownable {
     /* ========== Events ========== */
 
     event WorkDone(address keeper);
+
     event UpdatedAll(address caller);
+
     event PairUpdated(address pair);
+
     event PairAdded(address pair);
+
     event PairRemoved(address pair);
+
     event Keep3rV1AddressSet(address kp3r);
+
     event PeriodWindowSet(uint newPeriodWindow);
+
     event UniV2FactorySet(address newUniV2Factory);
 
     /* ========== Modifiers ========== */
 
     modifier keeper() {
-        require(KP3R.isKeeper(msg.sender), "::isKeeper: keeper is not registered");
+        require(
+            KP3R.isKeeper(msg.sender),
+            "isKeeper(): keeper is not registered"
+        );
         _;
     }
 
     /* ========== Constructor ========== */
 
-    constructor(address _kp3r, address _uniV2Factory) public {
+    constructor(
+        address _kp3r,
+        address _uniV2Factory
+    )
+        public
+    {
         require(
             _kp3r != address(0) && _uniV2Factory != address(0),
-            "ArcUniswapV2Oracle:: Keeper and univ2Factory address must not be null"
+            "ArcUniswapV2Oracle: Keeper and univ2Factory address must not be null"
         );
 
         KP3R = IKeep3rV1(_kp3r);
@@ -76,7 +95,10 @@ contract ArcUniswapV2Oracle is Ownable {
     function work() external keeper {
         bool worked = _updateAll();
 
-        require(worked, "ArcUniswapV2Oracle::work: the work was not completed!");
+        require(
+            worked,
+            "ArcUniswapV2Oracle:work: the work was not completed!"
+        );
 
         KP3R.worked(msg.sender);
 
@@ -89,7 +111,13 @@ contract ArcUniswapV2Oracle is Ownable {
      * @notice Updates the pair if it is known
      * @return `true` if the pair was successfully updated
      */
-    function updateTokensPair(address _token0, address _token1) external returns (bool) {
+    function updateTokensPair(
+        address _token0,
+        address _token1
+    )
+        external
+        returns (bool)
+    {
         address pair = UniswapV2Library.pairFor(uniV2Factory, _token0, _token1);
         return updatePair(pair);
     }
@@ -98,8 +126,14 @@ contract ArcUniswapV2Oracle is Ownable {
      * @notice Updates the given pair
      * @param _pair The pair to be updated
      */
-    function updatePair(address _pair) public returns (bool) {
-        require(_known[_pair], "ArcUniswapV2Oracle::updatePair: The pair is not known");
+    function updatePair(address _pair)
+        public
+        returns (bool)
+    {
+        require(
+            _known[_pair],
+            "ArcUniswapV2Oracle:updatePair(): The pair is not known"
+        );
 
         bool updated = _update(_pair);
 
@@ -125,11 +159,19 @@ contract ArcUniswapV2Oracle is Ownable {
 
     /* ========== Public Getters ========== */
 
-    function getPairObservations(address _pair) external view returns (Observation[] memory) {
+    function getPairObservations(address _pair)
+        external
+        view
+        returns (Observation[] memory)
+    {
         return pairObservations[_pair];
     }
 
-    function getPairs() external view returns (address[] memory) {
+    function getPairs()
+        external
+        view
+        returns (address[] memory)
+    {
         return _pairs;
     }
 
@@ -137,8 +179,15 @@ contract ArcUniswapV2Oracle is Ownable {
      * @notice Returns the last recorded observation for the pair
      * @param _pair The pair we want the last observation for
      */
-    function lastObservation(address _pair) public view returns (Observation memory) {
-        require(_known[_pair], "ArcUniswapV2Oracle::lastObservation: The pair is not known");
+    function lastObservation(address _pair)
+        public
+        view
+        returns (Observation memory)
+    {
+        require(
+            _known[_pair],
+            "ArcUniswapV2Oracle:lastObservation(): The pair is not known"
+        );
 
         Observation[] memory foundPairObservations = pairObservations[_pair];
         return pairObservations[_pair][foundPairObservations.length - 1];
@@ -147,10 +196,20 @@ contract ArcUniswapV2Oracle is Ownable {
     /**
      * @notice returns the last observation for the token pair
      */
-    function lastObservationTokens(address _token0, address _token1) external view returns (Observation memory) {
+    function lastObservationTokens(
+        address _token0,
+        address _token1
+    )
+        external
+        view
+        returns (Observation memory)
+    {
         address pair = UniswapV2Library.pairFor(uniV2Factory, _token0, _token1);
 
-        require(_known[pair], "ArcUniswapV2Oracle::lastObservationTokens: The pair is not known");
+        require(
+            _known[pair],
+            "ArcUniswapV2Oracle:lastObservationTokens(): The pair is not known"
+        );
 
         Observation[] memory foundPairObservations = pairObservations[pair];
         return pairObservations[pair][foundPairObservations.length - 1];
@@ -160,8 +219,15 @@ contract ArcUniswapV2Oracle is Ownable {
      * @notice Returns true if pair is updatable given the period window. Therefore calling work() will yield a reward
      * @param _pair The pair to make the check for
      */
-    function workablePair(address _pair) public view returns (bool) {
-        require(_known[_pair], "ArcUniswapV2Oracle::workablePair: pair is not known");
+    function workablePair(address _pair)
+        public
+        view
+        returns (bool)
+    {
+        require(
+            _known[_pair],
+            "ArcUniswapV2Oracle:workablePair(): pair is not known"
+        );
 
         Observation memory observation = lastObservation(_pair);
         uint timeElapsed = block.timestamp.sub(observation.timestamp);
@@ -172,10 +238,20 @@ contract ArcUniswapV2Oracle is Ownable {
     /**
      * @notice Returns true if pair is updatable given the period window. Therefore calling work() will yield a reward
      */
-    function workableTokens(address _token0, address _token1) external view returns (bool) {
+    function workableTokens(
+        address _token0,
+        address _token1
+    )
+        external
+        view
+        returns (bool)
+    {
         address pair = UniswapV2Library.pairFor(uniV2Factory, _token0, _token1);
 
-        require(_known[pair], "ArcUniswapV2Oracle::workableTokens: pair is not known");
+        require(
+            _known[pair],
+            "ArcUniswapV2Oracle:workableTokens(): pair is not known"
+        );
 
         Observation memory observation = lastObservation(pair);
         uint timeElapsed = block.timestamp.sub(observation.timestamp);
@@ -186,7 +262,11 @@ contract ArcUniswapV2Oracle is Ownable {
     /**
      * @notice Iterates over all known pairs and checks wether there is at least one pair that is updatable
      */
-    function workable() external view returns (bool) {
+    function workable()
+        external
+        view
+        returns (bool)
+    {
         for (uint i = 0; i < _pairs.length; i++) {
             if (workablePair(_pairs[i])) {
                 return true;
@@ -199,7 +279,11 @@ contract ArcUniswapV2Oracle is Ownable {
     /**
      * @notice Returns the pair address of the two tokens
      */
-    function pairFor(address _token0, address _token1) external view returns (address) {
+    function pairFor(address _token0, address _token1)
+        external
+        view
+        returns (address)
+    {
         return UniswapV2Library.pairFor(uniV2Factory, _token0, _token1);
     }
 
@@ -214,10 +298,17 @@ contract ArcUniswapV2Oracle is Ownable {
         address _tokenIn,
         uint _amountIn,
         address _tokenOut
-    ) external view returns (uint) {
+    )
+        external
+        view
+        returns (uint)
+    {
         address pair = UniswapV2Library.pairFor(uniV2Factory, _tokenIn, _tokenOut);
 
-        require(_valid(pair, periodWindow.mul(2)), "ArcUniswapV2Oracle::current: stale prices");
+        require(
+            _valid(pair, periodWindow.mul(2)),
+            "ArcUniswapV2Oracle:current(): stale prices"
+        );
 
         (address token0, ) = UniswapV2Library.sortTokens(_tokenIn, _tokenOut);
         Observation memory observation = lastObservation(pair);
@@ -255,17 +346,26 @@ contract ArcUniswapV2Oracle is Ownable {
      * @param _tokenIn the token that `_amountIn` is denominated in
      * @param _amountIn the amount to get the quote for
      * @param _tokenOut the token that the result is denominated in
-     * @param _granularity the granularity of the quote in terms of time. Ex. if `_granularity` = 2, the quote will be return a price based on the `periodWindow` * 2
+     * @param _granularity the granularity of the quote in terms of time.
+     *                     Ex. if `_granularity` = 2, the quote will be return a
+     *                     price based on the `periodWindow` * 2
      */
     function quote(
         address _tokenIn,
         uint _amountIn,
         address _tokenOut,
         uint _granularity
-    ) external view returns (uint) {
+    )
+        external
+        view
+        returns (uint)
+    {
         address pair = UniswapV2Library.pairFor(uniV2Factory, _tokenIn, _tokenOut);
 
-        require(_valid(pair, periodWindow.mul(_granularity)), "ArcUniswapV2Oracle::quote: stale prices");
+        require(
+            _valid(pair, periodWindow.mul(_granularity)),
+            "ArcUniswapV2Oracle:quote(): stale prices"
+        );
 
         (address token0, ) = UniswapV2Library.sortTokens(_tokenIn, _tokenOut);
 
@@ -305,7 +405,11 @@ contract ArcUniswapV2Oracle is Ownable {
      * @notice Sets the period window
      */
     function setPeriodWindow(uint _periodWindow) external onlyOwner {
-        require(_periodWindow != 0, "ArcUniswapV2Oracle::setPeriodWindow: period window cannot be 0!");
+
+        require(
+            _periodWindow != 0,
+            "ArcUniswapV2Oracle:setPeriodWindow(): period window cannot be 0!"
+        );
 
         periodWindow = _periodWindow;
         emit PeriodWindowSet(_periodWindow);
@@ -315,7 +419,10 @@ contract ArcUniswapV2Oracle is Ownable {
      * @notice Sets the Keep3rV1 address
      */
     function setKeep3rAddress(address _kp3r) external onlyOwner {
-        require(_kp3r != address(0), "ArcUniswapV2Oracle::setKeep3rAddress: _kp3r must not be null");
+        require(
+            _kp3r != address(0),
+            "ArcUniswapV2Oracle:setKeep3rAddress(): _kp3r must not be null"
+        );
 
         KP3R = IKeep3rV1(_kp3r);
         emit Keep3rV1AddressSet(_kp3r);
@@ -327,10 +434,16 @@ contract ArcUniswapV2Oracle is Ownable {
      * @param _token0 first token of the pair
      * @param _token1 second token of the pair
      */
-    function addPair(address _token0, address _token1) external onlyOwner {
+    function addPair(
+        address _token0,
+        address _token1
+    )
+        external
+        onlyOwner
+    {
         address pair = UniswapV2Library.pairFor(uniV2Factory, _token0, _token1);
 
-        require(!_known[pair], "ArcUniswapV2Oracle::addPair: already known");
+        require(!_known[pair], "ArcUniswapV2Oracle:addPair(): already known");
 
         _known[pair] = true;
         _pairs.push(pair);
@@ -346,10 +459,19 @@ contract ArcUniswapV2Oracle is Ownable {
     /**
      * @notice Removes a pair
      */
-    function removePair(address _tokenA, address _tokenB) external onlyOwner {
+    function removePair(
+        address _tokenA,
+        address _tokenB
+    )
+        external
+        onlyOwner
+    {
         address pair = UniswapV2Library.pairFor(uniV2Factory, _tokenA, _tokenB);
 
-        require(_known[pair], "ArcUniswapV2Oracle::removePair: pair not added");
+        require(
+            _known[pair],
+            "ArcUniswapV2Oracle:removePair(): pair not added"
+        );
 
         // Remove the pair from the pairs array
         for (uint i = 0; i < _pairs.length; i++) {
@@ -371,8 +493,15 @@ contract ArcUniswapV2Oracle is Ownable {
     /**
      * @notice sets the univ2 factory address
      */
-    function setUniV2FactoryAddress(address _uniV2Factory) external onlyOwner {
-        require(_uniV2Factory != address(0), "ArcUniswapV2Oracle::setUniV2FactoryAddress: _uniV2Factory cannot be 0");
+    function setUniV2FactoryAddress(address _uniV2Factory)
+        external
+        onlyOwner
+    {
+        require(
+            _uniV2Factory != address(0),
+            "ArcUniswapV2Oracle:setUniV2FactoryAddress(): _uniV2Factory cannot be 0"
+        );
+
         uniV2Factory = _uniV2Factory;
         emit UniV2FactorySet(_uniV2Factory);
     }
@@ -383,7 +512,10 @@ contract ArcUniswapV2Oracle is Ownable {
      * @dev Updates the pair if within the time window
      * @param _pair The pair to update
      */
-    function _update(address _pair) internal returns (bool) {
+    function _update(address _pair)
+        internal
+        returns (bool)
+    {
         // we only want to commit updates once per period (i.e. windowSize / granularity)
         uint timeElapsed = block.timestamp - lastObservation(_pair).timestamp;
 
@@ -401,7 +533,10 @@ contract ArcUniswapV2Oracle is Ownable {
     /**
      * @dev Loops over all registered pairs and updates them
      */
-    function _updateAll() internal returns (bool updated) {
+    function _updateAll()
+        internal
+        returns (bool updated)
+    {
         for (uint i = 0; i < _pairs.length; i++) {
             if (_update(_pairs[i])) {
                 updated = true;
@@ -412,7 +547,14 @@ contract ArcUniswapV2Oracle is Ownable {
     /**
      * @dev Checks wether the pair was updated within `age` time
      */
-    function _valid(address _pair, uint _age) internal view returns (bool) {
+    function _valid(
+        address _pair,
+        uint _age
+    )
+        internal
+        view
+        returns (bool)
+    {
         return block.timestamp.sub(lastObservation(_pair).timestamp) <= _age;
     }
 
@@ -421,7 +563,11 @@ contract ArcUniswapV2Oracle is Ownable {
         uint _priceCumulativeEnd,
         uint _timeElapsed,
         uint _amountIn
-    ) private pure returns (uint amountOut) {
+    )
+        private
+        pure
+        returns (uint amountOut)
+    {
         // overflow is desired.
         FixedPoint.uq112x112 memory priceAverage =
             FixedPoint.uq112x112(uint224((_priceCumulativeEnd - _priceCumulativeStart) / _timeElapsed));
