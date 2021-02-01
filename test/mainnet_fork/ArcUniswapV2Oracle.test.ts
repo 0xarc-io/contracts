@@ -19,7 +19,7 @@ const WETH = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
 // Set window period to 10 minutes
 const windowPeriodMinutes = 10;
 
-describe.skip('ArcUniswapV2Oracle', () => {
+describe('ArcUniswapV2Oracle', () => {
   let oracle: ArcUniswapV2Oracle;
   let owner: Signer;
   let keeper: Signer;
@@ -95,10 +95,11 @@ describe.skip('ArcUniswapV2Oracle', () => {
       await expectRevert(keeperOracle.work());
     });
 
-    it('should update all pairs', async () => {
+    it.only('should update all pairs', async () => {
       // add pairs
       await oracle.addPair(WBTC, DIGG);
       await oracle.addPair(WBTC, KPR);
+      await oracle.addPair(WETH, KPR);
 
       const observation0 = await oracle.lastObservationTokens(WBTC, DIGG);
       const observation1 = await oracle.lastObservationTokens(WBTC, KPR);
