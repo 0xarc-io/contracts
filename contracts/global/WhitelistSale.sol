@@ -51,7 +51,7 @@ contract WhitelistSale is Ownable {
     function claimAllocation(
         uint256 amount
     )
-        public
+        external
     {
         // Get their total spend till date
         uint256 participantSpent = participants[msg.sender].spent.add(amount);
@@ -79,7 +79,9 @@ contract WhitelistSale is Ownable {
         emit AllocationClaimed(msg.sender, amount);
     }
 
-    function getParticipant(address participant)
+    function getParticipant(
+        address participant
+    )
         public
         view
         returns (Participant memory)
@@ -90,10 +92,10 @@ contract WhitelistSale is Ownable {
     /* ========== Admin Functions ========== */
 
     function setAllocation(
-        address[] memory users,
-        uint256[] memory allocations
+        address[] calldata users,
+        uint256[] calldata allocations
     )
-        public
+        external
         onlyOwner
     {
         // If there is a mismatch something hasn't been done correctly
@@ -112,7 +114,7 @@ contract WhitelistSale is Ownable {
     function updateSaleStatus(
         bool status
     )
-        public
+        external
         onlyOwner
     {
         require(
