@@ -19,7 +19,7 @@ const WETH = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
 // Set window period to 10 minutes
 const windowPeriodMinutes = 10;
 
-describe('ArcUniswapV2Oracle', () => {
+describe.skip('ArcUniswapV2Oracle', () => {
   let oracle: ArcUniswapV2Oracle;
   let owner: Signer;
   let keeper: Signer;
