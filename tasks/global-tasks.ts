@@ -99,12 +99,12 @@ task(
   'deploy-whitelist-sale',
   'Deploy the WhitelistSale contract using USDC as currency and load it with data',
 )
-.addParam('currency', 'The address of the currency to use')
+.addParam('currency', 'The address of the currency to use', '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', undefined, true)
 .setAction(async (taskArgs, hre) => {
   const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
 
   const kyfEligibilityFilePath = path.join(__dirname, 'kyfEligibility.csv');
-  const USDCAddress = taskArgs.currency || '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48';
+  const USDCAddress = taskArgs.currency;
 
   await pruneDeployments(network, signer.provider);
 
@@ -160,7 +160,7 @@ task(
   console.log(yellow(`Setting up ${allowances.length} allowances...`));
 
   const whitelistSaleContract = WhitelistSaleFactory.connect(whitelistSaleAddress, signer);
-  const tx = await whitelistSaleContract.setAllocation(users, allowances);
+  const tx = await whitelistSaleContract.setAllocation(users, allowances, {gasLimit: 3000000});
   await tx.wait();
 
   console.log(green('Allocations set!'));
