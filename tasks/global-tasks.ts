@@ -98,11 +98,13 @@ task('deploy-global', 'Deploy, update and interact with global contracts').setAc
 task(
   'deploy-whitelist-sale',
   'Deploy the WhitelistSale contract using USDC as currency and load it with data',
-).setAction(async (taskArgs, hre) => {
+)
+.addParam('currency', 'The address of the currency to use')
+.setAction(async (taskArgs, hre) => {
   const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
 
   const kyfEligibilityFilePath = path.join(__dirname, 'kyfEligibility.csv');
-  const USDCAddress = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48';
+  const USDCAddress = taskArgs.currency || '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48';
 
   await pruneDeployments(network, signer.provider);
 
