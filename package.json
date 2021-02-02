@@ -79,6 +79,7 @@
     "lodash": "^4.17.20",
     "module-alias": "^2.2.2",
     "mustache": "^4.0.1",
+    "neat-csv": "^6.0.1",
     "node-run-cmd": "^1.0.1",
     "prettier": "^2.0.5",
     "pretty-error": "^2.1.1",

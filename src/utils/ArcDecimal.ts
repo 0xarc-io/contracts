@@ -1,9 +1,9 @@
 import { BigNumber } from 'ethers';
 
 export default class ArcDecimal {
-  static new(value: number) {
+  static new(value: number, decimals: number = 18) {
     const decimalPlaces = countDecimals(value);
-    const difference = 18 - decimalPlaces;
+    const difference = decimals - decimalPlaces;
     const zeros = BigNumber.from(10).pow(difference);
     const abs = BigNumber.from(`${value.toString().replace('.', '')}`);
     return { value: abs.mul(zeros) };
