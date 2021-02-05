@@ -3,12 +3,13 @@
 pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
-import {Decimal} from "../lib/Decimal.sol";
-import {SafeMath} from "../lib/SafeMath.sol";
+import {Decimal} from "../../lib/Decimal.sol";
+import {SafeMath} from "../../lib/SafeMath.sol";
 
-import {IOracle} from "./IOracle.sol";
+import {IChainLinkAggregator} from "../IChainLinkAggregator.sol";
+import {IOracle} from "../IOracle.sol";
+
 import {ICToken} from "./ICToken.sol";
-import {IChainLinkAggregator} from "./IChainLinkAggregator.sol";
 
 contract CTokenOracle is IOracle {
 
