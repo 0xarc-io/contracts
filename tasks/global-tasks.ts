@@ -15,7 +15,8 @@ import { green, red, yellow } from 'chalk';
 import path from 'path';
 import neatCsv from 'neat-csv';
 import fs from 'fs';
-import { BigNumber, utils } from 'ethers';
+import { BigNumber, ContractTransaction, utils } from 'ethers';
+import _ from 'lodash'
 import ArcDecimal from '@src/utils/ArcDecimal';
 
 task('deploy-global', 'Deploy, update and interact with global contracts').setAction(
@@ -99,12 +100,12 @@ task(
   'deploy-whitelist-sale',
   'Deploy the WhitelistSale contract using USDC as currency and load it with data',
 )
-.addParam('currency', 'The address of the currency to use')
+.addParam('currency', 'The address of the currency to use', '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', undefined, true)
 .setAction(async (taskArgs, hre) => {
   const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
 
   const kyfEligibilityFilePath = path.join(__dirname, 'kyfEligibility.csv');
-  const USDCAddress = taskArgs.currency || '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48';
+  const USDCAddress = taskArgs.currency;
 
   await pruneDeployments(network, signer.provider);
 
@@ -160,16 +161,30 @@ task(
   console.log(yellow(`Setting up ${allowances.length} allowances...`));
 
   const whitelistSaleContract = WhitelistSaleFactory.connect(whitelistSaleAddress, signer);
-  const tx = await whitelistSaleContract.setAllocation(users, allowances);
-  await tx.wait();
 
-  console.log(green('Allocations set!'));
+  try {
+    const batchSize = 75
+    const usersBatches = _.chunk(users, batchSize)
+    const allowancesBatches = _.chunk(allowances, batchSize)
+    let tx: ContractTransaction
 
-  const testParticipant = await whitelistSaleContract.participants(users[0]);
-
-  console.log({
-    testParticipantAllocation: BigNumber.from(testParticipant.allocation).toString(),
-  });
+    for (let i = 0; i < Math.ceil(users.length / batchSize); i++) {
+      console.log(yellow(`Setting allocation batch ${i}...`))
+      
+      tx = await whitelistSaleContract.setAllocation(usersBatches[i], allowancesBatches[i], {gasLimit: 3000000});
+      await tx.wait();
+    }
+    
+    console.log(green(`${users.length} allocations set!`));
+  
+    const testParticipant = await whitelistSaleContract.participants(users[0]);
+  
+    console.log({
+      testParticipantAllocation: BigNumber.from(testParticipant.allocation).toString(),
+    });
+  } catch (err) {
+    console.log(red(`Error setting allocations: ${err}`))
+  }
 });
 
 // @TODO: Scenarios to plan for:
