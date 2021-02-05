@@ -446,7 +446,16 @@
     "txn": "0x5d01a3ea76e96c8440442d75d4ae3e7b5076a31326cd82a3fc9183a8070c5ba6",
     "network": "mainnet",
     "version": 1,
-    "type": "synth",
+    "type": "synth"
+  },
+  {
+    "name": "WhitelistSale",
+    "source": "WhitelistSale",
+    "address": "0x7F38C29CeB46377955E86132Ba77F4ed8529373d",
+    "txn": "0x40e541b142f7f167fc2b6822af37974de3e84774291ae1e3b47ac1a1e87acda6",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global",
     "group": ""
   }
 ]
