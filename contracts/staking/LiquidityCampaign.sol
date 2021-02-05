@@ -240,9 +240,9 @@ contract LiquidityCampaign is Adminable {
         address _rewardsDistributor,
         address _rewardsToken,
         address _stakingToken,
-        Decimal.D256 calldata _daoAllocation
+        Decimal.D256 memory _daoAllocation
     )
-        external
+        public
         onlyAdmin
     {
         arcDAO              = _arcDAO;
