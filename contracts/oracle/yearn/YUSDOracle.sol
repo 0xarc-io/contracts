@@ -3,13 +3,14 @@
 pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
-import {Decimal} from "../lib/Decimal.sol";
-import {SafeMath} from "../lib/SafeMath.sol";
+import {Decimal} from "../../lib/Decimal.sol";
+import {SafeMath} from "../../lib/SafeMath.sol";
 
-import {IOracle} from "./IOracle.sol";
+import {IOracle} from "../IOracle.sol";
+import {IChainLinkAggregator} from "../IChainLinkAggregator.sol";
+
 import {IRiskOracle} from "./IRiskOracle.sol";
 import {IYToken} from "./IYToken.sol";
-import {IChainLinkAggregator} from "./IChainLinkAggregator.sol";
 
 contract YUSDOracle is IOracle {
 
