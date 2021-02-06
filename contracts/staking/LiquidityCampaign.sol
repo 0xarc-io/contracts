@@ -189,12 +189,6 @@ contract LiquidityCampaign is Adminable {
             "LiquidityCampaign::getReward: Tokens cannot be claimed yet"
         );
 
-        // TODO not sold on the following check
-        if (block.timestamp < periodFinish) {
-            // Tokens cannot be claimed before the end of the reward period
-            return;
-        }
-
         Staker storage staker = stakers[_user];
 
         uint256 payableAmount = staker.rewardsEarned.sub(staker.rewardsReleased);
