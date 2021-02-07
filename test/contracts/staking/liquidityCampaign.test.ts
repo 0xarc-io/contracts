@@ -14,16 +14,19 @@ import ArcDecimal from '@src/utils/ArcDecimal';
 import { BigNumber } from 'ethers';
 import { expect } from 'chai';
 import { BASE } from '@src/constants';
+import { expectRevert } from '@test/helpers/expectRevert';
 
 let liquidityCampaignAdmin: LiquidityCampaign;
 let liquidityCampaignUser1: LiquidityCampaign;
 let liquidityCampaignUser2: LiquidityCampaign;
 
 const REWARD_AMOUNT = ArcNumber.new(100);
+const STAKE_AMOUNT = ArcNumber.new(10);
 const REWARD_DURATION_MINUTES = 10;
 
 let stakingToken: TestToken;
 let rewardToken: TestToken;
+let otherErc20: TestToken;
 
 let admin: SignerWithAddress;
 let user1: SignerWithAddress;
@@ -31,6 +34,16 @@ let user2: SignerWithAddress;
 
 describe('LiquidityCampaign', () => {
   const DAO_ALLOCATION = ArcDecimal.new(0.4);
+  const USER_ALLOCATION = ArcNumber.new(1).sub(DAO_ALLOCATION.value);
+
+  function bnToEthNumberRounded(amount: BigNumber) {
+    return Math.round(parseFloat(ethers.utils.formatEther(amount)));
+  }
+
+  async function stake(contract: LiquidityCampaign, user: SignerWithAddress, amount: BigNumber) {
+    await mintAndApprove(stakingToken, user, amount);
+    await contract.stake(amount);
+  }
 
   async function mintAndApprove(
     token: TestToken,
@@ -80,6 +93,7 @@ describe('LiquidityCampaign', () => {
   beforeEach(async () => {
     stakingToken = await deployTestToken(admin, '3Pool', 'CRV');
     rewardToken = await deployTestToken(admin, 'Arc Token', 'ARC');
+    otherErc20 = await deployTestToken(admin, 'Another ERC20 token', 'AERC20');
 
     liquidityCampaignAdmin = await new LiquidityCampaignFactory(admin).deploy();
 
@@ -97,7 +111,7 @@ describe('LiquidityCampaign', () => {
   });
 
   describe('View functions', () => {
-    describe.skip('#lastTimeRewardApplicable', () => {
+    describe('#lastTimeRewardApplicable', () => {
       beforeEach(async () => {
         await setup();
       });
@@ -116,7 +130,7 @@ describe('LiquidityCampaign', () => {
       });
     });
 
-    describe.skip('#balanceOfStaker', () => {
+    describe('#balanceOfStaker', () => {
       beforeEach(async () => {
         await setup();
       });
@@ -133,7 +147,7 @@ describe('LiquidityCampaign', () => {
       });
     });
 
-    describe.skip('#rewardPerToken', () => {
+    describe('#rewardPerToken', () => {
       beforeEach(async () => {
         await setup();
       });
@@ -180,7 +194,7 @@ describe('LiquidityCampaign', () => {
       });
     });
 
-    describe.skip('#userAllocation', () => {
+    describe('#userAllocation', () => {
       beforeEach(async () => {
         await setup();
       });
@@ -193,99 +207,393 @@ describe('LiquidityCampaign', () => {
     });
 
     describe('#earned', () => {
-      xit('should return the correct amount earned over time', async () => {
-        // Stake
-        // Check amount earned (should be 0)
-        // Advance time
-        // Check amount earned
+      beforeEach(async () => {
+        await setup();
       });
 
-      xit('should return the correct amount earned over time while another user stakes in between', async () => {
-        // User A stakes
+      it('should return the correct amount earned over time', async () => {
+        await stake(liquidityCampaignUser1, user1, ArcNumber.new(10));
         // Check amount earned (should be 0)
+        const amountEarned0 = await liquidityCampaignUser1.earned(user1.address);
+        expect(amountEarned0).to.eq(BigNumber.from(0));
+
         // Advance time
-        // User B stakes
-        // Advance time
+        await time.increase(time.duration.minutes(1));
         // Check amount earned
+        const amountEarned1 = await liquidityCampaignUser1.earned(user1.address);
+
+        expect(amountEarned1).to.be.gt(amountEarned0);
+      });
+
+      it('should return the correct amount earned over time while another user stakes in between', async () => {
+        const amount = ArcNumber.new(10);
+        // User A stakes
+        await stake(liquidityCampaignUser1, user1, amount);
+        // Advance time half the period
+        await time.increase(time.duration.minutes(REWARD_DURATION_MINUTES / 2));
+
+        // User B stakes
+        await stake(liquidityCampaignUser2, user2, amount);
+
+        // Advance time to the end of the period
+        await time.increase(time.duration.minutes(REWARD_DURATION_MINUTES / 2));
+
+        // Check amount earned
+        const user1Earned = await liquidityCampaignUser1.earned(user1.address);
+        const user2Earned = await liquidityCampaignUser2.earned(user2.address);
+
+        expect(Math.round(parseFloat(ethers.utils.formatEther(user1Earned)))).to.eq(45);
+        expect(Math.round(parseFloat(ethers.utils.formatEther(user2Earned)))).to.eq(15);
+
+        // console.log({
+        //   user1: ethers.utils.formatEther(user1Earned),
+        //   user2: ethers.utils.formatEther(user2Earned),
+        //   reward: ethers.utils.formatEther(REWARD_AMOUNT),
+        //   daoAllocation: ethers.utils.formatEther(daoAllocation),
+        // });
       });
     });
 
     describe('#getRewardForDuration', () => {
-      xit('returns the correct reward for duration');
+      beforeEach(async () => {
+        await setup();
+      });
+
+      it('returns the correct reward for duration', async () => {
+        const rewardForDuration = await liquidityCampaignAdmin.getRewardForDuration();
+
+        expect(Math.round(parseFloat(ethers.utils.formatEther(rewardForDuration)))).to.eq(
+          parseFloat(ethers.utils.formatEther(REWARD_AMOUNT)),
+        );
+      });
     });
   });
 
   describe('Mutative functions', () => {
     describe('#stake', () => {
-      xit('should not be able to stake more than balance');
+      beforeEach(async () => {
+        await setup();
+      });
 
-      xit('should be able to stake');
+      it('should not be able to stake more than balance', async () => {
+        await mintAndApprove(stakingToken, user1, ArcNumber.new(10));
 
-      xit('should update reward correctly after staking');
+        const balance = await stakingToken.balanceOf(user1.address);
+
+        await expectRevert(liquidityCampaignUser1.stake(balance.add(1)));
+      });
+
+      it('should be able to stake', async () => {
+        const amount = ArcNumber.new(10);
+        await mintAndApprove(stakingToken, user1, amount);
+
+        await liquidityCampaignUser1.stake(amount);
+
+        const supply = await liquidityCampaignUser1.totalSupply();
+
+        expect(supply).to.eq(amount);
+      });
+
+      it('should update reward correctly after staking', async () => {
+        const earned0 = await liquidityCampaignUser1.earned(user1.address);
+
+        await stake(liquidityCampaignUser1, user1, STAKE_AMOUNT);
+
+        await time.increase(time.duration.minutes(REWARD_DURATION_MINUTES / 2));
+
+        const earned1 = await liquidityCampaignUser1.earned(user1.address);
+
+        expect(earned0).to.not.be.eq(earned1);
+      });
     });
 
     describe('#getReward', () => {
-      xit('should not be able to get the reward if the tokens are not claimable');
+      beforeEach(async () => {
+        await setup();
+      });
 
-      xit('should be able to claim rewards gradually over time');
+      it('should not be able to get the reward if the tokens are not claimable', async () => {
+        await stake(liquidityCampaignUser1, user1, STAKE_AMOUNT);
 
-      xit('should be able to claim the right amount of rewards given the number of participants');
+        await time.increase(time.duration.minutes(REWARD_DURATION_MINUTES / 2));
 
-      xit('should update reward correctly after staking');
+        await expectRevert(liquidityCampaignUser1.getReward(user1.address));
+      });
+
+      it('should be able to claim rewards gradually over time', async () => {
+        await liquidityCampaignAdmin.setTokensClaimable(true);
+
+        await stake(liquidityCampaignUser1, user1, STAKE_AMOUNT);
+        await time.increase(time.duration.minutes(REWARD_DURATION_MINUTES / 3));
+
+        await liquidityCampaignUser1.getReward(user1.address);
+        const reward0 = await rewardToken.balanceOf(user1.address);
+
+        await time.increase(time.duration.minutes(REWARD_DURATION_MINUTES / 3));
+
+        await liquidityCampaignUser1.getReward(user1.address);
+        const reward1 = await rewardToken.balanceOf(user1.address);
+
+        expect(reward0).to.be.lt(reward1);
+      });
+
+      it('should be able to claim the right amount of rewards given the number of participants', async () => {
+        await liquidityCampaignAdmin.setTokensClaimable(true);
+
+        await stake(liquidityCampaignUser1, user1, STAKE_AMOUNT);
+        await time.increase(time.duration.minutes(REWARD_DURATION_MINUTES / 2));
+
+        await liquidityCampaignUser1.getReward(user1.address);
+        let reward0 = await rewardToken.balanceOf(user1.address);
+
+        expect(bnToEthNumberRounded(reward0)).to.eq(
+          bnToEthNumberRounded(REWARD_AMOUNT.div(2).mul(USER_ALLOCATION).div(BASE)),
+        );
+
+        await stake(liquidityCampaignUser2, user2, STAKE_AMOUNT);
+        await time.increase(time.duration.minutes(REWARD_DURATION_MINUTES / 2));
+
+        await liquidityCampaignUser1.getReward(user1.address);
+        const reward1 = await rewardToken.balanceOf(user1.address);
+
+        expect(bnToEthNumberRounded(reward1)).to.eq(
+          bnToEthNumberRounded(reward0.add(REWARD_AMOUNT.div(4).mul(USER_ALLOCATION).div(BASE))),
+        );
+      });
+
+      it('should update reward after claiming reward', async () => {
+        await liquidityCampaignAdmin.setTokensClaimable(true);
+
+        await stake(liquidityCampaignUser1, user1, STAKE_AMOUNT);
+
+        const rewardPerTokenStored0 = await liquidityCampaignUser1.rewardPerTokenStored();
+
+        await time.increase(time.duration.minutes(REWARD_DURATION_MINUTES / 2));
+
+        await liquidityCampaignUser1.getReward(user1.address);
+
+        const rewardPerTokenStored1 = await liquidityCampaignUser1.rewardPerTokenStored();
+
+        expect(rewardPerTokenStored0).to.be.lt(rewardPerTokenStored1);
+      });
     });
 
     describe('#withdraw', () => {
-      xit('should not be able to withdraw more than the balance');
+      beforeEach(async () => {
+        await setup();
+      });
 
-      xit('should withdraw the correct amount');
+      it('should not be able to withdraw more than the balance', async () => {
+        await stake(liquidityCampaignUser1, user1, STAKE_AMOUNT);
 
-      xit('should update reward correctly after withdrawing');
+        await expectRevert(liquidityCampaignUser1.withdraw(STAKE_AMOUNT.add(1)));
+      });
+
+      it('should withdraw the correct amount', async () => {
+        await stake(liquidityCampaignUser1, user1, STAKE_AMOUNT);
+
+        await liquidityCampaignUser1.withdraw(STAKE_AMOUNT);
+
+        const balance = await stakingToken.balanceOf(user1.address);
+
+        expect(balance).to.eq(STAKE_AMOUNT);
+      });
+
+      it('should update reward correctly after withdrawing', async () => {
+        await stake(liquidityCampaignUser1, user1, STAKE_AMOUNT);
+
+        const rewardPerTokenStored0 = await liquidityCampaignUser1.rewardPerTokenStored();
+
+        await liquidityCampaignUser1.withdraw(STAKE_AMOUNT);
+
+        const rewardPerTokenStored1 = await liquidityCampaignUser1.rewardPerTokenStored();
+
+        expect(rewardPerTokenStored0).to.not.eq(rewardPerTokenStored1);
+      });
     });
 
     describe('#exit', () => {
-      xit('should be able to exit and get the right amount of staked tokens and rewards');
+      beforeEach(async () => {
+        await setup();
+      });
+
+      it('should be able to exit and get the right amount of staked tokens and rewards', async () => {
+        await liquidityCampaignAdmin.setTokensClaimable(true);
+
+        await stake(liquidityCampaignUser1, user1, STAKE_AMOUNT);
+
+        await time.increase(time.duration.minutes(REWARD_DURATION_MINUTES / 2));
+
+        await liquidityCampaignUser1.exit();
+
+        const stakingBalance = await stakingToken.balanceOf(user1.address);
+        const rewardBalance = await rewardToken.balanceOf(user1.address);
+
+        expect(stakingBalance).to.eq(STAKE_AMOUNT);
+        expect(bnToEthNumberRounded(rewardBalance)).to.eq(
+          bnToEthNumberRounded(REWARD_AMOUNT.div(2).mul(USER_ALLOCATION).div(BASE)),
+        );
+      });
     });
   });
 
   describe('Admin functions', () => {
     describe('#init', () => {
-      xit('should not be callable by anyone');
+      it('should not be callable by anyone', async () => {
+        await expectRevert(
+          liquidityCampaignUser1.init(
+            user1.address,
+            user1.address,
+            rewardToken.address,
+            stakingToken.address,
+            DAO_ALLOCATION,
+          ),
+        );
+      });
 
-      xit('should only be callable by the contract owner');
+      it('should only be callable by the contract owner', async () => {
+        await liquidityCampaignAdmin.init(
+          admin.address,
+          admin.address,
+          rewardToken.address,
+          stakingToken.address,
+          DAO_ALLOCATION,
+        );
+
+        const arcDao = await liquidityCampaignAdmin.arcDAO();
+        const rewardsDistributor = await liquidityCampaignAdmin.rewardsDistributor();
+        const rewardsToken = await liquidityCampaignAdmin.rewardsToken();
+        const stakingTokenAddress = await liquidityCampaignAdmin.stakingToken();
+        const daoAllocation = await liquidityCampaignAdmin.daoAllocation();
+
+        expect(arcDao).to.eq(admin.address);
+        expect(rewardsDistributor).to.eq(admin.address);
+        expect(rewardsToken).to.eq(rewardToken.address);
+        expect(stakingTokenAddress).to.eq(stakingToken.address);
+        expect(daoAllocation).to.eq(DAO_ALLOCATION.value);
+      });
     });
 
     describe('#notifyRewardAmount', () => {
-      xit('should not be callable by anyone');
+      it('should not be callable by anyone', async () => {
+        await expectRevert(liquidityCampaignUser1.notifyRewardAmount(REWARD_AMOUNT));
+      });
 
-      xit('should only be callable by the rewards distributor');
+      it('should only be callable by the rewards distributor', async () => {
+        await liquidityCampaignAdmin.init(
+          admin.address,
+          admin.address,
+          rewardToken.address,
+          stakingToken.address,
+          DAO_ALLOCATION,
+        );
 
-      xit('should update rewards correctly after a new reward update');
+        const rewardRate0 = await liquidityCampaignAdmin.rewardRate();
+
+        const rewardsDuration = time.duration.minutes(REWARD_DURATION_MINUTES).toString();
+        await liquidityCampaignAdmin.setRewardsDuration(rewardsDuration);
+
+        await liquidityCampaignAdmin.notifyRewardAmount(REWARD_AMOUNT.div(2));
+
+        const rewardrate1 = await liquidityCampaignAdmin.rewardRate();
+
+        expect(rewardRate0).to.be.lt(rewardrate1);
+      });
+
+      it('should update rewards correctly after a new reward update', async () => {
+        await liquidityCampaignAdmin.init(
+          admin.address,
+          admin.address,
+          rewardToken.address,
+          stakingToken.address,
+          DAO_ALLOCATION,
+        );
+
+        const rewardsDuration = time.duration.minutes(REWARD_DURATION_MINUTES).toString();
+        await liquidityCampaignAdmin.setRewardsDuration(rewardsDuration);
+
+        await liquidityCampaignAdmin.notifyRewardAmount(REWARD_AMOUNT.div(2));
+        const rewardRate0 = await liquidityCampaignAdmin.rewardRate();
+
+        await liquidityCampaignAdmin.notifyRewardAmount(REWARD_AMOUNT.div(2));
+
+        const rewardrate1 = await liquidityCampaignAdmin.rewardRate();
+
+        expect(rewardRate0).to.be.lt(rewardrate1);
+      });
     });
 
     describe('#setRewardsDistributor', () => {
-      xit('should not be callable by non-admin');
+      it('should not be callable by non-admin', async () => {
+        await expectRevert(liquidityCampaignUser1.setRewardsDistributor(user1.address));
+      });
 
-      xit('should set rewardsDistributor if called by admin');
+      it('should set rewardsDistributor if called by admin', async () => {
+        await liquidityCampaignAdmin.setRewardsDistributor(user2.address);
+
+        expect(await liquidityCampaignAdmin.rewardsDistributor()).to.eq(user2.address);
+      });
     });
 
     describe('#setRewardsDuration', () => {
-      xit('should not be claimable by anyone');
+      it('should not be claimable by anyone', async () => {
+        await expectRevert(
+          liquidityCampaignUser1.setRewardsDuration(
+            BigNumber.from(time.duration.minutes(REWARD_DURATION_MINUTES)),
+          ),
+        );
+      });
 
-      xit('should only be callable by the contract owner and set the right duration');
+      it('should only be callable by the contract owner and set the right duration', async () => {
+        const duration = BigNumber.from(time.duration.minutes(REWARD_DURATION_MINUTES));
+
+        await liquidityCampaignAdmin.setRewardsDuration(duration);
+
+        expect(await liquidityCampaignAdmin.rewardsDuration()).to.eq(duration);
+      });
     });
 
     describe('#recoverERC20', () => {
-      xit('should not be callable by anyone');
+      const erc20Share = ArcNumber.new(10);
 
-      xit('should not recover staking or reward token');
+      beforeEach(async () => {
+        await otherErc20.mintShare(liquidityCampaignAdmin.address, erc20Share);
+      });
 
-      xit('should let admin recover the erc20 on this contract');
+      it('should not be callable by anyone', async () => {
+        await expectRevert(liquidityCampaignUser1.recoverERC20(otherErc20.address, erc20Share));
+      });
+
+      it('should not recover staking or reward token', async () => {
+        await setup();
+        await stakingToken.mintShare(liquidityCampaignAdmin.address, erc20Share);
+        await rewardToken.mintShare(liquidityCampaignAdmin.address, erc20Share);
+
+        await expectRevert(liquidityCampaignAdmin.recoverERC20(stakingToken.address, erc20Share));
+        await expectRevert(liquidityCampaignAdmin.recoverERC20(rewardToken.address, erc20Share));
+      });
+
+      it('should let admin recover the erc20 on this contract', async () => {
+        const balance0 = await otherErc20.balanceOf(admin.address);
+
+        await liquidityCampaignAdmin.recoverERC20(otherErc20.address, erc20Share);
+
+        const balance1 = await otherErc20.balanceOf(admin.address);
+
+        expect(balance1).to.eq(balance0.add(erc20Share));
+      });
     });
 
     describe('#setTokensClaimable', () => {
-      xit('should not be claimable by anyone');
+      it('should not be claimable by anyone', async () => {
+        await expectRevert(liquidityCampaignUser1.setTokensClaimable(true));
+      });
 
-      xit('should only be callable by the contract owner');
+      it('should only be callable by the contract owner', async () => {
+        await liquidityCampaignAdmin.setTokensClaimable(true);
+
+        expect(await liquidityCampaignAdmin.tokensClaimable()).to.be.eq(true);
+      });
     });
   });
 });
