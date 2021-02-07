@@ -260,7 +260,7 @@ contract LiquidityCampaign is Adminable {
             rewardsDuration != 0,
             "LiquidityCampaign::notifyRewardAmount: rewards duration must first be set"
         );
-        
+
         if (block.timestamp >= periodFinish) {
             rewardRate = _reward.div(rewardsDuration);
         } else {
