@@ -256,6 +256,11 @@ contract LiquidityCampaign is Adminable {
         onlyRewardsDistributor
         updateReward(address(0))
     {
+        require(
+            rewardsDuration != 0,
+            "LiquidityCampaign::notifyRewardAmount: rewards duration must first be set"
+        );
+        
         if (block.timestamp >= periodFinish) {
             rewardRate = _reward.div(rewardsDuration);
         } else {
