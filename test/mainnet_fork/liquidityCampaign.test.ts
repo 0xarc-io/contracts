@@ -9,7 +9,7 @@ import {
 import { time } from '@openzeppelin/test-helpers';
 import ArcNumber from '@src/utils/ArcNumber';
 import { ethers } from 'hardhat';
-import { deployTestToken } from '../deployers';
+import { deployTestToken } from '../contracts/deployers';
 import ArcDecimal from '@src/utils/ArcDecimal';
 import { BigNumber } from 'ethers';
 import { expect } from 'chai';
