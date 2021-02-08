@@ -111,7 +111,10 @@ task(
   .setAction(async (taskArgs, hre) => {
     const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
 
-    const kyfEligibilityFilePath = path.join(__dirname, 'kyfEligibility.csv');
+    const kyfEligibilityFilePath = path.join(
+      __dirname,
+      `kyfEligibility${network === 'playnet' ? '-playnet' : ''}.csv`,
+    );
     const USDCAddress = taskArgs.currency;
 
     await pruneDeployments(network, signer.provider);
