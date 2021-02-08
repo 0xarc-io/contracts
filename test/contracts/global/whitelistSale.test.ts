@@ -1,15 +1,18 @@
 import 'module-alias/register';
 
-import { BigNumber, Wallet } from 'ethers';
-import { expect } from 'chai';
+import { BigNumber } from 'ethers';
+import chai from 'chai';
 
 import { expectRevert } from '@test/helpers/expectRevert';
 import { ethers } from 'hardhat';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { WhitelistSale } from '@src/typings/WhitelistSale';
 import { TestToken, TestTokenFactory, WhitelistSaleFactory } from '@src/typings';
 import { deployTestToken } from '../deployers';
 import ArcNumber from '@src/utils/ArcNumber';
+import { solidity } from 'ethereum-waffle';
+
+chai.use(solidity);
+const expect = chai.expect;
 
 let signers: SignerWithAddress[];
 let ownerAccount: SignerWithAddress;
@@ -18,6 +21,10 @@ let userAccount: SignerWithAddress;
 describe('WhitelistSale', () => {
   let whitelistSaleAddress: string;
   let currency: TestToken;
+
+  function connectAs(signer: SignerWithAddress) {
+    return WhitelistSaleFactory.connect(whitelistSaleAddress, signer);
+  }
 
   function setAllocation(user: SignerWithAddress, allocation: BigNumber) {
     return connectAs(ownerAccount).setAllocation([user.address], [allocation]);
@@ -42,10 +49,6 @@ describe('WhitelistSale', () => {
 
     whitelistSaleAddress = whitelistSale.address;
   });
-
-  function connectAs(signer: SignerWithAddress) {
-    return WhitelistSaleFactory.connect(whitelistSaleAddress, signer);
-  }
 
   describe('#setHardCap', () => {
     it('should not be able to set the hard cap as a non-owner', async () => {
@@ -93,8 +96,8 @@ describe('WhitelistSale', () => {
         [signer1Allocation, signer2Allocation],
       );
 
-      const participant1 = await whitelistSale.getParticipant(signers[1].address);
-      const participant2 = await whitelistSale.getParticipant(signers[2].address);
+      const participant1 = await whitelistSale.participants(signers[1].address);
+      const participant2 = await whitelistSale.participants(signers[2].address);
 
       expect(participant1.allocation).to.be.eq(signer1Allocation);
       expect(participant1.spent).to.be.eq(BigNumber.from(0));
@@ -114,13 +117,13 @@ describe('WhitelistSale', () => {
         [signer1Allocation, signer2Allocation],
       );
 
-      const participant2 = await whitelistSale.getParticipant(signers[2].address);
+      const participant2 = await whitelistSale.participants(signers[2].address);
 
       // Remove allocation of user 1
       await whitelistSale.setAllocation([signers[1].address], [BigNumber.from(0)]);
 
-      const participant1New = await whitelistSale.getParticipant(signers[1].address);
-      const participant2New = await whitelistSale.getParticipant(signers[2].address);
+      const participant1New = await whitelistSale.participants(signers[1].address);
+      const participant2New = await whitelistSale.participants(signers[2].address);
 
       expect(participant1New.allocation).to.eq(BigNumber.from(0));
       expect(participant2.allocation).to.eq(participant2New.allocation);
@@ -207,16 +210,20 @@ describe('WhitelistSale', () => {
     });
 
     it('should transfer the funds from user to owner', async () => {
+      const claimAmount = ArcNumber.new(5);
       const ownerWhitelistSale = connectAs(ownerAccount);
       await ownerWhitelistSale.updateSaleStatus(true);
+      await ownerWhitelistSale.setHardCap(claimAmount);
 
-      await setAllocation(userAccount, ArcNumber.new(5));
+      await setAllocation(userAccount, claimAmount);
 
       const userWhiteSaleContract = connectAs(userAccount);
 
-      await userWhiteSaleContract.claimAllocation(ArcNumber.new(5));
-
-      expect(await currency.balanceOf(ownerAccount.address)).to.eq(ArcNumber.new(5));
+      await expect(() => userWhiteSaleContract.claimAllocation(claimAmount)).to.changeTokenBalance(
+        currency,
+        ownerAccount,
+        claimAmount,
+      );
     });
   });
 
