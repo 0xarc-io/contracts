@@ -94,16 +94,6 @@ contract WhitelistSale is Ownable {
         emit AllocationClaimed(msg.sender, amount);
     }
 
-    function getParticipant(
-        address participant
-    )
-        public
-        view
-        returns (Participant memory)
-    {
-        return participants[participant];
-    }
-
     /* ========== Admin Functions ========== */
 
     function setHardCap(uint256 amount)
