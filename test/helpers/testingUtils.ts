@@ -23,7 +23,6 @@ export const addSnapshotBeforeRestoreAfterEach = () => {
   });
 };
 
-
 export async function setStartingBalances(
   collateral: string,
   core: string,

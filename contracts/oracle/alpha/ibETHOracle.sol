@@ -3,12 +3,12 @@
 pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
-import {Decimal} from "../lib/Decimal.sol";
-import {SafeMath} from "../lib/SafeMath.sol";
-import {IERC20} from "../token/IERC20.sol";
+import {Decimal} from "../../lib/Decimal.sol";
+import {SafeMath} from "../../lib/SafeMath.sol";
+import {IERC20} from "../../token/IERC20.sol";
 
-import {IOracle} from "./IOracle.sol";
-import {IChainLinkAggregator} from "./IChainLinkAggregator.sol";
+import {IOracle} from "../IOracle.sol";
+import {IChainLinkAggregator} from "../IChainLinkAggregator.sol";
 
 import {IibETH} from "./IibETH.sol";
 
