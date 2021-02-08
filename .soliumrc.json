@@ -9,7 +9,7 @@
     "lbrace": 0,
     "blank-lines": 0,
     "function-order": 0,
-    "max-len": ["error", 100],
+    "max-len": ["error", 125],
     "indentation": ["error", 4],
     "quotes": ["error", "double"],
     "arg-overflow": ["warning", 3],

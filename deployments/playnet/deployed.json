@@ -268,5 +268,15 @@
     "version": 1,
     "type": "synth",
     "group": "imUSD-STABLEx"
+  },
+  {
+    "name": "WhitelistSale",
+    "source": "WhitelistSale",
+    "address": "0x942F94Fb1716AB9ECd8EDBfBB79f7050F9406948",
+    "txn": "0x2d19641aa7f44b59acc259ca79b929c2171825d74a0bed34910366a2ce49dab3",
+    "network": "playnet",
+    "version": 1,
+    "type": "global",
+    "group": ""
   }
 ]

@@ -5,7 +5,6 @@ import deployments from '../../deployments/mainnet/deployed.json';
 import { OwnableFactory } from '@src/typings/OwnableFactory';
 import { AdminableFactory } from '@src/typings';
 
-
 /* eslint-disable @typescript-eslint/no-var-requires */
 const hre = require('hardhat');
 
@@ -16,7 +15,7 @@ describe('Ownable contracts', () => {
     ganacheOptions: {
       fork: 'https://eth-mainnet.alchemyapi.io/v2/HSgFSArdYblhAJVgM8F820KLd65jiFzc',
     },
-  })
+  });
 
   describe('contracts have owner', () => {
     for (const deployment of deployments) {
@@ -35,6 +34,7 @@ describe('Ownable contracts', () => {
           'KYFToken',
           'SkillsetToken',
           'StaticSyntheticToken',
+          'ArcUniswapV2Oracle',
         ].includes(source);
       };
 
