@@ -272,8 +272,8 @@
   {
     "name": "WhitelistSale",
     "source": "WhitelistSale",
-    "address": "0x942F94Fb1716AB9ECd8EDBfBB79f7050F9406948",
-    "txn": "0x2d19641aa7f44b59acc259ca79b929c2171825d74a0bed34910366a2ce49dab3",
+    "address": "0x578823A0c9551c20Bd3A516727d3DdBdDcb4023C",
+    "txn": "0xeb6c50046a7414399b53bb57c5884ea78632e2a491f85b6722e247a9510a9864",
     "network": "playnet",
     "version": 1,
     "type": "global",
