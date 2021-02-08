@@ -176,8 +176,8 @@ describe('WhitelistSale', () => {
     });
 
     it.only('should transfer the funds from user to owner', async () => {
-      await whitelistSale.updateSaleStatus(true)
-      await setAllocation(userAccount, ArcNumber.new(5))
+      await whitelistSale.updateSaleStatus(true);
+      await setAllocation(userAccount, ArcNumber.new(5));
 
       const userWhiteSaleContract = WhitelistSaleFactory.connect(
         whitelistSale.address,
@@ -186,8 +186,8 @@ describe('WhitelistSale', () => {
 
       await userWhiteSaleContract.claimAllocation(ArcNumber.new(5));
 
-      expect(await currency.balanceOf(ownerAccount.address)).to.eq(ArcNumber.new(5))
-    })
+      expect(await currency.balanceOf(ownerAccount.address)).to.eq(ArcNumber.new(5));
+    });
   });
 
   describe('#updateSaleStatus', () => {
