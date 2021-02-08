@@ -209,7 +209,6 @@ describe('WhitelistSale', () => {
     it('should transfer the funds from user to owner', async () => {
       const ownerWhitelistSale = connectAs(ownerAccount);
       await ownerWhitelistSale.updateSaleStatus(true);
-      await ownerWhitelistSale.setHardCap(ArcNumber.new(10));
 
       await setAllocation(userAccount, ArcNumber.new(5));
 
