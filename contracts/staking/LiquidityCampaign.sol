@@ -64,13 +64,13 @@ contract LiquidityCampaign is Adminable {
 
     /* ========== Modifiers ========== */
 
-    modifier updateReward(address account) {
+    modifier updateReward(address _account) {
         rewardPerTokenStored = _actualRewardPerToken();
         lastUpdateTime = lastTimeRewardApplicable();
 
-        if (account != address(0)) {
-            stakers[account].rewardsEarned = _actualEarned(account);
-            stakers[account].rewardPerTokenPaid = rewardPerTokenStored; // TODO don't understand this
+        if (_account != address(0)) {
+            stakers[_account].rewardsEarned = _actualEarned(_account);
+            stakers[_account].rewardPerTokenPaid = rewardPerTokenStored;
         }
         _;
     }
