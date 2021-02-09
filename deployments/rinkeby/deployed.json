@@ -291,8 +291,8 @@
   {
     "name": "TestStakingToken",
     "source": "TestToken",
-    "address": "0x1918b20eC1998856dc785497C7fd8569b1F7B863",
-    "txn": "0x23b10ff03259038283c1fe803af1c3640b8baf0f6ca564dd041eee259ac7b002",
+    "address": "0x9c20dfae420A45147fe46aBd89D17488B41b1ef1",
+    "txn": "0x3fcab77f8dee8d992f21e35a1f5200c39c94eeb2622d695a3bbadbda65659de1",
     "network": "rinkeby",
     "version": 1,
     "type": "staking",
@@ -301,8 +301,8 @@
   {
     "name": "Implementation",
     "source": "LiquidityCampaign",
-    "address": "0x29bD79F9b5b141864177F1E94aaF5E922FF2389c",
-    "txn": "0x181b88ac946fa7b87feab4d51ae3dee6f4d7fea9f6bab117409ac8015e173c8e",
+    "address": "0x7d3F2EBc6708f62136c2DE87b09ba366EFEFE21a",
+    "txn": "0xa972c5818ed551ba2a322f7f82c15391ce838a22a084eb507b306f16f8a280f7",
     "network": "rinkeby",
     "version": 1,
     "type": "staking",
@@ -311,8 +311,8 @@
   {
     "name": "Proxy",
     "source": "ArcProxy",
-    "address": "0x0a133374534840E98E6460E313ae8D147B58BF0e",
-    "txn": "0x2e28076c89a70b33551949472129f2e43f09b5a340de3c9298d6e52b94c94ec2",
+    "address": "0x8B5D590665aaA8ad82E6d5bF02E81467A29f3171",
+    "txn": "0x6e56f8125202d4ed643b699e8659220d6ce1db178591e7eca96c958b0c815316",
     "network": "rinkeby",
     "version": 1,
     "type": "staking",

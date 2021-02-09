@@ -25,7 +25,6 @@ task('deploy-staking', 'Deploy a staking/reward pool')
     const ultimateOwner = networkDetails['users'].owner.toLowerCase();
 
     const stakingConfig = await loadStakingConfig({ network, key: name });
-    const rewardConfig = stakingConfig.rewardConfig;
 
     if (!stakingConfig.rewardsDurationSeconds) {
       throw Error('"rewardsDurationSeconds" is not set in the staking-config.json file');

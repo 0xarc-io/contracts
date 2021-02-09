@@ -45,9 +45,9 @@ export default {
   },
   'Pool-6': {
     source: 'LiquidityCampaign',
-    stakingToken: '',
+    stakingToken: '0x6c0ffb49AD9072F253e254445CFD829BCb8A1b5d',
     rewardsToken: 'ArcxToken',
-    rewardsDurationSeconds: 2678400,
+    rewardsDurationSeconds: 60 * 60 * 24 * 31, // 31 days
     contractFactory: LiquidityCampaignFactory,
     getDeployTx: (signer: SignerWithAddress) =>
       new LiquidityCampaignFactory(signer).getDeployTransaction(),
@@ -58,7 +58,7 @@ export default {
       rewardsTokenAddress: string,
       stakingTokenAddress: string,
     ) => {
-      const daoAllocation = '330000000000000000';
+      const daoAllocation = '400000000000000000';
 
       return contract.init(arcDao, rewardsDistributor, rewardsTokenAddress, stakingTokenAddress, {
         value: daoAllocation,

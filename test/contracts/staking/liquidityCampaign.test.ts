@@ -300,6 +300,7 @@ describe('LiquidityCampaign', () => {
         supply = await liquidityCampaignUser1.totalSupply();
 
         expect(supply).to.eq(amount.mul(2));
+        expect(await stakingToken.balanceOf(liquidityCampaignAdmin.address)).to.eq(amount.mul(2))
       });
 
       it('should update reward correctly after staking', async () => {
