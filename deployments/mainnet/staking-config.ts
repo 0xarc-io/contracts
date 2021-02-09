@@ -47,7 +47,7 @@ export default {
     source: 'LiquidityCampaign',
     stakingToken: '',
     rewardsToken: 'ArcxToken',
-    rewardsDurationSeconds: 2678400,
+    rewardsDurationSeconds: 60 * 60 * 24 * 31, // 31 days
     contractFactory: LiquidityCampaignFactory,
     getDeployTx: (signer: SignerWithAddress) =>
       new LiquidityCampaignFactory(signer).getDeployTransaction(),
@@ -58,7 +58,7 @@ export default {
       rewardsTokenAddress: string,
       stakingTokenAddress: string,
     ) => {
-      const daoAllocation = '330000000000000000';
+      const daoAllocation = '400000000000000000';
 
       return contract.init(arcDao, rewardsDistributor, rewardsTokenAddress, stakingTokenAddress, {
         value: daoAllocation,
