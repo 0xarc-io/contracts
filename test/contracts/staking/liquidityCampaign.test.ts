@@ -6,15 +6,17 @@ import {
   TestToken,
   TestTokenFactory,
 } from '@src/typings';
-import { time } from '@openzeppelin/test-helpers';
+import hre from 'hardhat';
 import ArcNumber from '@src/utils/ArcNumber';
 import { ethers } from 'hardhat';
-import { deployTestToken } from '../contracts/deployers';
+import { deployTestToken } from '../deployers';
 import ArcDecimal from '@src/utils/ArcDecimal';
 import { BigNumber } from 'ethers';
 import { expect } from 'chai';
 import { BASE } from '@src/constants';
 import { expectRevert } from '@test/helpers/expectRevert';
+import { EVM } from '@test/helpers/EVM';
+import { receiveMessageOnPort } from 'worker_threads';
 
 let liquidityCampaignAdmin: LiquidityCampaign;
 let liquidityCampaignUser1: LiquidityCampaign;
@@ -22,7 +24,7 @@ let liquidityCampaignUser2: LiquidityCampaign;
 
 const REWARD_AMOUNT = ArcNumber.new(100);
 const STAKE_AMOUNT = ArcNumber.new(10);
-const REWARD_DURATION_MINUTES = 10;
+const REWARD_DURATION = 10 * 60;
 
 let stakingToken: TestToken;
 let rewardToken: TestToken;
@@ -32,9 +34,16 @@ let admin: SignerWithAddress;
 let user1: SignerWithAddress;
 let user2: SignerWithAddress;
 
+let evm: EVM;
+
 describe('LiquidityCampaign', () => {
   const DAO_ALLOCATION = ArcDecimal.new(0.4);
   const USER_ALLOCATION = ArcNumber.new(1).sub(DAO_ALLOCATION.value);
+
+  async function increaseTime(duration: number) {
+    await evm.increaseTime(duration);
+    await evm.mineBlock();
+  }
 
   function bnToEthNumberRounded(amount: BigNumber) {
     return Math.round(parseFloat(ethers.utils.formatEther(amount)));
@@ -69,7 +78,7 @@ describe('LiquidityCampaign', () => {
 
     await liquidityCampaignAdmin.setRewardsDistributor(admin.address);
 
-    const rewardsDuration = time.duration.minutes(REWARD_DURATION_MINUTES).toString();
+    const rewardsDuration = REWARD_DURATION;
     await liquidityCampaignAdmin.setRewardsDuration(rewardsDuration);
 
     await liquidityCampaignAdmin.init(
@@ -85,6 +94,7 @@ describe('LiquidityCampaign', () => {
 
   before(async () => {
     const signers = await ethers.getSigners();
+    evm = new EVM(hre.ethers.provider);
     admin = signers[0];
     user1 = signers[1];
     user2 = signers[2];
@@ -123,7 +133,7 @@ describe('LiquidityCampaign', () => {
       });
 
       it('should return the period finish if called after reward period has finished', async () => {
-        await time.increase(time.duration.minutes(REWARD_DURATION_MINUTES));
+        await increaseTime(REWARD_DURATION);
 
         const periodFinish = await liquidityCampaignAdmin.periodFinish();
         expect(await liquidityCampaignAdmin.lastTimeRewardApplicable()).to.eq(periodFinish);
@@ -164,7 +174,8 @@ describe('LiquidityCampaign', () => {
 
         await liquidityCampaignUser1.stake(stakingAmount.div(2));
         await liquidityCampaignUser1.stake(stakingAmount.div(2));
-        await time.advanceBlock();
+
+        await evm.mineBlock();
 
         const rewardPerToken = await liquidityCampaignUser1.rewardPerToken();
         const rewardPerTokenStored = await liquidityCampaignAdmin.rewardPerTokenStored();
@@ -218,7 +229,7 @@ describe('LiquidityCampaign', () => {
         expect(amountEarned0).to.eq(BigNumber.from(0));
 
         // Advance time
-        await time.increase(time.duration.minutes(1));
+        await increaseTime(60);
         // Check amount earned
         const amountEarned1 = await liquidityCampaignUser1.earned(user1.address);
 
@@ -230,13 +241,13 @@ describe('LiquidityCampaign', () => {
         // User A stakes
         await stake(liquidityCampaignUser1, user1, amount);
         // Advance time half the period
-        await time.increase(time.duration.minutes(REWARD_DURATION_MINUTES / 2));
+        await increaseTime(REWARD_DURATION / 2);
 
         // User B stakes
         await stake(liquidityCampaignUser2, user2, amount);
 
         // Advance time to the end of the period
-        await time.increase(time.duration.minutes(REWARD_DURATION_MINUTES / 2));
+        await increaseTime(REWARD_DURATION / 2);
 
         // Check amount earned
         const user1Earned = await liquidityCampaignUser1.earned(user1.address);
@@ -285,13 +296,19 @@ describe('LiquidityCampaign', () => {
 
       it('should be able to stake', async () => {
         const amount = ArcNumber.new(10);
-        await mintAndApprove(stakingToken, user1, amount);
+        await mintAndApprove(stakingToken, user1, amount.mul(2));
 
         await liquidityCampaignUser1.stake(amount);
 
-        const supply = await liquidityCampaignUser1.totalSupply();
+        let supply = await liquidityCampaignUser1.totalSupply();
 
         expect(supply).to.eq(amount);
+
+        await liquidityCampaignUser1.stake(amount);
+
+        supply = await liquidityCampaignUser1.totalSupply();
+
+        expect(supply).to.eq(amount.mul(2));
       });
 
       it('should update reward correctly after staking', async () => {
@@ -299,7 +316,7 @@ describe('LiquidityCampaign', () => {
 
         await stake(liquidityCampaignUser1, user1, STAKE_AMOUNT);
 
-        await time.increase(time.duration.minutes(REWARD_DURATION_MINUTES / 2));
+        await increaseTime(REWARD_DURATION / 2);
 
         const earned1 = await liquidityCampaignUser1.earned(user1.address);
 
@@ -315,7 +332,7 @@ describe('LiquidityCampaign', () => {
       it('should not be able to get the reward if the tokens are not claimable', async () => {
         await stake(liquidityCampaignUser1, user1, STAKE_AMOUNT);
 
-        await time.increase(time.duration.minutes(REWARD_DURATION_MINUTES / 2));
+        await increaseTime(REWARD_DURATION / 2);
 
         await expectRevert(liquidityCampaignUser1.getReward(user1.address));
       });
@@ -324,12 +341,12 @@ describe('LiquidityCampaign', () => {
         await liquidityCampaignAdmin.setTokensClaimable(true);
 
         await stake(liquidityCampaignUser1, user1, STAKE_AMOUNT);
-        await time.increase(time.duration.minutes(REWARD_DURATION_MINUTES / 3));
+        await increaseTime(REWARD_DURATION / 3);
 
         await liquidityCampaignUser1.getReward(user1.address);
         const reward0 = await rewardToken.balanceOf(user1.address);
 
-        await time.increase(time.duration.minutes(REWARD_DURATION_MINUTES / 3));
+        await increaseTime(REWARD_DURATION / 3);
 
         await liquidityCampaignUser1.getReward(user1.address);
         const reward1 = await rewardToken.balanceOf(user1.address);
@@ -341,7 +358,7 @@ describe('LiquidityCampaign', () => {
         await liquidityCampaignAdmin.setTokensClaimable(true);
 
         await stake(liquidityCampaignUser1, user1, STAKE_AMOUNT);
-        await time.increase(time.duration.minutes(REWARD_DURATION_MINUTES / 2));
+        await increaseTime(REWARD_DURATION / 2);
 
         await liquidityCampaignUser1.getReward(user1.address);
         let reward0 = await rewardToken.balanceOf(user1.address);
@@ -351,7 +368,7 @@ describe('LiquidityCampaign', () => {
         );
 
         await stake(liquidityCampaignUser2, user2, STAKE_AMOUNT);
-        await time.increase(time.duration.minutes(REWARD_DURATION_MINUTES / 2));
+        await increaseTime(REWARD_DURATION / 2);
 
         await liquidityCampaignUser1.getReward(user1.address);
         const reward1 = await rewardToken.balanceOf(user1.address);
@@ -368,7 +385,7 @@ describe('LiquidityCampaign', () => {
 
         const rewardPerTokenStored0 = await liquidityCampaignUser1.rewardPerTokenStored();
 
-        await time.increase(time.duration.minutes(REWARD_DURATION_MINUTES / 2));
+        await increaseTime(REWARD_DURATION / 2);
 
         await liquidityCampaignUser1.getReward(user1.address);
 
@@ -422,7 +439,7 @@ describe('LiquidityCampaign', () => {
 
         await stake(liquidityCampaignUser1, user1, STAKE_AMOUNT);
 
-        await time.increase(time.duration.minutes(REWARD_DURATION_MINUTES / 2));
+        await increaseTime(REWARD_DURATION / 2);
 
         await liquidityCampaignUser1.exit();
 
@@ -490,8 +507,7 @@ describe('LiquidityCampaign', () => {
 
         const rewardRate0 = await liquidityCampaignAdmin.rewardRate();
 
-        const rewardsDuration = time.duration.minutes(REWARD_DURATION_MINUTES).toString();
-        await liquidityCampaignAdmin.setRewardsDuration(rewardsDuration);
+        await liquidityCampaignAdmin.setRewardsDuration(REWARD_DURATION);
 
         await liquidityCampaignAdmin.notifyRewardAmount(REWARD_AMOUNT.div(2));
 
@@ -509,8 +525,7 @@ describe('LiquidityCampaign', () => {
           DAO_ALLOCATION,
         );
 
-        const rewardsDuration = time.duration.minutes(REWARD_DURATION_MINUTES).toString();
-        await liquidityCampaignAdmin.setRewardsDuration(rewardsDuration);
+        await liquidityCampaignAdmin.setRewardsDuration(REWARD_DURATION);
 
         await liquidityCampaignAdmin.notifyRewardAmount(REWARD_AMOUNT.div(2));
         const rewardRate0 = await liquidityCampaignAdmin.rewardRate();
@@ -538,14 +553,12 @@ describe('LiquidityCampaign', () => {
     describe('#setRewardsDuration', () => {
       it('should not be claimable by anyone', async () => {
         await expectRevert(
-          liquidityCampaignUser1.setRewardsDuration(
-            BigNumber.from(time.duration.minutes(REWARD_DURATION_MINUTES)),
-          ),
+          liquidityCampaignUser1.setRewardsDuration(BigNumber.from(REWARD_DURATION)),
         );
       });
 
       it('should only be callable by the contract owner and set the right duration', async () => {
-        const duration = BigNumber.from(time.duration.minutes(REWARD_DURATION_MINUTES));
+        const duration = BigNumber.from(REWARD_DURATION);
 
         await liquidityCampaignAdmin.setRewardsDuration(duration);
 

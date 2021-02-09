@@ -78,7 +78,7 @@ contract LiquidityCampaign is Adminable {
     modifier onlyRewardsDistributor() {
         require(
             msg.sender == rewardsDistributor,
-            "Caller is not RewardsDistributor"
+            "LiquidityCampaign:updateReward() Caller is not RewardsDistributor"
         );
         _;
     }
@@ -186,7 +186,7 @@ contract LiquidityCampaign is Adminable {
     {
         require(
             tokensClaimable == true,
-            "LiquidityCampaign::getReward: Tokens cannot be claimed yet"
+            "LiquidityCampaign:getReward() Tokens cannot be claimed yet"
         );
 
         Staker storage staker = stakers[_user];
@@ -258,7 +258,7 @@ contract LiquidityCampaign is Adminable {
     {
         require(
             rewardsDuration != 0,
-            "LiquidityCampaign::notifyRewardAmount: rewards duration must first be set"
+            "LiquidityCampaign:notifyRewardAmount() rewards duration must first be set"
         );
 
         if (block.timestamp >= periodFinish) {
@@ -276,7 +276,7 @@ contract LiquidityCampaign is Adminable {
         uint balance = rewardsToken.balanceOf(address(this));
         require(
             rewardRate <= balance.div(rewardsDuration),
-            "Provided reward too high"
+            "LiquidityCampaign:notifyRewardAmount() Provided reward too high"
         );
 
         periodFinish = block.timestamp.add(rewardsDuration);
@@ -301,7 +301,7 @@ contract LiquidityCampaign is Adminable {
     {
         require(
             periodFinish == 0 || block.timestamp > periodFinish,
-            "LiquidityCampaign::setRewardsDuration: Period not finished yet"
+            "LiquidityCampaign:setRewardsDuration() Period not finished yet"
         );
 
         rewardsDuration = _rewardsDuration;
@@ -321,7 +321,7 @@ contract LiquidityCampaign is Adminable {
         // Cannot recover the staking token or the rewards token
         require(
             _tokenAddress != address(stakingToken) && _tokenAddress != address(rewardsToken),
-            "LiquidityCampaign::recoverERC20: Can't withdraw staking or rewards tokens"
+            "LiquidityCampaign:recoverERC20() Can't withdraw staking or rewards tokens"
         );
 
         IERC20(_tokenAddress).safeTransfer(getAdmin(), _tokenAmount);
