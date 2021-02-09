@@ -1,11 +1,13 @@
 import { ArcUniswapV2Oracle, ArcUniswapV2OracleFactory } from '@src/typings';
 import { ethers } from 'hardhat';
-import { time } from '@openzeppelin/test-helpers';
 import { BigNumber, Signer } from 'ethers';
 import { expectRevert } from '@test/helpers/expectRevert';
 import { expect } from 'chai';
 import { MockKeep3rV1Factory } from '@src/typings/MockKeep3rV1Factory';
 import ArcNumber from '@src/utils/ArcNumber';
+import { EVM } from '@test/helpers/EVM';
+
+let evm: EVM;
 
 // const KEEP3RV1_ADDRESS = '0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44';
 let MOCK_KEEP3RV1_ADDRESS;
@@ -17,13 +19,22 @@ const KPR = '0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44';
 const WETH = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
 
 // Set window period to 10 minutes
-const windowPeriodMinutes = 10;
+const windowPeriod = 10 * 60;
 
 describe.skip('ArcUniswapV2Oracle', () => {
   let oracle: ArcUniswapV2Oracle;
   let owner: Signer;
   let keeper: Signer;
   let nonKeeper: Signer;
+
+  async function increaseTime(duration: number) {
+    await evm.increaseTime(duration);
+    await evm.mineBlock();
+  }
+
+  before(() => {
+    evm = new EVM(ethers.provider);
+  });
 
   beforeEach(async () => {
     const signers = await ethers.getSigners();
@@ -43,7 +54,7 @@ describe.skip('ArcUniswapV2Oracle', () => {
       MOCK_KEEP3RV1_ADDRESS,
       UNIV2_FACTORY,
     );
-    await oracle.setPeriodWindow(BigNumber.from(windowPeriodMinutes * 60));
+    await oracle.setPeriodWindow(BigNumber.from(windowPeriod));
   });
 
   describe('#addPair', () => {
@@ -105,7 +116,7 @@ describe.skip('ArcUniswapV2Oracle', () => {
       const observation1 = await oracle.lastObservationTokens(WBTC, KPR);
 
       // Wait the time period
-      await time.increase(time.duration.minutes(windowPeriodMinutes));
+      await increaseTime(windowPeriod);
 
       const keeperOracle = ArcUniswapV2OracleFactory.connect(oracle.address, keeper);
       await keeperOracle.work();
@@ -186,7 +197,7 @@ describe.skip('ArcUniswapV2Oracle', () => {
     it('should return true if within the period window', async () => {
       await oracle.addPair(WBTC, DIGG);
 
-      await time.increase(time.duration.minutes(windowPeriodMinutes));
+      await increaseTime(windowPeriod);
 
       const pair = await oracle.pairFor(WBTC, DIGG);
 
@@ -200,7 +211,7 @@ describe.skip('ArcUniswapV2Oracle', () => {
     it('should update pair', async () => {
       await oracle.addPair(WBTC, DIGG);
 
-      await time.increase(time.duration.minutes(windowPeriodMinutes));
+      await increaseTime(windowPeriod);
 
       const tx = await oracle.updateTokensPair(WBTC, DIGG);
       const receipt = await tx.wait();
@@ -230,7 +241,7 @@ describe.skip('ArcUniswapV2Oracle', () => {
       await oracle.addPair(WBTC, DIGG);
       await oracle.addPair(WBTC, KPR);
 
-      await time.increase(time.duration.minutes(windowPeriodMinutes));
+      await increaseTime(windowPeriod);
 
       let tx = await oracle.updateTokensPair(WBTC, KPR);
       await tx.wait();
@@ -245,7 +256,7 @@ describe.skip('ArcUniswapV2Oracle', () => {
       await oracle.addPair(WBTC, DIGG);
       await oracle.addPair(WBTC, KPR);
 
-      await time.increase(time.duration.minutes(windowPeriodMinutes));
+      await increaseTime(windowPeriod);
 
       const tx = await oracle.updateAll();
       const receipt = await tx.wait();
@@ -318,8 +329,7 @@ describe.skip('ArcUniswapV2Oracle', () => {
     it('should return true if there exists any workable pair', async () => {
       await oracle.addPair(WBTC, KPR);
 
-      await time.advanceBlock();
-      await time.increase(time.duration.minutes(windowPeriodMinutes));
+      await increaseTime(windowPeriod);
 
       expect(await oracle.workable()).to.be.true;
     });
@@ -341,8 +351,7 @@ describe.skip('ArcUniswapV2Oracle', () => {
       const pair = await oracle.pairFor(WBTC, KPR);
       await oracle.addPair(WBTC, KPR);
 
-      await time.advanceBlock();
-      await time.increase(time.duration.minutes(windowPeriodMinutes));
+      await increaseTime(windowPeriod);
 
       expect(await oracle.workablePair(pair)).to.be.true;
     });
@@ -361,8 +370,7 @@ describe.skip('ArcUniswapV2Oracle', () => {
     it('should return true if the pair was updated in more than periodWindow', async () => {
       await oracle.addPair(WBTC, KPR);
 
-      await time.advanceBlock();
-      await time.increase(time.duration.minutes(windowPeriodMinutes));
+      await increaseTime(windowPeriod);
 
       expect(await oracle.workableTokens(WBTC, KPR)).to.be.true;
     });
@@ -389,8 +397,7 @@ describe.skip('ArcUniswapV2Oracle', () => {
     it('should revert if the pair was not updated within 2 period windows', async () => {
       await oracle.addPair(WBTC, DIGG);
 
-      await time.advanceBlock();
-      await time.increase(time.duration.minutes(windowPeriodMinutes * 3));
+      await increaseTime(windowPeriod);
 
       await expectRevert(oracle.current(WBTC, ArcNumber.new(1), DIGG));
     });
@@ -399,7 +406,7 @@ describe.skip('ArcUniswapV2Oracle', () => {
       const tx = await oracle.addPair(WETH, KPR);
       await tx.wait();
 
-      await time.advanceBlock();
+      await evm.mineBlock();
 
       const kprFor1Eth = await oracle.current(WETH, ArcNumber.new(1), KPR);
 
@@ -413,8 +420,7 @@ describe.skip('ArcUniswapV2Oracle', () => {
     it('should revert if the last observation of the pair is bigger than the granularity * periodWindow', async () => {
       await oracle.addPair(WETH, KPR);
 
-      await time.advanceBlock();
-      await time.increase(time.duration.minutes(1));
+      await increaseTime(60);
 
       await expectRevert(oracle.quote(WETH, ArcNumber.new(1), KPR, BigNumber.from(2)));
     });
@@ -424,7 +430,7 @@ describe.skip('ArcUniswapV2Oracle', () => {
 
       // Add 5 entries
       for (let i = 0; i < 5; i++) {
-        await time.increase(time.duration.minutes(windowPeriodMinutes));
+        await increaseTime(windowPeriod);
         await oracle.updateTokensPair(WETH, KPR);
       }
 
