@@ -4,7 +4,7 @@ import { LiquidityCampaign, LiquidityCampaignFactory } from '@src/typings';
 export default {
   'Pool-6': {
     source: 'LiquidityCampaign',
-    stakingToken: '',
+    stakingToken: '0x6c0ffb49AD9072F253e254445CFD829BCb8A1b5d',
     rewardsToken: 'ArcxToken',
     rewardsDurationSeconds: 60 * 60 * 24 * 31, // 31 days
     contractFactory: LiquidityCampaignFactory,
