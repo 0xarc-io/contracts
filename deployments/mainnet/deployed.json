@@ -467,5 +467,15 @@
 		"network": "mainnet",
 		"version": 1,
 		"type": "synth"
+	},
+	{
+		"name": "WhitelistSale",
+		"source": "WhitelistSale",
+		"address": "0x2D6c5b9fF886bb4eEFed33b2065366F4caa0e6Fe",
+		"txn": "0xfb6f967971ce1d0e80aa49db4f63d32b8e6a0c2285db8e4110b4348b7a4d0b45",
+		"network": "mainnet",
+		"version": 1,
+		"type": "global",
+		"group": ""
 	}
 ]
