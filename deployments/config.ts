@@ -9,7 +9,7 @@ export const constants = {
   CONTRACTS_FOLDER: 'contracts',
   SYNTH_CONFIG_FILENAME: 'synth-config.ts',
   SAVINGS_CONFIG_FILENAME: 'savings-config.json',
-  STAKING_CONFIG_FILENAME: 'staking-config.json',
+  STAKING_CONFIG_FILENAME: 'staking-config.ts',
   SUBGRAPH_CONFIG_FILENAME: 'subgraph-config.json',
   DEPLOYMENT_FILENAME: 'deployed.json',
 };

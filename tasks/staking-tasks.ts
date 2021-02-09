@@ -70,8 +70,8 @@ task('deploy-staking', 'Deploy a staking/reward pool')
     const implementationContract = await deployContract(
       {
         name: 'Implementation',
-        source: 'RewardCampaign',
-        data: new RewardCampaignFactory(signer).getDeployTransaction(),
+        source: stakingConfig.source,
+        data: stakingConfig.getDeployTx(signer),
         version: 1,
         type: DeploymentType.staking,
         group: name,
@@ -99,15 +99,12 @@ task('deploy-staking', 'Deploy a staking/reward pool')
 
     console.log(yellow(`* Calling init()...`));
     try {
-      await implementation.init(
+      await stakingConfig.runInit(
+        implementation,
         arcDAO.address,
         ultimateOwner,
         rewardToken.address,
         stakingTokenAddress,
-        { value: rewardConfig.daoAllocation },
-        { value: rewardConfig.slasherCut },
-        rewardConfig.vestingEndDate,
-        rewardConfig.debtToStake,
       );
       console.log(green(`Called init() successfully!\n`));
     } catch (error) {
@@ -117,7 +114,7 @@ task('deploy-staking', 'Deploy a staking/reward pool')
     // Add approved state contracts
     const stateProxies = [];
     try {
-      for (const rewardGroup of stakingConfig.rewardConfig.coreContracts) {
+      for (const rewardGroup of stakingConfig.coreContracts) {
         const contract = await loadContract({
           name: 'CoreProxy',
           type: DeploymentType.synth,
@@ -182,4 +179,108 @@ task('deploy-staking', 'Deploy a staking/reward pool')
     //   await implementation.notifyRewardAmount(ArcNumber.new(100));
     //   console.log(green(`Executed successfully!\n`));
     // }
+  });
+
+task('deploy-staking-liquidity', 'Deploy a LiquidityCampaign')
+  .addParam('name', 'The name of the pool you would like to deploy')
+  .setAction(async (taskArgs, hre) => {
+    const name = taskArgs.name;
+
+    const { network, signer, networkConfig, networkDetails } = await loadDetails(taskArgs, hre);
+
+    const ultimateOwner = networkDetails['users'].owner.toLowerCase();
+
+    const stakingConfig = await loadStakingConfig({ network, key: name });
+
+    if (!stakingConfig.rewardsDurationSeconds) {
+      throw red(`"rewardsDurationSeconds" is not set in the staking-config.ts file`);
+    }
+
+    await pruneDeployments(network, signer.provider);
+
+    const arcDAO = await loadContract({
+      name: 'ArcDAO',
+      type: DeploymentType.global,
+      network,
+    });
+
+    const rewardToken = await loadContract({
+      name: stakingConfig.rewardsToken,
+      type: DeploymentType.global,
+      network,
+    });
+
+    if (!arcDAO || !rewardToken) {
+      throw red(`There is no ArcDAO, RewardToken or Core Contract in this deployments file`);
+    }
+
+    const stakingTokenAddress =
+      stakingConfig.stakingToken ||
+      (await deployContract(
+        {
+          name: 'TestStakingToken',
+          source: 'TestToken',
+          data: new TestTokenFactory(signer).getDeployTransaction(`${name}-TestToken`, name, 18),
+          version: 1,
+          type: DeploymentType.staking,
+          group: name,
+        },
+        networkConfig,
+      ));
+
+    const implementationContract = await deployContract(
+      {
+        name: 'Implementation',
+        source: stakingConfig.source,
+        data: stakingConfig.getDeployTx(signer),
+        version: 1,
+        type: DeploymentType.staking,
+        group: name,
+      },
+      networkConfig,
+    );
+
+    const proxyContract = await deployContract(
+      {
+        name: 'Proxy',
+        source: 'ArcProxy',
+        data: new ArcProxyFactory(signer).getDeployTransaction(
+          implementationContract,
+          await signer.getAddress(),
+          [],
+        ),
+        version: 1,
+        type: DeploymentType.staking,
+        group: name,
+      },
+      networkConfig,
+    );
+
+    if (!stakingConfig.contractFactory) {
+      throw red(`"contractFactory" missing from in the staking-config.ts file`);
+    }
+
+    const implementation = stakingConfig.contractFactory.connect(proxyContract, signer);
+
+    console.log(yellow(`* Calling init()...`));
+    try {
+      await stakingConfig.runInit(
+        implementation,
+        arcDAO.address,
+        ultimateOwner,
+        rewardToken.address,
+        stakingTokenAddress,
+      );
+      console.log(green(`Called init() successfully!\n`));
+    } catch (error) {
+      console.log(red(`Failed to call init().\nReason: ${error}\n`));
+    }
+
+    try {
+      console.log(yellow('Setting rewards duration...'));
+      await implementation.setRewardsDuration(stakingConfig.rewardsDurationSeconds);
+      console.log(green('Rewards duration successfully set'));
+    } catch (error) {
+      console.log(red(`Failed to set the rewards duration. Reason: ${error}\n`));
+    }
   });
