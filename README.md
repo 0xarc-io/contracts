@@ -1,3 +1,5 @@
+[![npm version](https://badge.fury.io/js/%40arcxgame%2Fcontracts.svg)](https://badge.fury.io/js/%40arcxgame%2Fcontracts)
+
 # ARCx Protocol Contracts
 
 A synthetic asset protocol where you can use one or many collateral types to output a single synthetic token. For more information read here: https://docs.google.com/document/d/1bZsaxeCzUSdfrZdnRJj5NXeQ9lJqTbwxw1SXGM_BZvI/edit#.

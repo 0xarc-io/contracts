@@ -440,6 +440,26 @@
 		"group": "ibETH-STABLEx"
 	},
 	{
+		"name": "Oracle",
+		"source": "imUSDOracle",
+		"address": "0xF3c0aD6D689c59997e1E3E96699a65Bc464AC937",
+		"txn": "0x2769a16df3ee50a2084715feae7457252b964fbdde9c6cae6d6631ed01b43632",
+		"network": "mainnet",
+		"version": 1,
+		"type": "synth",
+		"group": "imUSD-STABLEx"
+	},
+	{
+		"name": "CoreProxy",
+		"source": "ArcProxy",
+		"address": "0x066b7660b2003793fB2ffD0b8152158c016fbfeF",
+		"txn": "0xd4455f51e82d7eed3a49e6c5489c79dcb439202f6cc4cc0501ffd41a869b7620",
+		"network": "mainnet",
+		"version": 1,
+		"type": "synth",
+		"group": "imUSD-STABLEx"
+	},
+	{
 		"name": "ArcUniswapV2Oracle",
 		"source": "ArcUniswapV2Oracle",
 		"address": "0x3258a7d31ab32eEaBDa47032E97EfFeA3Bc9567D",
@@ -451,8 +471,8 @@
 	{
 		"name": "WhitelistSale",
 		"source": "WhitelistSale",
-		"address": "0x7F38C29CeB46377955E86132Ba77F4ed8529373d",
-		"txn": "0x40e541b142f7f167fc2b6822af37974de3e84774291ae1e3b47ac1a1e87acda6",
+		"address": "0x2D6c5b9fF886bb4eEFed33b2065366F4caa0e6Fe",
+		"txn": "0xfb6f967971ce1d0e80aa49db4f63d32b8e6a0c2285db8e4110b4348b7a4d0b45",
 		"network": "mainnet",
 		"version": 1,
 		"type": "global",
