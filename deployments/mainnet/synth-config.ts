@@ -130,8 +130,8 @@ export default {
     version: 1,
     params: {
       collateral_ratio: '2000000000000000000',
-      liquidation_user_fee: '150000000000000000',
-      liquidation_arc_ratio: '100000000000000000',
+      liquidation_user_fee: '20000000000000000',
+      liquidation_arc_ratio: '200000000000000000',
       collateral_limit: '',
       synthetic_limit: '',
       position_minimum_collateral: '',

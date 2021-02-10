@@ -281,8 +281,8 @@
   {
     "name": "WhitelistSale",
     "source": "WhitelistSale",
-    "address": "0x71b8392cAC44c00439e8ac44Bef37bF1f99879ab",
-    "txn": "0x3ceab1418dea7b38ced580b8a76a2c3c0b5230847352c0c86f91e199f2f5c280",
+    "address": "0xf653A51724CB4b6aBcB91d6d9d12eBb300a192ec",
+    "txn": "0xf4672c0294fc5b8edcb65743f665e4138463960b5938a20f9d2888346f73a0c3",
     "network": "rinkeby",
     "version": 1,
     "type": "global",

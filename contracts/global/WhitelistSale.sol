@@ -29,6 +29,10 @@ contract WhitelistSale is Ownable {
 
     mapping (address => Participant) public participants;
 
+    uint256 public totalHardCap;
+
+    uint256 public totalRaised;
+
     bool public saleOpen;
 
     /* ========== Events ========== */
@@ -38,6 +42,8 @@ contract WhitelistSale is Ownable {
     event AllocationSet(address user, uint256 amount);
 
     event SaleStatusUpdated(bool status);
+
+    event HardCapUpdated(uint256 amount);
 
     /* ========== Constructor ========== */
 
@@ -56,6 +62,8 @@ contract WhitelistSale is Ownable {
         // Get their total spend till date
         uint256 participantSpent = participants[msg.sender].spent.add(amount);
 
+        uint256 newTotalRaised = totalRaised.add(amount);
+
         require(
             participantSpent <= participants[msg.sender].allocation,
             "You cannot spend more than your allocation"
@@ -66,8 +74,15 @@ contract WhitelistSale is Ownable {
             "The sale is not currently open"
         );
 
+        require(
+            newTotalRaised <= totalHardCap,
+            "You cannot purchase more than the hard cap"
+        );
+
         // Increase the user's spend amount otherwise they can keep purchasing
         participants[msg.sender].spent = participantSpent;
+
+        totalRaised = newTotalRaised;
 
         // Transfer the funds to the owner, no funds will be stored in this contract directly.
         currency.safeTransferFrom(
@@ -79,17 +94,16 @@ contract WhitelistSale is Ownable {
         emit AllocationClaimed(msg.sender, amount);
     }
 
-    function getParticipant(
-        address participant
-    )
-        public
-        view
-        returns (Participant memory)
-    {
-        return participants[participant];
-    }
-
     /* ========== Admin Functions ========== */
+
+    function setHardCap(uint256 amount)
+        external
+        onlyOwner
+    {
+        totalHardCap = amount;
+
+        emit HardCapUpdated(amount);
+    }
 
     function setAllocation(
         address[] calldata users,
