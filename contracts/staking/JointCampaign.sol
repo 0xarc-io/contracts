@@ -61,7 +61,7 @@ contract JointCampaign is Ownable {
     Decimal.D256 public slasherCut;
 
     uint256 public vestingEndDate; // todo vesting?
-    uint8 public debtToStakeRatio;
+    uint8 public stakeToDebtRatio;
 
     bool public tokensClaimable;
 
@@ -255,7 +255,7 @@ contract JointCampaign is Ownable {
             );
         }
 
-        uint256 debtRequirement = totalBalance.div(uint256(debtToStakeRatio));
+        uint256 debtRequirement = totalBalance.div(uint256(stakeToDebtRatio));
 
         require(
             isMinter(
@@ -512,8 +512,7 @@ contract JointCampaign is Ownable {
         address _stakingToken,
         Decimal.D256 memory _daoAllocation,
         Decimal.D256 memory _slasherCut,
-        uint256 _vestingEndDate,
-        uint8 _debtToStakeRatio
+        uint8 _stakeToDebtRatio
     )
         public
         onlyOwner
@@ -527,8 +526,7 @@ contract JointCampaign is Ownable {
         daoAllocation = _daoAllocation;
         slasherCut = _slasherCut;
         arcRewardToken = IERC20(_arcRewardToken);
-        vestingEndDate = _vestingEndDate;
-        debtToStakeRatio = _debtToStakeRatio;
+        stakeToDebtRatio = _stakeToDebtRatio;
     }
 
     /* ========== Private Functions ========== */
