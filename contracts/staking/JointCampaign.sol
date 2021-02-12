@@ -60,7 +60,6 @@ contract JointCampaign is Ownable {
     Decimal.D256 public daoAllocation;
     Decimal.D256 public slasherCut;
 
-    uint256 public vestingEndDate; // todo vesting?
     uint8 public stakeToDebtRatio;
 
     bool public tokensClaimable;
@@ -297,11 +296,6 @@ contract JointCampaign is Ownable {
         require(
             _user != msg.sender,
             "You cannot slash yourself"
-        );
-
-        require(
-            block.timestamp < vestingEndDate,
-            "You cannot slash after the vesting end date"
         );
 
         Staker storage userStaker = stakers[_user];
