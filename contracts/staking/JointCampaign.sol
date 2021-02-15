@@ -138,7 +138,7 @@ contract JointCampaign is Ownable {
         return _totalSupply;
     }
 
-    function balanceOf(
+    function balanceOfStaker(
         address account
     )
         public
@@ -157,7 +157,7 @@ contract JointCampaign is Ownable {
     }
 
     function arcRewardPerTokenUser()
-        public
+        external
         view
         returns (uint256)
     {
@@ -180,17 +180,45 @@ contract JointCampaign is Ownable {
             );
     }
 
+    function stEthRewardPerToken()
+        external
+        view
+        returns (uint256)
+    {
+        if (_totalSupply == 0) {
+            return stEthPerTokenStored;
+        }
+
+        return stEthPerTokenStored.add(
+            lastTimeRewardApplicable()
+                .sub(lastUpdateTime)
+                .mul(stEthRewardRate)
+                .mul(1e18)
+                .div(_totalSupply)
+        );
+    }
+
     function arcEarned(
-        address account
+        address _account
     )
-        public
+        external
         view
         returns (uint256)
     {
         return Decimal.mul(
-            _rewardTokenEarned(account, address(arcRewardToken)),
+            _rewardTokenEarned(_account, address(arcRewardToken)),
             userAllocation()
         );
+    }
+
+    function stEthEarned(
+        address _account
+    )
+        external
+        view
+        returns (uint256)
+    {
+        return _rewardTokenEarned(_account, address(stEthRewardToken));
     }
 
     function getArcRewardForDuration()
@@ -247,7 +275,7 @@ contract JointCampaign is Ownable {
         external
         updateReward(msg.sender)
     {
-        uint256 totalBalance = balanceOf(msg.sender).add(_amount);
+        uint256 totalBalance = balanceOfStaker(msg.sender).add(_amount);
 
         // Setting each variable invididually means we don't overwrite
         Staker storage staker = stakers[msg.sender];
@@ -378,10 +406,37 @@ contract JointCampaign is Ownable {
         external
     {
         getReward(msg.sender);
-        withdraw(balanceOf(msg.sender));
+        withdraw(balanceOfStaker(msg.sender));
     }
 
     /* ========== Admin Functions ========== */
+
+    function init(
+        address _arcDAO,
+        address _arcRewardsDistributor,
+        address _stEthRewardsDistributor,
+        address _arcRewardToken,
+        address _stEthRewardToken,
+        address _stakingToken,
+        Decimal.D256 memory _daoAllocation,
+        Decimal.D256 memory _slasherCut,
+        uint8 _stakeToDebtRatio
+    )
+        public
+        onlyOwner
+    {
+        arcDAO = _arcDAO;
+        arcRewardsDistributor = _arcRewardsDistributor;
+        stEthRewardsDistributor = _stEthRewardsDistributor;
+        arcRewardToken = IERC20(_arcRewardToken);
+        stEthRewardToken = IERC20(_stEthRewardToken);
+        stakingToken = IERC20(_stakingToken);
+
+        daoAllocation = _daoAllocation;
+        slasherCut = _slasherCut;
+        arcRewardToken = IERC20(_arcRewardToken);
+        stakeToDebtRatio = _stakeToDebtRatio;
+    }
 
     function setStEthRewardsDistributor(
         address _rewardsDistributor
@@ -520,10 +575,10 @@ contract JointCampaign is Ownable {
             );
         }
 
-        // Cannot recover the staking token or the rewards token
+        // Cannot recover the staking token or the stETH rewards token
         require(
             _tokenAddress != address(stakingToken) && _tokenAddress != address(stEthRewardToken),
-            "Cannot withdraw the staking or rewards tokens"
+            "Cannot withdraw the staking or stETH reward tokens"
         );
 
         IERC20(_tokenAddress).safeTransfer(owner(), _tokenAmount);
@@ -564,33 +619,6 @@ contract JointCampaign is Ownable {
         tokensClaimable = _enabled;
 
         emit ClaimableStatusUpdated(_enabled);
-    }
-
-    function init(
-        address _arcDAO,
-        address _arcRewardsDistributor,
-        address _stEthRewardsDistributor,
-        address _arcRewardToken,
-        address _stEthRewardToken,
-        address _stakingToken,
-        Decimal.D256 memory _daoAllocation,
-        Decimal.D256 memory _slasherCut,
-        uint8 _stakeToDebtRatio
-    )
-        public
-        onlyOwner
-    {
-        arcDAO = _arcDAO;
-        arcRewardsDistributor = _arcRewardsDistributor;
-        stEthRewardsDistributor = _stEthRewardsDistributor;
-        arcRewardToken = IERC20(_arcRewardToken);
-        stEthRewardToken = IERC20(_stEthRewardToken);
-        stakingToken = IERC20(_stakingToken);
-
-        daoAllocation = _daoAllocation;
-        slasherCut = _slasherCut;
-        arcRewardToken = IERC20(_arcRewardToken);
-        stakeToDebtRatio = _stakeToDebtRatio;
     }
 
     /* ========== Private Functions ========== */
