@@ -41,9 +41,9 @@ contract JointCampaign is Ownable {
 
     IMozartCoreV2 public stateContract;
 
-    // TODO to remove or to not remove? that is the question
     address public arcDAO;
-    address public rewardsDistributor;
+    address public arcRewardsDistributor;
+    address public stEthRewardsDistributor;
 
     mapping (address => Staker) public stakers;
 
@@ -68,7 +68,7 @@ contract JointCampaign is Ownable {
 
     /* ========== Events ========== */
 
-    event RewardAdded (uint256 reward);
+    event RewardAdded (uint256 reward, address rewardToken);
 
     event Staked(address indexed user, uint256 amount);
 
@@ -78,7 +78,13 @@ contract JointCampaign is Ownable {
 
     event RewardsDurationUpdated(uint256 newDuration);
 
-    event Recovered(address token, uint256 amount);
+    event StEthRewardsDistributorUpdated(address rewardsDistributor);
+
+    event ArcRewardsDistributorUpdated(address rewardsDistributor);
+
+    event ERC20Recovered(address token, uint256 amount);
+
+    event StEthRecovered(uint256 amount);
 
     event PositionStaked(address _address, uint256 _positionId);
 
@@ -95,10 +101,18 @@ contract JointCampaign is Ownable {
         _;
     }
 
-    modifier onlyRewardsDistributor() {
+    modifier onlyRewardDistributors() {
         require(
-            msg.sender == rewardsDistributor,
-            "Caller is not RewardsDistribution contract"
+            msg.sender == arcRewardsDistributor || msg.sender == stEthRewardsDistributor,
+            "Caller is not a reward distributor"
+        );
+        _;
+    }
+
+    modifier onlyStEthDistributor() {
+        require(
+            msg.sender == stEthRewardsDistributor,
+            "Caller is not the stETH rewards distributor"
         );
         _;
     }
@@ -110,14 +124,6 @@ contract JointCampaign is Ownable {
         require (
             isArcToken || isStEthToken,
             "The reward token address does not correspond to one of the rewards tokens."
-        );
-        _;
-    }
-
-    modifier onlyPartners() {
-        require(
-            msg.sender == owner() || msg.sender == rewardsDistributor,
-            "Caller is not owner or reward distributor"
         );
         _;
     }
@@ -221,7 +227,6 @@ contract JointCampaign is Ownable {
         return uint256(position.borrowedAmount.value) >= _amount;
     }
 
-    // todo is this still necessary?
     function  userAllocation()
         public
         view
@@ -313,7 +318,7 @@ contract JointCampaign is Ownable {
         uint256 bounty = Decimal.mul(penalty, slasherCut);
 
         stakers[msg.sender].arcRewardsEarned = stakers[msg.sender].arcRewardsEarned.add(bounty);
-        stakers[rewardsDistributor].arcRewardsEarned = stakers[rewardsDistributor].arcRewardsEarned.add(
+        stakers[arcRewardsDistributor].arcRewardsEarned = stakers[arcRewardsDistributor].arcRewardsEarned.add(
             penalty.sub(bounty)
         );
 
@@ -378,18 +383,34 @@ contract JointCampaign is Ownable {
 
     /* ========== Admin Functions ========== */
 
-    function setRewardsDistributor(
+    function setStEthRewardsDistributor(
         address _rewardsDistributor
     )
         external
-        onlyPartners
+        onlyStEthDistributor
     {
         require(
-            rewardsDistributor != _rewardsDistributor,
+            stEthRewardsDistributor != _rewardsDistributor,
             "Cannot set the same rewards distributor"
         );
-        
-        rewardsDistributor = _rewardsDistributor;
+
+        stEthRewardsDistributor = _rewardsDistributor;
+        emit StEthRewardsDistributorUpdated(_rewardsDistributor);
+    }
+
+    function setArcRewardsDistributor(
+        address _rewardsDistributor
+    )
+        external
+        onlyOwner
+    {
+        require(
+            arcRewardsDistributor != _rewardsDistributor,
+            "Cannot set the same rewards distributor"
+        );
+
+        arcRewardsDistributor = _rewardsDistributor;
+        emit ArcRewardsDistributorUpdated(_rewardsDistributor);
     }
 
     function setRewardsDuration(
@@ -407,54 +428,76 @@ contract JointCampaign is Ownable {
         emit RewardsDurationUpdated(rewardsDuration);
     }
 
+    /**
+     * @notice Sets the reward amount for the given reward token. There contract must
+     *          already have at least as much amount as the given `_reward`
+     *
+     * @param _reward The amount of the reward
+     * @param _rewardToken The address of the reward token
+     */
     function notifyRewardAmount(
-        uint256 _reward
+        uint256 _reward,
+        address _rewardToken
     )
         external
-        onlyRewardsDistributor
+        onlyRewardDistributors
+        verifyRewardToken(_rewardToken)
         updateReward(address(0))
     {
         require(
             rewardsDuration > 0,
             "Rewards duration is not set"
         );
-        
-        stEthRewardToken.safeTransferFrom(msg.sender, address(this), _reward);
 
-        uint256 arcBalance = arcRewardToken.balanceOf(address(this));
+        uint256 remaining = periodFinish.sub(block.timestamp);
+        bool isAfterPeriodFinish = block.timestamp >= periodFinish;
+        uint256 leftover;
 
-        if (block.timestamp >= periodFinish) {
-            stEthRewardRate = _reward.div(rewardsDuration);
-            arcRewardRate = arcBalance.div(rewardsDuration);
+        if (_rewardToken == address(arcRewardToken)) {
+            require(
+                msg.sender == arcRewardsDistributor,
+                "Only the ARCx rewards distributor can notify the amount of ARCx rewards"
+            );
+
+            if (isAfterPeriodFinish) {
+                arcRewardRate = _reward.div(rewardsDuration);
+            } else {
+                leftover = remaining.mul(arcRewardRate);
+                arcRewardRate = _reward.add(leftover).div(rewardsDuration);
+
+                require(
+                    arcRewardRate <= arcRewardToken.balanceOf(address(this)),
+                    "Provided reward too high for the balance of ARCx token"
+                );
+            }
         } else {
-            uint256 remaining = periodFinish.sub(block.timestamp);
-            uint256 stEthLeftover = remaining.mul(stEthRewardRate);
-            stEthRewardRate = _reward.add(stEthLeftover).div(rewardsDuration);
-        }
+            require(
+                msg.sender == stEthRewardsDistributor,
+                "Only the stETH rewards distributor can notify the amount of stETH rewards"
+            );
 
-        // Ensure the provided reward amount is not more than the balance in the contract.
-        // This keeps the reward rate in the right range, preventing overflows due to
-        // very high values of rewardRate in the earned and rewardsPerToken functions;
-        // Reward + leftover must be less than 2^256 / 10^18 to avoid overflow.
-        require(
-            arcRewardRate <= arcBalance.div(rewardsDuration),
-            "Provided reward too high for the balance of ARCx token"
-        );
-        
-        uint256 stEthBalance = stEthRewardToken.balanceOf(address(this));
-        require(
-            stEthRewardRate <= stEthBalance.div(rewardsDuration),
-            "Provided reward too high for the balance of stETH token"
-        );
+            // stETH token
+            if (isAfterPeriodFinish) {
+                stEthRewardRate = _reward.div(rewardsDuration);
+            } else {
+                leftover = remaining.mul(stEthRewardRate);
+                stEthRewardRate = _reward.add(leftover).div(rewardsDuration);
+
+                require(
+                    stEthRewardRate <= stEthRewardToken.balanceOf(address(this)),
+                    "Provided reward too high for the balance of stETH token"
+                );
+            }
+        }
 
         lastUpdateTime = block.timestamp;
         periodFinish = block.timestamp.add(rewardsDuration);
-        emit RewardAdded(_reward);
+        emit RewardAdded(_reward, _rewardToken);
     }
 
     /**
      * @notice Allows owner to recover any ERC20 token sent to this contract, except the staking
-     * tokens and the reward tokens - with the exception of ARCx surplus that was transfered.
+     *          okens and the reward tokens - with the exception of ARCx surplus that was transfered.
      *
      * @param _tokenAddress the address of the token
      * @param _tokenAmount to amount to recover
@@ -476,7 +519,7 @@ contract JointCampaign is Ownable {
                 "Only the surplus of the reward can be recovered, not more"
             );
         }
-        
+
         // Cannot recover the staking token or the rewards token
         require(
             _tokenAddress != address(stakingToken) && _tokenAddress != address(stEthRewardToken),
@@ -484,7 +527,32 @@ contract JointCampaign is Ownable {
         );
 
         IERC20(_tokenAddress).safeTransfer(owner(), _tokenAmount);
-        emit Recovered(_tokenAddress, _tokenAmount);
+        emit ERC20Recovered(_tokenAddress, _tokenAmount);
+    }
+
+    /**
+     * @notice Lets the stETH reward distributor recover a desired amount of stETH as long as that
+     *          amount is not greater than the reward to recover
+     *
+     * @param _amount The amount of stETH to recover
+     */
+    function recoverStEth(
+        uint256 _amount
+    )
+        external
+        onlyStEthDistributor
+    {
+        if (rewardsDuration > 0) {
+            uint256 stEthBalance = stEthRewardToken.balanceOf(address(this));
+
+            require(
+                stEthRewardRate <= stEthBalance.sub(_amount).div(rewardsDuration),
+                "Only the surplus of the reward can be recovered, not more"
+            );
+        }
+
+        stEthRewardToken.safeTransfer(msg.sender, _amount);
+        emit StEthRecovered(_amount);
     }
 
     function setTokensClaimable(
@@ -500,7 +568,8 @@ contract JointCampaign is Ownable {
 
     function init(
         address _arcDAO,
-        address _rewardsDistributor,
+        address _arcRewardsDistributor,
+        address _stEthRewardsDistributor,
         address _arcRewardToken,
         address _stEthRewardToken,
         address _stakingToken,
@@ -512,7 +581,8 @@ contract JointCampaign is Ownable {
         onlyOwner
     {
         arcDAO = _arcDAO;
-        rewardsDistributor = _rewardsDistributor;
+        arcRewardsDistributor = _arcRewardsDistributor;
+        stEthRewardsDistributor = _stEthRewardsDistributor;
         arcRewardToken = IERC20(_arcRewardToken);
         stEthRewardToken = IERC20(_stEthRewardToken);
         stakingToken = IERC20(_stakingToken);
@@ -589,7 +659,7 @@ contract JointCampaign is Ownable {
         returns (uint256)
     {
         uint256 stakerBalance = stakers[_account].balance;
-        
+
         if (_rewardTokenAddress == address(arcRewardToken)) {
             return stakerBalance
                 .mul(_rewardPerToken(address(arcRewardToken)).sub(
@@ -598,7 +668,7 @@ contract JointCampaign is Ownable {
                 .div(1e18)
                 .add(stakers[_account].arcRewardsEarned);
         }
-        
+
         return stakerBalance.mul(_rewardPerToken(address(stEthRewardToken))
                 .sub(stakers[_account].stEthRewardPerTokenPaid)
             )
