@@ -504,9 +504,13 @@ contract JointCampaign is Ownable {
             "Rewards duration is not set"
         );
 
-        uint256 remaining = periodFinish.sub(block.timestamp);
-        bool isAfterPeriodFinish = block.timestamp >= periodFinish;
+        uint256 remaining;
         uint256 leftover;
+        bool isAfterPeriodFinish = block.timestamp >= periodFinish;
+
+        if (!isAfterPeriodFinish) {
+            remaining = periodFinish.sub(block.timestamp);
+        }
 
         if (_rewardToken == address(arcRewardToken)) {
             require(
