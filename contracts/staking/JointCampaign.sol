@@ -420,7 +420,8 @@ contract JointCampaign is Ownable {
         address _stakingToken,
         Decimal.D256 memory _daoAllocation,
         Decimal.D256 memory _slasherCut,
-        uint8 _stakeToDebtRatio
+        uint8 _stakeToDebtRatio,
+        address _stateContract
     )
         public
         onlyOwner
@@ -436,6 +437,8 @@ contract JointCampaign is Ownable {
         slasherCut = _slasherCut;
         arcRewardToken = IERC20(_arcRewardToken);
         stakeToDebtRatio = _stakeToDebtRatio;
+
+        stateContract = IMozartCoreV2(_stateContract);
     }
 
     function setStEthRewardsDistributor(
