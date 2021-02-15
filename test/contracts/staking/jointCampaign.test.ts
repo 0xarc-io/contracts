@@ -173,7 +173,7 @@ describe('JointCampaign', () => {
     describe('#totalSupply', () => {
       beforeEach(setup);
 
-      it.only('should return the correct amount of staking tokens', async () => {
+      it('should return the correct amount of staking tokens', async () => {
         expect(await jointCampaignOwner.totalSupply()).to.eq(BigNumber.from(0));
 
         await stake(user1, STAKE_AMOUNT);
@@ -187,28 +187,21 @@ describe('JointCampaign', () => {
     });
 
     describe('#balanceOfStaker', () => {
-      beforeEach(async () => {
-        await setup();
+      beforeEach(setup);
+
+      it('should return 0 if user did not stake', async () => {
+        expect(await jointCampaignOwner.balanceOfStaker(user1.address)).to.eq(BigNumber.from(0));
       });
 
-      xit('should return 0 if user did not stake', async () => {
-        const stakingAmount = ArcNumber.new(10);
-
-        await stakingToken.mintShare(owner.address, stakingAmount);
-        await stakingToken.approve(jointCampaignOwner.address, stakingAmount);
-
+      it('should return the correct balance after staking', async () => {
         await stake(user1, STAKE_AMOUNT);
 
-        expect(await jointCampaignOwner.balanceOfStaker(owner.address)).to.eq(stakingAmount);
+        expect(await jointCampaignOwner.balanceOfStaker(user1.address)).to.eq(STAKE_AMOUNT);
       });
-
-      xit('should return the correct balance after staking');
     });
 
     describe('#lastTimeRewardApplicable', () => {
-      beforeEach(async () => {
-        await setup();
-      });
+      beforeEach(setup);
 
       it('should return the block timestamp if called before the reward period finished', async () => {
         const currentTime = await getCurrentTimestamp();
@@ -224,20 +217,19 @@ describe('JointCampaign', () => {
       });
     });
 
-    describe('#arcRewardPerTokenUser', () => {
-      beforeEach(async () => {
-        await setup();
+    describe.only('#arcRewardPerTokenUser', () => {
+      beforeEach(setup);
+
+      it('should return 0 if the supply is 0', async () => {
+        expect(await jointCampaignOwner.arcRewardPerTokenUser()).to.eq(BigNumber.from(0));
       });
 
-      it('should return the reward per token stored if the supply is 0', async () => {
-        const rewardPerTokenStored = await jointCampaignOwner.rewardPerTokenStored();
+      it('should return a valid reward per token after someone staked', async () => {
+        await stake(user1, STAKE_AMOUNT);
+        await evm.mineBlock();
 
-        expect(await jointCampaignOwner.rewardPerToken()).to.eq(rewardPerTokenStored);
-      });
+        expect(await jointCampaignOwner.arcRewardPerTokenUser()).to.eq(ArcDecimal.new(0.6).value);
 
-      xit('should return a valid reward per token after someone staked', async () => {
-        // const stakingAmount = ArcNumber.new(10);
-        // await mintAndApprove(stakingToken, user1, stakingAmount);
         // await jointCampaignUser1.stake(stakingAmount.div(2));
         // await jointCampaignUser1.stake(stakingAmount.div(2));
         // await evm.mineBlock();
@@ -275,9 +267,7 @@ describe('JointCampaign', () => {
     });
 
     describe('#arcEarned', () => {
-      beforeEach(async () => {
-        await setup();
-      });
+      beforeEach(setup);
 
       xit('should return the correct amount of arcx earned over time', async () => {
         // await stake(jointCampaignUser1, user1, ArcNumber.new(10));
@@ -306,9 +296,7 @@ describe('JointCampaign', () => {
     });
 
     describe('#stETHEarned', () => {
-      beforeEach(async () => {
-        await setup();
-      });
+      beforeEach(setup);
 
       xit('should return the correct amount of stETH earned over time', async () => {
         // await stake(jointCampaignUser1, user1, ArcNumber.new(10));
@@ -337,9 +325,7 @@ describe('JointCampaign', () => {
     });
 
     describe('#userAllocation', () => {
-      beforeEach(async () => {
-        await setup();
-      });
+      beforeEach(setup);
 
       it('should return the correct user allocation', async () => {
         const userAllocation = await jointCampaignUser1.userAllocation();
@@ -349,9 +335,7 @@ describe('JointCampaign', () => {
     });
 
     describe('#getArcRewardForDuration', () => {
-      beforeEach(async () => {
-        await setup();
-      });
+      beforeEach(setup);
 
       xit('returns the correct ARC reward for duration', async () => {
         // const rewardForDuration = await jointCampaignOwner.getRewardForDuration();
@@ -377,9 +361,7 @@ describe('JointCampaign', () => {
 
   describe('Mutative functions', () => {
     describe('#stake', () => {
-      beforeEach(async () => {
-        await setup();
-      });
+      beforeEach(setup);
 
       xit('should not be able to stake the full amount with less debt');
       xit('should not be able to set a lower debt requirement by staking less before the deadline');
@@ -424,9 +406,7 @@ describe('JointCampaign', () => {
     });
 
     describe('#getReward', () => {
-      beforeEach(async () => {
-        await setup();
-      });
+      beforeEach(setup);
 
       xit('should not be able to get the reward if the tokens are not claimable', async () => {
         // await stake(jointCampaignUser1, user1, STAKE_AMOUNT);
@@ -513,9 +493,7 @@ describe('JointCampaign', () => {
     });
 
     describe('#withdraw', () => {
-      beforeEach(async () => {
-        await setup();
-      });
+      beforeEach(setup);
 
       xit('should not be able to withdraw more than the balance', async () => {
         // await stake(jointCampaignUser1, user1, STAKE_AMOUNT);
@@ -543,9 +521,7 @@ describe('JointCampaign', () => {
     });
 
     describe('#exit', () => {
-      beforeEach(async () => {
-        await setup();
-      });
+      beforeEach(setup);
 
       xit('should be able to exit and get the right amount of staked tokens and rewards', async () => {
         // await jointCampaignOwner.setTokensClaimable(true);
