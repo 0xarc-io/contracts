@@ -14,6 +14,8 @@ import {IERC20} from "../token/IERC20.sol";
 import {IMozartCoreV2} from "../debt/mozart/IMozartCoreV2.sol";
 import {MozartTypes} from "../debt/mozart/MozartTypes.sol";
 
+import "hardhat/console.sol";
+
 contract JointCampaign is Ownable {
 
     using SafeMath for uint256;
@@ -286,6 +288,11 @@ contract JointCampaign is Ownable {
                 "You cannot stake based on a different debt position"
             );
         }
+
+        require(
+            stakeToDebtRatio != 0,
+            "The stake to debt ratio cannot be 0"
+        );
 
         uint256 debtRequirement = totalBalance.div(uint256(stakeToDebtRatio));
 
@@ -635,10 +642,10 @@ contract JointCampaign is Ownable {
     )
         private
     {
-        lastUpdateTime = lastTimeRewardApplicable();
-
         arcRewardPerTokenStored = _rewardPerToken(address(arcRewardToken));
         stEthPerTokenStored = _rewardPerToken(address(stEthRewardToken));
+
+        lastUpdateTime = lastTimeRewardApplicable();
 
         if (_account != address(0)) {
             stakers[_account].arcRewardsEarned = _rewardTokenEarned(_account, address(arcRewardToken));
