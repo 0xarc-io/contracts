@@ -265,7 +265,7 @@ describe('JointCampaign', () => {
       });
     });
 
-    describe.only('#arcEarned', () => {
+    describe('#arcEarned', () => {
       beforeEach(setup);
 
       it('should return the correct amount of arcx earned over time', async () => {
@@ -296,32 +296,34 @@ describe('JointCampaign', () => {
       });
     });
 
-    describe('#stETHEarned', () => {
+    describe.only('#stETHEarned', () => {
       beforeEach(setup);
 
-      xit('should return the correct amount of stETH earned over time', async () => {
-        // await stake(jointCampaignUser1, user1, ArcNumber.new(10));
-        // // Check amount earned (should be 0)
-        // const amountEarned0 = await jointCampaignUser1.earned(user1.address);
-        // expect(amountEarned0).to.eq(BigNumber.from(0));
-        // // Advance time
-        // await increaseTime(60);
-        // // Check amount earned
-        // const amountEarned1 = await jointCampaignUser1.earned(user1.address);
-        // expect(amountEarned1).to.be.gt(amountEarned0);
+      it('should return the correct amount of stETH earned over time', async () => {
+        await stake(user1, STAKE_AMOUNT);
+
+        await evm.mineBlock();
+
+        expect(await jointCampaignUser1.stEthEarned(user1.address)).to.eq(ArcNumber.new(20));
+
+        await evm.mineBlock();
+
+        expect(await jointCampaignUser1.stEthEarned(user1.address)).to.eq(ArcNumber.new(40));
       });
 
-      xit('should return the correct amount of stETH earned over time while another user stakes in between', async () => {
-        // // User A stakes
-        // await stake(jointCampaignUser1, user1, STAKE_AMOUNT);
-        // // User B stakes
-        // await stake(jointCampaignUser2, user2, STAKE_AMOUNT); // adds 3 epochs
-        // await increaseTime(1);
-        // // Check amount earned
-        // const user1Earned = await jointCampaignUser1.earned(user1.address);
-        // const user2Earned = await jointCampaignUser2.earned(user2.address);
-        // expect(user1Earned).to.eq(ArcNumber.new(21));
-        // expect(user2Earned).to.eq(ArcNumber.new(3));
+      it('should return the correct amount of stETH earned over time while another user stakes in between', async () => {
+        await stake(user1, STAKE_AMOUNT);
+
+        await evm.mineBlock();
+
+        expect(await jointCampaignUser1.stEthEarned(user1.address)).to.eq(ArcNumber.new(20));
+
+        await stake(user2, STAKE_AMOUNT); // adds 4 epochs
+
+        await evm.mineBlock();
+
+        expect(await jointCampaignUser1.stEthEarned(user1.address)).to.eq(ArcNumber.new(110)); // 20 + 20*4 + 20/2
+        expect(await jointCampaignUser2.stEthEarned(user2.address)).to.eq(ArcNumber.new(10));
       });
     });
 
