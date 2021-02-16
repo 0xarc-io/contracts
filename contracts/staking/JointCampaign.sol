@@ -681,7 +681,7 @@ contract JointCampaign is Ownable {
                 return stEthPerTokenStored;
             }
 
-            stEthPerTokenStored.add(
+            return stEthPerTokenStored.add(
                 lastTimeRewardApplicable()
                     .sub(lastUpdateTime)
                     .mul(stEthRewardRate)
@@ -702,16 +702,21 @@ contract JointCampaign is Ownable {
     {
         uint256 stakerBalance = stakers[_account].balance;
 
+        console.log("staker balance: %s", stakerBalance);
+
         if (_rewardTokenAddress == address(arcRewardToken)) {
-            return stakerBalance
-                .mul(_rewardPerToken(address(arcRewardToken)).sub(
-                    stakers[_account].arcRewardPerTokenPaid)
+            return
+                stakerBalance.mul(
+                    _rewardPerToken(address(arcRewardToken))
+                    .sub(stakers[_account].arcRewardPerTokenPaid)
                 )
                 .div(1e18)
                 .add(stakers[_account].arcRewardsEarned);
         }
 
-        return stakerBalance.mul(_rewardPerToken(address(stEthRewardToken))
+        return
+            stakerBalance.mul(
+                _rewardPerToken(address(stEthRewardToken))
                 .sub(stakers[_account].stEthRewardPerTokenPaid)
             )
             .div(1e18)
