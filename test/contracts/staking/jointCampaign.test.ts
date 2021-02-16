@@ -448,11 +448,28 @@ describe('JointCampaign', () => {
     describe.only('#slash', () => {
       beforeEach(setup);
 
-      xit('should not be able to slash if user has the amount of their debt snapshot');
-      xit('should not be able to slash past the vesting end date');
-      xit('should not be able to slash if the tokens are unstaked but debt is there');
-      xit('should be able to slash if the user does not have enough debt', async () => {
+      it('should not be able to slash if user has the amount of their debt snapshot', async () => {
+        await stake(user1, STAKE_AMOUNT);
+
+        await expectRevert(jointCampaignUser2.slash(user1.address));
+      });
+
+      it('should be able to slash if the user does not have enough debt', async () => {
         // check for both rewards
+        const positionId = await stake(user1, STAKE_AMOUNT);
+
+        await evm.mineBlock();
+
+        await arc.repay(positionId, BORROW_AMOUNT.div(2), BigNumber.from(0), user1);
+
+        await jointCampaignUser2.slash(user1.address);
+
+        const dao = await jointCampaignUser1.stakers(owner.address);
+
+        // 30 earned, 9 slasher's cut, 9 * 0.6 (user allocation) = 5.4
+        expect(await jointCampaignUser2.arcEarned(user2.address)).to.eq(ArcDecimal.new(5.4).value);
+        expect(await jointCampaignUser2.stEthEarned(user2.address)).to.eq(ArcNumber.new(60));
+        expect(dao.arcRewardsEarned).to.eq(ArcNumber.new(21));
       });
     });
 

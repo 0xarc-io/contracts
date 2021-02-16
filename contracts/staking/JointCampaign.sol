@@ -70,29 +70,29 @@ contract JointCampaign is Ownable {
 
     /* ========== Events ========== */
 
-    event RewardAdded (uint256 reward, address rewardToken);
+    event RewardAdded (uint256 _reward, address _rewardToken);
 
-    event Staked(address indexed user, uint256 amount);
+    event Staked(address indexed _user, uint256 _amount);
 
-    event Withdrawn(address indexed user, uint256 amount);
+    event Withdrawn(address indexed _user, uint256 _amount);
 
-    event RewardPaid(address indexed user, uint256 arcReward, uint256 stEthReward);
+    event RewardPaid(address indexed _user, uint256 _arcReward, uint256 _stEthReward);
 
-    event RewardsDurationUpdated(uint256 newDuration);
+    event RewardsDurationUpdated(uint256 _newDuration);
 
-    event StEthRewardsDistributorUpdated(address rewardsDistributor);
+    event StEthRewardsDistributorUpdated(address _rewardsDistributor);
 
-    event ArcRewardsDistributorUpdated(address rewardsDistributor);
+    event ArcRewardsDistributorUpdated(address _rewardsDistributor);
 
-    event ERC20Recovered(address token, uint256 amount);
+    event ERC20Recovered(address _token, uint256 _amount);
 
-    event StEthRecovered(uint256 amount);
+    event StEthRecovered(uint256 _amount);
 
     event PositionStaked(address _address, uint256 _positionId);
 
     event ClaimableStatusUpdated(bool _status);
 
-    event UserSlashed(address _user, address _slasher, uint256 _amount);
+    event UserSlashed(address _user, address _slasher, uint256 _arcPenalty, uint256 _stEthPenalty);
 
     event StateContractApproved(address _address);
 
@@ -351,18 +351,22 @@ contract JointCampaign is Ownable {
             "You can't slash a user who is a valid minter"
         );
 
-        uint256 penalty = userStaker.arcRewardsEarned;
-        uint256 bounty = Decimal.mul(penalty, slasherCut);
+        uint256 arcPenalty = userStaker.arcRewardsEarned.sub(userStaker.arcRewardsReleased);
+        uint256 arcBounty = Decimal.mul(arcPenalty, slasherCut);
 
-        stakers[msg.sender].arcRewardsEarned = stakers[msg.sender].arcRewardsEarned.add(bounty);
+        uint256 stEthPenalty = userStaker.stEthRewardsEarned.sub(userStaker.stEthRewardsReleased);
+
+        stakers[msg.sender].arcRewardsEarned = stakers[msg.sender].arcRewardsEarned.add(arcBounty);
+        stakers[msg.sender].stEthRewardsEarned = stakers[msg.sender].stEthRewardsEarned.add(stEthPenalty);
+
         stakers[arcRewardsDistributor].arcRewardsEarned = stakers[arcRewardsDistributor].arcRewardsEarned.add(
-            penalty.sub(bounty)
+            arcPenalty.sub(arcBounty)
         );
 
-        userStaker.arcRewardsEarned = 0;
+        userStaker.arcRewardsEarned = userStaker.arcRewardsEarned.sub(arcPenalty);
+        userStaker.stEthRewardsEarned = userStaker.stEthRewardsEarned.sub(stEthPenalty);
 
-        emit UserSlashed(_user, msg.sender, penalty);
-
+        emit UserSlashed(_user, msg.sender, arcPenalty, stEthPenalty);
     }
 
     function getReward(address _user)
@@ -703,6 +707,8 @@ contract JointCampaign is Ownable {
         returns (uint256)
     {
         uint256 stakerBalance = stakers[_account].balance;
+
+        console.log("staker balance: %s", stakerBalance);
 
         if (_rewardTokenAddress == address(arcRewardToken)) {
             return
