@@ -27,11 +27,6 @@ let jointCampaignLido: JointCampaign;
 let jointCampaignUser1: JointCampaign;
 let jointCampaignUser2: JointCampaign;
 
-const ARC_REWARD_AMOUNT = ArcNumber.new(100);
-const STETH_REWARD_AMOUNT = ArcNumber.new(200);
-const STAKE_AMOUNT = ArcNumber.new(10);
-const REWARD_DURATION = 10;
-
 let arc: MozartTestArc;
 
 let stakingToken: TestToken;
@@ -43,6 +38,11 @@ let owner: SignerWithAddress;
 let lido: SignerWithAddress;
 let user1: SignerWithAddress;
 let user2: SignerWithAddress;
+
+const ARC_REWARD_AMOUNT = ArcNumber.new(100);
+const STETH_REWARD_AMOUNT = ArcNumber.new(200);
+const STAKE_AMOUNT = ArcNumber.new(10);
+const REWARD_DURATION = 10;
 
 const DAO_ALLOCATION = ArcDecimal.new(0.4);
 const SLASHER_CUT = ArcDecimal.new(0.3);
@@ -217,7 +217,7 @@ describe('JointCampaign', () => {
       });
     });
 
-    describe.only('#arcRewardPerTokenUser', () => {
+    describe('#arcRewardPerTokenUser', () => {
       beforeEach(setup);
 
       it('should return 0 if the supply is 0', async () => {
@@ -229,69 +229,70 @@ describe('JointCampaign', () => {
         await evm.mineBlock();
 
         expect(await jointCampaignOwner.arcRewardPerTokenUser()).to.eq(ArcDecimal.new(0.6).value);
-
-        // await jointCampaignUser1.stake(stakingAmount.div(2));
-        // await jointCampaignUser1.stake(stakingAmount.div(2));
-        // await evm.mineBlock();
-        // const rewardPerToken = await jointCampaignUser1.rewardPerToken();
-        // const rewardPerTokenStored = await jointCampaignOwner.rewardPerTokenStored();
-        // const currentRewardRate = (await jointCampaignUser1.lastTimeRewardApplicable())
-        //   .sub(await jointCampaignUser1.lastUpdateTime())
-        //   .mul(await jointCampaignUser1.rewardRate())
-        //   .mul(BASE)
-        //   .div(await jointCampaignUser1.totalSupply());
-        // console.log({
-        //   totalSupply: await(await jointCampaignUser1.totalSupply()).toString(),
-        //   rewardPerTokenStored: rewardPerTokenStored.toString(),
-        //   rewardPerToken: rewardPerToken.toString(),
-        //   daoAllocation: await(await jointCampaignUser1.daoAllocation()).toString(),
-        //   userAllocation: await(await jointCampaignUser1.userAllocation()).toString(),
-        //   lastUpdateTime: await(await jointCampaignUser1.lastUpdateTime()).toString(),
-        //   rewardRate: await(await jointCampaignUser1.rewardRate()).toString(),
-        //   currentRewardRate: currentRewardRate.toString(),
-        //   lastTimeRewardApplicable: await(
-        //     await jointCampaignUser1.lastTimeRewardApplicable(),
-        //   ).toString(),
-        // });
-        // expect(rewardPerToken).to.be.gt(BigNumber.from(0));
-        // expect(rewardPerToken).to.not.eq(rewardPerTokenStored);
       });
 
-      xit('should return correct reward per token with two tokens staked');
+      it('should return correct reward per token with two users staked', async () => {
+        await stake(user1, STAKE_AMOUNT);
+        await stake(user2, STAKE_AMOUNT);
+
+        await evm.mineBlock();
+
+        expect(await jointCampaignOwner.arcRewardPerTokenUser()).to.eq(ArcDecimal.new(0.3).value);
+      });
     });
 
     describe('#stEthRewardPerToken', () => {
-      xit('should return the reward per token stored if the supply is 0');
-      xit('should return the correct reward per token after someone staked');
-      xit('should return correct reward per token with two tokens staked');
-    });
-
-    describe('#arcEarned', () => {
       beforeEach(setup);
 
-      xit('should return the correct amount of arcx earned over time', async () => {
-        // await stake(jointCampaignUser1, user1, ArcNumber.new(10));
-        // // Check amount earned (should be 0)
-        // const amountEarned0 = await jointCampaignUser1.earned(user1.address);
-        // expect(amountEarned0).to.eq(BigNumber.from(0));
-        // // Advance time
-        // await increaseTime(60);
-        // // Check amount earned
-        // const amountEarned1 = await jointCampaignUser1.earned(user1.address);
-        // expect(amountEarned1).to.be.gt(amountEarned0);
+      it('should return the reward per token stored if the supply is 0', async () => {
+        expect(await jointCampaignOwner.stEthRewardPerToken()).to.eq(BigNumber.from(0));
       });
 
-      xit('should return the correct amount of arcx earned over time while another user stakes in between', async () => {
-        // // User A stakes
-        // await stake(jointCampaignUser1, user1, STAKE_AMOUNT);
-        // // User B stakes
-        // await stake(jointCampaignUser2, user2, STAKE_AMOUNT); // adds 3 epochs
-        // await increaseTime(1);
-        // // Check amount earned
-        // const user1Earned = await jointCampaignUser1.earned(user1.address);
-        // const user2Earned = await jointCampaignUser2.earned(user2.address);
-        // expect(user1Earned).to.eq(ArcNumber.new(21));
-        // expect(user2Earned).to.eq(ArcNumber.new(3));
+      it('should return the correct reward per token after someone staked', async () => {
+        await stake(user1, STAKE_AMOUNT);
+        await evm.mineBlock();
+
+        expect(await jointCampaignOwner.stEthRewardPerToken()).to.eq(ArcNumber.new(2));
+      });
+
+      it('should return correct reward per token with two tokens staked', async () => {
+        await stake(user1, STAKE_AMOUNT);
+        await stake(user2, STAKE_AMOUNT);
+
+        await evm.mineBlock();
+
+        expect(await jointCampaignOwner.stEthRewardPerToken()).to.eq(ArcNumber.new(1));
+      });
+    });
+
+    describe.only('#arcEarned', () => {
+      beforeEach(setup);
+
+      it('should return the correct amount of arcx earned over time', async () => {
+        await stake(user1, STAKE_AMOUNT);
+
+        await evm.mineBlock();
+
+        expect(await jointCampaignUser1.arcEarned(user1.address)).to.eq(ArcNumber.new(6));
+
+        await evm.mineBlock();
+
+        expect(await jointCampaignUser1.arcEarned(user1.address)).to.eq(ArcNumber.new(12));
+      });
+
+      it('should return the correct amount of arcx earned over time while another user stakes in between', async () => {
+        await stake(user1, STAKE_AMOUNT);
+
+        await evm.mineBlock();
+
+        expect(await jointCampaignUser1.arcEarned(user1.address)).to.eq(ArcNumber.new(6));
+
+        await stake(user2, STAKE_AMOUNT); // adds 4 epochs
+
+        await evm.mineBlock();
+
+        expect(await jointCampaignUser1.arcEarned(user1.address)).to.eq(ArcNumber.new(33)); // 6 + 6*4 + 6/2
+        expect(await jointCampaignUser2.arcEarned(user2.address)).to.eq(ArcNumber.new(3));
       });
     });
 
