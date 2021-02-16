@@ -282,6 +282,8 @@ contract JointCampaign is Ownable {
         // Setting each variable invididually means we don't overwrite
         Staker storage staker = stakers[msg.sender];
 
+        console.log("debt pos: %s, _positionId: %s", staker.positionId, _positionId);
+
         if (staker.positionId != 0) {
             require (
                 staker.positionId == _positionId,
@@ -701,8 +703,6 @@ contract JointCampaign is Ownable {
         returns (uint256)
     {
         uint256 stakerBalance = stakers[_account].balance;
-
-        console.log("staker balance: %s", stakerBalance);
 
         if (_rewardTokenAddress == address(arcRewardToken)) {
             return
