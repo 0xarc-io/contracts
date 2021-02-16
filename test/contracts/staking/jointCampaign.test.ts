@@ -49,8 +49,8 @@ const SLASHER_CUT = ArcDecimal.new(0.3);
 const STAKE_TO_DEBT_RATIO = 2;
 const USER_ALLOCATION = ArcNumber.new(1).sub(DAO_ALLOCATION.value);
 
-const COLLATERAL_AMOUNT = STAKE_AMOUNT.mul(2);
-const BORROW_AMOUNT = STAKE_AMOUNT;
+const COLLATERAL_AMOUNT = ArcNumber.new(10);
+const BORROW_AMOUNT = ArcNumber.new(5);
 
 let evm: EVM;
 
@@ -62,8 +62,10 @@ describe('JointCampaign', () => {
 
   /**
    * Opens a position and stakes the amount
+   *
    * @param user staking user
    * @param amount the amount to stake
+   * @returns the position ID
    */
   async function stake(user: SignerWithAddress, amount: BigNumber) {
     await mintAndApprove(stakingToken, user, amount);
@@ -72,10 +74,9 @@ describe('JointCampaign', () => {
 
     const contract = JointCampaignFactory.connect(jointCampaignOwner.address, user);
 
-    const timestampAtStake = await getCurrentTimestamp();
     await contract.stake(amount, newPosition.params.id);
 
-    return timestampAtStake;
+    return newPosition.params.id;
   }
 
   async function mintAndApprove(
@@ -296,7 +297,7 @@ describe('JointCampaign', () => {
       });
     });
 
-    describe.only('#stETHEarned', () => {
+    describe('#stETHEarned', () => {
       beforeEach(setup);
 
       it('should return the correct amount of stETH earned over time', async () => {
@@ -340,25 +341,64 @@ describe('JointCampaign', () => {
     describe('#getArcRewardForDuration', () => {
       beforeEach(setup);
 
-      xit('returns the correct ARC reward for duration', async () => {
-        // const rewardForDuration = await jointCampaignOwner.getRewardForDuration();
-        // expect(Math.round(parseFloat(ethers.utils.formatEther(rewardForDuration)))).to.eq(
-        //   parseFloat(ethers.utils.formatEther(REWARD_AMOUNT)),
-        // );
+      it('returns the correct ARC reward for duration', async () => {
+        const rewardForDuration = await jointCampaignOwner.getArcRewardForDuration();
+
+        expect(rewardForDuration).to.eq(ARC_REWARD_AMOUNT);
       });
     });
 
     describe('#getStETHRewardForDuration', () => {
-      xit('returns the correct stEth reward for duration');
+      beforeEach(setup);
+
+      it('returns the correct stEth reward for duration', async () => {
+        const rewardForDuration = await jointCampaignOwner.getStETHRewardForDuration();
+
+        expect(rewardForDuration).to.eq(STETH_REWARD_AMOUNT);
+      });
     });
 
     describe('#isMinter', () => {
-      xit('should revert if the state contract is not registered');
-      xit('should return false if user did not mint debt to the position');
-      xit('should return fasle if user minted a smaller amount than the given _amount');
-      xit(
-        'should return true if user minted an equal or greater amount of debt for the given position',
-      );
+      beforeEach(setup);
+
+      it('should return false if user did not mint debt to the position', async () => {
+        expect(await jointCampaignUser1.isMinter(user1.address, BORROW_AMOUNT, BigNumber.from(0)))
+          .to.be.false;
+
+        const user2Position = await arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, user2);
+
+        expect(
+          await jointCampaignUser1.isMinter(user1.address, BORROW_AMOUNT, user2Position.params.id),
+        ).to.be.false;
+      });
+
+      it('should return false if user minted a smaller amount than the given _amount', async () => {
+        const user1Position = await arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, user1);
+
+        expect(
+          await jointCampaignUser1.isMinter(
+            user1.address,
+            BORROW_AMOUNT.add(1),
+            user1Position.params.id,
+          ),
+        ).to.be.false;
+      });
+
+      it('should return true if user minted an equal or greater amount of debt for the given position', async () => {
+        const user1Position = await arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, user1);
+
+        expect(
+          await jointCampaignUser1.isMinter(
+            user1.address,
+            BORROW_AMOUNT.div(2),
+            user1Position.params.id,
+          ),
+        ).to.be.true;
+
+        expect(
+          await jointCampaignUser1.isMinter(user1.address, BORROW_AMOUNT, user1Position.params.id),
+        ).to.be.true;
+      });
     });
   });
 
@@ -366,40 +406,48 @@ describe('JointCampaign', () => {
     describe('#stake', () => {
       beforeEach(setup);
 
-      xit('should not be able to stake the full amount with less debt');
-      xit('should not be able to set a lower debt requirement by staking less before the deadline');
-      xit('should not be able to stake to a different position ID');
+      it('should not be able to stake the full amount with less debt', async () => {
+        await mintAndApprove(stakingToken, user1, STAKE_AMOUNT);
 
-      xit('should not be able to stake more than balance', async () => {
-        // await mintAndApprove(stakingToken, user1, ArcNumber.new(10));
-        // const balance = await stakingToken.balanceOf(user1.address);
-        // await expectRevert(jointCampaignUser1.stake(balance.add(1)));
+        const newPosition = await arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT.sub(1), user1);
+
+        await expectRevert(jointCampaignUser1.stake(STAKE_AMOUNT, newPosition.params.id));
       });
 
-      xit('should be able to stake', async () => {
-        // const amount = ArcNumber.new(10);
-        // await mintAndApprove(stakingToken, user1, amount.mul(2));
-        // await jointCampaignUser1.stake(amount);
-        // let supply = await jointCampaignUser1.totalSupply();
-        // expect(supply).to.eq(amount);
-        // await jointCampaignUser1.stake(amount);
-        // supply = await jointCampaignUser1.totalSupply();
-        // expect(supply).to.eq(amount.mul(2));
-        // expect(await stakingToken.balanceOf(jointCampaignOwner.address)).to.eq(amount.mul(2));
+      it('should not be able to set a lower debt requirement by staking less before the deadline', async () => {
+        const newPositionId = await stake(user1, STAKE_AMOUNT);
+
+        await expectRevert(jointCampaignUser1.stake(BigNumber.from(1), newPositionId));
       });
 
-      xit('should update reward correctly after staking', async () => {
-        // await stake(jointCampaignUser1, user1, STAKE_AMOUNT);
-        // await increaseTime(1);
-        // let earned = await jointCampaignUser1.earned(user1.address);
-        // expect(earned).to.eq(ArcNumber.new(6));
-        // await increaseTime(1);
-        // earned = await jointCampaignUser1.earned(user1.address);
-        // expect(earned).to.eq(ArcNumber.new(12));
+      it('should not be able to stake to a different position ID', async () => {
+        await stake(user1, STAKE_AMOUNT);
+
+        const newPosition = await arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, user1);
+
+        await mintAndApprove(stakingToken, user1, STAKE_AMOUNT);
+
+        await expectRevert(jointCampaignUser1.stake(STAKE_AMOUNT, newPosition.params.id));
+      });
+
+      it('should not be able to stake more than balance', async () => {
+        await mintAndApprove(stakingToken, user1, STAKE_AMOUNT);
+
+        const newPosition = await arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, user1);
+
+        await expectRevert(jointCampaignUser1.stake(STAKE_AMOUNT.add(1), newPosition.params.id));
+      });
+
+      it('should be able to stake', async () => {
+        await stake(user1, STAKE_AMOUNT);
+
+        expect(await jointCampaignUser1.balanceOfStaker(user1.address)).to.be.eq(STAKE_AMOUNT);
       });
     });
 
-    describe('#slash', () => {
+    describe.only('#slash', () => {
+      beforeEach(setup);
+
       xit('should not be able to slash if user has the amount of their debt snapshot');
       xit('should not be able to slash past the vesting end date');
       xit('should not be able to slash if the tokens are unstaked but debt is there');
@@ -411,11 +459,7 @@ describe('JointCampaign', () => {
     describe('#getReward', () => {
       beforeEach(setup);
 
-      xit('should not be able to get the reward if the tokens are not claimable', async () => {
-        // await stake(jointCampaignUser1, user1, STAKE_AMOUNT);
-        // await increaseTime(REWARD_DURATION / 2);
-        // await expectRevert(jointCampaignUser1.getReward(user1.address));
-      });
+      xit('should not be able to get the reward if the tokens are not claimable', async () => {});
 
       xit('should be able to claim rewards gradually over time', async () => {
         // await jointCampaignOwner.setTokensClaimable(true);
