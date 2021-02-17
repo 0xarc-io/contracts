@@ -37,6 +37,8 @@ contract JointCampaign is Ownable {
 
     /* ========== Variables ========== */
 
+    bool public isInitialized;
+
     IERC20 public arcRewardToken;
     IERC20 public stEthRewardToken;
     IERC20 public stakingToken;
@@ -174,18 +176,16 @@ contract JointCampaign is Ownable {
             return arcRewardPerTokenStored;
         }
 
-        // Since we're adding the stored amount we can't just multiply
-        // the userAllocation() with the result of actualRewardPerTokenUser()
         return
-            arcRewardPerTokenStored.add(
-                Decimal.mul(
+            Decimal.mul(
+                arcRewardPerTokenStored.add(
                     lastTimeRewardApplicable(address(arcRewardToken))
                         .sub(arcLastUpdateTime)
                         .mul(arcRewardRate)
                         .mul(1e18)
-                        .div(_totalSupply),
-                    userAllocation()
-                )
+                        .div(_totalSupply)
+                ),
+                userAllocation()
             );
     }
 
@@ -444,6 +444,23 @@ contract JointCampaign is Ownable {
         public
         onlyOwner
     {
+        require(
+            !isInitialized &&
+            _arcDAO != address(0) &&
+            _arcRewardsDistributor != address(0) &&
+            _stEthRewardsDistributor != address(0) &&
+            _arcRewardToken != address(0) &&
+            _stEthRewardToken != address(0) &&
+            _stakingToken != address(0) &&
+            _daoAllocation.value > 0 &&
+            _slasherCut.value > 0 &&
+            _stakeToDebtRatio > 0 &&
+            _stateContract != address(0),
+            "One or more values is empty"
+        );
+
+        isInitialized = true;
+
         arcDAO = _arcDAO;
         arcRewardsDistributor = _arcRewardsDistributor;
         stEthRewardsDistributor = _stEthRewardsDistributor;
@@ -453,7 +470,6 @@ contract JointCampaign is Ownable {
 
         daoAllocation = _daoAllocation;
         slasherCut = _slasherCut;
-        arcRewardToken = IERC20(_arcRewardToken);
         stakeToDebtRatio = _stakeToDebtRatio;
 
         stateContract = IMozartCoreV2(_stateContract);
@@ -545,11 +561,12 @@ contract JointCampaign is Ownable {
                 leftover = remaining.mul(arcRewardRate);
                 arcRewardRate = _reward.add(leftover).div(rewardsDuration);
 
-                require(
-                    arcRewardRate <= arcRewardToken.balanceOf(address(this)),
-                    "Provided reward too high for the balance of ARCx token"
-                );
             }
+
+            require(
+                arcRewardRate <= arcRewardToken.balanceOf(address(this)).div(rewardsDuration),
+                "Provided reward too high for the balance of ARCx token"
+            );
 
             arcPeriodFinish = block.timestamp.add(rewardsDuration);
             arcLastUpdateTime = block.timestamp;
@@ -567,11 +584,12 @@ contract JointCampaign is Ownable {
                 leftover = remaining.mul(stEthRewardRate);
                 stEthRewardRate = _reward.add(leftover).div(rewardsDuration);
 
-                require(
-                    stEthRewardRate <= stEthRewardToken.balanceOf(address(this)),
-                    "Provided reward too high for the balance of stETH token"
-                );
             }
+            
+            require(
+                stEthRewardRate <= stEthRewardToken.balanceOf(address(this)).div(rewardsDuration),
+                "Provided reward too high for the balance of stETH token"
+            );
 
             stEthPeriodFinish = block.timestamp.add(rewardsDuration);
             stEthLastUpdateTime = block.timestamp;
