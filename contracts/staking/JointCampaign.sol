@@ -49,9 +49,11 @@ contract JointCampaign is Ownable {
 
     mapping (address => Staker) public stakers;
 
-    uint256 public periodFinish = 0;
+    uint256 public arcPeriodFinish = 0;
+    uint256 public stEthPeriodFinish = 0;
     uint256 public rewardsDuration = 0;
-    uint256 public lastUpdateTime;
+    uint256 public arcLastUpdateTime;
+    uint256 public stEthLastUpdateTime;
 
     uint256 public arcRewardRate = 0;
     uint256 public stEthRewardRate = 0;
@@ -98,8 +100,8 @@ contract JointCampaign is Ownable {
 
     /* ========== Modifiers ========== */
 
-    modifier updateReward(address _account) {
-        _updateReward(_account);
+    modifier updateReward(address _account, address _rewardToken) {
+        _updateReward(_account, _rewardToken);
         _;
     }
 
@@ -150,12 +152,17 @@ contract JointCampaign is Ownable {
         return stakers[account].balance;
     }
 
-    function lastTimeRewardApplicable()
+    function lastTimeRewardApplicable(
+        address _rewardToken
+    )
         public
         view
+        verifyRewardToken(_rewardToken)
         returns (uint256)
     {
-        return block.timestamp < periodFinish ? block.timestamp : periodFinish;
+        uint256 relevantPeriod = _rewardToken == address(arcRewardToken) ? arcPeriodFinish : stEthPeriodFinish;
+        
+        return block.timestamp < relevantPeriod ? block.timestamp : relevantPeriod;
     }
 
     function arcRewardPerTokenUser()
@@ -172,8 +179,8 @@ contract JointCampaign is Ownable {
         return
             arcRewardPerTokenStored.add(
                 Decimal.mul(
-                    lastTimeRewardApplicable()
-                        .sub(lastUpdateTime)
+                    lastTimeRewardApplicable(address(arcRewardToken))
+                        .sub(arcLastUpdateTime)
                         .mul(arcRewardRate)
                         .mul(1e18)
                         .div(_totalSupply),
@@ -192,8 +199,8 @@ contract JointCampaign is Ownable {
         }
 
         return stEthPerTokenStored.add(
-            lastTimeRewardApplicable()
-                .sub(lastUpdateTime)
+            lastTimeRewardApplicable(address(stEthRewardToken))
+                .sub(stEthLastUpdateTime)
                 .mul(stEthRewardRate)
                 .mul(1e18)
                 .div(_totalSupply)
@@ -275,14 +282,12 @@ contract JointCampaign is Ownable {
         uint256 _positionId
     )
         external
-        updateReward(msg.sender)
+        updateReward(msg.sender, address(0))
     {
         uint256 totalBalance = balanceOfStaker(msg.sender).add(_amount);
 
         // Setting each variable invididually means we don't overwrite
         Staker storage staker = stakers[msg.sender];
-
-        console.log("debt pos: %s, _positionId: %s", staker.positionId, _positionId);
 
         if (staker.positionId != 0) {
             require (
@@ -333,7 +338,7 @@ contract JointCampaign is Ownable {
         address _user
     )
         external
-        updateReward(_user)
+        updateReward(_user, address(0))
     {
         require(
             _user != msg.sender,
@@ -371,7 +376,7 @@ contract JointCampaign is Ownable {
 
     function getReward(address _user)
         public
-        updateReward(_user)
+        updateReward(_user, address(0))
     {
         require(
             tokensClaimable == true,
@@ -400,7 +405,7 @@ contract JointCampaign is Ownable {
         uint256 amount
     )
         public
-        updateReward(msg.sender)
+        updateReward(msg.sender, address(0))
     {
         require(
             amount >= 0,
@@ -490,6 +495,10 @@ contract JointCampaign is Ownable {
         external
         onlyOwner
     {
+        uint256 periodFinish = arcPeriodFinish > stEthPeriodFinish
+            ? arcPeriodFinish
+            : stEthPeriodFinish;
+        
         require(
             periodFinish == 0 || block.timestamp > periodFinish,
             "Prev period must be complete before changing duration for new period"
@@ -513,7 +522,7 @@ contract JointCampaign is Ownable {
         external
         onlyRewardDistributors
         verifyRewardToken(_rewardToken)
-        updateReward(address(0))
+        updateReward(address(0), _rewardToken)
     {
         require(
             rewardsDuration > 0,
@@ -522,11 +531,6 @@ contract JointCampaign is Ownable {
 
         uint256 remaining;
         uint256 leftover;
-        bool isAfterPeriodFinish = block.timestamp >= periodFinish;
-
-        if (!isAfterPeriodFinish) {
-            remaining = periodFinish.sub(block.timestamp);
-        }
 
         if (_rewardToken == address(arcRewardToken)) {
             require(
@@ -534,9 +538,10 @@ contract JointCampaign is Ownable {
                 "Only the ARCx rewards distributor can notify the amount of ARCx rewards"
             );
 
-            if (isAfterPeriodFinish) {
+            if (block.timestamp >= arcPeriodFinish) {
                 arcRewardRate = _reward.div(rewardsDuration);
             } else {
+                remaining = arcPeriodFinish.sub(block.timestamp);
                 leftover = remaining.mul(arcRewardRate);
                 arcRewardRate = _reward.add(leftover).div(rewardsDuration);
 
@@ -545,6 +550,9 @@ contract JointCampaign is Ownable {
                     "Provided reward too high for the balance of ARCx token"
                 );
             }
+
+            arcPeriodFinish = block.timestamp.add(rewardsDuration);
+            arcLastUpdateTime = block.timestamp;
         } else {
             require(
                 msg.sender == stEthRewardsDistributor,
@@ -552,9 +560,10 @@ contract JointCampaign is Ownable {
             );
 
             // stETH token
-            if (isAfterPeriodFinish) {
+            if (block.timestamp >= stEthPeriodFinish) {
                 stEthRewardRate = _reward.div(rewardsDuration);
             } else {
+                remaining = stEthPeriodFinish.sub(block.timestamp);
                 leftover = remaining.mul(stEthRewardRate);
                 stEthRewardRate = _reward.add(leftover).div(rewardsDuration);
 
@@ -563,10 +572,11 @@ contract JointCampaign is Ownable {
                     "Provided reward too high for the balance of stETH token"
                 );
             }
+
+            stEthPeriodFinish = block.timestamp.add(rewardsDuration);
+            stEthLastUpdateTime = block.timestamp;
         }
 
-        lastUpdateTime = block.timestamp;
-        periodFinish = block.timestamp.add(rewardsDuration);
         emit RewardAdded(_reward, _rewardToken);
     }
 
@@ -644,14 +654,35 @@ contract JointCampaign is Ownable {
     /* ========== Private Functions ========== */
 
     function _updateReward(
-        address _account
+        address _account,
+        address _rewardToken
     )
         private
     {
-        arcRewardPerTokenStored = _rewardPerToken(address(arcRewardToken));
-        stEthPerTokenStored = _rewardPerToken(address(stEthRewardToken));
+        require(
+            _rewardToken == address(0) ||
+            _rewardToken == address(arcRewardToken) || 
+            _rewardToken == address(stEthRewardToken),
+            "The reward token can either be 0 or a valid reward token"
+        );
 
-        lastUpdateTime = lastTimeRewardApplicable();
+
+        // If an individual reward token is updated, only update the relevant variables
+        if (_rewardToken == address(0)) {
+            arcRewardPerTokenStored = _rewardPerToken(address(arcRewardToken));
+            stEthPerTokenStored = _rewardPerToken(address(stEthRewardToken));
+
+            arcLastUpdateTime = lastTimeRewardApplicable(address(arcRewardToken));
+            stEthLastUpdateTime = lastTimeRewardApplicable(address(stEthRewardToken));
+
+        } else if (_rewardToken == address(arcRewardToken)) {
+            arcRewardPerTokenStored = _rewardPerToken(address(arcRewardToken));
+            arcLastUpdateTime = lastTimeRewardApplicable(address(arcRewardToken));
+
+        } else {
+            stEthPerTokenStored = _rewardPerToken(address(stEthRewardToken));
+            stEthLastUpdateTime = lastTimeRewardApplicable(address(stEthRewardToken));
+        }
 
         if (_account != address(0)) {
             stakers[_account].arcRewardsEarned = _rewardTokenEarned(_account, address(arcRewardToken));
@@ -676,8 +707,8 @@ contract JointCampaign is Ownable {
             }
 
             return arcRewardPerTokenStored.add(
-                lastTimeRewardApplicable()
-                    .sub(lastUpdateTime)
+                lastTimeRewardApplicable(address(arcRewardToken))
+                    .sub(arcLastUpdateTime)
                     .mul(arcRewardRate)
                     .mul(1e18)
                     .div(_totalSupply)
@@ -688,8 +719,8 @@ contract JointCampaign is Ownable {
             }
 
             return stEthPerTokenStored.add(
-                lastTimeRewardApplicable()
-                    .sub(lastUpdateTime)
+                lastTimeRewardApplicable(address(stEthRewardToken))
+                    .sub(stEthLastUpdateTime)
                     .mul(stEthRewardRate)
                     .mul(1e18)
                     .div(_totalSupply)
@@ -707,8 +738,6 @@ contract JointCampaign is Ownable {
         returns (uint256)
     {
         uint256 stakerBalance = stakers[_account].balance;
-
-        console.log("staker balance: %s", stakerBalance);
 
         if (_rewardTokenAddress == address(arcRewardToken)) {
             return

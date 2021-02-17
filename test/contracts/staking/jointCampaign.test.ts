@@ -204,18 +204,19 @@ describe('JointCampaign', () => {
     describe('#lastTimeRewardApplicable', () => {
       beforeEach(setup);
 
-      it('should return the block timestamp if called before the reward period finished', async () => {
-        const currentTime = await getCurrentTimestamp();
+      xit(
+        'arc: should return the block timestamp if called after the stEth reward period but before the arc reward period',
+      );
+      xit(
+        'stEth: should return the block timestamp if called after the arc reward period but before the stEth reward period',
+      );
 
-        expect(await jointCampaignOwner.lastTimeRewardApplicable()).to.eq(currentTime);
-      });
-
-      it('should return the period finish if called after reward period has finished', async () => {
-        await increaseTime(REWARD_DURATION);
-
-        const periodFinish = await jointCampaignOwner.periodFinish();
-        expect(await jointCampaignOwner.lastTimeRewardApplicable()).to.eq(periodFinish);
-      });
+      xit(
+        'arc: should return the arc reward period if called after the arc reward period but before the stEth reward period',
+      );
+      xit(
+        'stEth: should return the stEth reward period if called after the stEth reward period but before the arc reward period',
+      );
     });
 
     describe('#arcRewardPerTokenUser', () => {
@@ -445,7 +446,7 @@ describe('JointCampaign', () => {
       });
     });
 
-    describe.only('#slash', () => {
+    describe('#slash', () => {
       beforeEach(setup);
 
       it('should not be able to slash if user has the amount of their debt snapshot', async () => {
@@ -473,87 +474,91 @@ describe('JointCampaign', () => {
       });
     });
 
-    describe('#getReward', () => {
-      beforeEach(setup);
+    describe.only('#getReward', () => {
+      it('should not be able to get the reward if the tokens are not claimable', async () => {
+        await setup();
+        await stake(user1, STAKE_AMOUNT);
 
-      xit('should not be able to get the reward if the tokens are not claimable', async () => {});
+        await evm.mineBlock();
 
-      xit('should be able to claim rewards gradually over time', async () => {
-        // await jointCampaignOwner.setTokensClaimable(true);
-        // await stake(jointCampaignUser1, user1, STAKE_AMOUNT);
-        // await increaseTime(1);
-        // const currentBalance = await arcToken.balanceOf(user1.address);
-        // await expect(() => jointCampaignUser1.getReward(user1.address)).to.changeTokenBalance(
-        //   arcToken,
-        //   user1,
-        //   currentBalance.add(ArcNumber.new(12)),
-        // );
-        // await increaseTime(1);
-        // await expect(() => jointCampaignUser1.getReward(user1.address)).to.changeTokenBalance(
-        //   arcToken,
-        //   user1,
-        //   currentBalance.add(ArcNumber.new(12)),
-        // );
+        await expectRevert(jointCampaignUser1.getReward(user1.address));
       });
 
-      xit('should be able to claim the right amount of rewards given the number of participants', async () => {
-        // await jointCampaignOwner.setTokensClaimable(true);
-        // const initialBalance = await arcToken.balanceOf(user1.address);
-        // await stake(jointCampaignUser1, user1, STAKE_AMOUNT);
-        // await expect(() => jointCampaignUser1.getReward(user1.address)).to.changeTokenBalance(
-        //   arcToken,
-        //   user1,
-        //   initialBalance.add(ArcNumber.new(6)),
-        // );
-        // const user2Balance = await arcToken.balanceOf(user2.address);
-        // await stake(jointCampaignUser2, user2, STAKE_AMOUNT); // increases 3 epochs
-        // await expect(() => jointCampaignUser1.getReward(user1.address)).to.changeTokenBalance(
-        //   arcToken,
-        //   user1,
-        //   initialBalance.add(ArcNumber.new(21)), // 6 + 6+ 6 + (6/2)
-        // );
-        // await expect(() => jointCampaignUser2.getReward(user2.address)).to.changeTokenBalance(
-        //   arcToken,
-        //   user2,
-        //   user2Balance.add(ArcNumber.new(6)), // 3 + 3
-        // );
+      it('should be able to claim rewards gradually over time', async () => {
+        await setup();
+        await jointCampaignOwner.setTokensClaimable(true);
+
+        await stake(user1, STAKE_AMOUNT);
+
+        await evm.mineBlock();
+
+        await jointCampaignUser1.getReward(user1.address);
+
+        expect(await arcToken.balanceOf(user1.address)).to.eq(ArcNumber.new(12));
+        expect(await stEthToken.balanceOf(user1.address)).to.eq(ArcNumber.new(40));
+
+        await evm.mineBlock();
+
+        await jointCampaignUser1.getReward(user1.address);
+
+        expect(await arcToken.balanceOf(user1.address)).to.eq(ArcNumber.new(24));
+        expect(await stEthToken.balanceOf(user1.address)).to.eq(ArcNumber.new(80));
       });
 
-      xit('should claim the correct amount of rewards after calling #notifyRewardAmount a second time', async () => {
-        // call #notifyArcRewardAmount
-        // call #notifyStEthRewardAmount
-        // wait some time
-        // get rewards
-        // call #notifyArcRewardAmount
-        // call #notifyStEthRewardAmount
-        // get rewards
+      it('should be able to claim the right amount of rewards given the number of participants', async () => {
+        await setupBasic();
+        await jointCampaignOwner.setRewardsDuration(BigNumber.from(20));
+        await jointCampaignOwner.notifyRewardAmount(ARC_REWARD_AMOUNT, arcToken.address);
+        await jointCampaignLido.notifyRewardAmount(STETH_REWARD_AMOUNT, stEthToken.address);
+
+        await jointCampaignOwner.setTokensClaimable(true);
+
+        await stake(user1, STAKE_AMOUNT);
+
+        await jointCampaignUser1.getReward(user1.address);
+
+        expect(await arcToken.balanceOf(user1.address)).to.eq(ArcNumber.new(3));
+        expect(await stEthToken.balanceOf(user1.address)).to.eq(ArcNumber.new(10));
+
+        await stake(user2, STAKE_AMOUNT); // increases 4 epochs
+
+        await jointCampaignUser1.getReward(user1.address);
+
+        expect(await arcToken.balanceOf(user1.address)).to.eq(ArcDecimal.new(16.5).value); // 3 + 3*4 + 1.5
+        expect(await stEthToken.balanceOf(user1.address)).to.eq(ArcNumber.new(55)); // 10 + 10*4 + 5
+
+        await jointCampaignUser2.getReward(user2.address);
+        expect(await arcToken.balanceOf(user2.address)).to.eq(ArcNumber.new(3)); // 1.5 * 2
+        expect(await stEthToken.balanceOf(user2.address)).to.eq(ArcNumber.new(10)); // 5 * 2
       });
 
-      // it.only('should update reward after claiming reward', async () => {
-      //   await jointCampaignOwner.setTokensClaimable(true);
+      it('should claim the correct amount of rewards after calling #notifyRewardAmount a second time', async () => {
+        await setupBasic();
+        await jointCampaignOwner.setRewardsDuration(BigNumber.from(20));
+        await jointCampaignOwner.setTokensClaimable(true);
 
-      //   await stake(jointCampaignUser1, user1, STAKE_AMOUNT);
+        await jointCampaignOwner.notifyRewardAmount(ARC_REWARD_AMOUNT, arcToken.address); // arc reward per epoch = 5
+        await jointCampaignLido.notifyRewardAmount(STETH_REWARD_AMOUNT, stEthToken.address); // stEth reward per epoch = 10
 
-      //   const rewardPerTokenStored0 = await jointCampaignUser1.rewardPerTokenStored();
+        await stake(user1, STAKE_AMOUNT);
 
-      //   console.log('reward per token stored 0', rewardPerTokenStored0.toString());
+        await jointCampaignUser1.getReward(user1.address);
 
-      //   await increaseTime(1);
+        expect(await arcToken.balanceOf(user1.address)).to.eq(ArcNumber.new(3));
+        expect(await stEthToken.balanceOf(user1.address)).to.eq(ArcNumber.new(10));
 
-      //   await jointCampaignUser1.getReward(user1.address);
+        await arcToken.mintShare(jointCampaignUser1.address, ARC_REWARD_AMOUNT);
+        await stEthToken.mintShare(jointCampaignUser1.address, STETH_REWARD_AMOUNT);
 
-      //   console.log(
-      //     'reward per token stored 1',
-      //     (await jointCampaignUser1.rewardPerTokenStored()).toString(),
-      //   );
-      //   const rewardPerTokenStored1 = await jointCampaignUser1.rewardPerTokenStored();
+        // call notify reward amount a second time
+        await jointCampaignOwner.notifyRewardAmount(ARC_REWARD_AMOUNT, arcToken.address); // arc reward per epoch = 7.75
+        await jointCampaignLido.notifyRewardAmount(STETH_REWARD_AMOUNT, stEthToken.address); // stEth reward per epoch = 15.5
 
-      //   console.log(rewardPerTokenStored0.toString(), rewardPerTokenStored1.toString());
+        await jointCampaignUser1.getReward(user1.address);
 
-      //   await jointCampaignUser1.getReward(user1.address);
-
-      //   expect(rewardPerTokenStored0).to.be.lt(rewardPerTokenStored1);
-      // });
+        expect(await arcToken.balanceOf(user1.address)).to.eq(ArcDecimal.new(21.3).value); // 3 + 3*3 + (7.75*2*0.6)
+        expect(await stEthToken.balanceOf(user1.address)).to.eq(ArcDecimal.new(65.5).value); // 10 + 10*4 + 15.5
+      });
     });
 
     describe('#withdraw', () => {
