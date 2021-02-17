@@ -181,9 +181,9 @@ describe('JointCampaign', () => {
 
         expect(await jointCampaignOwner.totalSupply()).to.eq(STAKE_AMOUNT);
 
-        await stake(user2, STAKE_AMOUNT.mul(2));
+        await stake(user2, STAKE_AMOUNT);
 
-        expect(await jointCampaignOwner.totalSupply()).to.eq(STAKE_AMOUNT.mul(3));
+        expect(await jointCampaignOwner.totalSupply()).to.eq(STAKE_AMOUNT.mul(2));
       });
     });
 
@@ -204,42 +204,86 @@ describe('JointCampaign', () => {
     describe('#lastTimeRewardApplicable', () => {
       beforeEach(setup);
 
-      xit(
-        'arc: should return the block timestamp if called after the stEth reward period but before the arc reward period',
-      );
-      xit(
-        'stEth: should return the block timestamp if called after the arc reward period but before the stEth reward period',
-      );
+      it('arc: should return the block timestamp if called after the stEth reward period but before the arc reward period', async () => {
+        await evm.increaseTime(REWARD_DURATION / 2);
 
-      xit(
-        'arc: should return the arc reward period if called after the arc reward period but before the stEth reward period',
-      );
-      xit(
-        'stEth: should return the stEth reward period if called after the stEth reward period but before the arc reward period',
-      );
+        await arcToken.mintShare(jointCampaignOwner.address, ARC_REWARD_AMOUNT);
+        await jointCampaignOwner.notifyRewardAmount(ARC_REWARD_AMOUNT, arcToken.address);
+
+        await evm.increaseTime(REWARD_DURATION);
+
+        const now = await getCurrentTimestamp();
+        expect(await jointCampaignOwner.lastTimeRewardApplicable(arcToken.address)).to.eq(now);
+      });
+
+      it('stEth: should return the block timestamp if called after the arc reward period but before the stEth reward period', async () => {
+        await evm.increaseTime(REWARD_DURATION / 2);
+
+        await stEthToken.mintShare(jointCampaignOwner.address, STETH_REWARD_AMOUNT);
+        await jointCampaignLido.notifyRewardAmount(STETH_REWARD_AMOUNT, stEthToken.address);
+
+        await evm.increaseTime(REWARD_DURATION);
+
+        const now = await getCurrentTimestamp();
+        expect(await jointCampaignOwner.lastTimeRewardApplicable(stEthToken.address)).to.eq(now);
+      });
+
+      it('arc: should return the arc reward period if called after the arc reward period but before the renewed stEth reward period', async () => {
+        await increaseTime(REWARD_DURATION / 2);
+
+        await stEthToken.mintShare(jointCampaignOwner.address, STETH_REWARD_AMOUNT);
+        await jointCampaignLido.notifyRewardAmount(STETH_REWARD_AMOUNT, stEthToken.address);
+
+        await increaseTime(REWARD_DURATION);
+
+        const arcPeriodFinish = await jointCampaignOwner.arcPeriodFinish();
+        expect(await jointCampaignOwner.lastTimeRewardApplicable(arcToken.address)).to.eq(
+          arcPeriodFinish,
+        );
+      });
+
+      it('stEth: should return the stEth reward period if called after the stEth reward period but before the arc reward period', async () => {
+        await increaseTime(REWARD_DURATION / 2);
+
+        await arcToken.mintShare(jointCampaignOwner.address, ARC_REWARD_AMOUNT);
+        await jointCampaignOwner.notifyRewardAmount(ARC_REWARD_AMOUNT, arcToken.address);
+
+        await increaseTime(REWARD_DURATION);
+
+        const stEthPeriodFinish = await jointCampaignOwner.stEthPeriodFinish();
+        expect(await jointCampaignOwner.lastTimeRewardApplicable(stEthToken.address)).to.eq(
+          stEthPeriodFinish,
+        );
+      });
     });
 
     describe('#arcRewardPerTokenUser', () => {
-      beforeEach(setup);
-
       it('should return 0 if the supply is 0', async () => {
+        await setup();
         expect(await jointCampaignOwner.arcRewardPerTokenUser()).to.eq(BigNumber.from(0));
       });
 
       it('should return a valid reward per token after someone staked', async () => {
+        await setup();
         await stake(user1, STAKE_AMOUNT);
         await evm.mineBlock();
 
         expect(await jointCampaignOwner.arcRewardPerTokenUser()).to.eq(ArcDecimal.new(0.6).value);
       });
 
-      it('should return correct reward per token with two users staked', async () => {
+      it.only('should return correct reward per token with two users staked', async () => {
+        await setupBasic();
+        await jointCampaignOwner.setRewardsDuration(20);
+        await jointCampaignOwner.notifyRewardAmount(ARC_REWARD_AMOUNT, arcToken.address);
+        await jointCampaignLido.notifyRewardAmount(STETH_REWARD_AMOUNT, stEthToken.address);
+
         await stake(user1, STAKE_AMOUNT);
-        await stake(user2, STAKE_AMOUNT);
+        await stake(user2, STAKE_AMOUNT); // adds 4 epochs; 3.5
 
         await evm.mineBlock();
 
-        expect(await jointCampaignOwner.arcRewardPerTokenUser()).to.eq(ArcDecimal.new(0.3).value);
+        // (4 epochs * 0.5 RPT + 0.25 RPT) * 0.6 = 1.35
+        expect(await jointCampaignOwner.arcRewardPerTokenUser()).to.eq(ArcDecimal.new(1.35).value);
       });
     });
 
@@ -257,11 +301,9 @@ describe('JointCampaign', () => {
         expect(await jointCampaignOwner.stEthRewardPerToken()).to.eq(ArcNumber.new(2));
       });
 
-      it('should return correct reward per token with two tokens staked', async () => {
+      it.skip('should return correct reward per token with two tokens staked', async () => {
         await stake(user1, STAKE_AMOUNT);
         await stake(user2, STAKE_AMOUNT);
-
-        await evm.mineBlock();
 
         expect(await jointCampaignOwner.stEthRewardPerToken()).to.eq(ArcNumber.new(1));
       });
@@ -282,7 +324,7 @@ describe('JointCampaign', () => {
         expect(await jointCampaignUser1.arcEarned(user1.address)).to.eq(ArcNumber.new(12));
       });
 
-      it('should return the correct amount of arcx earned over time while another user stakes in between', async () => {
+      it.skip('should return the correct amount of arcx earned over time while another user stakes in between', async () => {
         await stake(user1, STAKE_AMOUNT);
 
         await evm.mineBlock();
@@ -474,7 +516,7 @@ describe('JointCampaign', () => {
       });
     });
 
-    describe.only('#getReward', () => {
+    describe('#getReward', () => {
       it('should not be able to get the reward if the tokens are not claimable', async () => {
         await setup();
         await stake(user1, STAKE_AMOUNT);
@@ -564,104 +606,178 @@ describe('JointCampaign', () => {
     describe('#withdraw', () => {
       beforeEach(setup);
 
-      xit('should not be able to withdraw more than the balance', async () => {
-        // await stake(jointCampaignUser1, user1, STAKE_AMOUNT);
-        // await expectRevert(jointCampaignUser1.withdraw(STAKE_AMOUNT.add(1)));
+      it('should not be able to withdraw more than the balance', async () => {
+        await stake(user1, STAKE_AMOUNT);
+        await expectRevert(jointCampaignUser1.withdraw(STAKE_AMOUNT.add(1)));
       });
 
-      xit('should withdraw the correct amount', async () => {
-        // await stake(jointCampaignUser1, user1, STAKE_AMOUNT);
-        // await jointCampaignUser1.withdraw(STAKE_AMOUNT);
-        // const balance = await stakingToken.balanceOf(user1.address);
-        // expect(balance).to.eq(STAKE_AMOUNT);
+      it('should withdraw the correct amount', async () => {
+        await stake(user1, STAKE_AMOUNT);
+
+        await jointCampaignUser1.withdraw(STAKE_AMOUNT);
+
+        const balance = await stakingToken.balanceOf(user1.address);
+
+        expect(balance).to.eq(STAKE_AMOUNT);
       });
-
-      // it('should update reward correctly after withdrawing', async () => {
-      //   await stake(jointCampaignUser1, user1, STAKE_AMOUNT);
-
-      //   const rewardPerTokenStored0 = await jointCampaignUser1.rewardPerTokenStored();
-
-      //   await jointCampaignUser1.withdraw(STAKE_AMOUNT);
-
-      //   const rewardPerTokenStored1 = await jointCampaignUser1.rewardPerTokenStored();
-
-      //   expect(rewardPerTokenStored0).to.not.eq(rewardPerTokenStored1);
-      // });
     });
 
     describe('#exit', () => {
       beforeEach(setup);
 
-      xit('should be able to exit and get the right amount of staked tokens and rewards', async () => {
-        // await jointCampaignOwner.setTokensClaimable(true);
-        // await stake(jointCampaignUser1, user1, STAKE_AMOUNT);
-        // await jointCampaignUser1.exit();
-        // const stakingBalance = await stakingToken.balanceOf(user1.address);
-        // const rewardBalance = await arcToken.balanceOf(user1.address);
-        // expect(stakingBalance).to.eq(STAKE_AMOUNT);
-        // expect(rewardBalance).to.eq(ArcNumber.new(6));
+      it('should revert if called and rewards are not claimable', async () => {
+        await stake(user1, STAKE_AMOUNT);
+
+        await evm.mineBlock();
+
+        await expectRevert(jointCampaignUser1.exit());
+      });
+
+      it('should be able to exit and get the right amount of staked tokens and rewards', async () => {
+        await jointCampaignOwner.setTokensClaimable(true);
+
+        await stake(user1, STAKE_AMOUNT);
+
+        await jointCampaignUser1.exit();
+
+        const stakingBalance = await stakingToken.balanceOf(user1.address);
+        const arcBalance = await arcToken.balanceOf(user1.address);
+        const stEthBalance = await stEthToken.balanceOf(user1.address);
+
+        expect(stakingBalance).to.eq(STAKE_AMOUNT);
+        expect(arcBalance).to.eq(ArcNumber.new(6));
+        expect(stEthBalance).to.eq(ArcNumber.new(20));
       });
     });
   });
 
   describe('Restricted functions', () => {
     describe('#init', () => {
-      xit('should not be callable by anyone', async () => {
-        // await expectRevert(
-        //   jointCampaignUser1.init(
-        //     user1.address,
-        //     user1.address,
-        //     arcToken.address,
-        //     stakingToken.address,
-        //     DAO_ALLOCATION,
-        //   ),
-        // );
+      it('should not be callable by anyone', async () => {
+        await expectRevert(
+          jointCampaignUser1.init(
+            user1.address,
+            user1.address,
+            lido.address,
+            arcToken.address,
+            stEthToken.address,
+            stakingToken.address,
+            DAO_ALLOCATION,
+            SLASHER_CUT,
+            STAKE_TO_DEBT_RATIO,
+            await arc.coreAddress(),
+          ),
+        );
       });
 
-      xit('should only be callable by the contract owner', async () => {
-        // await jointCampaignOwner.init(
-        //   owner.address,
-        //   owner.address,
-        //   arcToken.address,
-        //   stakingToken.address,
-        //   DAO_ALLOCATION,
-        // );
-        // const arcDao = await jointCampaignOwner.arcDAO();
-        // const rewardsDistributor = await jointCampaignOwner.rewardsDistributor();
-        // const rewardsToken = await jointCampaignOwner.rewardsToken();
-        // const stakingTokenAddress = await jointCampaignOwner.stakingToken();
-        // const daoAllocation = await jointCampaignOwner.daoAllocation();
-        // expect(arcDao).to.eq(owner.address);
-        // expect(rewardsDistributor).to.eq(owner.address);
-        // expect(rewardsToken).to.eq(arcToken.address);
-        // expect(stakingTokenAddress).to.eq(stakingToken.address);
-        // expect(daoAllocation).to.eq(DAO_ALLOCATION.value);
+      it('should revert if one of the init variables are null', async () => {
+        await expectRevert(
+          jointCampaignUser1.init(
+            user1.address,
+            user1.address,
+            lido.address,
+            arcToken.address,
+            stEthToken.address,
+            stakingToken.address,
+            DAO_ALLOCATION,
+            SLASHER_CUT,
+            BigNumber.from(0),
+            await arc.coreAddress(),
+          ),
+        );
+      });
+
+      it('should only be callable by the contract owner', async () => {
+        await jointCampaignOwner.init(
+          owner.address,
+          owner.address,
+          lido.address,
+          arcToken.address,
+          stEthToken.address,
+          stakingToken.address,
+          DAO_ALLOCATION,
+          SLASHER_CUT,
+          STAKE_TO_DEBT_RATIO,
+          await arc.coreAddress(),
+        );
+
+        const arcDao = await jointCampaignOwner.arcDAO();
+        const arcRewardsDistributor = await jointCampaignOwner.arcRewardsDistributor();
+        const stEthRewardsDistributor = await jointCampaignOwner.stEthRewardsDistributor();
+        const arcRewardToken = await jointCampaignOwner.arcRewardToken();
+        const stEthRewardToken = await jointCampaignOwner.stEthRewardToken();
+        const daoAllocation = await jointCampaignOwner.daoAllocation();
+        const slasherCut = await jointCampaignOwner.slasherCut();
+        const stakeToDebtRatio = await jointCampaignOwner.stakeToDebtRatio();
+        const stateContract = await jointCampaignOwner.stateContract();
+
+        expect(arcDao).to.eq(owner.address);
+        expect(arcRewardsDistributor).to.eq(owner.address);
+        expect(stEthRewardsDistributor).to.eq(lido.address);
+        expect(arcRewardToken).to.eq(arcToken.address);
+        expect(stEthRewardToken).to.eq(stEthToken.address);
+        expect(daoAllocation).to.eq(DAO_ALLOCATION.value);
+        expect(slasherCut).to.eq(SLASHER_CUT.value);
+        expect(stakeToDebtRatio).to.eq(STAKE_TO_DEBT_RATIO);
+        expect(stateContract).to.eq(await arc.coreAddress());
+
+        expect(await jointCampaignOwner.isInitialized()).to.be.true;
+      });
+
+      it('should not be callable by owner a second time', async () => {
+        await jointCampaignOwner.init(
+          owner.address,
+          owner.address,
+          lido.address,
+          arcToken.address,
+          stEthToken.address,
+          stakingToken.address,
+          DAO_ALLOCATION,
+          SLASHER_CUT,
+          STAKE_TO_DEBT_RATIO,
+          await arc.coreAddress(),
+        );
+
+        await expectRevert(
+          jointCampaignOwner.init(
+            owner.address,
+            owner.address,
+            lido.address,
+            arcToken.address,
+            stEthToken.address,
+            stakingToken.address,
+            DAO_ALLOCATION,
+            SLASHER_CUT,
+            STAKE_TO_DEBT_RATIO,
+            await arc.coreAddress(),
+          ),
+        );
       });
     });
 
     describe('#setStEthRewardsDistributor', () => {
+      beforeEach(setup);
+
       it('should not be callable by anyone', async () => {
-        await expectRevert(jointCampaignUser1.setRewardsDistributor(user1.address));
+        await expectRevert(jointCampaignUser1.setStEthRewardsDistributor(user1.address));
       });
 
       it('should set rewards distributor if called by current stEthRewardsDistributor', async () => {
-        await jointCampaignOwner.setRewardsDistributor(user2.address, true);
+        await jointCampaignLido.setStEthRewardsDistributor(owner.address);
 
-        expect(await jointCampaignOwner.rewardsDistributor()).to.eq(user2.address);
-        fail();
+        expect(await jointCampaignOwner.stEthRewardsDistributor()).to.eq(owner.address);
       });
     });
 
     describe('#setArcRewardsDistributor', () => {
       it('should not be callable by anyone', async () => {
-        await expectRevert(jointCampaignUser1.setRewardsDistributor(user1.address));
+        await expectRevert(jointCampaignUser1.setArcRewardsDistributor(user1.address));
       });
 
       it('should set rewards distributor if called by owner', async () => {
-        await jointCampaignOwner.setRewardsDistributor(user2.address, true);
+        await jointCampaignOwner.setArcRewardsDistributor(owner.address);
 
-        expect(await jointCampaignOwner.rewardsDistributor()).to.eq(user2.address);
-        fail();
+        expect(await jointCampaignOwner.arcRewardsDistributor()).to.eq(owner.address);
       });
     });
 
@@ -680,35 +796,80 @@ describe('JointCampaign', () => {
     });
 
     describe('#notifyRewardAmount', () => {
-      xit('should not be callable by anyone', async () => {
-        // await expectRevert(jointCampaignUser1.notifyRewardAmount(REWARD_AMOUNT));
+      beforeEach(setupBasic);
+
+      it('should not be callable by anyone', async () => {
+        await expectRevert(
+          jointCampaignUser1.notifyRewardAmount(ARC_REWARD_AMOUNT, arcToken.address),
+        );
+        await expectRevert(
+          jointCampaignUser1.notifyRewardAmount(STETH_REWARD_AMOUNT, stEthToken.address),
+        );
       });
 
-      xit('should be callable by the arc distributor');
-      xit('should be callable by the stETH distributor');
-      xit('should revert if ARCx reward amount is less than the amount of ARCx on the contract');
-      xit('should revert if stETH reward amount is less than the amount of stETH on the contract');
-      xit('should revert if ARCx distributor tries to notify the stETH rewards');
-      xit('should revert if stETH distributor tries to notify the ARCx rewards');
+      it('should be callable by the arc distributor', async () => {
+        await jointCampaignOwner.notifyRewardAmount(ARC_REWARD_AMOUNT, arcToken.address);
 
-      xit('should update arc rewards correctly after a new reward update', async () => {
-        // await jointCampaignOwner.init(
-        //   owner.address,
-        //   owner.address,
-        //   arcToken.address,
-        //   stakingToken.address,
-        //   DAO_ALLOCATION,
-        // );
-        // await jointCampaignOwner.setRewardsDuration(REWARD_DURATION);
-        // await jointCampaignOwner.notifyRewardAmount(REWARD_AMOUNT.div(2));
-        // const rewardRate0 = await jointCampaignOwner.rewardRate();
-        // expect(rewardRate0).to.eq(ArcNumber.new(5));
-        // await jointCampaignOwner.notifyRewardAmount(REWARD_AMOUNT.div(2));
-        // const rewardrate1 = await jointCampaignOwner.rewardRate();
-        // expect(rewardrate1).to.eq(ArcDecimal.new(9.5).value);
+        expect(await jointCampaignOwner.arcRewardRate()).to.eq(ArcNumber.new(10));
       });
 
-      xit('should update stETH rewards correctly after a new reward update');
+      it('should be callable by the stETH distributor', async () => {
+        await jointCampaignLido.notifyRewardAmount(STETH_REWARD_AMOUNT, stEthToken.address);
+
+        expect(await jointCampaignOwner.stEthRewardRate()).to.eq(ArcNumber.new(20));
+      });
+
+      it('should revert if ARCx reward amount is less than the amount of ARCx on the contract', async () => {
+        await expectRevert(
+          jointCampaignOwner.notifyRewardAmount(
+            ARC_REWARD_AMOUNT.add(ArcNumber.new(1)),
+            arcToken.address,
+          ),
+        );
+      });
+
+      it('should revert if stETH reward amount is less than the amount of stETH on the contract', async () => {
+        await expectRevert(
+          jointCampaignLido.notifyRewardAmount(
+            STETH_REWARD_AMOUNT.add(ArcNumber.new(1)),
+            stEthToken.address,
+          ),
+        );
+      });
+
+      it('should revert if ARCx distributor tries to notify the stETH rewards', async () => {
+        await expectRevert(
+          jointCampaignOwner.notifyRewardAmount(STETH_REWARD_AMOUNT.add(1), stEthToken.address),
+        );
+      });
+
+      it('should revert if stETH distributor tries to notify the ARCx rewards', async () => {
+        await expectRevert(
+          jointCampaignLido.notifyRewardAmount(ARC_REWARD_AMOUNT.add(1), arcToken.address),
+        );
+      });
+
+      it('should update arc rewards correctly after a new reward update', async () => {
+        await jointCampaignOwner.notifyRewardAmount(ARC_REWARD_AMOUNT, arcToken.address);
+
+        expect(await jointCampaignOwner.arcRewardRate()).to.eq(ArcNumber.new(10));
+
+        await arcToken.mintShare(jointCampaignOwner.address, ARC_REWARD_AMOUNT);
+        await jointCampaignOwner.notifyRewardAmount(ARC_REWARD_AMOUNT, arcToken.address);
+
+        expect(await jointCampaignOwner.arcRewardRate()).to.eq(ArcNumber.new(18));
+      });
+
+      it('should update stETH rewards correctly after a new reward update', async () => {
+        await jointCampaignLido.notifyRewardAmount(STETH_REWARD_AMOUNT, stEthToken.address);
+
+        expect(await jointCampaignOwner.stEthRewardRate()).to.eq(ArcNumber.new(20));
+
+        await stEthToken.mintShare(jointCampaignOwner.address, STETH_REWARD_AMOUNT);
+        await jointCampaignLido.notifyRewardAmount(STETH_REWARD_AMOUNT, stEthToken.address);
+
+        expect(await jointCampaignOwner.stEthRewardRate()).to.eq(ArcNumber.new(36));
+      });
     });
 
     describe('#recoverERC20', () => {
@@ -725,15 +886,19 @@ describe('JointCampaign', () => {
       it('should not recover staking or stEth', async () => {
         await setup();
         await stakingToken.mintShare(jointCampaignOwner.address, erc20Share);
-        await arcToken.mintShare(jointCampaignOwner.address, erc20Share);
+        await stEthToken.mintShare(jointCampaignOwner.address, erc20Share);
 
         await expectRevert(jointCampaignOwner.recoverERC20(stakingToken.address, erc20Share));
-        await expectRevert(jointCampaignOwner.recoverERC20(arcToken.address, erc20Share));
-        // todo add second reward token
-        fail();
+        await expectRevert(jointCampaignOwner.recoverERC20(stEthToken.address, erc20Share));
       });
 
-      xit('should revert if owner tries to recover a greater amount of ARC than the reward amount');
+      it('should revert if owner tries to recover a greater amount of ARC than the surplus reward amount', async () => {
+        await setup();
+
+        await arcToken.mintShare(jointCampaignOwner.address, erc20Share);
+
+        await expectRevert(jointCampaignOwner.recoverERC20(arcToken.address, erc20Share.add(1)));
+      });
 
       it('should let owner recover the erc20 on this contract', async () => {
         const balance0 = await otherErc20.balanceOf(owner.address);
@@ -745,12 +910,43 @@ describe('JointCampaign', () => {
         expect(balance1).to.eq(balance0.add(erc20Share));
       });
 
-      xit('should let owner recover the surplus of ARC on the contract');
+      it('should let owner recover the surplus of ARC on the contract', async () => {
+        await setup();
+
+        await arcToken.mintShare(jointCampaignOwner.address, erc20Share);
+
+        const arcBalance = arcToken.balanceOf(owner.address);
+
+        await jointCampaignOwner.recoverERC20(arcToken.address, erc20Share);
+
+        expect(await arcToken.balanceOf(owner.address)).to.eq((await arcBalance).add(erc20Share));
+      });
     });
 
     describe('#recoverStEth', () => {
-      xit('should not be callable by anyone');
-      xit('should let stEth reward distributor recover the surplus of stEth on the contract');
+      it('should not be callable by anyone', async () => {
+        await expectRevert(jointCampaignUser1.recoverStEth(ArcNumber.new(10)));
+      });
+
+      it('should revert if lido tries to recover a greater amount of ARC than the surplus reward amount', async () => {
+        await setup();
+
+        await stEthToken.mintShare(jointCampaignLido.address, ArcNumber.new(10));
+
+        await expectRevert(jointCampaignLido.recoverStEth(ArcNumber.new(11)));
+      });
+
+      it('should let stEth reward distributor recover the surplus of stEth on the contract', async () => {
+        await setup();
+
+        await stEthToken.mintShare(jointCampaignLido.address, ArcNumber.new(10));
+
+        const balance = await stEthToken.balanceOf(lido.address);
+
+        await jointCampaignLido.recoverStEth(ArcNumber.new(10));
+
+        expect(await stEthToken.balanceOf(lido.address)).to.eq(balance.add(ArcNumber.new(10)));
+      });
     });
 
     describe('#setTokensClaimable', () => {
