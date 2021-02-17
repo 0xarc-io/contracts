@@ -163,7 +163,7 @@ contract JointCampaign is Ownable {
         returns (uint256)
     {
         uint256 relevantPeriod = _rewardToken == address(arcRewardToken) ? arcPeriodFinish : stEthPeriodFinish;
-        
+
         return block.timestamp < relevantPeriod ? block.timestamp : relevantPeriod;
     }
 
@@ -371,7 +371,12 @@ contract JointCampaign is Ownable {
         userStaker.arcRewardsEarned = userStaker.arcRewardsEarned.sub(arcPenalty);
         userStaker.stEthRewardsEarned = userStaker.stEthRewardsEarned.sub(stEthPenalty);
 
-        emit UserSlashed(_user, msg.sender, arcPenalty, stEthPenalty);
+        emit UserSlashed(
+            _user,
+            msg.sender,
+            arcPenalty,
+            stEthPenalty
+        );
     }
 
     function getReward(address _user)
@@ -514,7 +519,7 @@ contract JointCampaign is Ownable {
         uint256 periodFinish = arcPeriodFinish > stEthPeriodFinish
             ? arcPeriodFinish
             : stEthPeriodFinish;
-        
+
         require(
             periodFinish == 0 || block.timestamp > periodFinish,
             "Prev period must be complete before changing duration for new period"
@@ -585,7 +590,7 @@ contract JointCampaign is Ownable {
                 stEthRewardRate = _reward.add(leftover).div(rewardsDuration);
 
             }
-            
+
             require(
                 stEthRewardRate <= stEthRewardToken.balanceOf(address(this)).div(rewardsDuration),
                 "Provided reward too high for the balance of stETH token"
@@ -679,7 +684,7 @@ contract JointCampaign is Ownable {
     {
         require(
             _rewardToken == address(0) ||
-            _rewardToken == address(arcRewardToken) || 
+            _rewardToken == address(arcRewardToken) ||
             _rewardToken == address(stEthRewardToken),
             "The reward token can either be 0 or a valid reward token"
         );

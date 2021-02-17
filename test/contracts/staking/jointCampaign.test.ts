@@ -271,7 +271,7 @@ describe('JointCampaign', () => {
         expect(await jointCampaignOwner.arcRewardPerTokenUser()).to.eq(ArcDecimal.new(0.6).value);
       });
 
-      it.only('should return correct reward per token with two users staked', async () => {
+      it('should return correct reward per token with two users staked', async () => {
         await setupBasic();
         await jointCampaignOwner.setRewardsDuration(20);
         await jointCampaignOwner.notifyRewardAmount(ARC_REWARD_AMOUNT, arcToken.address);
@@ -288,31 +288,38 @@ describe('JointCampaign', () => {
     });
 
     describe('#stEthRewardPerToken', () => {
-      beforeEach(setup);
-
       it('should return the reward per token stored if the supply is 0', async () => {
+        await setup();
         expect(await jointCampaignOwner.stEthRewardPerToken()).to.eq(BigNumber.from(0));
       });
 
       it('should return the correct reward per token after someone staked', async () => {
+        await setup();
         await stake(user1, STAKE_AMOUNT);
         await evm.mineBlock();
 
         expect(await jointCampaignOwner.stEthRewardPerToken()).to.eq(ArcNumber.new(2));
       });
 
-      it.skip('should return correct reward per token with two tokens staked', async () => {
+      it('should return correct reward per token with two tokens staked', async () => {
+        await setupBasic();
+        await jointCampaignOwner.setRewardsDuration(20);
+        await jointCampaignOwner.notifyRewardAmount(ARC_REWARD_AMOUNT, arcToken.address);
+        await jointCampaignLido.notifyRewardAmount(STETH_REWARD_AMOUNT, stEthToken.address);
+
         await stake(user1, STAKE_AMOUNT);
         await stake(user2, STAKE_AMOUNT);
 
-        expect(await jointCampaignOwner.stEthRewardPerToken()).to.eq(ArcNumber.new(1));
+        await evm.mineBlock();
+
+        // 4 epochs * 1 RPT + 0.5 RPT
+        expect(await jointCampaignOwner.stEthRewardPerToken()).to.eq(ArcDecimal.new(4.5).value);
       });
     });
 
     describe('#arcEarned', () => {
-      beforeEach(setup);
-
       it('should return the correct amount of arcx earned over time', async () => {
+        await setup();
         await stake(user1, STAKE_AMOUNT);
 
         await evm.mineBlock();
@@ -324,19 +331,24 @@ describe('JointCampaign', () => {
         expect(await jointCampaignUser1.arcEarned(user1.address)).to.eq(ArcNumber.new(12));
       });
 
-      it.skip('should return the correct amount of arcx earned over time while another user stakes in between', async () => {
+      it('should return the correct amount of arcx earned over time while another user stakes in between', async () => {
+        await setupBasic();
+        await jointCampaignOwner.setRewardsDuration(20);
+        await jointCampaignOwner.notifyRewardAmount(ARC_REWARD_AMOUNT, arcToken.address);
+        await jointCampaignLido.notifyRewardAmount(STETH_REWARD_AMOUNT, stEthToken.address);
+
         await stake(user1, STAKE_AMOUNT);
 
         await evm.mineBlock();
 
-        expect(await jointCampaignUser1.arcEarned(user1.address)).to.eq(ArcNumber.new(6));
+        expect(await jointCampaignUser1.arcEarned(user1.address)).to.eq(ArcNumber.new(3));
 
         await stake(user2, STAKE_AMOUNT); // adds 4 epochs
 
         await evm.mineBlock();
 
-        expect(await jointCampaignUser1.arcEarned(user1.address)).to.eq(ArcNumber.new(33)); // 6 + 6*4 + 6/2
-        expect(await jointCampaignUser2.arcEarned(user2.address)).to.eq(ArcNumber.new(3));
+        expect(await jointCampaignUser1.arcEarned(user1.address)).to.eq(ArcDecimal.new(16.5).value); // 3 + 3*4 + 3/2
+        expect(await jointCampaignUser2.arcEarned(user2.address)).to.eq(ArcDecimal.new(1.5).value);
       });
     });
 
