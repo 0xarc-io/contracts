@@ -445,7 +445,7 @@ describe('LiquidityCampaign', () => {
         expect(daoAllocation).to.eq(DAO_ALLOCATION.value);
       });
 
-      it.only('should not be called twice by the contract owner', async () => {
+      it('should not be called twice by the contract owner', async () => {
         await liquidityCampaignAdmin.init(
           admin.address,
           admin.address,
