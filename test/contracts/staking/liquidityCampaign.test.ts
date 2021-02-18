@@ -182,26 +182,6 @@ describe('LiquidityCampaign', () => {
         const rewardPerToken = await liquidityCampaignUser1.rewardPerToken();
         const rewardPerTokenStored = await liquidityCampaignAdmin.rewardPerTokenStored();
 
-        // const currentRewardRate = (await liquidityCampaignUser1.lastTimeRewardApplicable())
-        //   .sub(await liquidityCampaignUser1.lastUpdateTime())
-        //   .mul(await liquidityCampaignUser1.rewardRate())
-        //   .mul(BASE)
-        //   .div(await liquidityCampaignUser1.totalSupply());
-
-        // console.log({
-        //   totalSupply: await(await liquidityCampaignUser1.totalSupply()).toString(),
-        //   rewardPerTokenStored: rewardPerTokenStored.toString(),
-        //   rewardPerToken: rewardPerToken.toString(),
-        //   daoAllocation: await(await liquidityCampaignUser1.daoAllocation()).toString(),
-        //   userAllocation: await(await liquidityCampaignUser1.userAllocation()).toString(),
-        //   lastUpdateTime: await(await liquidityCampaignUser1.lastUpdateTime()).toString(),
-        //   rewardRate: await(await liquidityCampaignUser1.rewardRate()).toString(),
-        //   currentRewardRate: currentRewardRate.toString(),
-        //   lastTimeRewardApplicable: await(
-        //     await liquidityCampaignUser1.lastTimeRewardApplicable(),
-        //   ).toString(),
-        // });
-
         expect(rewardPerToken).to.be.gt(BigNumber.from(0));
         expect(rewardPerToken).to.not.eq(rewardPerTokenStored);
       });
@@ -300,7 +280,7 @@ describe('LiquidityCampaign', () => {
         supply = await liquidityCampaignUser1.totalSupply();
 
         expect(supply).to.eq(amount.mul(2));
-        expect(await stakingToken.balanceOf(liquidityCampaignAdmin.address)).to.eq(amount.mul(2))
+        expect(await stakingToken.balanceOf(liquidityCampaignAdmin.address)).to.eq(amount.mul(2));
       });
 
       it('should update reward correctly after staking', async () => {
@@ -384,32 +364,6 @@ describe('LiquidityCampaign', () => {
           user2Balance.add(ArcNumber.new(6)), // 3 + 3
         );
       });
-
-      // it.only('should update reward after claiming reward', async () => {
-      //   await liquidityCampaignAdmin.setTokensClaimable(true);
-
-      //   await stake(liquidityCampaignUser1, user1, STAKE_AMOUNT);
-
-      //   const rewardPerTokenStored0 = await liquidityCampaignUser1.rewardPerTokenStored();
-
-      //   console.log('reward per token stored 0', rewardPerTokenStored0.toString());
-
-      //   await increaseTime(1);
-
-      //   await liquidityCampaignUser1.getReward(user1.address);
-
-      //   console.log(
-      //     'reward per token stored 1',
-      //     (await liquidityCampaignUser1.rewardPerTokenStored()).toString(),
-      //   );
-      //   const rewardPerTokenStored1 = await liquidityCampaignUser1.rewardPerTokenStored();
-
-      //   console.log(rewardPerTokenStored0.toString(), rewardPerTokenStored1.toString());
-
-      //   await liquidityCampaignUser1.getReward(user1.address);
-
-      //   expect(rewardPerTokenStored0).to.be.lt(rewardPerTokenStored1);
-      // });
     });
 
     describe('#withdraw', () => {
@@ -432,18 +386,6 @@ describe('LiquidityCampaign', () => {
 
         expect(balance).to.eq(STAKE_AMOUNT);
       });
-
-      // it('should update reward correctly after withdrawing', async () => {
-      //   await stake(liquidityCampaignUser1, user1, STAKE_AMOUNT);
-
-      //   const rewardPerTokenStored0 = await liquidityCampaignUser1.rewardPerTokenStored();
-
-      //   await liquidityCampaignUser1.withdraw(STAKE_AMOUNT);
-
-      //   const rewardPerTokenStored1 = await liquidityCampaignUser1.rewardPerTokenStored();
-
-      //   expect(rewardPerTokenStored0).to.not.eq(rewardPerTokenStored1);
-      // });
     });
 
     describe('#exit', () => {
@@ -501,6 +443,26 @@ describe('LiquidityCampaign', () => {
         expect(rewardsToken).to.eq(rewardToken.address);
         expect(stakingTokenAddress).to.eq(stakingToken.address);
         expect(daoAllocation).to.eq(DAO_ALLOCATION.value);
+      });
+
+      it.only('should not be called twice by the contract owner', async () => {
+        await liquidityCampaignAdmin.init(
+          admin.address,
+          admin.address,
+          rewardToken.address,
+          stakingToken.address,
+          DAO_ALLOCATION,
+        );
+
+        await expectRevert(
+          liquidityCampaignAdmin.init(
+            admin.address,
+            admin.address,
+            rewardToken.address,
+            stakingToken.address,
+            DAO_ALLOCATION,
+          ),
+        );
       });
     });
 
