@@ -15,7 +15,6 @@ import {
   pruneDeployments,
 } from '../deployments/src';
 import { task } from 'hardhat/config';
-import { run } from 'hardhat';
 
 task('deploy-staking', 'Deploy a staking/reward pool')
   .addParam('name', 'The name of the pool you would like to deploy')
@@ -378,6 +377,7 @@ task('deploy-staking-joint', 'Deploy a JointCampaign')
     if (contractPath) {
       console.log(green(`Verifying contract at address ${jointCampaignAddress}`));
 
-      await run('verify-contract', { path: contractPath, address: jointCampaignAddress });
+      // todo where to import this run function from?
+      // await run('verify-contract', { path: contractPath, address: jointCampaignAddress });
     }
   });

@@ -28,11 +28,11 @@ contract JointCampaign is Ownable {
         uint256 debtSnapshot;
         uint256 balance;
         uint256 arcRewardPerTokenPaid;
-        uint256 stEthRewardPerTokenPaid;
+        uint256 collabRewardPerTokenPaid;
         uint256 arcRewardsEarned;
-        uint256 stEthRewardsEarned;
+        uint256 collabRewardsEarned;
         uint256 arcRewardsReleased;
-        uint256 stEthRewardsReleased;
+        uint256 collabRewardsReleased;
     }
 
     /* ========== Variables ========== */
@@ -40,28 +40,28 @@ contract JointCampaign is Ownable {
     bool public isInitialized;
 
     IERC20 public arcRewardToken;
-    IERC20 public stEthRewardToken;
+    IERC20 public collabRewardToken;
     IERC20 public stakingToken;
 
     IMozartCoreV2 public stateContract;
 
     address public arcDAO;
     address public arcRewardsDistributor;
-    address public stEthRewardsDistributor;
+    address public collabRewardsDistributor;
 
     mapping (address => Staker) public stakers;
 
     uint256 public arcPeriodFinish = 0;
-    uint256 public stEthPeriodFinish = 0;
+    uint256 public collabPeriodFinish = 0;
     uint256 public rewardsDuration = 0;
     uint256 public arcLastUpdateTime;
-    uint256 public stEthLastUpdateTime;
+    uint256 public collabLastUpdateTime;
 
     uint256 public arcRewardRate = 0;
-    uint256 public stEthRewardRate = 0;
+    uint256 public collabRewardRate = 0;
 
     uint256 public arcRewardPerTokenStored;
-    uint256 public stEthPerTokenStored;
+    uint256 public collabPerTokenStored;
 
     Decimal.D256 public daoAllocation;
     Decimal.D256 public slasherCut;
@@ -80,23 +80,23 @@ contract JointCampaign is Ownable {
 
     event Withdrawn(address indexed _user, uint256 _amount);
 
-    event RewardPaid(address indexed _user, uint256 _arcReward, uint256 _stEthReward);
+    event RewardPaid(address indexed _user, uint256 _arcReward, uint256 _collabReward);
 
     event RewardsDurationUpdated(uint256 _newDuration);
 
-    event StEthRewardsDistributorUpdated(address _rewardsDistributor);
+    event CollabRewardsDistributorUpdated(address _rewardsDistributor);
 
     event ArcRewardsDistributorUpdated(address _rewardsDistributor);
 
     event ERC20Recovered(address _token, uint256 _amount);
 
-    event StEthRecovered(uint256 _amount);
+    event CollabRecovered(uint256 _amount);
 
     event PositionStaked(address _address, uint256 _positionId);
 
     event ClaimableStatusUpdated(bool _status);
 
-    event UserSlashed(address _user, address _slasher, uint256 _arcPenalty, uint256 _stEthPenalty);
+    event UserSlashed(address _user, address _slasher, uint256 _arcPenalty, uint256 _collabPenalty);
 
     event StateContractApproved(address _address);
 
@@ -109,26 +109,26 @@ contract JointCampaign is Ownable {
 
     modifier onlyRewardDistributors() {
         require(
-            msg.sender == arcRewardsDistributor || msg.sender == stEthRewardsDistributor,
+            msg.sender == arcRewardsDistributor || msg.sender == collabRewardsDistributor,
             "Caller is not a reward distributor"
         );
         _;
     }
 
-    modifier onlyStEthDistributor() {
+    modifier onlycollabDistributor() {
         require(
-            msg.sender == stEthRewardsDistributor,
-            "Caller is not the stETH rewards distributor"
+            msg.sender == collabRewardsDistributor,
+            "Caller is not the collab rewards distributor"
         );
         _;
     }
 
     modifier verifyRewardToken(address _rewardTokenAddress) {
         bool isArcToken = _rewardTokenAddress == address(arcRewardToken);
-        bool isStEthToken = _rewardTokenAddress == address(stEthRewardToken);
+        bool iscollabToken = _rewardTokenAddress == address(collabRewardToken);
 
         require (
-            isArcToken || isStEthToken,
+            isArcToken || iscollabToken,
             "The reward token address does not correspond to one of the rewards tokens."
         );
         _;
@@ -162,7 +162,7 @@ contract JointCampaign is Ownable {
         verifyRewardToken(_rewardToken)
         returns (uint256)
     {
-        uint256 relevantPeriod = _rewardToken == address(arcRewardToken) ? arcPeriodFinish : stEthPeriodFinish;
+        uint256 relevantPeriod = _rewardToken == address(arcRewardToken) ? arcPeriodFinish : collabPeriodFinish;
 
         return block.timestamp < relevantPeriod ? block.timestamp : relevantPeriod;
     }
@@ -189,19 +189,19 @@ contract JointCampaign is Ownable {
             );
     }
 
-    function stEthRewardPerToken()
+    function collabRewardPerToken()
         external
         view
         returns (uint256)
     {
         if (_totalSupply == 0) {
-            return stEthPerTokenStored;
+            return collabPerTokenStored;
         }
 
-        return stEthPerTokenStored.add(
-            lastTimeRewardApplicable(address(stEthRewardToken))
-                .sub(stEthLastUpdateTime)
-                .mul(stEthRewardRate)
+        return collabPerTokenStored.add(
+            lastTimeRewardApplicable(address(collabRewardToken))
+                .sub(collabLastUpdateTime)
+                .mul(collabRewardRate)
                 .mul(1e18)
                 .div(_totalSupply)
         );
@@ -220,14 +220,14 @@ contract JointCampaign is Ownable {
         );
     }
 
-    function stEthEarned(
+    function collabEarned(
         address _account
     )
         external
         view
         returns (uint256)
     {
-        return _rewardTokenEarned(_account, address(stEthRewardToken));
+        return _rewardTokenEarned(_account, address(collabRewardToken));
     }
 
     function getArcRewardForDuration()
@@ -238,12 +238,12 @@ contract JointCampaign is Ownable {
         return arcRewardRate.mul(rewardsDuration);
     }
 
-    function getStETHRewardForDuration()
+    function getcollabRewardForDuration()
         external
         view
         returns (uint256)
     {
-        return stEthRewardRate.mul(rewardsDuration);
+        return collabRewardRate.mul(rewardsDuration);
     }
 
     function isMinter(
@@ -359,23 +359,23 @@ contract JointCampaign is Ownable {
         uint256 arcPenalty = userStaker.arcRewardsEarned.sub(userStaker.arcRewardsReleased);
         uint256 arcBounty = Decimal.mul(arcPenalty, slasherCut);
 
-        uint256 stEthPenalty = userStaker.stEthRewardsEarned.sub(userStaker.stEthRewardsReleased);
+        uint256 collabPenalty = userStaker.collabRewardsEarned.sub(userStaker.collabRewardsReleased);
 
         stakers[msg.sender].arcRewardsEarned = stakers[msg.sender].arcRewardsEarned.add(arcBounty);
-        stakers[msg.sender].stEthRewardsEarned = stakers[msg.sender].stEthRewardsEarned.add(stEthPenalty);
+        stakers[msg.sender].collabRewardsEarned = stakers[msg.sender].collabRewardsEarned.add(collabPenalty);
 
         stakers[arcRewardsDistributor].arcRewardsEarned = stakers[arcRewardsDistributor].arcRewardsEarned.add(
             arcPenalty.sub(arcBounty)
         );
 
         userStaker.arcRewardsEarned = userStaker.arcRewardsEarned.sub(arcPenalty);
-        userStaker.stEthRewardsEarned = userStaker.stEthRewardsEarned.sub(stEthPenalty);
+        userStaker.collabRewardsEarned = userStaker.collabRewardsEarned.sub(collabPenalty);
 
         emit UserSlashed(
             _user,
             msg.sender,
             arcPenalty,
-            stEthPenalty
+            collabPenalty
         );
     }
 
@@ -391,19 +391,19 @@ contract JointCampaign is Ownable {
         Staker storage staker = stakers[_user];
 
         uint256 arcPayableAmount = staker.arcRewardsEarned.sub(staker.arcRewardsReleased);
-        uint256 stEthPayableAmount = staker.stEthRewardsEarned.sub(staker.stEthRewardsReleased);
+        uint256 collabPayableAmount = staker.collabRewardsEarned.sub(staker.collabRewardsReleased);
 
         staker.arcRewardsReleased = staker.arcRewardsReleased.add(arcPayableAmount);
-        staker.stEthRewardsReleased = staker.arcRewardsReleased.add(arcPayableAmount);
+        staker.collabRewardsReleased = staker.arcRewardsReleased.add(arcPayableAmount);
 
         uint256 daoPayable = Decimal.mul(arcPayableAmount, daoAllocation);
 
         arcRewardToken.safeTransfer(arcDAO, daoPayable);
         arcRewardToken.safeTransfer(_user, arcPayableAmount.sub(daoPayable));
 
-        stEthRewardToken.safeTransfer(_user, stEthPayableAmount);
+        collabRewardToken.safeTransfer(_user, collabPayableAmount);
 
-        emit RewardPaid(_user, arcPayableAmount, stEthPayableAmount);
+        emit RewardPaid(_user, arcPayableAmount, collabPayableAmount);
     }
 
     function withdraw(
@@ -437,9 +437,9 @@ contract JointCampaign is Ownable {
     function init(
         address _arcDAO,
         address _arcRewardsDistributor,
-        address _stEthRewardsDistributor,
+        address _collabRewardsDistributor,
         address _arcRewardToken,
-        address _stEthRewardToken,
+        address _collabRewardToken,
         address _stakingToken,
         Decimal.D256 memory _daoAllocation,
         Decimal.D256 memory _slasherCut,
@@ -453,9 +453,9 @@ contract JointCampaign is Ownable {
             !isInitialized &&
             _arcDAO != address(0) &&
             _arcRewardsDistributor != address(0) &&
-            _stEthRewardsDistributor != address(0) &&
+            _collabRewardsDistributor != address(0) &&
             _arcRewardToken != address(0) &&
-            _stEthRewardToken != address(0) &&
+            _collabRewardToken != address(0) &&
             _stakingToken != address(0) &&
             _daoAllocation.value > 0 &&
             _slasherCut.value > 0 &&
@@ -468,9 +468,9 @@ contract JointCampaign is Ownable {
 
         arcDAO = _arcDAO;
         arcRewardsDistributor = _arcRewardsDistributor;
-        stEthRewardsDistributor = _stEthRewardsDistributor;
+        collabRewardsDistributor = _collabRewardsDistributor;
         arcRewardToken = IERC20(_arcRewardToken);
-        stEthRewardToken = IERC20(_stEthRewardToken);
+        collabRewardToken = IERC20(_collabRewardToken);
         stakingToken = IERC20(_stakingToken);
 
         daoAllocation = _daoAllocation;
@@ -480,19 +480,19 @@ contract JointCampaign is Ownable {
         stateContract = IMozartCoreV2(_stateContract);
     }
 
-    function setStEthRewardsDistributor(
+    function setcollabRewardsDistributor(
         address _rewardsDistributor
     )
         external
-        onlyStEthDistributor
+        onlycollabDistributor
     {
         require(
-            stEthRewardsDistributor != _rewardsDistributor,
+            collabRewardsDistributor != _rewardsDistributor,
             "Cannot set the same rewards distributor"
         );
 
-        stEthRewardsDistributor = _rewardsDistributor;
-        emit StEthRewardsDistributorUpdated(_rewardsDistributor);
+        collabRewardsDistributor = _rewardsDistributor;
+        emit CollabRewardsDistributorUpdated(_rewardsDistributor);
     }
 
     function setArcRewardsDistributor(
@@ -516,9 +516,9 @@ contract JointCampaign is Ownable {
         external
         onlyOwner
     {
-        uint256 periodFinish = arcPeriodFinish > stEthPeriodFinish
+        uint256 periodFinish = arcPeriodFinish > collabPeriodFinish
             ? arcPeriodFinish
-            : stEthPeriodFinish;
+            : collabPeriodFinish;
 
         require(
             periodFinish == 0 || block.timestamp > periodFinish,
@@ -577,27 +577,27 @@ contract JointCampaign is Ownable {
             arcLastUpdateTime = block.timestamp;
         } else {
             require(
-                msg.sender == stEthRewardsDistributor,
-                "Only the stETH rewards distributor can notify the amount of stETH rewards"
+                msg.sender == collabRewardsDistributor,
+                "Only the collab rewards distributor can notify the amount of collab rewards"
             );
 
-            // stETH token
-            if (block.timestamp >= stEthPeriodFinish) {
-                stEthRewardRate = _reward.div(rewardsDuration);
+            // collab token
+            if (block.timestamp >= collabPeriodFinish) {
+                collabRewardRate = _reward.div(rewardsDuration);
             } else {
-                remaining = stEthPeriodFinish.sub(block.timestamp);
-                leftover = remaining.mul(stEthRewardRate);
-                stEthRewardRate = _reward.add(leftover).div(rewardsDuration);
+                remaining = collabPeriodFinish.sub(block.timestamp);
+                leftover = remaining.mul(collabRewardRate);
+                collabRewardRate = _reward.add(leftover).div(rewardsDuration);
 
             }
 
             require(
-                stEthRewardRate <= stEthRewardToken.balanceOf(address(this)).div(rewardsDuration),
-                "Provided reward too high for the balance of stETH token"
+                collabRewardRate <= collabRewardToken.balanceOf(address(this)).div(rewardsDuration),
+                "Provided reward too high for the balance of collab token"
             );
 
-            stEthPeriodFinish = block.timestamp.add(rewardsDuration);
-            stEthLastUpdateTime = block.timestamp;
+            collabPeriodFinish = block.timestamp.add(rewardsDuration);
+            collabLastUpdateTime = block.timestamp;
         }
 
         emit RewardAdded(_reward, _rewardToken);
@@ -628,10 +628,10 @@ contract JointCampaign is Ownable {
             );
         }
 
-        // Cannot recover the staking token or the stETH rewards token
+        // Cannot recover the staking token or the collab rewards token
         require(
-            _tokenAddress != address(stakingToken) && _tokenAddress != address(stEthRewardToken),
-            "Cannot withdraw the staking or stETH reward tokens"
+            _tokenAddress != address(stakingToken) && _tokenAddress != address(collabRewardToken),
+            "Cannot withdraw the staking or collab reward tokens"
         );
 
         IERC20(_tokenAddress).safeTransfer(owner(), _tokenAmount);
@@ -639,28 +639,28 @@ contract JointCampaign is Ownable {
     }
 
     /**
-     * @notice Lets the stETH reward distributor recover a desired amount of stETH as long as that
+     * @notice Lets the collab reward distributor recover a desired amount of collab as long as that
      *          amount is not greater than the reward to recover
      *
-     * @param _amount The amount of stETH to recover
+     * @param _amount The amount of collab to recover
      */
-    function recoverStEth(
+    function recovercollab(
         uint256 _amount
     )
         external
-        onlyStEthDistributor
+        onlycollabDistributor
     {
         if (rewardsDuration > 0) {
-            uint256 stEthBalance = stEthRewardToken.balanceOf(address(this));
+            uint256 collabBalance = collabRewardToken.balanceOf(address(this));
 
             require(
-                stEthRewardRate <= stEthBalance.sub(_amount).div(rewardsDuration),
+                collabRewardRate <= collabBalance.sub(_amount).div(rewardsDuration),
                 "Only the surplus of the reward can be recovered, not more"
             );
         }
 
-        stEthRewardToken.safeTransfer(msg.sender, _amount);
-        emit StEthRecovered(_amount);
+        collabRewardToken.safeTransfer(msg.sender, _amount);
+        emit CollabRecovered(_amount);
     }
 
     function setTokensClaimable(
@@ -685,7 +685,7 @@ contract JointCampaign is Ownable {
         require(
             _rewardToken == address(0) ||
             _rewardToken == address(arcRewardToken) ||
-            _rewardToken == address(stEthRewardToken),
+            _rewardToken == address(collabRewardToken),
             "The reward token can either be 0 or a valid reward token"
         );
 
@@ -693,26 +693,26 @@ contract JointCampaign is Ownable {
         // If an individual reward token is updated, only update the relevant variables
         if (_rewardToken == address(0)) {
             arcRewardPerTokenStored = _rewardPerToken(address(arcRewardToken));
-            stEthPerTokenStored = _rewardPerToken(address(stEthRewardToken));
+            collabPerTokenStored = _rewardPerToken(address(collabRewardToken));
 
             arcLastUpdateTime = lastTimeRewardApplicable(address(arcRewardToken));
-            stEthLastUpdateTime = lastTimeRewardApplicable(address(stEthRewardToken));
+            collabLastUpdateTime = lastTimeRewardApplicable(address(collabRewardToken));
 
         } else if (_rewardToken == address(arcRewardToken)) {
             arcRewardPerTokenStored = _rewardPerToken(address(arcRewardToken));
             arcLastUpdateTime = lastTimeRewardApplicable(address(arcRewardToken));
 
         } else {
-            stEthPerTokenStored = _rewardPerToken(address(stEthRewardToken));
-            stEthLastUpdateTime = lastTimeRewardApplicable(address(stEthRewardToken));
+            collabPerTokenStored = _rewardPerToken(address(collabRewardToken));
+            collabLastUpdateTime = lastTimeRewardApplicable(address(collabRewardToken));
         }
 
         if (_account != address(0)) {
             stakers[_account].arcRewardsEarned = _rewardTokenEarned(_account, address(arcRewardToken));
             stakers[_account].arcRewardPerTokenPaid = arcRewardPerTokenStored;
 
-            stakers[_account].stEthRewardsEarned = _rewardTokenEarned(_account, address(stEthRewardToken));
-            stakers[_account].stEthRewardPerTokenPaid = stEthPerTokenStored;
+            stakers[_account].collabRewardsEarned = _rewardTokenEarned(_account, address(collabRewardToken));
+            stakers[_account].collabRewardPerTokenPaid = collabPerTokenStored;
         }
     }
 
@@ -738,13 +738,13 @@ contract JointCampaign is Ownable {
             );
         } else {
             if (_totalSupply == 0) {
-                return stEthPerTokenStored;
+                return collabPerTokenStored;
             }
 
-            return stEthPerTokenStored.add(
-                lastTimeRewardApplicable(address(stEthRewardToken))
-                    .sub(stEthLastUpdateTime)
-                    .mul(stEthRewardRate)
+            return collabPerTokenStored.add(
+                lastTimeRewardApplicable(address(collabRewardToken))
+                    .sub(collabLastUpdateTime)
+                    .mul(collabRewardRate)
                     .mul(1e18)
                     .div(_totalSupply)
             );
@@ -774,10 +774,10 @@ contract JointCampaign is Ownable {
 
         return
             stakerBalance.mul(
-                _rewardPerToken(address(stEthRewardToken))
-                .sub(stakers[_account].stEthRewardPerTokenPaid)
+                _rewardPerToken(address(collabRewardToken))
+                .sub(stakers[_account].collabRewardPerTokenPaid)
             )
             .div(1e18)
-            .add(stakers[_account].stEthRewardsEarned);
+            .add(stakers[_account].collabRewardsEarned);
     }
 }
