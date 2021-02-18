@@ -77,3 +77,17 @@ type GlobalMarket @entity {
   position: Position!
   createdAt: Int!
 }
+
+enum LiquidityActionType {
+  Withdraw
+  Deposit
+}
+
+type LiquidityAction @entity {
+  id: ID!
+  account: Bytes!
+  pool:Bytes!
+  amount: BigInt!
+  type: LiquidityActionType!
+  timestamp: BigInt!
+}
