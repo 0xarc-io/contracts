@@ -44,8 +44,8 @@ export default {
       arcRewardsDistributor: string,
       arcTokenAddress: string,
     ) {
-      const stEthRewardsDistributor = '';
-      const stEthTokenAddress = '0xae7ab96520de3a18e5e111b5eaab095312d7fe84';
+      const lidoRewardsDistributor = '';
+      const lidoTokenAddress = '0x5A98FcBEA516Cf06857215779Fd812CA3beF1B32';
       const daoAllocation = ArcDecimal.new(0.4);
       const slashersCut = ArcDecimal.new(0.3);
       const stakeToDebtRatio = 2;
@@ -54,9 +54,9 @@ export default {
       return contract.init(
         arcDao,
         arcRewardsDistributor,
-        stEthRewardsDistributor,
+        lidoRewardsDistributor,
         arcTokenAddress,
-        stEthTokenAddress,
+        lidoTokenAddress,
         this.stakingToken,
         daoAllocation,
         slashersCut,
