@@ -8,7 +8,7 @@ interface IWstETH {
     /**
      * @return Returns amount of stETH for 1 wstETH
      */
-    function stEthPerToken() 
+    function stEthPerToken()
         external
         view
         returns (uint256);
