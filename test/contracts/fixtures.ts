@@ -14,6 +14,7 @@ import {
   deploySpritzCoreV3,
   deployMockMozartCore,
   deployMockSavings,
+  deploySapphireCreditScore,
 } from './deployers';
 
 import { Signer } from 'ethers';
@@ -113,4 +114,15 @@ export async function spritzFixture(ctx: ITestContext, args?: ITestContextArgs) 
 
 export async function distributorFixture(ctx: ITestContext, args?: ITestContextArgs) {
   ctx.contracts.collateral = await deployTestToken(ctx.signers.admin, 'ARC GOVERNANCE', 'ARCX', 18);
+}
+
+export async function sapphireFixture(ctx: ITestContext, args?: ITestContextArgs) {
+  const deployer: Signer = ctx.signers.admin;
+  const deployerAddress = await deployer.getAddress();
+
+  console.log('deploy Sapphire Credit Score');
+  ctx.contracts.sapphire.creditScore = await deploySapphireCreditScore(
+    deployer,
+    ctx.signers.interestSetter.address,
+  );
 }

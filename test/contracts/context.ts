@@ -46,6 +46,7 @@ export async function generateContext(
   const contracts = {
     mozart: {},
     spritz: {},
+    sapphire: {},
     synthetic: {},
   } as Contracts;
 

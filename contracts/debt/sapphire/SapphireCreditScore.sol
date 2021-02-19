@@ -3,11 +3,12 @@
 pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
+import {Ownable} from "../../lib/Ownable.sol";
 import {SapphireTypes} from "./SapphireTypes.sol";
+import {ISapphireCreditScore} from "./ISapphireCreditScore.sol";
 
-contract SapphireCreditScore {
-
-    /* ========== Structs ========== */
+contract SapphireCreditScore is ISapphireCreditScore, Ownable {
+  /* ========== Structs ========== */
 
     struct CreditScore {
         uint256 score;
@@ -28,59 +29,66 @@ contract SapphireCreditScore {
 
     address public merkleRootUpdater;
 
-    mapping (address => CreditScore) public userScores;
+    mapping(address => CreditScore) public userScores;
 
-    /* ========== Functions ========== */
+    /* ========== Modifiers ========== */
 
-    function updateMerkleRoot(
-        bytes32 newRoot
-    )
-        public
-    {
-        // If admin calls update merkle root
-        // - Replace upcoming merkle root (avoid time delay)
-        // - Keep existing merkle root as-is
+    modifier isAuthorized() {
+        require(
+            merkleRootUpdater == msg.sender,
+            "SapphireCreditScore: caller is not authorized to update merkle root"
+        );
+        _;
+    }
+
+    modifier isAuthorizedOrOwner() {
+        require(
+            merkleRootUpdater == msg.sender || owner() == msg.sender,
+            "SapphireCreditScore: caller is not authorized to update merkle root"
+        );
+        _;
+    }
+
+    /* ========== Constructor ========== */
+
+    constructor(address _merkleRootUpdater) public {
+        merkleRootUpdater = _merkleRootUpdater;
+    }
+
+  /* ========== Functions ========== */
+
+    function updateMerkleRoot(bytes32 newRoot) public isAuthorizedOrOwner {
+        if (msg.sender == merkleRootUpdater) {
+            // If admin calls update merkle root
+            // - Replace upcoming merkle root (avoid time delay)
+            // - Keep existing merkle root as-is
+        } else {
+            updateMerkleRootAsOwner(newRoot);
+        }
+    }
+
+    function updateMerkleRootAsOwner(bytes32 newRoot) private onlyOwner {
         // If not admin
         // - Ensure duration has been passed
         // - Set the upcoming merkle root to the current one
         // - Set the passed in merkle root to the upcoming one
+        require(
+            isPaused == true,
+            "SapphireCreditScore: pause contract to update merkle root as owner"
+        );
+        currentMerkleRoot = newRoot;
     }
 
-    function request(
-        SapphireTypes.ScoreProof memory proof
-    )
-        public
-        returns (uint256)
-    {
+
+    function request(SapphireTypes.ScoreProof memory proof) public returns (uint256) {
         // Decode the score from the current merkle root
         // Update the userScores mapping
         // Return the score
     }
 
-    function getLastScore(
-        address user
-    )
-        public
-        returns (uint256, uint256)
-    {
+    function getLastScore(address user) public returns (uint256, uint256) {}
 
-    }
+    function setMerkleRootDelay(uint256 delay) public {}
 
-    function setMerkleRootDelay(
-        uint256 delay
-    )
-        public
-    {
-
-    }
-
-    function setPause(
-        bool status
-    )
-        public
-    {
-
-    }
-
-
+    function setPause(bool status) public {}
 }
