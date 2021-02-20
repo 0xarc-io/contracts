@@ -22,8 +22,7 @@ contract WstEthOracle is IOracle {
 
     address public stETHCrvPoolAddress = 0xDC24316b9AE028F1497c275EB9192a3Ea0f67022;
 
-    // TODO add the wstETH address on mainnet. This given address (0xDC24316b9AE028F1497c275EB9192a3Ea0f67022) is wrong
-    address public wstETHAddress = 0xDC24316b9AE028F1497c275EB9192a3Ea0f67022;
+    address public wstETHAddress = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
 
     uint256 public chainlinkEthScalar;
 
