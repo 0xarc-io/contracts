@@ -1,4 +1,5 @@
-import { WstEthOracle, WstEthOracleFactory } from '@src/typings';
+import { WstEthOracle } from '@src/typings/WstEthOracle';
+import { WstEthOracleFactory } from '@src/typings/WstEthOracleFactory';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 
