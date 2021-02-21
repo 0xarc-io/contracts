@@ -8,7 +8,6 @@ import {Amount} from "../../lib/Amount.sol";
 library SapphireTypes {
 
     struct ScoreProof {
-        uint256 index;
         address account;
         uint256 score;
         bytes32[] merkleProof;
