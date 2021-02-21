@@ -17,6 +17,8 @@ contract SapphireCreditScore {
 
     bool public isPaused;
 
+    uint256 public lastMerkleRootUpdate;
+
     uint256 public merkleRootDelayDuration;
 
     bytes32 public currentMerkleRoot;
@@ -34,8 +36,13 @@ contract SapphireCreditScore {
     )
         public
     {
-        // Set the upcoming merkle root to the current one
-        // Set the passed in merkle root to the upcoming one
+        // If admin calls update merkle root
+        // - Replace upcoming merkle root (avoid time delay)
+        // - Keep existing merkle root as-is
+        // If not admin
+        // - Ensure duration has been passed
+        // - Set the upcoming merkle root to the current one
+        // - Set the passed in merkle root to the upcoming one
     }
 
     function request(

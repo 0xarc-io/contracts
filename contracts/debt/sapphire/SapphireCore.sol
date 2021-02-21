@@ -7,8 +7,6 @@ import {SapphireTypes} from "./SapphireTypes.sol";
 
 contract SapphireCore {
 
-    // Key difference, keep the collateral inside the vault
-
     function open(
         uint256 collateralAmount,
         uint256 borrowAmount,

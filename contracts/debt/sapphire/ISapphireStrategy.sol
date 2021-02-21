@@ -23,6 +23,7 @@ contract ISapphireStrategy {
 
     function rescue(
         address token,
+        address to,
         uint256 amount,
         address vault
     )
