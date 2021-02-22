@@ -38,13 +38,19 @@ contract WstEthOracle is IOracle {
         // get stETH per wstETH
         uint256 stEthPerWstEth = IWstETH(wstETHAddress).stEthPerToken();
 
-        // get price of stETH in ETH
-        uint256 ethPerStEth = ICurve(stETHCrvPoolAddress).get_virtual_price();
+        // Get amount of USD per stETH to check against safety margin
+        uint256 ethPerStEth = ICurve(stETHCrvPoolAddress).get_dy(1, 0, 10 ** 18);
+        require(
+            ethPerStEth <= 10 ** 18 &&
+            ethPerStEth >= 8 * 10 ** 17,
+            "The amount of ETH per stETH cannot be less than 0.8 ETH or higher than 1 ETH"
+        );
+
+        // get amount of eth per one wstETH
+        uint256 ethPerWstEth = ICurve(stETHCrvPoolAddress).get_dy(1, 0, stEthPerWstEth);
 
         // get price in USD
         uint256 usdPerEth = uint256(chainLinkEthAggregator.latestAnswer()).mul(10 ** chainlinkEthScalar);
-
-        uint256 ethPerWstEth = stEthPerWstEth.mul(ethPerStEth).div(10 ** 18);
 
         uint256 usdPerWstEth = usdPerEth.mul(ethPerWstEth).div(10 ** 18);
 
