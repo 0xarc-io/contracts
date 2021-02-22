@@ -41,13 +41,17 @@ contract WstEthOracle is IOracle {
         // Get amount of USD per stETH to check against safety margin
         uint256 ethPerStEth = ICurve(stETHCrvPoolAddress).get_dy(1, 0, 10 ** 18);
         require(
-            ethPerStEth <= 10 ** 18 &&
             ethPerStEth >= 8 * 10 ** 17,
-            "The amount of ETH per stETH cannot be less than 0.8 ETH or higher than 1 ETH"
+            "The amount of ETH per stETH cannot be less than 0.8 ETH"
         );
 
+        // If the amount of ETH per stETH is higher than 1 ETH, limit it to 1
+        if (ethPerStEth > 10 ** 18) {
+            ethPerStEth = 10 ** 18;
+        }
+
         // get amount of eth per one wstETH
-        uint256 ethPerWstEth = ICurve(stETHCrvPoolAddress).get_dy(1, 0, stEthPerWstEth);
+        uint256 ethPerWstEth = ethPerStEth.mul(stEthPerWstEth).div(10 ** 18);
 
         // get price in USD
         uint256 usdPerEth = uint256(chainLinkEthAggregator.latestAnswer()).mul(10 ** chainlinkEthScalar);

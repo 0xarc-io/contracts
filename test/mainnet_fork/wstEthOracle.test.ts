@@ -3,7 +3,7 @@ import { WstEthOracleFactory } from '@src/typings/WstEthOracleFactory';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 
-describe.skip('WstEthOracle', () => {
+describe.only('WstEthOracle', () => {
   let oracle: WstEthOracle;
 
   before(async () => {
