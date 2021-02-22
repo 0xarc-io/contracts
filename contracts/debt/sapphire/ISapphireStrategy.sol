@@ -8,17 +8,22 @@ contract ISapphireStrategy {
     function deposit(
         address token,
         uint256 amount,
-        address from,
+        address user,
         address vault
     )
-        public;
+        public
+        returns (uint256);
 
     function withdraw(
         address token,
         uint256 amount,
-        address from,
+        address user,
         address vault
     )
+        public
+        returns (uint256);
+
+    function harvest()
         public;
 
     function rescue(
@@ -27,6 +32,7 @@ contract ISapphireStrategy {
         uint256 amount,
         address vault
     )
-        public;
+        public
+        returns (uint256);
 
 }
