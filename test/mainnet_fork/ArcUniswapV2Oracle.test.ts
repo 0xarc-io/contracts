@@ -106,7 +106,7 @@ describe.skip('ArcUniswapV2Oracle', () => {
       await expectRevert(keeperOracle.work());
     });
 
-    it.only('should update all pairs', async () => {
+    it('should update all pairs', async () => {
       // add pairs
       await oracle.addPair(WBTC, DIGG);
       await oracle.addPair(WBTC, KPR);
