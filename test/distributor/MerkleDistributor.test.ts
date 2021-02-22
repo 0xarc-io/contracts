@@ -14,7 +14,7 @@ const overrides = {
 
 const ZERO_BYTES32 = '0x0000000000000000000000000000000000000000000000000000000000000000';
 
-describe.only('MerkleDistributor', () => {
+describe('MerkleDistributor', () => {
   const provider = new MockProvider({
     ganacheOptions: {
       hardfork: 'istanbul',
