@@ -14,7 +14,7 @@ const overrides = {
 
 const ZERO_BYTES32 = '0x0000000000000000000000000000000000000000000000000000000000000000';
 
-describe('MerkleDistributor', () => {
+describe.only('MerkleDistributor', () => {
   const provider = new MockProvider({
     ganacheOptions: {
       hardfork: 'istanbul',
@@ -55,6 +55,35 @@ describe('MerkleDistributor', () => {
     });
   });
 
+  describe('#switchActive', () => {
+    it('owner can switch activity', async () => {
+      const distributor = await deployContract(
+        wallet0,
+        Distributor,
+        [token.address, ZERO_BYTES32],
+        overrides,
+      );
+      expect(await distributor.merkleRoot()).to.eq(ZERO_BYTES32);
+      expect(await distributor.active()).to.be.false;
+      await distributor.switchActive();
+      expect(await distributor.active()).to.be.true;
+    });
+
+    it('fails if non-owner try to switch activity', async () => {
+      const distributor = await deployContract(
+        wallet0,
+        Distributor,
+        [token.address, ZERO_BYTES32],
+        overrides,
+      );
+      expect(await distributor.merkleRoot()).to.eq(ZERO_BYTES32);
+      expect(await distributor.active()).to.be.false;
+      await expect(distributor.connect(wallet1).switchActive()).to.be.revertedWith(
+        'Ownable: caller is not the owner',
+      );
+    });
+  });
+
   describe('#claim', () => {
     it('fails for empty proof', async () => {
       const distributor = await deployContract(
@@ -63,8 +92,9 @@ describe('MerkleDistributor', () => {
         [token.address, ZERO_BYTES32],
         overrides,
       );
+      await distributor.switchActive();
       await expect(distributor.claim(0, wallet0.address, 10, [])).to.be.revertedWith(
-        'MerkleDistributor: Invalid proof.',
+        'MerkleDistributor: Invalid proof',
       );
     });
 
@@ -75,8 +105,21 @@ describe('MerkleDistributor', () => {
         [token.address, ZERO_BYTES32],
         overrides,
       );
+      await distributor.switchActive();
       await expect(distributor.claim(0, wallet0.address, 10, [])).to.be.revertedWith(
-        'MerkleDistributor: Invalid proof.',
+        'MerkleDistributor: Invalid proof',
+      );
+    });
+
+    it('fails for not active contract', async () => {
+      const distributor = await deployContract(
+        wallet0,
+        Distributor,
+        [token.address, ZERO_BYTES32],
+        overrides,
+      );
+      await expect(distributor.claim(0, wallet0.address, 10, [])).to.be.revertedWith(
+        'MerkleDistributor: Contract is not active',
       );
     });
 
@@ -94,6 +137,7 @@ describe('MerkleDistributor', () => {
           [token.address, tree.getHexRoot()],
           overrides,
         );
+        await distributor.switchActive();
         await token.mint(distributor.address, 201);
       });
 
@@ -137,7 +181,7 @@ describe('MerkleDistributor', () => {
         await distributor.claim(0, wallet0.address, 100, proof0, overrides);
         await expect(
           distributor.claim(0, wallet0.address, 100, proof0, overrides),
-        ).to.be.revertedWith('MerkleDistributor: Drop already claimed.');
+        ).to.be.revertedWith('MerkleDistributor: Drop already claimed');
       });
 
       it('cannot claim more than once: 0 and then 1', async () => {
@@ -164,7 +208,7 @@ describe('MerkleDistributor', () => {
             tree.getProof(0, wallet0.address, BigNumber.from(100)),
             overrides,
           ),
-        ).to.be.revertedWith('MerkleDistributor: Drop already claimed.');
+        ).to.be.revertedWith('MerkleDistributor: Drop already claimed');
       });
 
       it('cannot claim more than once: 1 and then 0', async () => {
@@ -191,23 +235,24 @@ describe('MerkleDistributor', () => {
             tree.getProof(1, wallet1.address, BigNumber.from(101)),
             overrides,
           ),
-        ).to.be.revertedWith('MerkleDistributor: Drop already claimed.');
+        ).to.be.revertedWith('MerkleDistributor: Drop already claimed');
       });
 
       it('cannot claim for address other than proof', async () => {
         const proof0 = tree.getProof(0, wallet0.address, BigNumber.from(100));
         await expect(
           distributor.claim(1, wallet1.address, 101, proof0, overrides),
-        ).to.be.revertedWith('MerkleDistributor: Invalid proof.');
+        ).to.be.revertedWith('MerkleDistributor: Invalid proof');
       });
 
       it('cannot claim more than proof', async () => {
         const proof0 = tree.getProof(0, wallet0.address, BigNumber.from(100));
         await expect(
           distributor.claim(0, wallet0.address, 101, proof0, overrides),
-        ).to.be.revertedWith('MerkleDistributor: Invalid proof.');
+        ).to.be.revertedWith('MerkleDistributor: Invalid proof');
       });
     });
+
     describe('larger tree', () => {
       let distributor: Contract;
       let tree: BalanceTree;
@@ -223,6 +268,7 @@ describe('MerkleDistributor', () => {
           [token.address, tree.getHexRoot()],
           overrides,
         );
+        await distributor.switchActive();
         await token.mint(distributor.address, 201);
       });
 
@@ -275,6 +321,7 @@ describe('MerkleDistributor', () => {
           [token.address, tree.getHexRoot()],
           overrides,
         );
+        await distributor.switchActive();
         await token.mint(distributor.address, constants.MaxUint256);
       });
 
@@ -284,7 +331,7 @@ describe('MerkleDistributor', () => {
           await distributor.claim(i, wallet0.address, 100, proof, overrides);
           await expect(
             distributor.claim(i, wallet0.address, 100, proof, overrides),
-          ).to.be.revertedWith('MerkleDistributor: Drop already claimed.');
+          ).to.be.revertedWith('MerkleDistributor: Drop already claimed');
         }
       });
     });
