@@ -40,7 +40,8 @@ contract SapphireCore {
     }
 
     function liquidate(
-        uint256 positionId
+        uint256 positionId,
+        SapphireTypes.ScoreProof memory scoreProof
     )
         public
     {
