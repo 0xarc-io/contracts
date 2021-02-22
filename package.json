@@ -114,6 +114,7 @@
     "@openzeppelin/contracts": "^2.5.0",
     "@openzeppelin/upgrades": "^2.8.0",
     "eslint-plugin-unused-imports": "^1.0.0",
+    "ethereumjs-util": "^7.0.8",
     "ethers": "^5.0.2",
     "husky": "^4.3.0"
   },
