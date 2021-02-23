@@ -383,25 +383,22 @@ contract JointCampaign is Ownable {
         public
         updateReward(_user, address(0))
     {
-        require(
-            tokensClaimable == true,
-            "Tokens cannnot be claimed yet"
-        );
-
         Staker storage staker = stakers[_user];
+        uint256 arcPayableAmount;
 
-        uint256 arcPayableAmount = staker.arcRewardsEarned.sub(staker.arcRewardsReleased);
         uint256 collabPayableAmount = staker.collabRewardsEarned.sub(staker.collabRewardsReleased);
-
-        staker.arcRewardsReleased = staker.arcRewardsReleased.add(arcPayableAmount);
-        staker.collabRewardsReleased = staker.arcRewardsReleased.add(arcPayableAmount);
-
-        uint256 daoPayable = Decimal.mul(arcPayableAmount, daoAllocation);
-
-        arcRewardToken.safeTransfer(arcDAO, daoPayable);
-        arcRewardToken.safeTransfer(_user, arcPayableAmount.sub(daoPayable));
+        staker.collabRewardsReleased = staker.collabRewardsReleased.add(collabPayableAmount);
 
         collabRewardToken.safeTransfer(_user, collabPayableAmount);
+
+        if (tokensClaimable) {
+            arcPayableAmount = staker.arcRewardsEarned.sub(staker.arcRewardsReleased);
+            staker.arcRewardsReleased = staker.arcRewardsReleased.add(arcPayableAmount);
+
+            uint256 daoPayable = Decimal.mul(arcPayableAmount, daoAllocation);
+            arcRewardToken.safeTransfer(arcDAO, daoPayable);
+            arcRewardToken.safeTransfer(_user, arcPayableAmount.sub(daoPayable));
+        }
 
         emit RewardPaid(_user, arcPayableAmount, collabPayableAmount);
     }
