@@ -14,8 +14,6 @@ import {IERC20} from "../token/IERC20.sol";
 import {IMozartCoreV2} from "../debt/mozart/IMozartCoreV2.sol";
 import {MozartTypes} from "../debt/mozart/MozartTypes.sol";
 
-import "hardhat/console.sol";
-
 contract JointCampaign is Ownable {
 
     using SafeMath for uint256;
@@ -685,7 +683,6 @@ contract JointCampaign is Ownable {
             _rewardToken == address(collabRewardToken),
             "The reward token can either be 0 or a valid reward token"
         );
-
 
         // If an individual reward token is updated, only update the relevant variables
         if (_rewardToken == address(0)) {
