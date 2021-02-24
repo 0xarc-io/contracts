@@ -122,6 +122,7 @@ export async function sapphireFixture(ctx: ITestContext, args?: ITestContextArgs
 
   ctx.contracts.sapphire.creditScore = await deploySapphireCreditScore(
     deployer,
+    '0x0000000000000000000000000000000000000000000000000000000000000000',
     ctx.signers.interestSetter.address,
   );
 }

@@ -6,6 +6,10 @@ import { sapphireFixture } from '../fixtures';
 
 chai.use(solidity);
 
+const ZERO_BYTES32 = '0x0000000000000000000000000000000000000000000000000000000000000000';
+const ONE_BYTES32 = '0x1111111111111111111111111111111111111111111111111111111111111111';
+const TWO_BYTES32 = '0x2222222222222222222222222222222222222222222222222222222222222222';
+
 /**
  * This is the core credit score contract and is where a user's credit score will
  * be posted. The logic around this contract needs to be very sound since we anticipate
@@ -47,22 +51,55 @@ describe.only('SapphireCreditScore', () => {
   })
 
   describe('#updateMerkleRoot', () => {
+    beforeEach(async () => {
+      await ctx.contracts.sapphire.creditScore.setPause(false);
+    });
+
     it('should not be able to update the merkle root as an unauthorised user', async () => {
-      await expect(ctx.contracts.sapphire.creditScore.connect(ctx.signers.unauthorised).updateMerkleRoot('0x0000000000000000000000000000000000000000000000000000000000000000')).to.be.revertedWith('SapphireCreditScore: caller is not authorized to update merkle root');
+      await expect(ctx.contracts.sapphire.creditScore.connect(ctx.signers.unauthorised).updateMerkleRoot(ZERO_BYTES32)).to.be.revertedWith('SapphireCreditScore: caller is not authorized to update merkle root');
     });
 
     it('should not be able to update as the owner if the contract is not paused', async () => {
-      await expect(ctx.contracts.sapphire.creditScore.updateMerkleRoot('0x0000000000000000000000000000000000000000000000000000000000000000')).to.be.revertedWith('SapphireCreditScore: pause contract to update merkle root as owner');
+      await expect(ctx.contracts.sapphire.creditScore.updateMerkleRoot(ZERO_BYTES32)).to.be.revertedWith('SapphireCreditScore: pause contract to update merkle root as owner');
     });
 
-    it('should not be able to be called by the root updater before the delay duration', async () => {});
+    it('should not be able to be called by the root updater before the delay duration', async () => {
+      await ctx.contracts.sapphire.creditScore.connect(ctx.signers.interestSetter).updateMerkleRoot(ZERO_BYTES32);
+      await expect(ctx.contracts.sapphire.creditScore.connect(ctx.signers.interestSetter).updateMerkleRoot(ZERO_BYTES32)).to.be.revertedWith('SapphireCreditScore: too frequent root update');
+    });
 
-    it('should not be able to post an empty root', async () => {});
+    xit('should not be able to post an empty root', async () => {
+      // calling with null or undefined as merkle root throw error cannot call .toHex() on undefined/null
+      await expect(ctx.contracts.sapphire.creditScore.connect(ctx.signers.interestSetter).updateMerkleRoot(null as any)).to.be.revertedWith('SapphireCreditScore: root is empty');
+    });
+
+    it('instantly update merkle root as the root owner', async () => {
+      await ctx.contracts.sapphire.creditScore.setPause(true);
+      const upcomingMerkleRoot = await ctx.contracts.sapphire.creditScore.upcomingMerkleRoot();
+      await ctx.contracts.sapphire.creditScore.connect(ctx.signers.admin).updateMerkleRoot(ONE_BYTES32);
+      expect(await ctx.contracts.sapphire.creditScore.upcomingMerkleRoot()).eq(upcomingMerkleRoot);
+      expect(await ctx.contracts.sapphire.creditScore.currentMerkleRoot()).eq(ONE_BYTES32);
+    });
+
+    it('instantly update merkle root as the root owner avoiding time delay ', async () => {
+      await ctx.contracts.sapphire.creditScore.connect(ctx.signers.interestSetter).updateMerkleRoot(ONE_BYTES32);
+      const initialLastMerkleRootUpdate = await ctx.contracts.sapphire.creditScore.lastMerkleRootUpdate();
+      const initialUpcomingMerkleRoot = await ctx.contracts.sapphire.creditScore.upcomingMerkleRoot();
+      await ctx.contracts.sapphire.creditScore.connect(ctx.signers.admin).setPause(true);
+      await ctx.contracts.sapphire.creditScore.connect(ctx.signers.admin).updateMerkleRoot(TWO_BYTES32);
+      // should this method update lastMerkleRootUpdate timestamp?
+      expect(await ctx.contracts.sapphire.creditScore.lastMerkleRootUpdate()).eq(initialLastMerkleRootUpdate);
+      expect(await ctx.contracts.sapphire.creditScore.upcomingMerkleRoot()).eq(initialUpcomingMerkleRoot);
+      expect(await ctx.contracts.sapphire.creditScore.currentMerkleRoot()).eq(TWO_BYTES32);
+    });
 
     it('should be able to update the merkle root as the root updater', async () => {
-      // Ensure the last updated date was updated
-      // The current merkle root has been updated from the upcoming merkle root
-      // The upcoming merkle root has been set in queue
+      const initialLastMerkleRootUpdate = await ctx.contracts.sapphire.creditScore.lastMerkleRootUpdate();
+      const initialUpcomingMerkleRoot = await ctx.contracts.sapphire.creditScore.upcomingMerkleRoot();
+      await ctx.contracts.sapphire.creditScore.connect(ctx.signers.interestSetter).updateMerkleRoot(ONE_BYTES32);
+      expect(await ctx.contracts.sapphire.creditScore.lastMerkleRootUpdate()).not.eq(initialLastMerkleRootUpdate);
+      expect(await ctx.contracts.sapphire.creditScore.currentMerkleRoot()).eq(initialUpcomingMerkleRoot);
+      expect(await ctx.contracts.sapphire.creditScore.upcomingMerkleRoot()).eq(ONE_BYTES32);
     });
   });
 
