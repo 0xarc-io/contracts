@@ -120,7 +120,6 @@ export async function sapphireFixture(ctx: ITestContext, args?: ITestContextArgs
   const deployer: Signer = ctx.signers.admin;
   const deployerAddress = await deployer.getAddress();
 
-  console.log('deploy Sapphire Credit Score');
   ctx.contracts.sapphire.creditScore = await deploySapphireCreditScore(
     deployer,
     ctx.signers.interestSetter.address,

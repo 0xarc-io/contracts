@@ -53,6 +53,8 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
 
     constructor(address _merkleRootUpdater) public {
         merkleRootUpdater = _merkleRootUpdater;
+        lastMerkleRootUpdate = block.timestamp;
+        isPaused = true;
     }
 
   /* ========== Functions ========== */
@@ -90,5 +92,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
 
     function setMerkleRootDelay(uint256 delay) public {}
 
-    function setPause(bool status) public {}
+    function setPause(bool status) public onlyOwner {
+        isPaused = status;
+    }
 }
