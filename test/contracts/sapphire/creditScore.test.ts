@@ -15,7 +15,7 @@ describe.only('SapphireCreditScore', () => {
   // Utils will need to be developed to generate valid + invalid merkle roots
   let ctx: ITestContext;
 
-  before(async () => {
+  beforeEach(async () => {
     ctx = await generateContext(sapphireFixture, async () => {});
   });
 
@@ -23,6 +23,27 @@ describe.only('SapphireCreditScore', () => {
     const merkleRootUpdater = await ctx.contracts.sapphire.creditScore.merkleRootUpdater();
     expect(merkleRootUpdater).not.eq(ctx.signers.admin.address);
     expect(merkleRootUpdater).eq(ctx.signers.interestSetter.address);
+  })
+
+  describe('#setPause', () => {
+    it('initially not active',  async () => {
+      expect(await ctx.contracts.sapphire.creditScore.isPaused()).to.be.true;
+    })
+
+    it('revert if set pause as unauthorize', async () => {
+      expect(await ctx.contracts.sapphire.creditScore.merkleRootUpdater()).not.eq(ctx.signers.unauthorised.address);
+      expect(await ctx.contracts.sapphire.creditScore.owner()).not.eq(ctx.signers.unauthorised.address);
+      await expect(ctx.contracts.sapphire.creditScore.connect(ctx.signers.unauthorised).setPause(false)).to.be.revertedWith('Ownable: caller is not the owner');
+    })
+
+    it('revert if set pause as merkle root updater', async () => {
+      expect(await ctx.contracts.sapphire.creditScore.merkleRootUpdater()).eq(ctx.signers.interestSetter.address);
+      await expect(ctx.contracts.sapphire.creditScore.connect(ctx.signers.interestSetter).setPause(false)).to.be.revertedWith('Ownable: caller is not the owner');
+    })
+
+    it('set pause as owner', async () => {
+      await expect(ctx.contracts.sapphire.creditScore.setPause(false)).not.to.be.reverted;
+    })
   })
 
   describe('#updateMerkleRoot', () => {
