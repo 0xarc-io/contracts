@@ -8,7 +8,7 @@ import {SapphireTypes} from "./SapphireTypes.sol";
 import {ISapphireCreditScore} from "./ISapphireCreditScore.sol";
 
 contract SapphireCreditScore is ISapphireCreditScore, Ownable {
-  /* ========== Structs ========== */
+    /* ========== Structs ========== */
 
     struct CreditScore {
         uint256 score;
@@ -49,31 +49,53 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         _;
     }
 
+    modifier isActive() {
+        require(
+            isPaused == false,
+            "SapphireCreditScore: contract is not active"
+        );
+        _;
+    }
+
     /* ========== Constructor ========== */
 
-    constructor(address _merkleRootUpdater) public {
+    constructor(bytes32 merkleRoot, address _merkleRootUpdater) public {
+        currentMerkleRoot = merkleRoot;
+        upcomingMerkleRoot = merkleRoot;
         merkleRootUpdater = _merkleRootUpdater;
-        lastMerkleRootUpdate = block.timestamp;
+        lastMerkleRootUpdate = 0;
         isPaused = true;
+        merkleRootDelayDuration = 86400; // 24 * 60 * 60 sec
     }
 
   /* ========== Functions ========== */
 
     function updateMerkleRoot(bytes32 newRoot) public isAuthorizedOrOwner {
         if (msg.sender == merkleRootUpdater) {
-            // If admin calls update merkle root
-            // - Replace upcoming merkle root (avoid time delay)
-            // - Keep existing merkle root as-is
+            updateMerkleRootAsUpdator(newRoot);
         } else {
             updateMerkleRootAsOwner(newRoot);
         }
     }
 
-    function updateMerkleRootAsOwner(bytes32 newRoot) private onlyOwner {
+    function updateMerkleRootAsUpdator(bytes32 newRoot) private isAuthorized isActive {
         // If not admin
         // - Ensure duration has been passed
         // - Set the upcoming merkle root to the current one
         // - Set the passed in merkle root to the upcoming one
+        require(
+            block.timestamp - lastMerkleRootUpdate > merkleRootDelayDuration,
+            "SapphireCreditScore: too frequent root update"
+        );
+        currentMerkleRoot = upcomingMerkleRoot;
+        upcomingMerkleRoot = newRoot;
+        lastMerkleRootUpdate = block.timestamp;
+    }
+
+    function updateMerkleRootAsOwner(bytes32 newRoot) private onlyOwner {
+        // If admin calls update merkle root
+        // - Replace upcoming merkle root (avoid time delay)
+        // - Keep existing merkle root as-is
         require(
             isPaused == true,
             "SapphireCreditScore: pause contract to update merkle root as owner"
