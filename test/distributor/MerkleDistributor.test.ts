@@ -11,10 +11,6 @@ import { MerkleDistributor } from '@src/typings/MerkleDistributor';
 
 chai.use(solidity);
 
-const overrides = {
-  gasLimit: 9999999,
-};
-
 const ZERO_BYTES32 = '0x0000000000000000000000000000000000000000000000000000000000000000';
 
 describe('MerkleDistributor', () => {
@@ -101,11 +97,11 @@ describe('MerkleDistributor', () => {
 
       it('successful claim', async () => {
         const proof0 = tree.getProof(0, ctx.signers.admin.address, BigNumber.from(100));
-        await expect(distributor.claim(0, ctx.signers.admin.address, 100, proof0, overrides))
+        await expect(distributor.claim(0, ctx.signers.admin.address, 100, proof0))
           .to.emit(distributor, 'Claimed')
           .withArgs(0, ctx.signers.admin.address, 100);
         const proof1 = tree.getProof(1, ctx.signers.unauthorised.address, BigNumber.from(101));
-        await expect(distributor.claim(1, ctx.signers.unauthorised.address, 101, proof1, overrides))
+        await expect(distributor.claim(1, ctx.signers.unauthorised.address, 101, proof1))
           .to.emit(distributor, 'Claimed')
           .withArgs(1, ctx.signers.unauthorised.address, 101);
       });
@@ -113,7 +109,7 @@ describe('MerkleDistributor', () => {
       it('transfers the ctx.contracts.collateral', async () => {
         const proof0 = tree.getProof(0, ctx.signers.admin.address, BigNumber.from(100));
         expect(await ctx.contracts.collateral.balanceOf(ctx.signers.admin.address)).to.eq(0);
-        await distributor.claim(0, ctx.signers.admin.address, 100, proof0, overrides);
+        await distributor.claim(0, ctx.signers.admin.address, 100, proof0);
         expect(await ctx.contracts.collateral.balanceOf(ctx.signers.admin.address)).to.eq(100);
       });
 
@@ -121,7 +117,7 @@ describe('MerkleDistributor', () => {
         const proof0 = tree.getProof(0, ctx.signers.admin.address, BigNumber.from(100));
         await ctx.contracts.collateral.redeemShare(distributor.address, 140);
         await expect(
-          distributor.claim(0, ctx.signers.admin.address, 100, proof0, overrides),
+          distributor.claim(0, ctx.signers.admin.address, 100, proof0),
         ).to.be.revertedWith('SafeMath: subtraction overflow');
       });
 
@@ -129,16 +125,16 @@ describe('MerkleDistributor', () => {
         const proof0 = tree.getProof(0, ctx.signers.admin.address, BigNumber.from(100));
         expect(await distributor.isClaimed(0)).to.eq(false);
         expect(await distributor.isClaimed(1)).to.eq(false);
-        await distributor.claim(0, ctx.signers.admin.address, 100, proof0, overrides);
+        await distributor.claim(0, ctx.signers.admin.address, 100, proof0);
         expect(await distributor.isClaimed(0)).to.eq(true);
         expect(await distributor.isClaimed(1)).to.eq(false);
       });
 
       it('cannot allow two claims', async () => {
         const proof0 = tree.getProof(0, ctx.signers.admin.address, BigNumber.from(100));
-        await distributor.claim(0, ctx.signers.admin.address, 100, proof0, overrides);
+        await distributor.claim(0, ctx.signers.admin.address, 100, proof0);
         await expect(
-          distributor.claim(0, ctx.signers.admin.address, 100, proof0, overrides),
+          distributor.claim(0, ctx.signers.admin.address, 100, proof0),
         ).to.be.revertedWith('MerkleDistributor: Drop already claimed');
       });
 
@@ -148,24 +144,19 @@ describe('MerkleDistributor', () => {
           ctx.signers.admin.address,
           100,
           tree.getProof(0, ctx.signers.admin.address, BigNumber.from(100)),
-          overrides,
         );
         await distributor.claim(
           1,
           ctx.signers.unauthorised.address,
           101,
-          tree.getProof(1, ctx.signers.unauthorised.address, BigNumber.from(101)),
-          overrides,
-        );
+          tree.getProof(1, ctx.signers.unauthorised.address, BigNumber.from(101)),);
 
         await expect(
           distributor.claim(
             0,
             ctx.signers.admin.address,
             100,
-            tree.getProof(0, ctx.signers.admin.address, BigNumber.from(100)),
-            overrides,
-          ),
+            tree.getProof(0, ctx.signers.admin.address, BigNumber.from(100))),
         ).to.be.revertedWith('MerkleDistributor: Drop already claimed');
       });
 
@@ -174,39 +165,33 @@ describe('MerkleDistributor', () => {
           1,
           ctx.signers.unauthorised.address,
           101,
-          tree.getProof(1, ctx.signers.unauthorised.address, BigNumber.from(101)),
-          overrides,
-        );
+          tree.getProof(1, ctx.signers.unauthorised.address, BigNumber.from(101)),);
         await distributor.claim(
           0,
           ctx.signers.admin.address,
           100,
-          tree.getProof(0, ctx.signers.admin.address, BigNumber.from(100)),
-          overrides,
-        );
+          tree.getProof(0, ctx.signers.admin.address, BigNumber.from(100)),);
 
         await expect(
           distributor.claim(
             1,
             ctx.signers.unauthorised.address,
             101,
-            tree.getProof(1, ctx.signers.unauthorised.address, BigNumber.from(101)),
-            overrides,
-          ),
+            tree.getProof(1, ctx.signers.unauthorised.address, BigNumber.from(101))),
         ).to.be.revertedWith('MerkleDistributor: Drop already claimed');
       });
 
       it('cannot claim for address other than proof', async () => {
         const proof0 = tree.getProof(0, ctx.signers.admin.address, BigNumber.from(100));
         await expect(
-          distributor.claim(1, ctx.signers.unauthorised.address, 101, proof0, overrides),
+          distributor.claim(1, ctx.signers.unauthorised.address, 101, proof0),
         ).to.be.revertedWith('MerkleDistributor: Invalid proof');
       });
 
       it('cannot claim more than proof', async () => {
         const proof0 = tree.getProof(0, ctx.signers.admin.address, BigNumber.from(100));
         await expect(
-          distributor.claim(0, ctx.signers.admin.address, 101, proof0, overrides),
+          distributor.claim(0, ctx.signers.admin.address, 101, proof0),
         ).to.be.revertedWith('MerkleDistributor: Invalid proof');
       });
     });
@@ -230,14 +215,14 @@ describe('MerkleDistributor', () => {
 
       it('claim index 4', async () => {
         const proof = tree.getProof(4, ctx.signers.staker.address, BigNumber.from(5));
-        await expect(distributor.claim(4, ctx.signers.staker.address, 5, proof, overrides))
+        await expect(distributor.claim(4, ctx.signers.staker.address, 5, proof))
           .to.emit(distributor, 'Claimed')
           .withArgs(4, ctx.signers.staker.address, 5);
       });
 
       it('claim index 8', async () => {
         const proof = tree.getProof(8, ctx.signers.unauthorised.address, BigNumber.from(9));
-        await expect(distributor.claim(8, ctx.signers.unauthorised.address, 9, proof, overrides))
+        await expect(distributor.claim(8, ctx.signers.unauthorised.address, 9, proof))
           .to.emit(distributor, 'Claimed')
           .withArgs(8, ctx.signers.unauthorised.address, 9);
       });
@@ -286,9 +271,9 @@ describe('MerkleDistributor', () => {
       it('no double claims in random distribution', async () => {
         for (let i = 0; i < 25; i += Math.floor(Math.random() * (NUM_LEAVES / NUM_SAMPLES))) {
           const proof = tree.getProof(i, ctx.signers.admin.address, BigNumber.from(100));
-          await distributor.claim(i, ctx.signers.admin.address, 100, proof, overrides);
+          await distributor.claim(i, ctx.signers.admin.address, 100, proof);
           await expect(
-            distributor.claim(i, ctx.signers.admin.address, 100, proof, overrides),
+            distributor.claim(i, ctx.signers.admin.address, 100, proof),
           ).to.be.revertedWith('MerkleDistributor: Drop already claimed');
         }
       });
