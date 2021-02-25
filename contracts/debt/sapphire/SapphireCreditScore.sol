@@ -104,17 +104,19 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     }
 
 
-    function request(SapphireTypes.ScoreProof memory proof) public returns (uint256) {
+    function request(SapphireTypes.ScoreProof memory proof) public view returns (uint256) {
         // Decode the score from the current merkle root
         // Update the userScores mapping
         // Return the score
     }
 
-    function getLastScore(address user) public returns (uint256, uint256) {}
+    function getLastScore(address user) public view returns (uint256, uint256) {}
 
     function setMerkleRootDelay(uint256 delay) public {}
 
     function setPause(bool status) public onlyOwner {
         isPaused = status;
     }
+
+    function updateMerkleRootUpdator(address merkleRootUpdator) public {}
 }
