@@ -28,7 +28,8 @@ function testNetwork(network: string) {
   const hreNetwork = hre.config.networks[network];
   const provider = new ethers.providers.JsonRpcProvider(hreNetwork.url);
   const signer = generatedWallets(provider)[0];
-  const ultimateOwner = hreNetwork.users?.owner.toLowerCase();
+  const ultimateOwner = hreNetwork.users?.owner?.toLowerCase();
+  // TODO to add multisig?
 
   try {
     const arcTokenDetails = loadContract({
