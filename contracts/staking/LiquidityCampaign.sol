@@ -270,7 +270,7 @@ contract LiquidityCampaign is Adminable {
     function _actualEarned(
         address _account
     )
-        public
+        internal
         view
         returns (uint256)
     {
