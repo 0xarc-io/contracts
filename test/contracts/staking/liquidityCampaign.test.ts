@@ -321,9 +321,9 @@ describe('LiquidityCampaign', () => {
     });
 
     describe('#getReward', () => {
-      beforeEach(async () => {
-        await setup();
-      });
+      // beforeEach(async () => {
+      //   await setup();
+      // });
 
       it('should not be able to get the reward if the tokens are not claimable', async () => {
         await stake(liquidityCampaignUser1, user1, STAKE_AMOUNT);
@@ -355,6 +355,54 @@ describe('LiquidityCampaign', () => {
           currentBalance.add(ArcNumber.new(12)),
         );
       });
+
+      it.only('should not get any rewards if user stakes before the reward is notified', async () => {
+        await liquidityCampaignAdmin.setRewardsDistributor(admin.address);
+
+        await liquidityCampaignAdmin.setRewardsDuration(REWARD_DURATION);
+
+        await liquidityCampaignAdmin.init(
+          admin.address,
+          admin.address,
+          rewardToken.address,
+          stakingToken.address,
+          DAO_ALLOCATION,
+        );
+        
+        await stake(liquidityCampaignUser1, user1, STAKE_AMOUNT);
+        
+        await evm.mineBlock()
+
+        console.log('1',(await liquidityCampaignUser1.earned(user1.address)).toString())
+
+        await evm.mineBlock()
+
+        console.log('2',(await liquidityCampaignUser1.earned(user1.address)).toString())
+
+        await evm.mineBlock()
+
+        console.log('3',(await liquidityCampaignUser1.earned(user1.address)).toString())
+
+        await evm.mineBlock()
+
+        console.log('4',(await liquidityCampaignUser1.earned(user1.address)).toString())
+
+        expect(await liquidityCampaignUser1.earned(user1.address)).to.eq(BigNumber.from(0))
+
+        await liquidityCampaignAdmin.notifyRewardAmount(REWARD_AMOUNT);
+
+        console.log('5',(await liquidityCampaignUser1.earned(user1.address)).toString())
+
+        await evm.mineBlock()
+
+        console.log('6',(await liquidityCampaignUser1.earned(user1.address)).toString())
+
+        await evm.mineBlock()
+
+        console.log('7',(await liquidityCampaignUser1.earned(user1.address)).toString())
+
+        expect(await liquidityCampaignUser1.earned(user1.address)).to.eq(ArcNumber.new(12))
+      })
 
       it('should be able to claim the right amount of rewards given the number of participants', async () => {
         await liquidityCampaignAdmin.setTokensClaimable(true);
