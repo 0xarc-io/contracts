@@ -201,7 +201,7 @@ contract LiquidityCampaign is Adminable {
     /**
      * @notice Returns the balance of the staker address
      */
-    function balanceOfStaker(
+    function balanceOf(
         address _account
     )
         public
@@ -387,6 +387,6 @@ contract LiquidityCampaign is Adminable {
         external
     {
         getReward(msg.sender);
-        withdraw(balanceOfStaker(msg.sender));
+        withdraw(balanceOf(msg.sender));
     }
 }
