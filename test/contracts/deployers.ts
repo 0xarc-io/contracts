@@ -17,6 +17,7 @@ import { KYFV2 } from '@src/typings/KYFV2';
 import { MockOracle } from '@src/typings/MockOracle';
 import { MockMozartCoreV2 } from '@src/typings/MockMozartCoreV2';
 import { MockMozartSavingsV2 } from '@src/typings';
+import { MerkleDistributor } from '@src/typings/MerkleDistributor';
 
 export async function deployMockMozartCore(deployer: Signer) {
   const Contract = await ethers.getContractFactory('MockMozartCoreV2', deployer);
@@ -138,4 +139,10 @@ export async function deployKyfV2(deployer: Signer) {
   const KYFV2 = await ethers.getContractFactory('KYFV2', deployer);
   const kyfv2 = await KYFV2.deploy();
   return kyfv2 as KYFV2;
+}
+
+export async function deployMerkleDistributor(deployer: Signer, token: string, merkleRoot: string) {
+  const merkleDistributorFactory = await ethers.getContractFactory('MerkleDistributor', deployer);
+  const distributor = await merkleDistributorFactory.deploy(token, merkleRoot);
+  return distributor as MerkleDistributor;
 }
