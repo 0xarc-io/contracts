@@ -1,12 +1,13 @@
 import chai, { expect } from 'chai';
-import { solidity, deployContract } from 'ethereum-waffle';
+import { solidity } from 'ethereum-waffle';
 import { Contract, BigNumber, constants } from 'ethers';
 
-import Distributor from '../../artifacts/contracts/distributor/MerkleDistributor.sol/MerkleDistributor.json';
 import BalanceTree from '@src/MerkleTree/BalanceTree';
 import { generateContext, ITestContext } from '@test/contracts/context';
 import { distributorFixture } from '@test/contracts/fixtures';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
+import { deployMerkleDistributor } from '@test/contracts/deployers';
+import { MerkleDistributor } from '@src/typings/MerkleDistributor';
 
 chai.use(solidity);
 
@@ -18,45 +19,33 @@ const ZERO_BYTES32 = '0x00000000000000000000000000000000000000000000000000000000
 
 describe('MerkleDistributor', () => {
   let ctx: ITestContext;
+  let distributor: MerkleDistributor;
 
   before(async () => {
     ctx = await generateContext(distributorFixture, async () => {});
+    distributor = await deployMerkleDistributor(
+      ctx.signers.admin,
+      ctx.contracts.collateral.address,
+      ZERO_BYTES32,
+    );
   });
 
   addSnapshotBeforeRestoreAfterEach();
 
   describe('#token', () => {
     it('returns the ctx.contracts.collateral address', async () => {
-      const distributor = await deployContract(
-        ctx.signers.admin,
-        Distributor,
-        [ctx.contracts.collateral.address, ZERO_BYTES32],
-        overrides,
-      );
       expect(await distributor.token()).to.eq(ctx.contracts.collateral.address);
     });
   });
 
   describe('#merkleRoot', () => {
     it('returns the zero merkle root', async () => {
-      const distributor = await deployContract(
-        ctx.signers.admin,
-        Distributor,
-        [ctx.contracts.collateral.address, ZERO_BYTES32],
-        overrides,
-      );
       expect(await distributor.merkleRoot()).to.eq(ZERO_BYTES32);
     });
   });
 
   describe('#switchActive', () => {
     it('owner can switch activity', async () => {
-      const distributor = await deployContract(
-        ctx.signers.admin,
-        Distributor,
-        [ctx.contracts.collateral.address, ZERO_BYTES32],
-        overrides,
-      );
       expect(await distributor.merkleRoot()).to.eq(ZERO_BYTES32);
       expect(await distributor.active()).to.be.false;
       await distributor.switchActive();
@@ -64,12 +53,6 @@ describe('MerkleDistributor', () => {
     });
 
     it('fails if non-owner try to switch activity', async () => {
-      const distributor = await deployContract(
-        ctx.signers.admin,
-        Distributor,
-        [ctx.contracts.collateral.address, ZERO_BYTES32],
-        overrides,
-      );
       expect(await distributor.merkleRoot()).to.eq(ZERO_BYTES32);
       expect(await distributor.active()).to.be.false;
       await expect(distributor.connect(ctx.signers.unauthorised).switchActive()).to.be.revertedWith(
@@ -80,12 +63,6 @@ describe('MerkleDistributor', () => {
 
   describe('#claim', () => {
     it('fails for empty proof', async () => {
-      const distributor = await deployContract(
-        ctx.signers.admin,
-        Distributor,
-        [ctx.contracts.collateral.address, ZERO_BYTES32],
-        overrides,
-      );
       await distributor.switchActive();
       await expect(distributor.claim(0, ctx.signers.admin.address, 10, [])).to.be.revertedWith(
         'MerkleDistributor: Invalid proof',
@@ -93,12 +70,6 @@ describe('MerkleDistributor', () => {
     });
 
     it('fails for invalid index', async () => {
-      const distributor = await deployContract(
-        ctx.signers.admin,
-        Distributor,
-        [ctx.contracts.collateral.address, ZERO_BYTES32],
-        overrides,
-      );
       await distributor.switchActive();
       await expect(distributor.claim(0, ctx.signers.admin.address, 10, [])).to.be.revertedWith(
         'MerkleDistributor: Invalid proof',
@@ -106,12 +77,6 @@ describe('MerkleDistributor', () => {
     });
 
     it('fails for not active contract', async () => {
-      const distributor = await deployContract(
-        ctx.signers.admin,
-        Distributor,
-        [ctx.contracts.collateral.address, ZERO_BYTES32],
-        overrides,
-      );
       await expect(distributor.claim(0, ctx.signers.admin.address, 10, [])).to.be.revertedWith(
         'MerkleDistributor: Contract is not active',
       );
@@ -125,11 +90,10 @@ describe('MerkleDistributor', () => {
           { account: ctx.signers.admin.address, amount: BigNumber.from(100) },
           { account: ctx.signers.unauthorised.address, amount: BigNumber.from(101) },
         ]);
-        distributor = await deployContract(
+        distributor = await deployMerkleDistributor(
           ctx.signers.admin,
-          Distributor,
-          [ctx.contracts.collateral.address, tree.getHexRoot()],
-          overrides,
+          ctx.contracts.collateral.address,
+          tree.getHexRoot(),
         );
         await distributor.switchActive();
         await ctx.contracts.collateral.mintShare(distributor.address, 201);
@@ -248,7 +212,6 @@ describe('MerkleDistributor', () => {
     });
 
     describe('larger tree', () => {
-      let distributor: Contract;
       let tree: BalanceTree;
       beforeEach('deploy', async () => {
         tree = new BalanceTree(
@@ -256,11 +219,10 @@ describe('MerkleDistributor', () => {
             return { account: ctx.signers[signerKey].address, amount: BigNumber.from(ix + 1) };
           }),
         );
-        distributor = await deployContract(
+        distributor = await deployMerkleDistributor(
           ctx.signers.admin,
-          Distributor,
-          [ctx.contracts.collateral.address, tree.getHexRoot()],
-          overrides,
+          ctx.contracts.collateral.address,
+          tree.getHexRoot(),
         );
         await distributor.switchActive();
         await ctx.contracts.collateral.mintShare(distributor.address, 201);
@@ -294,7 +256,7 @@ describe('MerkleDistributor', () => {
           elements.push(node);
         }
         tree = new BalanceTree(elements);
-      })
+      });
 
       it('proof verification works', () => {
         const root = tree.getHexRoot();
@@ -312,11 +274,10 @@ describe('MerkleDistributor', () => {
       });
 
       beforeEach('deploy', async () => {
-        distributor = await deployContract(
+        distributor = await deployMerkleDistributor(
           ctx.signers.admin,
-          Distributor,
-          [ctx.contracts.collateral.address, tree.getHexRoot()],
-          overrides,
+          ctx.contracts.collateral.address,
+          tree.getHexRoot(),
         );
         await distributor.switchActive();
         await ctx.contracts.collateral.mintShare(distributor.address, constants.MaxUint256);
