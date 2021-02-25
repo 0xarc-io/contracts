@@ -1,7 +1,7 @@
 const chokidar = require('chokidar');
 const _ = require('lodash');
 const system = require('system-commands');
-const shell = require('shelljs'); // This module is already a solidity-coverage dep
+const spawnSync = require('child_process').spawnSync;
 
 const { green, yellow } = require('chalk');
 
@@ -55,7 +55,7 @@ async function runTest(path) {
 	}
 
 	lastRunPath = path;
-	shell.exec(`yarn hardhat test ${path} --network local`);
+	spawnSync('yarn', ['hardhat', 'test', path, '--network', 'local'], { stdio: 'inherit' });
 	let splitPath = lastRunPath.split('/');
 	console.log(green(`Finished running: ${splitPath[splitPath.length - 1]}`));
 }
