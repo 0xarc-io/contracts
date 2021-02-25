@@ -8,6 +8,7 @@ import {
   TestToken,
   TestTokenFactory,
 } from '@src/typings';
+
 import hre from 'hardhat';
 import ArcNumber from '@src/utils/ArcNumber';
 import { ethers } from 'hardhat';
@@ -19,7 +20,6 @@ import { BASE } from '@src/constants';
 import { expectRevert } from '@test/helpers/expectRevert';
 import { EVM } from '@test/helpers/EVM';
 import { solidity } from 'ethereum-waffle';
-import { exit } from 'process';
 
 chai.use(solidity);
 const expect = chai.expect;
@@ -861,21 +861,40 @@ describe('LiquidityCampaign', () => {
       expect(await earned(userB)).to.eq(ArcDecimal.new(0).value);
       expect(await earned(userC)).to.eq(ArcDecimal.new(0).value);
 
-      await liquidityCampaignAdmin.setCurrentTimestamp(5);
+      await liquidityCampaignAdmin.setCurrentTimestamp(8);
 
-      await stake(userC, STAKE_AMOUNT);
+      await stake(userC, STAKE_AMOUNT.mul(2));
 
       await logTimeDiff(timeAtNotification);
-      expect(await earned(userA)).to.eq(ArcDecimal.new(20).value);
-      expect(await earned(userB)).to.eq(ArcDecimal.new(5).value);
+      expect(await earned(userA)).to.eq(ArcDecimal.new(27.5).value);
+      expect(await earned(userB)).to.eq(ArcDecimal.new(12.5).value);
       expect(await earned(userC)).to.eq(ArcDecimal.new(0).value);
 
-      // await liquidityCampaignAdmin.setCurrentTimestamp(10);
+      await liquidityCampaignAdmin.setCurrentTimestamp(10);
 
-      // await logTimeDiff(timeAtNotification);
-      // expect(await earned(userA)).to.eq(ArcDecimal.new(38.75).value);
-      // expect(await earned(userB)).to.eq(ArcDecimal.new(18.75).value);
-      // expect(await earned(userC)).to.eq(ArcDecimal.new(12.5).value);
+      await logTimeDiff(timeAtNotification);
+      expect(await earned(userA)).to.eq(ArcDecimal.new(30).value);
+      expect(await earned(userB)).to.eq(ArcDecimal.new(15).value);
+      expect(await earned(userC)).to.eq(ArcDecimal.new(5).value);
+
+      await liquidityCampaignAdmin.setCurrentTimestamp(13);
+
+      await liquidityCampaignAdmin.setTokensClaimable(true);
+
+      await exitCampaign(userB);
+      await withdraw(userC, STAKE_AMOUNT);
+
+      await liquidityCampaignAdmin.setCurrentTimestamp(20);
+
+      await logTimeDiff(timeAtNotification);
+      expect(await earned(userA)).to.eq(ArcDecimal.new(51.25).value);
+
+      expect(await earned(userB)).to.eq(ArcDecimal.new(18.75).value);
+      expect((await liquidityCampaignAdmin.stakers(userB.address)).rewardsReleased).to.eq(
+        ArcDecimal.new(18.75).value,
+      );
+
+      expect(await earned(userC)).to.eq(ArcDecimal.new(30).value);
     });
   });
 });
