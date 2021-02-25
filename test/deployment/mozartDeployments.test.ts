@@ -13,7 +13,7 @@ require('dotenv').config();
 /* eslint-disable @typescript-eslint/no-var-requires */
 const hre = require('hardhat');
 
-describe.only('Mozart.deployments', () => {
+describe('Mozart.deployments', () => {
   deploymentTestNetworks.forEach((network) => {
     describe(network, () => testNetwork(network));
   });
@@ -24,7 +24,7 @@ function testNetwork(network: string) {
   const provider = new ethers.providers.JsonRpcProvider(hreNetwork.url);
   const signer = generatedWallets(provider)[0];
   const isOwnerSet = hreNetwork.users?.owner?.length > 0;
-  const ultimateOwner = hreNetwork.users?.eoaOwner?.toLowerCase();
+  const eoaOwner = hreNetwork.users?.eoaOwner?.toLowerCase();
   const multisigOwner = hreNetwork.users?.multisigOwner?.toLowerCase();
 
   const synthContracts = loadContracts({
@@ -66,7 +66,9 @@ function testNetwork(network: string) {
         synthetic = SyntheticTokenV1Factory.connect(syntheticProxyDetails.address, signer);
 
         it(`should have the synthetic (${synthProxyName}) configured correctly`, async () => {
-          expect(await (await synthetic.getAdmin()).toLowerCase()).to.equal(ultimateOwner);
+          expect(await (await synthetic.getAdmin()).toLowerCase()).to.satisfy(
+            (admin) => admin === eoaOwner || admin === multisigOwner,
+          );
         });
 
         synthProxiesChecked[synthProxyName] = syntheticProxyDetails;
@@ -82,7 +84,9 @@ function testNetwork(network: string) {
       const mozartCore = MozartCoreV1Factory.connect(coreProxyDetails.address, signer);
 
       it('should have the core configured correctly', async () => {
-        expect((await mozartCore.getAdmin()).toLowerCase()).to.equal(multisigOwner.toLowerCase());
+        expect((await mozartCore.getAdmin()).toLowerCase()).to.satisfy(
+          (admin) => admin === multisigOwner || admin === eoaOwner,
+        );
         expect((await mozartCore.getCurrentOracle()).toLowerCase()).to.equal(
           oracleDetails.address.toLowerCase(),
         );

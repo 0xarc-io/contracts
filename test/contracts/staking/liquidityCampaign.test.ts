@@ -300,7 +300,7 @@ describe('LiquidityCampaign', () => {
         supply = await liquidityCampaignUser1.totalSupply();
 
         expect(supply).to.eq(amount.mul(2));
-        expect(await stakingToken.balanceOf(liquidityCampaignAdmin.address)).to.eq(amount.mul(2))
+        expect(await stakingToken.balanceOf(liquidityCampaignAdmin.address)).to.eq(amount.mul(2));
       });
 
       it('should update reward correctly after staking', async () => {
@@ -384,32 +384,6 @@ describe('LiquidityCampaign', () => {
           user2Balance.add(ArcNumber.new(6)), // 3 + 3
         );
       });
-
-      // it.only('should update reward after claiming reward', async () => {
-      //   await liquidityCampaignAdmin.setTokensClaimable(true);
-
-      //   await stake(liquidityCampaignUser1, user1, STAKE_AMOUNT);
-
-      //   const rewardPerTokenStored0 = await liquidityCampaignUser1.rewardPerTokenStored();
-
-      //   console.log('reward per token stored 0', rewardPerTokenStored0.toString());
-
-      //   await increaseTime(1);
-
-      //   await liquidityCampaignUser1.getReward(user1.address);
-
-      //   console.log(
-      //     'reward per token stored 1',
-      //     (await liquidityCampaignUser1.rewardPerTokenStored()).toString(),
-      //   );
-      //   const rewardPerTokenStored1 = await liquidityCampaignUser1.rewardPerTokenStored();
-
-      //   console.log(rewardPerTokenStored0.toString(), rewardPerTokenStored1.toString());
-
-      //   await liquidityCampaignUser1.getReward(user1.address);
-
-      //   expect(rewardPerTokenStored0).to.be.lt(rewardPerTokenStored1);
-      // });
     });
 
     describe('#withdraw', () => {
