@@ -261,7 +261,7 @@ contract LiquidityCampaign is Adminable {
                         .sub(lastUpdateTime)
                         .mul(rewardRate)
                         .mul(1e18)
-                        .div(totalSupply), 
+                        .div(totalSupply),
                     userAllocation()
                 )
             );
@@ -312,7 +312,7 @@ contract LiquidityCampaign is Adminable {
             daoAllocation.value
         );
     }
-    
+
     /* ========== Mutative Functions ========== */
 
     function stake(
