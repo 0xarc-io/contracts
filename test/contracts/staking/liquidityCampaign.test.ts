@@ -131,6 +131,7 @@ describe('LiquidityCampaign', () => {
     );
 
     await liquidityCampaignAdmin.notifyRewardAmount(REWARD_AMOUNT);
+    await setTimestampTo(0);
   }
 
   before(async () => {
@@ -174,14 +175,14 @@ describe('LiquidityCampaign', () => {
       });
 
       it('should return the period finish if called after reward period has finished', async () => {
-        await increaseTime(REWARD_DURATION);
+        await setTimestampTo(REWARD_DURATION);
 
         const periodFinish = await liquidityCampaignAdmin.periodFinish();
         expect(await liquidityCampaignAdmin.lastTimeRewardApplicable()).to.eq(periodFinish);
       });
     });
 
-    describe('#balanceOfStaker', () => {
+    describe('#balanceOf', () => {
       beforeEach(async () => {
         await setup();
       });
@@ -194,7 +195,7 @@ describe('LiquidityCampaign', () => {
 
         await liquidityCampaignAdmin.stake(stakingAmount);
 
-        expect(await liquidityCampaignAdmin.balanceOfStaker(admin.address)).to.eq(stakingAmount);
+        expect(await liquidityCampaignAdmin.balanceOf(admin.address)).to.eq(stakingAmount);
       });
     });
 
@@ -216,30 +217,10 @@ describe('LiquidityCampaign', () => {
         await liquidityCampaignUser1.stake(stakingAmount.div(2));
         await liquidityCampaignUser1.stake(stakingAmount.div(2));
 
-        await evm.mineBlock();
+        await setTimestampTo(1);
 
         const rewardPerToken = await liquidityCampaignUser1.rewardPerToken();
         const rewardPerTokenStored = await liquidityCampaignAdmin.rewardPerTokenStored();
-
-        // const currentRewardRate = (await liquidityCampaignUser1.lastTimeRewardApplicable())
-        //   .sub(await liquidityCampaignUser1.lastUpdateTime())
-        //   .mul(await liquidityCampaignUser1.rewardRate())
-        //   .mul(BASE)
-        //   .div(await liquidityCampaignUser1.totalSupply());
-
-        // console.log({
-        //   totalSupply: await(await liquidityCampaignUser1.totalSupply()).toString(),
-        //   rewardPerTokenStored: rewardPerTokenStored.toString(),
-        //   rewardPerToken: rewardPerToken.toString(),
-        //   daoAllocation: await(await liquidityCampaignUser1.daoAllocation()).toString(),
-        //   userAllocation: await(await liquidityCampaignUser1.userAllocation()).toString(),
-        //   lastUpdateTime: await(await liquidityCampaignUser1.lastUpdateTime()).toString(),
-        //   rewardRate: await(await liquidityCampaignUser1.rewardRate()).toString(),
-        //   currentRewardRate: currentRewardRate.toString(),
-        //   lastTimeRewardApplicable: await(
-        //     await liquidityCampaignUser1.lastTimeRewardApplicable(),
-        //   ).toString(),
-        // });
 
         expect(rewardPerToken).to.be.gt(BigNumber.from(0));
         expect(rewardPerToken).to.not.eq(rewardPerTokenStored);
@@ -264,34 +245,37 @@ describe('LiquidityCampaign', () => {
       });
 
       it('should return the correct amount earned over time', async () => {
-        await stake(user1, ArcNumber.new(10));
+        await stake(user1, STAKE_AMOUNT);
         // Check amount earned (should be 0)
         const amountEarned0 = await liquidityCampaignUser1.earned(user1.address);
         expect(amountEarned0).to.eq(BigNumber.from(0));
 
         // Advance time
-        await increaseTime(60);
-        // Check amount earned
-        const amountEarned1 = await liquidityCampaignUser1.earned(user1.address);
+        await setTimestampTo(1);
 
-        expect(amountEarned1).to.be.gt(amountEarned0);
+        expect(await earned(user1)).to.eq(ArcNumber.new(10));
+
+        await setTimestampTo(2);
+
+        expect(await earned(user1)).to.eq(ArcNumber.new(20));
       });
 
       it('should return the correct amount earned over time while another user stakes in between', async () => {
+        await setTimestampTo(1);
+
         // User A stakes
         await stake(user1, STAKE_AMOUNT);
+
+        await setTimestampTo(2);
 
         // User B stakes
         await stake(user2, STAKE_AMOUNT); // adds 3 epochs
 
-        await increaseTime(1);
+        await setTimestampTo(3);
 
         // Check amount earned
-        const user1Earned = await liquidityCampaignUser1.earned(user1.address);
-        const user2Earned = await liquidityCampaignUser2.earned(user2.address);
-
-        expect(user1Earned).to.eq(ArcNumber.new(21));
-        expect(user2Earned).to.eq(ArcNumber.new(3));
+        expect(await earned(user1)).to.eq(ArcNumber.new(15));
+        expect(await earned(user2)).to.eq(ArcNumber.new(5));
       });
     });
 
@@ -345,13 +329,13 @@ describe('LiquidityCampaign', () => {
       it('should update reward correctly after staking', async () => {
         await stake(user1, STAKE_AMOUNT);
 
-        await increaseTime(1);
+        await setTimestampTo(1);
 
         let earned = await liquidityCampaignUser1.earned(user1.address);
 
         expect(earned).to.eq(ArcNumber.new(6));
 
-        await increaseTime(1);
+        await setTimestampTo(2);
 
         earned = await liquidityCampaignUser1.earned(user1.address);
 
@@ -376,23 +360,20 @@ describe('LiquidityCampaign', () => {
         await liquidityCampaignAdmin.setTokensClaimable(true);
 
         await stake(user1, STAKE_AMOUNT);
-        await increaseTime(1);
+
+        await setTimestampTo(1);
 
         const currentBalance = await rewardToken.balanceOf(user1.address);
 
-        await expect(() => liquidityCampaignUser1.getReward(user1.address)).to.changeTokenBalance(
-          rewardToken,
-          user1,
-          currentBalance.add(ArcNumber.new(12)),
-        );
+        await liquidityCampaignUser1.getReward(user1.address);
 
-        await increaseTime(1);
+        expect(await rewardToken.balanceOf(user1.address)).to.eq(ArcNumber.new(6));
 
-        await expect(() => liquidityCampaignUser1.getReward(user1.address)).to.changeTokenBalance(
-          rewardToken,
-          user1,
-          currentBalance.add(ArcNumber.new(12)),
-        );
+        await setTimestampTo(2);
+
+        await liquidityCampaignUser1.getReward(user1.address);
+
+        expect(await rewardToken.balanceOf(user1.address)).to.eq(ArcNumber.new(12));
       });
 
       it('should be able to claim the right amount of rewards given the number of participants', async () => {
@@ -401,27 +382,21 @@ describe('LiquidityCampaign', () => {
 
         await stake(user1, STAKE_AMOUNT);
 
-        await expect(() => liquidityCampaignUser1.getReward(user1.address)).to.changeTokenBalance(
-          rewardToken,
-          user1,
-          initialBalance.add(ArcNumber.new(6)),
-        );
+        await setTimestampTo(1);
 
-        const user2Balance = await rewardToken.balanceOf(user2.address);
+        await liquidityCampaignUser1.getReward(user1.address);
 
-        await stake(user2, STAKE_AMOUNT); // increases 3 epochs
+        expect(await rewardToken.balanceOf(user1.address)).to.eq(ArcNumber.new(6));
 
-        await expect(() => liquidityCampaignUser1.getReward(user1.address)).to.changeTokenBalance(
-          rewardToken,
-          user1,
-          initialBalance.add(ArcNumber.new(21)), // 6 + 6+ 6 + (6/2)
-        );
+        await stake(user2, STAKE_AMOUNT);
 
-        await expect(() => liquidityCampaignUser2.getReward(user2.address)).to.changeTokenBalance(
-          rewardToken,
-          user2,
-          user2Balance.add(ArcNumber.new(6)), // 3 + 3
-        );
+        await setTimestampTo(2);
+
+        await liquidityCampaignUser1.getReward(user1.address);
+        await liquidityCampaignUser2.getReward(user2.address);
+
+        expect(await rewardToken.balanceOf(user1.address)).to.eq(ArcNumber.new(9));
+        expect(await rewardToken.balanceOf(user2.address)).to.eq(ArcNumber.new(3));
       });
     });
 
@@ -445,18 +420,6 @@ describe('LiquidityCampaign', () => {
 
         expect(balance).to.eq(STAKE_AMOUNT);
       });
-
-      // it('should update reward correctly after withdrawing', async () => {
-      //   await stake( user1, STAKE_AMOUNT);
-
-      //   const rewardPerTokenStored0 = await liquidityCampaignUser1.rewardPerTokenStored();
-
-      //   await liquidityCampaignUser1.withdraw(STAKE_AMOUNT);
-
-      //   const rewardPerTokenStored1 = await liquidityCampaignUser1.rewardPerTokenStored();
-
-      //   expect(rewardPerTokenStored0).to.not.eq(rewardPerTokenStored1);
-      // });
     });
 
     describe('#exit', () => {
@@ -468,6 +431,8 @@ describe('LiquidityCampaign', () => {
         await liquidityCampaignAdmin.setTokensClaimable(true);
 
         await stake(user1, STAKE_AMOUNT);
+
+        await setTimestampTo(1);
 
         await liquidityCampaignUser1.exit();
 
@@ -552,9 +517,12 @@ describe('LiquidityCampaign', () => {
         await liquidityCampaignAdmin.setRewardsDuration(REWARD_DURATION);
 
         await liquidityCampaignAdmin.notifyRewardAmount(REWARD_AMOUNT.div(2));
+
         const rewardRate0 = await liquidityCampaignAdmin.rewardRate();
 
         expect(rewardRate0).to.eq(ArcNumber.new(5));
+
+        await setTimestampTo(1);
 
         await liquidityCampaignAdmin.notifyRewardAmount(REWARD_AMOUNT.div(2));
 
@@ -901,6 +869,61 @@ describe('LiquidityCampaign', () => {
       );
 
       expect(await earned(userC)).to.eq(ArcDecimal.new(30).value);
+    });
+
+    it('should distribute rewards correctly if new rewards are notified before the end of the period', async () => {
+      await liquidityCampaignAdmin.setRewardsDuration(10);
+      await setTimestampTo(0);
+
+      await liquidityCampaignAdmin.notifyRewardAmount(ArcNumber.new(100));
+
+      await setTimestampTo(1);
+
+      await stake(user1, STAKE_AMOUNT);
+
+      await setTimestampTo(2);
+
+      expect(await earned(user1)).to.eq(ArcNumber.new(10));
+
+      await setTimestampTo(3);
+
+      await stake(user2, STAKE_AMOUNT);
+
+      await setTimestampTo(4);
+
+      expect(await earned(user1)).to.eq(ArcNumber.new(25));
+      expect(await earned(user2)).to.eq(ArcNumber.new(5));
+
+      await rewardToken.mintShare(liquidityCampaignAdmin.address, ArcNumber.new(100));
+      await liquidityCampaignAdmin.notifyRewardAmount(ArcNumber.new(100));
+
+      // New rewards: 60 + 100 = 160 distributed over 10 epochs
+
+      await setTimestampTo(5);
+
+      expect(await earned(user1)).to.eq(ArcDecimal.new(33).value);
+      expect(await earned(user2)).to.eq(ArcDecimal.new(13).value);
+
+      await withdraw(user1, STAKE_AMOUNT);
+
+      await setTimestampTo(6);
+
+      expect(await earned(user1)).to.eq(ArcDecimal.new(33).value);
+      expect(await earned(user2)).to.eq(ArcDecimal.new(29).value);
+
+      await liquidityCampaignAdmin.setTokensClaimable(true);
+
+      await liquidityCampaignUser1.getReward(user1.address);
+
+      expect(await rewardToken.balanceOf(user1.address)).to.eq(ArcDecimal.new(19.8).value);
+
+      await setTimestampTo(7);
+
+      expect(await earned(user2)).to.eq(ArcDecimal.new(45).value);
+
+      await liquidityCampaignUser1.getReward(user2.address);
+
+      expect(await rewardToken.balanceOf(user2.address)).to.eq(ArcDecimal.new(27).value);
     });
   });
 });
