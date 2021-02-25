@@ -110,3 +110,7 @@ export async function spritzFixture(ctx: ITestContext, args?: ITestContextArgs) 
     oracle,
   });
 }
+
+export async function distributorFixture(ctx: ITestContext, args?: ITestContextArgs) {
+  ctx.contracts.collateral = await deployTestToken(ctx.signers.admin, 'ARC GOVERNANCE', 'ARCX', 18);
+}
