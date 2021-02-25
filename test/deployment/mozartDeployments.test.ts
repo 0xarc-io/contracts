@@ -1,5 +1,5 @@
 import { ethers } from 'hardhat';
-import _ from 'lodash'
+import _ from 'lodash';
 import { loadContract, loadContracts } from '../../deployments/src/loadContracts';
 import { DeploymentType } from '../../deployments/src/writeToDeployments';
 import { generatedWallets } from '../helpers/generatedWallets';
@@ -24,40 +24,33 @@ function testNetwork(network: string) {
   const provider = new ethers.providers.JsonRpcProvider(hreNetwork.url);
   const signer = generatedWallets(provider)[0];
   const isOwnerSet = hreNetwork.users?.owner?.length > 0;
-  const ultimateOwner = hreNetwork.users?.oeaOwner?.toLowerCase();
+  const ultimateOwner = hreNetwork.users?.eoaOwner?.toLowerCase();
   const multisigOwner = hreNetwork.users?.multisigOwner?.toLowerCase();
 
   const synthContracts = loadContracts({
     network: network,
     type: DeploymentType.synth,
-    name: 'CoreProxy'
-  })
+    name: 'CoreProxy',
+  });
 
-  const synthProxyNames = _.groupBy(synthContracts, (coreProxyDetails) => {
-    const synth = coreProxyDetails.group;
-
-    return synth.split('-').length == 1 ? synth : synth.split('-')[1]
-  })
-  
-  const synthProxiesChecked = {}
+  const synthProxiesChecked = {};
   // const synths = ['ETHX', 'yUSD-STABLEx', 'cUSDC-STABLEx', 'xSUSHI-STABLEx'];
 
   synthContracts.forEach((coreProxyDetails) => {
-    const synth = coreProxyDetails.group
-    const synthProxyName = synth.split('-').length == 1 ? synth : synth.split('-')[1]
+    const synth = coreProxyDetails.group;
+    const synthProxyName = synth.split('-').length == 1 ? synth : synth.split('-')[1];
 
     if (synthProxyName === 'LINKUSD') {
       return;
     }
-    
+
     describe(`Core: ${coreProxyDetails.group}`, () => {
       let syntheticProxyDetails;
-      let synthetic: SyntheticTokenV1
+      let synthetic: SyntheticTokenV1;
 
       if (synthProxyName in synthProxiesChecked) {
-        syntheticProxyDetails = synthProxiesChecked[synthProxyName]
+        syntheticProxyDetails = synthProxiesChecked[synthProxyName];
         synthetic = SyntheticTokenV1Factory.connect(syntheticProxyDetails.address, signer);
-
       } else {
         try {
           syntheticProxyDetails = loadContract({
@@ -72,11 +65,11 @@ function testNetwork(network: string) {
 
         synthetic = SyntheticTokenV1Factory.connect(syntheticProxyDetails.address, signer);
 
-        it('should have the synthetic configured correctly', async () => {
+        it(`should have the synthetic (${synthProxyName}) configured correctly`, async () => {
           expect(await (await synthetic.getAdmin()).toLowerCase()).to.equal(ultimateOwner);
         });
 
-        synthProxiesChecked[synthProxyName] = syntheticProxyDetails
+        synthProxiesChecked[synthProxyName] = syntheticProxyDetails;
       }
 
       const oracleDetails = loadContract({
@@ -98,21 +91,5 @@ function testNetwork(network: string) {
         );
       });
     });
-
-    Object.keys(synthProxyNames).forEach(synthProxyName => {
-      const syntheticProxyDetails = loadContract({
-        network,
-        type: DeploymentType.synth,
-        group: synth.split('-').length == 1 ? synth : synth.split('-')[1],
-        name: 'SyntheticProxy',
-      });
-      const synthetic = SyntheticTokenV1Factory.connect(syntheticProxyDetails.address, signer);
-      
-      describe(`Synthetic: ${synthProxyName}`, () => {
-        it('should have the synthetic configured correctly', async () => {
-          expect(await (await synthetic.getAdmin()).toLowerCase()).to.equal(ultimateOwner);
-        });
-      })
-    })
   });
 }
