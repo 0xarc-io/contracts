@@ -28,4 +28,14 @@ contract MockLiquidityCampaign is LiquidityCampaign {
         return currentTimestamp;
     }
 
+    function actualEarned(
+        address _account
+    )
+        public
+        view
+        returns (uint256)
+    {
+        return _actualEarned(_account);
+    }
+
 }

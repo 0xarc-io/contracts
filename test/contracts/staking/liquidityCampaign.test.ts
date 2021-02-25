@@ -102,7 +102,7 @@ describe('LiquidityCampaign', () => {
   }
 
   async function earned(user: SignerWithAddress) {
-    return await liquidityCampaignAdmin._actualEarned(user.address);
+    return await liquidityCampaignAdmin.actualEarned(user.address);
   }
 
   async function getCurrentTimestamp() {
