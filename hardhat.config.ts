@@ -95,7 +95,7 @@ const config: HardhatUserConfig = {
       gasPrice: 190 * 10 ** 9,
       users: {
         eoaOwner: '0x62f31e08e279f3091d9755a09914df97554eae0b',
-        multisigOwner: ''
+        multisigOwner: '',
       },
     },
     playnet: {
@@ -104,7 +104,7 @@ const config: HardhatUserConfig = {
       gasPrice: 190 * 10 ** 9,
       users: {
         eoaOwner: '0x9c767178528c8a205DF63305ebdA4BB6B147889b',
-        multisigOwner: ''
+        multisigOwner: '0xFe1AaAAEc2cFd70E89037F489d4eB362a169631e',
       },
     },
   },
