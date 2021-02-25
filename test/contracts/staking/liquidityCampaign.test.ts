@@ -356,54 +356,6 @@ describe('LiquidityCampaign', () => {
         );
       });
 
-      it.only('should not get any rewards if user stakes before the reward is notified', async () => {
-        await liquidityCampaignAdmin.setRewardsDistributor(admin.address);
-
-        await liquidityCampaignAdmin.setRewardsDuration(REWARD_DURATION);
-
-        await liquidityCampaignAdmin.init(
-          admin.address,
-          admin.address,
-          rewardToken.address,
-          stakingToken.address,
-          DAO_ALLOCATION,
-        );
-        
-        await stake(liquidityCampaignUser1, user1, STAKE_AMOUNT);
-        
-        await evm.mineBlock()
-
-        console.log('1',(await liquidityCampaignUser1.earned(user1.address)).toString())
-
-        await evm.mineBlock()
-
-        console.log('2',(await liquidityCampaignUser1.earned(user1.address)).toString())
-
-        await evm.mineBlock()
-
-        console.log('3',(await liquidityCampaignUser1.earned(user1.address)).toString())
-
-        await evm.mineBlock()
-
-        console.log('4',(await liquidityCampaignUser1.earned(user1.address)).toString())
-
-        expect(await liquidityCampaignUser1.earned(user1.address)).to.eq(BigNumber.from(0))
-
-        await liquidityCampaignAdmin.notifyRewardAmount(REWARD_AMOUNT);
-
-        console.log('5',(await liquidityCampaignUser1.earned(user1.address)).toString())
-
-        await evm.mineBlock()
-
-        console.log('6',(await liquidityCampaignUser1.earned(user1.address)).toString())
-
-        await evm.mineBlock()
-
-        console.log('7',(await liquidityCampaignUser1.earned(user1.address)).toString())
-
-        expect(await liquidityCampaignUser1.earned(user1.address)).to.eq(ArcNumber.new(12))
-      })
-
       it('should be able to claim the right amount of rewards given the number of participants', async () => {
         await liquidityCampaignAdmin.setTokensClaimable(true);
         const initialBalance = await rewardToken.balanceOf(user1.address);
@@ -432,32 +384,6 @@ describe('LiquidityCampaign', () => {
           user2Balance.add(ArcNumber.new(6)), // 3 + 3
         );
       });
-
-      // it.only('should update reward after claiming reward', async () => {
-      //   await liquidityCampaignAdmin.setTokensClaimable(true);
-
-      //   await stake(liquidityCampaignUser1, user1, STAKE_AMOUNT);
-
-      //   const rewardPerTokenStored0 = await liquidityCampaignUser1.rewardPerTokenStored();
-
-      //   console.log('reward per token stored 0', rewardPerTokenStored0.toString());
-
-      //   await increaseTime(1);
-
-      //   await liquidityCampaignUser1.getReward(user1.address);
-
-      //   console.log(
-      //     'reward per token stored 1',
-      //     (await liquidityCampaignUser1.rewardPerTokenStored()).toString(),
-      //   );
-      //   const rewardPerTokenStored1 = await liquidityCampaignUser1.rewardPerTokenStored();
-
-      //   console.log(rewardPerTokenStored0.toString(), rewardPerTokenStored1.toString());
-
-      //   await liquidityCampaignUser1.getReward(user1.address);
-
-      //   expect(rewardPerTokenStored0).to.be.lt(rewardPerTokenStored1);
-      // });
     });
 
     describe('#withdraw', () => {
@@ -670,4 +596,54 @@ describe('LiquidityCampaign', () => {
       });
     });
   });
+
+  describe('Scenarios', () => {
+    it('should not get any rewards if user stakes before the reward is notified', async () => {
+        await liquidityCampaignAdmin.setRewardsDistributor(admin.address);
+
+        await liquidityCampaignAdmin.setRewardsDuration(REWARD_DURATION);
+
+        await liquidityCampaignAdmin.init(
+          admin.address,
+          admin.address,
+          rewardToken.address,
+          stakingToken.address,
+          DAO_ALLOCATION,
+        );
+        
+        await stake(liquidityCampaignUser1, user1, STAKE_AMOUNT);
+        
+        await evm.mineBlock()
+
+        console.log('1',(await liquidityCampaignUser1.earned(user1.address)).toString())
+
+        await evm.mineBlock()
+
+        console.log('2',(await liquidityCampaignUser1.earned(user1.address)).toString())
+
+        await evm.mineBlock()
+
+        console.log('3',(await liquidityCampaignUser1.earned(user1.address)).toString())
+
+        await evm.mineBlock()
+
+        console.log('4',(await liquidityCampaignUser1.earned(user1.address)).toString())
+
+        expect(await liquidityCampaignUser1.earned(user1.address)).to.eq(BigNumber.from(0))
+
+        await liquidityCampaignAdmin.notifyRewardAmount(REWARD_AMOUNT);
+
+        console.log('5',(await liquidityCampaignUser1.earned(user1.address)).toString())
+
+        await evm.mineBlock()
+
+        console.log('6',(await liquidityCampaignUser1.earned(user1.address)).toString())
+
+        await evm.mineBlock()
+
+        console.log('7',(await liquidityCampaignUser1.earned(user1.address)).toString())
+
+        expect(await liquidityCampaignUser1.earned(user1.address)).to.eq(ArcNumber.new(12))
+      })
+  })
 });
