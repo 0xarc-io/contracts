@@ -51,6 +51,10 @@ describe('LiquidityCampaign', () => {
     await evm.mineBlock();
   }
 
+  async function setTimestampTo(timestamp: number) {
+    await liquidityCampaignAdmin.setCurrentTimestamp(timestamp);
+  }
+
   async function stake(user: SignerWithAddress, amount: BigNumber) {
     await mintAndApprove(stakingToken, user, amount);
 
@@ -61,13 +65,13 @@ describe('LiquidityCampaign', () => {
     return timestampAtStake;
   }
 
-  async function logTimeDiff(timeReference: BigNumber, prefix?: string) {
-    console.log(
-      `${prefix ? prefix + ' ' : ''}t${(await getCurrentTimestamp())
-        .sub(timeReference)
-        .toString()}`,
-    );
-  }
+  // async function logTimeDiff(timeReference: BigNumber, prefix?: string) {
+  //   console.log(
+  //     `${prefix ? prefix + ' ' : ''}t${(await getCurrentTimestamp())
+  //       .sub(timeReference)
+  //       .toString()}`,
+  //   );
+  // }
 
   async function mintAndApprove(
     token: TestToken,
@@ -106,10 +110,7 @@ describe('LiquidityCampaign', () => {
   }
 
   async function getCurrentTimestamp() {
-    const currentBlockNumber = await ethers.provider.getBlockNumber();
-    const currentBlock = await ethers.provider.getBlock(currentBlockNumber);
-
-    return BigNumber.from(currentBlock.timestamp);
+    return liquidityCampaignAdmin.getCurrentTimestamp();
   }
 
   async function setup() {
@@ -635,7 +636,7 @@ describe('LiquidityCampaign', () => {
     });
   });
 
-  describe.only('Scenarios', () => {
+  describe('Scenarios', () => {
     beforeEach(async () => {
       await liquidityCampaignAdmin.setRewardsDistributor(admin.address);
 
@@ -650,26 +651,24 @@ describe('LiquidityCampaign', () => {
 
     it('should not get any rewards if user stakes before the reward is notified', async () => {
       await liquidityCampaignAdmin.setRewardsDuration(REWARD_DURATION);
+      await setTimestampTo(0);
 
       await stake(user1, STAKE_AMOUNT);
 
-      await evm.mineBlock();
-      await evm.mineBlock();
-      await evm.mineBlock();
-      await evm.mineBlock();
+      await setTimestampTo(4);
 
-      expect(await liquidityCampaignUser1.earned(user1.address)).to.eq(BigNumber.from(0));
+      expect(await earned(user1)).to.eq(BigNumber.from(0));
 
       await liquidityCampaignAdmin.notifyRewardAmount(REWARD_AMOUNT);
 
-      await evm.mineBlock();
-      await evm.mineBlock();
+      await setTimestampTo(6);
 
-      expect(await liquidityCampaignUser1.earned(user1.address)).to.eq(ArcNumber.new(12));
+      expect(await earned(user1)).to.eq(ArcNumber.new(20));
     });
 
-    it.skip('should distribute rewards to users correctly', async () => {
+    it('should distribute rewards to users correctly', async () => {
       await liquidityCampaignAdmin.setRewardsDuration(20);
+      await setTimestampTo(0);
       const users = await ethers.getSigners();
 
       const userA = users[1];
@@ -683,99 +682,107 @@ describe('LiquidityCampaign', () => {
 
       await rewardToken.mintShare(liquidityCampaignAdmin.address, ArcNumber.new(200));
 
-      await liquidityCampaignAdmin.notifyRewardAmount(ArcNumber.new(300)); // epoch after: 0
-      const timeAtNotification = await getCurrentTimestamp();
+      await liquidityCampaignAdmin.notifyRewardAmount(ArcNumber.new(300)); // 0
 
-      await evm.mineBlock(); // 1
-      await logTimeDiff(timeAtNotification);
-
-      expect(await earned(userA)).to.eq(ArcDecimal.new(4.5).value);
-      expect(await earned(userB)).to.eq(ArcDecimal.new(4.5).value);
+      expect(await earned(userA)).to.eq(ArcDecimal.new(0).value);
+      expect(await earned(userB)).to.eq(ArcDecimal.new(0).value);
       expect(await earned(userC)).to.eq(ArcDecimal.new(0).value);
       expect(await earned(userD)).to.eq(ArcDecimal.new(0).value);
       expect(await earned(userE)).to.eq(ArcDecimal.new(0).value);
 
-      await evm.mineBlock(); // 2
-      await logTimeDiff(timeAtNotification);
+      await setTimestampTo(1);
 
-      expect(await earned(userA)).to.eq(ArcDecimal.new(9).value);
-      expect(await earned(userB)).to.eq(ArcDecimal.new(9).value);
+      expect(await earned(userA)).to.eq(ArcDecimal.new(7.5).value);
+      expect(await earned(userB)).to.eq(ArcDecimal.new(7.5).value);
       expect(await earned(userC)).to.eq(ArcDecimal.new(0).value);
       expect(await earned(userD)).to.eq(ArcDecimal.new(0).value);
       expect(await earned(userE)).to.eq(ArcDecimal.new(0).value);
 
-      await stake(userC, STAKE_AMOUNT); // 5
+      await setTimestampTo(2);
 
-      await logTimeDiff(timeAtNotification);
-      expect(await earned(userA)).to.eq(ArcDecimal.new(22.5).value);
-      expect(await earned(userB)).to.eq(ArcDecimal.new(22.5).value);
+      expect(await earned(userA)).to.eq(ArcDecimal.new(15).value);
+      expect(await earned(userB)).to.eq(ArcDecimal.new(15).value);
       expect(await earned(userC)).to.eq(ArcDecimal.new(0).value);
       expect(await earned(userD)).to.eq(ArcDecimal.new(0).value);
       expect(await earned(userE)).to.eq(ArcDecimal.new(0).value);
 
-      await stake(userD, STAKE_AMOUNT); // 8
+      await setTimestampTo(4);
 
-      await logTimeDiff(timeAtNotification);
-      expect(await earned(userA)).to.eq(ArcDecimal.new(31.5).value);
-      expect(await earned(userB)).to.eq(ArcDecimal.new(31.5).value);
-      expect(await earned(userC)).to.eq(ArcDecimal.new(9).value);
+      await stake(userC, STAKE_AMOUNT);
+
+      expect(await earned(userA)).to.eq(ArcDecimal.new(30).value);
+      expect(await earned(userB)).to.eq(ArcDecimal.new(30).value);
+      expect(await earned(userC)).to.eq(ArcDecimal.new(0).value);
       expect(await earned(userD)).to.eq(ArcDecimal.new(0).value);
       expect(await earned(userE)).to.eq(ArcDecimal.new(0).value);
 
-      await evm.mineBlock(); // 9
+      await setTimestampTo(5);
 
-      await logTimeDiff(timeAtNotification);
-      expect(await earned(userA)).to.eq(ArcDecimal.new(34.5).value);
-      expect(await earned(userB)).to.eq(ArcDecimal.new(34.5).value);
-      expect(await earned(userC)).to.eq(ArcDecimal.new(12).value);
+      expect(await earned(userA)).to.eq(ArcDecimal.new(35).value);
+      expect(await earned(userB)).to.eq(ArcDecimal.new(35).value);
+      expect(await earned(userC)).to.eq(ArcDecimal.new(5).value);
       expect(await earned(userD)).to.eq(ArcDecimal.new(0).value);
       expect(await earned(userE)).to.eq(ArcDecimal.new(0).value);
 
-      await evm.mineBlock(); // 10
+      await setTimestampTo(8);
 
-      await logTimeDiff(timeAtNotification);
-      expect(await earned(userA)).to.eq(ArcDecimal.new(36.75).value);
-      expect(await earned(userB)).to.eq(ArcDecimal.new(36.75).value);
-      expect(await earned(userC)).to.eq(ArcDecimal.new(14.25).value);
-      expect(await earned(userD)).to.eq(ArcDecimal.new(2.25).value);
+      await stake(userD, STAKE_AMOUNT);
+
+      expect(await earned(userA)).to.eq(ArcDecimal.new(50).value);
+      expect(await earned(userB)).to.eq(ArcDecimal.new(50).value);
+      expect(await earned(userC)).to.eq(ArcDecimal.new(20).value);
+      expect(await earned(userD)).to.eq(ArcDecimal.new(0).value);
       expect(await earned(userE)).to.eq(ArcDecimal.new(0).value);
 
-      await stake(userE, STAKE_AMOUNT); // 13
+      await setTimestampTo(9);
 
-      await logTimeDiff(timeAtNotification);
-      expect(await earned(userA)).to.eq(ArcDecimal.new(43.5).value);
-      expect(await earned(userB)).to.eq(ArcDecimal.new(43.5).value);
-      expect(await earned(userC)).to.eq(ArcDecimal.new(21).value);
-      expect(await earned(userD)).to.eq(ArcDecimal.new(9).value);
+      expect(await earned(userA)).to.eq(ArcDecimal.new(53.75).value);
+      expect(await earned(userB)).to.eq(ArcDecimal.new(53.75).value);
+      expect(await earned(userC)).to.eq(ArcDecimal.new(23.75).value);
+      expect(await earned(userD)).to.eq(ArcDecimal.new(3.75).value);
       expect(await earned(userE)).to.eq(ArcDecimal.new(0).value);
 
-      await liquidityCampaignAdmin.setTokensClaimable(true); // 14
+      await setTimestampTo(10);
 
-      await increaseTime(2); // 16
+      expect(await earned(userA)).to.eq(ArcDecimal.new(57.5).value);
+      expect(await earned(userB)).to.eq(ArcDecimal.new(57.5).value);
+      expect(await earned(userC)).to.eq(ArcDecimal.new(27.5).value);
+      expect(await earned(userD)).to.eq(ArcDecimal.new(7.5).value);
+      expect(await earned(userE)).to.eq(ArcDecimal.new(0).value);
 
-      await logTimeDiff(timeAtNotification);
-      expect(await earned(userA)).to.eq(ArcDecimal.new(49.35).value);
-      expect(await earned(userB)).to.eq(ArcDecimal.new(49.35).value);
-      expect(await earned(userC)).to.eq(ArcDecimal.new(26.85).value);
-      expect(await earned(userD)).to.eq(ArcDecimal.new(14.85).value);
-      expect(await earned(userE)).to.eq(ArcDecimal.new(7.2).value);
+      await setTimestampTo(13);
 
-      await withdraw(userC); // 17
+      await stake(userE, STAKE_AMOUNT);
 
-      await increaseTime(2); // 19
+      expect(await earned(userA)).to.eq(ArcDecimal.new(68.75).value);
+      expect(await earned(userB)).to.eq(ArcDecimal.new(68.75).value);
+      expect(await earned(userC)).to.eq(ArcDecimal.new(38.75).value);
+      expect(await earned(userD)).to.eq(ArcDecimal.new(18.75).value);
+      expect(await earned(userE)).to.eq(ArcDecimal.new(0).value);
 
-      await logTimeDiff(timeAtNotification);
-      expect(await earned(userA)).to.eq(ArcDecimal.new(55.2).value);
-      expect(await earned(userB)).to.eq(ArcDecimal.new(55.2).value);
-      expect(await earned(userC)).to.eq(ArcDecimal.new(30.45).value);
-      expect(await earned(userD)).to.eq(ArcDecimal.new(20.7).value);
-      expect(await earned(userE)).to.eq(ArcDecimal.new(9.45).value);
+      await liquidityCampaignAdmin.setTokensClaimable(true);
 
-      console.log(
-        `periodFinish: ${await (await liquidityCampaignAdmin.periodFinish()).toString()}`,
-      );
-      console.log(`time: ${await (await getCurrentTimestamp()).toString()}`);
-      await logTimeDiff(timeAtNotification, '20');
+      await setTimestampTo(16);
+
+      expect(await earned(userA)).to.eq(ArcDecimal.new(77.75).value);
+      expect(await earned(userB)).to.eq(ArcDecimal.new(77.75).value);
+      expect(await earned(userC)).to.eq(ArcDecimal.new(47.75).value);
+      expect(await earned(userD)).to.eq(ArcDecimal.new(27.75).value);
+      expect(await earned(userE)).to.eq(ArcDecimal.new(9).value);
+
+      await setTimestampTo(17);
+
+      await withdraw(userC);
+
+      await setTimestampTo(19);
+
+      expect(await earned(userA)).to.eq(ArcDecimal.new(88.25).value);
+      expect(await earned(userB)).to.eq(ArcDecimal.new(88.25).value);
+      expect(await earned(userC)).to.eq(ArcDecimal.new(50.75).value);
+      expect(await earned(userD)).to.eq(ArcDecimal.new(38.25).value);
+      expect(await earned(userE)).to.eq(ArcDecimal.new(19.5).value);
+
+      await setTimestampTo(20);
 
       await exitCampaign(userA);
       await exitCampaign(userB);
@@ -783,16 +790,16 @@ describe('LiquidityCampaign', () => {
       await exitCampaign(userD);
       await exitCampaign(userE);
 
-      await logTimeDiff(timeAtNotification);
-      expect(await rewardBalanceOf(userA)).to.be.eq(ArcDecimal.new(57.45).value);
-      expect(await rewardBalanceOf(userB)).to.be.eq(ArcDecimal.new(57.45).value);
+      expect(await rewardBalanceOf(userA)).to.be.eq(ArcDecimal.new(55.2).value);
+      expect(await rewardBalanceOf(userB)).to.be.eq(ArcDecimal.new(55.2).value);
       expect(await rewardBalanceOf(userC)).to.be.eq(ArcDecimal.new(30.45).value);
-      expect(await rewardBalanceOf(userD)).to.be.eq(ArcDecimal.new(22.95).value);
-      expect(await rewardBalanceOf(userE)).to.be.eq(ArcDecimal.new(11.7).value);
+      expect(await rewardBalanceOf(userD)).to.be.eq(ArcDecimal.new(25.2).value);
+      expect(await rewardBalanceOf(userE)).to.be.eq(ArcDecimal.new(13.95).value);
     });
 
-    it.skip('should distribute rewards correctly for 2 users', async () => {
+    it('should distribute rewards correctly for 2 users', async () => {
       await liquidityCampaignAdmin.setRewardsDuration(20);
+      await liquidityCampaignAdmin.setCurrentTimestamp(0);
 
       const users = await ethers.getSigners();
 
@@ -803,30 +810,35 @@ describe('LiquidityCampaign', () => {
 
       await rewardToken.mintShare(liquidityCampaignAdmin.address, ArcNumber.new(200));
 
-      await liquidityCampaignAdmin.notifyRewardAmount(ArcNumber.new(300)); // epoch after: 0
-      const timeAtNotification = await getCurrentTimestamp();
+      await liquidityCampaignAdmin.notifyRewardAmount(ArcNumber.new(300)); // 0
 
-      await evm.mineBlock(); // 1
-
-      await logTimeDiff(timeAtNotification);
-
-      await increaseTime(7); // 8
-      expect(await earned(userA)).to.eq(ArcDecimal.new(72).value);
-
-      await stake(userB, STAKE_AMOUNT); // 11
-
-      await logTimeDiff(timeAtNotification);
-
-      expect(await earned(userA)).to.eq(ArcDecimal.new(99).value);
+      expect(await earned(userA)).to.eq(ArcDecimal.new(0).value);
       expect(await earned(userB)).to.eq(ArcDecimal.new(0).value);
 
-      await increaseTime(7); // 18
+      await setTimestampTo(1);
 
-      expect(await earned(userA)).to.eq(ArcDecimal.new(130.5).value);
-      expect(await earned(userB)).to.eq(ArcDecimal.new(31.5).value);
+      expect(await earned(userA)).to.eq(ArcDecimal.new(15).value);
+      expect(await earned(userB)).to.eq(ArcDecimal.new(0).value);
+
+      await setTimestampTo(10);
+
+      await stake(userB, STAKE_AMOUNT);
+
+      expect(await earned(userA)).to.eq(ArcDecimal.new(150).value);
+      expect(await earned(userB)).to.eq(ArcDecimal.new(0).value);
+
+      await setTimestampTo(11);
+
+      expect(await earned(userA)).to.eq(ArcDecimal.new(157.5).value);
+      expect(await earned(userB)).to.eq(ArcDecimal.new(7.5).value);
+
+      await setTimestampTo(20);
+
+      expect(await earned(userA)).to.eq(ArcDecimal.new(225).value);
+      expect(await earned(userB)).to.eq(ArcDecimal.new(75).value);
     });
 
-    it.only('should distribute rewards to 3 users correctly', async () => {
+    it('should distribute rewards to 3 users correctly', async () => {
       await liquidityCampaignAdmin.setRewardsDuration(20);
       await liquidityCampaignAdmin.setCurrentTimestamp(0);
 
@@ -838,8 +850,7 @@ describe('LiquidityCampaign', () => {
 
       await stake(userA, STAKE_AMOUNT);
 
-      const timeAtNotification = await getCurrentTimestamp();
-      await liquidityCampaignAdmin.notifyRewardAmount(ArcNumber.new(100)); // epoch after: 1
+      await liquidityCampaignAdmin.notifyRewardAmount(ArcNumber.new(100)); // 0
 
       expect(await earned(userA)).to.eq(ArcDecimal.new(0).value);
       expect(await earned(userB)).to.eq(ArcDecimal.new(0).value);
@@ -847,7 +858,6 @@ describe('LiquidityCampaign', () => {
 
       await liquidityCampaignAdmin.setCurrentTimestamp(1);
 
-      await logTimeDiff(timeAtNotification);
       expect(await earned(userA)).to.eq(ArcDecimal.new(5).value);
       expect(await earned(userB)).to.eq(ArcDecimal.new(0).value);
       expect(await earned(userC)).to.eq(ArcDecimal.new(0).value);
@@ -856,7 +866,6 @@ describe('LiquidityCampaign', () => {
 
       await stake(userB, STAKE_AMOUNT);
 
-      await logTimeDiff(timeAtNotification);
       expect(await earned(userA)).to.eq(ArcDecimal.new(15).value);
       expect(await earned(userB)).to.eq(ArcDecimal.new(0).value);
       expect(await earned(userC)).to.eq(ArcDecimal.new(0).value);
@@ -865,14 +874,12 @@ describe('LiquidityCampaign', () => {
 
       await stake(userC, STAKE_AMOUNT.mul(2));
 
-      await logTimeDiff(timeAtNotification);
       expect(await earned(userA)).to.eq(ArcDecimal.new(27.5).value);
       expect(await earned(userB)).to.eq(ArcDecimal.new(12.5).value);
       expect(await earned(userC)).to.eq(ArcDecimal.new(0).value);
 
       await liquidityCampaignAdmin.setCurrentTimestamp(10);
 
-      await logTimeDiff(timeAtNotification);
       expect(await earned(userA)).to.eq(ArcDecimal.new(30).value);
       expect(await earned(userB)).to.eq(ArcDecimal.new(15).value);
       expect(await earned(userC)).to.eq(ArcDecimal.new(5).value);
@@ -886,7 +893,6 @@ describe('LiquidityCampaign', () => {
 
       await liquidityCampaignAdmin.setCurrentTimestamp(20);
 
-      await logTimeDiff(timeAtNotification);
       expect(await earned(userA)).to.eq(ArcDecimal.new(51.25).value);
 
       expect(await earned(userB)).to.eq(ArcDecimal.new(18.75).value);
