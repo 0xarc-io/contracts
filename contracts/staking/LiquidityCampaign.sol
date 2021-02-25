@@ -101,7 +101,7 @@ contract LiquidityCampaign is Adminable {
         onlyAdmin
     {
         require(
-            periodFinish == 0 || block.timestamp > periodFinish,
+            periodFinish == 0 || getCurrentTimestamp() > periodFinish,
             "LiquidityCampaign:setRewardsDuration() Period not finished yet"
         );
 
@@ -124,10 +124,10 @@ contract LiquidityCampaign is Adminable {
             "LiquidityCampaign:notifyRewardAmount() rewards duration must first be set"
         );
 
-        if (block.timestamp >= periodFinish) {
+        if (getCurrentTimestamp() >= periodFinish) {
             rewardRate = _reward.div(rewardsDuration);
         } else {
-            uint256 remaining = periodFinish.sub(block.timestamp);
+            uint256 remaining = periodFinish.sub(getCurrentTimestamp());
             uint256 leftover = remaining.mul(rewardRate);
             rewardRate = _reward.add(leftover).div(rewardsDuration);
         }
@@ -142,8 +142,8 @@ contract LiquidityCampaign is Adminable {
             "LiquidityCampaign:notifyRewardAmount() Provided reward too high"
         );
 
-        periodFinish = block.timestamp.add(rewardsDuration);
-        lastUpdateTime = block.timestamp;
+        periodFinish = getCurrentTimestamp().add(rewardsDuration);
+        lastUpdateTime = getCurrentTimestamp();
 
         emit RewardAdded(_reward);
     }
@@ -219,7 +219,7 @@ contract LiquidityCampaign is Adminable {
         view
         returns (uint256)
     {
-        return block.timestamp < periodFinish ? block.timestamp : periodFinish;
+        return getCurrentTimestamp() < periodFinish ? getCurrentTimestamp() : periodFinish;
     }
 
     /**
@@ -270,7 +270,7 @@ contract LiquidityCampaign is Adminable {
     function _actualEarned(
         address _account
     )
-        private
+        public
         view
         returns (uint256)
     {
@@ -284,7 +284,7 @@ contract LiquidityCampaign is Adminable {
     function earned(
         address _account
     )
-        external
+        public
         view
         returns (uint256)
     {
@@ -300,6 +300,14 @@ contract LiquidityCampaign is Adminable {
         returns (uint256)
     {
         return rewardRate.mul(rewardsDuration);
+    }
+
+    function getCurrentTimestamp()
+        public
+        view
+        returns (uint256)
+    {
+        return block.timestamp;
     }
 
     function userAllocation()
