@@ -46,6 +46,8 @@ contract LiquidityCampaign is Adminable {
 
     uint256 public totalSupply;
 
+    bool private _isInitialized;
+
     /* ========== Events ========== */
 
     event RewardAdded (uint256 reward);
@@ -189,6 +191,22 @@ contract LiquidityCampaign is Adminable {
         public
         onlyAdmin
     {
+        require(
+            !_isInitialized,
+            "The init function cannot be called twice"
+        );
+
+        _isInitialized = true;
+
+        require(
+            _arcDAO != address(0) &&
+            _rewardsDistributor != address(0) &&
+            _rewardsToken != address(0) &&
+            _stakingToken != address(0) &&
+            _daoAllocation.value > 0,
+            "One or more parameters of init() cannot be null"
+        );
+
         arcDAO              = _arcDAO;
         rewardsDistributor  = _rewardsDistributor;
         rewardsToken        = IERC20(_rewardsToken);
