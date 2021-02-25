@@ -83,7 +83,133 @@ contract LiquidityCampaign is Adminable {
         _;
     }
 
+    /* ========== Admin Functions ========== */
+
+    function setRewardsDistributor(
+        address _rewardsDistributor
+    )
+        external
+        onlyAdmin
+    {
+        rewardsDistributor = _rewardsDistributor;
+    }
+
+    function setRewardsDuration(
+        uint256 _rewardsDuration
+    )
+        external
+        onlyAdmin
+    {
+        require(
+            periodFinish == 0 || getCurrentTimestamp() > periodFinish,
+            "LiquidityCampaign:setRewardsDuration() Period not finished yet"
+        );
+
+        rewardsDuration = _rewardsDuration;
+        emit RewardsDurationUpdated(rewardsDuration);
+    }
+
+    /**
+     * @notice Sets the reward amount for a period of `rewardsDuration`
+     */
+    function notifyRewardAmount(
+        uint256 _reward
+    )
+        external
+        onlyRewardsDistributor
+        updateReward(address(0))
+    {
+        require(
+            rewardsDuration != 0,
+            "LiquidityCampaign:notifyRewardAmount() rewards duration must first be set"
+        );
+
+        if (getCurrentTimestamp() >= periodFinish) {
+            rewardRate = _reward.div(rewardsDuration);
+        } else {
+            uint256 remaining = periodFinish.sub(getCurrentTimestamp());
+            uint256 leftover = remaining.mul(rewardRate);
+            rewardRate = _reward.add(leftover).div(rewardsDuration);
+        }
+
+        // Ensure the provided reward amount is not more than the balance in the contract.
+        // This keeps the reward rate in the right range, preventing overflows due to
+        // very high values of rewardRate in the earned and rewardsPerToken functions;
+        // Reward + leftover must be less than 2^256 / 10^18 to avoid overflow.
+        uint balance = rewardsToken.balanceOf(address(this));
+        require(
+            rewardRate <= balance.div(rewardsDuration),
+            "LiquidityCampaign:notifyRewardAmount() Provided reward too high"
+        );
+
+        periodFinish = getCurrentTimestamp().add(rewardsDuration);
+        lastUpdateTime = getCurrentTimestamp();
+
+        emit RewardAdded(_reward);
+    }
+
+    /**
+     * @notice Withdraws ERC20 into the admin's account
+     */
+    function recoverERC20(
+        address _tokenAddress,
+        uint256 _tokenAmount
+    )
+        external
+        onlyAdmin
+    {
+        // Cannot recover the staking token or the rewards token
+        require(
+            _tokenAddress != address(stakingToken) && _tokenAddress != address(rewardsToken),
+            "LiquidityCampaign:recoverERC20() Can't withdraw staking or rewards tokens"
+        );
+
+        IERC20(_tokenAddress).safeTransfer(getAdmin(), _tokenAmount);
+        emit Recovered(_tokenAddress, _tokenAmount);
+    }
+
+    function setTokensClaimable(
+        bool _enabled
+    )
+        external
+        onlyAdmin
+    {
+        tokensClaimable = _enabled;
+
+        emit ClaimableStatusUpdated(_enabled);
+    }
+
+    function init(
+        address _arcDAO,
+        address _rewardsDistributor,
+        address _rewardsToken,
+        address _stakingToken,
+        Decimal.D256 memory _daoAllocation
+    )
+        public
+        onlyAdmin
+    {
+        arcDAO              = _arcDAO;
+        rewardsDistributor  = _rewardsDistributor;
+        rewardsToken        = IERC20(_rewardsToken);
+        stakingToken        = IERC20(_stakingToken);
+        daoAllocation       = _daoAllocation;
+    }
+
     /* ========== View Functions ========== */
+
+    /**
+     * @notice Returns the balance of the staker address
+     */
+    function balanceOf(
+        address _account
+    )
+        public
+        view
+        returns (uint256)
+    {
+        return stakers[_account].balance;
+    }
 
     /**
      * @notice Returns the current block timestamp if the reward period did not finish, or `periodFinish` otherwise
@@ -93,20 +219,28 @@ contract LiquidityCampaign is Adminable {
         view
         returns (uint256)
     {
-        return block.timestamp < periodFinish ? block.timestamp : periodFinish;
+        return getCurrentTimestamp() < periodFinish ? getCurrentTimestamp() : periodFinish;
     }
 
     /**
-     * @notice Returns the balance of the staker address
+     * @notice Returns the current reward amount per token staked
      */
-    function balanceOfStaker(
-        address _account
-    )
-        public
+    function _actualRewardPerToken()
+        private
         view
         returns (uint256)
     {
-        return stakers[_account].balance;
+        if (totalSupply == 0) {
+            return rewardPerTokenStored;
+        }
+
+        return rewardPerTokenStored.add(
+            lastTimeRewardApplicable()
+                .sub(lastUpdateTime)
+                .mul(rewardRate)
+                .mul(1e18)
+                .div(totalSupply)
+        );
     }
 
     function rewardPerToken()
@@ -122,25 +256,35 @@ contract LiquidityCampaign is Adminable {
         // the userAllocation() with the result of actualRewardPerToken()
         return
             rewardPerTokenStored.add(
-                Decimal.mul(_currentRewardRate(), userAllocation())
+                Decimal.mul(
+                    lastTimeRewardApplicable()
+                        .sub(lastUpdateTime)
+                        .mul(rewardRate)
+                        .mul(1e18)
+                        .div(totalSupply),
+                    userAllocation()
+                )
             );
     }
 
-    function userAllocation()
-        public
+    function _actualEarned(
+        address _account
+    )
+        internal
         view
-        returns (Decimal.D256 memory)
+        returns (uint256)
     {
-        return Decimal.sub(
-            Decimal.one(),
-            daoAllocation.value
-        );
+        return stakers[_account]
+            .balance
+            .mul(_actualRewardPerToken().sub(stakers[_account].rewardPerTokenPaid))
+            .div(1e18)
+            .add(stakers[_account].rewardsEarned);
     }
 
     function earned(
         address _account
     )
-        external
+        public
         view
         returns (uint256)
     {
@@ -156,6 +300,25 @@ contract LiquidityCampaign is Adminable {
         returns (uint256)
     {
         return rewardRate.mul(rewardsDuration);
+    }
+
+    function getCurrentTimestamp()
+        public
+        view
+        returns (uint256)
+    {
+        return block.timestamp;
+    }
+
+    function userAllocation()
+        public
+        view
+        returns (Decimal.D256 memory)
+    {
+        return Decimal.sub(
+            Decimal.one(),
+            daoAllocation.value
+        );
     }
 
     /* ========== Mutative Functions ========== */
@@ -224,161 +387,6 @@ contract LiquidityCampaign is Adminable {
         external
     {
         getReward(msg.sender);
-        withdraw(balanceOfStaker(msg.sender));
-    }
-
-    /* ========== Admin Functions ========== */
-
-    function init(
-        address _arcDAO,
-        address _rewardsDistributor,
-        address _rewardsToken,
-        address _stakingToken,
-        Decimal.D256 memory _daoAllocation
-    )
-        public
-        onlyAdmin
-    {
-        arcDAO              = _arcDAO;
-        rewardsDistributor  = _rewardsDistributor;
-        rewardsToken        = IERC20(_rewardsToken);
-        stakingToken        = IERC20(_stakingToken);
-        daoAllocation       = _daoAllocation;
-    }
-
-    /**
-     * @notice Sets the reward amount for a period of `rewardsDuration`
-     */
-    function notifyRewardAmount(
-        uint256 _reward
-    )
-        external
-        onlyRewardsDistributor
-        updateReward(address(0))
-    {
-        require(
-            rewardsDuration != 0,
-            "LiquidityCampaign:notifyRewardAmount() rewards duration must first be set"
-        );
-
-        if (block.timestamp >= periodFinish) {
-            rewardRate = _reward.div(rewardsDuration);
-        } else {
-            uint256 remaining = periodFinish.sub(block.timestamp);
-            uint256 leftover = remaining.mul(rewardRate);
-            rewardRate = _reward.add(leftover).div(rewardsDuration);
-        }
-
-        // Ensure the provided reward amount is not more than the balance in the contract.
-        // This keeps the reward rate in the right range, preventing overflows due to
-        // very high values of rewardRate in the earned and rewardsPerToken functions;
-        // Reward + leftover must be less than 2^256 / 10^18 to avoid overflow.
-        uint balance = rewardsToken.balanceOf(address(this));
-        require(
-            rewardRate <= balance.div(rewardsDuration),
-            "LiquidityCampaign:notifyRewardAmount() Provided reward too high"
-        );
-
-        periodFinish = block.timestamp.add(rewardsDuration);
-
-        emit RewardAdded(_reward);
-    }
-
-    function setRewardsDistributor(
-        address _rewardsDistributor
-    )
-        external
-        onlyAdmin
-    {
-        rewardsDistributor = _rewardsDistributor;
-    }
-
-    function setRewardsDuration(
-        uint256 _rewardsDuration
-    )
-        external
-        onlyAdmin
-    {
-        require(
-            periodFinish == 0 || block.timestamp > periodFinish,
-            "LiquidityCampaign:setRewardsDuration() Period not finished yet"
-        );
-
-        rewardsDuration = _rewardsDuration;
-        emit RewardsDurationUpdated(rewardsDuration);
-    }
-
-    /**
-     * @notice Withdraws ERC20 into the admin's account
-     */
-    function recoverERC20(
-        address _tokenAddress,
-        uint256 _tokenAmount
-    )
-        external
-        onlyAdmin
-    {
-        // Cannot recover the staking token or the rewards token
-        require(
-            _tokenAddress != address(stakingToken) && _tokenAddress != address(rewardsToken),
-            "LiquidityCampaign:recoverERC20() Can't withdraw staking or rewards tokens"
-        );
-
-        IERC20(_tokenAddress).safeTransfer(getAdmin(), _tokenAmount);
-        emit Recovered(_tokenAddress, _tokenAmount);
-    }
-
-    function setTokensClaimable(
-        bool _enabled
-    )
-        external
-        onlyAdmin
-    {
-        tokensClaimable = _enabled;
-
-        emit ClaimableStatusUpdated(_enabled);
-    }
-
-    /* ========== Private Functions ========== */
-
-    function _currentRewardRate()
-        private
-        view
-        returns (uint256)
-    {
-        return lastTimeRewardApplicable()
-            .sub(lastUpdateTime)
-            .mul(rewardRate)
-            .mul(1e18)
-            .div(totalSupply);
-    }
-
-    function _actualEarned(
-        address _account
-    )
-        private
-        view
-        returns (uint256)
-    {
-        return stakers[_account]
-            .balance
-            .mul(_actualRewardPerToken().sub(stakers[_account].rewardPerTokenPaid))
-            .div(1e18)
-            .add(stakers[_account].rewardsEarned);
-    }
-
-    /**
-     * @notice Returns the current reward amount per token staked
-     */
-    function _actualRewardPerToken()
-        private
-        view
-        returns (uint256)
-    {
-        if (totalSupply == 0) {
-            return rewardPerTokenStored;
-        }
-
-        return rewardPerTokenStored.add(_currentRewardRate());
+        withdraw(balanceOf(msg.sender));
     }
 }
