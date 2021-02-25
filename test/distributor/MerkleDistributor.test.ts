@@ -1,10 +1,12 @@
 import chai, { expect } from 'chai';
-import { solidity, MockProvider, deployContract } from 'ethereum-waffle';
+import { solidity, deployContract } from 'ethereum-waffle';
 import { Contract, BigNumber, constants } from 'ethers';
 
 import Distributor from '../../artifacts/contracts/distributor/MerkleDistributor.sol/MerkleDistributor.json';
-import ArcxToken from '../../artifacts/contracts/token/ArcxToken.sol/ArcxToken.json';
 import BalanceTree from '@src/MerkleTree/BalanceTree';
+import { generateContext, ITestContext } from '@test/contracts/context';
+import { distributorFixture } from '@test/contracts/fixtures';
+import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 
 chai.use(solidity);
 
@@ -15,40 +17,32 @@ const overrides = {
 const ZERO_BYTES32 = '0x0000000000000000000000000000000000000000000000000000000000000000';
 
 describe('MerkleDistributor', () => {
-  const provider = new MockProvider({
-    ganacheOptions: {
-      hardfork: 'istanbul',
-      mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
-      gasLimit: 9999999,
-    },
+  let ctx: ITestContext;
+
+  before(async () => {
+    ctx = await generateContext(distributorFixture, async () => {});
   });
 
-  const wallets = provider.getWallets();
-  const [wallet0, wallet1] = wallets;
-
-  let token: Contract;
-  beforeEach('deploy token', async () => {
-    token = await deployContract(wallet0, ArcxToken as any, [], overrides);
-  });
+  addSnapshotBeforeRestoreAfterEach();
 
   describe('#token', () => {
-    it('returns the token address', async () => {
+    it('returns the ctx.contracts.collateral address', async () => {
       const distributor = await deployContract(
-        wallet0,
+        ctx.signers.admin,
         Distributor,
-        [token.address, ZERO_BYTES32],
+        [ctx.contracts.collateral.address, ZERO_BYTES32],
         overrides,
       );
-      expect(await distributor.token()).to.eq(token.address);
+      expect(await distributor.token()).to.eq(ctx.contracts.collateral.address);
     });
   });
 
   describe('#merkleRoot', () => {
     it('returns the zero merkle root', async () => {
       const distributor = await deployContract(
-        wallet0,
+        ctx.signers.admin,
         Distributor,
-        [token.address, ZERO_BYTES32],
+        [ctx.contracts.collateral.address, ZERO_BYTES32],
         overrides,
       );
       expect(await distributor.merkleRoot()).to.eq(ZERO_BYTES32);
@@ -58,9 +52,9 @@ describe('MerkleDistributor', () => {
   describe('#switchActive', () => {
     it('owner can switch activity', async () => {
       const distributor = await deployContract(
-        wallet0,
+        ctx.signers.admin,
         Distributor,
-        [token.address, ZERO_BYTES32],
+        [ctx.contracts.collateral.address, ZERO_BYTES32],
         overrides,
       );
       expect(await distributor.merkleRoot()).to.eq(ZERO_BYTES32);
@@ -71,14 +65,14 @@ describe('MerkleDistributor', () => {
 
     it('fails if non-owner try to switch activity', async () => {
       const distributor = await deployContract(
-        wallet0,
+        ctx.signers.admin,
         Distributor,
-        [token.address, ZERO_BYTES32],
+        [ctx.contracts.collateral.address, ZERO_BYTES32],
         overrides,
       );
       expect(await distributor.merkleRoot()).to.eq(ZERO_BYTES32);
       expect(await distributor.active()).to.be.false;
-      await expect(distributor.connect(wallet1).switchActive()).to.be.revertedWith(
+      await expect(distributor.connect(ctx.signers.unauthorised).switchActive()).to.be.revertedWith(
         'Ownable: caller is not the owner',
       );
     });
@@ -87,38 +81,38 @@ describe('MerkleDistributor', () => {
   describe('#claim', () => {
     it('fails for empty proof', async () => {
       const distributor = await deployContract(
-        wallet0,
+        ctx.signers.admin,
         Distributor,
-        [token.address, ZERO_BYTES32],
+        [ctx.contracts.collateral.address, ZERO_BYTES32],
         overrides,
       );
       await distributor.switchActive();
-      await expect(distributor.claim(0, wallet0.address, 10, [])).to.be.revertedWith(
+      await expect(distributor.claim(0, ctx.signers.admin.address, 10, [])).to.be.revertedWith(
         'MerkleDistributor: Invalid proof',
       );
     });
 
     it('fails for invalid index', async () => {
       const distributor = await deployContract(
-        wallet0,
+        ctx.signers.admin,
         Distributor,
-        [token.address, ZERO_BYTES32],
+        [ctx.contracts.collateral.address, ZERO_BYTES32],
         overrides,
       );
       await distributor.switchActive();
-      await expect(distributor.claim(0, wallet0.address, 10, [])).to.be.revertedWith(
+      await expect(distributor.claim(0, ctx.signers.admin.address, 10, [])).to.be.revertedWith(
         'MerkleDistributor: Invalid proof',
       );
     });
 
     it('fails for not active contract', async () => {
       const distributor = await deployContract(
-        wallet0,
+        ctx.signers.admin,
         Distributor,
-        [token.address, ZERO_BYTES32],
+        [ctx.contracts.collateral.address, ZERO_BYTES32],
         overrides,
       );
-      await expect(distributor.claim(0, wallet0.address, 10, [])).to.be.revertedWith(
+      await expect(distributor.claim(0, ctx.signers.admin.address, 10, [])).to.be.revertedWith(
         'MerkleDistributor: Contract is not active',
       );
     });
@@ -128,84 +122,84 @@ describe('MerkleDistributor', () => {
       let tree: BalanceTree;
       beforeEach('deploy', async () => {
         tree = new BalanceTree([
-          { account: wallet0.address, amount: BigNumber.from(100) },
-          { account: wallet1.address, amount: BigNumber.from(101) },
+          { account: ctx.signers.admin.address, amount: BigNumber.from(100) },
+          { account: ctx.signers.unauthorised.address, amount: BigNumber.from(101) },
         ]);
         distributor = await deployContract(
-          wallet0,
+          ctx.signers.admin,
           Distributor,
-          [token.address, tree.getHexRoot()],
+          [ctx.contracts.collateral.address, tree.getHexRoot()],
           overrides,
         );
         await distributor.switchActive();
-        await token.mint(distributor.address, 201);
+        await ctx.contracts.collateral.mintShare(distributor.address, 201);
       });
 
       it('successful claim', async () => {
-        const proof0 = tree.getProof(0, wallet0.address, BigNumber.from(100));
-        await expect(distributor.claim(0, wallet0.address, 100, proof0, overrides))
+        const proof0 = tree.getProof(0, ctx.signers.admin.address, BigNumber.from(100));
+        await expect(distributor.claim(0, ctx.signers.admin.address, 100, proof0, overrides))
           .to.emit(distributor, 'Claimed')
-          .withArgs(0, wallet0.address, 100);
-        const proof1 = tree.getProof(1, wallet1.address, BigNumber.from(101));
-        await expect(distributor.claim(1, wallet1.address, 101, proof1, overrides))
+          .withArgs(0, ctx.signers.admin.address, 100);
+        const proof1 = tree.getProof(1, ctx.signers.unauthorised.address, BigNumber.from(101));
+        await expect(distributor.claim(1, ctx.signers.unauthorised.address, 101, proof1, overrides))
           .to.emit(distributor, 'Claimed')
-          .withArgs(1, wallet1.address, 101);
+          .withArgs(1, ctx.signers.unauthorised.address, 101);
       });
 
-      it('transfers the token', async () => {
-        const proof0 = tree.getProof(0, wallet0.address, BigNumber.from(100));
-        expect(await token.balanceOf(wallet0.address)).to.eq(0);
-        await distributor.claim(0, wallet0.address, 100, proof0, overrides);
-        expect(await token.balanceOf(wallet0.address)).to.eq(100);
+      it('transfers the ctx.contracts.collateral', async () => {
+        const proof0 = tree.getProof(0, ctx.signers.admin.address, BigNumber.from(100));
+        expect(await ctx.contracts.collateral.balanceOf(ctx.signers.admin.address)).to.eq(0);
+        await distributor.claim(0, ctx.signers.admin.address, 100, proof0, overrides);
+        expect(await ctx.contracts.collateral.balanceOf(ctx.signers.admin.address)).to.eq(100);
       });
 
       it('must have enough to transfer', async () => {
-        const proof0 = tree.getProof(0, wallet0.address, BigNumber.from(100));
-        await token.burn(distributor.address, 140);
+        const proof0 = tree.getProof(0, ctx.signers.admin.address, BigNumber.from(100));
+        await ctx.contracts.collateral.redeemShare(distributor.address, 140);
         await expect(
-          distributor.claim(0, wallet0.address, 100, proof0, overrides),
+          distributor.claim(0, ctx.signers.admin.address, 100, proof0, overrides),
         ).to.be.revertedWith('SafeMath: subtraction overflow');
       });
 
       it('sets #isClaimed', async () => {
-        const proof0 = tree.getProof(0, wallet0.address, BigNumber.from(100));
+        const proof0 = tree.getProof(0, ctx.signers.admin.address, BigNumber.from(100));
         expect(await distributor.isClaimed(0)).to.eq(false);
         expect(await distributor.isClaimed(1)).to.eq(false);
-        await distributor.claim(0, wallet0.address, 100, proof0, overrides);
+        await distributor.claim(0, ctx.signers.admin.address, 100, proof0, overrides);
         expect(await distributor.isClaimed(0)).to.eq(true);
         expect(await distributor.isClaimed(1)).to.eq(false);
       });
 
       it('cannot allow two claims', async () => {
-        const proof0 = tree.getProof(0, wallet0.address, BigNumber.from(100));
-        await distributor.claim(0, wallet0.address, 100, proof0, overrides);
+        const proof0 = tree.getProof(0, ctx.signers.admin.address, BigNumber.from(100));
+        await distributor.claim(0, ctx.signers.admin.address, 100, proof0, overrides);
         await expect(
-          distributor.claim(0, wallet0.address, 100, proof0, overrides),
+          distributor.claim(0, ctx.signers.admin.address, 100, proof0, overrides),
         ).to.be.revertedWith('MerkleDistributor: Drop already claimed');
       });
 
       it('cannot claim more than once: 0 and then 1', async () => {
         await distributor.claim(
           0,
-          wallet0.address,
+          ctx.signers.admin.address,
           100,
-          tree.getProof(0, wallet0.address, BigNumber.from(100)),
+          tree.getProof(0, ctx.signers.admin.address, BigNumber.from(100)),
           overrides,
         );
         await distributor.claim(
           1,
-          wallet1.address,
+          ctx.signers.unauthorised.address,
           101,
-          tree.getProof(1, wallet1.address, BigNumber.from(101)),
+          tree.getProof(1, ctx.signers.unauthorised.address, BigNumber.from(101)),
           overrides,
         );
 
         await expect(
           distributor.claim(
             0,
-            wallet0.address,
+            ctx.signers.admin.address,
             100,
-            tree.getProof(0, wallet0.address, BigNumber.from(100)),
+            tree.getProof(0, ctx.signers.admin.address, BigNumber.from(100)),
             overrides,
           ),
         ).to.be.revertedWith('MerkleDistributor: Drop already claimed');
@@ -214,41 +208,41 @@ describe('MerkleDistributor', () => {
       it('cannot claim more than once: 1 and then 0', async () => {
         await distributor.claim(
           1,
-          wallet1.address,
+          ctx.signers.unauthorised.address,
           101,
-          tree.getProof(1, wallet1.address, BigNumber.from(101)),
+          tree.getProof(1, ctx.signers.unauthorised.address, BigNumber.from(101)),
           overrides,
         );
         await distributor.claim(
           0,
-          wallet0.address,
+          ctx.signers.admin.address,
           100,
-          tree.getProof(0, wallet0.address, BigNumber.from(100)),
+          tree.getProof(0, ctx.signers.admin.address, BigNumber.from(100)),
           overrides,
         );
 
         await expect(
           distributor.claim(
             1,
-            wallet1.address,
+            ctx.signers.unauthorised.address,
             101,
-            tree.getProof(1, wallet1.address, BigNumber.from(101)),
+            tree.getProof(1, ctx.signers.unauthorised.address, BigNumber.from(101)),
             overrides,
           ),
         ).to.be.revertedWith('MerkleDistributor: Drop already claimed');
       });
 
       it('cannot claim for address other than proof', async () => {
-        const proof0 = tree.getProof(0, wallet0.address, BigNumber.from(100));
+        const proof0 = tree.getProof(0, ctx.signers.admin.address, BigNumber.from(100));
         await expect(
-          distributor.claim(1, wallet1.address, 101, proof0, overrides),
+          distributor.claim(1, ctx.signers.unauthorised.address, 101, proof0, overrides),
         ).to.be.revertedWith('MerkleDistributor: Invalid proof');
       });
 
       it('cannot claim more than proof', async () => {
-        const proof0 = tree.getProof(0, wallet0.address, BigNumber.from(100));
+        const proof0 = tree.getProof(0, ctx.signers.admin.address, BigNumber.from(100));
         await expect(
-          distributor.claim(0, wallet0.address, 101, proof0, overrides),
+          distributor.claim(0, ctx.signers.admin.address, 101, proof0, overrides),
         ).to.be.revertedWith('MerkleDistributor: Invalid proof');
       });
     });
@@ -258,32 +252,32 @@ describe('MerkleDistributor', () => {
       let tree: BalanceTree;
       beforeEach('deploy', async () => {
         tree = new BalanceTree(
-          wallets.map((wallet, ix) => {
-            return { account: wallet.address, amount: BigNumber.from(ix + 1) };
+          Object.keys(ctx.signers).map((signerKey, ix) => {
+            return { account: ctx.signers[signerKey].address, amount: BigNumber.from(ix + 1) };
           }),
         );
         distributor = await deployContract(
-          wallet0,
+          ctx.signers.admin,
           Distributor,
-          [token.address, tree.getHexRoot()],
+          [ctx.contracts.collateral.address, tree.getHexRoot()],
           overrides,
         );
         await distributor.switchActive();
-        await token.mint(distributor.address, 201);
+        await ctx.contracts.collateral.mintShare(distributor.address, 201);
       });
 
       it('claim index 4', async () => {
-        const proof = tree.getProof(4, wallets[4].address, BigNumber.from(5));
-        await expect(distributor.claim(4, wallets[4].address, 5, proof, overrides))
+        const proof = tree.getProof(4, ctx.signers.staker.address, BigNumber.from(5));
+        await expect(distributor.claim(4, ctx.signers.staker.address, 5, proof, overrides))
           .to.emit(distributor, 'Claimed')
-          .withArgs(4, wallets[4].address, 5);
+          .withArgs(4, ctx.signers.staker.address, 5);
       });
 
-      it('claim index 9', async () => {
-        const proof = tree.getProof(9, wallets[9].address, BigNumber.from(10));
-        await expect(distributor.claim(9, wallets[9].address, 10, proof, overrides))
+      it('claim index 8', async () => {
+        const proof = tree.getProof(8, ctx.signers.unauthorised.address, BigNumber.from(9));
+        await expect(distributor.claim(8, ctx.signers.unauthorised.address, 9, proof, overrides))
           .to.emit(distributor, 'Claimed')
-          .withArgs(9, wallets[9].address, 10);
+          .withArgs(8, ctx.signers.unauthorised.address, 9);
       });
     });
 
@@ -293,19 +287,22 @@ describe('MerkleDistributor', () => {
       const NUM_LEAVES = 100_000;
       const NUM_SAMPLES = 25;
       const elements: { account: string; amount: BigNumber }[] = [];
-      for (let i = 0; i < NUM_LEAVES; i++) {
-        const node = { account: wallet0.address, amount: BigNumber.from(100) };
-        elements.push(node);
-      }
-      tree = new BalanceTree(elements);
+
+      before(() => {
+        for (let i = 0; i < NUM_LEAVES; i++) {
+          const node = { account: ctx.signers.admin.address, amount: BigNumber.from(100) };
+          elements.push(node);
+        }
+        tree = new BalanceTree(elements);
+      })
 
       it('proof verification works', () => {
         const root = tree.getHexRoot();
         for (let i = 0; i < NUM_LEAVES; i += NUM_LEAVES / NUM_SAMPLES) {
-          const proof = tree.getProof(i, wallet0.address, BigNumber.from(100));
+          const proof = tree.getProof(i, ctx.signers.admin.address, BigNumber.from(100));
           const validProof = BalanceTree.verifyProof(
             i,
-            wallet0.address,
+            ctx.signers.admin.address,
             BigNumber.from(100),
             proof,
             root,
@@ -316,21 +313,21 @@ describe('MerkleDistributor', () => {
 
       beforeEach('deploy', async () => {
         distributor = await deployContract(
-          wallet0,
+          ctx.signers.admin,
           Distributor,
-          [token.address, tree.getHexRoot()],
+          [ctx.contracts.collateral.address, tree.getHexRoot()],
           overrides,
         );
         await distributor.switchActive();
-        await token.mint(distributor.address, constants.MaxUint256);
+        await ctx.contracts.collateral.mintShare(distributor.address, constants.MaxUint256);
       });
 
       it('no double claims in random distribution', async () => {
         for (let i = 0; i < 25; i += Math.floor(Math.random() * (NUM_LEAVES / NUM_SAMPLES))) {
-          const proof = tree.getProof(i, wallet0.address, BigNumber.from(100));
-          await distributor.claim(i, wallet0.address, 100, proof, overrides);
+          const proof = tree.getProof(i, ctx.signers.admin.address, BigNumber.from(100));
+          await distributor.claim(i, ctx.signers.admin.address, 100, proof, overrides);
           await expect(
-            distributor.claim(i, wallet0.address, 100, proof, overrides),
+            distributor.claim(i, ctx.signers.admin.address, 100, proof, overrides),
           ).to.be.revertedWith('MerkleDistributor: Drop already claimed');
         }
       });
