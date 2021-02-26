@@ -9,7 +9,7 @@ import { AdminableFactory } from '@src/typings';
 const hre = require('hardhat');
 
 describe('Ownable contracts', () => {
-  const expectedOwner = hre.config.networks.mainnet.users.owner;
+  const expectedOwner = hre.config.networks.mainnet.users.eoaOwner;
 
   const provider = new MockProvider({
     ganacheOptions: {
@@ -34,7 +34,7 @@ describe('Ownable contracts', () => {
           'KYFToken',
           'SkillsetToken',
           'StaticSyntheticToken',
-          'ArcUniswapV2Oracle',
+          // 'ArcUniswapV2Oracle',
         ].includes(source);
       };
 
