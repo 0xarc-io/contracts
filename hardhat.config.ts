@@ -67,7 +67,7 @@ const config: HardhatUserConfig = {
     local: {
       url: 'http://127.0.0.1:8545',
       users: {
-        owner: '0xAF36712cb4ebD3BD706E898F5703ce3Ca96E8982',
+        eoaOwner: '0xAF36712cb4ebD3BD706E898F5703ce3Ca96E8982',
       },
     },
     coverage: {
@@ -78,7 +78,7 @@ const config: HardhatUserConfig = {
       accounts: [params.testnet_private_key],
       gasPrice: 1000000000,
       users: {
-        owner: '0xa8C01EfD74A206Bb2d769b6b3a5759508c83F20C',
+        eoaOwner: '0xa8C01EfD74A206Bb2d769b6b3a5759508c83F20C',
       },
     },
     kovan: {
@@ -86,7 +86,7 @@ const config: HardhatUserConfig = {
       accounts: [params.testnet_private_key],
       gasPrice: 1000000000,
       users: {
-        owner: '0xa8C01EfD74A206Bb2d769b6b3a5759508c83F20C',
+        eoaOwner: '0xa8C01EfD74A206Bb2d769b6b3a5759508c83F20C',
       },
     },
     mainnet: {
@@ -94,7 +94,8 @@ const config: HardhatUserConfig = {
       accounts: [params.deploy_private_key],
       gasPrice: 190 * 10 ** 9,
       users: {
-        owner: '0x62f31e08e279f3091d9755a09914df97554eae0b',
+        eoaOwner: '0x62f31e08e279f3091d9755a09914df97554eae0b',
+        multisigOwner: '',
       },
     },
     playnet: {
@@ -102,7 +103,8 @@ const config: HardhatUserConfig = {
       accounts: [params.deploy_private_key],
       gasPrice: 190 * 10 ** 9,
       users: {
-        owner: '0x9c767178528c8a205DF63305ebdA4BB6B147889b',
+        eoaOwner: '0x9c767178528c8a205DF63305ebdA4BB6B147889b',
+        multisigOwner: '0xFe1AaAAEc2cFd70E89037F489d4eB362a169631e',
       },
     },
   },
