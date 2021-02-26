@@ -6,17 +6,6 @@
     "singleQuote": true,
     "overrides": [
       {
-        "files": "*.sol",
-        "options": {
-          "printWidth": 125,
-          "tabWidth": 4,
-          "useTabs": false,
-          "singleQuote": false,
-          "bracketSpacing": false,
-          "explicitTypes": "preserve"
-        }
-      },
-      {
         "files": ["*.js", "*.md"],
         "options": {
           "useTabs": true,

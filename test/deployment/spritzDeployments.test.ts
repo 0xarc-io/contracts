@@ -25,7 +25,7 @@ function testNetwork(network: string) {
     const provider = new ethers.providers.JsonRpcProvider(hreNetwork.url);
     const signer = generatedWallets(provider)[0];
     const isOwnerSet = hreNetwork.users?.owner?.length > 0;
-    const ultimateOwner = hreNetwork.users?.owner.toLowerCase();
+    const eoaOwner = hreNetwork.users?.eoaOwner?.toLowerCase();
 
     const coreProxyDetails = loadContract({
       network,
@@ -58,7 +58,7 @@ function testNetwork(network: string) {
 
     it('should have the correct admin set for core', async () => {
       if (isOwnerSet) {
-        expect((await core.getAdmin()).toLowerCase()).to.equal(ultimateOwner);
+        expect((await core.getAdmin()).toLowerCase()).to.equal(eoaOwner);
       }
     });
   });
