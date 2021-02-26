@@ -185,17 +185,17 @@ describe('JointCampaign', () => {
       });
     });
 
-    describe('#balanceOfStaker', () => {
+    describe('#balanceOf', () => {
       beforeEach(setup);
 
       it('should return 0 if user did not stake', async () => {
-        expect(await jointCampaignOwner.balanceOfStaker(user1.address)).to.eq(BigNumber.from(0));
+        expect(await jointCampaignOwner.balanceOf(user1.address)).to.eq(BigNumber.from(0));
       });
 
       it('should return the correct balance after staking', async () => {
         await stake(user1, STAKE_AMOUNT);
 
-        expect(await jointCampaignOwner.balanceOfStaker(user1.address)).to.eq(STAKE_AMOUNT);
+        expect(await jointCampaignOwner.balanceOf(user1.address)).to.eq(STAKE_AMOUNT);
       });
     });
 
@@ -405,7 +405,7 @@ describe('JointCampaign', () => {
       beforeEach(setup);
 
       it('returns the correct collab reward for duration', async () => {
-        const rewardForDuration = await jointCampaignOwner.getcollabRewardForDuration();
+        const rewardForDuration = await jointCampaignOwner.getCollabRewardForDuration();
 
         expect(rewardForDuration).to.eq(COLLAB_REWARD_AMOUNT);
       });
@@ -494,7 +494,7 @@ describe('JointCampaign', () => {
       it('should be able to stake', async () => {
         await stake(user1, STAKE_AMOUNT);
 
-        expect(await jointCampaignUser1.balanceOfStaker(user1.address)).to.be.eq(STAKE_AMOUNT);
+        expect(await jointCampaignUser1.balanceOf(user1.address)).to.be.eq(STAKE_AMOUNT);
       });
     });
 
@@ -604,13 +604,13 @@ describe('JointCampaign', () => {
       });
 
       it('should claim the collab reward only, if the arc tokens are not claimable', async () => {
-        await setup()
+        await setup();
 
-        await stake(user1, STAKE_AMOUNT)
+        await stake(user1, STAKE_AMOUNT);
 
-        await evm.mineBlock()
+        await evm.mineBlock();
 
-        await jointCampaignUser1.getReward(user1.address)
+        await jointCampaignUser1.getReward(user1.address);
 
         expect(await arcToken.balanceOf(user1.address)).to.eq(ArcNumber.new(0));
         expect(await collabToken.balanceOf(user1.address)).to.eq(ArcNumber.new(40));
@@ -626,21 +626,21 @@ describe('JointCampaign', () => {
 
         expect(await arcToken.balanceOf(user1.address)).to.eq(ArcNumber.new(30));
         expect(await collabToken.balanceOf(user1.address)).to.eq(ArcNumber.new(100));
-      })
+      });
 
       it('should update rewards accordingly if user exits in between', async () => {
-        await setupBasic() 
+        await setupBasic();
         await jointCampaignOwner.setRewardsDuration(BigNumber.from(20));
         await jointCampaignOwner.setTokensClaimable(true);
 
         await jointCampaignOwner.notifyRewardAmount(ARC_REWARD_AMOUNT, arcToken.address); // arc reward per epoch = 5
         await jointCampaignLido.notifyRewardAmount(COLLAB_REWARD_AMOUNT, collabToken.address); // collab reward per epoch = 10
 
-        const positionId = await stake(user1, STAKE_AMOUNT)
+        const positionId = await stake(user1, STAKE_AMOUNT);
 
-        await evm.mineBlock()
+        await evm.mineBlock();
 
-        await jointCampaignUser1.getReward(user1.address)
+        await jointCampaignUser1.getReward(user1.address);
 
         expect(await arcToken.balanceOf(user1.address)).to.eq(ArcNumber.new(6));
         expect(await collabToken.balanceOf(user1.address)).to.eq(ArcNumber.new(20));
@@ -650,27 +650,27 @@ describe('JointCampaign', () => {
         expect(await arcToken.balanceOf(user1.address)).to.eq(ArcNumber.new(9));
         expect(await collabToken.balanceOf(user1.address)).to.eq(ArcNumber.new(30));
 
-        await jointCampaignUser1.exit()
-        
-        expect(await arcToken.balanceOf(user1.address)).to.eq(ArcNumber.new(12));
-        expect(await collabToken.balanceOf(user1.address)).to.eq(ArcNumber.new(40));
-
-        await jointCampaignUser1.getReward(user1.address)
+        await jointCampaignUser1.exit();
 
         expect(await arcToken.balanceOf(user1.address)).to.eq(ArcNumber.new(12));
         expect(await collabToken.balanceOf(user1.address)).to.eq(ArcNumber.new(40));
 
-        await mintAndApprove(stakingToken, user1, STAKE_AMOUNT)
-        await jointCampaignUser1.stake(STAKE_AMOUNT, positionId)
+        await jointCampaignUser1.getReward(user1.address);
 
-        await evm.mineBlock()
-        await evm.mineBlock()
+        expect(await arcToken.balanceOf(user1.address)).to.eq(ArcNumber.new(12));
+        expect(await collabToken.balanceOf(user1.address)).to.eq(ArcNumber.new(40));
 
-        await jointCampaignUser1.getReward(user1.address)
+        await mintAndApprove(stakingToken, user1, STAKE_AMOUNT);
+        await jointCampaignUser1.stake(STAKE_AMOUNT, positionId);
+
+        await evm.mineBlock();
+        await evm.mineBlock();
+
+        await jointCampaignUser1.getReward(user1.address);
 
         expect(await arcToken.balanceOf(user1.address)).to.eq(ArcNumber.new(21));
         expect(await collabToken.balanceOf(user1.address)).to.eq(ArcNumber.new(70));
-      })
+      });
     });
 
     describe('#withdraw', () => {
