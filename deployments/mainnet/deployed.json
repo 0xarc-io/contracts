@@ -501,8 +501,8 @@
   {
     "name": "Implementation",
     "source": "LiquidityCampaign",
-    "address": "0xED271f625F03fdc4DDB08F9dD6a4F433F098132C",
-    "txn": "0x807f3f930a709357fc42ecfddc629b6822dc5b4f14adc8d43b24bccb7a383649",
+    "address": "0x00e7dAB5983803D9476385cE7E9076CB4573f8AE",
+    "txn": "0xf8502627e47a1e5f2ae07d4d1182120da8588674e47e518667ccb2679280c799",
     "network": "mainnet",
     "version": 1,
     "type": "staking",
@@ -511,8 +511,8 @@
   {
     "name": "Proxy",
     "source": "ArcProxy",
-    "address": "0xBBb655723D64D59E75292F3e3eAa90E1873d36f2",
-    "txn": "0xd84fcc858550fa9a459ae2c7b0965c7f3cc4048488b6f3986eb08f05b983981c",
+    "address": "0xa85333DA5e5A48498F0a65A1A6521E0ceadD3eFD",
+    "txn": "0x47039243d5b12bc9a4f77adb1dd4203c3f8a67de82411a7780b43b0a11a9e740",
     "network": "mainnet",
     "version": 1,
     "type": "staking",
