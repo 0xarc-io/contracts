@@ -378,7 +378,6 @@ describe('LiquidityCampaign', () => {
 
       it('should be able to claim the right amount of rewards given the number of participants', async () => {
         await liquidityCampaignAdmin.setTokensClaimable(true);
-        const initialBalance = await rewardToken.balanceOf(user1.address);
 
         await stake(user1, STAKE_AMOUNT);
 
@@ -479,6 +478,26 @@ describe('LiquidityCampaign', () => {
         expect(rewardsToken).to.eq(rewardToken.address);
         expect(stakingTokenAddress).to.eq(stakingToken.address);
         expect(daoAllocation).to.eq(DAO_ALLOCATION.value);
+      });
+
+      it('should not be called twice by the contract owner', async () => {
+        await liquidityCampaignAdmin.init(
+          admin.address,
+          admin.address,
+          rewardToken.address,
+          stakingToken.address,
+          DAO_ALLOCATION,
+        );
+
+        await expectRevert(
+          liquidityCampaignAdmin.init(
+            admin.address,
+            admin.address,
+            rewardToken.address,
+            stakingToken.address,
+            DAO_ALLOCATION,
+          ),
+        );
       });
     });
 
