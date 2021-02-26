@@ -51,11 +51,6 @@ const COLLATERAL_AMOUNT = ArcNumber.new(10);
 const BORROW_AMOUNT = ArcNumber.new(5);
 
 describe('JointCampaign', () => {
-  // async function increaseTime(duration: number) {
-  //   await evm.increaseTime(duration);
-  //   await evm.mineBlock();
-  // }
-
   async function setTimestampTo(timestamp: number) {
     await jointCampaignOwner.setCurrentTimestamp(timestamp);
   }
@@ -88,13 +83,6 @@ describe('JointCampaign', () => {
     await tokenContract.mintShare(tokenReceiver.address, amount);
     await tokenContract.approve(jointCampaignOwner.address, amount);
   }
-
-  // async function getCurrentTimestamp() {
-  //   const currentBlockNumber = await ethers.provider.getBlockNumber();
-  //   const currentBlock = await ethers.provider.getBlock(currentBlockNumber);
-
-  //   return BigNumber.from(currentBlock.timestamp);
-  // }
 
   /**
    * skip calls init() and sets the reward duration
