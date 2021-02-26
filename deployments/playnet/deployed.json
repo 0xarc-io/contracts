@@ -278,5 +278,25 @@
     "version": 1,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "Oracle",
+    "source": "WstEthOracle",
+    "address": "0x5F64247C77E8F4331C9c2f91647B8F37d639eECf",
+    "txn": "0x1c37eeec4f404b2d9cb17536feecda514050deffdf7cd72186c793ae0be9780f",
+    "network": "playnet",
+    "version": 1,
+    "type": "synth",
+    "group": "wstETH-STABLEx"
+  },
+  {
+    "name": "CoreProxy",
+    "source": "ArcProxy",
+    "address": "0xC86d5cf39bc6d0EB3a8EFAbe408268C8AF2EBF2f",
+    "txn": "0x6caa63d930f0bb8fc8848239b554d198eecbc80f2a40d0fe3602bd85857ec8ee",
+    "network": "playnet",
+    "version": 1,
+    "type": "synth",
+    "group": "wstETH-STABLEx"
   }
 ]
