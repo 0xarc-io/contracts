@@ -82,13 +82,7 @@ contract JointCampaign is Ownable {
 
     event RewardsDurationUpdated(uint256 _newDuration);
 
-    event CollabRewardsDistributorUpdated(address _rewardsDistributor);
-
-    event ArcRewardsDistributorUpdated(address _rewardsDistributor);
-
     event ERC20Recovered(address _token, uint256 _amount);
-
-    event CollabRecovered(uint256 _amount);
 
     event PositionStaked(address _address, uint256 _positionId);
 
@@ -96,7 +90,11 @@ contract JointCampaign is Ownable {
 
     event UserSlashed(address _user, address _slasher, uint256 _arcPenalty, uint256 _collabPenalty);
 
-    event StateContractApproved(address _address);
+    event CollabRewardsDistributorUpdated(address _rewardsDistributor);
+
+    event ArcRewardsDistributorUpdated(address _rewardsDistributor);
+
+    event CollabRecovered(uint256 _amount);
 
     /* ========== Modifiers ========== */
 
@@ -113,7 +111,7 @@ contract JointCampaign is Ownable {
         _;
     }
 
-    modifier onlycollabDistributor() {
+    modifier onlyCollabDistributor() {
         require(
             msg.sender == collabRewardsDistributor,
             "Caller is not the collab rewards distributor"
@@ -132,354 +130,13 @@ contract JointCampaign is Ownable {
         _;
     }
 
-    /* ========== View Functions ========== */
-
-    function totalSupply()
-        public
-        view
-        returns (uint256)
-    {
-        return _totalSupply;
-    }
-
-    function balanceOfStaker(
-        address account
-    )
-        public
-        view
-        returns (uint256)
-    {
-        return stakers[account].balance;
-    }
-
-    function lastTimeRewardApplicable(
-        address _rewardToken
-    )
-        public
-        view
-        verifyRewardToken(_rewardToken)
-        returns (uint256)
-    {
-        uint256 relevantPeriod = _rewardToken == address(arcRewardToken) ? arcPeriodFinish : collabPeriodFinish;
-
-        return block.timestamp < relevantPeriod ? block.timestamp : relevantPeriod;
-    }
-
-    function arcRewardPerTokenUser()
-        external
-        view
-        returns (uint256)
-    {
-        if (_totalSupply == 0) {
-            return arcRewardPerTokenStored;
-        }
-
-        return
-            Decimal.mul(
-                arcRewardPerTokenStored.add(
-                    lastTimeRewardApplicable(address(arcRewardToken))
-                        .sub(arcLastUpdateTime)
-                        .mul(arcRewardRate)
-                        .mul(1e18)
-                        .div(_totalSupply)
-                ),
-                userAllocation()
-            );
-    }
-
-    function collabRewardPerToken()
-        external
-        view
-        returns (uint256)
-    {
-        if (_totalSupply == 0) {
-            return collabPerTokenStored;
-        }
-
-        return collabPerTokenStored.add(
-            lastTimeRewardApplicable(address(collabRewardToken))
-                .sub(collabLastUpdateTime)
-                .mul(collabRewardRate)
-                .mul(1e18)
-                .div(_totalSupply)
-        );
-    }
-
-    function arcEarned(
-        address _account
-    )
-        external
-        view
-        returns (uint256)
-    {
-        return Decimal.mul(
-            _rewardTokenEarned(_account, address(arcRewardToken)),
-            userAllocation()
-        );
-    }
-
-    function collabEarned(
-        address _account
-    )
-        external
-        view
-        returns (uint256)
-    {
-        return _rewardTokenEarned(_account, address(collabRewardToken));
-    }
-
-    function getArcRewardForDuration()
-        external
-        view
-        returns (uint256)
-    {
-        return arcRewardRate.mul(rewardsDuration);
-    }
-
-    function getcollabRewardForDuration()
-        external
-        view
-        returns (uint256)
-    {
-        return collabRewardRate.mul(rewardsDuration);
-    }
-
-    function isMinter(
-        address _user,
-        uint256 _amount,
-        uint256 _positionId
-    )
-        public
-        view
-        returns (bool)
-    {
-        MozartTypes.Position memory position = stateContract.getPosition(_positionId);
-
-        if (position.owner != _user) {
-            return false;
-        }
-
-        return uint256(position.borrowedAmount.value) >= _amount;
-    }
-
-    function  userAllocation()
-        public
-        view
-        returns (Decimal.D256 memory)
-    {
-        return Decimal.sub(
-            Decimal.one(),
-            daoAllocation.value
-        );
-    }
-
-    /* ========== Mutative Functions ========== */
-
-    function stake(
-        uint256 _amount,
-        uint256 _positionId
-    )
-        external
-        updateReward(msg.sender, address(0))
-    {
-        uint256 totalBalance = balanceOfStaker(msg.sender).add(_amount);
-
-        // Setting each variable invididually means we don't overwrite
-        Staker storage staker = stakers[msg.sender];
-
-        if (staker.positionId != 0) {
-            require (
-                staker.positionId == _positionId,
-                "You cannot stake based on a different debt position"
-            );
-        }
-
-        require(
-            stakeToDebtRatio != 0,
-            "The stake to debt ratio cannot be 0"
-        );
-
-        uint256 debtRequirement = totalBalance.div(uint256(stakeToDebtRatio));
-
-        require(
-            isMinter(
-                msg.sender,
-                debtRequirement,
-                _positionId
-            ),
-            "Must be a valid minter"
-        );
-
-        // This stops an attack vector where a user stakes a lot of money
-        // then drops the debt requirement by staking less before the deadline
-        // to reduce the amount of debt they need to lock in
-
-        require(
-            debtRequirement >= staker.debtSnapshot,
-            "Your new debt requirement cannot be lower than last time"
-        );
-
-        if (staker.positionId == 0) {
-            staker.positionId = _positionId;
-        }
-        staker.debtSnapshot = debtRequirement;
-        staker.balance = staker.balance.add(_amount);
-
-        _totalSupply = _totalSupply.add(_amount);
-
-        stakingToken.safeTransferFrom(msg.sender, address(this), _amount);
-
-        emit Staked(msg.sender, _amount);
-    }
-
-    function slash(
-        address _user
-    )
-        external
-        updateReward(_user, address(0))
-    {
-        require(
-            _user != msg.sender,
-            "You cannot slash yourself"
-        );
-
-        Staker storage userStaker = stakers[_user];
-
-        require(
-            isMinter(
-                _user,
-                userStaker.debtSnapshot,
-                userStaker.positionId
-            ) == false,
-            "You can't slash a user who is a valid minter"
-        );
-
-        uint256 arcPenalty = userStaker.arcRewardsEarned.sub(userStaker.arcRewardsReleased);
-        uint256 arcBounty = Decimal.mul(arcPenalty, slasherCut);
-
-        uint256 collabPenalty = userStaker.collabRewardsEarned.sub(userStaker.collabRewardsReleased);
-
-        stakers[msg.sender].arcRewardsEarned = stakers[msg.sender].arcRewardsEarned.add(arcBounty);
-        stakers[msg.sender].collabRewardsEarned = stakers[msg.sender].collabRewardsEarned.add(collabPenalty);
-
-        stakers[arcRewardsDistributor].arcRewardsEarned = stakers[arcRewardsDistributor].arcRewardsEarned.add(
-            arcPenalty.sub(arcBounty)
-        );
-
-        userStaker.arcRewardsEarned = userStaker.arcRewardsEarned.sub(arcPenalty);
-        userStaker.collabRewardsEarned = userStaker.collabRewardsEarned.sub(collabPenalty);
-
-        emit UserSlashed(
-            _user,
-            msg.sender,
-            arcPenalty,
-            collabPenalty
-        );
-    }
-
-    function getReward(address _user)
-        public
-        updateReward(_user, address(0))
-    {
-        Staker storage staker = stakers[_user];
-        uint256 arcPayableAmount;
-
-        uint256 collabPayableAmount = staker.collabRewardsEarned.sub(staker.collabRewardsReleased);
-        staker.collabRewardsReleased = staker.collabRewardsReleased.add(collabPayableAmount);
-
-        collabRewardToken.safeTransfer(_user, collabPayableAmount);
-
-        if (tokensClaimable) {
-            arcPayableAmount = staker.arcRewardsEarned.sub(staker.arcRewardsReleased);
-            staker.arcRewardsReleased = staker.arcRewardsReleased.add(arcPayableAmount);
-
-            uint256 daoPayable = Decimal.mul(arcPayableAmount, daoAllocation);
-            arcRewardToken.safeTransfer(arcDAO, daoPayable);
-            arcRewardToken.safeTransfer(_user, arcPayableAmount.sub(daoPayable));
-        }
-
-        emit RewardPaid(_user, arcPayableAmount, collabPayableAmount);
-    }
-
-    function withdraw(
-        uint256 amount
-    )
-        public
-        updateReward(msg.sender, address(0))
-    {
-        require(
-            amount >= 0,
-            "Cannot withdraw less than 0"
-        );
-
-        _totalSupply = _totalSupply.sub(amount);
-        stakers[msg.sender].balance = stakers[msg.sender].balance.sub(amount);
-
-        stakingToken.safeTransfer(msg.sender, amount);
-
-        emit Withdrawn(msg.sender, amount);
-    }
-
-    function exit()
-        external
-    {
-        getReward(msg.sender);
-        withdraw(balanceOfStaker(msg.sender));
-    }
-
     /* ========== Admin Functions ========== */
-
-    function init(
-        address _arcDAO,
-        address _arcRewardsDistributor,
-        address _collabRewardsDistributor,
-        address _arcRewardToken,
-        address _collabRewardToken,
-        address _stakingToken,
-        Decimal.D256 memory _daoAllocation,
-        Decimal.D256 memory _slasherCut,
-        uint8 _stakeToDebtRatio,
-        address _stateContract
-    )
-        public
-        onlyOwner
-    {
-        require(
-            !isInitialized &&
-            _arcDAO != address(0) &&
-            _arcRewardsDistributor != address(0) &&
-            _collabRewardsDistributor != address(0) &&
-            _arcRewardToken != address(0) &&
-            _collabRewardToken != address(0) &&
-            _stakingToken != address(0) &&
-            _daoAllocation.value > 0 &&
-            _slasherCut.value > 0 &&
-            _stakeToDebtRatio > 0 &&
-            _stateContract != address(0),
-            "One or more values is empty"
-        );
-
-        isInitialized = true;
-
-        arcDAO = _arcDAO;
-        arcRewardsDistributor = _arcRewardsDistributor;
-        collabRewardsDistributor = _collabRewardsDistributor;
-        arcRewardToken = IERC20(_arcRewardToken);
-        collabRewardToken = IERC20(_collabRewardToken);
-        stakingToken = IERC20(_stakingToken);
-
-        daoAllocation = _daoAllocation;
-        slasherCut = _slasherCut;
-        stakeToDebtRatio = _stakeToDebtRatio;
-
-        stateContract = IMozartCoreV2(_stateContract);
-    }
 
     function setcollabRewardsDistributor(
         address _rewardsDistributor
     )
         external
-        onlycollabDistributor
+        onlyCollabDistributor
     {
         require(
             collabRewardsDistributor != _rewardsDistributor,
@@ -643,7 +300,7 @@ contract JointCampaign is Ownable {
         uint256 _amount
     )
         external
-        onlycollabDistributor
+        onlyCollabDistributor
     {
         if (rewardsDuration > 0) {
             uint256 collabBalance = collabRewardToken.balanceOf(address(this));
@@ -667,6 +324,377 @@ contract JointCampaign is Ownable {
         tokensClaimable = _enabled;
 
         emit ClaimableStatusUpdated(_enabled);
+    }
+
+    function init(
+        address _arcDAO,
+        address _arcRewardsDistributor,
+        address _collabRewardsDistributor,
+        address _arcRewardToken,
+        address _collabRewardToken,
+        address _stakingToken,
+        Decimal.D256 memory _daoAllocation,
+        Decimal.D256 memory _slasherCut,
+        uint8 _stakeToDebtRatio,
+        address _stateContract
+    )
+        public
+        onlyOwner
+    {
+        require(
+            !isInitialized &&
+            _arcDAO != address(0) &&
+            _arcRewardsDistributor != address(0) &&
+            _collabRewardsDistributor != address(0) &&
+            _arcRewardToken != address(0) &&
+            _collabRewardToken != address(0) &&
+            _stakingToken != address(0) &&
+            _daoAllocation.value > 0 &&
+            _slasherCut.value > 0 &&
+            _stakeToDebtRatio > 0 &&
+            _stateContract != address(0),
+            "One or more values is empty"
+        );
+
+        isInitialized = true;
+
+        arcDAO = _arcDAO;
+        arcRewardsDistributor = _arcRewardsDistributor;
+        collabRewardsDistributor = _collabRewardsDistributor;
+        arcRewardToken = IERC20(_arcRewardToken);
+        collabRewardToken = IERC20(_collabRewardToken);
+        stakingToken = IERC20(_stakingToken);
+
+        daoAllocation = _daoAllocation;
+        slasherCut = _slasherCut;
+        stakeToDebtRatio = _stakeToDebtRatio;
+
+        stateContract = IMozartCoreV2(_stateContract);
+    }
+
+    /* ========== View Functions ========== */
+
+    function totalSupply()
+        public
+        view
+        returns (uint256)
+    {
+        return _totalSupply;
+    }
+
+    function balanceOf(
+        address account
+    )
+        public
+        view
+        returns (uint256)
+    {
+        return stakers[account].balance;
+    }
+
+    function lastTimeRewardApplicable(
+        address _rewardToken
+    )
+        public
+        view
+        verifyRewardToken(_rewardToken)
+        returns (uint256)
+    {
+        uint256 relevantPeriod = _rewardToken == address(arcRewardToken) ? arcPeriodFinish : collabPeriodFinish;
+
+        return block.timestamp < relevantPeriod ? block.timestamp : relevantPeriod;
+    }
+
+    function arcRewardPerTokenUser()
+        external
+        view
+        returns (uint256)
+    {
+        if (_totalSupply == 0) {
+            return arcRewardPerTokenStored;
+        }
+
+        return
+            Decimal.mul(
+                arcRewardPerTokenStored.add(
+                    lastTimeRewardApplicable(address(arcRewardToken))
+                        .sub(arcLastUpdateTime)
+                        .mul(arcRewardRate)
+                        .mul(1e18)
+                        .div(_totalSupply)
+                ),
+                userAllocation()
+            );
+    }
+
+    function collabRewardPerToken()
+        external
+        view
+        returns (uint256)
+    {
+        if (_totalSupply == 0) {
+            return collabPerTokenStored;
+        }
+
+        return collabPerTokenStored.add(
+            lastTimeRewardApplicable(address(collabRewardToken))
+                .sub(collabLastUpdateTime)
+                .mul(collabRewardRate)
+                .mul(1e18)
+                .div(_totalSupply)
+        );
+    }
+
+    function actualEarned(
+        address _account,
+        address _rewardTokenAddress
+    )
+        internal
+        view
+        verifyRewardToken(_rewardTokenAddress)
+        returns (uint256)
+    {
+        uint256 stakerBalance = stakers[_account].balance;
+
+        if (_rewardTokenAddress == address(arcRewardToken)) {
+            return
+                stakerBalance.mul(
+                    _rewardPerToken(address(arcRewardToken))
+                    .sub(stakers[_account].arcRewardPerTokenPaid)
+                )
+                .div(1e18)
+                .add(stakers[_account].arcRewardsEarned);
+        }
+
+        return
+            stakerBalance.mul(
+                _rewardPerToken(address(collabRewardToken))
+                .sub(stakers[_account].collabRewardPerTokenPaid)
+            )
+            .div(1e18)
+            .add(stakers[_account].collabRewardsEarned);
+    }
+
+    function arcEarned(
+        address _account
+    )
+        external
+        view
+        returns (uint256)
+    {
+        return Decimal.mul(
+            actualEarned(_account, address(arcRewardToken)),
+            userAllocation()
+        );
+    }
+
+    function collabEarned(
+        address _account
+    )
+        external
+        view
+        returns (uint256)
+    {
+        return actualEarned(_account, address(collabRewardToken));
+    }
+
+    function getArcRewardForDuration()
+        external
+        view
+        returns (uint256)
+    {
+        return arcRewardRate.mul(rewardsDuration);
+    }
+
+    function getCollabRewardForDuration()
+        external
+        view
+        returns (uint256)
+    {
+        return collabRewardRate.mul(rewardsDuration);
+    }
+
+    function isMinter(
+        address _user,
+        uint256 _amount,
+        uint256 _positionId
+    )
+        public
+        view
+        returns (bool)
+    {
+        MozartTypes.Position memory position = stateContract.getPosition(_positionId);
+
+        if (position.owner != _user) {
+            return false;
+        }
+
+        return uint256(position.borrowedAmount.value) >= _amount;
+    }
+
+    function  userAllocation()
+        public
+        view
+        returns (Decimal.D256 memory)
+    {
+        return Decimal.sub(
+            Decimal.one(),
+            daoAllocation.value
+        );
+    }
+
+    /* ========== Mutative Functions ========== */
+
+    function stake(
+        uint256 _amount,
+        uint256 _positionId
+    )
+        external
+        updateReward(msg.sender, address(0))
+    {
+        uint256 totalBalance = balanceOf(msg.sender).add(_amount);
+
+        // Setting each variable invididually means we don't overwrite
+        Staker storage staker = stakers[msg.sender];
+
+        if (staker.positionId != 0) {
+            require (
+                staker.positionId == _positionId,
+                "You cannot stake based on a different debt position"
+            );
+        }
+
+        require(
+            stakeToDebtRatio != 0,
+            "The stake to debt ratio cannot be 0"
+        );
+
+        uint256 debtRequirement = totalBalance.div(uint256(stakeToDebtRatio));
+
+        require(
+            isMinter(
+                msg.sender,
+                debtRequirement,
+                _positionId
+            ),
+            "Must be a valid minter"
+        );
+
+        // This stops an attack vector where a user stakes a lot of money
+        // then drops the debt requirement by staking less before the deadline
+        // to reduce the amount of debt they need to lock in
+
+        require(
+            debtRequirement >= staker.debtSnapshot,
+            "Your new debt requirement cannot be lower than last time"
+        );
+
+        if (staker.positionId == 0) {
+            staker.positionId = _positionId;
+        }
+        staker.debtSnapshot = debtRequirement;
+        staker.balance = staker.balance.add(_amount);
+
+        _totalSupply = _totalSupply.add(_amount);
+
+        stakingToken.safeTransferFrom(msg.sender, address(this), _amount);
+
+        emit Staked(msg.sender, _amount);
+    }
+
+    function slash(
+        address _user
+    )
+        external
+        updateReward(_user, address(0))
+    {
+        require(
+            _user != msg.sender,
+            "You cannot slash yourself"
+        );
+
+        Staker storage userStaker = stakers[_user];
+
+        require(
+            isMinter(
+                _user,
+                userStaker.debtSnapshot,
+                userStaker.positionId
+            ) == false,
+            "You can't slash a user who is a valid minter"
+        );
+
+        uint256 arcPenalty = userStaker.arcRewardsEarned.sub(userStaker.arcRewardsReleased);
+        uint256 arcBounty = Decimal.mul(arcPenalty, slasherCut);
+
+        uint256 collabPenalty = userStaker.collabRewardsEarned.sub(userStaker.collabRewardsReleased);
+
+        stakers[msg.sender].arcRewardsEarned = stakers[msg.sender].arcRewardsEarned.add(arcBounty);
+        stakers[msg.sender].collabRewardsEarned = stakers[msg.sender].collabRewardsEarned.add(collabPenalty);
+
+        stakers[arcRewardsDistributor].arcRewardsEarned = stakers[arcRewardsDistributor].arcRewardsEarned.add(
+            arcPenalty.sub(arcBounty)
+        );
+
+        userStaker.arcRewardsEarned = userStaker.arcRewardsEarned.sub(arcPenalty);
+        userStaker.collabRewardsEarned = userStaker.collabRewardsEarned.sub(collabPenalty);
+
+        emit UserSlashed(
+            _user,
+            msg.sender,
+            arcPenalty,
+            collabPenalty
+        );
+    }
+
+    function getReward(address _user)
+        public
+        updateReward(_user, address(0))
+    {
+        Staker storage staker = stakers[_user];
+        uint256 arcPayableAmount;
+
+        uint256 collabPayableAmount = staker.collabRewardsEarned.sub(staker.collabRewardsReleased);
+        staker.collabRewardsReleased = staker.collabRewardsReleased.add(collabPayableAmount);
+
+        collabRewardToken.safeTransfer(_user, collabPayableAmount);
+
+        if (tokensClaimable) {
+            arcPayableAmount = staker.arcRewardsEarned.sub(staker.arcRewardsReleased);
+            staker.arcRewardsReleased = staker.arcRewardsReleased.add(arcPayableAmount);
+
+            uint256 daoPayable = Decimal.mul(arcPayableAmount, daoAllocation);
+            arcRewardToken.safeTransfer(arcDAO, daoPayable);
+            arcRewardToken.safeTransfer(_user, arcPayableAmount.sub(daoPayable));
+        }
+
+        emit RewardPaid(_user, arcPayableAmount, collabPayableAmount);
+    }
+
+    function withdraw(
+        uint256 amount
+    )
+        public
+        updateReward(msg.sender, address(0))
+    {
+        require(
+            amount >= 0,
+            "Cannot withdraw less than 0"
+        );
+
+        _totalSupply = _totalSupply.sub(amount);
+        stakers[msg.sender].balance = stakers[msg.sender].balance.sub(amount);
+
+        stakingToken.safeTransfer(msg.sender, amount);
+
+        emit Withdrawn(msg.sender, amount);
+    }
+
+    function exit()
+        external
+    {
+        getReward(msg.sender);
+        withdraw(balanceOf(msg.sender));
     }
 
     /* ========== Private Functions ========== */
@@ -702,10 +730,10 @@ contract JointCampaign is Ownable {
         }
 
         if (_account != address(0)) {
-            stakers[_account].arcRewardsEarned = _rewardTokenEarned(_account, address(arcRewardToken));
+            stakers[_account].arcRewardsEarned = actualEarned(_account, address(arcRewardToken));
             stakers[_account].arcRewardPerTokenPaid = arcRewardPerTokenStored;
 
-            stakers[_account].collabRewardsEarned = _rewardTokenEarned(_account, address(collabRewardToken));
+            stakers[_account].collabRewardsEarned = actualEarned(_account, address(collabRewardToken));
             stakers[_account].collabRewardPerTokenPaid = collabPerTokenStored;
         }
     }
@@ -745,33 +773,5 @@ contract JointCampaign is Ownable {
         }
     }
 
-    function _rewardTokenEarned(
-        address _account,
-        address _rewardTokenAddress
-    )
-        private
-        view
-        verifyRewardToken(_rewardTokenAddress)
-        returns (uint256)
-    {
-        uint256 stakerBalance = stakers[_account].balance;
 
-        if (_rewardTokenAddress == address(arcRewardToken)) {
-            return
-                stakerBalance.mul(
-                    _rewardPerToken(address(arcRewardToken))
-                    .sub(stakers[_account].arcRewardPerTokenPaid)
-                )
-                .div(1e18)
-                .add(stakers[_account].arcRewardsEarned);
-        }
-
-        return
-            stakerBalance.mul(
-                _rewardPerToken(address(collabRewardToken))
-                .sub(stakers[_account].collabRewardPerTokenPaid)
-            )
-            .div(1e18)
-            .add(stakers[_account].collabRewardsEarned);
-    }
 }
