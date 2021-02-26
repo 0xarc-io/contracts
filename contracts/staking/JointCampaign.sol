@@ -173,7 +173,7 @@ contract JointCampaign is Ownable {
             : collabPeriodFinish;
 
         require(
-            periodFinish == 0 || block.timestamp > periodFinish,
+            periodFinish == 0 || getCurrentTimestamp() > periodFinish,
             "Prev period must be complete before changing duration for new period"
         );
 
@@ -211,10 +211,10 @@ contract JointCampaign is Ownable {
                 "Only the ARCx rewards distributor can notify the amount of ARCx rewards"
             );
 
-            if (block.timestamp >= arcPeriodFinish) {
+            if (getCurrentTimestamp() >= arcPeriodFinish) {
                 arcRewardRate = _reward.div(rewardsDuration);
             } else {
-                remaining = arcPeriodFinish.sub(block.timestamp);
+                remaining = arcPeriodFinish.sub(getCurrentTimestamp());
                 leftover = remaining.mul(arcRewardRate);
                 arcRewardRate = _reward.add(leftover).div(rewardsDuration);
 
@@ -225,8 +225,8 @@ contract JointCampaign is Ownable {
                 "Provided reward too high for the balance of ARCx token"
             );
 
-            arcPeriodFinish = block.timestamp.add(rewardsDuration);
-            arcLastUpdateTime = block.timestamp;
+            arcPeriodFinish = getCurrentTimestamp().add(rewardsDuration);
+            arcLastUpdateTime = getCurrentTimestamp();
         } else {
             require(
                 msg.sender == collabRewardsDistributor,
@@ -234,10 +234,10 @@ contract JointCampaign is Ownable {
             );
 
             // collab token
-            if (block.timestamp >= collabPeriodFinish) {
+            if (getCurrentTimestamp() >= collabPeriodFinish) {
                 collabRewardRate = _reward.div(rewardsDuration);
             } else {
-                remaining = collabPeriodFinish.sub(block.timestamp);
+                remaining = collabPeriodFinish.sub(getCurrentTimestamp());
                 leftover = remaining.mul(collabRewardRate);
                 collabRewardRate = _reward.add(leftover).div(rewardsDuration);
 
@@ -248,8 +248,8 @@ contract JointCampaign is Ownable {
                 "Provided reward too high for the balance of collab token"
             );
 
-            collabPeriodFinish = block.timestamp.add(rewardsDuration);
-            collabLastUpdateTime = block.timestamp;
+            collabPeriodFinish = getCurrentTimestamp().add(rewardsDuration);
+            collabLastUpdateTime = getCurrentTimestamp();
         }
 
         emit RewardAdded(_reward, _rewardToken);
@@ -402,7 +402,7 @@ contract JointCampaign is Ownable {
     {
         uint256 relevantPeriod = _rewardToken == address(arcRewardToken) ? arcPeriodFinish : collabPeriodFinish;
 
-        return block.timestamp < relevantPeriod ? block.timestamp : relevantPeriod;
+        return getCurrentTimestamp() < relevantPeriod ? getCurrentTimestamp() : relevantPeriod;
     }
 
     function arcRewardPerTokenUser()
@@ -512,6 +512,14 @@ contract JointCampaign is Ownable {
         returns (uint256)
     {
         return collabRewardRate.mul(rewardsDuration);
+    }
+
+    function getCurrentTimestamp()
+        public
+        view
+        returns (uint256)
+    {
+        return block.timestamp;
     }
 
     function isMinter(
