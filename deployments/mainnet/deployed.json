@@ -1,521 +1,521 @@
 [
-  {
-    "name": "KYF-T1",
-    "group": "",
-    "source": "KYFV2",
-    "address": "0x1f10ff148a0ad63a57f98530ab472568e90a72c5",
-    "txn": "0x2ec44b1141940d1934fcab14e33af07aafcef651f845608b84c0b1e9140c9c7b",
-    "network": "mainnet",
-    "version": 1,
-    "type": "global"
-  },
-  {
-    "name": "KYF-T2",
-    "group": "",
-    "source": "KYFV2",
-    "address": "0x877E31c9c04e8a2A3Af59341635F5BC6ae0dDc13",
-    "txn": "0x0e454ba4c2ac248e5d2651cf556a69f2072c0c29abb5f3307fe5d12fbd736990",
-    "network": "mainnet",
-    "version": 1,
-    "type": "global"
-  },
-  {
-    "name": "ArcxToken",
-    "group": "",
-    "source": "ArcxToken",
-    "address": "0xED30Dd7E50EdF3581AD970eFC5D9379Ce2614AdB",
-    "txn": "0x4f0fd31a69cce6af21e4b8a9406352239ff1eec5d128941a1cafb25bea008553",
-    "network": "mainnet",
-    "version": 1,
-    "type": "global"
-  },
-  {
-    "name": "ArcDAO",
-    "group": "",
-    "source": "AddressAccrual",
-    "address": "0x1DEBBC50322150EB44DE3b663d5faA89c12b07ff",
-    "txn": "0xaddd5d086184e35efd0e38e6bc289582613c328b5cf0c4670f769b151949f92f",
-    "network": "mainnet",
-    "version": 1,
-    "type": "global"
-  },
-  {
-    "name": "SynthRegistry",
-    "group": "",
-    "source": "SynthRegistry",
-    "address": "0x372a4D34e9E9d96656F101aFf06a4a455396C974",
-    "txn": "0x293c48b94a9626720afd83d1b4b2b272c7e3df26dd922e012f0d3f2bb8e34b07",
-    "network": "mainnet",
-    "version": 1,
-    "type": "global"
-  },
-  {
-    "name": "KYFToken",
-    "group": "",
-    "source": "KYFToken",
-    "address": "0xD85e2772912213e0c584d80B2694c79D6a09E39A",
-    "txn": "0xd168c7b318dcc9d8eb26c89a9ef6d7f517f3a2cd6f9481cde5c25733c1f49bda",
-    "network": "mainnet",
-    "version": 1,
-    "type": "global"
-  },
-  {
-    "name": "CoreProxy",
-    "group": "LINKUSD",
-    "source": "ArcProxy",
-    "address": "0x5568Df89AF6Bc835B876fDc3B2d44ef63530e419",
-    "txn": "0x42b18f8203170cfdc37d75b8c16a59ed4c6ee407bd83cb4b2b8daa6121e33703",
-    "network": "mainnet",
-    "version": 1,
-    "type": "synth"
-  },
-  {
-    "name": "Oracle",
-    "group": "LINKUSD",
-    "source": "ChainLinkOracle",
-    "address": "0xeFFD9768a337950CdC883682Dc08583D4a3fe596",
-    "txn": "0x64228347bf80803309b51813edd6852346348609e89d724d2f62e44a5b822fc9",
-    "network": "mainnet",
-    "version": 1,
-    "type": "synth"
-  },
-  {
-    "name": "SpritzState",
-    "group": "LINKUSD",
-    "source": "StateV1",
-    "address": "0x94F40fD4018586AaFb8A6AD95441e0b58cc4c058",
-    "txn": "0x93bd657169d285729c70e721ad547e84e82cf7fc2addae92741636895151b919",
-    "network": "mainnet",
-    "version": 1,
-    "type": "synth"
-  },
-  {
-    "name": "SyntheticToken",
-    "group": "LINKUSD",
-    "source": "StaticSyntheticToken",
-    "address": "0x0E2EC54fC0B509F445631Bf4b91AB8168230C752",
-    "txn": "0x5d22a8a734109c88440a849da6a06b21e8419c83fadb117a7b39264650d968fd",
-    "network": "mainnet",
-    "version": 1,
-    "type": "synth"
-  },
-  {
-    "name": "Pool-1",
-    "group": "Pool-1",
-    "source": "StakingRewardsAccrualCapped",
-    "address": "0xd1902581868163BEf61776cfD27228EE5074be8F",
-    "txn": "0xe52e9b1cdda86f893a90a515fbd77b2cfcef99a9ab9c794e3c603c19c9632154",
-    "network": "mainnet",
-    "version": 1,
-    "type": "staking"
-  },
-  {
-    "name": "Pool-2",
-    "group": "Pool-2",
-    "source": "StakingRewardsAccrualCapped",
-    "address": "0xA9A9300Ab9A70c43C19d6F42e3308Be24d73D885",
-    "txn": "0xe3874d35badf9f65aefbc8a54ca0d058ffa60fd8e14753ca46c923b8d17bf03d",
-    "network": "mainnet",
-    "version": 1,
-    "type": "staking"
-  },
-  {
-    "name": "Pool-2.1",
-    "group": "Pool-2.1",
-    "source": "AdminRewards",
-    "address": "0x580836540CA183Ab71AA4C58253F5EEaaD2552Dc",
-    "txn": "0xe3874d35badf9f65aefbc8a54ca0d058ffa60fd8e14753ca46c923b8d17bf03d",
-    "network": "mainnet",
-    "version": "1",
-    "type": "staking"
-  },
-  {
-    "name": "SpritzCore",
-    "group": "",
-    "source": "CoreV1",
-    "address": "0x08Db418a5234337D76c78cCF630658D4e328FC69",
-    "txn": "0x4690959ea3442c1b9272abe11386b2f9d60807d86936f0ae7707f350546e7400",
-    "network": "mainnet",
-    "version": 1,
-    "type": "synth"
-  },
-  {
-    "name": "SpritzCore",
-    "group": "",
-    "source": "CoreV2",
-    "address": "0x8e1fe752e51b05b9fe6eE95d8907695E0f3e2Ecd",
-    "txn": "0xc35406ee85ca64842b0957a8c68f48fa7f962687c83640374d7815f3f2b33a8f",
-    "network": "mainnet",
-    "version": 2,
-    "type": "synth"
-  },
-  {
-    "name": "SpritzCore",
-    "group": "",
-    "source": "CoreV3",
-    "address": "0xC8C2E1547298E09E5f18e4CDEA4A271FdadAB971",
-    "txn": "0xc3ca124d70184617103988682af2ac1f9ea2fe4d8c0707e68348c9fe15b0d447",
-    "network": "mainnet",
-    "version": 3,
-    "type": "synth"
-  },
-  {
-    "name": "SpritzCore",
-    "group": "",
-    "source": "CoreV4",
-    "address": "0x6981263d090734F2Bd2708D1bE30Db5594BDE400",
-    "txn": "0xf4a07e7eec8bf06af0693862dab51718ab616cad97f8224a713e5cc71a35d0e5",
-    "network": "mainnet",
-    "version": 4,
-    "type": "synth"
-  },
-  {
-    "name": "Proxy",
-    "group": "Pool-3",
-    "source": "ArcProxy",
-    "address": "0x38b25c0A9e61E226023B700ce4a6A4134eCAEeDF",
-    "txn": "0x2bab27a2e9a2434613c24915247f11752f3c43d252342486e9f508dfb65f5c03",
-    "network": "mainnet",
-    "version": 1,
-    "type": "staking"
-  },
-  {
-    "name": "Implementation",
-    "group": "Pool-3",
-    "source": "RewardCampaign",
-    "address": "0x140C21C364B9E72856C582CF7B6d37ee88B52140",
-    "txn": "0x4559c140f80f1af1a5400ccfa39f67379267f4599b1e3c00f2a5f9e8bf15e368",
-    "network": "mainnet",
-    "version": 1,
-    "type": "staking"
-  },
-  {
-    "name": "Proxy",
-    "group": "Pool-4",
-    "source": "ArcProxy",
-    "address": "0x8016F490D76346EBEC91707fD4Fb56A7fe64f694",
-    "txn": "0x0bc9985a636df79b3dd1d896b7dbebec47e2b1fe4c25803beae958207a20285c",
-    "network": "mainnet",
-    "version": 1,
-    "type": "staking"
-  },
-  {
-    "name": "Implementation",
-    "group": "Pool-4",
-    "source": "RewardCampaign",
-    "address": "0x57f52dAD9fcB361c67FF8c555720dc934dD5945D",
-    "txn": "0xe40ce68414f5272836c8f340655cff9f1cc3aab1d9a83a09957ffb75bc30a89e",
-    "network": "mainnet",
-    "version": 1,
-    "type": "staking"
-  },
-  {
-    "name": "Proxy",
-    "group": "SkillsetMetadata",
-    "source": "ArcProxy",
-    "address": "0xAc09434EAce70771AEcb75B3BdEB775B4c1B4Aef",
-    "txn": "0xe22e539a5fa4b517ffed75d8154e07daa4867035322dcca6ee58d917a28480bb",
-    "network": "mainnet",
-    "version": 1,
-    "type": "global"
-  },
-  {
-    "name": "Implementation",
-    "group": "SkillsetMetadata",
-    "source": "SkillsetMetadata",
-    "address": "0x1D453D0c02D6ac3494A4be4f53e59F01abd0E6a3",
-    "txn": "0x0bb685743c7ebb234b6367447a77a9c5af07a1648f0bb3ce1ba46d037aa1a75e",
-    "network": "mainnet",
-    "version": 1,
-    "type": "global"
-  },
-  {
-    "name": "CollateralToken",
-    "source": "IERC20",
-    "address": "0x514910771af9ca656af840dff83e8264ecf986ca",
-    "txn": "0x5488510df045770efbff57f25d0c6d2c1404d58c1199b21eb8dc5072b22d91d7",
-    "network": "mainnet",
-    "version": 1,
-    "type": "synth",
-    "group": "LINKUSD"
-  },
-  {
-    "name": "SyntheticToken",
-    "source": "SyntheticTokenV1",
-    "address": "0xA58B598d0503bAA97B877735c97C69Cc19c07904",
-    "txn": "0x1c28e22840af2d1af89d967175f5195aa1184b91cb506aac0b93b037985b9e2c",
-    "network": "mainnet",
-    "version": 1,
-    "type": "synth",
-    "group": ""
-  },
-  {
-    "name": "SyntheticProxy",
-    "source": "ArcProxy",
-    "address": "0xcD91538B91B4ba7797D39a2f66E63810b50A33d0",
-    "txn": "0x22da62351f09f7f62d920256ccf1b8d6505dd486bd3a1028fd1adc661ba87a16",
-    "network": "mainnet",
-    "version": 1,
-    "type": "synth",
-    "group": "STABLEx"
-  },
-  {
-    "name": "SynthRegistryV2",
-    "source": "SynthRegistryV2",
-    "address": "0xeB739e889E74383562695D94C495F5F69F9E2559",
-    "txn": "0x56acb25ff3c46ab3be12d03330de88e388c488ad29440a95327077b8f48f38cc",
-    "network": "mainnet",
-    "version": 2,
-    "type": "global",
-    "group": ""
-  },
-  {
-    "name": "ArcProxyInfo",
-    "source": "ArcProxyInfo",
-    "address": "0x17B387a0FDdC8eC9FbB5127707F21d25819E28AA",
-    "txn": "0xa3305df0b8bef12e7132c1db3a2e9941861e27f51344fb207d0020b0cfe63242",
-    "network": "mainnet",
-    "version": 1,
-    "type": "global",
-    "group": ""
-  },
-  {
-    "name": "MozartCore",
-    "source": "MozartCoreV1",
-    "address": "0xC6a2A61C8A1c9614085207A2692D08ad78b9E425",
-    "txn": "0xed9073b84af0a29a3c9754d611beb5209ca776ecef1792f73ddd53f41a3d8a78",
-    "network": "mainnet",
-    "version": 1,
-    "type": "synth",
-    "group": ""
-  },
-  {
-    "name": "Oracle",
-    "source": "YUSDOracle",
-    "address": "0x4e5D8e00a630A50016FfDCA3d955ACa2e73Fe9F0",
-    "txn": "0xab08c3f7349fb866ad4e01196e03718b258db6b060b922400612b2858803d393",
-    "network": "mainnet",
-    "version": 1,
-    "type": "synth",
-    "group": "yUSD-STABLEx"
-  },
-  {
-    "name": "CoreProxy",
-    "source": "ArcProxy",
-    "address": "0xEBFD7b965E1B4c5719a006dE1AcAf82a7C3A142C",
-    "txn": "0x8dc6a15665d8905821a0db5d068c01d49932a333bb401b9bed52d6af134ca39c",
-    "network": "mainnet",
-    "version": 1,
-    "type": "synth",
-    "group": "yUSD-STABLEx"
-  },
-  {
-    "name": "SavingsRegistry",
-    "source": "SavingsRegistry",
-    "address": "0x2948Ddf33b00686D7E58D2Eb3AA2469A1b52C7e4",
-    "txn": "0x4ad315af56eeadee17c3937bb90bc4a7b0c8d8359521890b4232f4f30059df97",
-    "network": "mainnet",
-    "version": 1,
-    "type": "global",
-    "group": ""
-  },
-  {
-    "name": "MozartSavings",
-    "source": "MozartSavingsV1",
-    "address": "0x2C8eDbf218e2f9baAFaC71692f424E75D9f9755e",
-    "txn": "0xf140e5bd84978543ac938b2d5cc3f506b84d7271536ae7305fa3be1d8ef586a6",
-    "network": "mainnet",
-    "version": 1,
-    "type": "savings",
-    "group": ""
-  },
-  {
-    "name": "SavingsProxy",
-    "source": "ArcProxy",
-    "address": "0xec18FfEa29dACC0F47525529fd1fD1D4A40FE65c",
-    "txn": "0xc6b64f435b8f7213a262d0e5f332366523de6561df75df02ca9a69cffdf26f35",
-    "network": "mainnet",
-    "version": 1,
-    "type": "savings",
-    "group": "STABLEx"
-  },
-  {
-    "name": "MozartCore",
-    "source": "MozartCoreV2",
-    "address": "0x0BCb3b8BeCaae10Acc13FDDc0aB09be3351Cd30d",
-    "txn": "0x04f33295de328c8ba30dfa6e1a49a353cfc5450ab6a36c44a4469eb2a9b3a7ec",
-    "network": "mainnet",
-    "version": 1,
-    "type": "synth",
-    "group": ""
-  },
-  {
-    "name": "Oracle",
-    "source": "CTokenOracle",
-    "address": "0x7E0537F8499A1AbE3AF152A0Bd55C1F39ed11b64",
-    "txn": "0xebe58735d4c92d2bc2412d14a128929d7618ce08bf96f022af91f6ee2e14c01c",
-    "network": "mainnet",
-    "version": 1,
-    "type": "synth",
-    "group": "cUSDC-STABLEx"
-  },
-  {
-    "name": "CoreProxy",
-    "source": "ArcProxy",
-    "address": "0x84EAD9Ce2e36b3e6cdf41C94D5397e5056b3d8d6",
-    "txn": "0x22e9808a2e7fd5955f229c270c0271744162a4c6560d31aba40ecdb413bc486d",
-    "network": "mainnet",
-    "version": 1,
-    "type": "synth",
-    "group": "cUSDC-STABLEx"
-  },
-  {
-    "name": "Implementation",
-    "source": "RewardCampaign",
-    "address": "0x58bF325843b25B4767A3ff4Ef69B1b7B47493528",
-    "txn": "0x51772511e2dc7551f70064d42c125a6bb8ba154c1d43f35e41c8bcb4530b5b60",
-    "network": "mainnet",
-    "version": 1,
-    "type": "staking",
-    "group": "Pool-5"
-  },
-  {
-    "name": "Proxy",
-    "source": "ArcProxy",
-    "address": "0xd41a21F6a3DEbFe28b06ace2312A69c53107ceE5",
-    "txn": "0x050892a1a29175e00d3dee1704f9a62a9ae54dfdac96917485923a473ea132cd",
-    "network": "mainnet",
-    "version": 1,
-    "type": "staking",
-    "group": "Pool-5"
-  },
-  {
-    "name": "MozartSavings",
-    "source": "MozartSavingsV2",
-    "address": "0xeb79a36303aeF7f7536467025a29Df85421F31E2",
-    "txn": "0x067a79eb296cdbbae57b4805420e43e4b60e49f98f6ec23658378d72abcc9d2b",
-    "network": "mainnet",
-    "version": 1,
-    "type": "savings",
-    "group": ""
-  },
-  {
-    "name": "Oracle",
-    "source": "xSushiOracle",
-    "address": "0x8fD458EF0889eed73220bc766CE12a58f9ed0447",
-    "txn": "0x1b70c870f5e950b2918e8e2178aa76fbf7d6c53030d5a21cac90cc90a1104e42",
-    "network": "mainnet",
-    "version": 1,
-    "type": "synth",
-    "group": "xSUSHI-STABLEx"
-  },
-  {
-    "name": "CoreProxy",
-    "source": "ArcProxy",
-    "address": "0xc3A5A0dC6241C922937c5cd90F5bACE23716AFB7",
-    "txn": "0xdc892b0867f5f8b9e3d0375dbf420920841e30eb25ec8baf2f4040a1206311e5",
-    "network": "mainnet",
-    "version": 1,
-    "type": "synth",
-    "group": "xSUSHI-STABLEx"
-  },
-  {
-    "name": "Oracle",
-    "source": "ibETHOracle",
-    "address": "0xCba520FF6d7CdD13707e6d2f061E8356d8DdB23e",
-    "txn": "0x7aaf41b12caef142c013af236753cce733d02541ececb431f6b69e2369c67157",
-    "network": "mainnet",
-    "version": 1,
-    "type": "synth",
-    "group": "ibETH-STABLEx"
-  },
-  {
-    "name": "CoreProxy",
-    "source": "ArcProxy",
-    "address": "0x81f16E6B58738DaAA4C5D493a240cCA49C240f04",
-    "txn": "0x4466d6e66f5ae8e3cac06b02da10d0d54e6d9c4b7fb60344397a02d6985d40db",
-    "network": "mainnet",
-    "version": 1,
-    "type": "synth",
-    "group": "ibETH-STABLEx"
-  },
-  {
-    "name": "Oracle",
-    "source": "imUSDOracle",
-    "address": "0xF3c0aD6D689c59997e1E3E96699a65Bc464AC937",
-    "txn": "0x2769a16df3ee50a2084715feae7457252b964fbdde9c6cae6d6631ed01b43632",
-    "network": "mainnet",
-    "version": 1,
-    "type": "synth",
-    "group": "imUSD-STABLEx"
-  },
-  {
-    "name": "CoreProxy",
-    "source": "ArcProxy",
-    "address": "0x066b7660b2003793fB2ffD0b8152158c016fbfeF",
-    "txn": "0xd4455f51e82d7eed3a49e6c5489c79dcb439202f6cc4cc0501ffd41a869b7620",
-    "network": "mainnet",
-    "version": 1,
-    "type": "synth",
-    "group": "imUSD-STABLEx"
-  },
-  {
-    "name": "ArcUniswapV2Oracle",
-    "source": "ArcUniswapV2Oracle",
-    "address": "0x3258a7d31ab32eEaBDa47032E97EfFeA3Bc9567D",
-    "txn": "0x5d01a3ea76e96c8440442d75d4ae3e7b5076a31326cd82a3fc9183a8070c5ba6",
-    "network": "mainnet",
-    "version": 1,
-    "type": "synth"
-  },
-  {
-    "name": "WhitelistSale",
-    "source": "WhitelistSale",
-    "address": "0x2D6c5b9fF886bb4eEFed33b2065366F4caa0e6Fe",
-    "txn": "0xfb6f967971ce1d0e80aa49db4f63d32b8e6a0c2285db8e4110b4348b7a4d0b45",
-    "network": "mainnet",
-    "version": 1,
-    "type": "global",
-    "group": ""
-  },
-  {
-    "name": "Implementation",
-    "source": "LiquidityCampaign",
-    "address": "0x706f4Af0a7Bb113f00E687dafA4D8e84fBc65658",
-    "txn": "0x644a14d08e7935be4073b829880fce17dade0938d6917007496e39724ddb0873",
-    "network": "mainnet",
-    "version": 1,
-    "type": "staking",
-    "group": "Pool-6"
-  },
-  {
-    "name": "Proxy",
-    "source": "ArcProxy",
-    "address": "0x1960AFc89FF98f4eE64D29A5082EB5002b376E35",
-    "txn": "0xd728ac80bed40eb09462b5380f7c8d59e31c1813f9b08d2ba686af68f4781952",
-    "network": "mainnet",
-    "version": 1,
-    "type": "staking",
-    "group": "Pool-6"
-  },
-  {
-    "name": "Implementation",
-    "source": "LiquidityCampaign",
-    "address": "0x00e7dAB5983803D9476385cE7E9076CB4573f8AE",
-    "txn": "0xf8502627e47a1e5f2ae07d4d1182120da8588674e47e518667ccb2679280c799",
-    "network": "mainnet",
-    "version": 1,
-    "type": "staking",
-    "group": "Pool-6.1"
-  },
-  {
-    "name": "Proxy",
-    "source": "ArcProxy",
-    "address": "0xa85333DA5e5A48498F0a65A1A6521E0ceadD3eFD",
-    "txn": "0x47039243d5b12bc9a4f77adb1dd4203c3f8a67de82411a7780b43b0a11a9e740",
-    "network": "mainnet",
-    "version": 1,
-    "type": "staking",
-    "group": "Pool-6.1"
-  }
+	{
+		"name": "KYF-T1",
+		"group": "",
+		"source": "KYFV2",
+		"address": "0x1f10ff148a0ad63a57f98530ab472568e90a72c5",
+		"txn": "0x2ec44b1141940d1934fcab14e33af07aafcef651f845608b84c0b1e9140c9c7b",
+		"network": "mainnet",
+		"version": 1,
+		"type": "global"
+	},
+	{
+		"name": "KYF-T2",
+		"group": "",
+		"source": "KYFV2",
+		"address": "0x877E31c9c04e8a2A3Af59341635F5BC6ae0dDc13",
+		"txn": "0x0e454ba4c2ac248e5d2651cf556a69f2072c0c29abb5f3307fe5d12fbd736990",
+		"network": "mainnet",
+		"version": 1,
+		"type": "global"
+	},
+	{
+		"name": "ArcxToken",
+		"group": "",
+		"source": "ArcxToken",
+		"address": "0xED30Dd7E50EdF3581AD970eFC5D9379Ce2614AdB",
+		"txn": "0x4f0fd31a69cce6af21e4b8a9406352239ff1eec5d128941a1cafb25bea008553",
+		"network": "mainnet",
+		"version": 1,
+		"type": "global"
+	},
+	{
+		"name": "ArcDAO",
+		"group": "",
+		"source": "AddressAccrual",
+		"address": "0x1DEBBC50322150EB44DE3b663d5faA89c12b07ff",
+		"txn": "0xaddd5d086184e35efd0e38e6bc289582613c328b5cf0c4670f769b151949f92f",
+		"network": "mainnet",
+		"version": 1,
+		"type": "global"
+	},
+	{
+		"name": "SynthRegistry",
+		"group": "",
+		"source": "SynthRegistry",
+		"address": "0x372a4D34e9E9d96656F101aFf06a4a455396C974",
+		"txn": "0x293c48b94a9626720afd83d1b4b2b272c7e3df26dd922e012f0d3f2bb8e34b07",
+		"network": "mainnet",
+		"version": 1,
+		"type": "global"
+	},
+	{
+		"name": "KYFToken",
+		"group": "",
+		"source": "KYFToken",
+		"address": "0xD85e2772912213e0c584d80B2694c79D6a09E39A",
+		"txn": "0xd168c7b318dcc9d8eb26c89a9ef6d7f517f3a2cd6f9481cde5c25733c1f49bda",
+		"network": "mainnet",
+		"version": 1,
+		"type": "global"
+	},
+	{
+		"name": "CoreProxy",
+		"group": "LINKUSD",
+		"source": "ArcProxy",
+		"address": "0x5568Df89AF6Bc835B876fDc3B2d44ef63530e419",
+		"txn": "0x42b18f8203170cfdc37d75b8c16a59ed4c6ee407bd83cb4b2b8daa6121e33703",
+		"network": "mainnet",
+		"version": 1,
+		"type": "synth"
+	},
+	{
+		"name": "Oracle",
+		"group": "LINKUSD",
+		"source": "ChainLinkOracle",
+		"address": "0xeFFD9768a337950CdC883682Dc08583D4a3fe596",
+		"txn": "0x64228347bf80803309b51813edd6852346348609e89d724d2f62e44a5b822fc9",
+		"network": "mainnet",
+		"version": 1,
+		"type": "synth"
+	},
+	{
+		"name": "SpritzState",
+		"group": "LINKUSD",
+		"source": "StateV1",
+		"address": "0x94F40fD4018586AaFb8A6AD95441e0b58cc4c058",
+		"txn": "0x93bd657169d285729c70e721ad547e84e82cf7fc2addae92741636895151b919",
+		"network": "mainnet",
+		"version": 1,
+		"type": "synth"
+	},
+	{
+		"name": "SyntheticToken",
+		"group": "LINKUSD",
+		"source": "StaticSyntheticToken",
+		"address": "0x0E2EC54fC0B509F445631Bf4b91AB8168230C752",
+		"txn": "0x5d22a8a734109c88440a849da6a06b21e8419c83fadb117a7b39264650d968fd",
+		"network": "mainnet",
+		"version": 1,
+		"type": "synth"
+	},
+	{
+		"name": "Pool-1",
+		"group": "Pool-1",
+		"source": "StakingRewardsAccrualCapped",
+		"address": "0xd1902581868163BEf61776cfD27228EE5074be8F",
+		"txn": "0xe52e9b1cdda86f893a90a515fbd77b2cfcef99a9ab9c794e3c603c19c9632154",
+		"network": "mainnet",
+		"version": 1,
+		"type": "staking"
+	},
+	{
+		"name": "Pool-2",
+		"group": "Pool-2",
+		"source": "StakingRewardsAccrualCapped",
+		"address": "0xA9A9300Ab9A70c43C19d6F42e3308Be24d73D885",
+		"txn": "0xe3874d35badf9f65aefbc8a54ca0d058ffa60fd8e14753ca46c923b8d17bf03d",
+		"network": "mainnet",
+		"version": 1,
+		"type": "staking"
+	},
+	{
+		"name": "Pool-2.1",
+		"group": "Pool-2.1",
+		"source": "AdminRewards",
+		"address": "0x580836540CA183Ab71AA4C58253F5EEaaD2552Dc",
+		"txn": "0xe3874d35badf9f65aefbc8a54ca0d058ffa60fd8e14753ca46c923b8d17bf03d",
+		"network": "mainnet",
+		"version": "1",
+		"type": "staking"
+	},
+	{
+		"name": "SpritzCore",
+		"group": "",
+		"source": "CoreV1",
+		"address": "0x08Db418a5234337D76c78cCF630658D4e328FC69",
+		"txn": "0x4690959ea3442c1b9272abe11386b2f9d60807d86936f0ae7707f350546e7400",
+		"network": "mainnet",
+		"version": 1,
+		"type": "synth"
+	},
+	{
+		"name": "SpritzCore",
+		"group": "",
+		"source": "CoreV2",
+		"address": "0x8e1fe752e51b05b9fe6eE95d8907695E0f3e2Ecd",
+		"txn": "0xc35406ee85ca64842b0957a8c68f48fa7f962687c83640374d7815f3f2b33a8f",
+		"network": "mainnet",
+		"version": 2,
+		"type": "synth"
+	},
+	{
+		"name": "SpritzCore",
+		"group": "",
+		"source": "CoreV3",
+		"address": "0xC8C2E1547298E09E5f18e4CDEA4A271FdadAB971",
+		"txn": "0xc3ca124d70184617103988682af2ac1f9ea2fe4d8c0707e68348c9fe15b0d447",
+		"network": "mainnet",
+		"version": 3,
+		"type": "synth"
+	},
+	{
+		"name": "SpritzCore",
+		"group": "",
+		"source": "CoreV4",
+		"address": "0x6981263d090734F2Bd2708D1bE30Db5594BDE400",
+		"txn": "0xf4a07e7eec8bf06af0693862dab51718ab616cad97f8224a713e5cc71a35d0e5",
+		"network": "mainnet",
+		"version": 4,
+		"type": "synth"
+	},
+	{
+		"name": "Proxy",
+		"group": "Pool-3",
+		"source": "ArcProxy",
+		"address": "0x38b25c0A9e61E226023B700ce4a6A4134eCAEeDF",
+		"txn": "0x2bab27a2e9a2434613c24915247f11752f3c43d252342486e9f508dfb65f5c03",
+		"network": "mainnet",
+		"version": 1,
+		"type": "staking"
+	},
+	{
+		"name": "Implementation",
+		"group": "Pool-3",
+		"source": "RewardCampaign",
+		"address": "0x140C21C364B9E72856C582CF7B6d37ee88B52140",
+		"txn": "0x4559c140f80f1af1a5400ccfa39f67379267f4599b1e3c00f2a5f9e8bf15e368",
+		"network": "mainnet",
+		"version": 1,
+		"type": "staking"
+	},
+	{
+		"name": "Proxy",
+		"group": "Pool-4",
+		"source": "ArcProxy",
+		"address": "0x8016F490D76346EBEC91707fD4Fb56A7fe64f694",
+		"txn": "0x0bc9985a636df79b3dd1d896b7dbebec47e2b1fe4c25803beae958207a20285c",
+		"network": "mainnet",
+		"version": 1,
+		"type": "staking"
+	},
+	{
+		"name": "Implementation",
+		"group": "Pool-4",
+		"source": "RewardCampaign",
+		"address": "0x57f52dAD9fcB361c67FF8c555720dc934dD5945D",
+		"txn": "0xe40ce68414f5272836c8f340655cff9f1cc3aab1d9a83a09957ffb75bc30a89e",
+		"network": "mainnet",
+		"version": 1,
+		"type": "staking"
+	},
+	{
+		"name": "Proxy",
+		"group": "SkillsetMetadata",
+		"source": "ArcProxy",
+		"address": "0xAc09434EAce70771AEcb75B3BdEB775B4c1B4Aef",
+		"txn": "0xe22e539a5fa4b517ffed75d8154e07daa4867035322dcca6ee58d917a28480bb",
+		"network": "mainnet",
+		"version": 1,
+		"type": "global"
+	},
+	{
+		"name": "Implementation",
+		"group": "SkillsetMetadata",
+		"source": "SkillsetMetadata",
+		"address": "0x1D453D0c02D6ac3494A4be4f53e59F01abd0E6a3",
+		"txn": "0x0bb685743c7ebb234b6367447a77a9c5af07a1648f0bb3ce1ba46d037aa1a75e",
+		"network": "mainnet",
+		"version": 1,
+		"type": "global"
+	},
+	{
+		"name": "CollateralToken",
+		"source": "IERC20",
+		"address": "0x514910771af9ca656af840dff83e8264ecf986ca",
+		"txn": "0x5488510df045770efbff57f25d0c6d2c1404d58c1199b21eb8dc5072b22d91d7",
+		"network": "mainnet",
+		"version": 1,
+		"type": "synth",
+		"group": "LINKUSD"
+	},
+	{
+		"name": "SyntheticToken",
+		"source": "SyntheticTokenV1",
+		"address": "0xA58B598d0503bAA97B877735c97C69Cc19c07904",
+		"txn": "0x1c28e22840af2d1af89d967175f5195aa1184b91cb506aac0b93b037985b9e2c",
+		"network": "mainnet",
+		"version": 1,
+		"type": "synth",
+		"group": ""
+	},
+	{
+		"name": "SyntheticProxy",
+		"source": "ArcProxy",
+		"address": "0xcD91538B91B4ba7797D39a2f66E63810b50A33d0",
+		"txn": "0x22da62351f09f7f62d920256ccf1b8d6505dd486bd3a1028fd1adc661ba87a16",
+		"network": "mainnet",
+		"version": 1,
+		"type": "synth",
+		"group": "STABLEx"
+	},
+	{
+		"name": "SynthRegistryV2",
+		"source": "SynthRegistryV2",
+		"address": "0xeB739e889E74383562695D94C495F5F69F9E2559",
+		"txn": "0x56acb25ff3c46ab3be12d03330de88e388c488ad29440a95327077b8f48f38cc",
+		"network": "mainnet",
+		"version": 2,
+		"type": "global",
+		"group": ""
+	},
+	{
+		"name": "ArcProxyInfo",
+		"source": "ArcProxyInfo",
+		"address": "0x17B387a0FDdC8eC9FbB5127707F21d25819E28AA",
+		"txn": "0xa3305df0b8bef12e7132c1db3a2e9941861e27f51344fb207d0020b0cfe63242",
+		"network": "mainnet",
+		"version": 1,
+		"type": "global",
+		"group": ""
+	},
+	{
+		"name": "MozartCore",
+		"source": "MozartCoreV1",
+		"address": "0xC6a2A61C8A1c9614085207A2692D08ad78b9E425",
+		"txn": "0xed9073b84af0a29a3c9754d611beb5209ca776ecef1792f73ddd53f41a3d8a78",
+		"network": "mainnet",
+		"version": 1,
+		"type": "synth",
+		"group": ""
+	},
+	{
+		"name": "Oracle",
+		"source": "YUSDOracle",
+		"address": "0x4e5D8e00a630A50016FfDCA3d955ACa2e73Fe9F0",
+		"txn": "0xab08c3f7349fb866ad4e01196e03718b258db6b060b922400612b2858803d393",
+		"network": "mainnet",
+		"version": 1,
+		"type": "synth",
+		"group": "yUSD-STABLEx"
+	},
+	{
+		"name": "CoreProxy",
+		"source": "ArcProxy",
+		"address": "0xEBFD7b965E1B4c5719a006dE1AcAf82a7C3A142C",
+		"txn": "0x8dc6a15665d8905821a0db5d068c01d49932a333bb401b9bed52d6af134ca39c",
+		"network": "mainnet",
+		"version": 1,
+		"type": "synth",
+		"group": "yUSD-STABLEx"
+	},
+	{
+		"name": "SavingsRegistry",
+		"source": "SavingsRegistry",
+		"address": "0x2948Ddf33b00686D7E58D2Eb3AA2469A1b52C7e4",
+		"txn": "0x4ad315af56eeadee17c3937bb90bc4a7b0c8d8359521890b4232f4f30059df97",
+		"network": "mainnet",
+		"version": 1,
+		"type": "global",
+		"group": ""
+	},
+	{
+		"name": "MozartSavings",
+		"source": "MozartSavingsV1",
+		"address": "0x2C8eDbf218e2f9baAFaC71692f424E75D9f9755e",
+		"txn": "0xf140e5bd84978543ac938b2d5cc3f506b84d7271536ae7305fa3be1d8ef586a6",
+		"network": "mainnet",
+		"version": 1,
+		"type": "savings",
+		"group": ""
+	},
+	{
+		"name": "SavingsProxy",
+		"source": "ArcProxy",
+		"address": "0xec18FfEa29dACC0F47525529fd1fD1D4A40FE65c",
+		"txn": "0xc6b64f435b8f7213a262d0e5f332366523de6561df75df02ca9a69cffdf26f35",
+		"network": "mainnet",
+		"version": 1,
+		"type": "savings",
+		"group": "STABLEx"
+	},
+	{
+		"name": "MozartCore",
+		"source": "MozartCoreV2",
+		"address": "0x0BCb3b8BeCaae10Acc13FDDc0aB09be3351Cd30d",
+		"txn": "0x04f33295de328c8ba30dfa6e1a49a353cfc5450ab6a36c44a4469eb2a9b3a7ec",
+		"network": "mainnet",
+		"version": 1,
+		"type": "synth",
+		"group": ""
+	},
+	{
+		"name": "Oracle",
+		"source": "CTokenOracle",
+		"address": "0x7E0537F8499A1AbE3AF152A0Bd55C1F39ed11b64",
+		"txn": "0xebe58735d4c92d2bc2412d14a128929d7618ce08bf96f022af91f6ee2e14c01c",
+		"network": "mainnet",
+		"version": 1,
+		"type": "synth",
+		"group": "cUSDC-STABLEx"
+	},
+	{
+		"name": "CoreProxy",
+		"source": "ArcProxy",
+		"address": "0x84EAD9Ce2e36b3e6cdf41C94D5397e5056b3d8d6",
+		"txn": "0x22e9808a2e7fd5955f229c270c0271744162a4c6560d31aba40ecdb413bc486d",
+		"network": "mainnet",
+		"version": 1,
+		"type": "synth",
+		"group": "cUSDC-STABLEx"
+	},
+	{
+		"name": "Implementation",
+		"source": "RewardCampaign",
+		"address": "0x58bF325843b25B4767A3ff4Ef69B1b7B47493528",
+		"txn": "0x51772511e2dc7551f70064d42c125a6bb8ba154c1d43f35e41c8bcb4530b5b60",
+		"network": "mainnet",
+		"version": 1,
+		"type": "staking",
+		"group": "Pool-5"
+	},
+	{
+		"name": "Proxy",
+		"source": "ArcProxy",
+		"address": "0xd41a21F6a3DEbFe28b06ace2312A69c53107ceE5",
+		"txn": "0x050892a1a29175e00d3dee1704f9a62a9ae54dfdac96917485923a473ea132cd",
+		"network": "mainnet",
+		"version": 1,
+		"type": "staking",
+		"group": "Pool-5"
+	},
+	{
+		"name": "MozartSavings",
+		"source": "MozartSavingsV2",
+		"address": "0xeb79a36303aeF7f7536467025a29Df85421F31E2",
+		"txn": "0x067a79eb296cdbbae57b4805420e43e4b60e49f98f6ec23658378d72abcc9d2b",
+		"network": "mainnet",
+		"version": 1,
+		"type": "savings",
+		"group": ""
+	},
+	{
+		"name": "Oracle",
+		"source": "xSushiOracle",
+		"address": "0x8fD458EF0889eed73220bc766CE12a58f9ed0447",
+		"txn": "0x1b70c870f5e950b2918e8e2178aa76fbf7d6c53030d5a21cac90cc90a1104e42",
+		"network": "mainnet",
+		"version": 1,
+		"type": "synth",
+		"group": "xSUSHI-STABLEx"
+	},
+	{
+		"name": "CoreProxy",
+		"source": "ArcProxy",
+		"address": "0xc3A5A0dC6241C922937c5cd90F5bACE23716AFB7",
+		"txn": "0xdc892b0867f5f8b9e3d0375dbf420920841e30eb25ec8baf2f4040a1206311e5",
+		"network": "mainnet",
+		"version": 1,
+		"type": "synth",
+		"group": "xSUSHI-STABLEx"
+	},
+	{
+		"name": "Oracle",
+		"source": "ibETHOracle",
+		"address": "0xCba520FF6d7CdD13707e6d2f061E8356d8DdB23e",
+		"txn": "0x7aaf41b12caef142c013af236753cce733d02541ececb431f6b69e2369c67157",
+		"network": "mainnet",
+		"version": 1,
+		"type": "synth",
+		"group": "ibETH-STABLEx"
+	},
+	{
+		"name": "CoreProxy",
+		"source": "ArcProxy",
+		"address": "0x81f16E6B58738DaAA4C5D493a240cCA49C240f04",
+		"txn": "0x4466d6e66f5ae8e3cac06b02da10d0d54e6d9c4b7fb60344397a02d6985d40db",
+		"network": "mainnet",
+		"version": 1,
+		"type": "synth",
+		"group": "ibETH-STABLEx"
+	},
+	{
+		"name": "Oracle",
+		"source": "imUSDOracle",
+		"address": "0xF3c0aD6D689c59997e1E3E96699a65Bc464AC937",
+		"txn": "0x2769a16df3ee50a2084715feae7457252b964fbdde9c6cae6d6631ed01b43632",
+		"network": "mainnet",
+		"version": 1,
+		"type": "synth",
+		"group": "imUSD-STABLEx"
+	},
+	{
+		"name": "CoreProxy",
+		"source": "ArcProxy",
+		"address": "0x066b7660b2003793fB2ffD0b8152158c016fbfeF",
+		"txn": "0xd4455f51e82d7eed3a49e6c5489c79dcb439202f6cc4cc0501ffd41a869b7620",
+		"network": "mainnet",
+		"version": 1,
+		"type": "synth",
+		"group": "imUSD-STABLEx"
+	},
+	{
+		"name": "ArcUniswapV2Oracle",
+		"source": "ArcUniswapV2Oracle",
+		"address": "0x3258a7d31ab32eEaBDa47032E97EfFeA3Bc9567D",
+		"txn": "0x5d01a3ea76e96c8440442d75d4ae3e7b5076a31326cd82a3fc9183a8070c5ba6",
+		"network": "mainnet",
+		"version": 1,
+		"type": "synth"
+	},
+	{
+		"name": "WhitelistSale",
+		"source": "WhitelistSale",
+		"address": "0x2D6c5b9fF886bb4eEFed33b2065366F4caa0e6Fe",
+		"txn": "0xfb6f967971ce1d0e80aa49db4f63d32b8e6a0c2285db8e4110b4348b7a4d0b45",
+		"network": "mainnet",
+		"version": 1,
+		"type": "global",
+		"group": ""
+	},
+	{
+		"name": "Implementation",
+		"source": "LiquidityCampaign",
+		"address": "0x706f4Af0a7Bb113f00E687dafA4D8e84fBc65658",
+		"txn": "0x644a14d08e7935be4073b829880fce17dade0938d6917007496e39724ddb0873",
+		"network": "mainnet",
+		"version": 1,
+		"type": "staking",
+		"group": "Pool-6"
+	},
+	{
+		"name": "Proxy",
+		"source": "ArcProxy",
+		"address": "0x1960AFc89FF98f4eE64D29A5082EB5002b376E35",
+		"txn": "0xd728ac80bed40eb09462b5380f7c8d59e31c1813f9b08d2ba686af68f4781952",
+		"network": "mainnet",
+		"version": 1,
+		"type": "staking",
+		"group": "Pool-6"
+	},
+	{
+		"name": "Implementation",
+		"source": "LiquidityCampaign",
+		"address": "0x00e7dAB5983803D9476385cE7E9076CB4573f8AE",
+		"txn": "0xf8502627e47a1e5f2ae07d4d1182120da8588674e47e518667ccb2679280c799",
+		"network": "mainnet",
+		"version": 1,
+		"type": "staking",
+		"group": "Pool-6.1"
+	},
+	{
+		"name": "Proxy",
+		"source": "ArcProxy",
+		"address": "0xa85333DA5e5A48498F0a65A1A6521E0ceadD3eFD",
+		"txn": "0x47039243d5b12bc9a4f77adb1dd4203c3f8a67de82411a7780b43b0a11a9e740",
+		"network": "mainnet",
+		"version": 1,
+		"type": "staking",
+		"group": "Pool-6.1"
+	}
 ]
