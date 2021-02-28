@@ -513,6 +513,16 @@ describe('JointCampaign', () => {
         await expectRevert(jointCampaignUser2.slash(user1.address));
       });
 
+      it('should revert if trying to slash after the end of the reward period', async () => {
+        const positionId = await stake(user1, STAKE_AMOUNT);
+
+        await setTimestampTo(REWARD_DURATION);
+
+        await arc.repay(positionId, BORROW_AMOUNT.div(2), BigNumber.from(0), user1);
+
+        await expectRevert(jointCampaignUser2.slash(user1.address));
+      });
+
       it('should be able to slash if the user does not have enough debt', async () => {
         // note: check for both rewards
         const positionId = await stake(user1, STAKE_AMOUNT);
