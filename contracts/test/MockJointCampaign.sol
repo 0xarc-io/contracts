@@ -29,4 +29,16 @@ contract MockJointCampaign is JointCampaign {
     {
         return _currentTimestamp;
     }
+
+    function actualEarned(
+        address _account,
+        address _rewardToken
+    )
+        public
+        view
+        verifyRewardToken(_rewardToken)
+        returns (uint256)
+    {
+        return _actualEarned(_account, _rewardToken);
+    }
 }

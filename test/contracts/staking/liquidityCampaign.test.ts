@@ -65,14 +65,6 @@ describe('LiquidityCampaign', () => {
     return timestampAtStake;
   }
 
-  // async function logTimeDiff(timeReference: BigNumber, prefix?: string) {
-  //   console.log(
-  //     `${prefix ? prefix + ' ' : ''}t${(await getCurrentTimestamp())
-  //       .sub(timeReference)
-  //       .toString()}`,
-  //   );
-  // }
-
   async function mintAndApprove(
     token: TestToken,
     tokenReceiver: SignerWithAddress,
