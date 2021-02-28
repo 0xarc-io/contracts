@@ -1,15 +1,13 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { TestToken, TestTokenFactory } from '@src/typings';
-import hre from 'hardhat';
 import ArcNumber from '@src/utils/ArcNumber';
 import { ethers } from 'hardhat';
 import { deployTestToken } from '../deployers';
 import ArcDecimal from '@src/utils/ArcDecimal';
-import { BigNumber } from 'ethers';
+import { BigNumber, BigNumberish } from 'ethers';
 import chai from 'chai';
 import { BASE, TEN_PERCENT } from '@src/constants';
 import { expectRevert } from '@test/helpers/expectRevert';
-import { EVM } from '@test/helpers/EVM';
 import { solidity } from 'ethereum-waffle';
 import { generateContext, ITestContext } from '../context';
 import { mozartFixture } from '../fixtures';
@@ -53,6 +51,14 @@ const BORROW_AMOUNT = ArcNumber.new(5);
 describe('JointCampaign', () => {
   async function setTimestampTo(timestamp: number) {
     await jointCampaignOwner.setCurrentTimestamp(timestamp);
+  }
+
+  function arcEarned(user: SignerWithAddress) {
+    return jointCampaignOwner.actualEarned(user.address, arcToken.address);
+  }
+
+  function lidoEarned(user: SignerWithAddress) {
+    return jointCampaignOwner.actualEarned(user.address, collabToken.address);
   }
 
   /**
@@ -529,8 +535,17 @@ describe('JointCampaign', () => {
     describe('#getReward', () => {
       beforeEach(setup);
 
+      it('should revert if no rewards are claimable', async () => {
+        await stake(user1, STAKE_AMOUNT);
+
+        await setTimestampTo(1);
+
+        await expectRevert(jointCampaignUser1.getReward(user1.address));
+      });
+
       it('should be able to claim both rewards gradually over time', async () => {
-        await jointCampaignOwner.setTokensClaimable(true);
+        await jointCampaignOwner.setArcTokensClaimable(true);
+        await jointCampaignOwner.setCollabTokensClaimable(true);
 
         await stake(user1, STAKE_AMOUNT);
 
@@ -550,7 +565,8 @@ describe('JointCampaign', () => {
       });
 
       it('should be able to claim the right amount of rewards given the number of participants', async () => {
-        await jointCampaignOwner.setTokensClaimable(true);
+        await jointCampaignOwner.setArcTokensClaimable(true);
+        await jointCampaignOwner.setCollabTokensClaimable(true);
 
         await stake(user1, STAKE_AMOUNT);
 
@@ -578,7 +594,8 @@ describe('JointCampaign', () => {
       });
 
       it('should claim the correct amount of rewards after calling #notifyRewardAmount a second time', async () => {
-        await jointCampaignOwner.setTokensClaimable(true);
+        await jointCampaignOwner.setArcTokensClaimable(true);
+        await jointCampaignOwner.setCollabTokensClaimable(true);
 
         await stake(user1, STAKE_AMOUNT);
 
@@ -608,30 +625,48 @@ describe('JointCampaign', () => {
 
         await setTimestampTo(1);
 
-        await jointCampaignUser1.getReward(user1.address);
+        // No rewards are claimable, expect revert
+        await expectRevert(jointCampaignUser1.getReward(user1.address));
 
         expect(await arcToken.balanceOf(user1.address)).to.eq(ArcNumber.new(0));
-        expect(await collabToken.balanceOf(user1.address)).to.eq(ArcNumber.new(20));
+        expect(await collabToken.balanceOf(user1.address)).to.eq(ArcNumber.new(0));
 
         await setTimestampTo(2);
 
-        await jointCampaignUser1.getReward(user1.address);
+        await expectRevert(jointCampaignUser1.getReward(user1.address));
 
         expect(await arcToken.balanceOf(user1.address)).to.eq(ArcNumber.new(0));
-        expect(await collabToken.balanceOf(user1.address)).to.eq(ArcNumber.new(40));
+        expect(await collabToken.balanceOf(user1.address)).to.eq(ArcNumber.new(0));
 
-        await jointCampaignOwner.setTokensClaimable(true);
+        await jointCampaignOwner.setCollabTokensClaimable(true);
 
         await setTimestampTo(3);
 
         await jointCampaignUser1.getReward(user1.address);
 
-        expect(await arcToken.balanceOf(user1.address)).to.eq(ArcNumber.new(18));
+        expect(await arcToken.balanceOf(user1.address)).to.eq(ArcNumber.new(0));
         expect(await collabToken.balanceOf(user1.address)).to.eq(ArcNumber.new(60));
+
+        await setTimestampTo(4);
+
+        await jointCampaignUser1.getReward(user1.address);
+
+        expect(await arcToken.balanceOf(user1.address)).to.eq(ArcNumber.new(0));
+        expect(await collabToken.balanceOf(user1.address)).to.eq(ArcNumber.new(80));
+
+        await jointCampaignOwner.setArcTokensClaimable(true);
+
+        await setTimestampTo(5);
+
+        await jointCampaignUser1.getReward(user1.address);
+
+        expect(await arcToken.balanceOf(user1.address)).to.eq(ArcNumber.new(30));
+        expect(await collabToken.balanceOf(user1.address)).to.eq(ArcNumber.new(100));
       });
 
       it('should update rewards accordingly if user exits in between', async () => {
-        await jointCampaignOwner.setTokensClaimable(true);
+        await jointCampaignOwner.setArcTokensClaimable(true);
+        await jointCampaignOwner.setCollabTokensClaimable(true);
 
         const positionId = await stake(user1, STAKE_AMOUNT);
 
@@ -699,8 +734,17 @@ describe('JointCampaign', () => {
     describe('#exit', () => {
       beforeEach(setup);
 
+      it('should revert if no rewards are claimable', async () => {
+        await stake(user1, STAKE_AMOUNT);
+
+        await setTimestampTo(1);
+
+        await expectRevert(jointCampaignUser1.exit());
+      });
+
       it('should be able to exit and get the right amount of staked tokens and rewards', async () => {
-        await jointCampaignOwner.setTokensClaimable(true);
+        await jointCampaignOwner.setArcTokensClaimable(true);
+        await jointCampaignOwner.setCollabTokensClaimable(true);
 
         await stake(user1, STAKE_AMOUNT);
 
@@ -1021,16 +1065,237 @@ describe('JointCampaign', () => {
       });
     });
 
-    describe('#setTokensClaimable', () => {
+    describe('#setArcTokensClaimable', () => {
       it('should not be claimable by anyone', async () => {
-        await expectRevert(jointCampaignUser1.setTokensClaimable(true));
+        await expectRevert(jointCampaignUser1.setArcTokensClaimable(true));
       });
 
-      it('should skip be callable by the contract owner', async () => {
-        await jointCampaignOwner.setTokensClaimable(true);
+      it('should be callable by the contract owner', async () => {
+        await jointCampaignOwner.setArcTokensClaimable(true);
 
-        expect(await jointCampaignOwner.tokensClaimable()).to.be.eq(true);
+        expect(await jointCampaignOwner.arcTokensClaimable()).to.be.eq(true);
       });
+    });
+  });
+
+  describe('#setCollabTokensClaimable', () => {
+    it('should not be called by anyone', async () => {
+      await expectRevert(jointCampaignUser1.setCollabTokensClaimable(true));
+    });
+
+    it('should be callable by the contract owner', async () => {
+      await jointCampaignOwner.setCollabTokensClaimable(true);
+
+      expect(await jointCampaignOwner.collabTokensClaimable()).to.be.eq(true);
+    });
+  });
+
+  describe('Scenarios', () => {
+    it('should distribut rewards to 3 users correctly', async () => {
+      await setupBasic();
+      await jointCampaignOwner.setRewardsDuration(20);
+
+      const signers = await ethers.getSigners();
+      const user3 = signers[4];
+      const jointCampaignUser3 = MockJointCampaignFactory.connect(
+        jointCampaignOwner.address,
+        user3,
+      );
+      let user3Position: BigNumberish;
+
+      const arcRewardAmount = ArcNumber.new(150);
+      const lidoRewardAmount = ArcNumber.new(300);
+
+      await stake(user1, STAKE_AMOUNT);
+
+      await setTimestampTo(1);
+
+      await stake(user2, STAKE_AMOUNT);
+
+      await setTimestampTo(3);
+
+      await arcToken.mintShare(jointCampaignOwner.address, arcRewardAmount);
+      await jointCampaignOwner.notifyRewardAmount(arcRewardAmount, arcToken.address);
+
+      expect(await arcEarned(user1)).to.eq(ArcDecimal.new(0).value);
+      expect(await arcEarned(user2)).to.eq(ArcDecimal.new(0).value);
+      expect(await arcEarned(user2)).to.eq(ArcDecimal.new(0).value);
+      expect(await lidoEarned(user2)).to.eq(ArcDecimal.new(0).value);
+
+      await setTimestampTo(4);
+
+      expect(await arcEarned(user1)).to.eq(ArcDecimal.new(3.75).value);
+      expect(await lidoEarned(user1)).to.eq(ArcDecimal.new(0).value);
+      expect(await arcEarned(user2)).to.eq(ArcDecimal.new(3.75).value);
+      expect(await lidoEarned(user2)).to.eq(ArcDecimal.new(0).value);
+
+      await setTimestampTo(5);
+
+      await collabToken.mintShare(jointCampaignOwner.address, lidoRewardAmount);
+      await jointCampaignLido.notifyRewardAmount(lidoRewardAmount, collabToken.address);
+
+      expect(await arcEarned(user1)).to.eq(ArcDecimal.new(7.5).value);
+      expect(await lidoEarned(user1)).to.eq(ArcDecimal.new(0).value);
+      expect(await arcEarned(user2)).to.eq(ArcDecimal.new(7.5).value);
+      expect(await lidoEarned(user2)).to.eq(ArcDecimal.new(0).value);
+
+      await setTimestampTo(6);
+
+      expect(await arcEarned(user1)).to.eq(ArcDecimal.new(11.25).value);
+      expect(await lidoEarned(user1)).to.eq(ArcDecimal.new(7.5).value);
+      expect(await arcEarned(user2)).to.eq(ArcDecimal.new(11.25).value);
+      expect(await lidoEarned(user2)).to.eq(ArcDecimal.new(7.5).value);
+
+      await setTimestampTo(7);
+
+      // no rewards are claimable -> revert
+      await expectRevert(jointCampaignUser1.getReward(user1.address));
+
+      await setTimestampTo(9);
+
+      await jointCampaignOwner.setCollabTokensClaimable(true);
+
+      expect(await arcEarned(user1)).to.eq(ArcDecimal.new(22.5).value);
+      expect(await lidoEarned(user1)).to.eq(ArcDecimal.new(30).value);
+      expect(await arcEarned(user2)).to.eq(ArcDecimal.new(22.5).value);
+      expect(await lidoEarned(user2)).to.eq(ArcDecimal.new(30).value);
+
+      await setTimestampTo(10);
+
+      user3Position = await stake(user3, STAKE_AMOUNT);
+
+      expect(await arcEarned(user1)).to.eq(ArcDecimal.new(26.25).value);
+      expect(await lidoEarned(user1)).to.eq(ArcDecimal.new(37.5).value);
+      expect(await arcEarned(user2)).to.eq(ArcDecimal.new(26.25).value);
+      expect(await lidoEarned(user2)).to.eq(ArcDecimal.new(37.5).value);
+      expect(await arcEarned(user3)).to.eq(ArcDecimal.new(0).value);
+      expect(await lidoEarned(user3)).to.eq(ArcDecimal.new(0).value);
+
+      await setTimestampTo(11);
+
+      await jointCampaignUser2.getReward(user2.address);
+
+      expect(await arcToken.balanceOf(user2.address)).to.eq(BigNumber.from(0)); // ARC tokens not yet claimable
+      expect(await collabToken.balanceOf(user2.address)).to.eq(ArcDecimal.new(42.5).value);
+
+      expect(await arcEarned(user1)).to.eq(ArcDecimal.new(28.75).value);
+      expect(await lidoEarned(user1)).to.eq(ArcDecimal.new(42.5).value);
+      expect(await arcEarned(user2)).to.eq(ArcDecimal.new(28.75).value);
+      expect(await lidoEarned(user2)).to.eq(ArcDecimal.new(42.5).value);
+      expect(await arcEarned(user3)).to.eq(ArcDecimal.new(2.5).value);
+      expect(await lidoEarned(user3)).to.eq(ArcDecimal.new(5).value);
+
+      await setTimestampTo(12);
+
+      await arcToken.mintShare(jointCampaignOwner.address, arcRewardAmount);
+      await jointCampaignOwner.notifyRewardAmount(arcRewardAmount, arcToken.address);
+
+      await setTimestampTo(13);
+
+      await jointCampaignOwner.setCollabTokensClaimable(false);
+
+      expect(await arcEarned(user1)).to.eq(ArcDecimal.new(35.125).value);
+      expect(await lidoEarned(user1)).to.eq(ArcDecimal.new(52.5).value);
+      expect(await arcEarned(user2)).to.eq(ArcDecimal.new(35.125).value);
+      expect(await lidoEarned(user2)).to.eq(ArcDecimal.new(52.5).value);
+      expect(await arcEarned(user3)).to.eq(ArcDecimal.new(8.875).value);
+      expect(await lidoEarned(user3)).to.eq(ArcDecimal.new(15).value);
+
+      await setTimestampTo(15);
+
+      // reverts because no rewards are claimable
+      await expectRevert(jointCampaignUser1.getReward(user1.address));
+
+      await setTimestampTo(19);
+
+      await jointCampaignOwner.setArcTokensClaimable(true);
+
+      expect(await arcEarned(user1)).to.eq(ArcDecimal.new(58.375).value);
+      expect(await lidoEarned(user1)).to.eq(ArcDecimal.new(82.5).value);
+      expect(await arcEarned(user2)).to.eq(ArcDecimal.new(58.375).value);
+      expect(await lidoEarned(user2)).to.eq(ArcDecimal.new(82.5).value);
+      expect(await arcEarned(user3)).to.eq(ArcDecimal.new(32.125).value);
+      expect(await lidoEarned(user3)).to.eq(ArcDecimal.new(45).value);
+
+      await setTimestampTo(21);
+
+      await jointCampaignOwner.setCollabTokensClaimable(true);
+
+      expect(await arcEarned(user1)).to.eq(ArcDecimal.new(66.125).value);
+      expect(await lidoEarned(user1)).to.eq(ArcDecimal.new(92.5).value);
+      expect(await arcEarned(user2)).to.eq(ArcDecimal.new(66.125).value);
+      expect(await lidoEarned(user2)).to.eq(ArcDecimal.new(92.5).value);
+      expect(await arcEarned(user3)).to.eq(ArcDecimal.new(39.875).value);
+      expect(await lidoEarned(user3)).to.eq(ArcDecimal.new(55).value);
+
+      await setTimestampTo(22);
+
+      await jointCampaignUser2.exit();
+
+      expect(await stakingToken.balanceOf(user2.address)).to.eq(STAKE_AMOUNT);
+      expect(await arcToken.balanceOf(user2.address)).to.eq(ArcDecimal.new(42).value); // 70 * 0.6
+      expect(await collabToken.balanceOf(user2.address)).to.eq(ArcDecimal.new(97.5).value);
+
+      expect(await arcEarned(user1)).to.eq(ArcDecimal.new(70).value);
+      expect(await lidoEarned(user1)).to.eq(ArcDecimal.new(97.5).value);
+      expect(await arcEarned(user2)).to.eq(ArcDecimal.new(70).value);
+      expect(await lidoEarned(user2)).to.eq(ArcDecimal.new(97.5).value);
+      expect(await arcEarned(user3)).to.eq(ArcDecimal.new(43.75).value);
+      expect(await lidoEarned(user3)).to.eq(ArcDecimal.new(60).value);
+
+      await setTimestampTo(24);
+
+      await jointCampaignUser3.exit();
+
+      expect(await stakingToken.balanceOf(user3.address)).to.eq(STAKE_AMOUNT);
+      expect(await arcToken.balanceOf(user3.address)).to.eq(ArcDecimal.new(33.225).value); // 55.375 * 0.6
+      expect(await collabToken.balanceOf(user3.address)).to.eq(ArcDecimal.new(75).value);
+
+      expect(await arcEarned(user1)).to.eq(ArcDecimal.new(81.625).value);
+      expect(await lidoEarned(user1)).to.eq(ArcDecimal.new(112.5).value);
+      expect(await arcEarned(user2)).to.eq(ArcDecimal.new(70).value);
+      expect(await lidoEarned(user2)).to.eq(ArcDecimal.new(97.5).value);
+      expect(await arcEarned(user3)).to.eq(ArcDecimal.new(55.375).value);
+      expect(await lidoEarned(user3)).to.eq(ArcDecimal.new(75).value);
+
+      await setTimestampTo(25);
+
+      const user3StakingToken = TestTokenFactory.connect(stakingToken.address, user3);
+      await user3StakingToken.approve(jointCampaignUser3.address, STAKE_AMOUNT);
+      await jointCampaignUser3.stake(STAKE_AMOUNT, user3Position);
+
+      expect(await arcEarned(user1)).to.eq(ArcDecimal.new(93.25).value);
+      expect(await lidoEarned(user1)).to.eq(ArcDecimal.new(127.5).value);
+      expect(await arcEarned(user2)).to.eq(ArcDecimal.new(70).value);
+      expect(await lidoEarned(user2)).to.eq(ArcDecimal.new(97.5).value);
+      expect(await arcEarned(user3)).to.eq(ArcDecimal.new(55.375).value);
+      expect(await lidoEarned(user3)).to.eq(ArcDecimal.new(75).value);
+
+      await setTimestampTo(32);
+
+      expect(await arcEarned(user1)).to.eq(ArcDecimal.new(133.9375).value);
+      expect(await lidoEarned(user1)).to.eq(ArcDecimal.new(127.5).value);
+      expect(await arcEarned(user2)).to.eq(ArcDecimal.new(70).value);
+      expect(await lidoEarned(user2)).to.eq(ArcDecimal.new(97.5).value);
+      expect(await arcEarned(user3)).to.eq(ArcDecimal.new(96.0625).value);
+      expect(await lidoEarned(user3)).to.eq(ArcDecimal.new(75).value);
+
+      await setTimestampTo(40);
+
+      await jointCampaignUser3.exit();
+      await jointCampaignUser1.exit();
+
+      expect(await stakingToken.balanceOf(user1.address)).to.eq(STAKE_AMOUNT);
+      expect(await arcToken.balanceOf(user1.address)).to.eq(ArcDecimal.new(80.3625).value); // 133.9375 * 0.6
+      expect(await collabToken.balanceOf(user1.address)).to.eq(ArcDecimal.new(127.5).value);
+
+      expect(await stakingToken.balanceOf(user2.address)).to.eq(STAKE_AMOUNT);
+      expect(await arcToken.balanceOf(user2.address)).to.eq(ArcDecimal.new(42).value); // 70 * 0.6
+      expect(await collabToken.balanceOf(user2.address)).to.eq(ArcDecimal.new(97.5).value);
+
+      expect(await stakingToken.balanceOf(user3.address)).to.eq(STAKE_AMOUNT);
+      expect(await arcToken.balanceOf(user3.address)).to.eq(ArcDecimal.new(57.6375).value); // 96.0625 * 0.6
+      expect(await collabToken.balanceOf(user3.address)).to.eq(ArcDecimal.new(75).value);
     });
   });
 });

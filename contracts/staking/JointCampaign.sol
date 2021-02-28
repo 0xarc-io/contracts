@@ -66,7 +66,8 @@ contract JointCampaign is Ownable {
 
     uint8 public stakeToDebtRatio;
 
-    bool public tokensClaimable;
+    bool public arcTokensClaimable;
+    bool public collabTokensClaimable;
 
     uint256 private _totalSupply;
 
@@ -86,7 +87,9 @@ contract JointCampaign is Ownable {
 
     event PositionStaked(address _address, uint256 _positionId);
 
-    event ClaimableStatusUpdated(bool _status);
+    event ArcClaimableStatusUpdated(bool _status);
+
+    event CollabClaimableStatusUpdated(bool _status);
 
     event UserSlashed(address _user, address _slasher, uint256 _arcPenalty, uint256 _collabPenalty);
 
@@ -315,15 +318,26 @@ contract JointCampaign is Ownable {
         emit CollabRecovered(_amount);
     }
 
-    function setTokensClaimable(
+    function setArcTokensClaimable(
         bool _enabled
     )
         external
         onlyOwner
     {
-        tokensClaimable = _enabled;
+        arcTokensClaimable = _enabled;
 
-        emit ClaimableStatusUpdated(_enabled);
+        emit ArcClaimableStatusUpdated(_enabled);
+    }
+
+    function setCollabTokensClaimable(
+        bool _enabled
+    )
+        external
+        onlyOwner
+    {
+        collabTokensClaimable = _enabled;
+
+        emit CollabClaimableStatusUpdated(_enabled);
     }
 
     function init(
@@ -445,7 +459,7 @@ contract JointCampaign is Ownable {
         );
     }
 
-    function actualEarned(
+    function _actualEarned(
         address _account,
         address _rewardTokenAddress
     )
@@ -483,7 +497,7 @@ contract JointCampaign is Ownable {
         returns (uint256)
     {
         return Decimal.mul(
-            actualEarned(_account, address(arcRewardToken)),
+            _actualEarned(_account, address(arcRewardToken)),
             userAllocation()
         );
     }
@@ -495,7 +509,7 @@ contract JointCampaign is Ownable {
         view
         returns (uint256)
     {
-        return actualEarned(_account, address(collabRewardToken));
+        return _actualEarned(_account, address(collabRewardToken));
     }
 
     function getArcRewardForDuration()
@@ -661,13 +675,21 @@ contract JointCampaign is Ownable {
     {
         Staker storage staker = stakers[_user];
         uint256 arcPayableAmount;
+        uint256 collabPayableAmount;
 
-        uint256 collabPayableAmount = staker.collabRewardsEarned.sub(staker.collabRewardsReleased);
-        staker.collabRewardsReleased = staker.collabRewardsReleased.add(collabPayableAmount);
+        require(
+            collabTokensClaimable || arcTokensClaimable,
+            "At least one reward token must be claimable"
+        );
 
-        collabRewardToken.safeTransfer(_user, collabPayableAmount);
+        if (collabTokensClaimable) {
+            collabPayableAmount = staker.collabRewardsEarned.sub(staker.collabRewardsReleased);
+            staker.collabRewardsReleased = staker.collabRewardsReleased.add(collabPayableAmount);
 
-        if (tokensClaimable) {
+            collabRewardToken.safeTransfer(_user, collabPayableAmount);
+        }
+
+        if (arcTokensClaimable) {
             arcPayableAmount = staker.arcRewardsEarned.sub(staker.arcRewardsReleased);
             staker.arcRewardsReleased = staker.arcRewardsReleased.add(arcPayableAmount);
 
@@ -738,10 +760,10 @@ contract JointCampaign is Ownable {
         }
 
         if (_account != address(0)) {
-            stakers[_account].arcRewardsEarned = actualEarned(_account, address(arcRewardToken));
+            stakers[_account].arcRewardsEarned = _actualEarned(_account, address(arcRewardToken));
             stakers[_account].arcRewardPerTokenPaid = arcRewardPerTokenStored;
 
-            stakers[_account].collabRewardsEarned = actualEarned(_account, address(collabRewardToken));
+            stakers[_account].collabRewardsEarned = _actualEarned(_account, address(collabRewardToken));
             stakers[_account].collabRewardPerTokenPaid = collabPerTokenStored;
         }
     }
