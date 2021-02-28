@@ -635,6 +635,13 @@ contract JointCampaign is Ownable {
             "You cannot slash yourself"
         );
 
+        uint256 currentTime = getCurrentTimestamp();
+        require(
+            currentTime < arcPeriodFinish ||
+            currentTime < collabPeriodFinish,
+            "You cannot slash after the reward period"
+        );
+
         Staker storage userStaker = stakers[_user];
 
         require(
