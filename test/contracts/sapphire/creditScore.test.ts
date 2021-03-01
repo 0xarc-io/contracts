@@ -18,7 +18,6 @@ const THREE_BYTES32 = '0x3333333333333333333333333333333333333333333333333333333
  * it to be a core DeFi primitive for other applications to build on.
  */
 describe.only('SapphireCreditScore', () => {
-  // Utils will need to be developed to generate valid + invalid merkle roots
   let ctx: ITestContext;
 
   beforeEach(async () => {
@@ -75,12 +74,6 @@ describe.only('SapphireCreditScore', () => {
       ).to.be.revertedWith('SapphireCreditScore: caller is not authorized to update merkle root');
     });
 
-    it('should not be able to update as the owner if the contract is not paused', async () => {
-      await expect(
-        ctx.contracts.sapphire.creditScore.updateMerkleRoot(ONE_BYTES32),
-      ).to.be.revertedWith('SapphireCreditScore: pause contract to update merkle root as owner');
-    });
-
     it('should not be able to be called by the root updater before the delay duration', async () => {
       await ctx.contracts.sapphire.creditScore
         .connect(ctx.signers.interestSetter)
@@ -101,6 +94,12 @@ describe.only('SapphireCreditScore', () => {
     });
 
     describe('as owner', () => {
+      it('should not be able to update if the contract is not paused', async () => {
+        await expect(
+          ctx.contracts.sapphire.creditScore.updateMerkleRoot(ONE_BYTES32),
+        ).to.be.revertedWith('SapphireCreditScore: pause contract to update merkle root as owner');
+      });
+  
       it('instantly update merkle root', async () => {
         await ctx.contracts.sapphire.creditScore.setPause(true);
         const currentMerkleRoot = await ctx.contracts.sapphire.creditScore.currentMerkleRoot();
@@ -167,6 +166,7 @@ describe.only('SapphireCreditScore', () => {
 
     it('should be able to verify and update a users score', async () => {
       expect(await ctx.contracts.sapphire.creditScore.currentMerkleRoot()).eq(tree.getHexRoot());
+      const initTimestamp = Math.round(Date.now()/1000)
       const score = await ctx.contracts.sapphire.creditScore.request({
         account: creditScore1.account,
         score: creditScore1.amount,
@@ -178,7 +178,8 @@ describe.only('SapphireCreditScore', () => {
         1: lastUpdated,
       } = await ctx.contracts.sapphire.creditScore.getLastScore(creditScore1.account);
       expect(creditScore1.amount).eq(creditScore);
-      expect(creditScore1.lastUpdated).eq(lastUpdated);
+      expect(lastUpdated).gt(initTimestamp);
+      expect(lastUpdated).lte(Math.round(Date.now()/1000));
 
       // Check if the merkle root exists and if the last updated is the same as now then return stored
       // If not, ensure validity of root then update current score and last updated
@@ -220,6 +221,7 @@ describe.only('SapphireCreditScore', () => {
         {
           account: creditScore1.account,
           score: creditScore1.amount,
+          lastUpdated: Math.round(Date.now()/1000),
           merkleProof: tree.getProof(creditScore1.account, creditScore1.amount),
         },
         'CreditScoreUpdated',
