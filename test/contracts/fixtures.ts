@@ -116,13 +116,17 @@ export async function distributorFixture(ctx: ITestContext, args?: ITestContextA
   ctx.contracts.collateral = await deployTestToken(ctx.signers.admin, 'ARC GOVERNANCE', 'ARCX', 18);
 }
 
-export async function sapphireFixture(ctx: ITestContext, args?: ITestContextArgs) {
-  const deployer: Signer = ctx.signers.admin;
-  const deployerAddress = await deployer.getAddress();
+export function createSapphireFixture(
+  merkleRoot: string = '0x1111111111111111111111111111111111111111111111111111111111111111',
+) {
+  return async function sapphireFixture(ctx: ITestContext, args?: ITestContextArgs) {
+    const deployer: Signer = ctx.signers.admin;
+    const deployerAddress = await deployer.getAddress();
 
-  ctx.contracts.sapphire.creditScore = await deploySapphireCreditScore(
-    deployer,
-    '0x0000000000000000000000000000000000000000000000000000000000000000',
-    ctx.signers.interestSetter.address,
-  );
+    ctx.contracts.sapphire.creditScore = await deploySapphireCreditScore(
+      deployer,
+      merkleRoot,
+      ctx.signers.interestSetter.address,
+    );
+  };
 }
