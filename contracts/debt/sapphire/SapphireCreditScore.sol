@@ -58,14 +58,6 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         _;
     }
 
-    modifier isAuthorizedOrOwner() {
-        require(
-            merkleRootUpdater == msg.sender || owner() == msg.sender,
-            "SapphireCreditScore: caller is not authorized to update merkle root"
-        );
-        _;
-    }
-
     modifier isActive() {
         require(
             isPaused == false,
@@ -87,7 +79,11 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
 
   /* ========== Functions ========== */
 
-    function updateMerkleRoot(bytes32 newRoot) public isAuthorizedOrOwner {
+    function updateMerkleRoot(
+        bytes32 newRoot
+    ) 
+    public
+    {
         if (msg.sender == merkleRootUpdater) {
             updateMerkleRootAsUpdator(newRoot);
         } else {
@@ -95,7 +91,13 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         }
     }
 
-    function updateMerkleRootAsUpdator(bytes32 newRoot) private isAuthorized isActive {
+    function updateMerkleRootAsUpdator(
+        bytes32 newRoot
+    )
+        private
+        isAuthorized
+        isActive
+    {
         // If not admin
         // - Ensure duration has been passed
         // - Set the upcoming merkle root to the current one
@@ -109,7 +111,12 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         lastMerkleRootUpdate = block.timestamp;
     }
 
-    function updateMerkleRootAsOwner(bytes32 newRoot) private onlyOwner {
+    function updateMerkleRootAsOwner(
+        bytes32 newRoot
+    )
+        private
+        onlyOwner
+    {
         // If admin calls update merkle root
         // - Replace upcoming merkle root (avoid time delay)
         // - Keep existing merkle root as-is
@@ -120,7 +127,13 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         currentMerkleRoot = newRoot;
     }
 
-    function request(SapphireTypes.ScoreProof memory proof) public view returns (uint256) {
+    function request(
+        SapphireTypes.ScoreProof memory proof
+    ) 
+        public
+        view
+        returns (uint256)
+    {
         // abi.decode(proof, (data structure))
         // Decode the score from the current merkle root === verify
 
@@ -129,15 +142,34 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         return proof.score;
     }
 
-    function getLastScore(address user) public view returns (uint256, uint256) {
+    function getLastScore(
+        address user
+    )
+        public
+        view
+        returns (uint256, uint256)
+    {
         return (1, 1);
     }
 
-    function setMerkleRootDelay(uint256 delay) public {}
+    function setMerkleRootDelay(
+        uint256 delay
+    )
+        public
+    {}
 
-    function setPause(bool status) public onlyOwner {
+    function setPause(
+        bool status
+    )
+        public
+        onlyOwner
+    {
         isPaused = status;
     }
 
-    function updateMerkleRootUpdater(address merkleRootUpdator) public {}
+    function updateMerkleRootUpdater(
+        address merkleRootUpdator
+    )
+        public
+    {}
 }
