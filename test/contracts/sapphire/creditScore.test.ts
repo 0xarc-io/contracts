@@ -263,12 +263,15 @@ describe.only('SapphireCreditScore', () => {
   });
 
   describe('#setMerkleRootDelay', () => {
-    it('as owner', async () => {
-      await ctx.contracts.sapphire.creditScore.setMerkleRootDelay(5);
+    it('should be able to update as the owner', async () => {
+      await expect(ctx.contracts.sapphire.creditScore.setMerkleRootDelay(5)).to.be.emit({
+        account: ctx.signers.admin.address,
+        value: 5,
+      }, 'DelayDurationUpdated');
       expect(await ctx.contracts.sapphire.creditScore.merkleRootDelayDuration()).eq(5);
     });
 
-    it('as non-owner', async () => {
+    it('should not be able to update as non-owner', async () => {
       await expect(
         ctx.contracts.sapphire.creditScore
           .connect(ctx.signers.interestSetter)
