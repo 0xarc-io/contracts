@@ -62,6 +62,7 @@ describe.only('SapphireCreditScore', () => {
         { value: false },
         'PauseStatusUpdated',
       );
+      expect(await ctx.contracts.sapphire.creditScore.isPaused()).to.be.false;
     });
   });
 
