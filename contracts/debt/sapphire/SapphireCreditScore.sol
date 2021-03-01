@@ -15,6 +15,14 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         uint256 lastUpdated;
     }
 
+    /* ========== Structs ========== */
+
+    event CreditScoreUpdated(
+        address account,
+        uint256 score,
+        bytes32 merkleProof
+    );
+
     /* ========== Variables ========== */
 
     bool public isPaused;
@@ -103,14 +111,18 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         currentMerkleRoot = newRoot;
     }
 
-
     function request(SapphireTypes.ScoreProof memory proof) public view returns (uint256) {
-        // Decode the score from the current merkle root
+        // abi.decode(proof, (data structure))
+        // Decode the score from the current merkle root === verify
+
         // Update the userScores mapping
         // Return the score
+        return proof.score;
     }
 
-    function getLastScore(address user) public view returns (uint256, uint256) {}
+    function getLastScore(address user) public view returns (uint256, uint256) {
+        return (1, 1);
+    }
 
     function setMerkleRootDelay(uint256 delay) public {}
 
@@ -118,5 +130,5 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         isPaused = status;
     }
 
-    function updateMerkleRootUpdator(address merkleRootUpdator) public {}
+    function updateMerkleRootUpdater(address merkleRootUpdator) public {}
 }
