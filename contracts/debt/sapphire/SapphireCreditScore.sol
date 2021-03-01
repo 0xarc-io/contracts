@@ -15,7 +15,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         uint256 lastUpdated;
     }
 
-    /* ========== Structs ========== */
+    /* ========== Events ========== */
 
     event CreditScoreUpdated(
         address account,
@@ -23,6 +23,8 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         uint256 lastUpdated,
         bytes32 merkleProof
     );
+
+    event PauseStatusUpdated(bool value);
 
     /* ========== Variables ========== */
 
