@@ -5,11 +5,10 @@ pragma experimental ABIEncoderV2;
 
 import {SapphireTypes} from "./SapphireTypes.sol";
 
-interface ISapphireCreditScore {
-    
+interface ISapphireCreditScore {    
     function updateMerkleRoot(bytes32 newRoot) external;
     
-    function updateMerkleRootUpdator(address mercleRootUpdator) external;
+    function updateMerkleRootUpdater(address mercleRootUpdator) external;
 
     function request(SapphireTypes.ScoreProof calldata proof) external view returns (uint256);
 
