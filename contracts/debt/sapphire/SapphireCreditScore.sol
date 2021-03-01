@@ -17,6 +17,12 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
 
     /* ========== Events ========== */
 
+    event MerkleRootUpdated(
+        address updater,
+        bytes32 merkleRoot,
+        uint256 updatedAt
+    );
+
     event CreditScoreUpdated(
         address account,
         uint256 score,
