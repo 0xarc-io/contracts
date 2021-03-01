@@ -1041,11 +1041,11 @@ describe('JointCampaign', () => {
 
         await arcToken.mintShare(jointCampaignOwner.address, erc20Share);
 
-        const arcBalance = arcToken.balanceOf(owner.address);
+        const arcBalance = await arcToken.balanceOf(owner.address);
 
         await jointCampaignOwner.recoverERC20(arcToken.address, erc20Share);
 
-        expect(await arcToken.balanceOf(owner.address)).to.eq((await arcBalance).add(erc20Share));
+        expect(await arcToken.balanceOf(owner.address)).to.eq(arcBalance.add(erc20Share));
       });
     });
 
