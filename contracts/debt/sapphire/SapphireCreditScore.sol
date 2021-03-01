@@ -32,6 +32,11 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
 
     event PauseStatusUpdated(bool value);
 
+    event DelayDurationUpdated(
+        address account,
+        uint256 value
+    );
+
     /* ========== Variables ========== */
 
     bool public isPaused;
