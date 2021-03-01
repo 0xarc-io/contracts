@@ -35,7 +35,7 @@ describe.only('SapphireCreditScore', () => {
       expect(await ctx.contracts.sapphire.creditScore.isPaused()).to.be.true;
     });
 
-    it('revert if set pause as unauthorize', async () => {
+    it('revert if trying to pause as an unauthorised user', async () => {
       expect(await ctx.contracts.sapphire.creditScore.merkleRootUpdater()).not.eq(
         ctx.signers.unauthorised.address,
       );
