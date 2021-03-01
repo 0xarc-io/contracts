@@ -138,9 +138,18 @@ describe.only('SapphireCreditScore', () => {
     it('should be able to update the merkle root as the root updater', async () => {
       const initialLastMerkleRootUpdate = await ctx.contracts.sapphire.creditScore.lastMerkleRootUpdate();
       const initialUpcomingMerkleRoot = await ctx.contracts.sapphire.creditScore.upcomingMerkleRoot();
-      await ctx.contracts.sapphire.creditScore
-        .connect(ctx.signers.interestSetter)
-        .updateMerkleRoot(TWO_BYTES32);
+      await expect(
+        ctx.contracts.sapphire.creditScore
+          .connect(ctx.signers.interestSetter)
+          .updateMerkleRoot(TWO_BYTES32),
+      ).to.be.emit(
+        {
+          updater: ctx.signers.interestSetter.address,
+          merkleRoot: TWO_BYTES32,
+          updatedAt: Math.round(Date.now() / 1000),
+        },
+        'MerkleRootUpdated',
+      );
       expect(await ctx.contracts.sapphire.creditScore.lastMerkleRootUpdate()).not.eq(
         initialLastMerkleRootUpdate,
       );
