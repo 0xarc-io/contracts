@@ -20,6 +20,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     event CreditScoreUpdated(
         address account,
         uint256 score,
+        uint256 lastUpdated,
         bytes32 merkleProof
     );
 
