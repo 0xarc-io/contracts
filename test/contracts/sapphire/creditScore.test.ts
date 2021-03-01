@@ -98,42 +98,41 @@ describe.only('SapphireCreditScore', () => {
       ).to.be.revertedWith('SapphireCreditScore: root is empty');
     });
 
-    describe('as owner', () => {
-      it('should not be able to update if the contract is not paused', async () => {
-        await expect(
-          ctx.contracts.sapphire.creditScore.updateMerkleRoot(ONE_BYTES32),
-        ).to.be.revertedWith('SapphireCreditScore: pause contract to update merkle root as owner');
-      });
-
-      it('instantly update merkle root', async () => {
-        await ctx.contracts.sapphire.creditScore.setPause(true);
-        const currentMerkleRoot = await ctx.contracts.sapphire.creditScore.currentMerkleRoot();
-        await ctx.contracts.sapphire.creditScore
-          .connect(ctx.signers.admin)
-          .updateMerkleRoot(TWO_BYTES32);
-        expect(await ctx.contracts.sapphire.creditScore.upcomingMerkleRoot()).eq(TWO_BYTES32);
-        expect(await ctx.contracts.sapphire.creditScore.currentMerkleRoot()).eq(currentMerkleRoot);
-      });
-
-      it('instantly update merkle root avoiding time delay ', async () => {
-        await ctx.contracts.sapphire.creditScore
-          .connect(ctx.signers.interestSetter)
-          .updateMerkleRoot(TWO_BYTES32);
-        const initialLastMerkleRootUpdate = await ctx.contracts.sapphire.creditScore.lastMerkleRootUpdate();
-        const initialCurrentMerkleRoot = await ctx.contracts.sapphire.creditScore.currentMerkleRoot();
-        await ctx.contracts.sapphire.creditScore.connect(ctx.signers.admin).setPause(true);
-        await ctx.contracts.sapphire.creditScore
-          .connect(ctx.signers.admin)
-          .updateMerkleRoot(THREE_BYTES32);
-        expect(await ctx.contracts.sapphire.creditScore.lastMerkleRootUpdate()).eq(
-          initialLastMerkleRootUpdate,
-        );
-        expect(await ctx.contracts.sapphire.creditScore.currentMerkleRoot()).eq(
-          initialCurrentMerkleRoot,
-        );
-        expect(await ctx.contracts.sapphire.creditScore.upcomingMerkleRoot()).eq(THREE_BYTES32);
-      });
+    it('should not be able to update as owner if the contract is not paused', async () => {
+      await expect(
+        ctx.contracts.sapphire.creditScore.updateMerkleRoot(ONE_BYTES32),
+      ).to.be.revertedWith('SapphireCreditScore: pause contract to update merkle root as owner');
     });
+
+    it('instantly update merkle root as the owner', async () => {
+      await ctx.contracts.sapphire.creditScore.setPause(true);
+      const currentMerkleRoot = await ctx.contracts.sapphire.creditScore.currentMerkleRoot();
+      await ctx.contracts.sapphire.creditScore
+        .connect(ctx.signers.admin)
+        .updateMerkleRoot(TWO_BYTES32);
+      expect(await ctx.contracts.sapphire.creditScore.upcomingMerkleRoot()).eq(TWO_BYTES32);
+      expect(await ctx.contracts.sapphire.creditScore.currentMerkleRoot()).eq(currentMerkleRoot);
+    });
+
+    it('instantly update merkle root avoiding time delay as the owner', async () => {
+      await ctx.contracts.sapphire.creditScore
+        .connect(ctx.signers.interestSetter)
+        .updateMerkleRoot(TWO_BYTES32);
+      const initialLastMerkleRootUpdate = await ctx.contracts.sapphire.creditScore.lastMerkleRootUpdate();
+      const initialCurrentMerkleRoot = await ctx.contracts.sapphire.creditScore.currentMerkleRoot();
+      await ctx.contracts.sapphire.creditScore.connect(ctx.signers.admin).setPause(true);
+      await ctx.contracts.sapphire.creditScore
+        .connect(ctx.signers.admin)
+        .updateMerkleRoot(THREE_BYTES32);
+      expect(await ctx.contracts.sapphire.creditScore.lastMerkleRootUpdate()).eq(
+        initialLastMerkleRootUpdate,
+      );
+      expect(await ctx.contracts.sapphire.creditScore.currentMerkleRoot()).eq(
+        initialCurrentMerkleRoot,
+      );
+      expect(await ctx.contracts.sapphire.creditScore.upcomingMerkleRoot()).eq(THREE_BYTES32);
+    });
+
 
     it('should be able to update the merkle root as the root updater', async () => {
       const initialLastMerkleRootUpdate = await ctx.contracts.sapphire.creditScore.lastMerkleRootUpdate();
@@ -244,7 +243,7 @@ describe.only('SapphireCreditScore', () => {
   });
 
   describe('#updateMerkleRootUpdater', () => {
-    it('as owner', async () => {
+    it('should be able to update as the owner', async () => {
       await ctx.contracts.sapphire.creditScore.updateMerkleRootUpdater(
         ctx.signers.positionOperator.address,
       );
@@ -253,7 +252,7 @@ describe.only('SapphireCreditScore', () => {
       );
     });
 
-    it('as non-owner', async () => {
+    it('should not be able to update as non-owner', async () => {
       await expect(
         ctx.contracts.sapphire.creditScore
           .connect(ctx.signers.interestSetter)
