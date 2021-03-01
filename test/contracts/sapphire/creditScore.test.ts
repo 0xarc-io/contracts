@@ -57,7 +57,11 @@ describe.only('SapphireCreditScore', () => {
     });
 
     it('set pause as owner', async () => {
-      await expect(ctx.contracts.sapphire.creditScore.setPause(false)).not.to.be.reverted;
+      expect(await ctx.contracts.sapphire.creditScore.isPaused()).to.be.true;
+      await expect(ctx.contracts.sapphire.creditScore.setPause(false)).to.be.emit(
+        { value: false },
+        'PauseStatusUpdated',
+      );
     });
   });
 
@@ -99,7 +103,7 @@ describe.only('SapphireCreditScore', () => {
           ctx.contracts.sapphire.creditScore.updateMerkleRoot(ONE_BYTES32),
         ).to.be.revertedWith('SapphireCreditScore: pause contract to update merkle root as owner');
       });
-  
+
       it('instantly update merkle root', async () => {
         await ctx.contracts.sapphire.creditScore.setPause(true);
         const currentMerkleRoot = await ctx.contracts.sapphire.creditScore.currentMerkleRoot();
@@ -166,7 +170,7 @@ describe.only('SapphireCreditScore', () => {
 
     it('should be able to verify and update a users score', async () => {
       expect(await ctx.contracts.sapphire.creditScore.currentMerkleRoot()).eq(tree.getHexRoot());
-      const initTimestamp = Math.round(Date.now()/1000)
+      const initTimestamp = Math.round(Date.now() / 1000);
       const score = await ctx.contracts.sapphire.creditScore.request({
         account: creditScore1.account,
         score: creditScore1.amount,
@@ -179,7 +183,7 @@ describe.only('SapphireCreditScore', () => {
       } = await ctx.contracts.sapphire.creditScore.getLastScore(creditScore1.account);
       expect(creditScore1.amount).eq(creditScore);
       expect(lastUpdated).gt(initTimestamp);
-      expect(lastUpdated).lte(Math.round(Date.now()/1000));
+      expect(lastUpdated).lte(Math.round(Date.now() / 1000));
 
       // Check if the merkle root exists and if the last updated is the same as now then return stored
       // If not, ensure validity of root then update current score and last updated
@@ -221,7 +225,7 @@ describe.only('SapphireCreditScore', () => {
         {
           account: creditScore1.account,
           score: creditScore1.amount,
-          lastUpdated: Math.round(Date.now()/1000),
+          lastUpdated: Math.round(Date.now() / 1000),
           merkleProof: tree.getProof(creditScore1.account, creditScore1.amount),
         },
         'CreditScoreUpdated',
