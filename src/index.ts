@@ -3,3 +3,4 @@ export * from './MozartArc';
 export * from './SpritzTestArc';
 export * from './constants';
 export { approve } from './utils/approve';
+export * from './MerkleTree';

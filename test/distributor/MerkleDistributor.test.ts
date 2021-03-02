@@ -2,7 +2,7 @@ import chai, { expect } from 'chai';
 import { solidity } from 'ethereum-waffle';
 import { Contract, BigNumber, constants } from 'ethers';
 
-import BalanceTree from '@src/MerkleTree/BalanceTree';
+import { BalanceTree } from '@src/MerkleTree/BalanceTree';
 import { generateContext, ITestContext } from '@test/contracts/context';
 import { distributorFixture } from '@test/contracts/fixtures';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
@@ -149,14 +149,16 @@ describe('MerkleDistributor', () => {
           1,
           ctx.signers.unauthorised.address,
           101,
-          tree.getProof(1, ctx.signers.unauthorised.address, BigNumber.from(101)),);
+          tree.getProof(1, ctx.signers.unauthorised.address, BigNumber.from(101)),
+        );
 
         await expect(
           distributor.claim(
             0,
             ctx.signers.admin.address,
             100,
-            tree.getProof(0, ctx.signers.admin.address, BigNumber.from(100))),
+            tree.getProof(0, ctx.signers.admin.address, BigNumber.from(100)),
+          ),
         ).to.be.revertedWith('MerkleDistributor: Drop already claimed');
       });
 
@@ -165,19 +167,22 @@ describe('MerkleDistributor', () => {
           1,
           ctx.signers.unauthorised.address,
           101,
-          tree.getProof(1, ctx.signers.unauthorised.address, BigNumber.from(101)),);
+          tree.getProof(1, ctx.signers.unauthorised.address, BigNumber.from(101)),
+        );
         await distributor.claim(
           0,
           ctx.signers.admin.address,
           100,
-          tree.getProof(0, ctx.signers.admin.address, BigNumber.from(100)),);
+          tree.getProof(0, ctx.signers.admin.address, BigNumber.from(100)),
+        );
 
         await expect(
           distributor.claim(
             1,
             ctx.signers.unauthorised.address,
             101,
-            tree.getProof(1, ctx.signers.unauthorised.address, BigNumber.from(101))),
+            tree.getProof(1, ctx.signers.unauthorised.address, BigNumber.from(101)),
+          ),
         ).to.be.revertedWith('MerkleDistributor: Drop already claimed');
       });
 
