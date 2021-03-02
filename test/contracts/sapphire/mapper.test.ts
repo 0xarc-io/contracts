@@ -3,12 +3,15 @@ import ArcNumber from '@src/utils/ArcNumber';
 import { expectRevert } from '@test/helpers/expectRevert';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
+import { ethers } from 'hardhat';
 
-describe('SapphireMapperLinear', () => {
+describe.only('SapphireMapperLinear', () => {
   let mapper: SapphireMapperLinear;
 
   before(async () => {
-    mapper = await new SapphireMapperLinearFactory().deploy();
+    const signers = await ethers.getSigners();
+    const admin = signers[0];
+    mapper = await new SapphireMapperLinearFactory(admin).deploy();
   });
 
   it('reverts if scoreMax or upperbound are 0', async () => {
