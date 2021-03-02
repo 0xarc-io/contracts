@@ -32,15 +32,23 @@ describe('SapphireMapperLinear', () => {
     await expectRevert(mapper.map(6, 5, 1, 10));
   });
 
+  it('returns the lower bound if score is max', async () => {
+    expect(await mapper.map(10, 10, 1, 10)).to.eq(1);
+  });
+
+  it('returns the upper bound if score is min', async () => {
+    expect(await mapper.map(0, 10, 1, 10)).to.eq(10);
+  });
+
   it('returns a correct score mapping', async () => {
-    expect(await mapper.map(0, 1, 0, 1)).to.eq(BigNumber.from(0));
+    expect(await mapper.map(0, 1, 0, 1)).to.eq(BigNumber.from(1));
 
     expect(await mapper.map(5, 10, 0, 100)).to.eq(BigNumber.from(50));
 
-    expect(await mapper.map(10, 10, 0, 100)).to.eq(BigNumber.from(100));
+    expect(await mapper.map(10, 10, 0, 100)).to.eq(BigNumber.from(0));
 
     expect(await mapper.map(ArcNumber.new(65), ArcNumber.new(100), 0, ArcNumber.new(1000))).to.eq(
-      ArcNumber.new(650),
+      ArcNumber.new(350),
     );
   });
 });
