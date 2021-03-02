@@ -8,6 +8,7 @@ export * from './subgraph-tasks';
 export * from './verify-contract-tasks';
 export * from './staking-tasks';
 export * from './oracle-tasks';
+export * from './distributor';
 
 import { task } from 'hardhat/config';
 
