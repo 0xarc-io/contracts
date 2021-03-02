@@ -4,6 +4,7 @@ import {
   CTokenOracleFactory,
   IbETHOracleFactory,
   ImUSDOracleFactory,
+  WstEthOracleFactory,
   XSushiOracleFactory,
   YUSDOracleFactory,
 } from '@src/typings';
@@ -135,6 +136,22 @@ export default {
       collateral_limit: '',
       synthetic_limit: '',
       position_minimum_collateral: '',
+    },
+  },
+  'wstETH-STABLEx': {
+    collateral_address: '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0',
+    oracle: {
+      source: 'WstEthOracle',
+      getDeployTx: (signer: SignerWithAddress) =>
+        new WstEthOracleFactory(signer).getDeployTransaction(),
+    },
+    version: 1,
+    params: {
+      collateral_ratio: '2000000000000000000',
+      liquidation_user_fee: '150000000000000000',
+      liquidation_arc_ratio: '100000000000000000',
+      collateral_limit: '',
+      synthetic_limit: '10000000000000000000000',
     },
   },
 };

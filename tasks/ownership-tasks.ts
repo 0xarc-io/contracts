@@ -15,7 +15,12 @@ task('transfer-ownership', 'Transfer ownership of deployed contracts')
     const network = hre.network.name;
     const networkObject = hre.config.networks[network];
 
-    const ultimateOwner = networkObject['users'].owner.toLowerCase();
+    let ultimateOwner =
+      networkObject['users']['multisigOwner'] ||
+      networkObject['users']['eoaOwner'] ||
+      signer.address;
+
+    ultimateOwner = ultimateOwner.toLowerCase();
 
     await asyncForEach(addresses.split(','), async (address) => {
       const contract = OwnableFactory.connect(address, signer);
