@@ -537,5 +537,15 @@
     "version": 1,
     "type": "synth",
     "group": "wstETH-STABLEx"
+  },
+  {
+    "name": "JointCampaign",
+    "source": "JointCampaign",
+    "address": "0x747B2035a0FFE6D4dcc9192F369337b40C32de97",
+    "txn": "0x9d8a7646b633cab3641cbfe69b6ab079577b44e98204cdfbf9f6e97f8179d148",
+    "network": "mainnet",
+    "version": 1,
+    "type": "staking",
+    "group": "Pool-7"
   }
 ]
