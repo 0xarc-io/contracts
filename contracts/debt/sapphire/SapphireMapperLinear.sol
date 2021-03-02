@@ -9,7 +9,8 @@ contract SapphireMapperLinear is ISapphireMapper {
     using SafeMath for uint256;
 
     /**
-     * @notice Returns score/scoreMax * (upperBound - lowerBound)
+     * @notice An inverse linear mapper.
+     * Returns `_upperBound - (_score/_scoreMax) * (upperBound - lowerBound)`
      *
      * @param _score The score to check for
      * @param _scoreMax The maximum score
@@ -44,13 +45,16 @@ contract SapphireMapperLinear is ISapphireMapper {
 
         uint256 BASE = 10 ** 18;
 
-        return _score
-            .mul(BASE)
-            .mul(
-                _upperBound.sub(_lowerBound)
-            )
-            .div(_scoreMax)
-            .div(BASE);
+        uint256 boundsDifference = _upperBound.sub(_lowerBound);
+
+        return _upperBound
+            .sub(
+                _score
+                    .mul(BASE)
+                    .mul(boundsDifference)
+                    .div(_scoreMax)
+                    .div(BASE)
+            );
     }
 
 }
