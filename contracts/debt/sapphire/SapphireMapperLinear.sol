@@ -3,9 +3,19 @@
 pragma solidity ^0.5.16;
 
 import {ISapphireMapper} from "./ISapphireMapper.sol";
+import {SafeMath} from "../../lib/SafeMath.sol";
 
 contract SapphireMapperLinear is ISapphireMapper {
+    using SafeMath for uint256;
 
+    /**
+     * @notice Returns score/scoreMax * (upperBound - lowerBound)
+     *
+     * @param _score The score to check for
+     * @param _scoreMax The maximum score
+     * @param _lowerBound The mapping lower bound
+     * @param _upperBound The mapping upper bound
+     */
     function map(
         uint256 _score,
         uint256 _scoreMax,
@@ -16,10 +26,31 @@ contract SapphireMapperLinear is ISapphireMapper {
         view
         returns (uint256)
     {
-        // Sort the two vars, highest first
-        // Map linearly
-        // Return the result
-        return 0;
+        require(
+            _scoreMax > 0 &&
+            _upperBound > 0,
+            "The maximum score and upper bound cannot be 0"
+        );
+
+        require(
+            _lowerBound < _upperBound,
+            "The upper bound cannot be equal or larger than the lower bound"
+        );
+
+        require(
+            _score <= _scoreMax,
+            "The score cannot be larger than the maximum score"
+        );
+
+        uint256 BASE = 10 ** 18;
+
+        return _score
+            .mul(BASE)
+            .mul(
+                _upperBound.sub(_lowerBound)
+            )
+            .div(_scoreMax)
+            .div(BASE);
     }
 
 }
