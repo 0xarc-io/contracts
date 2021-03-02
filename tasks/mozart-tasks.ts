@@ -223,7 +223,12 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
     }
 
     console.log(yellow(`* Calling core init()...`));
-    const ultimateOwner = networkDetails['users']['owner'] || signer.address;
+
+    const ultimateOwner =
+      networkDetails['users']['multisigOwner'] ||
+      networkDetails['users']['eoaOwner'] ||
+      signer.address;
+
     try {
       console.log(
         red(
