@@ -5,7 +5,7 @@ import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 import { ethers } from 'hardhat';
 
-describe.only('SapphireMapperLinear', () => {
+describe('SapphireMapperLinear', () => {
   let mapper: SapphireMapperLinear;
 
   before(async () => {
@@ -29,13 +29,15 @@ describe.only('SapphireMapperLinear', () => {
   });
 
   it('reverts if score is bigger than the maximum score', async () => {
-    await expectRevert(mapper.map(5, 6, 1, 10));
+    await expectRevert(mapper.map(6, 5, 1, 10));
   });
 
   it('returns a correct score mapping', async () => {
     expect(await mapper.map(0, 1, 0, 1)).to.eq(BigNumber.from(0));
 
     expect(await mapper.map(5, 10, 0, 100)).to.eq(BigNumber.from(50));
+
+    expect(await mapper.map(10, 10, 0, 100)).to.eq(BigNumber.from(100));
 
     expect(await mapper.map(ArcNumber.new(65), ArcNumber.new(100), 0, ArcNumber.new(1000))).to.eq(
       ArcNumber.new(650),
