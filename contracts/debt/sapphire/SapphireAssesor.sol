@@ -5,14 +5,17 @@ pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {SapphireTypes} from "./SapphireTypes.sol";
+import {ISapphireMapper} from "./ISapphireMapper.sol";
+import {ISapphireCreditScore} from "./ISapphireCreditScore.sol";
+import {Ownable} from "../../lib/Ownable.sol";
 
-contract SapphireAssesor {
+contract SapphireAssesor is Ownable {
 
     /* ========== Variables ========== */
 
-    address public mapper;
+    ISapphireMapper public mapper;
 
-    address public creditScore;
+    ISapphireCreditScore public creditScoreContract;
 
     /* ========== Functions ========== */
 
@@ -25,10 +28,19 @@ contract SapphireAssesor {
 
     }
 
+    /**
+     * @notice Takes a lower and upper bound, and based on the user's credit score
+     * and given its proof, returns the appropriate value between these bounds.
+     *
+     * @param _lowerBound The lower bound
+     * @param _upperBound The upper bound
+     * @param _scoreProof The score proof
+     * @return A value between the lower and upper bounds depending on the credit score
+     */
     function assess(
-        uint256 variableOne,
-        uint256 variableTwo,
-        SapphireTypes.ScoreProof memory scoreProof
+        uint256 _lowerBound,
+        uint256 _upperBound,
+        SapphireTypes.ScoreProof memory _scoreProof
     )
         public
         returns (uint256)
@@ -38,4 +50,21 @@ contract SapphireAssesor {
         // Send the result from  the mapper
     }
 
+    function setMapper(
+        address _mapper
+    )
+        public
+        onlyOwner
+    {
+
+    }
+
+    function setCreditScoreContract(
+        address _creditScore
+    )
+        public
+        onlyOwner
+    {
+
+    }
 }
