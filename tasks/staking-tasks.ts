@@ -143,47 +143,6 @@ task('deploy-staking', 'Deploy a staking/reward pool')
     } catch (error) {
       console.log(red(`Failed to set the rewards duration. Reason: ${error}\n`));
     }
-
-    // if ((await signer.getChainId()) != 1) {
-    //   const collateralAmount = ArcNumber.new(10);
-
-    //   console.log(yellow('Minting 1 staking token...'));
-    //   const stakingToken = TestTokenFactory.connect(stakingTokenAddress, signer);
-    //   await stakingToken.mintShare(await signer.getAddress(), ArcNumber.new(1));
-    //   await stakingToken.approve(proxyContract, ArcNumber.new(1));
-
-    //   const arc = await MozartTestArc.init(signer);
-    //   await arc.addSynths({ TESTX: stateProxies[0] });
-
-    //   const collateralToken = await loadContract({
-    //     name: 'CollateralToken',
-    //     source: 'TestToken',
-    //     group: stakingConfig.rewardConfig.coreContracts[0],
-    //     network,
-    //   });
-    //   const collateralTokenContract = TestTokenFactory.connect(collateralToken.address, signer);
-
-    //   console.log(yellow('Minting collateral token...'));
-    //   await collateralTokenContract.mintShare(await signer.getAddress(), collateralAmount);
-    //   await collateralTokenContract.approve(stateProxies[0], collateralAmount);
-
-    //   console.log(yellow('Opening a position...'));
-    //   const positionResult = await arc.openPosition(
-    //     collateralAmount,
-    //     collateralAmount.div(2),
-    //     signer,
-    //   );
-    //   const positionId = positionResult.params.id;
-
-    //   console.log(yellow('Staking...'));
-    //   await implementation.stake(ArcNumber.new(1), positionId, stateProxies[0]);
-
-    //   console.log(yellow(`* Minting reward tokens and notifying rewards contract...`));
-    //   const arcToken = ArcxTokenFactory.connect(rewardToken.address, signer);
-    //   await arcToken.mint(proxyContract, ArcNumber.new(100));
-    //   await implementation.notifyRewardAmount(ArcNumber.new(100));
-    //   console.log(green(`Executed successfully!\n`));
-    // }
   });
 
 task('deploy-staking-liquidity', 'Deploy a LiquidityCampaign')
@@ -193,7 +152,12 @@ task('deploy-staking-liquidity', 'Deploy a LiquidityCampaign')
 
     const { network, signer, networkConfig, networkDetails } = await loadDetails(taskArgs, hre);
 
-    const ultimateOwner = networkDetails['users'].owner.toLowerCase();
+    let ultimateOwner =
+      networkDetails['users']['multisigOwner'] ||
+      networkDetails['users']['eoaOwner'] ||
+      signer.address;
+
+    ultimateOwner = ultimateOwner.toLowerCase();
 
     const stakingConfig = await loadStakingConfig({ network, key: name });
 
@@ -298,7 +262,14 @@ task('deploy-staking-joint', 'Deploy a JointCampaign')
     const contractPath = taskArgs.verifyPath;
 
     const { network, signer, networkConfig, networkDetails } = await loadDetails(taskArgs, hre);
-    const ultimateOwner = networkDetails['users'].owner.toLowerCase();
+
+    let ultimateOwner =
+      networkDetails['users']['multisigOwner'] ||
+      networkDetails['users']['eoaOwner'] ||
+      signer.address;
+
+    ultimateOwner = ultimateOwner.toLowerCase();
+
     const stakingConfig = await loadStakingConfig({ network, key: name });
 
     if (!stakingConfig.rewardsDurationSeconds) {
