@@ -22,7 +22,13 @@ task('deploy-staking', 'Deploy a staking/reward pool')
     const name = taskArgs.name;
 
     const { network, signer, networkConfig, networkDetails } = await loadDetails(taskArgs, hre);
-    const ultimateOwner = networkDetails['users'].owner.toLowerCase();
+
+    let ultimateOwner =
+      networkDetails['users']['multisigOwner'] ||
+      networkDetails['users']['eoaOwner'] ||
+      signer.address;
+
+    ultimateOwner = ultimateOwner.toLowerCase();
 
     const stakingConfig = await loadStakingConfig({ network, key: name });
 
