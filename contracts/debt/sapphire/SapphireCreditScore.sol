@@ -135,7 +135,11 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         uint256 delay
     )
         public
-    {}
+        onlyOwner
+    {
+        merkleRootDelayDuration = delay;
+        emit DelayDurationUpdated(msg.sender, delay);
+    }
 
     function setPause(
         bool value
