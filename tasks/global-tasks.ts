@@ -188,7 +188,6 @@ task(
       }
 
       console.log(green(`${users.length} allocations set!`));
-
       const testParticipant = await whitelistSaleContract.participants(users[0]);
 
       console.log({
