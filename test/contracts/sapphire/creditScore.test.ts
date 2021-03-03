@@ -1,4 +1,5 @@
 import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
+import { MockSapphireCreditScoreFactory } from '@src/typings/MockSapphireCreditScoreFactory';
 import chai, { expect } from 'chai';
 import { solidity } from 'ethereum-waffle';
 import { BigNumber } from 'ethers';
@@ -58,10 +59,9 @@ describe.only('SapphireCreditScore', () => {
 
     it('set pause as owner', async () => {
       expect(await ctx.contracts.sapphire.creditScore.isPaused()).to.be.true;
-      await expect(ctx.contracts.sapphire.creditScore.setPause(false)).to.be.emit(
-        { value: false },
-        'PauseStatusUpdated',
-      );
+      await expect(ctx.contracts.sapphire.creditScore.setPause(false))
+        .emit(ctx.contracts.sapphire.creditScore, 'PauseStatusUpdated')
+        .withArgs(false);
       expect(await ctx.contracts.sapphire.creditScore.isPaused()).to.be.false;
     });
   });
@@ -133,7 +133,6 @@ describe.only('SapphireCreditScore', () => {
       expect(await ctx.contracts.sapphire.creditScore.upcomingMerkleRoot()).eq(THREE_BYTES32);
     });
 
-
     it('should be able to update the merkle root as the root updater', async () => {
       const initialLastMerkleRootUpdate = await ctx.contracts.sapphire.creditScore.lastMerkleRootUpdate();
       const initialUpcomingMerkleRoot = await ctx.contracts.sapphire.creditScore.upcomingMerkleRoot();
@@ -141,14 +140,9 @@ describe.only('SapphireCreditScore', () => {
         ctx.contracts.sapphire.creditScore
           .connect(ctx.signers.interestSetter)
           .updateMerkleRoot(TWO_BYTES32),
-      ).to.be.emit(
-        {
-          updater: ctx.signers.interestSetter.address,
-          merkleRoot: TWO_BYTES32,
-          updatedAt: Math.round(Date.now() / 1000),
-        },
-        'MerkleRootUpdated',
-      );
+      )
+        .to.emit(ctx.contracts.sapphire, 'MerkleRootUpdated')
+        .withArgs(ctx.signers.interestSetter.address, TWO_BYTES32, Math.round(Date.now() / 1000));
       expect(await ctx.contracts.sapphire.creditScore.lastMerkleRootUpdate()).not.eq(
         initialLastMerkleRootUpdate,
       );
@@ -156,6 +150,51 @@ describe.only('SapphireCreditScore', () => {
         initialUpcomingMerkleRoot,
       );
       expect(await ctx.contracts.sapphire.creditScore.upcomingMerkleRoot()).eq(TWO_BYTES32);
+    });
+
+    it('should ensure that malicious merkle root does not became a current one', async () => {
+      const maliciousRoot = TWO_BYTES32;
+      await expect(
+        ctx.contracts.sapphire.creditScore
+          .connect(ctx.signers.interestSetter)
+          .updateMerkleRoot(maliciousRoot),
+      )
+        .to.emit(ctx.contracts.sapphire.creditScore, 'MerkleRootUpdated')
+        .withArgs(ctx.signers.interestSetter.address, maliciousRoot);
+      expect(await ctx.contracts.sapphire.creditScore.upcomingMerkleRoot()).eq(maliciousRoot);
+      expect(await ctx.contracts.sapphire.creditScore.setPause(true)).to.emit(
+        ctx.contracts.sapphire.creditScore,
+        'PauseStatusUpdated',
+      );
+      await expect(
+        ctx.contracts.sapphire.creditScore
+          .connect(ctx.signers.admin)
+          .updateMerkleRoot(THREE_BYTES32),
+      )
+        .to.emit(ctx.contracts.sapphire.creditScore, 'MerkleRootUpdated')
+        .withArgs(ctx.signers.interestSetter.address, THREE_BYTES32);
+      expect(await ctx.contracts.sapphire.creditScore.upcomingMerkleRoot()).eq(THREE_BYTES32);
+      expect(await ctx.contracts.sapphire.creditScore.currentMerkleRoot()).not.eq(maliciousRoot);
+    });
+
+    it('should check if delay work properly', async () => {
+      const creditScoreContract = await new MockSapphireCreditScoreFactory(
+        ctx.signers.admin,
+      ).deploy(ONE_BYTES32, ctx.signers.interestSetter.address);
+      await creditScoreContract.connect(ctx.signers.interestSetter).updateMerkleRoot(TWO_BYTES32);
+      const currentTimestamp = await creditScoreContract.getCurrentTimestamp();
+      const delay = await creditScoreContract.merkleRootDelayDuration();
+      await expect(
+        creditScoreContract.connect(ctx.signers.interestSetter).updateMerkleRoot(THREE_BYTES32),
+      ).to.revertedWith('SapphireCreditScore: too frequent root update');
+      await creditScoreContract.setCurrentTimestamp(currentTimestamp.add(delay).sub(1));
+      await expect(
+        creditScoreContract.connect(ctx.signers.interestSetter).updateMerkleRoot(THREE_BYTES32),
+      ).to.revertedWith('SapphireCreditScore: too frequent root update');
+      await creditScoreContract.setCurrentTimestamp(currentTimestamp.add(delay).sub(1));
+      await creditScoreContract.connect(ctx.signers.interestSetter).updateMerkleRoot(THREE_BYTES32);
+      expect(await creditScoreContract.currentMerkleRoot()).eq(TWO_BYTES32);
+      expect(await creditScoreContract.upcomingMerkleRoot()).eq(THREE_BYTES32);
     });
   });
 
@@ -210,35 +249,30 @@ describe.only('SapphireCreditScore', () => {
     });
 
     it('should not reverify a score if the timestamps are the same', async () => {
+      const creditScoreContract = await new MockSapphireCreditScoreFactory(
+        ctx.signers.admin,
+      ).deploy(ONE_BYTES32, ctx.signers.interestSetter.address);
       await expect(
-        ctx.contracts.sapphire.creditScore.request({
+        creditScoreContract.request({
           account: creditScore1.account,
           score: BigNumber.from(99),
           merkleProof: tree.getProof(creditScore1.account, creditScore1.amount),
         }),
-      ).to.be.emit(
-        {
-          account: creditScore1.account,
-          score: creditScore1.amount,
-          merkleProof: tree.getProof(creditScore1.account, creditScore1.amount),
-        },
-        'CreditScoreUpdated',
-      );
+      )
+        .to.emit(creditScoreContract, 'CreditScoreUpdated')
+        .withArgs(
+          creditScore1.account,
+          creditScore1.amount,
+          tree.getProof(creditScore1.account, creditScore1.amount),
+        );
+
       await expect(
-        ctx.contracts.sapphire.creditScore.request({
+        creditScoreContract.request({
           account: creditScore1.account,
           score: BigNumber.from(99),
           merkleProof: tree.getProof(creditScore1.account, creditScore1.amount),
         }),
-      ).not.to.be.emit(
-        {
-          account: creditScore1.account,
-          score: creditScore1.amount,
-          lastUpdated: Math.round(Date.now() / 1000),
-          merkleProof: tree.getProof(creditScore1.account, creditScore1.amount),
-        },
-        'CreditScoreUpdated',
-      );
+      ).not.to.emit(creditScoreContract, 'CreditScoreUpdated');
     });
   });
 
@@ -263,10 +297,9 @@ describe.only('SapphireCreditScore', () => {
 
   describe('#setMerkleRootDelay', () => {
     it('should be able to update as the owner', async () => {
-      await expect(ctx.contracts.sapphire.creditScore.setMerkleRootDelay(5)).to.be.emit({
-        account: ctx.signers.admin.address,
-        value: 5,
-      }, 'DelayDurationUpdated');
+      await expect(ctx.contracts.sapphire.creditScore.setMerkleRootDelay(5))
+        .to.emit(ctx.contracts.sapphire.creditScore, 'DelayDurationUpdated')
+        .withArgs(ctx.signers.admin.address, 5);
       expect(await ctx.contracts.sapphire.creditScore.merkleRootDelayDuration()).eq(5);
     });
 
