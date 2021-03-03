@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 
 import {ISapphireMapper} from "./ISapphireMapper.sol";
 import {SafeMath} from "../../lib/SafeMath.sol";
@@ -47,14 +47,13 @@ contract SapphireMapperLinear is ISapphireMapper {
 
         uint256 boundsDifference = _upperBound.sub(_lowerBound);
 
-        return _upperBound
-            .sub(
-                _score
-                    .mul(BASE)
-                    .mul(boundsDifference)
-                    .div(_scoreMax)
-                    .div(BASE)
-            );
+        // "Precision" because this number is multiplied by BASE
+        uint256 scoreRatioPrecision = _score.mul(BASE).div(_scoreMax);
+
+        // scoreRatio * boundsDifference
+        uint256 scoreRatioProduct = scoreRatioPrecision.mul(boundsDifference).div(BASE);
+
+        return _upperBound.sub(scoreRatioProduct);
     }
 
 }
