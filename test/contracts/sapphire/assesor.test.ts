@@ -292,7 +292,7 @@ describe('SapphireAssessor', () => {
       await expectRevert(assessor.setMapper(mapper.address));
     });
 
-    it('sets the new mapper', async () => {
+    it('sets the new mapper as owner', async () => {
       const testMapper = await new SapphireMapperLinearFactory(owner).deploy();
 
       await assessor.setMapper(testMapper.address);
