@@ -133,7 +133,6 @@ describe.only('SapphireCreditScore', () => {
       expect(await ctx.contracts.sapphire.creditScore.upcomingMerkleRoot()).eq(THREE_BYTES32);
     });
 
-
     it('should be able to update the merkle root as the root updater', async () => {
       const initialLastMerkleRootUpdate = await ctx.contracts.sapphire.creditScore.lastMerkleRootUpdate();
       const initialUpcomingMerkleRoot = await ctx.contracts.sapphire.creditScore.upcomingMerkleRoot();
@@ -156,6 +155,39 @@ describe.only('SapphireCreditScore', () => {
         initialUpcomingMerkleRoot,
       );
       expect(await ctx.contracts.sapphire.creditScore.upcomingMerkleRoot()).eq(TWO_BYTES32);
+    });
+
+    it('should ensure that malicious merkle root does not became a current one', async () => {
+      const maliciousRoot = TWO_BYTES32;
+      await expect(
+        ctx.contracts.sapphire.creditScore
+          .connect(ctx.signers.interestSetter)
+          .updateMerkleRoot(maliciousRoot),
+      ).to.be.emit(
+        {
+          updater: ctx.signers.interestSetter.address,
+          merkleRoot: maliciousRoot,
+        },
+        'MerkleRootUpdated',
+      );
+      expect(await ctx.contracts.sapphire.creditScore.upcomingMerkleRoot()).eq(maliciousRoot);
+      expect(await ctx.contracts.sapphire.creditScore.setPause(true)).emit(
+        { value: true },
+        'PauseStatusUpdated',
+      );
+      await expect(
+        ctx.contracts.sapphire.creditScore
+          .connect(ctx.signers.admin)
+          .updateMerkleRoot(THREE_BYTES32),
+      ).to.be.emit(
+        {
+          updater: ctx.signers.interestSetter.address,
+          merkleRoot: THREE_BYTES32,
+        },
+        'MerkleRootUpdated',
+      );
+      expect(await ctx.contracts.sapphire.creditScore.upcomingMerkleRoot()).eq(THREE_BYTES32);
+      expect(await ctx.contracts.sapphire.creditScore.currentMerkleRoot()).not.eq(maliciousRoot);
     });
   });
 
