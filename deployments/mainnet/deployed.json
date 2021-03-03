@@ -519,16 +519,6 @@
     "group": "Pool-6.1"
   },
   {
-    "name": "WhitelistSale-2",
-    "source": "WhitelistSale",
-    "address": "0x06270c6aF7F20559a6dC611A4d76b6FA398Cf454",
-    "txn": "0xadce23626046d1ff6fc3811a7951d0054c83991b94fc01d2bf3c44a2592568b2",
-    "network": "mainnet",
-    "version": 1,
-    "type": "global",
-    "group": ""
-  },
-  {
     "name": "Oracle",
     "source": "WstEthOracle",
     "address": "0x596e255594f95568B6777d1cfcc1Db86ab7772A7",
@@ -557,5 +547,15 @@
     "version": 1,
     "type": "staking",
     "group": "Pool-7"
+  },
+  {
+    "name": "WhitelistSale-2",
+    "source": "WhitelistSale",
+    "address": "0xF2057de81Eb26C09d4421Cb6B0C222b9a656f8f3",
+    "txn": "0x16b12bcaf21a93c2900f51e13cd4007b17a1096b2dec4e7aca8e4b05dad8c86b",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global",
+    "group": ""
   }
 ]
