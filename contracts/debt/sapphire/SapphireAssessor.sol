@@ -9,13 +9,19 @@ import {ISapphireMapper} from "./ISapphireMapper.sol";
 import {ISapphireCreditScore} from "./ISapphireCreditScore.sol";
 import {Ownable} from "../../lib/Ownable.sol";
 
-contract SapphireAssesor is Ownable {
+contract SapphireAssessor is Ownable {
 
     /* ========== Variables ========== */
 
     ISapphireMapper public mapper;
 
     ISapphireCreditScore public creditScoreContract;
+
+    /* ========== Events ========== */
+
+    event MapperSet(address newMapper);
+
+    event CreditScoreContractSet(address newCreditScoreContract);
 
     /* ========== Functions ========== */
 
