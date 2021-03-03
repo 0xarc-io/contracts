@@ -10,7 +10,6 @@ import { MockSapphireMapperLinearFactory } from '@src/typings/MockSapphireMapper
 import { SapphireAssessor } from '@src/typings/SapphireAssessor';
 import { SapphireAssessorFactory } from '@src/typings/SapphireAssessorFactory';
 import ArcNumber from '@src/utils/ArcNumber';
-import { expectRevert } from '@test/helpers/expectRevert';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 import { ethers } from 'hardhat';
@@ -90,26 +89,26 @@ describe('SapphireAssessor', () => {
 
   describe('constructor', () => {
     it('reverts if mapper and credit score are null', async () => {
-      await expectRevert(
+      await expect(
         new SapphireAssessorFactory(owner).deploy(
           '0x0000000000000000000000000000000000000000',
           creditScoreContract.address,
         ),
-      );
+      ).to.be.revertedWith('The mapper cannot be null');
 
-      await expectRevert(
+      await expect(
         new SapphireAssessorFactory(owner).deploy(
           mapper.address,
           '0x0000000000000000000000000000000000000000',
         ),
-      );
+      ).to.be.revertedWith('The credit score contract address cannot be null');
 
-      await expectRevert(
+      await expect(
         new SapphireAssessorFactory(owner).deploy(
           '0x0000000000000000000000000000000000000000',
           '0x0000000000000000000000000000000000000000',
         ),
-      );
+      ).to.be.revertedWith('The mapper and the credit score cannot be null');
     });
 
     it('initializes the mapper and the credit score', async () => {
@@ -126,100 +125,100 @@ describe('SapphireAssessor', () => {
   describe('#assess', () => {
     it('reverts if upper bound or account are empty', async () => {
       // upper bound is empty
-      await expectRevert(
+      await expect(
         assessor.assess(0, 0, {
           account: user1.address,
           score: 100,
           merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
         }),
-      );
+      ).to.be.revertedWith('The upper bound cannot be empty');
 
       // account is empty
-      await expectRevert(
+      await expect(
         assessor.assess(0, 100, {
           account: '',
           score: creditScore1.amount,
           merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
         }),
-      );
+      ).to.be.revertedWith('The account cannot be empty');
     });
 
     it('reverts if lower bound is not smaller than upper bound', async () => {
-      await expectRevert(
+      await expect(
         assessor.assess(11, 10, {
           account: user1.address,
           score: creditScore1.amount,
           merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
         }),
-      );
+      ).to.be.revertedWith('The lower bound must be smaller than the upper bound');
     });
 
     it('reverts if the proof is not valid', async () => {
-      await expectRevert(
+      await expect(
         assessor.assess(1, 10, {
           account: user1.address,
           score: creditScore1.amount,
           merkleProof: ['random proof'],
         }),
-      );
+      ).to.be.revertedWith('The credit score proof is not valid');
     });
 
     it('reverts if the score proof is passed and is not valid', async () => {
-      await expectRevert(
+      await expect(
         assessor.assess(1, 10, {
           account: user1.address,
           score: creditScore1.amount,
           merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount.add(1)),
         }),
-      );
+      ).to.be.revertedWith('The credit score proof is not valid');
     });
 
     it('reverts if score is passed but no proof is passed', async () => {
-      await expectRevert(
+      await expect(
         assessor.assess(1, 10, {
           account: user1.address,
           score: creditScore1.amount,
           merkleProof: [],
         }),
-      );
+      ).to.be.revertedWith('If a credit score is passed, the proof cannot be null');
     });
 
     it('reverts if proof is passed but no score', async () => {
-      await expectRevert(
+      await expect(
         assessor.assess(1, 10, {
           account: user1.address,
           score: 0,
           merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
         }),
-      );
+      ).to.be.revertedWith('If proof is passed, the score cannot be null');
     });
 
     it('reverts if the mapper returns a value that is outside the lower and upper bounds', async () => {
       const testMapper = await new MockSapphireMapperLinearFactory(owner).deploy();
-      const testAssessor = new SapphireAssessorFactory(owner).deploy(
+      const testAssessor = await new SapphireAssessorFactory(owner).deploy(
         testMapper.address,
         creditScoreContract.address,
       );
 
       await testMapper.setMapResult(0);
 
-      await expectRevert(
-        assessor.assess(1, 10, {
+      await expect(
+        testAssessor.assess(1, 10, {
           account: user1.address,
           score: creditScore1.amount,
           merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
         }),
-      );
+      ).to.be.revertedWith('The mapper returned a value outside the lower and upper bounds');
 
       await testMapper.setMapResult(11);
 
-      await expectRevert(
-        assessor.assess(1, 10, {
+      await expect(
+        testAssessor.assess(1, 10, {
           account: user1.address,
           score: creditScore1.amount,
           merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
         }),
-      );
+      ).to.be.revertedWith('The mapper returned a value outside the lower and upper bounds');
     });
 
     it(`returns the upperBound if the user doesn't have an existing score and no proof`, async () => {
@@ -280,16 +279,22 @@ describe('SapphireAssessor', () => {
     it('reverts if called by non-owner', async () => {
       const userAssessor = SapphireAssessorFactory.connect(assessor.address, user1);
 
-      await expectRevert(userAssessor.setMapper(user1.address));
+      await expect(userAssessor.setMapper(user1.address)).to.be.revertedWith(
+        'Ownable: caller is not the owner',
+      );
     });
 
     it('reverts if no new mapper is passed', async () => {
-      await expectRevert(assessor.setMapper(''));
-      await expectRevert(assessor.setMapper('0x0000000000000000000000000000000000000000'));
+      await expect(assessor.setMapper('')).to.be.revertedWith('The new mapper cannot be null');
+      await expect(
+        assessor.setMapper('0x0000000000000000000000000000000000000000'),
+      ).to.be.revertedWith('The new mapper cannot be null');
     });
 
     it('reverts if the new mapper is the same as the existing one', async () => {
-      await expectRevert(assessor.setMapper(mapper.address));
+      await expect(assessor.setMapper(mapper.address)).to.be.revertedWith(
+        'The same mapper is already set',
+      );
     });
 
     it('sets the new mapper as owner', async () => {
@@ -305,18 +310,24 @@ describe('SapphireAssessor', () => {
     it('reverts if called by non-owner', async () => {
       const userAssessor = SapphireAssessorFactory.connect(assessor.address, user1);
 
-      await expectRevert(userAssessor.setCreditScoreContract(user1.address));
-    });
-
-    it('reverts if new address is 0', async () => {
-      await expectRevert(assessor.setCreditScoreContract(''));
-      await expectRevert(
-        assessor.setCreditScoreContract('0x0000000000000000000000000000000000000000'),
+      await expect(userAssessor.setCreditScoreContract(user1.address)).to.be.revertedWith(
+        'Ownable: caller is not the owner',
       );
     });
 
+    it('reverts if new address is 0', async () => {
+      await expect(assessor.setCreditScoreContract('')).to.be.revertedWith(
+        'The new credit score contract address cannot be null.',
+      );
+      await expect(
+        assessor.setCreditScoreContract('0x0000000000000000000000000000000000000000'),
+      ).to.be.revertedWith('Cannot set a null credit score contract');
+    });
+
     it('reverts if new address is the same as the existing one', async () => {
-      await expectRevert(assessor.setCreditScoreContract(creditScoreContract.address));
+      await expect(assessor.setCreditScoreContract(creditScoreContract.address)).to.be.revertedWith(
+        'The same credit score contract is already set',
+      );
     });
 
     it('sets the new credit score contract', async () => {
