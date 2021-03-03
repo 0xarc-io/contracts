@@ -519,6 +519,16 @@
     "group": "Pool-6.1"
   },
   {
+    "name": "WhitelistSale-2",
+    "source": "WhitelistSale",
+    "address": "0x06270c6aF7F20559a6dC611A4d76b6FA398Cf454",
+    "txn": "0xadce23626046d1ff6fc3811a7951d0054c83991b94fc01d2bf3c44a2592568b2",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
     "name": "Oracle",
     "source": "WstEthOracle",
     "address": "0x596e255594f95568B6777d1cfcc1Db86ab7772A7",

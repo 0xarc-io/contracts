@@ -298,5 +298,15 @@
     "version": 1,
     "type": "synth",
     "group": "wstETH-STABLEx"
+  },
+  {
+    "name": "WhitelistSale-2",
+    "source": "WhitelistSale",
+    "address": "0x9B66C024A43C1bdbb90eD3957A3b5Ba4e9398606",
+    "txn": "0xd27901874da916e0523a09a8e6da55d19c589b45a51227b4754ff641783bc497",
+    "network": "playnet",
+    "version": 1,
+    "type": "global",
+    "group": ""
   }
 ]

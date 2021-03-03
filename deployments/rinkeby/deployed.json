@@ -317,5 +317,15 @@
     "version": 1,
     "type": "staking",
     "group": "TestPool-2"
+  },
+  {
+    "name": "WhitelistSale-2",
+    "source": "WhitelistSale",
+    "address": "0x7C23551E77E42386D557C139Eb69E307c88eAf2F",
+    "txn": "0x0db559aedc4f59e5c41b0a6f34933ec8bac7ac3a50e3594f29a721cb4898706e",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": ""
   }
 ]
