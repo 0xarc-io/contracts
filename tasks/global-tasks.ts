@@ -113,7 +113,7 @@ task(
 
     const kyfEligibilityFilePath = path.join(
       __dirname,
-      `kyfEligibility${network === 'playnet' ? '-playnet' : ''}.csv`,
+      `phase2Eligibility${network === 'playnet' || network == 'rinkeby' ? '-playnet' : ''}.csv`,
     );
     const USDCAddress = taskArgs.currency;
 
@@ -121,7 +121,7 @@ task(
 
     const whitelistSaleAddress = await deployContract(
       {
-        name: 'WhitelistSale',
+        name: 'WhitelistSale-2',
         source: 'WhitelistSale',
         data: new WhitelistSaleFactory(signer).getDeployTransaction(USDCAddress),
         version: 1,
@@ -148,7 +148,7 @@ task(
 
       for (const row of eligibilityData) {
         const allowance = {
-          address: row['Wallet Address'],
+          address: row['Account'],
           allowance: ArcDecimal.new(parseFloat(row['Total USDC']), 6).value,
         };
 
@@ -188,7 +188,6 @@ task(
       }
 
       console.log(green(`${users.length} allocations set!`));
-
       const testParticipant = await whitelistSaleContract.participants(users[0]);
 
       console.log({

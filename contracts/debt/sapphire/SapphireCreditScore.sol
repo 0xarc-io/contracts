@@ -55,7 +55,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
 
     /* ========== Modifiers ========== */
 
-    modifier isAuthorized() {
+    modifier isMerkleRootUpdater() {
         require(
             merkleRootUpdater == msg.sender,
             "SapphireCreditScore: caller is not authorized to update merkle root"
@@ -84,6 +84,14 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
 
   /* ========== Functions ========== */
 
+    function getCurrentTimestamp()
+        public
+        view
+        returns (uint256)
+    {
+        return block.timestamp;
+    }
+
     function updateMerkleRoot(
         bytes32 newRoot
     ) 
@@ -99,37 +107,15 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     function updateMerkleRootAsUpdator(
         bytes32 newRoot
     )
-        private
-        isAuthorized
-        isActive
+    public
     {
         // If not admin
         // - Ensure duration has been passed
         // - Set the upcoming merkle root to the current one
         // - Set the passed in merkle root to the upcoming one
-        require(
-            block.timestamp - lastMerkleRootUpdate > merkleRootDelayDuration,
-            "SapphireCreditScore: too frequent root update"
-        );
-        currentMerkleRoot = upcomingMerkleRoot;
-        upcomingMerkleRoot = newRoot;
-        lastMerkleRootUpdate = block.timestamp;
-    }
-
-    function updateMerkleRootAsOwner(
-        bytes32 newRoot
-    )
-        private
-        onlyOwner
-    {
         // If admin calls update merkle root
         // - Replace upcoming merkle root (avoid time delay)
         // - Keep existing merkle root as-is
-        require(
-            isPaused == true,
-            "SapphireCreditScore: pause contract to update merkle root as owner"
-        );
-        currentMerkleRoot = newRoot;
     }
 
     function request(
@@ -161,15 +147,20 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         uint256 delay
     )
         public
-    {}
+        onlyOwner
+    {
+        merkleRootDelayDuration = delay;
+        emit DelayDurationUpdated(msg.sender, delay);
+    }
 
     function setPause(
-        bool status
+        bool value
     )
         public
         onlyOwner
     {
-        isPaused = status;
+        isPaused = value;
+        emit PauseStatusUpdated(value);
     }
 
     function updateMerkleRootUpdater(
