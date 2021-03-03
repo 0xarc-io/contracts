@@ -84,6 +84,14 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
 
   /* ========== Functions ========== */
 
+    function getCurrentTimestamp()
+        public
+        view
+        returns (uint256)
+    {
+        return block.timestamp;
+    }
+
     function updateMerkleRoot(
         bytes32 newRoot
     ) 
