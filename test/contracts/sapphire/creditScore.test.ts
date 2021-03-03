@@ -59,10 +59,9 @@ describe.only('SapphireCreditScore', () => {
 
     it('set pause as owner', async () => {
       expect(await ctx.contracts.sapphire.creditScore.isPaused()).to.be.true;
-      await expect(ctx.contracts.sapphire.creditScore.setPause(false)).to.be.emit(
-        { value: false },
-        'PauseStatusUpdated',
-      );
+      await expect(ctx.contracts.sapphire.creditScore.setPause(false))
+        .emit(ctx.contracts.sapphire.creditScore, 'PauseStatusUpdated')
+        .withArgs(false);
       expect(await ctx.contracts.sapphire.creditScore.isPaused()).to.be.false;
     });
   });

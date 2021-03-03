@@ -138,12 +138,13 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     {}
 
     function setPause(
-        bool status
+        bool value
     )
         public
         onlyOwner
     {
-        isPaused = status;
+        isPaused = value;
+        emit PauseStatusUpdated(value);
     }
 
     function updateMerkleRootUpdater(
