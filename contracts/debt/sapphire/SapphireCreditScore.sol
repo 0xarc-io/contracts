@@ -94,7 +94,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
 
     function updateMerkleRoot(
         bytes32 newRoot
-    ) 
+    )
     public
     {
         // If not admin
@@ -108,7 +108,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
 
     function request(
         SapphireTypes.ScoreProof memory proof
-    ) 
+    )
         public
         view
         returns (uint256)
