@@ -527,5 +527,35 @@
     "version": 1,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "Oracle",
+    "source": "WstEthOracle",
+    "address": "0x596e255594f95568B6777d1cfcc1Db86ab7772A7",
+    "txn": "0x9b20c52d1929649470d04381a17b67b7fd4706457f111c38f81871e2b84ecccb",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth",
+    "group": "wstETH-STABLEx"
+  },
+  {
+    "name": "CoreProxy",
+    "source": "ArcProxy",
+    "address": "0xC466Ec062D554BEB42f1766488F7345261C63616",
+    "txn": "0x5c9e22c7df5205e268d783035ff0741d3fab2d01be907a2ab9e45d6c584a7854",
+    "network": "mainnet",
+    "version": 1,
+    "type": "synth",
+    "group": "wstETH-STABLEx"
+  },
+  {
+    "name": "JointCampaign",
+    "source": "JointCampaign",
+    "address": "0x747B2035a0FFE6D4dcc9192F369337b40C32de97",
+    "txn": "0x9d8a7646b633cab3641cbfe69b6ab079577b44e98204cdfbf9f6e97f8179d148",
+    "network": "mainnet",
+    "version": 1,
+    "type": "staking",
+    "group": "Pool-7"
   }
 ]
