@@ -13,7 +13,7 @@ import { ethers } from 'hardhat';
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
-describe.only('SapphireAssessor', () => {
+describe('SapphireAssessor', () => {
   let owner: SignerWithAddress;
   let assessor: SapphireAssessor;
   let mapper: SapphireMapperLinear;
@@ -161,17 +161,6 @@ describe.only('SapphireAssessor', () => {
       ).to.be.revertedWith('The lower bound must be smaller than the upper bound');
     });
 
-    // TODO not yet implemented by the credit score
-    it.skip('reverts if score is passed but no proof is passed', async () => {
-      await expect(
-        assessor.assess(1, 10, {
-          account: user1.address,
-          score: creditScore1.amount,
-          merkleProof: [],
-        }),
-      ).to.be.revertedWith('If a credit score is passed, the proof cannot be null');
-    });
-
     it('reverts if the mapper returns a value that is outside the lower and upper bounds', async () => {
       const testMapper = await new MockSapphireMapperLinearFactory(owner).deploy();
       const testAssessor = await new SapphireAssessorFactory(owner).deploy(
@@ -198,6 +187,16 @@ describe.only('SapphireAssessor', () => {
           merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
         }),
       ).to.be.revertedWith('The mapper returned a value outside the lower and upper bounds');
+    });
+
+    it('reverts if the proof is invalid', async () => {
+      await expect(
+        assessor.assess(1, 10, {
+          account: creditScore1.account,
+          score: creditScore1.amount.add(1),
+          merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
+        }),
+      ).to.be.reverted;
     });
 
     it(`returns the upperBound if the user doesn't have an existing score and no proof`, async () => {
