@@ -184,8 +184,11 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     }
 
     function updateMerkleRootUpdater(
-        address merkleRootUpdator
+        address _merkleRootUpdator
     )
         public
-    {}
+        onlyOwner
+    {
+        merkleRootUpdater = _merkleRootUpdator;
+    }
 }
