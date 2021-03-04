@@ -105,13 +105,45 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     )
     public
     {
-        // If not admin
-        // - Ensure duration has been passed
-        // - Set the upcoming merkle root to the current one
-        // - Set the passed in merkle root to the upcoming one
-        // If admin calls update merkle root
-        // - Replace upcoming merkle root (avoid time delay)
-        // - Keep existing merkle root as-is
+        require(
+            newRoot != 0x0000000000000000000000000000000000000000000000000000000000000000,
+            "SapphireCreditScore: root is empty"
+        );
+        if (msg.sender == owner()) {
+            updateMerkleRootAsOwner(newRoot);
+        } else {
+            updateMerkleRootAsUpdator(newRoot);
+        }
+        emit MerkleRootUpdated(msg.sender, newRoot, getCurrentTimestamp());
+    }
+
+    function updateMerkleRootAsUpdator(
+        bytes32 newRoot
+    )
+        private
+        isMerkleRootUpdater
+        isActive
+    {
+        require(
+            getCurrentTimestamp() >= merkleRootDelayDuration + lastMerkleRootUpdate,
+            "SapphireCreditScore: too frequent root update"
+        );
+        currentMerkleRoot = upcomingMerkleRoot;
+        upcomingMerkleRoot = newRoot;
+        lastMerkleRootUpdate = getCurrentTimestamp();
+    }
+
+    function updateMerkleRootAsOwner(
+        bytes32 newRoot
+    )
+        private
+        onlyOwner
+    {
+        require(
+            isPaused == true,
+            "SapphireCreditScore: pause contract to update merkle root as owner"
+        );
+        upcomingMerkleRoot = newRoot;
     }
 
     function updateMerkleRootAsOwner(
@@ -168,8 +200,11 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     }
 
     function updateMerkleRootUpdater(
-        address merkleRootUpdator
+        address _merkleRootUpdator
     )
         public
-    {}
+        onlyOwner
+    {
+        merkleRootUpdater = _merkleRootUpdator;
+    }
 }
