@@ -132,7 +132,7 @@ describe('SapphireAssessor', () => {
     });
   });
 
-  describe.only('#assess', () => {
+  describe('#assess', () => {
     it('reverts if upper bound or account are empty', async () => {
       // upper bound is empty
       await expect(
@@ -270,7 +270,9 @@ describe('SapphireAssessor', () => {
     });
 
     it('reverts if no new mapper is passed', async () => {
-      await expect(assessor.setMapper('')).to.be.revertedWith('The new mapper cannot be null');
+      await expect(assessor.setMapper(ZERO_ADDRESS)).to.be.revertedWith(
+        'The new mapper cannot be null',
+      );
       await expect(
         assessor.setMapper('0x0000000000000000000000000000000000000000'),
       ).to.be.revertedWith('The new mapper cannot be null');
@@ -287,7 +289,8 @@ describe('SapphireAssessor', () => {
 
       await assessor.setMapper(testMapper.address);
 
-      expect(assessor.mapper()).to.eq(testMapper.address);
+      const newMapper = await assessor.mapper();
+      expect(newMapper).to.eq(testMapper.address);
     });
   });
 
@@ -301,12 +304,9 @@ describe('SapphireAssessor', () => {
     });
 
     it('reverts if new address is 0', async () => {
-      await expect(assessor.setCreditScoreContract('')).to.be.revertedWith(
-        'The new credit score contract address cannot be null.',
-      );
       await expect(
         assessor.setCreditScoreContract('0x0000000000000000000000000000000000000000'),
-      ).to.be.revertedWith('Cannot set a null credit score contract');
+      ).to.be.revertedWith('The new credit score contract address cannot be null');
     });
 
     it('reverts if new address is the same as the existing one', async () => {

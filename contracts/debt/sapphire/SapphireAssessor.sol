@@ -111,7 +111,17 @@ contract SapphireAssessor is Ownable {
         public
         onlyOwner
     {
+        require(
+            _mapper != address(0),
+            "The new mapper cannot be null"
+        );
 
+        require(
+            _mapper != address(mapper),
+            "The same mapper is already set"
+        );
+
+        mapper = ISapphireMapper(_mapper);
     }
 
     function setCreditScoreContract(
@@ -120,6 +130,16 @@ contract SapphireAssessor is Ownable {
         public
         onlyOwner
     {
+        require(
+            _creditScore != address(0),
+            "The new credit score contract address cannot be null"
+        );
 
+        require(
+            _creditScore != address(creditScoreContract),
+            "The same credit score contract is already set"
+        );
+
+        creditScoreContract = ISapphireCreditScore(_creditScore);
     }
 }
