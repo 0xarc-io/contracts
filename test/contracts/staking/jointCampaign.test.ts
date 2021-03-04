@@ -479,20 +479,7 @@ describe('JointCampaign', () => {
         ).to.be.revertedWith('Must be a valid minter');
       });
 
-      it('should not be able to set a lower debt requirement by staking less before the deadline', async () => {
-        const newPositionId = await stake(user1, STAKE_AMOUNT);
-        jointCampaignUser1.withdraw(STAKE_AMOUNT);
-
-        const smallerStakeAmount = STAKE_AMOUNT.sub(1);
-
-        await mintAndApprove(stakingToken, user1, smallerStakeAmount);
-
-        await expect(
-          jointCampaignUser1.stake(smallerStakeAmount, newPositionId),
-        ).to.be.revertedWith('Your new debt requirement cannot be lower than last time');
-      });
-
-      // TODO this test fails if the original position ID is 0. It messes up the check
+      // This test fails if the original position ID is 0. It messes up the check
       // in JointCampaign.sol:614
       // It is only a corner case. It can be solved by opening a position at the beginning,
       // before anyone else opens a position
@@ -522,6 +509,23 @@ describe('JointCampaign', () => {
         await stake(user1, STAKE_AMOUNT);
 
         expect(await jointCampaignUser1.balanceOf(user1.address)).to.be.eq(STAKE_AMOUNT);
+      });
+
+      it('should be able to set a lower debt requirement by staking less before the deadline', async () => {
+        const positionId = await stake(user1, STAKE_AMOUNT);
+
+        expect((await jointCampaignUser1.stakers(user1.address)).balance).to.eq(STAKE_AMOUNT);
+
+        await jointCampaignUser1.withdraw(STAKE_AMOUNT);
+
+        expect((await jointCampaignUser1.stakers(user1.address)).balance).to.eq(BigNumber.from(0));
+
+        const smallerStakeAmount = STAKE_AMOUNT.sub(1);
+
+        await mintAndApprove(stakingToken, user1, smallerStakeAmount);
+        await jointCampaignUser1.stake(smallerStakeAmount, positionId);
+
+        expect(await jointCampaignUser1.balanceOf(user1.address)).to.be.eq(smallerStakeAmount);
       });
     });
 
