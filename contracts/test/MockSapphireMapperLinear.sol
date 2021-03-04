@@ -13,7 +13,12 @@ contract MockSapphireMapperLinear is SapphireMapperLinear {
         _mapResult = _result;
     }
 
-    function map()
+    function map(
+        uint256 _score,
+        uint256 _scoreMax,
+        uint256 _lowerBound,
+        uint256 _upperBound
+    )
         public
         view
         returns (uint256)

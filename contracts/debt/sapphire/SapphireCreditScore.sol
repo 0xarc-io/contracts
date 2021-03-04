@@ -8,13 +8,6 @@ import {SapphireTypes} from "./SapphireTypes.sol";
 import {ISapphireCreditScore} from "./ISapphireCreditScore.sol";
 
 contract SapphireCreditScore is ISapphireCreditScore, Ownable {
-    /* ========== Structs ========== */
-
-    struct CreditScore {
-        uint256 score;
-        uint256 lastUpdated;
-    }
-
     /* ========== Events ========== */
 
     event MerkleRootUpdated(
@@ -42,6 +35,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     bool public isPaused;
 
     uint256 public lastMerkleRootUpdate;
+    uint256 public maxScore;
 
     uint256 public merkleRootDelayDuration;
 
@@ -51,7 +45,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
 
     address public merkleRootUpdater;
 
-    mapping(address => CreditScore) public userScores;
+    mapping(address => SapphireTypes.CreditScore) public userScores;
 
     /* ========== Modifiers ========== */
 
@@ -73,13 +67,15 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
 
     /* ========== Constructor ========== */
 
-    constructor(bytes32 merkleRoot, address _merkleRootUpdater) public {
+    constructor(bytes32 merkleRoot, address _merkleRootUpdater, uint256 _maxScore) public {
         currentMerkleRoot = merkleRoot;
         upcomingMerkleRoot = merkleRoot;
         merkleRootUpdater = _merkleRootUpdater;
         lastMerkleRootUpdate = 0;
         isPaused = true;
         merkleRootDelayDuration = 86400; // 24 * 60 * 60 sec
+
+        maxScore = _maxScore;
     }
 
   /* ========== Functions ========== */
@@ -116,6 +112,14 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         // If admin calls update merkle root
         // - Replace upcoming merkle root (avoid time delay)
         // - Keep existing merkle root as-is
+    }
+
+    function updateMerkleRootAsOwner(
+        bytes32 _newRoot
+    )
+        public
+    {
+        
     }
 
     function request(
