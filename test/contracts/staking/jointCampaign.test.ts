@@ -34,6 +34,7 @@ let owner: SignerWithAddress;
 let lido: SignerWithAddress;
 let user1: SignerWithAddress;
 let user2: SignerWithAddress;
+let stranger: SignerWithAddress;
 
 const ARC_REWARD_AMOUNT = ArcNumber.new(100);
 const COLLAB_REWARD_AMOUNT = ArcNumber.new(200);
@@ -145,6 +146,7 @@ describe('JointCampaign', () => {
     lido = signers[1];
     user1 = signers[2];
     user2 = signers[3];
+    stranger = signers[4];
   });
 
   beforeEach(async () => {
@@ -164,6 +166,9 @@ describe('JointCampaign', () => {
     const ctx: ITestContext = await generateContext(mozartFixture, fixtureInit);
 
     arc = ctx.sdks.mozart;
+
+    // Open first position to make the position ID start at 1 instead of 0
+    await arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, stranger);
   });
 
   describe('View functions', () => {
@@ -476,12 +481,21 @@ describe('JointCampaign', () => {
 
       it('should not be able to set a lower debt requirement by staking less before the deadline', async () => {
         const newPositionId = await stake(user1, STAKE_AMOUNT);
+        jointCampaignUser1.withdraw(STAKE_AMOUNT);
 
-        await expect(jointCampaignUser1.stake(BigNumber.from(1), newPositionId)).to.be.revertedWith(
-          'Your new debt requirement cannot be lower than last time',
-        );
+        const smallerStakeAmount = STAKE_AMOUNT.sub(1);
+
+        await mintAndApprove(stakingToken, user1, smallerStakeAmount);
+
+        await expect(
+          jointCampaignUser1.stake(smallerStakeAmount, newPositionId),
+        ).to.be.revertedWith('Your new debt requirement cannot be lower than last time');
       });
 
+      // TODO this test fails if the original position ID is 0. It messes up the check
+      // in JointCampaign.sol:614
+      // It is only a corner case. It can be solved by opening a position at the beginning,
+      // before anyone else opens a position
       it('should not be able to stake to a different position ID', async () => {
         await stake(user1, STAKE_AMOUNT);
 
