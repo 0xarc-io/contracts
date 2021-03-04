@@ -6,7 +6,7 @@ pragma experimental ABIEncoderV2;
 import { SapphireCreditScore } from "../debt/sapphire/SapphireCreditScore.sol";
 
 contract MockSapphireCreditScore is SapphireCreditScore {
-    uint256 private currentTimestamp;
+    uint256 private currentTimestamp = block.timestamp;
 
     constructor(bytes32 merkleRoot, address _merkleRootUpdater, uint256 _maxScore)
         public
