@@ -7,7 +7,6 @@ import ArcDecimal from '@src/utils/ArcDecimal';
 import { BigNumber, BigNumberish } from 'ethers';
 import chai from 'chai';
 import { BASE, TEN_PERCENT } from '@src/constants';
-import { expectRevert } from '@test/helpers/expectRevert';
 import { solidity } from 'ethereum-waffle';
 import { generateContext, ITestContext } from '../context';
 import { mozartFixture } from '../fixtures';
@@ -470,13 +469,17 @@ describe('JointCampaign', () => {
 
         const newPosition = await arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT.sub(1), user1);
 
-        await expectRevert(jointCampaignUser1.stake(STAKE_AMOUNT, newPosition.params.id));
+        await expect(
+          jointCampaignUser1.stake(STAKE_AMOUNT, newPosition.params.id),
+        ).to.be.revertedWith('Must be a valid minter');
       });
 
       it('should not be able to set a lower debt requirement by staking less before the deadline', async () => {
         const newPositionId = await stake(user1, STAKE_AMOUNT);
 
-        await expectRevert(jointCampaignUser1.stake(BigNumber.from(1), newPositionId));
+        await expect(jointCampaignUser1.stake(BigNumber.from(1), newPositionId)).to.be.revertedWith(
+          'Your new debt requirement cannot be lower than last time',
+        );
       });
 
       it('should not be able to stake to a different position ID', async () => {
@@ -486,7 +489,9 @@ describe('JointCampaign', () => {
 
         await mintAndApprove(stakingToken, user1, STAKE_AMOUNT);
 
-        await expectRevert(jointCampaignUser1.stake(STAKE_AMOUNT, newPosition.params.id));
+        await expect(
+          jointCampaignUser1.stake(STAKE_AMOUNT, newPosition.params.id),
+        ).to.be.revertedWith('You cannot stake based on a different debt position');
       });
 
       it('should not be able to stake more than balance', async () => {
@@ -494,7 +499,9 @@ describe('JointCampaign', () => {
 
         const newPosition = await arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, user1);
 
-        await expectRevert(jointCampaignUser1.stake(STAKE_AMOUNT.add(1), newPosition.params.id));
+        await expect(
+          jointCampaignUser1.stake(STAKE_AMOUNT.add(1), newPosition.params.id),
+        ).to.be.revertedWith('TRANSFER_FROM_FAILED');
       });
 
       it('should be able to stake', async () => {
@@ -510,7 +517,9 @@ describe('JointCampaign', () => {
       it('should not be able to slash if user has the amount of their debt snapshot', async () => {
         await stake(user1, STAKE_AMOUNT);
 
-        await expectRevert(jointCampaignUser2.slash(user1.address));
+        await expect(jointCampaignUser2.slash(user1.address)).to.be.revertedWith(
+          "You can't slash a user who is a valid minter",
+        );
       });
 
       it('should revert if trying to slash after the end of the reward period', async () => {
@@ -520,7 +529,9 @@ describe('JointCampaign', () => {
 
         await arc.repay(positionId, BORROW_AMOUNT.div(2), BigNumber.from(0), user1);
 
-        await expectRevert(jointCampaignUser2.slash(user1.address));
+        await expect(jointCampaignUser2.slash(user1.address)).to.be.revertedWith(
+          'You cannot slash after the reward period',
+        );
       });
 
       it('should be able to slash if the user does not have enough debt', async () => {
@@ -550,7 +561,9 @@ describe('JointCampaign', () => {
 
         await setTimestampTo(1);
 
-        await expectRevert(jointCampaignUser1.getReward(user1.address));
+        await expect(jointCampaignUser1.getReward(user1.address)).to.be.revertedWith(
+          'At least one reward token must be claimable',
+        );
       });
 
       it('should be able to claim both rewards gradually over time', async () => {
@@ -636,14 +649,18 @@ describe('JointCampaign', () => {
         await setTimestampTo(1);
 
         // No rewards are claimable, expect revert
-        await expectRevert(jointCampaignUser1.getReward(user1.address));
+        await expect(jointCampaignUser1.getReward(user1.address)).to.be.revertedWith(
+          'At least one reward token must be claimable',
+        );
 
         expect(await arcToken.balanceOf(user1.address)).to.eq(ArcNumber.new(0));
         expect(await collabToken.balanceOf(user1.address)).to.eq(ArcNumber.new(0));
 
         await setTimestampTo(2);
 
-        await expectRevert(jointCampaignUser1.getReward(user1.address));
+        await expect(jointCampaignUser1.getReward(user1.address)).to.be.revertedWith(
+          'At least one reward token must be claimable',
+        );
 
         expect(await arcToken.balanceOf(user1.address)).to.eq(ArcNumber.new(0));
         expect(await collabToken.balanceOf(user1.address)).to.eq(ArcNumber.new(0));
@@ -727,7 +744,9 @@ describe('JointCampaign', () => {
 
       it('should not be able to withdraw more than the balance', async () => {
         await stake(user1, STAKE_AMOUNT);
-        await expectRevert(jointCampaignUser1.withdraw(STAKE_AMOUNT.add(1)));
+        await expect(jointCampaignUser1.withdraw(STAKE_AMOUNT.add(1))).to.be.revertedWith(
+          'subtraction overflow',
+        );
       });
 
       it('should withdraw the correct amount', async () => {
@@ -749,7 +768,9 @@ describe('JointCampaign', () => {
 
         await setTimestampTo(1);
 
-        await expectRevert(jointCampaignUser1.exit());
+        await expect(jointCampaignUser1.exit()).to.be.revertedWith(
+          'At least one reward token must be claimable',
+        );
       });
 
       it('should be able to exit and get the right amount of staked tokens and rewards', async () => {
@@ -776,7 +797,7 @@ describe('JointCampaign', () => {
   describe('Restricted functions', () => {
     describe('#init', () => {
       it('should not be callable by anyone', async () => {
-        await expectRevert(
+        await expect(
           jointCampaignUser1.init(
             user1.address,
             user1.address,
@@ -789,12 +810,12 @@ describe('JointCampaign', () => {
             STAKE_TO_DEBT_RATIO,
             await arc.coreAddress(),
           ),
-        );
+        ).to.be.revertedWith('Ownable: caller is not the owner');
       });
 
       it('should revert if one of the init variables are null', async () => {
-        await expectRevert(
-          jointCampaignUser1.init(
+        await expect(
+          jointCampaignOwner.init(
             user1.address,
             user1.address,
             lido.address,
@@ -806,7 +827,7 @@ describe('JointCampaign', () => {
             BigNumber.from(0),
             await arc.coreAddress(),
           ),
-        );
+        ).to.be.revertedWith('One or more values is empty');
       });
 
       it('should skip be callable by the contract owner', async () => {
@@ -860,7 +881,7 @@ describe('JointCampaign', () => {
           await arc.coreAddress(),
         );
 
-        await expectRevert(
+        await expect(
           jointCampaignOwner.init(
             owner.address,
             owner.address,
@@ -873,7 +894,7 @@ describe('JointCampaign', () => {
             STAKE_TO_DEBT_RATIO,
             await arc.coreAddress(),
           ),
-        );
+        ).to.be.revertedWith('One or more values is empty');
       });
     });
 
@@ -881,7 +902,9 @@ describe('JointCampaign', () => {
       beforeEach(setup);
 
       it('should not be callable by anyone', async () => {
-        await expectRevert(jointCampaignUser1.setcollabRewardsDistributor(user1.address));
+        await expect(
+          jointCampaignUser1.setcollabRewardsDistributor(user1.address),
+        ).to.be.revertedWith('Caller is not the collab rewards distributor');
       });
 
       it('should set rewards distributor if called by current collabRewardsDistributor', async () => {
@@ -893,7 +916,9 @@ describe('JointCampaign', () => {
 
     describe('#setArcRewardsDistributor', () => {
       it('should not be callable by anyone', async () => {
-        await expectRevert(jointCampaignUser1.setArcRewardsDistributor(user1.address));
+        await expect(jointCampaignUser1.setArcRewardsDistributor(user1.address)).to.be.revertedWith(
+          'Ownable: caller is not the owner',
+        );
       });
 
       it('should set rewards distributor if called by owner', async () => {
@@ -905,7 +930,9 @@ describe('JointCampaign', () => {
 
     describe('#setRewardsDuration', () => {
       it('should not be called by anyone', async () => {
-        await expectRevert(jointCampaignUser1.setRewardsDuration(BigNumber.from(REWARD_DURATION)));
+        await expect(
+          jointCampaignUser1.setRewardsDuration(BigNumber.from(REWARD_DURATION)),
+        ).to.be.revertedWith('Ownable: caller is not the owner');
       });
 
       it('should skip be callable by the contract owner and set the right duration', async () => {
@@ -921,12 +948,12 @@ describe('JointCampaign', () => {
       beforeEach(setupBasic);
 
       it('should not be callable by anyone', async () => {
-        await expectRevert(
+        await expect(
           jointCampaignUser1.notifyRewardAmount(ARC_REWARD_AMOUNT, arcToken.address),
-        );
-        await expectRevert(
+        ).to.be.revertedWith('Caller is not a reward distributor');
+        await expect(
           jointCampaignUser1.notifyRewardAmount(COLLAB_REWARD_AMOUNT, collabToken.address),
-        );
+        ).to.be.revertedWith('Caller is not a reward distributor');
       });
 
       it('should be callable by the arc distributor', async () => {
@@ -942,32 +969,36 @@ describe('JointCampaign', () => {
       });
 
       it('should revert if ARCx reward amount is less than the amount of ARCx on the contract', async () => {
-        await expectRevert(
+        await expect(
           jointCampaignOwner.notifyRewardAmount(
             ARC_REWARD_AMOUNT.add(ArcNumber.new(1)),
             arcToken.address,
           ),
-        );
+        ).to.be.revertedWith('Provided reward too high for the balance of ARCx token');
       });
 
       it('should revert if collab reward amount is less than the amount of collab on the contract', async () => {
-        await expectRevert(
+        await expect(
           jointCampaignLido.notifyRewardAmount(
             COLLAB_REWARD_AMOUNT.add(ArcNumber.new(1)),
             collabToken.address,
           ),
-        );
+        ).to.be.revertedWith('Provided reward too high for the balance of collab token');
       });
 
       it('should revert if ARCx distributor tries to notify the collab rewards', async () => {
-        await expectRevert(
+        await expect(
           jointCampaignOwner.notifyRewardAmount(COLLAB_REWARD_AMOUNT.add(1), collabToken.address),
+        ).to.be.revertedWith(
+          'Only the collab rewards distributor can notify the amount of collab rewards',
         );
       });
 
       it('should revert if collab distributor tries to notify the ARCx rewards', async () => {
-        await expectRevert(
+        await expect(
           jointCampaignLido.notifyRewardAmount(ARC_REWARD_AMOUNT.add(1), arcToken.address),
+        ).to.be.revertedWith(
+          'Only the ARCx rewards distributor can notify the amount of ARCx rewards',
         );
       });
 
@@ -1006,7 +1037,9 @@ describe('JointCampaign', () => {
       });
 
       it('should not be callable by anyone', async () => {
-        await expectRevert(jointCampaignUser1.recoverERC20(otherErc20.address, erc20Share));
+        await expect(
+          jointCampaignUser1.recoverERC20(otherErc20.address, erc20Share),
+        ).to.be.revertedWith('Ownable: caller is not the owner');
       });
 
       it('should not recover staking or collab', async () => {
@@ -1014,8 +1047,12 @@ describe('JointCampaign', () => {
         await stakingToken.mintShare(jointCampaignOwner.address, erc20Share);
         await collabToken.mintShare(jointCampaignOwner.address, erc20Share);
 
-        await expectRevert(jointCampaignOwner.recoverERC20(stakingToken.address, erc20Share));
-        await expectRevert(jointCampaignOwner.recoverERC20(collabToken.address, erc20Share));
+        await expect(
+          jointCampaignOwner.recoverERC20(stakingToken.address, erc20Share),
+        ).to.be.revertedWith('Cannot withdraw the staking or collab reward tokens');
+        await expect(
+          jointCampaignOwner.recoverERC20(collabToken.address, erc20Share),
+        ).to.be.revertedWith('Cannot withdraw the staking or collab reward tokens');
       });
 
       it('should revert if owner tries to recover a greater amount of ARC than the surplus reward amount', async () => {
@@ -1023,7 +1060,9 @@ describe('JointCampaign', () => {
 
         await arcToken.mintShare(jointCampaignOwner.address, erc20Share);
 
-        await expectRevert(jointCampaignOwner.recoverERC20(arcToken.address, erc20Share.add(1)));
+        await expect(
+          jointCampaignOwner.recoverERC20(arcToken.address, erc20Share.add(1)),
+        ).to.be.revertedWith('Only the surplus of the reward can be recovered, not more');
       });
 
       it('should let owner recover the erc20 on this contract', async () => {
@@ -1051,7 +1090,9 @@ describe('JointCampaign', () => {
 
     describe('#recovercollab', () => {
       it('should not be callable by anyone', async () => {
-        await expectRevert(jointCampaignUser1.recovercollab(ArcNumber.new(10)));
+        await expect(jointCampaignUser1.recovercollab(ArcNumber.new(10))).to.be.revertedWith(
+          'Caller is not the collab rewards distributor',
+        );
       });
 
       it('should revert if lido tries to recover a greater amount of ARC than the surplus reward amount', async () => {
@@ -1059,7 +1100,9 @@ describe('JointCampaign', () => {
 
         await collabToken.mintShare(jointCampaignLido.address, ArcNumber.new(10));
 
-        await expectRevert(jointCampaignLido.recovercollab(ArcNumber.new(11)));
+        await expect(jointCampaignLido.recovercollab(ArcNumber.new(11))).to.be.revertedWith(
+          'Only the surplus of the reward can be recovered, not more',
+        );
       });
 
       it('should let collab reward distributor recover the surplus of collab on the contract', async () => {
@@ -1077,7 +1120,9 @@ describe('JointCampaign', () => {
 
     describe('#setArcTokensClaimable', () => {
       it('should not be claimable by anyone', async () => {
-        await expectRevert(jointCampaignUser1.setArcTokensClaimable(true));
+        await expect(jointCampaignUser1.setArcTokensClaimable(true)).to.be.revertedWith(
+          'Ownable: caller is not the owner',
+        );
       });
 
       it('should be callable by the contract owner', async () => {
@@ -1090,7 +1135,9 @@ describe('JointCampaign', () => {
 
   describe('#setCollabTokensClaimable', () => {
     it('should not be called by anyone', async () => {
-      await expectRevert(jointCampaignUser1.setCollabTokensClaimable(true));
+      await expect(jointCampaignUser1.setCollabTokensClaimable(true)).to.be.revertedWith(
+        'Ownable: caller is not the owner',
+      );
     });
 
     it('should be callable by the contract owner', async () => {
@@ -1159,7 +1206,9 @@ describe('JointCampaign', () => {
       await setTimestampTo(7);
 
       // no rewards are claimable -> revert
-      await expectRevert(jointCampaignUser1.getReward(user1.address));
+      await expect(jointCampaignUser1.getReward(user1.address)).to.be.revertedWith(
+        'At least one reward token must be claimable',
+      );
 
       await setTimestampTo(9);
 
@@ -1214,7 +1263,9 @@ describe('JointCampaign', () => {
       await setTimestampTo(15);
 
       // reverts because no rewards are claimable
-      await expectRevert(jointCampaignUser1.getReward(user1.address));
+      await expect(jointCampaignUser1.getReward(user1.address)).to.be.revertedWith(
+        'At least one reward token must be claimable',
+      );
 
       await setTimestampTo(19);
 
