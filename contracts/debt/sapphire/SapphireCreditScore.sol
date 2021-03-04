@@ -8,6 +8,13 @@ import {SapphireTypes} from "./SapphireTypes.sol";
 import {ISapphireCreditScore} from "./ISapphireCreditScore.sol";
 
 contract SapphireCreditScore is ISapphireCreditScore, Ownable {
+    /* ========== Structs ========== */
+
+    struct CreditScore {
+        uint256 score;
+        uint256 lastUpdated;
+    }
+
     /* ========== Events ========== */
 
     event MerkleRootUpdated(
@@ -32,10 +39,11 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
 
     /* ========== Variables ========== */
 
+    uint16 public maxScore = 1000;
+
     bool public isPaused;
 
     uint256 public lastMerkleRootUpdate;
-    uint256 public maxScore;
 
     uint256 public merkleRootDelayDuration;
 
@@ -45,7 +53,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
 
     address public merkleRootUpdater;
 
-    mapping(address => SapphireTypes.CreditScore) public userScores;
+    mapping(address => CreditScore) public userScores;
 
     /* ========== Modifiers ========== */
 
@@ -67,15 +75,13 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
 
     /* ========== Constructor ========== */
 
-    constructor(bytes32 merkleRoot, address _merkleRootUpdater, uint256 _maxScore) public {
+    constructor(bytes32 merkleRoot, address _merkleRootUpdater) public {
         currentMerkleRoot = merkleRoot;
         upcomingMerkleRoot = merkleRoot;
         merkleRootUpdater = _merkleRootUpdater;
         lastMerkleRootUpdate = 0;
         isPaused = true;
         merkleRootDelayDuration = 86400; // 24 * 60 * 60 sec
-
-        maxScore = _maxScore;
     }
 
   /* ========== Functions ========== */
@@ -89,18 +95,6 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     }
 
     function updateMerkleRoot(
-        bytes32 newRoot
-    ) 
-    public
-    {
-        if (msg.sender == merkleRootUpdater) {
-            updateMerkleRootAsUpdator(newRoot);
-        } else {
-            updateMerkleRootAsOwner(newRoot);
-        }
-    }
-
-    function updateMerkleRootAsUpdator(
         bytes32 newRoot
     )
     public
@@ -146,17 +140,9 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         upcomingMerkleRoot = newRoot;
     }
 
-    function updateMerkleRootAsOwner(
-        bytes32 _newRoot
-    )
-        public
-    {
-        
-    }
-
     function request(
         SapphireTypes.ScoreProof memory proof
-    ) 
+    )
         public
         view
         returns (uint256)
