@@ -8,9 +8,9 @@ import { SapphireCreditScore } from "../debt/sapphire/SapphireCreditScore.sol";
 contract MockSapphireCreditScore is SapphireCreditScore {
     uint256 private currentTimestamp = block.timestamp;
 
-    constructor(bytes32 merkleRoot, address _merkleRootUpdater, uint256 _maxScore)
+    constructor(bytes32 merkleRoot, address _merkleRootUpdater)
         public
-        SapphireCreditScore(merkleRoot, _merkleRootUpdater, _maxScore)
+        SapphireCreditScore(merkleRoot, _merkleRootUpdater)
     { }
 
     function setCurrentTimestamp(uint256 _timestamp)

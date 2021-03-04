@@ -74,18 +74,6 @@ contract SapphireAssessor is Ownable {
             "The lower bound must be smaller than the upper bound"
         );
 
-        // Revert if score is passed but no proof is passed
-        if (_scoreProof.score > 0 && _scoreProof.merkleProof.length == 0) {
-            revert("If a credit score is passed, the proof cannot be null");
-        }
-
-        // Return the upper bound if the user doesn't have an existing score and no proof
-        if (_scoreProof.merkleProof.length == 0 && 
-            creditScoreContract.userScores(_scoreProof.account).lastUpdated == 0
-        ) {
-            return _upperBound;
-        }
-
         uint256 creditScore = creditScoreContract.request(_scoreProof);
         uint256 maxScore = creditScoreContract.maxScore();
 
