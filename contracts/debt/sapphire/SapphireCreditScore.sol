@@ -41,8 +41,6 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     
     uint16 public maxScore;
 
-    uint16 public maxScore = 1000;
-
     bool public isPaused;
 
     uint256 public lastMerkleRootUpdate;
@@ -174,13 +172,13 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
      * 
      * @notice If credit score is verified, this function updated user credit scores with verified one and current timestmp
      *
-     * @param poof Data required to verify if score is correct for current merkle root
+     * @param proof Data required to verify if score is correct for current merkle root
      */
     function request(
         SapphireTypes.ScoreProof memory proof
     )
         public
-        returns (uint256)
+        returns (uint256, uint16)
     {
         bytes32 node = keccak256(abi.encodePacked(proof.account, proof.score));
         require(MerkleProof.verify(proof.merkleProof, currentMerkleRoot, node), "SapphireCreditScore: invalid proof");
@@ -190,7 +188,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         });
         emit CreditScoreUpdated(proof.account, proof.score, getCurrentTimestamp());
 
-        return proof.score;
+        return (proof.score, maxScore);
     }
 
    /**

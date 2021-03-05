@@ -23,6 +23,8 @@ contract SapphireAssessor is Ownable {
 
     event CreditScoreContractSet(address newCreditScoreContract);
 
+    event Assessed(uint256 assessedValue);
+
     /* ========== Functions ========== */
 
     constructor(
@@ -56,7 +58,6 @@ contract SapphireAssessor is Ownable {
         SapphireTypes.ScoreProof memory _scoreProof
     )
         public
-        view
         returns (uint256)
     {
         require(
@@ -74,8 +75,15 @@ contract SapphireAssessor is Ownable {
             "The lower bound must be smaller than the upper bound"
         );
 
-        uint256 creditScore = creditScoreContract.request(_scoreProof);
-        uint256 maxScore = creditScoreContract.maxScore();
+        uint256 creditScore;
+        uint16 maxScore;
+        
+        // If there's no proof passed, use the latest credit score
+        if (_scoreProof.merkleProof.length == 0) {
+            (creditScore, maxScore,) = creditScoreContract.getLastScore(_scoreProof.account);
+        } else {
+            (creditScore, maxScore) = creditScoreContract.request(_scoreProof);
+        }
 
         uint256 result = mapper.map(
             creditScore,
@@ -89,6 +97,8 @@ contract SapphireAssessor is Ownable {
             result <= _upperBound,
             "The mapper returned a value outside the lower and upper bounds"
         );
+
+        emit Assessed(result);
 
         return result;
     }
