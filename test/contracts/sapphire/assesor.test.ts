@@ -196,18 +196,20 @@ describe('SapphireAssessor', () => {
           score: creditScore1.amount.add(1),
           merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
         }),
-      ).to.be.reverted;
+      ).to.be.revertedWith('SapphireCreditScore: invalid proof');
     });
 
     it(`returns the upperBound if the user doesn't have an existing score and no proof`, async () => {
       // If there's no score & no proof, pass the lowest credit score to the mapper
-      const assessedValue = assessor.assess(1, 10, {
-        account: user2.address,
-        score: 0,
-        merkleProof: [],
-      });
-
-      expect(assessedValue).to.emit(assessor, 'Assessed').withArgs(10);
+      await expect(
+        assessor.assess(1, 10, {
+          account: user2.address,
+          score: 0,
+          merkleProof: [],
+        }),
+      )
+        .to.emit(assessor, 'Assessed')
+        .withArgs(10);
     });
 
     it('returns the lowerBound if credit score is maxed out', async () => {
@@ -217,13 +219,15 @@ describe('SapphireAssessor', () => {
         creditScoreTree: testCreditScoreTree,
       } = await getAssessorWithCredit(BigNumber.from(1000));
 
-      const assessedValue = testAssessor.assess(ArcNumber.new(100), ArcNumber.new(200), {
-        account: maxCreditScore.account,
-        score: maxCreditScore.amount,
-        merkleProof: testCreditScoreTree.getProof(maxCreditScore.account, maxCreditScore.amount),
-      });
-
-      await expect(assessedValue).to.emit(testAssessor, 'Assessed').withArgs(ArcNumber.new(100));
+      await expect(
+        testAssessor.assess(ArcNumber.new(100), ArcNumber.new(200), {
+          account: maxCreditScore.account,
+          score: maxCreditScore.amount,
+          merkleProof: testCreditScoreTree.getProof(maxCreditScore.account, maxCreditScore.amount),
+        }),
+      )
+        .to.emit(testAssessor, 'Assessed')
+        .withArgs(ArcNumber.new(100));
     });
 
     it('returns the upperBound if credit score is at minimum', async () => {
@@ -233,25 +237,28 @@ describe('SapphireAssessor', () => {
         creditScoreTree: testCreditScoreTree,
       } = await getAssessorWithCredit(BigNumber.from(0));
 
-      const assessedValue = testAssessor.assess(ArcNumber.new(100), ArcNumber.new(200), {
-        account: minCreditScore.account,
-        score: minCreditScore.amount,
-        merkleProof: testCreditScoreTree.getProof(minCreditScore.account, minCreditScore.amount),
-      });
-
-      // 200 - (600/1000 * (200-100)) = 140
-      expect(assessedValue).to.emit(testAssessor, 'Assessed').withArgs(ArcNumber.new(200));
+      await expect(
+        testAssessor.assess(ArcNumber.new(100), ArcNumber.new(200), {
+          account: minCreditScore.account,
+          score: minCreditScore.amount,
+          merkleProof: testCreditScoreTree.getProof(minCreditScore.account, minCreditScore.amount),
+        }),
+      )
+        .to.emit(testAssessor, 'Assessed')
+        .withArgs(ArcNumber.new(200));
     });
 
     it('returns the correct value given the credit score and a valid proof', async () => {
-      const assessedValue = assessor.assess(ArcNumber.new(100), ArcNumber.new(200), {
-        account: user2.address,
-        score: creditScore1.amount,
-        merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
-      });
-
       // 200 - (600/1000 * (200-100)) = 140
-      expect(assessedValue).to.emit(assessor, 'Assessed').withArgs(ArcNumber.new(140));
+      await expect(
+        assessor.assess(ArcNumber.new(100), ArcNumber.new(200), {
+          account: user1.address,
+          score: creditScore1.amount,
+          merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
+        }),
+      )
+        .to.emit(assessor, 'Assessed')
+        .withArgs(ArcNumber.new(140));
     });
   });
 
