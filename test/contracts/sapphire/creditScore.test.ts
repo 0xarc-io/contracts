@@ -218,11 +218,12 @@ describe.only('SapphireCreditScore', () => {
         .to.emit(creditScoreContract, 'CreditScoreUpdated')
         .withArgs(creditScore1.account, creditScore1.amount, requestTimestamp);
 
-      const { 0: creditScore, 1: lastUpdated } = await creditScoreContract.getLastScore(
+      const { 0: creditScore, 1: maxCreditScore, 2: lastUpdated } = await creditScoreContract.getLastScore(
         creditScore1.account,
       );
       expect(creditScore).eq(creditScore1.amount);
       expect(lastUpdated).eq(requestTimestamp);
+      expect(maxCreditScore).eq(await creditScoreContract.maxScore());
     });
 
     it('should not be able to request an invalid proof', async () => {
@@ -287,7 +288,7 @@ describe.only('SapphireCreditScore', () => {
         .to.emit(creditScoreContract, 'CreditScoreUpdated')
         .withArgs(creditScore1.account, changedAmount, changedTimestamp);
 
-      const { 0: creditScore, 1: lastUpdated } = await creditScoreContract.getLastScore(
+      const { 0: creditScore, 2: lastUpdated } = await creditScoreContract.getLastScore(
         creditScore1.account,
       );
       expect(creditScore).eq(changedAmount);

@@ -10,7 +10,7 @@ contract MockSapphireCreditScore is SapphireCreditScore {
 
     constructor(bytes32 merkleRoot, address _merkleRootUpdater)
         public
-        SapphireCreditScore(merkleRoot, _merkleRootUpdater)
+        SapphireCreditScore(merkleRoot, _merkleRootUpdater, 1000)
     { }
 
     function setCurrentTimestamp(uint256 _timestamp)

@@ -127,6 +127,7 @@ export function createSapphireFixture(
       deployer,
       merkleRoot,
       ctx.signers.interestSetter.address,
+      1000,
     );
   };
 }

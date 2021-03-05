@@ -38,6 +38,8 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     );
 
     /* ========== Variables ========== */
+    
+    uint16 public maxScore;
 
     bool public isPaused;
 
@@ -73,13 +75,14 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
 
     /* ========== Constructor ========== */
 
-    constructor(bytes32 merkleRoot, address _merkleRootUpdater) public {
+    constructor(bytes32 merkleRoot, address _merkleRootUpdater, uint16 _maxScore) public {
         currentMerkleRoot = merkleRoot;
         upcomingMerkleRoot = merkleRoot;
         merkleRootUpdater = _merkleRootUpdater;
         lastMerkleRootUpdate = 0;
         isPaused = true;
         merkleRootDelayDuration = 86400; // 24 * 60 * 60 sec
+        maxScore = _maxScore;
     }
 
   /* ========== Functions ========== */
@@ -160,10 +163,10 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     )
         public
         view
-        returns (uint256, uint256)
+        returns (uint256, uint16, uint256)
     {
         CreditScore memory userScore = userScores[user];
-        return (userScore.score, userScore.lastUpdated);
+        return (userScore.score, maxScore, userScore.lastUpdated);
     }
 
     function setMerkleRootDelay(
