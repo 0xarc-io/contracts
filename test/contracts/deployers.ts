@@ -146,11 +146,11 @@ export async function deployMerkleDistributor(deployer: Signer, token: string, m
   return distributor as MerkleDistributor;
 }
 
-export async function deploySapphireCreditScore(deployer: Signer, merkleRoot: string, merkleTreeUpdater: string) {
+export async function deploySapphireCreditScore(deployer: Signer, merkleRoot: string, merkleTreeUpdater: string, maxScore: number) {
   const sapphireCreditScoreFactory = await ethers.getContractFactory(
     'SapphireCreditScore',
     deployer,
   );
-  const sapphireCreditScore = await sapphireCreditScoreFactory.deploy(merkleRoot, merkleTreeUpdater);
+  const sapphireCreditScore = await sapphireCreditScoreFactory.deploy(merkleRoot, merkleTreeUpdater, maxScore);
   return sapphireCreditScore as SapphireCreditScore;
 }
