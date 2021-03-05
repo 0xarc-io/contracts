@@ -2,6 +2,7 @@
 
 pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
+import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 
 import {Ownable} from "../../lib/Ownable.sol";
 import {SapphireTypes} from "./SapphireTypes.sol";
@@ -26,8 +27,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     event CreditScoreUpdated(
         address account,
         uint256 score,
-        uint256 lastUpdated,
-        bytes32 merkleProof
+        uint256 lastUpdated
     );
 
     event PauseStatusUpdated(bool value);
@@ -142,14 +142,16 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         SapphireTypes.ScoreProof memory proof
     )
         public
-        view
         returns (uint256)
     {
-        // abi.decode(proof, (data structure))
-        // Decode the score from the current merkle root === verify
+        bytes32 node = keccak256(abi.encodePacked(proof.account, proof.score));
+        require(MerkleProof.verify(proof.merkleProof, currentMerkleRoot, node), "SapphireCreditScore: invalid proof");
+        userScores[proof.account] = CreditScore({
+            score: proof.score,
+            lastUpdated: getCurrentTimestamp()
+        });
+        emit CreditScoreUpdated(proof.account, proof.score, getCurrentTimestamp());
 
-        // Update the userScores mapping
-        // Return the score
         return proof.score;
     }
 
@@ -160,7 +162,8 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         view
         returns (uint256, uint256)
     {
-        return (1, 1);
+        CreditScore memory userScore = userScores[user];
+        return (userScore.score, userScore.lastUpdated);
     }
 
     function setMerkleRootDelay(
