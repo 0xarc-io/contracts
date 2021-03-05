@@ -201,16 +201,16 @@ describe('SapphireAssessor', () => {
 
     it(`returns the upperBound if the user doesn't have an existing score and no proof`, async () => {
       // If there's no score & no proof, pass the lowest credit score to the mapper
-      const value = await assessor.assess(1, 10, {
+      const assessedValue = assessor.assess(1, 10, {
         account: user2.address,
         score: 0,
         merkleProof: [],
       });
 
-      expect(value).to.eq(10);
+      expect(assessedValue).to.emit(assessor, 'Assessed').withArgs(10);
     });
 
-    it('returns the lowerBound if credit score is maxed out', async () => {
+    it.only('returns the lowerBound if credit score is maxed out', async () => {
       const {
         assessor: testAssessor,
         creditScore: maxCreditScore,
@@ -226,7 +226,7 @@ describe('SapphireAssessor', () => {
       expect(value).to.eq(ArcNumber.new(100));
     });
 
-    it('returns the upperBound if credit score is at minimum', async () => {
+    it.only('returns the upperBound if credit score is at minimum', async () => {
       const {
         assessor: testAssessor,
         creditScore: minCreditScore,
@@ -243,7 +243,7 @@ describe('SapphireAssessor', () => {
       expect(value).to.eq(ArcNumber.new(200));
     });
 
-    it('returns the correct value given the credit score and a valid proof', async () => {
+    it.only('returns the correct value given the credit score and a valid proof', async () => {
       const value = await assessor.assess(ArcNumber.new(100), ArcNumber.new(200), {
         account: user2.address,
         score: creditScore1.amount,
