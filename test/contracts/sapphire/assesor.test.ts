@@ -210,48 +210,48 @@ describe('SapphireAssessor', () => {
       expect(assessedValue).to.emit(assessor, 'Assessed').withArgs(10);
     });
 
-    it.only('returns the lowerBound if credit score is maxed out', async () => {
+    it('returns the lowerBound if credit score is maxed out', async () => {
       const {
         assessor: testAssessor,
         creditScore: maxCreditScore,
         creditScoreTree: testCreditScoreTree,
       } = await getAssessorWithCredit(BigNumber.from(1000));
 
-      const value = await testAssessor.assess(ArcNumber.new(100), ArcNumber.new(200), {
+      const assessedValue = testAssessor.assess(ArcNumber.new(100), ArcNumber.new(200), {
         account: maxCreditScore.account,
         score: maxCreditScore.amount,
         merkleProof: testCreditScoreTree.getProof(maxCreditScore.account, maxCreditScore.amount),
       });
 
-      expect(value).to.eq(ArcNumber.new(100));
+      await expect(assessedValue).to.emit(testAssessor, 'Assessed').withArgs(ArcNumber.new(100));
     });
 
-    it.only('returns the upperBound if credit score is at minimum', async () => {
+    it('returns the upperBound if credit score is at minimum', async () => {
       const {
         assessor: testAssessor,
         creditScore: minCreditScore,
         creditScoreTree: testCreditScoreTree,
       } = await getAssessorWithCredit(BigNumber.from(0));
 
-      const value = await testAssessor.assess(ArcNumber.new(100), ArcNumber.new(200), {
+      const assessedValue = testAssessor.assess(ArcNumber.new(100), ArcNumber.new(200), {
         account: minCreditScore.account,
         score: minCreditScore.amount,
         merkleProof: testCreditScoreTree.getProof(minCreditScore.account, minCreditScore.amount),
       });
 
       // 200 - (600/1000 * (200-100)) = 140
-      expect(value).to.eq(ArcNumber.new(200));
+      expect(assessedValue).to.emit(testAssessor, 'Assessed').withArgs(ArcNumber.new(200));
     });
 
-    it.only('returns the correct value given the credit score and a valid proof', async () => {
-      const value = await assessor.assess(ArcNumber.new(100), ArcNumber.new(200), {
+    it('returns the correct value given the credit score and a valid proof', async () => {
+      const assessedValue = assessor.assess(ArcNumber.new(100), ArcNumber.new(200), {
         account: user2.address,
         score: creditScore1.amount,
         merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
       });
 
       // 200 - (600/1000 * (200-100)) = 140
-      expect(value).to.eq(ArcNumber.new(140));
+      expect(assessedValue).to.emit(assessor, 'Assessed').withArgs(ArcNumber.new(140));
     });
   });
 
