@@ -87,6 +87,11 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
 
   /* ========== Functions ========== */
 
+    /**
+     * @dev Returns current block's timestamp
+     *
+     * @notice This function is introduced in order to properly test time delays in this contract
+     */
     function getCurrentTimestamp()
         public
         view
@@ -95,6 +100,21 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         return block.timestamp;
     }
 
+    /**
+     * @dev Update upcoming merkle root
+     * 
+     * @notice Can be called by: 
+     *      - the owner: 
+                1. Check if contract is paused
+                2. Replace uncoming merkle root
+     *      - merkle root updater:
+     *          1. Check if contract is active  
+     *          2. Replace current merkle root with upcoming merkle root
+     *          3. Update upcoming one with passed mekle root.
+     *          4. Update the last merkle root update with the current timestamp
+     *
+     * @param newRoot New upcoming merkle root
+     */
     function updateMerkleRoot(
         bytes32 newRoot
     )
@@ -112,6 +132,9 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         emit MerkleRootUpdated(msg.sender, newRoot, getCurrentTimestamp());
     }
 
+    /**
+     * @dev Merkle root updating strategy for merkle root updator
+    **/
     function updateMerkleRootAsUpdator(
         bytes32 newRoot
     )
@@ -128,6 +151,9 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         lastMerkleRootUpdate = getCurrentTimestamp();
     }
 
+    /**
+     * @dev Merkle root updating strategy for the owner
+    **/
     function updateMerkleRootAsOwner(
         bytes32 newRoot
     )
@@ -141,6 +167,13 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         upcomingMerkleRoot = newRoot;
     }
 
+   /**
+     * @dev Request for verifying user's credit score
+     * 
+     * @notice If credit score is verified, this function updated user credit scores with verified one and current timestmp
+     *
+     * @param poof Data required to verify if score is correct for current merkle root
+     */
     function request(
         SapphireTypes.ScoreProof memory proof
     )
@@ -158,6 +191,9 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         return proof.score;
     }
 
+   /**
+     * @dev Return last verified user score
+     */
     function getLastScore(
         address user
     )
@@ -169,6 +205,10 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         return (userScore.score, maxScore, userScore.lastUpdated);
     }
 
+
+    /**
+     * @dev Update merkle root delay durration
+    */
     function setMerkleRootDelay(
         uint256 delay
     )
@@ -179,6 +219,9 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         emit DelayDurationUpdated(msg.sender, delay);
     }
 
+    /**
+     * @dev Pause contract, which cause that merkle root updated is not able to update the merkle root
+     */
     function setPause(
         bool value
     )
@@ -189,6 +232,9 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         emit PauseStatusUpdated(value);
     }
 
+    /**
+     * @dev Update merkle root updater
+    */
     function updateMerkleRootUpdater(
         address _merkleRootUpdator
     )
