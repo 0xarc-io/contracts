@@ -539,16 +539,6 @@
     "group": "wstETH-STABLEx"
   },
   {
-    "name": "JointCampaign",
-    "source": "JointCampaign",
-    "address": "0x747B2035a0FFE6D4dcc9192F369337b40C32de97",
-    "txn": "0x9d8a7646b633cab3641cbfe69b6ab079577b44e98204cdfbf9f6e97f8179d148",
-    "network": "mainnet",
-    "version": 1,
-    "type": "staking",
-    "group": "Pool-7"
-  },
-  {
     "name": "WhitelistSale-2",
     "source": "WhitelistSale",
     "address": "0xF2057de81Eb26C09d4421Cb6B0C222b9a656f8f3",
@@ -557,5 +547,15 @@
     "version": 1,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "JointCampaign",
+    "source": "JointCampaign",
+    "address": "0x8F1155447Ee97b5Ae147a01a5c420B0FDDF0370D",
+    "txn": "0x491fca236ff75042d07195ddbc04a6e2f51a103476cfe25efc3206380618c54b",
+    "network": "mainnet",
+    "version": 1,
+    "type": "staking",
+    "group": "Pool-7"
   }
 ]
