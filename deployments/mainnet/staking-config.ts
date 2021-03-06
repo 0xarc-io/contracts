@@ -92,7 +92,7 @@ export default {
   },
   'Pool-7': {
     source: 'JointCampaign',
-    stakingToken: '0x6c0ffb49AD9072F253e254445CFD829BCb8A1b5d',
+    stakingToken: '0x3252efd4ea2d6c78091a1f43982ee2c3659cc3d1',
     rewardsToken: 'ArcxToken',
     rewardsDurationSeconds: 60 * 60 * 24 * 31, // 31 days
     contractFactory: JointCampaignFactory,
