@@ -134,7 +134,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     function updateMerkleRoot(
         bytes32 newRoot
     )
-    public
+        public
     {
         require(
             newRoot != 0x0000000000000000000000000000000000000000000000000000000000000000,
