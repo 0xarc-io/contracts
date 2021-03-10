@@ -153,9 +153,9 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
      * 
      * @notice If credit score is verified, this function updated user credit scores with verified one and current timestmp
      *
-     * @param poof Data required to verify if score is correct for current merkle root
+     * @param proof Data required to verify if score is correct for current merkle root
      */
-    function request(
+    function verifyAndUpdate(
         SapphireTypes.ScoreProof memory proof
     )
         public
