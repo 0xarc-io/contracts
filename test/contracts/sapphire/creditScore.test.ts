@@ -88,7 +88,7 @@ describe('SapphireCreditScore', () => {
       await creditScoreContract.connect(merkleRootUpdater).updateMerkleRoot(ONE_BYTES32);
       await expect(
         creditScoreContract.connect(merkleRootUpdater).updateMerkleRoot(ONE_BYTES32),
-      ).to.be.revertedWith('SapphireCreditScore: too frequent root update');
+      ).to.be.revertedWith('SapphireCreditScore: cannot update merkle root before delay period');
     });
 
     it('should not be able to post an empty root', async () => {
@@ -101,7 +101,7 @@ describe('SapphireCreditScore', () => {
 
     it('should not be able to update as owner if the contract is not paused', async () => {
       await expect(creditScoreContract.updateMerkleRoot(ONE_BYTES32)).to.be.revertedWith(
-        'SapphireCreditScore: pause contract to update merkle root as owner',
+        'SapphireCreditScore: owner can only update merkle root if paused',
       );
     });
 
@@ -180,11 +180,11 @@ describe('SapphireCreditScore', () => {
       const delay = await mockCreditScoreContract.merkleRootDelayDuration();
       await expect(
         mockCreditScoreContract.connect(merkleRootUpdater).updateMerkleRoot(THREE_BYTES32),
-      ).to.be.revertedWith('SapphireCreditScore: too frequent root update');
+      ).to.be.revertedWith('SapphireCreditScore: cannot update merkle root before delay period');
       await mockCreditScoreContract.setCurrentTimestamp(lastMerkleRootUpdate.add(delay).sub(1));
       await expect(
         mockCreditScoreContract.connect(merkleRootUpdater).updateMerkleRoot(THREE_BYTES32),
-      ).to.be.revertedWith('SapphireCreditScore: too frequent root update');
+      ).to.be.revertedWith('SapphireCreditScore: cannot update merkle root before delay period');
       const { wait: waitFotCurrentTimestamp } = await mockCreditScoreContract.setCurrentTimestamp(
         lastMerkleRootUpdate.add(delay),
       );
