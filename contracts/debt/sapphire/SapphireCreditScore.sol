@@ -140,6 +140,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
             newRoot != 0x0000000000000000000000000000000000000000000000000000000000000000,
             "SapphireCreditScore: root is empty"
         );
+
         if (msg.sender == owner()) {
             updateMerkleRootAsOwner(newRoot);
         } else {
@@ -162,7 +163,12 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         returns (uint256, uint16)
     {
         bytes32 node = keccak256(abi.encodePacked(proof.account, proof.score));
-        require(MerkleProof.verify(proof.merkleProof, currentMerkleRoot, node), "SapphireCreditScore: invalid proof");
+
+        require(
+            MerkleProof.verify(proof.merkleProof, currentMerkleRoot, node),
+            "SapphireCreditScore: invalid proof"
+        );
+
         userScores[proof.account] = CreditScore({
             score: proof.score,
             lastUpdated: getCurrentTimestamp()
@@ -188,6 +194,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
             getCurrentTimestamp() >= merkleRootDelayDuration + lastMerkleRootUpdate,
             "SapphireCreditScore: too frequent root update"
         );
+
         currentMerkleRoot = upcomingMerkleRoot;
         upcomingMerkleRoot = newRoot;
         lastMerkleRootUpdate = getCurrentTimestamp();
@@ -206,6 +213,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
             isPaused == true,
             "SapphireCreditScore: pause contract to update merkle root as owner"
         );
+
         upcomingMerkleRoot = newRoot;
     }
 
