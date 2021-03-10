@@ -159,7 +159,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         SapphireTypes.ScoreProof memory proof
     )
         public
-        returns (uint256)
+        returns (uint256, uint16)
     {
         bytes32 node = keccak256(abi.encodePacked(proof.account, proof.score));
         require(MerkleProof.verify(proof.merkleProof, currentMerkleRoot, node), "SapphireCreditScore: invalid proof");
@@ -169,7 +169,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         });
         emit CreditScoreUpdated(proof.account, proof.score, getCurrentTimestamp());
 
-        return proof.score;
+        return (proof.score, maxScore);
     }
 
      /* ========== Private Functions ========== */
