@@ -192,7 +192,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     {
         require(
             getCurrentTimestamp() >= merkleRootDelayDuration + lastMerkleRootUpdate,
-            "SapphireCreditScore: too frequent root update"
+            "SapphireCreditScore: cannot update merkle root before delay period"
         );
 
         currentMerkleRoot = upcomingMerkleRoot;
@@ -211,7 +211,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     {
         require(
             isPaused == true,
-            "SapphireCreditScore: pause contract to update merkle root as owner"
+            "SapphireCreditScore: owner can only update merkle root if paused"
         );
 
         upcomingMerkleRoot = newRoot;
