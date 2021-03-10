@@ -17,6 +17,7 @@ import { MockMozartCoreV2 } from '@src/typings/MockMozartCoreV2';
 import { MockMozartSavingsV2 } from '@src/typings';
 import { MerkleDistributor } from '@src/typings/MerkleDistributor';
 import { SapphireCreditScore } from '@src/typings/SapphireCreditScore';
+import { MockSapphireCreditScore } from '@src/typings/MockSapphireCreditScore';
 
 export async function deployMockMozartCore(deployer: Signer) {
   const Contract = await ethers.getContractFactory('MockMozartCoreV2', deployer);
@@ -153,4 +154,13 @@ export async function deploySapphireCreditScore(deployer: Signer, merkleRoot: st
   );
   const sapphireCreditScore = await sapphireCreditScoreFactory.deploy(merkleRoot, merkleTreeUpdater, maxScore);
   return sapphireCreditScore as SapphireCreditScore;
+}
+
+export async function deployMockSapphireCreditScore(deployer: Signer, merkleRoot: string, merkleTreeUpdater: string) {
+  const mockSapphireCreditScoreFactory = await ethers.getContractFactory(
+    'MockSapphireCreditScore',
+    deployer,
+  );
+  const mockSapphireCreditScore = await mockSapphireCreditScoreFactory.deploy(merkleRoot, merkleTreeUpdater);
+  return mockSapphireCreditScore as MockSapphireCreditScore;
 }

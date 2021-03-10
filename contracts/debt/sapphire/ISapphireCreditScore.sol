@@ -10,7 +10,7 @@ interface ISapphireCreditScore {
     
     function updateMerkleRootUpdater(address mercleRootUpdator) external;
 
-    function request(SapphireTypes.ScoreProof calldata proof) external returns (uint256);
+    function verifyAndUpdate(SapphireTypes.ScoreProof calldata proof) external returns (uint256);
 
     function getLastScore(address user) external view returns (uint256, uint16, uint256);
 
