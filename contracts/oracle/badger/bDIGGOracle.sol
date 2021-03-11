@@ -29,10 +29,13 @@ contract bDIGGOracle is IOracle {
 
     uint256 public diggBtcChainlinkScalar;
     uint256 public btcUsdChainlinkScalar;
+    uint256 public diggScalar;
 
     constructor() public {
         diggBtcChainlinkScalar = uint256(18 - diggBtcChainlinkOracle.decimals());
         btcUsdChainlinkScalar = uint256(18 - btcUsdChainlinkOracle.decimals());
+
+        diggScalar = uint256(18 - DIGG.decimals());
     }
 
     function fetchCurrentPrice()
@@ -40,7 +43,8 @@ contract bDIGGOracle is IOracle {
         view
         returns (Decimal.D256 memory)
     {
-        uint256 diggPerbDigg = bDIGG.getPricePerFullShare();
+        uint256 totalDiggInbDigg = bDIGG.balance().mul(10 ** diggScalar);
+        uint256 diggPerbDigg = totalDiggInbDigg.mul(10 ** 18).div(bDIGG.totalSupply());
 
         uint256 btcPerDigg = uint256(
             diggBtcChainlinkOracle.latestAnswer()
