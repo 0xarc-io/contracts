@@ -12,6 +12,7 @@ import {IChainLinkAggregator} from "../IChainLinkAggregator.sol";
 
 import {IbDIGG} from "./IbDIGG.sol";
 
+/* solium-disable-next-line */
 contract bDIGGOracle is IOracle {
 
     using SafeMath for uint256;
