@@ -125,4 +125,25 @@ export default {
       );
     },
   },
+  'Pool-8': {
+    source: 'LiquidityCampaign',
+    stakingToken: '0x3252efd4ea2d6c78091a1f43982ee2c3659cc3d1',
+    rewardsToken: 'ArcxToken',
+    rewardsDurationSeconds: 60 * 60 * 24 * 31, // 31 days
+    contractFactory: LiquidityCampaignFactory,
+    getDeployTx: (signer: SignerWithAddress) =>
+      new LiquidityCampaignFactory(signer).getDeployTransaction(),
+    runInit: (
+      contract: LiquidityCampaign,
+      arcDao: string,
+      rewardsDistributor: string,
+      rewardsTokenAddress: string,
+      stakingTokenAddress: string,
+    ) => {
+      const daoAllocation = '400000000000000000';
+      return contract.init(arcDao, rewardsDistributor, rewardsTokenAddress, stakingTokenAddress, {
+        value: daoAllocation,
+      });
+    },
+  },
 };
