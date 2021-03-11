@@ -10,4 +10,9 @@ contract IbDIGG is IERC20 {
         public
         view
         returns (uint256);
+
+    function balance()
+        public
+        view
+        returns (uint256);
 }
