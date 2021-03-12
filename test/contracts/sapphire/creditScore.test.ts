@@ -172,7 +172,7 @@ describe('SapphireCreditScore', () => {
       expect(await creditScoreContract.currentMerkleRoot()).not.eq(maliciousRoot);
     });
 
-    it('should check if delay work properly', async () => {
+    it('should check if updater cannot update merklee root before thee delay duration passes', async () => {
       const mockCreditScoreContract = await deployMockSapphireCreditScore(owner, ONE_BYTES32, merkleRootUpdater.address);
       await mockCreditScoreContract.setPause(false);
       await mockCreditScoreContract.connect(merkleRootUpdater).updateMerkleRoot(TWO_BYTES32);
