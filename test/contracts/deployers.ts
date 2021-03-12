@@ -1,8 +1,6 @@
 import { BigNumberish, Signer } from 'ethers';
 import { ethers } from 'hardhat';
 
-import ArcDecimal from '@src/utils/ArcDecimal';
-
 import { TestTokenFactory } from '@src/typings/TestTokenFactory';
 import { ArcProxyFactory } from '@src/typings/ArcProxyFactory';
 import { SyntheticTokenV1 } from '@src/typings/SyntheticTokenV1';
@@ -18,6 +16,8 @@ import { MockOracle } from '@src/typings/MockOracle';
 import { MockMozartCoreV2 } from '@src/typings/MockMozartCoreV2';
 import { MockMozartSavingsV2 } from '@src/typings';
 import { MerkleDistributor } from '@src/typings/MerkleDistributor';
+import { SapphireCreditScore } from '@src/typings/SapphireCreditScore';
+import { MockSapphireCreditScore } from '@src/typings/MockSapphireCreditScore';
 
 export async function deployMockMozartCore(deployer: Signer) {
   const Contract = await ethers.getContractFactory('MockMozartCoreV2', deployer);
@@ -145,4 +145,22 @@ export async function deployMerkleDistributor(deployer: Signer, token: string, m
   const merkleDistributorFactory = await ethers.getContractFactory('MerkleDistributor', deployer);
   const distributor = await merkleDistributorFactory.deploy(token, merkleRoot);
   return distributor as MerkleDistributor;
+}
+
+export async function deploySapphireCreditScore(deployer: Signer, merkleRoot: string, merkleTreeUpdater: string, maxScore: number) {
+  const sapphireCreditScoreFactory = await ethers.getContractFactory(
+    'SapphireCreditScore',
+    deployer,
+  );
+  const sapphireCreditScore = await sapphireCreditScoreFactory.deploy(merkleRoot, merkleTreeUpdater, maxScore);
+  return sapphireCreditScore as SapphireCreditScore;
+}
+
+export async function deployMockSapphireCreditScore(deployer: Signer, merkleRoot: string, merkleTreeUpdater: string) {
+  const mockSapphireCreditScoreFactory = await ethers.getContractFactory(
+    'MockSapphireCreditScore',
+    deployer,
+  );
+  const mockSapphireCreditScore = await mockSapphireCreditScoreFactory.deploy(merkleRoot, merkleTreeUpdater);
+  return mockSapphireCreditScore as MockSapphireCreditScore;
 }
