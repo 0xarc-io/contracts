@@ -1,26 +1,27 @@
-// import { IbETHOracle } from '@src/typings/IbETHOracle';
-// import { IbETHOracleFactory } from '@src/typings/IbETHOracleFactory';
-// import { XSushiOracle } from '@src/typings/XSushiOracle';
-// import { XSushiOracleFactory } from '@src/typings/XSushiOracleFactory';
-// import { expect } from 'chai';
-// import { ethers } from 'hardhat';
+import { MockProvider } from '@ethereum-waffle/provider';
+import { BigNumber } from '@ethersproject/bignumber';
+import { IbETHOracle } from '@src/typings/IbETHOracle';
+import { IbETHOracleFactory } from '@src/typings/IbETHOracleFactory';
+import { expect } from 'chai';
 
-// /* eslint-disable @typescript-eslint/no-var-requires */
-// const hre = require('hardhat');
+describe('ibETHOracle', () => {
+  let oracle: IbETHOracle;
 
-// describe('ibETHOracle', () => {
-//   let oracle: IbETHOracle;
+  before(async () => {
+    const provider = new MockProvider({
+      ganacheOptions: {
+        fork: 'https://eth-mainnet.alchemyapi.io/v2/HSgFSArdYblhAJVgM8F820KLd65jiFzc',
+        fork_block_number: 12025602,
+      },
+    });
+    const signer = await provider.getSigner();
 
-//   before(async () => {
-//     const signer = await ethers.provider.getSigner();
+    oracle = await new IbETHOracleFactory(signer).deploy();
+  });
 
-//     oracle = await new IbETHOracleFactory(signer).deploy({ gasLimit: 10000000 });
-//     console.log(oracle.address);
-//   });
-
-//   it('should give the correct price', async () => {
-//     const price = await oracle.fetchCurrentPrice();
-//     console.log(price.value.toString());
-//     expect(price).to.not.be.null;
-//   });
-// });
+  it('should give the correct price', async () => {
+    const price = await oracle.fetchCurrentPrice();
+    // $1841.27
+    expect(price.value).to.eq(BigNumber.from('1841274068383565629474'));
+  });
+});
