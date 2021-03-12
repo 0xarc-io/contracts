@@ -9,13 +9,6 @@ import {SapphireTypes} from "./SapphireTypes.sol";
 import {ISapphireCreditScore} from "./ISapphireCreditScore.sol";
 
 contract SapphireCreditScore is ISapphireCreditScore, Ownable {
-    /* ========== Structs ========== */
-
-    struct CreditScore {
-        uint256 score;
-        uint256 lastUpdated;
-    }
-
     /* ========== Events ========== */
 
     event MerkleRootUpdated(
@@ -53,7 +46,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
 
     address public merkleRootUpdater;
 
-    mapping(address => CreditScore) public userScores;
+    mapping(address => SapphireTypes.CreditScore) public userScores;
 
     /* ========== Modifiers ========== */
 
@@ -110,7 +103,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         view
         returns (uint256, uint16, uint256)
     {
-        CreditScore memory userScore = userScores[user];
+        SapphireTypes.CreditScore memory userScore = userScores[user];
         return (userScore.score, maxScore, userScore.lastUpdated);
     }
 
@@ -169,7 +162,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
             "SapphireCreditScore: invalid proof"
         );
 
-        userScores[proof.account] = CreditScore({
+        userScores[proof.account] = SapphireTypes.CreditScore({
             score: proof.score,
             lastUpdated: getCurrentTimestamp()
         });
