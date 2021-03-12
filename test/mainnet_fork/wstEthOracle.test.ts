@@ -1,21 +1,27 @@
-// import { WstEthOracle } from '@src/typings/WstEthOracle';
-// import { WstEthOracleFactory } from '@src/typings/WstEthOracleFactory';
-// import { expect } from 'chai';
-// import { ethers } from 'hardhat';
+import { MockProvider } from '@ethereum-waffle/provider';
+import { BigNumber } from '@ethersproject/bignumber';
+import { WstEthOracle } from '@src/typings/WstEthOracle';
+import { WstEthOracleFactory } from '@src/typings/WstEthOracleFactory';
+import { expect } from 'chai';
 
-// describe.skip('WstEthOracle', () => {
-//   let oracle: WstEthOracle;
+describe('WstEthOracle', () => {
+  let oracle: WstEthOracle;
 
-//   before(async () => {
-//     const signer = await ethers.provider.getSigner();
+  before(async () => {
+    const provider = new MockProvider({
+      ganacheOptions: {
+        fork: 'https://eth-mainnet.alchemyapi.io/v2/HSgFSArdYblhAJVgM8F820KLd65jiFzc',
+        fork_block_number: 12025602,
+      },
+    });
+    const signer = await provider.getSigner();
 
-//     oracle = await new WstEthOracleFactory(signer).deploy({ gasLimit: 10000000 });
-//     console.log('oracle address:', oracle.address);
-//   });
+    oracle = await new WstEthOracleFactory(signer).deploy();
+  });
 
-//   it('should give the correct price', async () => {
-//     const price = await oracle.fetchCurrentPrice();
-//     console.log('price:', price.value.toString());
-//     expect(price).to.not.be.null;
-//   });
-// });
+  it('should give the correct price', async () => {
+    const price = await oracle.fetchCurrentPrice();
+    // $1724.70
+    expect(price.value).to.eq(BigNumber.from('1724700091306820052052'));
+  });
+});
