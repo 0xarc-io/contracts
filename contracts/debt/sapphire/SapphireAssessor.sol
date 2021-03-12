@@ -36,7 +36,7 @@ contract SapphireAssessor is Ownable {
         require(
             _mapper != address(0) &&
             _creditScore != address(0),
-            "The mapper and the credit score addresses cannot be null"
+            "SapphireAssessor: The mapper and the credit score addresses cannot be null"
         );
 
         mapper = ISapphireMapper(_mapper);
@@ -62,22 +62,22 @@ contract SapphireAssessor is Ownable {
     {
         require(
             _upperBound > 0,
-            "The upper bound cannot be empty"
+            "SapphireAssessor: The upper bound cannot be empty"
         );
 
         require(
             _scoreProof.account != address(0),
-            "The account cannot be empty"
+            "SapphireAssessor: The account cannot be empty"
         );
 
         require(
             _lowerBound < _upperBound,
-            "The lower bound must be smaller than the upper bound"
+            "SapphireAssessor: The lower bound exceeds the upper bound"
         );
 
         uint256 creditScore;
         uint16 maxScore;
-        
+
         // If there's no proof passed, use the latest credit score
         if (_scoreProof.merkleProof.length == 0) {
             (creditScore, maxScore,) = creditScoreContract.getLastScore(_scoreProof.account);
@@ -95,7 +95,7 @@ contract SapphireAssessor is Ownable {
         require(
             result >= _lowerBound &&
             result <= _upperBound,
-            "The mapper returned a value outside the lower and upper bounds"
+            "SapphireAssessor: The mapper returned a value out of bounds"
         );
 
         emit Assessed(result);
@@ -111,12 +111,12 @@ contract SapphireAssessor is Ownable {
     {
         require(
             _mapper != address(0),
-            "The new mapper cannot be null"
+            "SapphireAssessor: The new mapper cannot be null"
         );
 
         require(
             _mapper != address(mapper),
-            "The same mapper is already set"
+            "SapphireAssessor: The same mapper is already set"
         );
 
         mapper = ISapphireMapper(_mapper);
@@ -130,12 +130,12 @@ contract SapphireAssessor is Ownable {
     {
         require(
             _creditScore != address(0),
-            "The new credit score contract address cannot be null"
+            "SapphireAssessor: The new credit score contract address cannot be null"
         );
 
         require(
             _creditScore != address(creditScoreContract),
-            "The same credit score contract is already set"
+            "SapphireAssessor: The same credit score contract is already set"
         );
 
         creditScoreContract = ISapphireCreditScore(_creditScore);
