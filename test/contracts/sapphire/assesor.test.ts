@@ -13,7 +13,7 @@ import { ethers } from 'hardhat';
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
-describe('SapphireAssessor', () => {
+describe.only('SapphireAssessor', () => {
   let owner: SignerWithAddress;
   let assessor: SapphireAssessor;
   let mapper: SapphireMapperLinear;
@@ -102,21 +102,27 @@ describe('SapphireAssessor', () => {
           '0x0000000000000000000000000000000000000000',
           creditScoreContract.address,
         ),
-      ).to.be.revertedWith('The mapper and the credit score addresses cannot be null');
+      ).to.be.revertedWith(
+        'SapphireAssessor: The mapper and the credit score addresses cannot be null',
+      );
 
       await expect(
         new SapphireAssessorFactory(owner).deploy(
           mapper.address,
           '0x0000000000000000000000000000000000000000',
         ),
-      ).to.be.revertedWith('The mapper and the credit score addresses cannot be null');
+      ).to.be.revertedWith(
+        'SapphireAssessor: The mapper and the credit score addresses cannot be null',
+      );
 
       await expect(
         new SapphireAssessorFactory(owner).deploy(
           '0x0000000000000000000000000000000000000000',
           '0x0000000000000000000000000000000000000000',
         ),
-      ).to.be.revertedWith('The mapper and the credit score addresses cannot be null');
+      ).to.be.revertedWith(
+        'SapphireAssessor: The mapper and the credit score addresses cannot be null',
+      );
     });
 
     it('initializes the mapper and the credit score', async () => {
@@ -139,7 +145,7 @@ describe('SapphireAssessor', () => {
           score: 100,
           merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
         }),
-      ).to.be.revertedWith('The upper bound cannot be empty');
+      ).to.be.revertedWith('SapphireAssessor: The upper bound cannot be empty');
 
       // account is empty
       await expect(
@@ -148,7 +154,7 @@ describe('SapphireAssessor', () => {
           score: creditScore1.amount,
           merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
         }),
-      ).to.be.revertedWith('The account cannot be empty');
+      ).to.be.revertedWith('SapphireAssessor: The account cannot be empty');
     });
 
     it('reverts if lower bound is not smaller than upper bound', async () => {
@@ -158,7 +164,7 @@ describe('SapphireAssessor', () => {
           score: creditScore1.amount,
           merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
         }),
-      ).to.be.revertedWith('The lower bound must be smaller than the upper bound');
+      ).to.be.revertedWith('SapphireAssessor: The lower bound exceeds the upper bound');
     });
 
     it('reverts if the mapper returns a value that is outside the lower and upper bounds', async () => {
@@ -176,7 +182,7 @@ describe('SapphireAssessor', () => {
           score: creditScore1.amount,
           merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
         }),
-      ).to.be.revertedWith('The mapper returned a value outside the lower and upper bounds');
+      ).to.be.revertedWith('SapphireAssessor: The mapper returned a value out of bounds');
 
       await testMapper.setMapResult(11);
 
@@ -186,7 +192,7 @@ describe('SapphireAssessor', () => {
           score: creditScore1.amount,
           merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
         }),
-      ).to.be.revertedWith('The mapper returned a value outside the lower and upper bounds');
+      ).to.be.revertedWith('SapphireAssessor: The mapper returned a value out of bounds');
     });
 
     it('reverts if the proof is invalid', async () => {
@@ -277,7 +283,7 @@ describe('SapphireAssessor', () => {
       );
       await expect(
         assessor.setMapper('0x0000000000000000000000000000000000000000'),
-      ).to.be.revertedWith('The new mapper cannot be null');
+      ).to.be.revertedWith('SapphireAssessor: The new mapper cannot be null');
     });
 
     it('reverts if the new mapper is the same as the existing one', async () => {
@@ -308,12 +314,14 @@ describe('SapphireAssessor', () => {
     it('reverts if new address is 0', async () => {
       await expect(
         assessor.setCreditScoreContract('0x0000000000000000000000000000000000000000'),
-      ).to.be.revertedWith('The new credit score contract address cannot be null');
+      ).to.be.revertedWith(
+        'SapphireAssessor: The new credit score contract address cannot be null',
+      );
     });
 
     it('reverts if new address is the same as the existing one', async () => {
       await expect(assessor.setCreditScoreContract(creditScoreContract.address)).to.be.revertedWith(
-        'The same credit score contract is already set',
+        'SapphireAssessor: The same credit score contract is already set',
       );
     });
 
