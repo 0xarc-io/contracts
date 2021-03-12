@@ -19,6 +19,7 @@ import { TestToken } from '@src/typings/TestToken';
 import { SpritzTestArc } from '@src/SpritzTestArc';
 import { MozartTestArc } from '@src/MozartTestArc';
 import { MockMozartCoreV2, MockMozartSavingsV2 } from '@src/typings';
+import { SapphireCreditScore } from '@src/typings/SapphireCreditScore';
 
 export interface TestingSigners {
   admin: SignerWithAddress;
@@ -49,6 +50,9 @@ export interface Contracts {
     core: MockMozartCoreV2;
     savings: MockMozartSavingsV2;
   };
+  sapphire: {
+    creditScore: SapphireCreditScore;
+  }
   synthetic: {
     static: StaticSyntheticToken;
     tokenV1: SyntheticTokenV1;
