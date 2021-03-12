@@ -13,7 +13,7 @@ import { ethers } from 'hardhat';
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
-describe.only('SapphireAssessor', () => {
+describe('SapphireAssessor', () => {
   let owner: SignerWithAddress;
   let assessor: SapphireAssessor;
   let mapper: SapphireMapperLinear;
