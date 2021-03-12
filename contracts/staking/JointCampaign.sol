@@ -602,15 +602,6 @@ contract JointCampaign is Ownable {
             "Must be a valid minter"
         );
 
-        // This stops an attack vector where a user stakes a lot of money
-        // then drops the debt requirement by staking less before the deadline
-        // to reduce the amount of debt they need to lock in
-
-        require(
-            debtRequirement >= staker.debtSnapshot,
-            "Your new debt requirement cannot be lower than last time"
-        );
-
         if (staker.positionId == 0) {
             staker.positionId = _positionId;
         }
@@ -709,22 +700,26 @@ contract JointCampaign is Ownable {
     }
 
     function withdraw(
-        uint256 amount
+        uint256 _amount
     )
         public
         updateReward(msg.sender, address(0))
     {
         require(
-            amount >= 0,
+            _amount >= 0,
             "Cannot withdraw less than 0"
         );
 
-        _totalSupply = _totalSupply.sub(amount);
-        stakers[msg.sender].balance = stakers[msg.sender].balance.sub(amount);
+        _totalSupply = _totalSupply.sub(_amount);
 
-        stakingToken.safeTransfer(msg.sender, amount);
+        Staker storage staker = stakers[msg.sender];
 
-        emit Withdrawn(msg.sender, amount);
+        staker.balance = staker.balance.sub(_amount);
+        staker.debtSnapshot = staker.balance.div(uint256(stakeToDebtRatio));
+
+        stakingToken.safeTransfer(msg.sender, _amount);
+
+        emit Withdrawn(msg.sender, _amount);
     }
 
     function exit()

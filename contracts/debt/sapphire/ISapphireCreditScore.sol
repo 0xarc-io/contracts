@@ -10,9 +10,9 @@ interface ISapphireCreditScore {
     
     function updateMerkleRoot(bytes32 newRoot) external;
     
-    function updateMerkleRootUpdater(address mercleRootUpdator) external;
+    function updateMerkleRootUpdater(address merkleRootUpdator) external;
 
-    function request(SapphireTypes.ScoreProof calldata proof) external returns (uint256, uint16);
+    function verifyAndUpdate(SapphireTypes.ScoreProof calldata proof) external returns (uint256, uint16);
 
     function getLastScore(address user) external view returns (uint256, uint16, uint256);
 
