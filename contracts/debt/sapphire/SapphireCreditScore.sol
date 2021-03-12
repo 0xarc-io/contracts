@@ -85,7 +85,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         maxScore = _maxScore;
     }
 
-  /* ========== Functions ========== */
+    /* ========== View Functions ========== */
 
     /**
      * @dev Returns current block's timestamp
@@ -99,6 +99,22 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     {
         return block.timestamp;
     }
+
+   /**
+     * @dev Return last verified user score
+     */
+    function getLastScore(
+        address user
+    )
+        public
+        view
+        returns (uint256, uint16, uint256)
+    {
+        CreditScore memory userScore = userScores[user];
+        return (userScore.score, maxScore, userScore.lastUpdated);
+    }
+
+    /* ========== Mutative Functions ========== */
 
     /**
      * @dev Update upcoming merkle root
@@ -118,12 +134,13 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     function updateMerkleRoot(
         bytes32 newRoot
     )
-    public
+        public
     {
         require(
             newRoot != 0x0000000000000000000000000000000000000000000000000000000000000000,
             "SapphireCreditScore: root is empty"
         );
+
         if (msg.sender == owner()) {
             updateMerkleRootAsOwner(newRoot);
         } else {
@@ -131,6 +148,37 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         }
         emit MerkleRootUpdated(msg.sender, newRoot, getCurrentTimestamp());
     }
+
+   /**
+     * @dev Request for verifying user's credit score
+     * 
+     * @notice If credit score is verified, this function updated user credit scores with verified one and current timestmp
+     *
+     * @param proof Data required to verify if score is correct for current merkle root
+     */
+    function verifyAndUpdate(
+        SapphireTypes.ScoreProof memory proof
+    )
+        public
+        returns (uint256, uint16)
+    {
+        bytes32 node = keccak256(abi.encodePacked(proof.account, proof.score));
+
+        require(
+            MerkleProof.verify(proof.merkleProof, currentMerkleRoot, node),
+            "SapphireCreditScore: invalid proof"
+        );
+
+        userScores[proof.account] = CreditScore({
+            score: proof.score,
+            lastUpdated: getCurrentTimestamp()
+        });
+        emit CreditScoreUpdated(proof.account, proof.score, getCurrentTimestamp());
+
+        return (proof.score, maxScore);
+    }
+
+     /* ========== Private Functions ========== */
 
     /**
      * @dev Merkle root updating strategy for merkle root updator
@@ -144,8 +192,9 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     {
         require(
             getCurrentTimestamp() >= merkleRootDelayDuration + lastMerkleRootUpdate,
-            "SapphireCreditScore: too frequent root update"
+            "SapphireCreditScore: cannot update merkle root before delay period"
         );
+
         currentMerkleRoot = upcomingMerkleRoot;
         upcomingMerkleRoot = newRoot;
         lastMerkleRootUpdate = getCurrentTimestamp();
@@ -162,49 +211,13 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     {
         require(
             isPaused == true,
-            "SapphireCreditScore: pause contract to update merkle root as owner"
+            "SapphireCreditScore: owner can only update merkle root if paused"
         );
+
         upcomingMerkleRoot = newRoot;
     }
 
-   /**
-     * @dev Request for verifying user's credit score
-     * 
-     * @notice If credit score is verified, this function updated user credit scores with verified one and current timestmp
-     *
-     * @param proof Data required to verify if score is correct for current merkle root
-     */
-    function request(
-        SapphireTypes.ScoreProof memory proof
-    )
-        public
-        returns (uint256, uint16)
-    {
-        bytes32 node = keccak256(abi.encodePacked(proof.account, proof.score));
-        require(MerkleProof.verify(proof.merkleProof, currentMerkleRoot, node), "SapphireCreditScore: invalid proof");
-        userScores[proof.account] = CreditScore({
-            score: proof.score,
-            lastUpdated: getCurrentTimestamp()
-        });
-        emit CreditScoreUpdated(proof.account, proof.score, getCurrentTimestamp());
-
-        return (proof.score, maxScore);
-    }
-
-   /**
-     * @dev Return last verified user score
-     */
-    function getLastScore(
-        address user
-    )
-        public
-        view
-        returns (uint256, uint16, uint256)
-    {
-        CreditScore memory userScore = userScores[user];
-        return (userScore.score, maxScore, userScore.lastUpdated);
-    }
-
+    /* ========== Owner Functions ========== */
 
     /**
      * @dev Update merkle root delay durration

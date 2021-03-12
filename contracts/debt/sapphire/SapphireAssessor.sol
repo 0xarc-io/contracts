@@ -82,7 +82,7 @@ contract SapphireAssessor is Ownable {
         if (_scoreProof.merkleProof.length == 0) {
             (creditScore, maxScore,) = creditScoreContract.getLastScore(_scoreProof.account);
         } else {
-            (creditScore, maxScore) = creditScoreContract.request(_scoreProof);
+            (creditScore, maxScore) = creditScoreContract.verifyAndUpdate(_scoreProof);
         }
 
         uint256 result = mapper.map(

@@ -1,13 +1,13 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
-import { SapphireCreditScore } from '@src/typings';
-import { MockSapphireCreditScoreFactory } from '@src/typings/MockSapphireCreditScoreFactory';
+import { SapphireCreditScore } from '@src/typings/SapphireCreditScore';
 import { getTxnTimestamp } from '@test/helpers/getTxnTimestamp';
 import chai, { expect } from 'chai';
 import { solidity } from 'ethereum-waffle';
 import { BigNumber } from 'ethers';
 import 'module-alias/register';
 import { generateContext, ITestContext } from '../context';
+import { deployMockSapphireCreditScore } from '../deployers';
 import { createSapphireFixture } from '../fixtures';
 
 chai.use(solidity);
@@ -25,16 +25,20 @@ describe('SapphireCreditScore', () => {
   let ctx: ITestContext;
   let creditScoreContract: SapphireCreditScore;
   let merkleRootUpdater: SignerWithAddress;
+  let unauthorised: SignerWithAddress;
+  let owner: SignerWithAddress;
 
   beforeEach(async () => {
     ctx = await generateContext(createSapphireFixture(), async () => {});
     creditScoreContract = ctx.contracts.sapphire.creditScore;
     merkleRootUpdater = ctx.signers.interestSetter;
+    unauthorised = ctx.signers.unauthorised;
+    owner = ctx.signers.admin;
   });
 
   it('should have merkle root updater not equal owner', async () => {
     const merkleRootUpdaterAddress = await creditScoreContract.merkleRootUpdater();
-    expect(merkleRootUpdaterAddress).not.eq(ctx.signers.admin.address);
+    expect(merkleRootUpdaterAddress).not.eq(owner.address);
     expect(merkleRootUpdaterAddress).eq(merkleRootUpdater.address);
   });
 
@@ -45,11 +49,11 @@ describe('SapphireCreditScore', () => {
 
     it('revert if trying to pause as an unauthorised user', async () => {
       expect(await creditScoreContract.merkleRootUpdater()).not.eq(
-        ctx.signers.unauthorised.address,
+        unauthorised.address,
       );
-      expect(await creditScoreContract.owner()).not.eq(ctx.signers.unauthorised.address);
+      expect(await creditScoreContract.owner()).not.eq(unauthorised.address);
       await expect(
-        creditScoreContract.connect(ctx.signers.unauthorised).setPause(false),
+        creditScoreContract.connect(unauthorised).setPause(false),
       ).to.be.revertedWith('Ownable: caller is not the owner');
     });
 
@@ -76,7 +80,7 @@ describe('SapphireCreditScore', () => {
 
     it('should not be able to update the merkle root as an unauthorised user', async () => {
       await expect(
-        creditScoreContract.connect(ctx.signers.unauthorised).updateMerkleRoot(ONE_BYTES32),
+        creditScoreContract.connect(unauthorised).updateMerkleRoot(ONE_BYTES32),
       ).to.be.revertedWith('SapphireCreditScore: caller is not authorized to update merkle root');
     });
 
@@ -84,7 +88,7 @@ describe('SapphireCreditScore', () => {
       await creditScoreContract.connect(merkleRootUpdater).updateMerkleRoot(ONE_BYTES32);
       await expect(
         creditScoreContract.connect(merkleRootUpdater).updateMerkleRoot(ONE_BYTES32),
-      ).to.be.revertedWith('SapphireCreditScore: too frequent root update');
+      ).to.be.revertedWith('SapphireCreditScore: cannot update merkle root before delay period');
     });
 
     it('should not be able to post an empty root', async () => {
@@ -97,7 +101,7 @@ describe('SapphireCreditScore', () => {
 
     it('should not be able to update as owner if the contract is not paused', async () => {
       await expect(creditScoreContract.updateMerkleRoot(ONE_BYTES32)).to.be.revertedWith(
-        'SapphireCreditScore: pause contract to update merkle root as owner',
+        'SapphireCreditScore: owner can only update merkle root if paused',
       );
     });
 
@@ -106,12 +110,12 @@ describe('SapphireCreditScore', () => {
       const currentMerkleRoot = await creditScoreContract.currentMerkleRoot();
       const initialLastMerkleRootUpdate = await creditScoreContract.lastMerkleRootUpdate();
       const updateMerkleRootTxn = creditScoreContract
-        .connect(ctx.signers.admin)
+        .connect(owner)
         .updateMerkleRoot(TWO_BYTES32);
       const txnBlockTimestamp = await getTxnTimestamp(ctx, updateMerkleRootTxn);
       await expect(updateMerkleRootTxn)
         .to.emit(creditScoreContract, 'MerkleRootUpdated')
-        .withArgs(ctx.signers.admin.address, TWO_BYTES32, txnBlockTimestamp);
+        .withArgs(owner.address, TWO_BYTES32, txnBlockTimestamp);
       expect(await creditScoreContract.upcomingMerkleRoot()).eq(TWO_BYTES32);
       expect(await creditScoreContract.currentMerkleRoot()).eq(currentMerkleRoot);
       expect(await creditScoreContract.lastMerkleRootUpdate()).eq(initialLastMerkleRootUpdate);
@@ -119,10 +123,13 @@ describe('SapphireCreditScore', () => {
 
     it('instantly update merkle root avoiding time delay as the owner', async () => {
       await creditScoreContract.connect(merkleRootUpdater).updateMerkleRoot(TWO_BYTES32);
+
       const initialLastMerkleRootUpdate = await creditScoreContract.lastMerkleRootUpdate();
       const initialCurrentMerkleRoot = await creditScoreContract.currentMerkleRoot();
-      await creditScoreContract.connect(ctx.signers.admin).setPause(true);
-      await creditScoreContract.connect(ctx.signers.admin).updateMerkleRoot(THREE_BYTES32);
+
+      await creditScoreContract.connect(owner).setPause(true);
+      await creditScoreContract.connect(owner).updateMerkleRoot(THREE_BYTES32);
+
       expect(await creditScoreContract.lastMerkleRootUpdate()).eq(initialLastMerkleRootUpdate);
       expect(await creditScoreContract.currentMerkleRoot()).eq(initialCurrentMerkleRoot);
       expect(await creditScoreContract.upcomingMerkleRoot()).eq(THREE_BYTES32);
@@ -134,6 +141,7 @@ describe('SapphireCreditScore', () => {
         .connect(merkleRootUpdater)
         .updateMerkleRoot(TWO_BYTES32);
       const timestamp = await getTxnTimestamp(ctx, updateMerkleRootTxn);
+
       await expect(updateMerkleRootTxn)
         .to.emit(creditScoreContract, 'MerkleRootUpdated')
         .withArgs(merkleRootUpdater.address, TWO_BYTES32, timestamp);
@@ -154,31 +162,29 @@ describe('SapphireCreditScore', () => {
       expect(await creditScoreContract.upcomingMerkleRoot()).eq(maliciousRoot);
       await creditScoreContract.setPause(true);
       const updateMerkleRootTxn = creditScoreContract
-        .connect(ctx.signers.admin)
+        .connect(owner)
         .updateMerkleRoot(THREE_BYTES32);
       const timestamp = await getTxnTimestamp(ctx, updateMerkleRootTxn);
       await expect(updateMerkleRootTxn)
         .to.emit(creditScoreContract, 'MerkleRootUpdated')
-        .withArgs(ctx.signers.admin.address, THREE_BYTES32, timestamp);
+        .withArgs(owner.address, THREE_BYTES32, timestamp);
       expect(await creditScoreContract.upcomingMerkleRoot()).eq(THREE_BYTES32);
       expect(await creditScoreContract.currentMerkleRoot()).not.eq(maliciousRoot);
     });
 
-    it('should check if delay work properly', async () => {
-      const mockCreditScoreContract = await new MockSapphireCreditScoreFactory(
-        ctx.signers.admin,
-      ).deploy(ONE_BYTES32, merkleRootUpdater.address);
+    it('should check if updater cannot update merklee root before thee delay duration passes', async () => {
+      const mockCreditScoreContract = await deployMockSapphireCreditScore(owner, ONE_BYTES32, merkleRootUpdater.address);
       await mockCreditScoreContract.setPause(false);
       await mockCreditScoreContract.connect(merkleRootUpdater).updateMerkleRoot(TWO_BYTES32);
       const lastMerkleRootUpdate = await mockCreditScoreContract.lastMerkleRootUpdate();
       const delay = await mockCreditScoreContract.merkleRootDelayDuration();
       await expect(
         mockCreditScoreContract.connect(merkleRootUpdater).updateMerkleRoot(THREE_BYTES32),
-      ).to.be.revertedWith('SapphireCreditScore: too frequent root update');
+      ).to.be.revertedWith('SapphireCreditScore: cannot update merkle root before delay period');
       await mockCreditScoreContract.setCurrentTimestamp(lastMerkleRootUpdate.add(delay).sub(1));
       await expect(
         mockCreditScoreContract.connect(merkleRootUpdater).updateMerkleRoot(THREE_BYTES32),
-      ).to.be.revertedWith('SapphireCreditScore: too frequent root update');
+      ).to.be.revertedWith('SapphireCreditScore: cannot update merkle root before delay period');
       const { wait: waitFotCurrentTimestamp } = await mockCreditScoreContract.setCurrentTimestamp(
         lastMerkleRootUpdate.add(delay),
       );
@@ -189,18 +195,18 @@ describe('SapphireCreditScore', () => {
     });
   });
 
-  describe('#request', async () => {
+  describe('#verifyAndUpdate', async () => {
     let tree: CreditScoreTree;
     let creditScore1;
     let creditScore2;
 
     beforeEach(async () => {
       creditScore1 = {
-        account: ctx.signers.admin.address,
+        account: owner.address,
         amount: BigNumber.from(12),
       };
       creditScore2 = {
-        account: ctx.signers.unauthorised.address,
+        account: unauthorised.address,
         amount: BigNumber.from(20),
       };
       tree = new CreditScoreTree([creditScore1, creditScore2]);
@@ -210,40 +216,40 @@ describe('SapphireCreditScore', () => {
 
     it('should be able to verify and update a users score', async () => {
       expect(await creditScoreContract.currentMerkleRoot()).eq(tree.getHexRoot());
-      const requestTxn = creditScoreContract
-        .connect(ctx.signers.unauthorised)
-        .request(getRequest(creditScore1.account, creditScore1.amount, tree));
-      const requestTimestamp = await getTxnTimestamp(ctx, requestTxn);
-      expect(requestTxn)
+      const verifyAndUpdateTxn = creditScoreContract
+        .connect(unauthorised)
+        .verifyAndUpdate(getVerifyRequest(creditScore1.account, creditScore1.amount, tree));
+      const verifyAndUpdateTimestamp = await getTxnTimestamp(ctx, verifyAndUpdateTxn);
+      expect(verifyAndUpdateTxn)
         .to.emit(creditScoreContract, 'CreditScoreUpdated')
-        .withArgs(creditScore1.account, creditScore1.amount, requestTimestamp);
+        .withArgs(creditScore1.account, creditScore1.amount, verifyAndUpdateTimestamp);
 
       const { 0: creditScore, 1: maxCreditScore, 2: lastUpdated } = await creditScoreContract.getLastScore(
         creditScore1.account,
       );
       expect(creditScore).eq(creditScore1.amount);
-      expect(lastUpdated).eq(requestTimestamp);
+      expect(lastUpdated).eq(verifyAndUpdateTimestamp);
       expect(maxCreditScore).eq(await creditScoreContract.maxScore());
     });
 
-    it('should not be able to request an invalid proof', async () => {
+    it('should not be able to verifyAndUpdate an invalid proof', async () => {
       const invalidTree = new CreditScoreTree([
         { ...creditScore1, amount: BigNumber.from(99) },
         creditScore2,
       ]);
       await expect(
         creditScoreContract
-          .connect(ctx.signers.unauthorised)
-          .request(getRequest(creditScore1.account, BigNumber.from(99), invalidTree)),
+          .connect(unauthorised)
+          .verifyAndUpdate(getVerifyRequest(creditScore1.account, BigNumber.from(99), invalidTree)),
       ).to.be.revertedWith('SapphireCreditScore: invalid proof');
     });
 
     it('should reverify a score and change timestamp when score is the same', async () => {
-      const creditScoreContract = await new MockSapphireCreditScoreFactory(
-        ctx.signers.admin,
-      ).deploy(tree.getHexRoot(), merkleRootUpdater.address);
+      const creditScoreContract = await deployMockSapphireCreditScore(
+        owner,tree.getHexRoot(), merkleRootUpdater.address
+      );
       await expect(
-        creditScoreContract.request(getRequest(creditScore1.account, creditScore1.amount, tree)),
+        creditScoreContract.verifyAndUpdate(getVerifyRequest(creditScore1.account, creditScore1.amount, tree)),
       )
         .to.emit(creditScoreContract, 'CreditScoreUpdated')
         .withArgs(
@@ -253,21 +259,21 @@ describe('SapphireCreditScore', () => {
         );
       await creditScoreContract.setCurrentTimestamp(631000);
       await expect(
-        creditScoreContract.request(getRequest(creditScore1.account, creditScore1.amount, tree)),
+        creditScoreContract.verifyAndUpdate(getVerifyRequest(creditScore1.account, creditScore1.amount, tree)),
       )
         .to.emit(creditScoreContract, 'CreditScoreUpdated')
         .withArgs(creditScore1.account, creditScore1.amount, 631000);
     });
 
     it('should reverify a score and change timestamp after merkle root was changed', async () => {
-      const creditScoreContract = await new MockSapphireCreditScoreFactory(
-        ctx.signers.admin,
-      ).deploy(tree.getHexRoot(), merkleRootUpdater.address);
+      const creditScoreContract = await deployMockSapphireCreditScore(
+        owner,tree.getHexRoot(), merkleRootUpdater.address
+      );
       await creditScoreContract.setPause(false)
       const initTimestamp = await creditScoreContract.getCurrentTimestamp();
       const merkleRootDelay = await creditScoreContract.merkleRootDelayDuration();
       await expect(
-        creditScoreContract.request(getRequest(creditScore1.account, creditScore1.amount, tree)),
+        creditScoreContract.verifyAndUpdate(getVerifyRequest(creditScore1.account, creditScore1.amount, tree)),
       )
         .to.emit(creditScoreContract, 'CreditScoreUpdated')
         .withArgs(creditScore1.account, creditScore1.amount, initTimestamp);
@@ -283,7 +289,7 @@ describe('SapphireCreditScore', () => {
       await creditScoreContract.connect(merkleRootUpdater).updateMerkleRoot(TWO_BYTES32);
 
       await expect(
-        creditScoreContract.request(getRequest(creditScore1.account, changedAmount, newTree)),
+        creditScoreContract.verifyAndUpdate(getVerifyRequest(creditScore1.account, changedAmount, newTree)),
       )
         .to.emit(creditScoreContract, 'CreditScoreUpdated')
         .withArgs(creditScore1.account, changedAmount, changedTimestamp);
@@ -317,7 +323,7 @@ describe('SapphireCreditScore', () => {
     it('should be able to update as the owner', async () => {
       await expect(creditScoreContract.setMerkleRootDelay(5))
         .to.emit(creditScoreContract, 'DelayDurationUpdated')
-        .withArgs(ctx.signers.admin.address, 5);
+        .withArgs(owner.address, 5);
       expect(await creditScoreContract.merkleRootDelayDuration()).eq(5);
     });
 
@@ -329,7 +335,7 @@ describe('SapphireCreditScore', () => {
   });
 });
 
-function getRequest(account: string, amount: BigNumber, tree: CreditScoreTree) {
+function getVerifyRequest(account: string, amount: BigNumber, tree: CreditScoreTree) {
   return {
     account: account,
     score: amount,
