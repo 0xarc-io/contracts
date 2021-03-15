@@ -13,4 +13,9 @@ library SapphireTypes {
         bytes32[] merkleProof;
     }
 
+    struct CreditScore {
+        uint256 score;
+        uint256 lastUpdated;
+    }
+
 }
