@@ -22,6 +22,7 @@ describe.only('SapphireAssessor', () => {
   let creditScoreTree: CreditScoreTree;
   let creditScore1: CreditScore;
   let creditScore2: CreditScore;
+  let creditScore3: CreditScore;
   let user1: SignerWithAddress;
   let user2: SignerWithAddress;
 
@@ -82,7 +83,12 @@ describe.only('SapphireAssessor', () => {
       amount: BigNumber.from(200),
     };
 
-    creditScoreTree = new CreditScoreTree([creditScore1, creditScore2]);
+    creditScore3 = {
+      account: signers[3].address,
+      amount: BigNumber.from(300),
+    };
+
+    creditScoreTree = new CreditScoreTree([creditScore1, creditScore2, creditScore3]);
 
     creditScoreContract = await new MockSapphireCreditScoreFactory(owner).deploy(
       creditScoreTree.getHexRoot(),
@@ -254,17 +260,16 @@ describe.only('SapphireAssessor', () => {
     });
 
     it(`returns the upperBound if the user doesn't have an existing score, score is required and no proof`, async () => {
-      // If there's no score & no proof, pass the lowest credit score to the mapper
       await expect(
         assessor.assess(
           1,
           10,
           {
-            account: user2.address,
+            account: creditScore3.account,
             score: 0,
             merkleProof: [],
           },
-          false,
+          true,
         ),
       )
         .to.emit(assessor, 'Assessed')
@@ -274,12 +279,12 @@ describe.only('SapphireAssessor', () => {
     it(`throw an error if the user has an existing score, score is required and no proof`, async () => {
       await expect(
         assessor.assess(
-          ArcNumber.new(100),
-          ArcNumber.new(200),
+          1,
+          10,
           {
-            account: user1.address,
-            score: creditScore1.amount,
-            merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
+            account: user2.address,
+            score: creditScore2.amount,
+            merkleProof: creditScoreTree.getProof(creditScore2.account, creditScore2.amount),
           },
           true,
         ),
