@@ -3,10 +3,33 @@
 
 pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
+import {SafeMath} from "../../lib/SafeMath.sol";
 
 import {SapphireTypes} from "./SapphireTypes.sol";
 
 contract SapphireCore {
+
+    /* ========== Libraries ========== */
+
+    using SafeMath for uint256;
+
+    /* ========== Constants ========== */
+
+    uint256 constant BASE = 10**18;
+
+    /* ========== Types ========== */
+
+    enum Operation {
+        Open,
+        Borrow,
+        Repay,
+        Liquidate,
+        TransferOwnership
+    }
+
+    /* ========== Events ========== */
+
+    /* ========== Public Functions ========== */
 
     function open(
         uint256 collateralAmount,
