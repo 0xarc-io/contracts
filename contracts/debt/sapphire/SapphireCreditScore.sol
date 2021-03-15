@@ -9,13 +9,6 @@ import {SapphireTypes} from "./SapphireTypes.sol";
 import {ISapphireCreditScore} from "./ISapphireCreditScore.sol";
 
 contract SapphireCreditScore is ISapphireCreditScore, Ownable {
-    /* ========== Structs ========== */
-
-    struct CreditScore {
-        uint256 score;
-        uint256 lastUpdated;
-    }
-
     /* ========== Events ========== */
 
     event MerkleRootUpdated(
@@ -38,7 +31,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     );
 
     /* ========== Variables ========== */
-    
+
     uint16 public maxScore;
 
     bool public isPaused;
@@ -53,7 +46,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
 
     address public merkleRootUpdater;
 
-    mapping(address => CreditScore) public userScores;
+    mapping(address => SapphireTypes.CreditScore) public userScores;
 
     /* ========== Modifiers ========== */
 
@@ -110,7 +103,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         view
         returns (uint256, uint16, uint256)
     {
-        CreditScore memory userScore = userScores[user];
+        SapphireTypes.CreditScore memory userScore = userScores[user];
         return (userScore.score, maxScore, userScore.lastUpdated);
     }
 
@@ -118,13 +111,13 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
 
     /**
      * @dev Update upcoming merkle root
-     * 
-     * @notice Can be called by: 
-     *      - the owner: 
+     *
+     * @notice Can be called by:
+     *      - the owner:
                 1. Check if contract is paused
                 2. Replace uncoming merkle root
      *      - merkle root updater:
-     *          1. Check if contract is active  
+     *          1. Check if contract is active
      *          2. Replace current merkle root with upcoming merkle root
      *          3. Update upcoming one with passed mekle root.
      *          4. Update the last merkle root update with the current timestamp
@@ -151,7 +144,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
 
    /**
      * @dev Request for verifying user's credit score
-     * 
+     *
      * @notice If credit score is verified, this function updated user credit scores with verified one and current timestmp
      *
      * @param proof Data required to verify if score is correct for current merkle root
@@ -169,7 +162,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
             "SapphireCreditScore: invalid proof"
         );
 
-        userScores[proof.account] = CreditScore({
+        userScores[proof.account] = SapphireTypes.CreditScore({
             score: proof.score,
             lastUpdated: getCurrentTimestamp()
         });

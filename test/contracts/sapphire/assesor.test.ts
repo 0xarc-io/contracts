@@ -1,0 +1,346 @@
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
+import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
+import { SapphireMapperLinear, SapphireMapperLinearFactory } from '@src/typings';
+import { MockSapphireCreditScore } from '@src/typings/MockSapphireCreditScore';
+import { MockSapphireCreditScoreFactory } from '@src/typings/MockSapphireCreditScoreFactory';
+import { MockSapphireMapperLinearFactory } from '@src/typings/MockSapphireMapperLinearFactory';
+import { SapphireAssessor } from '@src/typings/SapphireAssessor';
+import { SapphireAssessorFactory } from '@src/typings/SapphireAssessorFactory';
+import ArcNumber from '@src/utils/ArcNumber';
+import { expect } from 'chai';
+import { BigNumber } from 'ethers';
+import { ethers } from 'hardhat';
+
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+
+describe('SapphireAssessor', () => {
+  let owner: SignerWithAddress;
+  let assessor: SapphireAssessor;
+  let mapper: SapphireMapperLinear;
+  let creditScoreContract: MockSapphireCreditScore;
+
+  let creditScoreTree: CreditScoreTree;
+  let creditScore1: CreditScore;
+  let creditScore2: CreditScore;
+  let user1: SignerWithAddress;
+  let user2: SignerWithAddress;
+
+  /**
+   * Returns an assessor that is set up with a sapphire credit score contract
+   * containing a user with the given `creditScore`
+   */
+  async function getAssessorWithCredit(
+    creditScore: BigNumber,
+  ): Promise<{
+    assessor: SapphireAssessor;
+    creditScore: CreditScore;
+    creditScoreTree: CreditScoreTree;
+  }> {
+    const testCreditScore = {
+      account: user1.address,
+      amount: creditScore,
+    };
+    const anotherCreditScore = {
+      account: user2.address,
+      amount: BigNumber.from(500),
+    };
+
+    const testCreditScoreTree = new CreditScoreTree([testCreditScore, anotherCreditScore]);
+
+    const testCreditScoreContract = await new MockSapphireCreditScoreFactory(owner).deploy(
+      testCreditScoreTree.getHexRoot(),
+      owner.address,
+    );
+
+    const testAssessor = await new SapphireAssessorFactory(owner).deploy(
+      mapper.address,
+      testCreditScoreContract.address,
+    );
+
+    return {
+      assessor: testAssessor,
+      creditScore: testCreditScore,
+      creditScoreTree: testCreditScoreTree,
+    };
+  }
+
+  before(async () => {
+    const signers = await ethers.getSigners();
+    owner = signers[0];
+    user1 = signers[1];
+    user2 = signers[2];
+
+    mapper = await new SapphireMapperLinearFactory(owner).deploy();
+
+    creditScore1 = {
+      account: user1.address,
+      amount: BigNumber.from(600),
+    };
+
+    creditScore2 = {
+      account: user2.address,
+      amount: BigNumber.from(200),
+    };
+
+    creditScoreTree = new CreditScoreTree([creditScore1, creditScore2]);
+
+    creditScoreContract = await new MockSapphireCreditScoreFactory(owner).deploy(
+      creditScoreTree.getHexRoot(),
+      '0x0000000000000000000000000000000000000000',
+    );
+
+    assessor = await new SapphireAssessorFactory(owner).deploy(
+      mapper.address,
+      creditScoreContract.address,
+    );
+  });
+
+  describe('constructor', () => {
+    it('reverts if mapper and credit score are null', async () => {
+      await expect(
+        new SapphireAssessorFactory(owner).deploy(
+          '0x0000000000000000000000000000000000000000',
+          creditScoreContract.address,
+        ),
+      ).to.be.revertedWith(
+        'SapphireAssessor: The mapper and the credit score addresses cannot be null',
+      );
+
+      await expect(
+        new SapphireAssessorFactory(owner).deploy(
+          mapper.address,
+          '0x0000000000000000000000000000000000000000',
+        ),
+      ).to.be.revertedWith(
+        'SapphireAssessor: The mapper and the credit score addresses cannot be null',
+      );
+
+      await expect(
+        new SapphireAssessorFactory(owner).deploy(
+          '0x0000000000000000000000000000000000000000',
+          '0x0000000000000000000000000000000000000000',
+        ),
+      ).to.be.revertedWith(
+        'SapphireAssessor: The mapper and the credit score addresses cannot be null',
+      );
+    });
+
+    it('initializes the mapper and the credit score', async () => {
+      const testAssessor = await new SapphireAssessorFactory(owner).deploy(
+        mapper.address,
+        creditScoreContract.address,
+      );
+
+      expect(await testAssessor.mapper()).to.eq(mapper.address);
+      expect(await testAssessor.creditScoreContract()).to.eq(creditScoreContract.address);
+    });
+  });
+
+  describe('#assess', () => {
+    it('reverts if upper bound or account are empty', async () => {
+      // upper bound is empty
+      await expect(
+        assessor.assess(0, 0, {
+          account: user1.address,
+          score: 100,
+          merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
+        }),
+      ).to.be.revertedWith('SapphireAssessor: The upper bound cannot be empty');
+
+      // account is empty
+      await expect(
+        assessor.assess(0, 100, {
+          account: ZERO_ADDRESS,
+          score: creditScore1.amount,
+          merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
+        }),
+      ).to.be.revertedWith('SapphireAssessor: The account cannot be empty');
+    });
+
+    it('reverts if lower bound is not smaller than upper bound', async () => {
+      await expect(
+        assessor.assess(11, 10, {
+          account: user1.address,
+          score: creditScore1.amount,
+          merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
+        }),
+      ).to.be.revertedWith('SapphireAssessor: The lower bound exceeds the upper bound');
+    });
+
+    it('reverts if the mapper returns a value that is outside the lower and upper bounds', async () => {
+      const testMapper = await new MockSapphireMapperLinearFactory(owner).deploy();
+      const testAssessor = await new SapphireAssessorFactory(owner).deploy(
+        testMapper.address,
+        creditScoreContract.address,
+      );
+
+      await testMapper.setMapResult(0);
+
+      await expect(
+        testAssessor.assess(1, 10, {
+          account: user1.address,
+          score: creditScore1.amount,
+          merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
+        }),
+      ).to.be.revertedWith('SapphireAssessor: The mapper returned a value out of bounds');
+
+      await testMapper.setMapResult(11);
+
+      await expect(
+        testAssessor.assess(1, 10, {
+          account: user1.address,
+          score: creditScore1.amount,
+          merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
+        }),
+      ).to.be.revertedWith('SapphireAssessor: The mapper returned a value out of bounds');
+    });
+
+    it('reverts if the proof is invalid', async () => {
+      await expect(
+        assessor.assess(1, 10, {
+          account: creditScore1.account,
+          score: creditScore1.amount.add(1),
+          merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
+        }),
+      ).to.be.revertedWith('SapphireCreditScore: invalid proof');
+    });
+
+    it(`returns the upperBound if the user doesn't have an existing score and no proof`, async () => {
+      // If there's no score & no proof, pass the lowest credit score to the mapper
+      await expect(
+        assessor.assess(1, 10, {
+          account: user2.address,
+          score: 0,
+          merkleProof: [],
+        }),
+      )
+        .to.emit(assessor, 'Assessed')
+        .withArgs(10);
+    });
+
+    it('returns the lowerBound if credit score is maxed out', async () => {
+      const {
+        assessor: testAssessor,
+        creditScore: maxCreditScore,
+        creditScoreTree: testCreditScoreTree,
+      } = await getAssessorWithCredit(BigNumber.from(1000));
+
+      await expect(
+        testAssessor.assess(ArcNumber.new(100), ArcNumber.new(200), {
+          account: maxCreditScore.account,
+          score: maxCreditScore.amount,
+          merkleProof: testCreditScoreTree.getProof(maxCreditScore.account, maxCreditScore.amount),
+        }),
+      )
+        .to.emit(testAssessor, 'Assessed')
+        .withArgs(ArcNumber.new(100));
+    });
+
+    it('returns the upperBound if credit score is at minimum', async () => {
+      const {
+        assessor: testAssessor,
+        creditScore: minCreditScore,
+        creditScoreTree: testCreditScoreTree,
+      } = await getAssessorWithCredit(BigNumber.from(0));
+
+      await expect(
+        testAssessor.assess(ArcNumber.new(100), ArcNumber.new(200), {
+          account: minCreditScore.account,
+          score: minCreditScore.amount,
+          merkleProof: testCreditScoreTree.getProof(minCreditScore.account, minCreditScore.amount),
+        }),
+      )
+        .to.emit(testAssessor, 'Assessed')
+        .withArgs(ArcNumber.new(200));
+    });
+
+    it('returns the correct value given the credit score and a valid proof', async () => {
+      // 200 - (600/1000 * (200-100)) = 140
+      await expect(
+        assessor.assess(ArcNumber.new(100), ArcNumber.new(200), {
+          account: user1.address,
+          score: creditScore1.amount,
+          merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
+        }),
+      )
+        .to.emit(assessor, 'Assessed')
+        .withArgs(ArcNumber.new(140));
+    });
+  });
+
+  describe('#setMapper', () => {
+    it('reverts if called by non-owner', async () => {
+      const userAssessor = SapphireAssessorFactory.connect(assessor.address, user1);
+
+      await expect(userAssessor.setMapper(user1.address)).to.be.revertedWith(
+        'Ownable: caller is not the owner',
+      );
+    });
+
+    it('reverts if no new mapper is passed', async () => {
+      await expect(assessor.setMapper(ZERO_ADDRESS)).to.be.revertedWith(
+        'The new mapper cannot be null',
+      );
+      await expect(
+        assessor.setMapper('0x0000000000000000000000000000000000000000'),
+      ).to.be.revertedWith('SapphireAssessor: The new mapper cannot be null');
+    });
+
+    it('reverts if the new mapper is the same as the existing one', async () => {
+      await expect(assessor.setMapper(mapper.address)).to.be.revertedWith(
+        'The same mapper is already set',
+      );
+    });
+
+    it('sets the new mapper as owner', async () => {
+      const testMapper = await new SapphireMapperLinearFactory(owner).deploy();
+
+      await assessor.setMapper(testMapper.address);
+
+      const newMapper = await assessor.mapper();
+      expect(newMapper).to.eq(testMapper.address);
+    });
+  });
+
+  describe('#setCreditScoreContract', () => {
+    it('reverts if called by non-owner', async () => {
+      const userAssessor = SapphireAssessorFactory.connect(assessor.address, user1);
+
+      await expect(userAssessor.setCreditScoreContract(user1.address)).to.be.revertedWith(
+        'Ownable: caller is not the owner',
+      );
+    });
+
+    it('reverts if new address is 0', async () => {
+      await expect(
+        assessor.setCreditScoreContract('0x0000000000000000000000000000000000000000'),
+      ).to.be.revertedWith(
+        'SapphireAssessor: The new credit score contract address cannot be null',
+      );
+    });
+
+    it('reverts if new address is the same as the existing one', async () => {
+      await expect(assessor.setCreditScoreContract(creditScoreContract.address)).to.be.revertedWith(
+        'SapphireAssessor: The same credit score contract is already set',
+      );
+    });
+
+    it('sets the new credit score contract', async () => {
+      const testCreditScoreTree = new CreditScoreTree([creditScore2]);
+
+      const testCreditScoreContract = await new MockSapphireCreditScoreFactory(owner).deploy(
+        testCreditScoreTree.getHexRoot(),
+        owner.address,
+      );
+
+      await assessor.setCreditScoreContract(testCreditScoreContract.address);
+
+      expect(await assessor.creditScoreContract()).to.eq(testCreditScoreContract.address);
+    });
+  });
+});
+
+interface CreditScore {
+  account: string;
+  amount: BigNumber;
+}
