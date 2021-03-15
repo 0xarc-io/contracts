@@ -8,7 +8,7 @@ describe('imUSDOracle', () => {
   before(async () => {
     const provider = new MockProvider({
       ganacheOptions: {
-        fork: 'https://eth-mainnet.alchemyapi.io/v2/HSgFSArdYblhAJVgM8F820KLd65jiFzc',
+        fork: 'process.env.GANACHE_FORK_URL/v2/HSgFSArdYblhAJVgM8F820KLd65jiFzc',
         fork_block_number: 12025602,
       },
     });
