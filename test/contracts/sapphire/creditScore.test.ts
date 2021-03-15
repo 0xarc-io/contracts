@@ -21,7 +21,7 @@ const THREE_BYTES32 = '0x3333333333333333333333333333333333333333333333333333333
  * be posted. The logic around this contract needs to be very sound since we anticipate
  * it to be a core DeFi primitive for other applications to build on.
  */
-describe('SapphireCreditScore', () => {
+describe.only('SapphireCreditScore', () => {
   let ctx: ITestContext;
   let creditScoreContract: SapphireCreditScore;
   let merkleRootUpdater: SignerWithAddress;
@@ -109,11 +109,11 @@ describe('SapphireCreditScore', () => {
       await creditScoreContract.setPause(true);
       const currentMerkleRoot = await creditScoreContract.currentMerkleRoot();
       const initialLastMerkleRootUpdate = await creditScoreContract.lastMerkleRootUpdate();
-      const updateMerkleRootTxn = creditScoreContract
-        .connect(owner)
-        .updateMerkleRoot(TWO_BYTES32);
-      const txnBlockTimestamp = await getTxnTimestamp(ctx, updateMerkleRootTxn);
-      await expect(updateMerkleRootTxn)
+    
+      const txn = creditScoreContract.connect(owner).updateMerkleRoot(TWO_BYTES32);
+      const txnBlockTimestamp = await getTxnTimestamp(ctx, txn);
+
+      await expect(txn)
         .to.emit(creditScoreContract, 'MerkleRootUpdated')
         .withArgs(owner.address, TWO_BYTES32, txnBlockTimestamp);
       expect(await creditScoreContract.upcomingMerkleRoot()).eq(TWO_BYTES32);
@@ -151,20 +151,26 @@ describe('SapphireCreditScore', () => {
     });
 
     it('should ensure that malicious merkle root does not became a current one', async () => {
+      // malicious update merkle root
       const maliciousRoot = TWO_BYTES32;
       const maliciousUpdateTxn = creditScoreContract
         .connect(merkleRootUpdater)
         .updateMerkleRoot(maliciousRoot);
       const maliciousTxnTimestamp = await getTxnTimestamp(ctx, maliciousUpdateTxn);
+
       await expect(maliciousUpdateTxn)
         .to.emit(creditScoreContract, 'MerkleRootUpdated')
         .withArgs(merkleRootUpdater.address, maliciousRoot, maliciousTxnTimestamp);
       expect(await creditScoreContract.upcomingMerkleRoot()).eq(maliciousRoot);
+
+
+      // owner prevent attack to not allow set malicious root as current one
       await creditScoreContract.setPause(true);
       const updateMerkleRootTxn = creditScoreContract
         .connect(owner)
         .updateMerkleRoot(THREE_BYTES32);
       const timestamp = await getTxnTimestamp(ctx, updateMerkleRootTxn);
+
       await expect(updateMerkleRootTxn)
         .to.emit(creditScoreContract, 'MerkleRootUpdated')
         .withArgs(owner.address, THREE_BYTES32, timestamp);
@@ -178,18 +184,23 @@ describe('SapphireCreditScore', () => {
       await mockCreditScoreContract.connect(merkleRootUpdater).updateMerkleRoot(TWO_BYTES32);
       const lastMerkleRootUpdate = await mockCreditScoreContract.lastMerkleRootUpdate();
       const delay = await mockCreditScoreContract.merkleRootDelayDuration();
+
+      // update merkle root right after root was updated
       await expect(
         mockCreditScoreContract.connect(merkleRootUpdater).updateMerkleRoot(THREE_BYTES32),
       ).to.be.revertedWith('SapphireCreditScore: cannot update merkle root before delay period');
+
       await mockCreditScoreContract.setCurrentTimestamp(lastMerkleRootUpdate.add(delay).sub(1));
+
+      // update merkle root 1 sec before delay passes
       await expect(
         mockCreditScoreContract.connect(merkleRootUpdater).updateMerkleRoot(THREE_BYTES32),
       ).to.be.revertedWith('SapphireCreditScore: cannot update merkle root before delay period');
-      const { wait: waitFotCurrentTimestamp } = await mockCreditScoreContract.setCurrentTimestamp(
-        lastMerkleRootUpdate.add(delay),
-      );
-      await waitFotCurrentTimestamp();
+      await mockCreditScoreContract.setCurrentTimestamp(lastMerkleRootUpdate.add(delay));
+
+      // update merkle root right after delay has passed
       await mockCreditScoreContract.connect(merkleRootUpdater).updateMerkleRoot(THREE_BYTES32);
+      
       expect(await mockCreditScoreContract.currentMerkleRoot()).eq(TWO_BYTES32);
       expect(await mockCreditScoreContract.upcomingMerkleRoot()).eq(THREE_BYTES32);
     });
@@ -216,6 +227,7 @@ describe('SapphireCreditScore', () => {
 
     it('should be able to verify and update a users score', async () => {
       expect(await creditScoreContract.currentMerkleRoot()).eq(tree.getHexRoot());
+
       const verifyAndUpdateTxn = creditScoreContract
         .connect(unauthorised)
         .verifyAndUpdate(getVerifyRequest(creditScore1.account, creditScore1.amount, tree));
@@ -248,9 +260,7 @@ describe('SapphireCreditScore', () => {
       const creditScoreContract = await deployMockSapphireCreditScore(
         owner,tree.getHexRoot(), merkleRootUpdater.address
       );
-      await expect(
-        creditScoreContract.verifyAndUpdate(getVerifyRequest(creditScore1.account, creditScore1.amount, tree)),
-      )
+      await expect(creditScoreContract.verifyAndUpdate(getVerifyRequest(creditScore1.account, creditScore1.amount, tree)))
         .to.emit(creditScoreContract, 'CreditScoreUpdated')
         .withArgs(
           creditScore1.account,
@@ -258,9 +268,7 @@ describe('SapphireCreditScore', () => {
           await creditScoreContract.getCurrentTimestamp(),
         );
       await creditScoreContract.setCurrentTimestamp(631000);
-      await expect(
-        creditScoreContract.verifyAndUpdate(getVerifyRequest(creditScore1.account, creditScore1.amount, tree)),
-      )
+      await expect(creditScoreContract.verifyAndUpdate(getVerifyRequest(creditScore1.account, creditScore1.amount, tree)))
         .to.emit(creditScoreContract, 'CreditScoreUpdated')
         .withArgs(creditScore1.account, creditScore1.amount, 631000);
     });
@@ -272,11 +280,15 @@ describe('SapphireCreditScore', () => {
       await creditScoreContract.setPause(false)
       const initTimestamp = await creditScoreContract.getCurrentTimestamp();
       const merkleRootDelay = await creditScoreContract.merkleRootDelayDuration();
+
+      // verify score with initial merkle root
       await expect(
         creditScoreContract.verifyAndUpdate(getVerifyRequest(creditScore1.account, creditScore1.amount, tree)),
       )
         .to.emit(creditScoreContract, 'CreditScoreUpdated')
         .withArgs(creditScore1.account, creditScore1.amount, initTimestamp);
+
+      // intended root set as upcoming one
       const changedAmount = BigNumber.from(99);
       const newTree = new CreditScoreTree([
         { ...creditScore1, amount: changedAmount },
@@ -284,10 +296,12 @@ describe('SapphireCreditScore', () => {
       ]);
       await creditScoreContract.connect(merkleRootUpdater).updateMerkleRoot(newTree.getHexRoot());
       
+      // intended root set as current one
       const changedTimestamp = initTimestamp.add(merkleRootDelay);
       await creditScoreContract.setCurrentTimestamp(changedTimestamp);
       await creditScoreContract.connect(merkleRootUpdater).updateMerkleRoot(TWO_BYTES32);
 
+      // verify account with intended root which contains new score for the account
       await expect(
         creditScoreContract.verifyAndUpdate(getVerifyRequest(creditScore1.account, changedAmount, newTree)),
       )
