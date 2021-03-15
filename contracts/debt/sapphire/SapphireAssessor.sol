@@ -85,7 +85,7 @@ contract SapphireAssessor is Ownable {
         // If credit score is required and user has already verified the score than require proof of score
         if (isScoreRequred && creditScore > 0) {
             require(
-                isProofPassed, 
+                isProofPassed,
                 "SapphireAssessor: proof for credit score should be provided"
             );
         }
