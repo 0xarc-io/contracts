@@ -252,8 +252,9 @@ describe.only('SapphireAssessor', () => {
         .to.emit(assessor, 'Assessed')
         .withArgs(10);
     });
-  
-    it(`returns the upperBound if the user doesn't have an existing score and no proof`, async () => {
+
+    it(`returns the upperBound if the user doesn't have an existing score, score is required and no proof`, async () => {
+      // If there's no score & no proof, pass the lowest credit score to the mapper
       await expect(
         assessor.assess(
           1,
@@ -268,6 +269,62 @@ describe.only('SapphireAssessor', () => {
       )
         .to.emit(assessor, 'Assessed')
         .withArgs(10);
+    });
+
+    it(`throw an error if the user has an existing score, score is required and no proof`, async () => {
+      await expect(
+        assessor.assess(
+          ArcNumber.new(100),
+          ArcNumber.new(200),
+          {
+            account: user1.address,
+            score: creditScore1.amount,
+            merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
+          },
+          true,
+        ),
+      ).to.emit(assessor, 'Assessed');
+
+      await expect(
+        assessor.assess(
+          1,
+          10,
+          {
+            account: user2.address,
+            score: 0,
+            merkleProof: [],
+          },
+          true,
+        ),
+      ).to.be.revertedWith('SapphireAssessor: proof for credit score should be provided');
+    });
+
+    it(`emit Assessed if the user has an existing score, score is required and proof is provided`, async () => {
+      await expect(
+        assessor.assess(
+          ArcNumber.new(100),
+          ArcNumber.new(200),
+          {
+            account: user1.address,
+            score: creditScore1.amount,
+            merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
+          },
+          true,
+        ),
+      ).to.emit(assessor, 'Assessed');
+
+      await expect(
+        assessor.assess(
+          ArcNumber.new(100),
+          ArcNumber.new(200),
+          {
+            account: user1.address,
+            score: creditScore1.amount,
+            merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
+          },
+          true,
+        ),
+      ).to.emit(assessor, 'Assessed');
     });
 
     it('returns the lowerBound if credit score is maxed out', async () => {
