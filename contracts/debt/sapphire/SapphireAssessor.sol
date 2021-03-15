@@ -80,17 +80,18 @@ contract SapphireAssessor is Ownable {
         uint16 maxScore;
 
         (creditScore, maxScore,) = creditScoreContract.getLastScore(_scoreProof.account);
-    
+        bool isProofPassed = _scoreProof.merkleProof.length > 0;
+
         // If credit score is required and user has already verified the score than require proof of score
         if (isScoreRequred && creditScore > 0) {
             require(
-                _scoreProof.merkleProof.length > 0, 
+                isProofPassed, 
                 "SapphireAssessor: proof for credit score should be provided"
             );
         }
 
         // If there's proof passed, use the updated credit score instead of the latest credit score
-        if (_scoreProof.merkleProof.length > 0) {
+        if (isProofPassed) {
             (creditScore, maxScore) = creditScoreContract.verifyAndUpdate(_scoreProof);
         }
 
