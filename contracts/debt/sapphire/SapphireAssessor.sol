@@ -87,7 +87,7 @@ contract SapphireAssessor is Ownable {
         if (_isScoreRequred && creditScore > 0) {
             require(
                 isProofPassed,
-                "SapphireAssessor: proof for credit score should be provided"
+                "SapphireAssessor: proof should be provided for credit score"
             );
         }
 

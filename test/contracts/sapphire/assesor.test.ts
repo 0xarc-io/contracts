@@ -301,7 +301,7 @@ describe('SapphireAssessor', () => {
           },
           true,
         ),
-      ).to.be.revertedWith('SapphireAssessor: proof for credit score should be provided');
+      ).to.be.revertedWith('SapphireAssessor: proof should be provided for credit score');
     });
 
     it(`emit Assessed if the user has an existing score, score is required and proof is provided`, async () => {
