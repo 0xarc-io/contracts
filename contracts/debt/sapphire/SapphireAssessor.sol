@@ -50,12 +50,14 @@ contract SapphireAssessor is Ownable {
      * @param _lowerBound The lower bound
      * @param _upperBound The upper bound
      * @param _scoreProof The score proof
+     * @param _isScoreRequred The flag, which require the proof of score if account already has some score 
      * @return A value between the lower and upper bounds depending on the credit score
      */
     function assess(
         uint256 _lowerBound,
         uint256 _upperBound,
-        SapphireTypes.ScoreProof memory _scoreProof
+        SapphireTypes.ScoreProof memory _scoreProof,
+        bool _isScoreRequred
     )
         public
         returns (uint256)
@@ -78,10 +80,19 @@ contract SapphireAssessor is Ownable {
         uint256 creditScore;
         uint16 maxScore;
 
-        // If there's no proof passed, use the latest credit score
-        if (_scoreProof.merkleProof.length == 0) {
-            (creditScore, maxScore,) = creditScoreContract.getLastScore(_scoreProof.account);
-        } else {
+        (creditScore, maxScore,) = creditScoreContract.getLastScore(_scoreProof.account);
+        bool isProofPassed = _scoreProof.merkleProof.length > 0;
+
+        // If credit score is required and user has already verified the score than require proof of score
+        if (_isScoreRequred && creditScore > 0) {
+            require(
+                isProofPassed,
+                "SapphireAssessor: proof should be provided for credit score"
+            );
+        }
+
+        // If there's proof passed, use the updated credit score instead of the latest credit score
+        if (isProofPassed) {
             (creditScore, maxScore) = creditScoreContract.verifyAndUpdate(_scoreProof);
         }
 
