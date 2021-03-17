@@ -20,7 +20,7 @@ export class MozartArc {
   public signer: Signer;
   public signerAddress: string;
 
-  public synths: { [name: string]: MozartSynth } = {};
+  public synths: Record<string, MozartSynth | undefined> = {};
 
   static async init(signer: Signer): Promise<MozartArc> {
     const arc = new MozartArc();
@@ -29,7 +29,7 @@ export class MozartArc {
     return arc;
   }
 
-  public async addSynths(synths: Record<string,string | undefined>) {
+  public async addSynths(synths: Record<string, string | undefined>) {
     const entries = Object.entries(synths);
 
     await asyncForEach(entries, async ([name, synth]) => {
