@@ -50,7 +50,7 @@ contract SapphireAssessor is Ownable {
      * @param _lowerBound The lower bound
      * @param _upperBound The upper bound
      * @param _scoreProof The score proof
-     * @param _isScoreRequred The flag, which require the proof of score if account already has some score 
+     * @param _isScoreRequred The flag, which require the proof of score if account already has some score
      * @return A value between the lower and upper bounds depending on the credit score
      */
     function assess(
