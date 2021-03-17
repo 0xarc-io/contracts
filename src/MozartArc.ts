@@ -1,12 +1,9 @@
 import { ContractTransaction, Signer } from 'ethers';
 import { BigNumber, BigNumberish } from 'ethers';
-import { ActionOperated, Operation, Position } from '../arc-types/core';
+import { ActionOperated, Operation, Position, Synth } from '../arc-types/core';
 import { calculateLiquidationAmount } from './utils/calculations';
-import { SyntheticTokenV1 } from './typings/SyntheticTokenV1';
 import { asyncForEach } from './utils/asyncForEach';
 import { MozartCoreV1 } from './typings/MozartCoreV1';
-import { IOracle } from './typings/IOracle';
-import { TestToken } from './typings/TestToken';
 import { MozartCoreV1Factory } from './typings/MozartCoreV1Factory';
 import { IOracleFactory } from './typings/IOracleFactory';
 import { SyntheticTokenV1Factory } from './typings/SyntheticTokenV1Factory';
@@ -17,18 +14,13 @@ import { AddressZero } from '@ethersproject/constants';
 import ArcNumber from './utils/ArcNumber';
 import { approve } from './utils/approve';
 
-export type Synth = {
-  core: MozartCoreV1;
-  oracle: IOracle;
-  collateral: TestToken;
-  synthetic: SyntheticTokenV1;
-};
+type MozartSynth = Synth<MozartCoreV1>;
 
 export class MozartArc {
   public signer: Signer;
   public signerAddress: string;
 
-  public synths: { [name: string]: Synth } = {};
+  public synths: { [name: string]: MozartSynth } = {};
 
   static async init(signer: Signer): Promise<MozartArc> {
     const arc = new MozartArc();
@@ -58,7 +50,7 @@ export class MozartArc {
     });
   }
 
-  public availableSynths(): Synth[] {
+  public availableSynths(): MozartSynth[] {
     return Object.values(this.synths);
   }
 
@@ -66,7 +58,7 @@ export class MozartArc {
     collateralAmount: BigNumberish,
     borrowAmount: BigNumber,
     caller: Signer = this.signer,
-    synth: Synth = this.availableSynths()[0],
+    synth: MozartSynth = this.availableSynths()[0],
     overrides: TransactionOverrides = {},
   ) {
     const contract = await this.getCore(synth, caller);
@@ -89,7 +81,7 @@ export class MozartArc {
     collateralAmount: BigNumberish,
     borrowAmount: BigNumberish,
     caller: Signer = this.signer,
-    synth: Synth = this.availableSynths()[0],
+    synth: MozartSynth = this.availableSynths()[0],
     overrides: TransactionOverrides = {},
   ) {
     const contract = await this.getCore(synth, caller);
@@ -112,7 +104,7 @@ export class MozartArc {
     repaymentAmount: BigNumberish,
     withdrawAmount: BigNumberish,
     caller: Signer = this.signer,
-    synth: Synth = this.availableSynths()[0],
+    synth: MozartSynth = this.availableSynths()[0],
     overrides: TransactionOverrides = {},
   ) {
     const contract = await this.getCore(synth, caller);
@@ -133,7 +125,7 @@ export class MozartArc {
   async liquidatePosition(
     positionId: BigNumberish,
     caller: Signer = this.signer,
-    synth: Synth = this.availableSynths()[0],
+    synth: MozartSynth = this.availableSynths()[0],
     overrides: TransactionOverrides = {},
   ) {
     const contract = await this.getCore(synth, caller);
@@ -155,7 +147,7 @@ export class MozartArc {
     positionId: BigNumberish,
     newOwner: string,
     caller: Signer = this.signer,
-    synth: Synth = this.availableSynths()[0],
+    synth: MozartSynth = this.availableSynths()[0],
     overrides: TransactionOverrides = {},
   ) {
     const contract = await this.getCore(synth, caller);
@@ -177,7 +169,7 @@ export class MozartArc {
     operator: string,
     status: boolean,
     caller: Signer = this.signer,
-    synth: Synth = this.availableSynths()[0],
+    synth: MozartSynth = this.availableSynths()[0],
     overrides: TransactionOverrides = {},
   ) {
     const contract = await this.getCore(synth, caller);
@@ -189,14 +181,14 @@ export class MozartArc {
     operator: string,
     status: boolean,
     caller: Signer = this.signer,
-    synth: Synth = this.availableSynths()[0],
+    synth: MozartSynth = this.availableSynths()[0],
     overrides: TransactionOverrides = {},
   ) {
     const contract = await this.getCore(synth, caller);
     return await contract.setPositionOperatorStatus(positionId, operator, status, overrides);
   }
 
-  async getLiquidationDetails(position: Position, synth: Synth = this.availableSynths()[0]) {
+  async getLiquidationDetails(position: Position, synth: MozartSynth = this.availableSynths()[0]) {
     const currentPrice = await (await synth.oracle.fetchCurrentPrice()).value;
     const fees = await await synth.core.getFees();
     const collateralRatio = await (await synth.core.getCollateralRatio()).value;
@@ -257,7 +249,7 @@ export class MozartArc {
   async approveSynthetic(
     amount: BigNumberish,
     caller: Signer = this.signer,
-    synth: Synth = this.availableSynths()[0],
+    synth: MozartSynth = this.availableSynths()[0],
     spender: string = synth.core.address,
     overrides?: TransactionOverrides,
   ) {
@@ -267,19 +259,19 @@ export class MozartArc {
   async approveCollateral(
     amount: BigNumberish,
     caller: Signer = this.signer,
-    synth: Synth = this.availableSynths()[0],
+    synth: MozartSynth = this.availableSynths()[0],
     overrides?: TransactionOverrides,
   ) {
     return approve(amount, synth.collateral.address, synth.core.address, caller, overrides);
   }
 
-  async isCollateralized(positionId: BigNumberish, synth: Synth = this.availableSynths()[0]) {
+  async isCollateralized(positionId: BigNumberish, synth: MozartSynth = this.availableSynths()[0]) {
     const position = await synth.core.getPosition(positionId);
     const price = await synth.core.getCurrentPrice();
     return await synth.core.isCollateralized(position, price);
   }
 
-  async getCore(synth: Synth, caller?: Signer) {
+  async getCore(synth: MozartSynth, caller?: Signer) {
     return MozartCoreV1Factory.connect(synth.core.address, caller || this.signer);
   }
 }
