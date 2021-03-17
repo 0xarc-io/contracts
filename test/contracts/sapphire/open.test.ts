@@ -16,7 +16,7 @@ describe('SapphireCore.open()', () => {
 
     it('open if no assessor is set', async () => {});
 
-    it('revert if score for address exists on-chain', async () => {});
+    it('revert if a score for address exists on-chain', async () => {});
 
     it('revert if open below the minimum position amount', async () => {});
   });
@@ -30,7 +30,7 @@ describe('SapphireCore.open()', () => {
 
     it('revert if no assessor is set', async () => {});
 
-    it('open if score for address exists on-chain', async () => {});
+    it('open if a score for address exists on-chain', async () => {});
 
     it('revert if open below the minimum position amount', async () => {});
   });
