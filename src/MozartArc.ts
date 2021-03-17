@@ -15,6 +15,7 @@ import { TestTokenFactory } from './typings/TestTokenFactory';
 import { TransactionOverrides } from '../arc-types/ethereum';
 import { AddressZero } from '@ethersproject/constants';
 import ArcNumber from './utils/ArcNumber';
+import { approve } from './utils/approve';
 
 export enum SynthNames {
   ETHX = 'ETHX',
@@ -265,14 +266,7 @@ export class MozartArc {
     spender: string = synth.core.address,
     overrides?: TransactionOverrides,
   ) {
-    const existingAllowance = await synth.synthetic.allowance(await caller.getAddress(), spender);
-
-    if (existingAllowance.gte(amount)) {
-      return;
-    }
-
-    const tx = await synth.synthetic.approve(spender, amount, overrides);
-    return tx.wait();
+    return approve(amount, synth.synthetic.address, spender, caller, overrides);
   }
 
   async approveCollateral(
@@ -281,17 +275,7 @@ export class MozartArc {
     synth: Synth = this.availableSynths()[0],
     overrides?: TransactionOverrides,
   ) {
-    const existingAllowance = await synth.collateral.allowance(
-      await caller.getAddress(),
-      synth.core.address,
-    );
-
-    if (existingAllowance.gte(amount)) {
-      return;
-    }
-
-    const tx = await synth.collateral.approve(synth.core.address, amount, overrides);
-    return tx.wait();
+    return approve(amount, synth.collateral.address, synth.core.address, caller, overrides);
   }
 
   async isCollateralized(positionId: BigNumberish, synth: Synth = this.availableSynths()[0]) {
