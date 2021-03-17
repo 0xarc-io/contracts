@@ -16,7 +16,7 @@ describe('SapphireCore.open()', () => {
 
     it('should not be able to open below the c-ratio', async () => {});
 
-    it('should be able to open without a score proof if no assesor is set', async () => {});
+    it('should be able to open without a score proof if no assessor is set', async () => {});
 
     it('should not be able to open without a score proof if one exists on-chain', async () => {});
 
@@ -30,7 +30,7 @@ describe('SapphireCore.open()', () => {
 
     it('should be able to calculate the correct interest amount', async () => {});
 
-    it('should not be able to open with a score proof if no assesor is set', async () => {});
+    it('should not be able to open with a score proof if no assessor is set', async () => {});
 
     it('should not be able to open below the c-ratio', async () => {});
 
