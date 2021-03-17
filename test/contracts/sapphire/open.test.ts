@@ -12,13 +12,13 @@ describe('SapphireCore.open()', () => {
 
     it('open above the c-ratio', async () => {});
 
-    it('revert if open below the c-ratio', async () => {});
+    it('revert if opened below the c-ratio', async () => {});
 
     it('open if no assessor is set', async () => {});
 
     it('revert if a score for address exists on-chain', async () => {});
 
-    it('revert if open below the minimum position amount', async () => {});
+    it('revert if opened below the minimum position amount', async () => {});
   });
 
   describe('with score proof', () => {
@@ -26,12 +26,12 @@ describe('SapphireCore.open()', () => {
 
     it('open above the c-ratio', async () => {});
 
-    it('revert if open below the c-ratio', async () => {});
+    it('revert if opened below the c-ratio', async () => {});
 
     it('revert if no assessor is set', async () => {});
 
     it('open if a score for address exists on-chain', async () => {});
 
-    it('revert if open below the minimum position amount', async () => {});
+    it('revert if opened below the minimum position amount', async () => {});
   });
 });
