@@ -17,11 +17,6 @@ import { AddressZero } from '@ethersproject/constants';
 import ArcNumber from './utils/ArcNumber';
 import { approve } from './utils/approve';
 
-export enum SynthNames {
-  ETHX = 'ETHX',
-  TESTX = 'TESTX'
-}
-
 export type Synth = {
   core: MozartCoreV1;
   oracle: IOracle;
@@ -42,7 +37,7 @@ export class MozartArc {
     return arc;
   }
 
-  public async addSynths(synths: { [name in SynthNames]?: string }) {
+  public async addSynths(synths: Record<string,string | undefined>) {
     const entries = Object.entries(synths);
 
     await asyncForEach(entries, async ([name, synth]) => {
