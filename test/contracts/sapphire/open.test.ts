@@ -28,7 +28,7 @@ describe('SapphireCore.open()', () => {
 
     it('revert if opened below the c-ratio', async () => {});
 
-    it('revert if no assessor is set', async () => {});
+    it('ignore proof(behavior based only on high c-ratio value) if no assessor is set', async () => {});
 
     it('open if a score for address exists on-chain', async () => {});
 
