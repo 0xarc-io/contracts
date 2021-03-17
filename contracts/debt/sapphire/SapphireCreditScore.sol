@@ -5,10 +5,16 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 
 import {Ownable} from "../../lib/Ownable.sol";
+import {SafeMath} from "../../lib/SafeMath.sol";
 import {SapphireTypes} from "./SapphireTypes.sol";
 import {ISapphireCreditScore} from "./ISapphireCreditScore.sol";
 
 contract SapphireCreditScore is ISapphireCreditScore, Ownable {
+
+    /* ========== Libraries ========== */
+
+    using SafeMath for uint256;
+
     /* ========== Events ========== */
 
     event MerkleRootUpdated(
