@@ -36,6 +36,8 @@ describe('SapphireCore.borrow()', () => {
 
   it('updates the total borrowed amount correctly');
 
+  it(`should not borrow if the price from the oracle is 0`);
+
   it(`should not borrow from someone else's vault if called by a position operator, but on an unapproved vault`, async () => {
     // 1. User A opens vault X
     // 2. Position operator P is approved on vault Y
