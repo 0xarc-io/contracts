@@ -8,32 +8,30 @@ import 'module-alias/register';
  */
 describe('SapphireCore.open()', () => {
   describe('without score proof', () => {
-    it('should be able to open at the exact c-ratio', async () => {});
+    it('open at the exact c-ratio', async () => {});
 
-    it('should be able to open above the c-ratio', async () => {});
+    it('open above the c-ratio', async () => {});
 
-    it('should be able to calculate the correct interest amount', async () => {});
+    it('revert if opened below the c-ratio', async () => {});
 
-    it('should not be able to open below the c-ratio', async () => {});
+    it('open if no assessor is set', async () => {});
 
-    it('should be able to open without a score proof if no assesor is set', async () => {});
+    it('revert if a score for address exists on-chain', async () => {});
 
-    it('should not be able to open without a score proof if one exists on-chain', async () => {});
-
-    it('should not be able to borrow below the minimum position amount', async () => {});
+    it('revert if opened below the minimum position amount', async () => {});
   });
 
   describe('with score proof', () => {
-    it('should be able to open at the exact c-ratio', async () => {});
+    it('open at the exact c-ratio', async () => {});
 
-    it('should be able to open above the c-ratio', async () => {});
+    it('open above the c-ratio', async () => {});
 
-    it('should be able to calculate the correct interest amount', async () => {});
+    it('revert if opened below the c-ratio', async () => {});
 
-    it('should not be able to open with a score proof if no assesor is set', async () => {});
+    it('ignore proof(behavior based only on high c-ratio value) if no assessor is set', async () => {});
 
-    it('should not be able to open below the c-ratio', async () => {});
+    it('open if a score for address exists on-chain', async () => {});
 
-    it('should not be able to borrow below the minimum position amount', async () => {});
+    it('revert if opened below the minimum position amount', async () => {});
   });
 });

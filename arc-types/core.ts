@@ -1,4 +1,7 @@
 import { BigNumberish } from 'ethers';
+import { SyntheticTokenV1 } from '@src/typings';
+import { IERC20 } from '@src/typings/IERC20';
+import { IOracle } from '@src/typings/IOracle';
 
 export type SynthAddressBook = {
   state?: string;
@@ -96,4 +99,12 @@ export type RiskParams = {
 export type D2Fees = {
   liquidationUserFee: BigNumberish;
   liquidationArcRatio: BigNumberish;
+};
+
+
+export type Synth<T> = {
+  core: T;
+  oracle: IOracle;
+  collateral: IERC20;
+  synthetic: SyntheticTokenV1;
 };
