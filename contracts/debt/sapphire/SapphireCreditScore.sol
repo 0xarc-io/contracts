@@ -9,6 +9,7 @@ import {SapphireTypes} from "./SapphireTypes.sol";
 import {ISapphireCreditScore} from "./ISapphireCreditScore.sol";
 
 contract SapphireCreditScore is ISapphireCreditScore, Ownable {
+
     /* ========== Events ========== */
 
     event MerkleRootUpdated(
