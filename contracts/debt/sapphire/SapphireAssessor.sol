@@ -132,7 +132,7 @@ contract SapphireAssessor is Ownable {
 
         mapper = ISapphireMapper(_mapper);
 
-        emit MapperSet(mapper);
+        emit MapperSet(_mapper);
     }
 
     function setCreditScoreContract(
@@ -153,6 +153,6 @@ contract SapphireAssessor is Ownable {
 
         creditScoreContract = ISapphireCreditScore(_creditScore);
 
-        emit CreditScoreContractSet(creditScoreContract);
+        emit CreditScoreContractSet(_creditScore);
     }
 }
