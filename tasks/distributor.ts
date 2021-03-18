@@ -7,7 +7,7 @@ import { task } from 'hardhat/config';
 import path from 'path';
 import { deployContract, DeploymentType, loadDetails, pruneDeployments } from '../deployments/src';
 
-task('deploy-distributor', 'Deploy merkle token distributor')
+task('distributor-deploy', 'Deploy merkle token distributor')
   .addParam('token', 'The address of the distributed token')
   .addParam('csv', 'The path to csv with distribution data')
   .setAction(async (taskArgs, hre) => {
