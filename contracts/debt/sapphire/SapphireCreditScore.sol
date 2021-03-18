@@ -190,7 +190,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         isActive
     {
         require(
-            getCurrentTimestamp() >= merkleRootDelayDuration + lastMerkleRootUpdate,
+            getCurrentTimestamp() >= merkleRootDelayDuration.add(lastMerkleRootUpdate),
             "SapphireCreditScore: cannot update merkle root before delay period"
         );
 
