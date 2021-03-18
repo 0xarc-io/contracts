@@ -19,11 +19,11 @@ contract SapphireAssessor is Ownable {
 
     /* ========== Events ========== */
 
-    event MapperSet(address newMapper);
+    event MapperSet(address _newMapper);
 
-    event CreditScoreContractSet(address newCreditScoreContract);
+    event CreditScoreContractSet(address _newCreditScoreContract);
 
-    event Assessed(uint256 assessedValue);
+    event Assessed(uint256 _assessedValue);
 
     /* ========== Functions ========== */
 
@@ -131,6 +131,8 @@ contract SapphireAssessor is Ownable {
         );
 
         mapper = ISapphireMapper(_mapper);
+
+        emit MapperSet(mapper);
     }
 
     function setCreditScoreContract(
@@ -150,5 +152,7 @@ contract SapphireAssessor is Ownable {
         );
 
         creditScoreContract = ISapphireCreditScore(_creditScore);
+
+        emit CreditScoreContractSet(creditScoreContract);
     }
 }
