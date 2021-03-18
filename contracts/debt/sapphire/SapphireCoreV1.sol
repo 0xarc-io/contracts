@@ -9,7 +9,7 @@ import {Decimal} from "../../lib/Decimal.sol";
 
 import {SapphireTypes} from "./SapphireTypes.sol";
 
-contract SapphireCore {
+contract SapphireCoreV1 {
 
     /* ========== Libraries ========== */
 
@@ -113,7 +113,10 @@ contract SapphireCore {
         uint256 borrowAmount,
         SapphireTypes.ScoreProof memory scoreProof
     )
-        public;
+        public
+    {
+
+    }
 
     function borrow(
         uint256 positionId,
@@ -121,7 +124,11 @@ contract SapphireCore {
         uint256 borrowAmount,
         SapphireTypes.ScoreProof memory scoreProof
     )
-        public;
+        public
+    {
+
+    }
+
 
     function repay(
         uint256 positionId,
@@ -129,12 +136,20 @@ contract SapphireCore {
         uint256 withdrawAmount,
         SapphireTypes.ScoreProof memory scoreProof
     )
-        public;
+        public
+    {
+
+    }
+
 
     function liquidate(
         uint256 positionId,
         SapphireTypes.ScoreProof memory scoreProof
     )
-        public;
+        public
+    {
+
+    }
+
 
 }
