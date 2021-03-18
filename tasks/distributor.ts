@@ -16,7 +16,6 @@ task('distributor-deploy', 'Deploy merkle token distributor')
     const data = readCsv(path.resolve(taskArgs.csv));
     const distributorTree = new BalanceTree(
       data.map((row) => {
-        console.log(row[1]);
         return {
           account: row[0],
           amount: BigNumber.from(row[1]),
