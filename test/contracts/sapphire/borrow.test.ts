@@ -10,6 +10,8 @@ import 'module-alias/register';
  */
 
 describe('SapphireCore.borrow()', () => {
+  it('borrows the correct amount for collateral tokens that have other than 18 decimal places');
+
   it('borrows above the c-ratio', async () => {});
 
   it('updates the index', async () => {});
@@ -31,6 +33,8 @@ describe('SapphireCore.borrow()', () => {
   it(`borrows from someone else's vault if called by the global operator`);
 
   it(`borrows from someone else's vault if called by an approved position operator`);
+
+  it('updates the total borrowed amount correctly');
 
   it(`should not borrow from someone else's vault if called by a position operator, but on an unapproved vault`, async () => {
     // 1. User A opens vault X
@@ -66,4 +70,8 @@ describe('SapphireCore.borrow()', () => {
   it('should not borrow from an inexistent vault');
 
   it('should not borrow more than the liquidity of the borrow asset');
+
+  it('should not borrow if contract is paused');
+
+  it('should not borrow if oracle is not set');
 });
