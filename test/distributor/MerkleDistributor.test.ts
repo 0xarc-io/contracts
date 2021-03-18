@@ -40,18 +40,18 @@ describe('MerkleDistributor', () => {
     });
   });
 
-  describe('#switchActive', () => {
+  describe('#toggleActive', () => {
     it('owner can switch activity', async () => {
       expect(await distributor.merkleRoot()).to.eq(ZERO_BYTES32);
       expect(await distributor.active()).to.be.false;
-      await distributor.switchActive();
+      await distributor.toggleActive();
       expect(await distributor.active()).to.be.true;
     });
 
     it('fails if non-owner try to switch activity', async () => {
       expect(await distributor.merkleRoot()).to.eq(ZERO_BYTES32);
       expect(await distributor.active()).to.be.false;
-      await expect(distributor.connect(ctx.signers.unauthorised).switchActive()).to.be.revertedWith(
+      await expect(distributor.connect(ctx.signers.unauthorised).toggleActive()).to.be.revertedWith(
         'Ownable: caller is not the owner',
       );
     });
@@ -59,14 +59,14 @@ describe('MerkleDistributor', () => {
 
   describe('#claim', () => {
     it('fails for empty proof', async () => {
-      await distributor.switchActive();
+      await distributor.toggleActive();
       await expect(distributor.claim(0, ctx.signers.admin.address, 10, [])).to.be.revertedWith(
         'MerkleDistributor: Invalid proof',
       );
     });
 
     it('fails for invalid index', async () => {
-      await distributor.switchActive();
+      await distributor.toggleActive();
       await expect(distributor.claim(0, ctx.signers.admin.address, 10, [])).to.be.revertedWith(
         'MerkleDistributor: Invalid proof',
       );
@@ -91,7 +91,7 @@ describe('MerkleDistributor', () => {
           ctx.contracts.collateral.address,
           tree.getHexRoot(),
         );
-        await distributor.switchActive();
+        await distributor.toggleActive();
         await ctx.contracts.collateral.mintShare(distributor.address, 201);
       });
 
@@ -214,7 +214,7 @@ describe('MerkleDistributor', () => {
           ctx.contracts.collateral.address,
           tree.getHexRoot(),
         );
-        await distributor.switchActive();
+        await distributor.toggleActive();
         await ctx.contracts.collateral.mintShare(distributor.address, 201);
       });
 
@@ -269,7 +269,7 @@ describe('MerkleDistributor', () => {
           ctx.contracts.collateral.address,
           tree.getHexRoot(),
         );
-        await distributor.switchActive();
+        await distributor.toggleActive();
         await ctx.contracts.collateral.mintShare(distributor.address, constants.MaxUint256);
       });
 

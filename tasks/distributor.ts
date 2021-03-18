@@ -40,12 +40,12 @@ task('deploy-distributor', 'Deploy merkle token distributor')
     console.log(green(`Contract MerkleDistributor is at ${distributorAddress}`));
   });
 
-task('switch-active-distributor', 'Switch activity of distributor')
+task('distributor-toggle-activity', 'Switch activity of distributor')
   .addParam('address', 'The address of the distributor contract')
   .setAction(async (taskArgs, hre) => {
     const { signer } = await loadDetails(taskArgs, hre);
     const distributorContract = MerkleDistributorFactory.connect(taskArgs.address, signer);
-    const { wait } = await distributorContract.switchActive();
+    const { wait } = await distributorContract.toggleActive();
     await wait();
     console.log(
       green(

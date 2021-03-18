@@ -26,7 +26,7 @@ contract MerkleDistributor is IMerkleDistributor, Ownable {
         active = false;
     }
 
-    function switchActive() external onlyOwner {
+    function toggleActive() external onlyOwner {
         active = !active;
     }
 
