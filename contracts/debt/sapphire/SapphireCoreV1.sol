@@ -29,32 +29,20 @@ contract SapphireCoreV1 {
         TransferOwnership
     }
 
+    struct OperationParams {
+        uint256 id;
+        uint256 amountOne;
+        uint256 amountTwo;
+        address addressOne;
+        SapphireTypes.ScoreProof _scoreProof;
+    }
+
     /* ========== Events ========== */
 
-    event PositionOpened(
-        uint256 _collateralAmount,
-        uint256 _borrowAmount,
-        SapphireTypes.ScoreProof _scoreProof
-    );
-
-    event Borrowed(
-        uint256 _positionId,
-        uint256 _collateralAmount,
-        uint256 _borrowAmount,
-        SapphireTypes.ScoreProof _scoreProof
-    );
-
-    event Repayed(
-        uint256 _positionId,
-        uint256 _repayAmount,
-        uint256 withdrawAmount,
-        SapphireTypes.ScoreProof _scoreProof
-    );
-
-    event Liquidated(
-        address _liquidator,
-        SapphireTypes.Position _updatedPosition,
-        SapphireTypes.ScoreProof _scoreProof
+    event ActionOperated(
+        uint8 _operation,
+        OperationParams _params,
+        SapphireTypes.Position _updatedPosition
     );
 
     event OwnershipTransfered(
@@ -141,7 +129,6 @@ contract SapphireCoreV1 {
 
     }
 
-
     function liquidate(
         uint256 positionId,
         SapphireTypes.ScoreProof memory scoreProof
@@ -150,6 +137,5 @@ contract SapphireCoreV1 {
     {
 
     }
-
 
 }
