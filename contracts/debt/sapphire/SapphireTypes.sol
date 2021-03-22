@@ -18,4 +18,10 @@ library SapphireTypes {
         uint256 lastUpdated;
     }
 
+    struct Position {
+        address owner;
+        Amount.Principal collateralAmount;
+        Amount.Principal borrowedAmount;
+    }
+
 }

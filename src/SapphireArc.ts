@@ -1,9 +1,9 @@
 import { Synth } from '@arc-types/core';
 import { TransactionOverrides } from '@arc-types/ethereum';
 import { BigNumber, BigNumberish, Signer } from 'ethers';
-import { SapphireCore } from './typings';
+import { SapphireCoreV1 } from './typings';
 
-export type SapphireSynth = Synth<SapphireCore>;
+export type SapphireSynth = Synth<SapphireCoreV1>;
 
 export class SapphireArc {
   public synths: Record<string, SapphireSynth | undefined> = {};

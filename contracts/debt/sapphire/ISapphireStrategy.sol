@@ -1,38 +1,37 @@
 // SPDX-License-Identifier: MIT
-// prettier-ignore
 
 pragma solidity ^0.5.16;
 
-contract ISapphireStrategy {
+interface ISapphireStrategy {
 
     function deposit(
-        address token,
-        uint256 amount,
-        address user,
-        address vault
+        address _token,
+        uint256 _amount,
+        address _user,
+        address _vault
     )
-        public
+        external
         returns (uint256);
 
     function withdraw(
-        address token,
-        uint256 amount,
-        address user,
-        address vault
+        address _token,
+        uint256 _amount,
+        address _user,
+        address _vault
     )
-        public
+        external
         returns (uint256);
 
     function harvest()
-        public;
+        external;
 
     function rescue(
-        address token,
-        address to,
-        uint256 amount,
-        address vault
+        address _token,
+        address _to,
+        uint256 _amount,
+        address _vault
     )
-        public
+        external
         returns (uint256);
 
 }
