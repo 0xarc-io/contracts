@@ -1,5 +1,5 @@
 // // Buidler automatically injects the waffle version into chai
-import { TestTokenFactory } from '../../src/typings';
+import { MockSapphireCreditScore, TestTokenFactory } from '../../src/typings';
 import { BigNumberish, Signer } from 'ethers';
 import { ethers } from 'hardhat';
 import { EVM } from './EVM';
@@ -34,4 +34,26 @@ export async function setStartingBalances(
     await testToken.mintShare(signer.address, balance);
     await Token.approve(collateral, signer, core, balance);
   });
+}
+
+export async function immediatelyUpdateMerkleRoot(
+  creditScoreContract: MockSapphireCreditScore,
+  targetCurrentRoot: string,
+  targetUpcomingRoot?: string,
+) {
+  await creditScoreContract.updateMerkleRoot(targetCurrentRoot);
+
+  await tickForCreditContract(creditScoreContract);
+  // intended root set as current one
+  await creditScoreContract.updateMerkleRoot(targetUpcomingRoot || targetCurrentRoot);
+}
+
+export async function tickForCreditContract(creditScoreContract: MockSapphireCreditScore) {
+  const initTimestamp = await creditScoreContract.getCurrentTimestamp();
+  const merkleRootDelay = await creditScoreContract.merkleRootDelayDuration();
+
+  const changedTimestamp = initTimestamp.add(merkleRootDelay);
+  const { wait } = await creditScoreContract.setCurrentTimestamp(changedTimestamp);
+  wait();
+  return changedTimestamp;
 }
