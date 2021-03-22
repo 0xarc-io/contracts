@@ -72,4 +72,15 @@ contract SapphireCore {
 
     }
 
+    /* ========== Public Getters ========== */
+
+    function getPosition(
+        uint256 id
+    )
+        external
+        view
+        returns (SapphireTypes.Position memory)
+    {
+    }
+
 }
