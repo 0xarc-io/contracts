@@ -163,7 +163,7 @@ describe.only('SapphireCore.open()', () => {
       };
     });
 
-    it('open at the exact c-ratio', async () => {
+    it('open at the exact default c-ratio', async () => {
       const { operation, params, updatedPosition } = await arc.open(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
@@ -193,7 +193,7 @@ describe.only('SapphireCore.open()', () => {
       expect(await arc.synth().collateral.balanceOf(arc.syntheticAddress())).eq(COLLATERAL_AMOUNT);
     });
 
-    it('open above the c-ratio', async () => {
+    it('open above the default c-ratio', async () => {
       const { params } = await arc.open(
         COLLATERAL_AMOUNT.mul(2),
         BORROW_AMOUNT,
@@ -208,7 +208,37 @@ describe.only('SapphireCore.open()', () => {
       expect(owner).to.equal(ctx.signers.unauthorised.address);
     });
 
-    it('revert if opened below the c-ratio', async () => {
+    it('open below the default c-ratio, but above c-ratio based on credit score', async () => {
+      const { params } = await arc.open(
+        COLLATERAL_AMOUNT.sub(1),
+        BORROW_AMOUNT,
+        creditScoreProof,
+        undefined,
+        ctx.signers.unauthorised,
+      );
+
+      const { borrowedAmount, collateralAmount, owner } = await arc.core().getPosition(params.id);
+      expect(collateralAmount.value).eq(COLLATERAL_AMOUNT.sub(1));
+      expect(borrowedAmount.value).eq(BORROW_AMOUNT);
+      expect(owner).to.equal(ctx.signers.unauthorised.address);
+    });
+
+    it('open at the c-ratio based on credit score', async () => {
+      const { params } = await arc.open(
+        COLLATERAL_AMOUNT.sub(1),
+        BORROW_AMOUNT,
+        creditScoreProof,
+        undefined,
+        ctx.signers.unauthorised,
+      );
+
+      const { borrowedAmount, collateralAmount, owner } = await arc.core().getPosition(params.id);
+      expect(collateralAmount.value).eq(COLLATERAL_AMOUNT.sub(1));
+      expect(borrowedAmount.value).eq(BORROW_AMOUNT);
+      expect(owner).to.equal(ctx.signers.unauthorised.address);
+    });
+
+    it('revert if opened below c-ratio based on credit score', async () => {
       await expect(
         arc.open(
           constants.One,
@@ -222,6 +252,16 @@ describe.only('SapphireCore.open()', () => {
 
     it('ignore proof(behavior based only on high c-ratio value) if no assessor is set', async () => {
       await arc.core().setAssessor(constants.AddressZero);
+      await expect(
+        arc.open(
+          COLLATERAL_AMOUNT.sub(1),
+          BORROW_AMOUNT,
+          creditScoreProof,
+          undefined,
+          ctx.signers.unauthorised,
+        ),
+      ).to.be.reverted;
+
       const { params } = await arc.open(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
