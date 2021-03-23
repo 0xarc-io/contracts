@@ -1,4 +1,4 @@
-import { BigNumberish } from 'ethers';
+import { BigNumber, BigNumberish } from 'ethers';
 import { SyntheticTokenV1 } from '@src/typings';
 import { IERC20 } from '@src/typings/IERC20';
 import { IOracle } from '@src/typings/IOracle';
@@ -107,4 +107,9 @@ export type Synth<T> = {
   oracle: IOracle;
   collateral: IERC20;
   synthetic: SyntheticTokenV1;
+};
+
+export type CreditScore = {
+  account: string;
+  amount: BigNumber;
 };

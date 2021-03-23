@@ -1,3 +1,4 @@
+import { CreditScore } from '@arc-types/core';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 import { SapphireMapperLinear, SapphireMapperLinearFactory } from '@src/typings';
@@ -495,8 +496,3 @@ describe('SapphireAssessor', () => {
     });
   });
 });
-
-interface CreditScore {
-  account: string;
-  amount: BigNumber;
-}

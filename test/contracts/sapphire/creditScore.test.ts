@@ -1,3 +1,4 @@
+import { CreditScore } from '@arc-types/core';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 import { MockSapphireCreditScore } from '@src/typings';
@@ -31,8 +32,8 @@ describe('SapphireCreditScore', () => {
   let unauthorised: SignerWithAddress;
   let owner: SignerWithAddress;
   let tree: CreditScoreTree;
-  let creditScore1;
-  let creditScore2;
+  let creditScore1: CreditScore;
+  let creditScore2: CreditScore;
   let ctx: ITestContext;
 
   before(async () => {
