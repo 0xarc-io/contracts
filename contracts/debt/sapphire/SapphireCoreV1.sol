@@ -5,9 +5,11 @@ pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 import {SafeMath} from "../../lib/SafeMath.sol";
 
+import {Decimal} from "../../lib/Decimal.sol";
+
 import {SapphireTypes} from "./SapphireTypes.sol";
 
-contract SapphireCore {
+contract SapphireCoreV1 {
 
     /* ========== Libraries ========== */
 
@@ -27,7 +29,70 @@ contract SapphireCore {
         TransferOwnership
     }
 
+    struct OperationParams {
+        uint256 id;
+        uint256 amountOne;
+        uint256 amountTwo;
+        address addressOne;
+        SapphireTypes.ScoreProof _scoreProof;
+    }
+
     /* ========== Events ========== */
+
+    event ActionOperated(
+        uint8 _operation,
+        OperationParams _params,
+        SapphireTypes.Position _updatedPosition
+    );
+
+    event OwnershipTransfered(
+        uint256 _positionId,
+        address _newOwner
+    );
+
+    event LiquidationFeesUpdated(
+        Decimal.D256 _liquidationUserFee,
+        Decimal.D256 _liquidationArcRatio
+    );
+
+    event LimitsUpdated(
+        uint256 _collateralLimit,
+        uint256 _collateralMinimum
+    );
+
+    event GlobalOperatorSet(
+        address _operator,
+        bool _status
+    );
+
+    event PositionOperatorSet(
+        uint256 _positionId,
+        address _operator,
+        bool _status
+    );
+
+    event IndexUpdated(
+        uint256 _newIndex,
+        uint256 _lastUpdateTime
+    );
+
+    event RateUpdated(uint256 _value);
+
+    event OracleUpdated(address _oracle);
+
+    event CollateralRatioUpdated(Decimal.D256 _collateralRatio);
+
+    event PauseStatusUpdated(bool _pauseStatus);
+
+    event InterestSetterUpdated(address _newInterestSetter);
+
+    event TokensWithdrawn(
+        address _token,
+        address _destination,
+        uint256 _amount
+    );
+
+    event StrategyUpdated(address _newStrategy);
 
     /* ========== Public Functions ========== */
 
@@ -51,6 +116,7 @@ contract SapphireCore {
     {
 
     }
+
 
     function repay(
         uint256 positionId,

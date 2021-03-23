@@ -1,20 +1,25 @@
-// import { ImUSDOracle, ImUSDOracleFactory } from '@src/typings';
-// import { expect } from 'chai';
-// import { ethers } from 'hardhat';
+import { MockProvider } from '@ethereum-waffle/provider';
+import { ImUSDOracle, ImUSDOracleFactory } from '@src/typings';
+import { expect } from 'chai';
 
-// describe('imUSDOracle', () => {
-//   let oracle: ImUSDOracle;
+describe('imUSDOracle', () => {
+  let oracle: ImUSDOracle;
 
-//   before(async () => {
-//     const signer = await ethers.provider.getSigner();
+  before(async () => {
+    const provider = new MockProvider({
+      ganacheOptions: {
+        fork: process.env.GANACHE_FORK_URL,
+        fork_block_number: 12025602,
+      },
+    });
+    const signer = await provider.getSigner();
 
-//     oracle = await new ImUSDOracleFactory(signer).deploy({ gasLimit: 10000000 });
-//     console.log('oracle address:', oracle.address);
-//   });
+    oracle = await new ImUSDOracleFactory(signer).deploy();
+  });
 
-//   it('should give the correct price', async () => {
-//     const price = await oracle.fetchCurrentPrice();
-//     console.log('price:', price.value.toString());
-//     expect(price).to.not.be.null;
-//   });
-// });
+  it('should give the correct price', async () => {
+    const price = await oracle.fetchCurrentPrice();
+    // $0.1
+    expect(price.value).to.eq('104201492729410660');
+  });
+});

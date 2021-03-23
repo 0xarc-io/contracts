@@ -23,4 +23,5 @@ library SapphireTypes {
         Amount.Principal collateralAmount;
         Amount.Principal borrowedAmount;
     }
+
 }
