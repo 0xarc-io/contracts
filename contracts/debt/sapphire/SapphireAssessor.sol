@@ -25,7 +25,7 @@ contract SapphireAssessor is Ownable {
 
     event Assessed(uint256 _assessedValue);
 
-    /* ========== Functions ========== */
+    /* ========== Constructor ========== */
 
     constructor(
         address _mapper,
@@ -42,6 +42,8 @@ contract SapphireAssessor is Ownable {
         mapper = ISapphireMapper(_mapper);
         creditScoreContract = ISapphireCreditScore(_creditScore);
     }
+
+    /* ========== Public Functions ========== */
 
     /**
      * @notice Takes a lower and upper bound, and based on the user's credit score

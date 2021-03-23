@@ -10,41 +10,70 @@ import 'module-alias/register';
  */
 
 describe('SapphireCore.borrow()', () => {
-  it('should be able to borrow above the c-ratio', async () => {});
+  it('borrows the correct amount for collateral tokens that have other than 18 decimal places');
 
-  it('should be able to update the index', async () => {});
+  it('borrows above the c-ratio', async () => {});
 
-  it('should be able to borrow more if more collateral is provided', async () => {});
+  it('updates the index', async () => {});
 
-  it('should be able to borrow more if a valid score proof is provided (first time)', async () => {
+  it('borrows more if more collateral is provided', async () => {});
+
+  it('borrows more if a valid score proof is provided (first time)', async () => {
     // The user has an existing position, then they obtain a credit score and can borrow more
   });
 
-  it('should be able to borrow more if the credit score increases', async () => {
+  it('borrows more if the credit score increases', async () => {
     // The user's existing credit score is updated and increases letting them borrow more
   });
 
-  it('should be able to borrow less if the credit score decreases', async () => {
+  it('borrows less if the credit score decreases', async () => {
     // The user's existing credit score is updated and decreases letting them borrow less
   });
 
-  it('should not be able to borrow with a score proof if no assesor is set', async () => {
+  it(`borrows from someone else's vault if called by the global operator`);
+
+  it(`borrows from someone else's vault if called by an approved position operator`);
+
+  it('updates the total borrowed amount correctly');
+
+  it(`should not borrow if the price from the oracle is 0`);
+
+  it(`should not borrow from someone else's vault if called by a position operator, but on an unapproved vault`, async () => {
+    // 1. User A opens vault X
+    // 2. Position operator P is approved on vault Y
+    // 3. P tries to borrow on X -> expect revert
+  });
+
+  it('should not borrow with a score proof if no assesor is set', async () => {
     // You can't borrow with a credit score if no assesor is set in the Core
   });
 
-  it('should not be able to borrow without a credit proof if a score exists on-chain', async () => {
+  it('should not borrow without a credit proof if a score exists on-chain', async () => {
     // You cannot borrow without a credit proof if one exists on-chain
   });
 
-  it('should not be able to borrow more if the c-ratio is not at the minimum', async () => {});
+  it('should not borrow more if the c-ratio is at the minimum', async () => {});
 
-  it('should not be able to borrow from someone elses account', async () => {});
+  it("should not borrow from someone else's account", async () => {});
 
-  it('should not be able to borrow without enough collateral', async () => {});
+  it('should not borrow without enough collateral', async () => {});
 
-  it('should not be able to borrow more if the price decreases', async () => {});
+  it('should not borrow more if the price decreases', async () => {});
 
-  it('should not be able to borrow more if more interest has accrued', async () => {});
+  it('should not borrow more if more interest has accrued', async () => {});
 
-  it('should not be able to borrow more than the collateral limit', async () => {});
+  it('should not borrow more than the collateral limit', async () => {});
+
+  it('should not borrow more than the maximum amount', async () => {
+    // 1. Borrow half of allowed amount
+    // 2. Borrow another half + 1 -> expect revert
+  });
+
+  it('should not borrow from an inexistent vault');
+
+  it('should not borrow more than the liquidity of the borrow asset');
+
+  it('should not borrow if contract is paused');
+
+  it('should not borrow if oracle is not set');
 });
