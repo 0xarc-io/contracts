@@ -1,4 +1,4 @@
-import { Synth } from '@arc-types/core';
+import { ActionOperated, Synth } from '@arc-types/core';
 import { TransactionOverrides } from '@arc-types/ethereum';
 import { BigNumber, BigNumberish, Signer } from 'ethers';
 import { SapphireCoreV1 } from './typings';
@@ -25,18 +25,20 @@ export class SapphireArc {
     return Object.keys(this.synths);
   }
 
-  open(
+  async open(
     collateralAmount: BigNumberish,
     borrowAmount: BigNumber,
-    synthName: string = this.getSynthNames()[0],
     creditScoreProof?: CreditScoreProof,
+    synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
-  ) {}
+  ): Promise<ActionOperated> {
+    return {} as ActionOperated;
+  }
 }
 
 interface CreditScoreProof {
-  account: string,
-  score: BigNumberish,
-  merkleProof: string[],
+  account: string;
+  score: BigNumberish;
+  merkleProof: string[];
 }
