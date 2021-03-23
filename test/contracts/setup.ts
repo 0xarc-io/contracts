@@ -2,7 +2,7 @@ import { BigNumber, BigNumberish } from 'ethers';
 import { BASE } from '@src/constants';
 import ArcNumber from '@src/utils/ArcNumber';
 import { ITestContext } from './context';
-import { setStartingBalances } from '../helpers/testingUtils';
+import { immediatelyUpdateMerkleRoot, setStartingBalances } from '../helpers/testingUtils';
 
 export interface MozartSetupOptions {
   oraclePrice: BigNumberish;
@@ -14,6 +14,10 @@ export interface MozartSetupOptions {
     liquidationArcRatio?: BigNumberish;
   };
   initialCollateralBalances?: [Account, BigNumber][];
+}
+
+export interface SapphireSetupOptions {
+  merkleRoot?: string;
 }
 
 export async function setupMozart(ctx: ITestContext, options: MozartSetupOptions) {
@@ -46,4 +50,17 @@ export async function setupMozart(ctx: ITestContext, options: MozartSetupOptions
       { value: options.fees?.liquidationUserFee || 0 },
       { value: options.fees?.liquidationArcRatio || 0 },
     );
+}
+
+export async function setupSapphire(ctx: ITestContext, options: SapphireSetupOptions) {
+  const arc = ctx.sdks.sapphire;
+
+  // Set the merkle root
+  if (options.merkleRoot) {
+    await ctx.contracts.sapphire.creditScore.setPause(false);
+    await immediatelyUpdateMerkleRoot(
+      ctx.contracts.sapphire.creditScore.connect(ctx.signers.interestSetter),
+      options.merkleRoot,
+    );
+  }
 }

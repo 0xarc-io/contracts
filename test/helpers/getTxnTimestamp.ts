@@ -1,6 +1,6 @@
-import { ITestContext } from "@test/contracts/context";
+import { providers } from 'ethers';
 
-export async function getTxnTimestamp(ctx: ITestContext, transaction): Promise<number> {
-  const block = await ctx.signers.admin.provider.getBlock((await transaction).blockHash);
+export async function getTxnTimestamp(provider: providers.Provider, transaction): Promise<number> {
+  const block = await provider.getBlock((await transaction).blockHash);
   return block.timestamp;
 }
