@@ -1,14 +1,18 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
-import { SapphireCreditScore } from '@src/typings/SapphireCreditScore';
-import { getTxnTimestamp } from '@test/helpers/getTxnTimestamp';
+import { MockSapphireCreditScore } from '@src/typings';
+import {
+  addSnapshotBeforeRestoreAfterEach,
+  advanceEpoch,
+} from '@test/helpers/testingUtils';
 import chai, { expect } from 'chai';
 import { solidity } from 'ethereum-waffle';
 import { BigNumber } from 'ethers';
 import 'module-alias/register';
 import { generateContext, ITestContext } from '../context';
-import { deployMockSapphireCreditScore } from '../deployers';
-import { createSapphireFixture } from '../fixtures';
+import { deployMockSapphireCreditScore, deploySapphireCreditScore } from '../deployers';
+import { sapphireFixture } from '../fixtures';
+import { setupSapphire } from '../setup';
 
 chai.use(solidity);
 
@@ -22,37 +26,55 @@ const THREE_BYTES32 = '0x3333333333333333333333333333333333333333333333333333333
  * it to be a core DeFi primitive for other applications to build on.
  */
 describe('SapphireCreditScore', () => {
-  let ctx: ITestContext;
-  let creditScoreContract: SapphireCreditScore;
+  let creditScoreContract: MockSapphireCreditScore;
   let merkleRootUpdater: SignerWithAddress;
   let unauthorised: SignerWithAddress;
   let owner: SignerWithAddress;
+  let tree: CreditScoreTree;
+  let creditScore1;
+  let creditScore2;
+  let ctx: ITestContext;
 
-  beforeEach(async () => {
-    ctx = await generateContext(createSapphireFixture(), async () => {});
-    creditScoreContract = ctx.contracts.sapphire.creditScore;
-    merkleRootUpdater = ctx.signers.interestSetter;
+  before(async () => {
+    ctx = await generateContext(sapphireFixture, async (ctx) => {
+      creditScore1 = {
+        account: ctx.signers.admin.address,
+        amount: BigNumber.from(12),
+      };
+      creditScore2 = {
+        account: ctx.signers.unauthorised.address,
+        amount: BigNumber.from(20),
+      };
+      tree = new CreditScoreTree([creditScore1, creditScore2]);
+      return setupSapphire(ctx, {
+        merkleRoot: tree.getHexRoot(),
+      });
+    });
     unauthorised = ctx.signers.unauthorised;
     owner = ctx.signers.admin;
+    merkleRootUpdater = ctx.signers.interestSetter;
+    creditScoreContract = ctx.contracts.sapphire.creditScore;
   });
 
-  it('should have merkle root updater not equal owner', async () => {
-    const merkleRootUpdaterAddress = await creditScoreContract.merkleRootUpdater();
-    expect(merkleRootUpdaterAddress).not.eq(owner.address);
-    expect(merkleRootUpdaterAddress).eq(merkleRootUpdater.address);
-  });
+  addSnapshotBeforeRestoreAfterEach();
 
   describe('#setPause', () => {
     it('initially not active', async () => {
-      expect(await creditScoreContract.isPaused()).to.be.true;
+      const contract = await deploySapphireCreditScore(
+        owner,
+        ONE_BYTES32,
+        merkleRootUpdater.address,
+        1000,
+      );
+      expect(await contract.isPaused()).to.be.true;
     });
 
     it('revert if trying to pause as an unauthorised user', async () => {
       expect(await creditScoreContract.merkleRootUpdater()).not.eq(unauthorised.address);
       expect(await creditScoreContract.owner()).not.eq(unauthorised.address);
-      await expect(creditScoreContract.connect(unauthorised).setPause(false)).to.be.revertedWith(
-        'Ownable: caller is not the owner',
-      );
+      await expect(
+        creditScoreContract.connect(unauthorised).setPause(false),
+      ).to.be.revertedWith('Ownable: caller is not the owner');
     });
 
     it('revert if set pause as merkle root updater', async () => {
@@ -63,17 +85,20 @@ describe('SapphireCreditScore', () => {
     });
 
     it('set pause as owner', async () => {
-      expect(await creditScoreContract.isPaused()).to.be.true;
-      await expect(creditScoreContract.setPause(false))
+      const initialIsPaused = await creditScoreContract.isPaused();
+      const expectedIsPaused = !initialIsPaused;
+      await expect(creditScoreContract.connect(owner).setPause(expectedIsPaused))
         .emit(creditScoreContract, 'PauseStatusUpdated')
-        .withArgs(false);
-      expect(await creditScoreContract.isPaused()).to.be.false;
+        .withArgs(expectedIsPaused);
+      expect(await creditScoreContract.isPaused()).eq(expectedIsPaused);
     });
   });
 
   describe('#updateMerkleRoot', () => {
-    beforeEach(async () => {
-      await creditScoreContract.setPause(false);
+    it('should have merkle root updater not equal owner', async () => {
+      const merkleRootUpdaterAddress = await creditScoreContract.merkleRootUpdater();
+      expect(merkleRootUpdaterAddress).not.eq(owner.address);
+      expect(merkleRootUpdaterAddress).eq(merkleRootUpdater.address);
     });
 
     it('should not be able to update the merkle root as an unauthorised user', async () => {
@@ -83,6 +108,7 @@ describe('SapphireCreditScore', () => {
     });
 
     it('should not be able to be called by the root updater before the delay duration', async () => {
+      await advanceEpoch(creditScoreContract);
       await creditScoreContract.connect(merkleRootUpdater).updateMerkleRoot(ONE_BYTES32);
       await expect(
         creditScoreContract.connect(merkleRootUpdater).updateMerkleRoot(ONE_BYTES32),
@@ -109,7 +135,7 @@ describe('SapphireCreditScore', () => {
       const initialLastMerkleRootUpdate = await creditScoreContract.lastMerkleRootUpdate();
 
       const txn = creditScoreContract.connect(owner).updateMerkleRoot(TWO_BYTES32);
-      const txnBlockTimestamp = await getTxnTimestamp(ctx, txn);
+      const txnBlockTimestamp = await creditScoreContract.getCurrentTimestamp();
 
       await expect(txn)
         .to.emit(creditScoreContract, 'MerkleRootUpdated')
@@ -120,11 +146,10 @@ describe('SapphireCreditScore', () => {
     });
 
     it('instantly update merkle root avoiding time delay as the owner', async () => {
-      await creditScoreContract.connect(merkleRootUpdater).updateMerkleRoot(TWO_BYTES32);
-
       const initialLastMerkleRootUpdate = await creditScoreContract.lastMerkleRootUpdate();
       const initialCurrentMerkleRoot = await creditScoreContract.currentMerkleRoot();
 
+      await creditScoreContract.setCurrentTimestamp(initialLastMerkleRootUpdate.add(1));
       await creditScoreContract.connect(owner).setPause(true);
       await creditScoreContract.connect(owner).updateMerkleRoot(THREE_BYTES32);
 
@@ -135,10 +160,10 @@ describe('SapphireCreditScore', () => {
 
     it('should be able to update the merkle root as the root updater', async () => {
       const initialUpcomingMerkleRoot = await creditScoreContract.upcomingMerkleRoot();
+      const timestamp = await advanceEpoch(creditScoreContract);
       const updateMerkleRootTxn = creditScoreContract
         .connect(merkleRootUpdater)
         .updateMerkleRoot(TWO_BYTES32);
-      const timestamp = await getTxnTimestamp(ctx, updateMerkleRootTxn);
 
       await expect(updateMerkleRootTxn)
         .to.emit(creditScoreContract, 'MerkleRootUpdated')
@@ -151,10 +176,10 @@ describe('SapphireCreditScore', () => {
     it('should ensure that malicious merkle root does not became a current one', async () => {
       // malicious update merkle root
       const maliciousRoot = TWO_BYTES32;
+      const maliciousTxnTimestamp = await advanceEpoch(creditScoreContract);
       const maliciousUpdateTxn = creditScoreContract
         .connect(merkleRootUpdater)
-        .updateMerkleRoot(maliciousRoot);
-      const maliciousTxnTimestamp = await getTxnTimestamp(ctx, maliciousUpdateTxn);
+        .updateMerkleRoot(maliciousRoot);      
 
       await expect(maliciousUpdateTxn)
         .to.emit(creditScoreContract, 'MerkleRootUpdated')
@@ -163,10 +188,10 @@ describe('SapphireCreditScore', () => {
 
       // owner prevent attack to not allow set malicious root as current one
       await creditScoreContract.setPause(true);
+      const timestamp = await advanceEpoch(creditScoreContract);
       const updateMerkleRootTxn = creditScoreContract
         .connect(owner)
         .updateMerkleRoot(THREE_BYTES32);
-      const timestamp = await getTxnTimestamp(ctx, updateMerkleRootTxn);
 
       await expect(updateMerkleRootTxn)
         .to.emit(creditScoreContract, 'MerkleRootUpdated')
@@ -208,34 +233,16 @@ describe('SapphireCreditScore', () => {
   });
 
   describe('#verifyAndUpdate', async () => {
-    let tree: CreditScoreTree;
-    let creditScore1;
-    let creditScore2;
-
-    beforeEach(async () => {
-      creditScore1 = {
-        account: owner.address,
-        amount: BigNumber.from(12),
-      };
-      creditScore2 = {
-        account: unauthorised.address,
-        amount: BigNumber.from(20),
-      };
-      tree = new CreditScoreTree([creditScore1, creditScore2]);
-      ctx = await generateContext(createSapphireFixture(tree.getHexRoot()), async () => {});
-      creditScoreContract = ctx.contracts.sapphire.creditScore;
-    });
-
     it('should be able to verify and update a users score', async () => {
       expect(await creditScoreContract.currentMerkleRoot()).eq(tree.getHexRoot());
+      const timestamp = await creditScoreContract.getCurrentTimestamp();
 
       const verifyAndUpdateTxn = creditScoreContract
         .connect(unauthorised)
         .verifyAndUpdate(getVerifyRequest(creditScore1.account, creditScore1.amount, tree));
-      const verifyAndUpdateTimestamp = await getTxnTimestamp(ctx, verifyAndUpdateTxn);
       expect(verifyAndUpdateTxn)
         .to.emit(creditScoreContract, 'CreditScoreUpdated')
-        .withArgs(creditScore1.account, creditScore1.amount, verifyAndUpdateTimestamp);
+        .withArgs(creditScore1.account, creditScore1.amount, timestamp);
 
       const {
         0: creditScore,
@@ -243,7 +250,7 @@ describe('SapphireCreditScore', () => {
         2: lastUpdated,
       } = await creditScoreContract.getLastScore(creditScore1.account);
       expect(creditScore).eq(creditScore1.amount);
-      expect(lastUpdated).eq(verifyAndUpdateTimestamp);
+      expect(lastUpdated).eq(timestamp);
       expect(maxCreditScore).eq(await creditScoreContract.maxScore());
     });
 
@@ -337,10 +344,8 @@ describe('SapphireCreditScore', () => {
 
   describe('#updateMerkleRootUpdater', () => {
     it('should be able to update as the owner', async () => {
-      await creditScoreContract.updateMerkleRootUpdater(ctx.signers.positionOperator.address);
-      expect(await creditScoreContract.merkleRootUpdater()).eq(
-        ctx.signers.positionOperator.address,
-      );
+      await creditScoreContract.updateMerkleRootUpdater(unauthorised.address);
+      expect(await creditScoreContract.merkleRootUpdater()).eq(unauthorised.address);
     });
 
     it('should not be able to update as non-owner', async () => {
