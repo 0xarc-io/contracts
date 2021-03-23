@@ -3,7 +3,7 @@ import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 import { MockSapphireCreditScore } from '@src/typings';
 import {
   addSnapshotBeforeRestoreAfterEach,
-  tickForCreditContract,
+  advanceEpoch,
 } from '@test/helpers/testingUtils';
 import chai, { expect } from 'chai';
 import { solidity } from 'ethereum-waffle';
@@ -25,7 +25,7 @@ const THREE_BYTES32 = '0x3333333333333333333333333333333333333333333333333333333
  * be posted. The logic around this contract needs to be very sound since we anticipate
  * it to be a core DeFi primitive for other applications to build on.
  */
-describe.only('SapphireCreditScore', () => {
+describe('SapphireCreditScore', () => {
   let creditScoreContract: MockSapphireCreditScore;
   let merkleRootUpdater: SignerWithAddress;
   let unauthorised: SignerWithAddress;
@@ -108,7 +108,7 @@ describe.only('SapphireCreditScore', () => {
     });
 
     it('should not be able to be called by the root updater before the delay duration', async () => {
-      await tickForCreditContract(creditScoreContract);
+      await advanceEpoch(creditScoreContract);
       await creditScoreContract.connect(merkleRootUpdater).updateMerkleRoot(ONE_BYTES32);
       await expect(
         creditScoreContract.connect(merkleRootUpdater).updateMerkleRoot(ONE_BYTES32),
@@ -160,7 +160,7 @@ describe.only('SapphireCreditScore', () => {
 
     it('should be able to update the merkle root as the root updater', async () => {
       const initialUpcomingMerkleRoot = await creditScoreContract.upcomingMerkleRoot();
-      const timestamp = await tickForCreditContract(creditScoreContract);
+      const timestamp = await advanceEpoch(creditScoreContract);
       const updateMerkleRootTxn = creditScoreContract
         .connect(merkleRootUpdater)
         .updateMerkleRoot(TWO_BYTES32);
@@ -176,7 +176,7 @@ describe.only('SapphireCreditScore', () => {
     it('should ensure that malicious merkle root does not became a current one', async () => {
       // malicious update merkle root
       const maliciousRoot = TWO_BYTES32;
-      const maliciousTxnTimestamp = await tickForCreditContract(creditScoreContract);
+      const maliciousTxnTimestamp = await advanceEpoch(creditScoreContract);
       const maliciousUpdateTxn = creditScoreContract
         .connect(merkleRootUpdater)
         .updateMerkleRoot(maliciousRoot);      
@@ -188,7 +188,7 @@ describe.only('SapphireCreditScore', () => {
 
       // owner prevent attack to not allow set malicious root as current one
       await creditScoreContract.setPause(true);
-      const timestamp = await tickForCreditContract(creditScoreContract);
+      const timestamp = await advanceEpoch(creditScoreContract);
       const updateMerkleRootTxn = creditScoreContract
         .connect(owner)
         .updateMerkleRoot(THREE_BYTES32);

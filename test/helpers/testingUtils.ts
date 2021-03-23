@@ -43,12 +43,12 @@ export async function immediatelyUpdateMerkleRoot(
 ) {
   await creditScoreContract.updateMerkleRoot(targetCurrentRoot);
 
-  await tickForCreditContract(creditScoreContract);
+  await advanceEpoch(creditScoreContract);
   // intended root set as current one
   await creditScoreContract.updateMerkleRoot(targetUpcomingRoot || targetCurrentRoot);
 }
 
-export async function tickForCreditContract(creditScoreContract: MockSapphireCreditScore) {
+export async function advanceEpoch(creditScoreContract: MockSapphireCreditScore) {
   const initTimestamp = await creditScoreContract.getCurrentTimestamp();
   const merkleRootDelay = await creditScoreContract.merkleRootDelayDuration();
 
