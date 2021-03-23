@@ -147,6 +147,23 @@ contract SapphireCoreV1 {
         view
         returns (SapphireTypes.Position memory)
     {
+
+    }
+
+    function getTotalCollateral ()
+        external
+        view
+        returns (uint256) 
+    {
+
+    }
+
+    function getTotalBorrowed ()
+        external
+        view
+        returns (uint256) 
+    {
+
     }
 
 }
