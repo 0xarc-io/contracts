@@ -37,7 +37,7 @@ export class SapphireArc {
   }
 }
 
-interface CreditScoreProof {
+export interface CreditScoreProof {
   account: string;
   score: BigNumberish;
   merkleProof: string[];
