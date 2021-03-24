@@ -32,10 +32,10 @@ describe.only('SapphireCore.open()', () => {
   async function init(ctx: ITestContext): Promise<void> {
     creditScore1 = {
       account: ctx.signers.minter.address,
-      amount: BigNumber.from(50),
+      amount: BigNumber.from(500),
     };
     creditScore2 = {
-      account: ctx.signers.unauthorised.address,
+      account: ctx.signers.interestSetter.address,
       amount: BigNumber.from(20),
     };
     creditScoreTree = new CreditScoreTree([creditScore1, creditScore2]);
@@ -77,8 +77,8 @@ describe.only('SapphireCore.open()', () => {
       expect(owner).to.equal(ctx.signers.unauthorised.address);
 
       // Check total collateral and borrowed values
-      expect(await arc.core().getTotalCollateral()).eq(COLLATERAL_AMOUNT);
-      expect(await arc.core().getTotalBorrowed()).eq(BORROW_AMOUNT);
+      expect(await arc.core().totalSupply()).eq(COLLATERAL_AMOUNT);
+      expect(await arc.core().totalBorrowed()).eq(BORROW_AMOUNT);
 
       expect(await arc.synth().collateral.balanceOf(arc.syntheticAddress())).eq(COLLATERAL_AMOUNT);
     });
@@ -225,7 +225,7 @@ describe.only('SapphireCore.open()', () => {
 
     it('open at the c-ratio based on credit score', async () => {
       const { params } = await arc.open(
-        COLLATERAL_AMOUNT.sub(1),
+        COLLATERAL_AMOUNT.sub(COLLATERAL_AMOUNT.div(2)),
         BORROW_AMOUNT,
         creditScoreProof,
         undefined,
