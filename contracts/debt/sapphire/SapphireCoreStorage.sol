@@ -43,7 +43,7 @@ contract SapphireCoreStorage {
     *      This amount will be multiplied by the precision scalar if the token
     *      has less than 18 decimals precision.
     */
-    uint256 public totalSupplied;
+    uint256 public totalCollateral;
 
     /**
      * @dev An account of the total amount being borrowed by all depositors. This includes
