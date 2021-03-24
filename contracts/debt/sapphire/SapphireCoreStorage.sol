@@ -27,4 +27,17 @@ contract SapphireCoreStorage {
     * @dev The address which collects fees when liquidations occur.
     */
     address internal feeCollector;
+
+    /**
+    * @dev The actual amount of collatteral provided to the protocol.
+    *      This amount will be multiplied by the precision scalar if the token
+    *      has less than 18 decimals precision.
+    */
+    uint256 public totalSupplied;
+
+    /**
+     * @dev An account of the total amount being borrowed by all depositors. This includes
+     *      the amount of interest accrued.
+     */
+    uint256 public totalBorrowed;
 }
