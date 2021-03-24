@@ -1,4 +1,4 @@
-import { BigNumber, BigNumberish } from 'ethers';
+import { BigNumber, BigNumberish, constants } from 'ethers';
 import { BASE } from '@src/constants';
 import ArcNumber from '@src/utils/ArcNumber';
 import { ITestContext } from './context';
@@ -18,6 +18,7 @@ export interface MozartSetupOptions {
 
 export interface SapphireSetupOptions {
   merkleRoot?: string;
+  collateralRatio?: BigNumberish;
 }
 
 export async function setupMozart(ctx: ITestContext, options: MozartSetupOptions) {
@@ -52,15 +53,18 @@ export async function setupMozart(ctx: ITestContext, options: MozartSetupOptions
     );
 }
 
-export async function setupSapphire(ctx: ITestContext, options: SapphireSetupOptions) {
+export async function setupSapphire(ctx: ITestContext, {merkleRoot, collateralRatio}: SapphireSetupOptions) {
   const arc = ctx.sdks.sapphire;
 
+  // Update the collateral ratio
+  await arc.synth().core.setCollateralRatio({ value: collateralRatio || constants.WeiPerEther });
+
   // Set the merkle root
-  if (options.merkleRoot) {
+  if (merkleRoot) {
     await ctx.contracts.sapphire.creditScore.setPause(false);
     await immediatelyUpdateMerkleRoot(
       ctx.contracts.sapphire.creditScore.connect(ctx.signers.interestSetter),
-      options.merkleRoot,
+      merkleRoot,
     );
   }
 }

@@ -150,20 +150,4 @@ contract SapphireCoreV1 {
 
     }
 
-    function getTotalCollateral ()
-        external
-        view
-        returns (uint256) 
-    {
-
-    }
-
-    function getTotalBorrowed ()
-        external
-        view
-        returns (uint256) 
-    {
-
-    }
-
 }
