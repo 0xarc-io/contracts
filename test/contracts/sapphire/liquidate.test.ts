@@ -74,3 +74,11 @@ describe('SapphireCore.liquidate()', () => {
 
   it('should not liquidate if user calls liquidate on their own vault');
 });
+
+// Accompanying sheet: https://docs.google.com/spreadsheets/d/1rmFbUxnM4gyi1xhcYKBwcdadvXrHBPKbeX7DLk8KQgE/edit#gid=387958619
+describe('SapphireCore.liquidate() scenarios', () => {
+  it('Scenario 1: the position gets liquidated because the collateral price hits the liquidation price')
+  it('Scenario 2: The borrow amount is greater than the collateral value and a liquidation occurs')
+  it('Scenario 3: the user changes their position, then their credit score decreases and liquidation occurs')
+  it('Scenario 4: the user changes their position, then their credit score increases which protects him from liquidation. Then the price drops and gets liquidated')
+})
