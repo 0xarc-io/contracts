@@ -29,6 +29,16 @@ contract SapphireCoreStorage {
     address internal feeCollector;
 
     /**
+     * @dev The actual address of the collateral used for this core system.
+     */
+    address public collateralAsset;
+
+    /**
+     * @dev The address of the synthetic token where this core is approved to mint from
+     */
+    address public syntheticAsset;
+
+    /**
     * @dev The actual amount of collatteral provided to the protocol.
     *      This amount will be multiplied by the precision scalar if the token
     *      has less than 18 decimals precision.
