@@ -1,5 +1,6 @@
-import { ActionOperated, Synth } from '@arc-types/core';
+import { Synth } from '@arc-types/core';
 import { TransactionOverrides } from '@arc-types/ethereum';
+import { CreditScoreProof, ActionOperated } from '@arc-types/sapphireCore';
 import { BigNumber, BigNumberish, Signer } from 'ethers';
 import { SapphireCoreV1 } from './typings';
 
@@ -9,7 +10,7 @@ export class SapphireArc {
   public synths: Record<string, SapphireSynth | undefined> = {};
 
   constructor(public readonly signer: Signer) {}
-  static async new(signer: Signer): Promise<SapphireArc> {
+  static new(signer: Signer): SapphireArc {
     return new SapphireArc(signer);
   }
 
@@ -35,10 +36,4 @@ export class SapphireArc {
   ): Promise<ActionOperated> {
     return {} as ActionOperated;
   }
-}
-
-export interface CreditScoreProof {
-  account: string;
-  score: BigNumberish;
-  merkleProof: string[];
 }
