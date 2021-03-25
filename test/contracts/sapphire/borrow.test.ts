@@ -15,13 +15,9 @@ chai.use(solidity);
 /**
  * This is the most crucial function of the system as it's how users actually borrow from a vault.
  * When call borrow the first time, new position is created under the hood.
- * When borrowing, we won't let a user borrow without a credit proof if they're already being tracked
- * in the system. This means that if people can't obtain a credit proof then they can't borrow. The same
- * cannot be said for liquidate and repay since the credit proof is optional. When testing the borrow
- * function we need to make sure that every case of with a credit proof, without a credit proof, price changes,
- * the the first borrow call and follow-up calls is tested.
+ * These test cases test only borrow call when account does not have position yet
  */
-describe.only('SapphireCore.borrow()', () => {
+describe('SapphireCore.borrow()', () => {
   const COLLATERAL_AMOUNT = utils.parseEther('100');
   const BORROW_AMOUNT = utils.parseEther('50');
 
