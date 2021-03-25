@@ -141,7 +141,7 @@ contract SapphireCoreV1 {
     /* ========== Public Getters ========== */
 
     function getPosition(
-        uint256 id
+        address owner
     )
         external
         view
