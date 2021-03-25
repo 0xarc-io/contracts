@@ -5,9 +5,9 @@ import chai, { expect } from 'chai';
 import { BigNumber, constants, utils } from 'ethers';
 import { solidity } from 'ethereum-waffle';
 import 'module-alias/register';
-import { generateContext, ITestContext } from '../context';
-import { sapphireFixture } from '../fixtures';
-import { setupSapphire } from '../setup';
+import { generateContext, ITestContext } from '../../context';
+import { sapphireFixture } from '../../fixtures';
+import { setupSapphire } from '../../setup';
 import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 
 chai.use(solidity);
@@ -17,7 +17,7 @@ chai.use(solidity);
  * When call borrow the first time, new position is created under the hood.
  * These test cases test only borrow call when account does not have position yet
  */
-describe('SapphireCore.borrow()', () => {
+describe('SapphireCore.borrow() - initialize position', () => {
   const COLLATERAL_AMOUNT = utils.parseEther('100');
   const BORROW_AMOUNT = utils.parseEther('50');
 

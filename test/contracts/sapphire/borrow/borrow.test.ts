@@ -9,7 +9,7 @@ import 'module-alias/register';
  * is tested.
  */
 
-describe('SapphireCore.borrow()', () => {
+describe('SapphireCore.borrow() - with initialized position', () => {
   it('borrows the correct amount for collateral tokens that have other than 18 decimal places');
 
   it('borrows above the c-ratio', async () => {});
