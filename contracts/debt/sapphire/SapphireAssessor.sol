@@ -19,13 +19,13 @@ contract SapphireAssessor is Ownable {
 
     /* ========== Events ========== */
 
-    event MapperSet(address newMapper);
+    event MapperSet(address _newMapper);
 
-    event CreditScoreContractSet(address newCreditScoreContract);
+    event CreditScoreContractSet(address _newCreditScoreContract);
 
-    event Assessed(uint256 assessedValue);
+    event Assessed(uint256 _assessedValue);
 
-    /* ========== Functions ========== */
+    /* ========== Constructor ========== */
 
     constructor(
         address _mapper,
@@ -43,6 +43,8 @@ contract SapphireAssessor is Ownable {
         creditScoreContract = ISapphireCreditScore(_creditScore);
     }
 
+    /* ========== Public Functions ========== */
+
     /**
      * @notice Takes a lower and upper bound, and based on the user's credit score
      * and given its proof, returns the appropriate value between these bounds.
@@ -50,7 +52,7 @@ contract SapphireAssessor is Ownable {
      * @param _lowerBound The lower bound
      * @param _upperBound The upper bound
      * @param _scoreProof The score proof
-     * @param _isScoreRequred The flag, which require the proof of score if account already has some score 
+     * @param _isScoreRequred The flag, which require the proof of score if account already has some score
      * @return A value between the lower and upper bounds depending on the credit score
      */
     function assess(
@@ -131,6 +133,8 @@ contract SapphireAssessor is Ownable {
         );
 
         mapper = ISapphireMapper(_mapper);
+
+        emit MapperSet(_mapper);
     }
 
     function setCreditScoreContract(
@@ -150,5 +154,7 @@ contract SapphireAssessor is Ownable {
         );
 
         creditScoreContract = ISapphireCreditScore(_creditScore);
+
+        emit CreditScoreContractSet(_creditScore);
     }
 }

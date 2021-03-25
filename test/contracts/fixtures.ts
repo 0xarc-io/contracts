@@ -1,6 +1,11 @@
 import { MAX_UINT256 } from '@src/constants';
 import { SyntheticTokenV1Factory } from '@src/typings/SyntheticTokenV1Factory';
-import { MozartCoreV1Factory } from '@src/typings/MozartCoreV1Factory';
+import {
+  CoreV4Factory,
+  MockMozartCoreV2Factory,
+  MockMozartSavingsV2Factory,
+  MockSapphireCoreV1Factory,
+} from '@src/typings';
 import ArcDecimal from '@src/utils/ArcDecimal';
 
 import {
@@ -14,15 +19,14 @@ import {
   deploySpritzCoreV3,
   deployMockMozartCore,
   deployMockSavings,
-  deploySapphireCreditScore,
+  deployMockSapphireCreditScore,
+  deployMockSapphireCoreV1,
 } from './deployers';
 
 import { Signer } from 'ethers';
 import { ITestContext, ITestContextArgs } from './context';
 import { MozartTestArc } from '@src/MozartTestArc';
-import { CoreV4Factory } from '@src/typings/CoreV4Factory';
 import { SpritzTestArc } from '../../src/SpritzTestArc';
-import { MockMozartCoreV2Factory, MockMozartSavingsV2Factory } from '@src/typings';
 
 export async function mozartFixture(ctx: ITestContext, args?: ITestContextArgs) {
   const deployer: Signer = ctx.signers.admin;
@@ -116,18 +120,18 @@ export async function distributorFixture(ctx: ITestContext, args?: ITestContextA
   ctx.contracts.collateral = await deployTestToken(ctx.signers.admin, 'ARC GOVERNANCE', 'ARCX', 18);
 }
 
-export function createSapphireFixture(
-  merkleRoot: string = '0x1111111111111111111111111111111111111111111111111111111111111111',
-) {
-  return async function sapphireFixture(ctx: ITestContext, args?: ITestContextArgs) {
-    const deployer: Signer = ctx.signers.admin;
-    const deployerAddress = await deployer.getAddress();
+export async function sapphireFixture(ctx: ITestContext, args?: ITestContextArgs) {
+  const deployer: Signer = ctx.signers.admin;
+  const deployerAddress = await deployer.getAddress();
 
-    ctx.contracts.sapphire.creditScore = await deploySapphireCreditScore(
-      deployer,
-      merkleRoot,
-      ctx.signers.interestSetter.address,
-      1000,
-    );
-  };
+  const coreImp = await deployMockSapphireCoreV1(deployer);
+  const coreProxy = await deployArcProxy(deployer, coreImp.address, deployerAddress, []);
+  ctx.contracts.sapphire.core = MockSapphireCoreV1Factory.connect(coreProxy.address, deployer);
+
+  ctx.contracts.sapphire.creditScore = await deployMockSapphireCreditScore(
+    deployer,
+    '0x1111111111111111111111111111111111111111111111111111111111111111',
+    ctx.signers.interestSetter.address,
+  );
+  await ctx.contracts.sapphire.creditScore.setPause(false);
 }

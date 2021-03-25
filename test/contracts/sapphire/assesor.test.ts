@@ -1,3 +1,4 @@
+import { CreditScore } from '@arc-types/core';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 import { SapphireMapperLinear, SapphireMapperLinearFactory } from '@src/typings';
@@ -435,6 +436,14 @@ describe('SapphireAssessor', () => {
       const newMapper = await assessor.mapper();
       expect(newMapper).to.eq(testMapper.address);
     });
+
+    it('emits a MapperSet event', async () => {
+      const testMapper = await new SapphireMapperLinearFactory(owner).deploy();
+
+      await expect(assessor.setMapper(testMapper.address))
+        .to.emit(assessor, 'MapperSet')
+        .withArgs(testMapper.address);
+    });
   });
 
   describe('#setCreditScoreContract', () => {
@@ -472,10 +481,18 @@ describe('SapphireAssessor', () => {
 
       expect(await assessor.creditScoreContract()).to.eq(testCreditScoreContract.address);
     });
+
+    it('emits the CreditScoreContractSet event', async () => {
+      const testCreditScoreTree = new CreditScoreTree([creditScore2]);
+
+      const testCreditScoreContract = await new MockSapphireCreditScoreFactory(owner).deploy(
+        testCreditScoreTree.getHexRoot(),
+        owner.address,
+      );
+
+      await expect(assessor.setCreditScoreContract(testCreditScoreContract.address))
+        .to.emit(assessor, 'CreditScoreContractSet')
+        .withArgs(testCreditScoreContract.address);
+    });
   });
 });
-
-interface CreditScore {
-  account: string;
-  amount: BigNumber;
-}
