@@ -108,8 +108,3 @@ export type Synth<T> = {
   collateral: IERC20;
   synthetic: SyntheticTokenV1;
 };
-
-export type CreditScore = {
-  account: string;
-  amount: BigNumber;
-};
