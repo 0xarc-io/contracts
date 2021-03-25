@@ -14,7 +14,7 @@ import { TokenStakingAccrual } from '@src/typings/TokenStakingAccrual';
 import { KYFV2 } from '@src/typings/KYFV2';
 import { MockOracle } from '@src/typings/MockOracle';
 import { MockMozartCoreV2 } from '@src/typings/MockMozartCoreV2';
-import { MockMozartSavingsV2 } from '@src/typings';
+import { MockMozartSavingsV2, MockSapphireCoreV1 } from '@src/typings';
 import { MerkleDistributor } from '@src/typings/MerkleDistributor';
 import { SapphireCreditScore } from '@src/typings/SapphireCreditScore';
 import { MockSapphireCreditScore } from '@src/typings/MockSapphireCreditScore';
@@ -163,4 +163,13 @@ export async function deployMockSapphireCreditScore(deployer: Signer, merkleRoot
   );
   const mockSapphireCreditScore = await mockSapphireCreditScoreFactory.deploy(merkleRoot, merkleTreeUpdater);
   return mockSapphireCreditScore as MockSapphireCreditScore;
+}
+
+export async function deployMockSapphireCoreV1(deployer: Signer) {
+  const factory = await ethers.getContractFactory(
+    'MockSapphireCoreV1',
+    deployer,
+  );
+  const contract = await factory.deploy();
+  return contract as MockSapphireCoreV1;
 }

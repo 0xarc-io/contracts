@@ -77,7 +77,7 @@ describe.only('SapphireCore.open()', () => {
       expect(owner).to.equal(ctx.signers.unauthorised.address);
 
       // Check total collateral and borrowed values
-      expect(await arc.core().totalSupply()).eq(COLLATERAL_AMOUNT);
+      expect(await arc.core().totalCollateral()).eq(COLLATERAL_AMOUNT);
       expect(await arc.core().totalBorrowed()).eq(BORROW_AMOUNT);
 
       expect(await arc.synth().collateral.balanceOf(arc.syntheticAddress())).eq(COLLATERAL_AMOUNT);
