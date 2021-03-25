@@ -1,20 +1,31 @@
-// import { BBadgerOracle, BBadgerOracleFactory, BDIGGOracle, BDIGGOracleFactory } from '@src/typings';
-// import { expect } from 'chai';
-// import { ethers } from 'hardhat';
+import { MockProvider } from '@ethereum-waffle/provider';
+import { BigNumber } from '@ethersproject/bignumber';
+import { BBadgerOracle, BBadgerOracleFactory } from '@src/typings';
+import { expect } from 'chai';
 
-// describe('bBadgerOracle', () => {
-//   let oracle: BBadgerOracle;
+describe('bBadgerOracle', () => {
+  let oracle: BBadgerOracle;
 
-//   before(async () => {
-//     const signer = await ethers.provider.getSigner();
+  before(async () => {
+    const provider = new MockProvider({
+      ganacheOptions: {
+        fork: process.env.GANACHE_FORK_URL,
+        fork_block_number: 12025602,
+      },
+    });
 
-//     oracle = await new BBadgerOracleFactory(signer).deploy({ gasLimit: 10000000 });
-//     console.log(oracle.address);
-//   });
+    const signer = await provider.getSigner();
 
-//   it('should give the correct price', async () => {
-//     const price = await oracle.fetchCurrentPrice();
-//     console.log(price.value.toString());
-//     expect(price).to.not.be.null;
-//   });
-// });
+    oracle = await new BBadgerOracleFactory(signer).deploy();
+  });
+
+  it('should give the correct price', async () => {
+    const price = await oracle.fetchCurrentPrice();
+
+    /**
+     * At block 12025602, 1 bBADGER is 1.22 BADGER, and 1 BADGER is $45.31
+     */
+
+    expect(price.value).to.eq(BigNumber.from('54429306291136836649'));
+  });
+});
