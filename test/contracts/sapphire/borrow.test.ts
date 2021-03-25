@@ -13,10 +13,13 @@ import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 chai.use(solidity);
 
 /**
- * When calling borrow(), it's calling borrow underneath the hood but just creates a new position
- * so that no custom logic is used for borrow versus borrow. The two scenarios to test here are for
- * for with a valid score proof and one without a valid score proof. You only need a score proof
- * if your address has a store proof in the CreditScore contract.
+ * This is the most crucial function of the system as it's how users actually borrow from a vault.
+ * When call borrow the first time, new position is created under the hood.
+ * When borrowing, we won't let a user borrow without a credit proof if they're already being tracked
+ * in the system. This means that if people can't obtain a credit proof then they can't borrow. The same
+ * cannot be said for liquidate and repay since the credit proof is optional. When testing the borrow
+ * function we need to make sure that every case of with a credit proof, without a credit proof, price changes,
+ * the the first borrow call and follow-up calls is tested.
  */
 describe.only('SapphireCore.borrow()', () => {
   const COLLATERAL_AMOUNT = utils.parseEther('100');
