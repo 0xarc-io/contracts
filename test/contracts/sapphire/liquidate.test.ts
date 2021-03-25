@@ -1,4 +1,15 @@
+import { SapphireTestArc } from '@src/SapphireTestArc';
+import { BigNumber } from 'ethers';
 import 'module-alias/register';
+import { generateContext, ITestContext } from '../context';
+import { setupSapphire } from '../setup';
+import { sapphireFixture } from '../fixtures';
+import ArcDecimal from '@src/utils/ArcDecimal';
+import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
+import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
+
+const LOW_C_RATIO = ArcDecimal.new(1.15);
+const HIGH_C_RATIO = ArcDecimal.new(1.5);
 
 /**
  * When a liquidation occurs, what's really happening is that the debt which a user owes the
@@ -6,7 +17,36 @@ import 'module-alias/register';
  * another user's debt is because they acquire the user's collateral at a discount and can make
  * an insta profit by selling the collateral they got a discount.
  */
-describe('SapphireCore.liquidate()', () => {
+describe.only('SapphireCore.liquidate()', () => {
+  let arc: SapphireTestArc;
+
+  async function init(ctx: ITestContext) {
+    const creditScore1 = {
+      account: ctx.signers.staker.address,
+      amount: BigNumber.from(500),
+    };
+
+    const creditScore2 = {
+      account: ctx.signers.liquidator.address,
+      amount: BigNumber.from(500),
+    };
+
+    const creditScoreTree = new CreditScoreTree([creditScore1, creditScore2]);
+
+    await setupSapphire(ctx, {
+      lowCollateralRatio: LOW_C_RATIO.value,
+      highCollateralRatio: HIGH_C_RATIO.value,
+      merkleRoot: creditScoreTree.getHexRoot(),
+    });
+  }
+
+  before(async () => {
+    const ctx = await generateContext(sapphireFixture, init);
+    arc = ctx.sdks.sapphire;
+  });
+
+  addSnapshotBeforeRestoreAfterEach();
+
   it('liquidates an undercollateralized position', async () => {
     // When a liquidation is done we need to check the following
     // - Ensure that the liquidator has enough debt (STABLEx)
@@ -77,8 +117,14 @@ describe('SapphireCore.liquidate()', () => {
 
 // Accompanying sheet: https://docs.google.com/spreadsheets/d/1rmFbUxnM4gyi1xhcYKBwcdadvXrHBPKbeX7DLk8KQgE/edit#gid=387958619
 describe('SapphireCore.liquidate() scenarios', () => {
-  it('Scenario 1: the position gets liquidated because the collateral price hits the liquidation price')
-  it('Scenario 2: The borrow amount is greater than the collateral value and a liquidation occurs')
-  it('Scenario 3: the user changes their position, then their credit score decreases and liquidation occurs')
-  it('Scenario 4: the user changes their position, then their credit score increases which protects him from liquidation. Then the price drops and gets liquidated')
-})
+  it(
+    'Scenario 1: the position gets liquidated because the collateral price hits the liquidation price',
+  );
+  it('Scenario 2: The borrow amount is greater than the collateral value and a liquidation occurs');
+  it(
+    'Scenario 3: the user changes their position, then their credit score decreases and liquidation occurs',
+  );
+  it(
+    'Scenario 4: the user changes their position, then their credit score increases which protects him from liquidation. Then the price drops and gets liquidated',
+  );
+});
