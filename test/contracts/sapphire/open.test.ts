@@ -40,7 +40,8 @@ describe.only('SapphireCore.open()', () => {
     };
     creditScoreTree = new CreditScoreTree([creditScore1, creditScore2]);
     await setupSapphire(ctx, {
-      collateralRatio: constants.WeiPerEther.mul(2),
+      lowCollateralRatio: constants.WeiPerEther.mul(2),
+      highCollateralRatio: constants.WeiPerEther.mul(2),
       merkleRoot: creditScoreTree.getHexRoot(),
     });
   }
@@ -240,13 +241,7 @@ describe.only('SapphireCore.open()', () => {
 
     it('revert if opened below c-ratio based on credit score', async () => {
       await expect(
-        arc.open(
-          constants.One,
-          BORROW_AMOUNT,
-          creditScoreProof,
-          undefined,
-          ctx.signers.minter,
-        ),
+        arc.open(constants.One, BORROW_AMOUNT, creditScoreProof, undefined, ctx.signers.minter),
       ).to.be.reverted;
     });
 
@@ -297,13 +292,7 @@ describe.only('SapphireCore.open()', () => {
     it('revert if opened below the minimum position amount', async () => {
       await arc.core().setLimits(0, COLLATERAL_AMOUNT.add(1));
       await expect(
-        arc.open(
-          COLLATERAL_AMOUNT,
-          BORROW_AMOUNT,
-          creditScoreProof,
-          undefined,
-          ctx.signers.minter,
-        ),
+        arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT, creditScoreProof, undefined, ctx.signers.minter),
       ).to.be.reverted;
     });
   });
