@@ -1,5 +1,4 @@
-import { Operation } from '@arc-types/core';
-import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
+import { CreditScore, CreditScoreProof, Operation } from '@arc-types/sapphireCore';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import chai, { expect } from 'chai';
@@ -14,12 +13,12 @@ import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 chai.use(solidity);
 
 /**
- * When calling open(), it's calling borrow underneath the hood but just creates a new position
- * so that no custom logic is used for open versus borrow. The two scenarios to test here are for
+ * When calling borrow(), it's calling borrow underneath the hood but just creates a new position
+ * so that no custom logic is used for borrow versus borrow. The two scenarios to test here are for
  * for with a valid score proof and one without a valid score proof. You only need a score proof
  * if your address has a store proof in the CreditScore contract.
  */
-describe.only('SapphireCore.open()', () => {
+describe.only('SapphireCore.borrow()', () => {
   const COLLATERAL_AMOUNT = utils.parseEther('100');
   const BORROW_AMOUNT = utils.parseEther('50');
 
@@ -53,8 +52,8 @@ describe.only('SapphireCore.open()', () => {
   addSnapshotBeforeRestoreAfterEach();
 
   describe('without score proof', () => {
-    it('open at the exact c-ratio', async () => {
-      const { operation, params, updatedPosition } = await arc.open(
+    it('borrow at the exact c-ratio', async () => {
+      const { operation, params, updatedPosition } = await arc.borrow(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
         undefined,
@@ -63,7 +62,7 @@ describe.only('SapphireCore.open()', () => {
       );
 
       // Ensure the events emitted correct information
-      expect(operation).eq(Operation.Open, 'Invalid operation emitted');
+      expect(operation).eq(Operation.Borrow, 'Invalid operation emitted');
       expect(params.collateralAmount).eq(COLLATERAL_AMOUNT, 'Invalid collateral amount emitted');
       expect(params.borrowedAmount).eq(BORROW_AMOUNT, 'Invalid borrow amount emitted');
       expect(params.owner).eq(ctx.signers.unauthorised.address);
@@ -82,8 +81,8 @@ describe.only('SapphireCore.open()', () => {
       expect(await arc.synth().collateral.balanceOf(arc.syntheticAddress())).eq(COLLATERAL_AMOUNT);
     });
 
-    it('open above the c-ratio', async () => {
-      const { params } = await arc.open(
+    it('borrow above the c-ratio', async () => {
+      const { params } = await arc.borrow(
         COLLATERAL_AMOUNT.mul(2),
         BORROW_AMOUNT,
         undefined,
@@ -96,9 +95,9 @@ describe.only('SapphireCore.open()', () => {
       expect(borrowedAmount.value).eq(BORROW_AMOUNT);
     });
 
-    it('revert if opened below the c-ratio', async () => {
+    it('revert if borrowed below the c-ratio', async () => {
       await expect(
-        arc.open(
+        arc.borrow(
           COLLATERAL_AMOUNT,
           BORROW_AMOUNT.add(1),
           undefined,
@@ -108,7 +107,7 @@ describe.only('SapphireCore.open()', () => {
       ).to.be.reverted;
 
       await expect(
-        arc.open(
+        arc.borrow(
           COLLATERAL_AMOUNT.sub(1),
           BORROW_AMOUNT,
           undefined,
@@ -118,9 +117,9 @@ describe.only('SapphireCore.open()', () => {
       ).to.be.reverted;
     });
 
-    it('open if no assessor is set', async () => {
+    it('borrow if no assessor is set', async () => {
       await arc.core().setAssessor(constants.AddressZero);
-      const { params } = await arc.open(
+      const { params } = await arc.borrow(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
         undefined,
@@ -135,14 +134,14 @@ describe.only('SapphireCore.open()', () => {
 
     it('revert if a score for address exists on-chain', async () => {
       await expect(
-        arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT, undefined, undefined, ctx.signers.minter),
+        arc.borrow(COLLATERAL_AMOUNT, BORROW_AMOUNT, undefined, undefined, ctx.signers.minter),
       ).to.be.reverted;
     });
 
-    it('revert if opened below the minimum position amount', async () => {
+    it('revert if borrowed below the minimum position amount', async () => {
       await arc.core().setLimits(0, COLLATERAL_AMOUNT.add(1));
       await expect(
-        arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT, undefined, undefined, ctx.signers.unauthorised),
+        arc.borrow(COLLATERAL_AMOUNT, BORROW_AMOUNT, undefined, undefined, ctx.signers.unauthorised),
       ).to.be.reverted;
     });
   });
@@ -158,8 +157,8 @@ describe.only('SapphireCore.open()', () => {
       };
     });
 
-    it('open at the exact default c-ratio', async () => {
-      const { operation, params, updatedPosition } = await arc.open(
+    it('borrow at the exact default c-ratio', async () => {
+      const { operation, params, updatedPosition } = await arc.borrow(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
         creditScoreProof,
@@ -168,7 +167,7 @@ describe.only('SapphireCore.open()', () => {
       );
 
       // Ensure the events emitted correct information
-      expect(operation).eq(Operation.Open, 'Invalid operation emitted');
+      expect(operation).eq(Operation.Borrow, 'Invalid operation emitted');
       expect(params.collateralAmount).eq(COLLATERAL_AMOUNT, 'Invalid collateral amount emitted');
       expect(params.borrowedAmount).eq(BORROW_AMOUNT, 'Invalid borrow amount emitted');
       expect(params.owner).eq(ctx.signers.minter.address);
@@ -187,8 +186,8 @@ describe.only('SapphireCore.open()', () => {
       expect(await arc.synth().collateral.balanceOf(arc.syntheticAddress())).eq(COLLATERAL_AMOUNT);
     });
 
-    it('open above the default c-ratio', async () => {
-      const { params } = await arc.open(
+    it('borrow above the default c-ratio', async () => {
+      const { params } = await arc.borrow(
         COLLATERAL_AMOUNT.mul(2),
         BORROW_AMOUNT,
         creditScoreProof,
@@ -201,8 +200,8 @@ describe.only('SapphireCore.open()', () => {
       expect(borrowedAmount.value).eq(BORROW_AMOUNT);;
     });
 
-    it('open below the default c-ratio, but above c-ratio based on credit score', async () => {
-      const { params } = await arc.open(
+    it('borrow below the default c-ratio, but above c-ratio based on credit score', async () => {
+      const { params } = await arc.borrow(
         COLLATERAL_AMOUNT.sub(1),
         BORROW_AMOUNT,
         creditScoreProof,
@@ -215,8 +214,8 @@ describe.only('SapphireCore.open()', () => {
       expect(borrowedAmount.value).eq(BORROW_AMOUNT);
     });
 
-    it('open at the c-ratio based on credit score', async () => {
-      const { params } = await arc.open(
+    it('borrow at the c-ratio based on credit score', async () => {
+      const { params } = await arc.borrow(
         COLLATERAL_AMOUNT.sub(COLLATERAL_AMOUNT.div(2)),
         BORROW_AMOUNT,
         creditScoreProof,
@@ -229,16 +228,16 @@ describe.only('SapphireCore.open()', () => {
       expect(borrowedAmount.value).eq(BORROW_AMOUNT);
     });
 
-    it('revert if opened below c-ratio based on credit score', async () => {
+    it('revert if borrowed below c-ratio based on credit score', async () => {
       await expect(
-        arc.open(constants.One, BORROW_AMOUNT, creditScoreProof, undefined, ctx.signers.minter),
+        arc.borrow(constants.One, BORROW_AMOUNT, creditScoreProof, undefined, ctx.signers.minter),
       ).to.be.reverted;
     });
 
     it('ignore proof(behavior based only on high c-ratio value) if no assessor is set', async () => {
       await arc.core().setAssessor(constants.AddressZero);
       await expect(
-        arc.open(
+        arc.borrow(
           COLLATERAL_AMOUNT.sub(1),
           BORROW_AMOUNT,
           creditScoreProof,
@@ -247,7 +246,7 @@ describe.only('SapphireCore.open()', () => {
         ),
       ).to.be.reverted;
 
-      const { params } = await arc.open(
+      const { params } = await arc.borrow(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
         creditScoreProof,
@@ -262,9 +261,9 @@ describe.only('SapphireCore.open()', () => {
       expect(collateralAmount.value).eq(COLLATERAL_AMOUNT);
     });
 
-    it('open if a score for address exists on-chain', async () => {
+    it('borrow if a score for address exists on-chain', async () => {
       await ctx.contracts.sapphire.creditScore.verifyAndUpdate(creditScoreProof);
-      const { params } = await arc.open(
+      const { params } = await arc.borrow(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
         creditScoreProof,
@@ -277,10 +276,10 @@ describe.only('SapphireCore.open()', () => {
       expect(borrowedAmount.value).eq(BORROW_AMOUNT);
     });
 
-    it('revert if opened below the minimum position amount', async () => {
+    it('revert if borrowed below the minimum position amount', async () => {
       await arc.core().setLimits(0, COLLATERAL_AMOUNT.add(1));
       await expect(
-        arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT, creditScoreProof, undefined, ctx.signers.minter),
+        arc.borrow(COLLATERAL_AMOUNT, BORROW_AMOUNT, creditScoreProof, undefined, ctx.signers.minter),
       ).to.be.reverted;
     });
   });

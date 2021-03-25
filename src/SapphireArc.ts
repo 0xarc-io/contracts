@@ -26,7 +26,7 @@ export class SapphireArc {
     return Object.keys(this.synths);
   }
 
-  async open(
+  async borrow (
     collateralAmount: BigNumberish,
     borrowAmount: BigNumber,
     creditScoreProof?: CreditScoreProof,
