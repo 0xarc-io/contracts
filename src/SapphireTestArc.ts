@@ -1,9 +1,13 @@
-import { BigNumberish } from 'ethers';
+import { BigNumberish, Signer } from 'ethers';
 import { SapphireArc } from './SapphireArc';
 import { MockOracleFactory } from './typings';
 import { MockSapphireCoreV1Factory } from './typings/MockSapphireCoreV1Factory';
 
 export class SapphireTestArc extends SapphireArc {
+  static new(signer: Signer): SapphireTestArc {
+    return new SapphireTestArc(signer);
+  }
+
   public synth() {
     return this.getSynth(this.getSynthNames()[0]);
   }
