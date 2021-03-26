@@ -10,14 +10,14 @@ import {BaseERC20} from "../../token/BaseERC20.sol";
 import {IOracle} from "../IOracle.sol";
 import {IChainLinkAggregator} from "../IChainLinkAggregator.sol";
 
-import {IBadgerSett} from "./IBadgerSett.sol";
+import {ISett} from "./ISett.sol";
 
 /* solium-disable-next-line */
 contract bDIGGOracle is IOracle {
 
     using SafeMath for uint256;
 
-    IBadgerSett public bDIGG = IBadgerSett(0x7e7E112A68d8D2E221E11047a72fFC1065c38e1a);
+    ISett public bDIGG = ISett(0x7e7E112A68d8D2E221E11047a72fFC1065c38e1a);
     BaseERC20 public DIGG = BaseERC20(0x798D1bE841a82a273720CE31c822C61a67a601C3);
 
     IChainLinkAggregator public diggBtcChainlinkOracle = IChainLinkAggregator(

@@ -10,14 +10,14 @@ import {BaseERC20} from "../../token/BaseERC20.sol";
 import {IOracle} from "../IOracle.sol";
 import {IChainLinkAggregator} from "../IChainLinkAggregator.sol";
 
-import {IBadgerSett} from "./IBadgerSett.sol";
+import {ISett} from "./ISett.sol";
 
 /* solium-disable-next-line */
 contract bBadgerOracle is IOracle {
 
     using SafeMath for uint256;
 
-    IBadgerSett public bBadger = IBadgerSett(
+    ISett public bBadger = ISett(
         0x19D97D8fA813EE2f51aD4B4e04EA08bAf4DFfC28
     );
 

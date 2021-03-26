@@ -11,7 +11,7 @@ import {BaseERC20} from "../../token/BaseERC20.sol";
 import {IOracle} from "../IOracle.sol";
 import {IChainLinkAggregator} from "../IChainLinkAggregator.sol";
 
-import {IbSLP} from "./IbSLP.sol";
+import {ISett} from "./ISett.sol";
 import {ISLP} from "./ISLP.sol";
 
 /* solium-disable-next-line */
@@ -21,7 +21,7 @@ contract bWBTCBadgerSLPOracle is IOracle {
 
     uint256 constant BASE = 10**18;
 
-    IbSLP public bSLP = IbSLP(
+    ISett public bSLP = ISett(
         0x1862A18181346EBd9EdAf800804f89190DeF24a5
     );
 
