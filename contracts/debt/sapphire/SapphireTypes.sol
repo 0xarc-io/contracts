@@ -27,7 +27,8 @@ library SapphireTypes {
         Repay,
         Deposit,
         Borrow,
-        Withraw
+        Withraw,
+        Liquidate
     }
 
     struct Action {
