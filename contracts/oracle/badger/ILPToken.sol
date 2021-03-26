@@ -4,7 +4,7 @@ pragma solidity 0.5.16;
 
 import {IERC20} from "../../token/IERC20.sol";
 
-contract ISLP is IERC20 {
+contract ILPToken is IERC20 {
 
     function token0()
         public

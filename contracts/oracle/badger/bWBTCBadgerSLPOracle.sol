@@ -12,7 +12,7 @@ import {IOracle} from "../IOracle.sol";
 import {IChainLinkAggregator} from "../IChainLinkAggregator.sol";
 
 import {ISett} from "./ISett.sol";
-import {ISLP} from "./ISLP.sol";
+import {ILPToken} from "./ILPToken.sol";
 
 /* solium-disable-next-line */
 contract bWBTCBadgerSLPOracle is IOracle {
@@ -45,7 +45,7 @@ contract bWBTCBadgerSLPOracle is IOracle {
         0x58921Ac140522867bf50b9E009599Da0CA4A2379
     );
 
-    ISLP public slp;
+    ILPToken public slp;
 
     uint256 slpScalar;
     uint256 wbtcScalar;
@@ -56,7 +56,7 @@ contract bWBTCBadgerSLPOracle is IOracle {
     uint256 badgerChainlinkScalar;
 
     constructor() public {
-        slp = ISLP(bSLP.token());
+        slp = ILPToken(bSLP.token());
 
         wbtcScalar = uint256(18 - wbtc.decimals());
         badgerScalar = uint256(18 - badger.decimals());
