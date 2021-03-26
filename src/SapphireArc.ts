@@ -1,6 +1,6 @@
 import { Synth } from '@arc-types/core';
 import { TransactionOverrides } from '@arc-types/ethereum';
-import { CreditScoreProof, Position } from '@arc-types/sapphireCore';
+import { Action, CreditScoreProof, Position } from '@arc-types/sapphireCore';
 import { BigNumber, BigNumberish, Signer } from 'ethers';
 import { SapphireCoreV1 } from './typings';
 
@@ -38,9 +38,7 @@ export class SapphireArc {
   }
 
   async liquidate(
-    collateralAmount: BigNumberish,
-    borrowAmount: BigNumber,
-    creditScoreProof?: CreditScoreProof,
+    owner: string,
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
@@ -49,7 +47,7 @@ export class SapphireArc {
   }
 
   async executeActions(
-    actions: [],
+    actions: Action[],
     owner: string,
     creditScoreProof?: CreditScoreProof,
     synthName: string = this.getSynthNames()[0],
@@ -73,6 +71,7 @@ export class SapphireArc {
   }
 
   async repay(
+    owner: string,
     amount: BigNumber,
     creditScoreProof?: CreditScoreProof,
     synthName: string = this.getSynthNames()[0],
@@ -85,6 +84,7 @@ export class SapphireArc {
   /* ========== Collateral functions ========== */
 
   async deposit(
+    owner: string,
     amount: BigNumber,
     creditScoreProof?: CreditScoreProof,
     synthName: string = this.getSynthNames()[0],
@@ -95,6 +95,7 @@ export class SapphireArc {
   }
 
   async withdraw(
+    owner: string,
     amount: BigNumber,
     creditScoreProof?: CreditScoreProof,
     synthName: string = this.getSynthNames()[0],

@@ -106,6 +106,16 @@ contract SapphireCoreV1 {
 
     }
 
+    function executeActions(
+        uint256 owner,
+        SapphireTypes.Action[] memory actions,
+        SapphireTypes.ScoreProof memory scoreProof
+    )
+        public
+    {
+
+    }
+
     function borrow(
         uint256 owner,
         uint256 amount,
