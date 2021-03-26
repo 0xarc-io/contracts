@@ -13,10 +13,10 @@ import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 chai.use(solidity);
 
 /**
- * When calling open(), it's calling borrow and deposit underneath the hood. Because borrow is called first time
- * it creates a new position so that no custom logic is used for open. The two scenarios to test here are for
- * for with a valid score proof and one without a valid score proof. You only need a score proof
- * if your address has a store proof in the CreditScore contract.
+ * When calling open(), it's calling executeActions underneath the hood with borrow and deposit actions. 
+ * Because borrow is called first time it creates a position for sender, which is connected directly with his address. 
+ * The two scenarios to test here are for with a valid score proof and one without a valid score proof. 
+ * You only need a score proof if your address has a store proof in the CreditScore contract.
  */
 describe('SapphireCore.open()', () => {
   const COLLATERAL_AMOUNT = utils.parseEther('100');
