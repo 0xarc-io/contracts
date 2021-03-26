@@ -13,8 +13,8 @@ import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 chai.use(solidity);
 
 /**
- * When calling open(), it's calling borrow underneath the hood but just creates a new vault
- * so that no custom logic is used for open versus borrow. The two scenarios to test here are for
+ * When calling open(), it's calling borrow and deposit underneath the hood. Because borrow is called first time
+ * it creates a new position so that no custom logic is used for open. The two scenarios to test here are for
  * for with a valid score proof and one without a valid score proof. You only need a score proof
  * if your address has a store proof in the CreditScore contract.
  */
