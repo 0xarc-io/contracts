@@ -168,4 +168,42 @@ contract SapphireCoreV1 {
 
     }
 
+    /* ========== Private Functions ========== */
+
+    function _borrow(
+        uint256 owner,
+        uint256 amount
+    )
+        private
+    {
+
+    }
+
+
+    function _repay(
+        uint256 owner,
+        uint256 amount
+    )
+        private
+    {
+
+    }
+
+    function _deposit(
+        uint256 owner,
+        uint256 amount
+    )
+        private
+    {
+
+    }
+
+    function _withdraw(
+        uint256 owner,
+        uint256 amount
+    )
+        private
+    {
+
+    }
 }
