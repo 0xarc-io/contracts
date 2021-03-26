@@ -1,6 +1,6 @@
 import { Synth } from '@arc-types/core';
 import { TransactionOverrides } from '@arc-types/ethereum';
-import { CreditScoreProof, ActionOperated } from '@arc-types/sapphireCore';
+import { CreditScoreProof, Position } from '@arc-types/sapphireCore';
 import { BigNumber, BigNumberish, Signer } from 'ethers';
 import { SapphireCoreV1 } from './typings';
 
@@ -33,8 +33,8 @@ export class SapphireArc {
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
-  ): Promise<ActionOperated> {
-    return {} as ActionOperated;
+  ): Promise<Position> {
+    return {} as Position;
   }
 
   async liquidate(
@@ -44,43 +44,62 @@ export class SapphireArc {
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
-  ): Promise<ActionOperated> {
-    return {} as ActionOperated;
+  ): Promise<Position> {
+    return {} as Position;
+  }
+
+  async executeActions(
+    actions: [],
+    owner: string,
+    creditScoreProof?: CreditScoreProof,
+    synthName: string = this.getSynthNames()[0],
+    caller: Signer = this.signer,
+    overrides: TransactionOverrides = {},
+  ): Promise<Position> {
+    return {} as Position;
   }
 
   /* ========== Borrow functions ==========*/
 
-  borrow(
+  async borrow(
+    owner: string,
     amount: BigNumber,
     creditScoreProof?: CreditScoreProof,
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
-  ) {}
+  ): Promise<Position> {
+    return {} as Position;
+  }
 
-  repay(
+  async repay(
     amount: BigNumber,
     creditScoreProof?: CreditScoreProof,
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
-  ) {}
+  ): Promise<Position> {
+    return {} as Position;
+  }
 
   /* ========== Collateral functions ========== */
 
-  deposit(
+  async deposit(
     amount: BigNumber,
     creditScoreProof?: CreditScoreProof,
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
-  ) {}
+  ): Promise<Position> {
+    return {} as Position;
+  }
 
-  withdraw(
+  async withdraw(
     amount: BigNumber,
     creditScoreProof?: CreditScoreProof,
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
-    overrides: TransactionOverrides = {},
-  ) {}
+  ): Promise<Position> {
+    return {} as Position;
+  }
 }
