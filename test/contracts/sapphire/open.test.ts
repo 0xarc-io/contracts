@@ -1,4 +1,3 @@
-import { Operation } from '@arc-types/core';
 import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
@@ -19,7 +18,7 @@ chai.use(solidity);
  * for with a valid score proof and one without a valid score proof. You only need a score proof
  * if your address has a store proof in the CreditScore contract.
  */
-describe.only('SapphireCore.open()', () => {
+describe('SapphireCore.open()', () => {
   const COLLATERAL_AMOUNT = utils.parseEther('100');
   const BORROW_AMOUNT = utils.parseEther('50');
 
