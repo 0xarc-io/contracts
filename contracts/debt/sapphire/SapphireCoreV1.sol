@@ -107,9 +107,8 @@ contract SapphireCoreV1 {
     }
 
     function borrow(
-        uint256 positionId,
-        uint256 collateralAmount,
-        uint256 borrowAmount,
+        uint256 owner,
+        uint256 amount,
         SapphireTypes.ScoreProof memory scoreProof
     )
         public
@@ -119,9 +118,28 @@ contract SapphireCoreV1 {
 
 
     function repay(
-        uint256 positionId,
-        uint256 repayAmount,
-        uint256 withdrawAmount,
+        uint256 owner,
+        uint256 amount,
+        SapphireTypes.ScoreProof memory scoreProof
+    )
+        public
+    {
+
+    }
+
+    function deposit(
+        uint256 owner,
+        uint256 amount,
+        SapphireTypes.ScoreProof memory scoreProof
+    )
+        public
+    {
+
+    }
+
+    function withdraw(
+        uint256 owner,
+        uint256 amount,
         SapphireTypes.ScoreProof memory scoreProof
     )
         public
