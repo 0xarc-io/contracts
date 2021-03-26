@@ -96,16 +96,6 @@ contract SapphireCoreV1 {
 
     /* ========== Public Functions ========== */
 
-    function open(
-        uint256 collateralAmount,
-        uint256 borrowAmount,
-        SapphireTypes.ScoreProof memory scoreProof
-    )
-        public
-    {
-
-    }
-
     function executeActions(
         address owner,
         SapphireTypes.Action[] memory actions,
