@@ -15,15 +15,13 @@ import {ISett} from "./ISett.sol";
 import {ILPToken} from "./ILPToken.sol";
 
 /* solium-disable-next-line */
-contract bWBTCBadgerSLPOracle is IOracle {
+contract bWBTCBadgerLPOracle is IOracle {
 
     using SafeMath for uint256;
 
     uint256 constant BASE = 10**18;
 
-    ISett public bSLP = ISett(
-        0x1862A18181346EBd9EdAf800804f89190DeF24a5
-    );
+    ISett public bLPToken;
 
     BaseERC20 public wbtc = BaseERC20(
         0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599
@@ -45,9 +43,9 @@ contract bWBTCBadgerSLPOracle is IOracle {
         0x58921Ac140522867bf50b9E009599Da0CA4A2379
     );
 
-    ILPToken public slp;
+    ILPToken public lpToken;
 
-    uint256 slpScalar;
+    uint256 lpScalar;
     uint256 wbtcScalar;
     uint256 badgerScalar;
 
@@ -55,8 +53,16 @@ contract bWBTCBadgerSLPOracle is IOracle {
     uint256 ethChainlinkScalar;
     uint256 badgerChainlinkScalar;
 
-    constructor() public {
-        slp = ILPToken(bSLP.token());
+    constructor(
+        address _bLPTokenAddress
+    ) public {
+        require(
+            _bLPTokenAddress != address(0),
+            "bWBTCBadgerLPOracle: the bLP token address cannot be 0x0"
+        );
+        bLPToken = ISett(_bLPTokenAddress);
+
+        lpToken = ILPToken(bLPToken.token());
 
         wbtcScalar = uint256(18 - wbtc.decimals());
         badgerScalar = uint256(18 - badger.decimals());
@@ -77,16 +83,16 @@ contract bWBTCBadgerSLPOracle is IOracle {
         view
         returns (Decimal.D256 memory)
     {
-        // Get the WBTC and Badger reserves per SLP
-        (uint256 resWBTC, uint256 resBadger) = _getReservesPerSLP();
+        // Get the WBTC and Badger reserves per lp
+        (uint256 resWBTC, uint256 resBadger) = _getReservesPerLP();
 
         uint256 k = resWBTC.mul(resBadger);
 
         (uint256 usdPerBtc, uint256 usdPerBadger) = _getTokenPrices();
 
-        uint256 totalSupply = slp.totalSupply().mul(10 ** slpScalar);
+        uint256 totalSupply = lpToken.totalSupply().mul(10 ** lpScalar);
 
-        uint256 fairSLPPrice = _computeFairPrice(
+        uint256 fairLPPrice = _computeFairPrice(
             k,
             usdPerBtc,
             usdPerBadger,
@@ -94,18 +100,18 @@ contract bWBTCBadgerSLPOracle is IOracle {
         );
 
         require(
-            fairSLPPrice > 0,
-            "bWBTCBadgerSLPOracle: the reported price cannot be 0"
+            fairLPPrice > 0,
+            "bWBTCBadgerLPOracle: the reported price cannot be 0"
         );
 
 
-        // Multiply the price by the number of slp per bSLP to
-        // reflect the amount of SLP tokens per bSLP
-        uint256 slpPerbSLP = bSLP.getPricePerFullShare().mul(10 ** slpScalar);
-        uint256 fairbSLPPrice = fairSLPPrice.mul(slpPerbSLP).div(BASE);
+        // Multiply the price by the number of lp per bLP to
+        // reflect the amount of LP tokens per bLP
+        uint256 lpPerbLP = bLPToken.getPricePerFullShare().mul(10 ** lpScalar);
+        uint256 fairbLPPrice = fairLPPrice.mul(lpPerbLP).div(BASE);
 
         return Decimal.D256({
-            value: fairbSLPPrice
+            value: fairbLPPrice
         });
     }
 
@@ -114,16 +120,16 @@ contract bWBTCBadgerSLPOracle is IOracle {
     /**
      * @dev Fetches the WBTC and Badger reserves normalized to 10e18
      */
-    function _getReservesPerSLP()
+    function _getReservesPerLP()
         private
         view
         returns (uint256, uint256)
     {
-        (uint112 resWBTC112, uint112 resBadger112,) = slp.getReserves();
+        (uint112 resWBTC112, uint112 resBadger112,) = lpToken.getReserves();
 
         require(
             resWBTC112 > 0 && resBadger112 > 0,
-            "bWBTCBadgerSLPOracle: the reserves cannot be 0"
+            "bWBTCBadgerLPOracle: the reserves cannot be 0"
         );
 
         uint256 resWBTC = uint256(resWBTC112).mul(10 ** wbtcScalar);
@@ -157,7 +163,7 @@ contract bWBTCBadgerSLPOracle is IOracle {
 
         require(
             usdPerBtc > 0 && usdPerBadger > 0,
-            "bWBTCBadgerSLPOracle: the usd prices of badger and btc cannot be 0"
+            "bWBTCBadgerLPOracle: the usd prices of badger and btc cannot be 0"
         );
 
         return (usdPerBtc, usdPerBadger);
