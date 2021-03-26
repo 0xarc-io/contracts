@@ -23,4 +23,16 @@ library SapphireTypes {
         Amount.Principal borrowedAmount;
     }
 
+    enum Operation {
+        Repay,
+        Deposit,
+        Borrow,
+        Withraw
+    }
+
+    struct Action {
+        uint amount;
+        Operation operation;
+    }
+
 }

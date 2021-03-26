@@ -5,7 +5,6 @@ export enum Operation {
   Deposit,
   Borrow,
   Withdraw,
-  Liquidate,
 }
 
 export type Position = {
@@ -22,4 +21,9 @@ export interface CreditScoreProof {
   account: string;
   score: BigNumberish;
   merkleProof: string[];
+}
+
+export type Action = {
+  actionType: Operation,
+  amount: BigNumberish,
 }
