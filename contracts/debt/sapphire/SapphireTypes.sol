@@ -19,7 +19,6 @@ library SapphireTypes {
     }
 
     struct Position {
-        address owner;
         Amount.Principal collateralAmount;
         Amount.Principal borrowedAmount;
     }
