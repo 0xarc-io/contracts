@@ -53,8 +53,14 @@ describe.only('SapphireCore.open()', () => {
   addSnapshotBeforeRestoreAfterEach();
 
   describe('without score proof', () => {
+    let unauthorisedAddress: string;
+
+    before(() => {
+      unauthorisedAddress = ctx.signers.unauthorised.address;
+    });
+
     it('open at the exact c-ratio', async () => {
-      const { operation, params, updatedPosition } = await arc.open(
+      const position = await arc.open(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
         undefined,
@@ -63,15 +69,13 @@ describe.only('SapphireCore.open()', () => {
       );
 
       // Ensure the events emitted correct information
-      expect(operation).eq(Operation.Open, 'Invalid operation emitted');
-      expect(params.collateralAmount).eq(COLLATERAL_AMOUNT, 'Invalid collateral amount emitted');
-      expect(params.borrowedAmount).eq(BORROW_AMOUNT, 'Invalid borrow amount emitted');
-      expect(params.owner).eq(ctx.signers.unauthorised.address);
-      expect(updatedPosition.borrowedAmount).eq(BORROW_AMOUNT);
-      expect(updatedPosition.collateralAmount).eq(COLLATERAL_AMOUNT);
+      expect(position.borrowedAmount).eq(BORROW_AMOUNT);
+      expect(position.collateralAmount).eq(COLLATERAL_AMOUNT);
 
       // Check created position
-      const { borrowedAmount, collateralAmount } = await arc.synth().core.getPosition(params.owner);
+      const { borrowedAmount, collateralAmount } = await arc
+        .synth()
+        .core.getPosition(unauthorisedAddress);
       expect(borrowedAmount.value).eq(BORROW_AMOUNT);
       expect(collateralAmount.value).eq(COLLATERAL_AMOUNT);
 
@@ -83,7 +87,7 @@ describe.only('SapphireCore.open()', () => {
     });
 
     it('open above the c-ratio', async () => {
-      const { params } = await arc.open(
+      await arc.open(
         COLLATERAL_AMOUNT.mul(2),
         BORROW_AMOUNT,
         undefined,
@@ -91,7 +95,7 @@ describe.only('SapphireCore.open()', () => {
         ctx.signers.unauthorised,
       );
 
-      const { borrowedAmount, collateralAmount } = await arc.core().getPosition(params.owner);
+      const { borrowedAmount, collateralAmount } = await arc.core().getPosition(unauthorisedAddress);
       expect(collateralAmount.value).eq(COLLATERAL_AMOUNT.mul(2));
       expect(borrowedAmount.value).eq(BORROW_AMOUNT);
     });
@@ -120,7 +124,7 @@ describe.only('SapphireCore.open()', () => {
 
     it('open if no assessor is set', async () => {
       await arc.core().setAssessor(constants.AddressZero);
-      const { params } = await arc.open(
+      await arc.open(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
         undefined,
@@ -128,7 +132,9 @@ describe.only('SapphireCore.open()', () => {
         ctx.signers.unauthorised,
       );
 
-      const { borrowedAmount, collateralAmount } = await arc.synth().core.getPosition(params.owner);
+      const { borrowedAmount, collateralAmount } = await arc
+        .synth()
+        .core.getPosition(unauthorisedAddress);
       expect(borrowedAmount.value).eq(BORROW_AMOUNT);
       expect(collateralAmount.value).eq(COLLATERAL_AMOUNT);
     });
@@ -149,17 +155,18 @@ describe.only('SapphireCore.open()', () => {
 
   describe('with score proof', () => {
     let creditScoreProof: CreditScoreProof;
-
+    let minterAddress: string;
     before(() => {
       creditScoreProof = {
         account: creditScore1.account,
         score: creditScore1.amount,
         merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
       };
+      minterAddress = ctx.signers.minter.address;
     });
 
     it('open at the exact default c-ratio', async () => {
-      const { operation, params, updatedPosition } = await arc.open(
+      const position = await arc.open(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
         creditScoreProof,
@@ -167,16 +174,10 @@ describe.only('SapphireCore.open()', () => {
         ctx.signers.minter,
       );
 
-      // Ensure the events emitted correct information
-      expect(operation).eq(Operation.Open, 'Invalid operation emitted');
-      expect(params.collateralAmount).eq(COLLATERAL_AMOUNT, 'Invalid collateral amount emitted');
-      expect(params.borrowedAmount).eq(BORROW_AMOUNT, 'Invalid borrow amount emitted');
-      expect(params.owner).eq(ctx.signers.minter.address);
-      expect(updatedPosition.borrowedAmount).eq(BORROW_AMOUNT);
-      expect(updatedPosition.collateralAmount).eq(COLLATERAL_AMOUNT);
-
       // Check created position
-      const { borrowedAmount, collateralAmount } = await arc.synth().core.getPosition(params.owner);
+      const { borrowedAmount, collateralAmount } = await arc
+        .synth()
+        .core.getPosition(minterAddress);
       expect(borrowedAmount.value).eq(BORROW_AMOUNT);
       expect(collateralAmount.value).eq(COLLATERAL_AMOUNT);
 
@@ -188,7 +189,7 @@ describe.only('SapphireCore.open()', () => {
     });
 
     it('open above the default c-ratio', async () => {
-      const { params } = await arc.open(
+      await arc.open(
         COLLATERAL_AMOUNT.mul(2),
         BORROW_AMOUNT,
         creditScoreProof,
@@ -196,13 +197,13 @@ describe.only('SapphireCore.open()', () => {
         ctx.signers.minter,
       );
 
-      const { borrowedAmount, collateralAmount } = await arc.core().getPosition(params.owner);
+      const { borrowedAmount, collateralAmount } = await arc.core().getPosition(minterAddress);
       expect(collateralAmount.value).eq(COLLATERAL_AMOUNT.mul(2));
-      expect(borrowedAmount.value).eq(BORROW_AMOUNT);;
+      expect(borrowedAmount.value).eq(BORROW_AMOUNT);
     });
 
     it('open below the default c-ratio, but above c-ratio based on credit score', async () => {
-      const { params } = await arc.open(
+      await arc.open(
         COLLATERAL_AMOUNT.sub(1),
         BORROW_AMOUNT,
         creditScoreProof,
@@ -210,13 +211,13 @@ describe.only('SapphireCore.open()', () => {
         ctx.signers.minter,
       );
 
-      const { borrowedAmount, collateralAmount } = await arc.core().getPosition(params.owner);
+      const { borrowedAmount, collateralAmount } = await arc.core().getPosition(minterAddress);
       expect(collateralAmount.value).eq(COLLATERAL_AMOUNT.sub(1));
       expect(borrowedAmount.value).eq(BORROW_AMOUNT);
     });
 
     it('open at the c-ratio based on credit score', async () => {
-      const { params } = await arc.open(
+      await arc.open(
         COLLATERAL_AMOUNT.sub(COLLATERAL_AMOUNT.div(2)),
         BORROW_AMOUNT,
         creditScoreProof,
@@ -224,7 +225,7 @@ describe.only('SapphireCore.open()', () => {
         ctx.signers.minter,
       );
 
-      const { borrowedAmount, collateralAmount } = await arc.core().getPosition(params.owner);
+      const { borrowedAmount, collateralAmount } = await arc.core().getPosition(minterAddress);
       expect(collateralAmount.value).eq(COLLATERAL_AMOUNT.sub(1));
       expect(borrowedAmount.value).eq(BORROW_AMOUNT);
     });
@@ -247,7 +248,7 @@ describe.only('SapphireCore.open()', () => {
         ),
       ).to.be.reverted;
 
-      const { params } = await arc.open(
+      await arc.open(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
         creditScoreProof,
@@ -257,14 +258,14 @@ describe.only('SapphireCore.open()', () => {
 
       const { borrowedAmount, collateralAmount } = await arc
         .synth()
-        .core.getPosition(params.owner);
+        .core.getPosition(minterAddress);
       expect(borrowedAmount.value).eq(BORROW_AMOUNT);
       expect(collateralAmount.value).eq(COLLATERAL_AMOUNT);
     });
 
     it('open if a score for address exists on-chain', async () => {
       await ctx.contracts.sapphire.creditScore.verifyAndUpdate(creditScoreProof);
-      const { params } = await arc.open(
+      await arc.open(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
         creditScoreProof,
@@ -272,7 +273,7 @@ describe.only('SapphireCore.open()', () => {
         ctx.signers.minter,
       );
 
-      const { borrowedAmount, collateralAmount } = await arc.core().getPosition(params.owner);
+      const { borrowedAmount, collateralAmount } = await arc.core().getPosition(minterAddress);
       expect(collateralAmount.value).eq(COLLATERAL_AMOUNT);
       expect(borrowedAmount.value).eq(BORROW_AMOUNT);
     });
