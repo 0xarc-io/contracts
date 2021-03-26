@@ -36,4 +36,51 @@ export class SapphireArc {
   ): Promise<ActionOperated> {
     return {} as ActionOperated;
   }
+
+  async liquidate(
+    collateralAmount: BigNumberish,
+    borrowAmount: BigNumber,
+    creditScoreProof?: CreditScoreProof,
+    synthName: string = this.getSynthNames()[0],
+    caller: Signer = this.signer,
+    overrides: TransactionOverrides = {},
+  ): Promise<ActionOperated> {
+    return {} as ActionOperated;
+  }
+
+  /* ========== Borrow functions ==========*/
+
+  borrow(
+    amount: BigNumber,
+    creditScoreProof?: CreditScoreProof,
+    synthName: string = this.getSynthNames()[0],
+    caller: Signer = this.signer,
+    overrides: TransactionOverrides = {},
+  ) {}
+
+  repay(
+    amount: BigNumber,
+    creditScoreProof?: CreditScoreProof,
+    synthName: string = this.getSynthNames()[0],
+    caller: Signer = this.signer,
+    overrides: TransactionOverrides = {},
+  ) {}
+
+  /* ========== Collateral functions ========== */
+
+  deposit(
+    amount: BigNumber,
+    creditScoreProof?: CreditScoreProof,
+    synthName: string = this.getSynthNames()[0],
+    caller: Signer = this.signer,
+    overrides: TransactionOverrides = {},
+  ) {}
+
+  withdraw(
+    amount: BigNumber,
+    creditScoreProof?: CreditScoreProof,
+    synthName: string = this.getSynthNames()[0],
+    caller: Signer = this.signer,
+    overrides: TransactionOverrides = {},
+  ) {}
 }
