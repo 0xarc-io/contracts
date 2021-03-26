@@ -5,6 +5,7 @@ export enum Operation {
   Deposit,
   Borrow,
   Withdraw,
+  Liquidate,
 }
 
 export type Position = {
