@@ -1,22 +1,12 @@
 import { BigNumber, BigNumberish } from "ethers";
 
-export type ActionOperated = {
-  operation: Operation;
-  params: OperationParams;
-  updatedPosition: Position;
-};
-
 export enum Operation {
-  Borrow,
   Repay,
+  Deposit,
+  Borrow,
+  Withdraw,
   Liquidate,
 }
-
-export type OperationParams = {
-  owner: string;
-  collateralAmount: BigNumberish;
-  borrowedAmount: BigNumberish;
-};
 
 export type Position = {
   collateralAmount: BigNumber;
@@ -32,4 +22,9 @@ export interface CreditScoreProof {
   account: string;
   score: BigNumberish;
   merkleProof: string[];
+}
+
+export type Action = {
+  actionType: Operation,
+  amount: BigNumberish,
 }
