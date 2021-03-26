@@ -96,9 +96,9 @@ contract SapphireCoreV1 {
 
     /* ========== Public Functions ========== */
 
-    function open(
-        uint256 collateralAmount,
-        uint256 borrowAmount,
+    function executeActions(
+        address owner,
+        SapphireTypes.Action[] memory actions,
         SapphireTypes.ScoreProof memory scoreProof
     )
         public
@@ -107,9 +107,8 @@ contract SapphireCoreV1 {
     }
 
     function borrow(
-        uint256 positionId,
-        uint256 collateralAmount,
-        uint256 borrowAmount,
+        address owner,
+        uint256 amount,
         SapphireTypes.ScoreProof memory scoreProof
     )
         public
@@ -119,9 +118,28 @@ contract SapphireCoreV1 {
 
 
     function repay(
-        uint256 positionId,
-        uint256 repayAmount,
-        uint256 withdrawAmount,
+        address owner,
+        uint256 amount,
+        SapphireTypes.ScoreProof memory scoreProof
+    )
+        public
+    {
+
+    }
+
+    function deposit(
+        address owner,
+        uint256 amount,
+        SapphireTypes.ScoreProof memory scoreProof
+    )
+        public
+    {
+
+    }
+
+    function withdraw(
+        address owner,
+        uint256 amount,
         SapphireTypes.ScoreProof memory scoreProof
     )
         public
@@ -130,7 +148,7 @@ contract SapphireCoreV1 {
     }
 
     function liquidate(
-        uint256 positionId,
+        address owner,
         SapphireTypes.ScoreProof memory scoreProof
     )
         public
@@ -150,4 +168,50 @@ contract SapphireCoreV1 {
 
     }
 
+    /* ========== Private Functions ========== */
+
+    function _borrow(
+        address owner,
+        uint256 amount
+    )
+        private
+    {
+
+    }
+
+
+    function _repay(
+        address owner,
+        uint256 amount
+    )
+        private
+    {
+
+    }
+
+    function _deposit(
+        address owner,
+        uint256 amount
+    )
+        private
+    {
+
+    }
+
+    function _withdraw(
+        address owner,
+        uint256 amount
+    )
+        private
+    {
+
+    }
+
+    function _liqiuidate(
+        address owner
+    )
+        private
+    {
+
+    }
 }
