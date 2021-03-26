@@ -107,7 +107,7 @@ contract SapphireCoreV1 {
     }
 
     function executeActions(
-        uint256 owner,
+        address owner,
         SapphireTypes.Action[] memory actions,
         SapphireTypes.ScoreProof memory scoreProof
     )
@@ -117,7 +117,7 @@ contract SapphireCoreV1 {
     }
 
     function borrow(
-        uint256 owner,
+        address owner,
         uint256 amount,
         SapphireTypes.ScoreProof memory scoreProof
     )
@@ -128,7 +128,7 @@ contract SapphireCoreV1 {
 
 
     function repay(
-        uint256 owner,
+        address owner,
         uint256 amount,
         SapphireTypes.ScoreProof memory scoreProof
     )
@@ -138,7 +138,7 @@ contract SapphireCoreV1 {
     }
 
     function deposit(
-        uint256 owner,
+        address owner,
         uint256 amount,
         SapphireTypes.ScoreProof memory scoreProof
     )
@@ -148,7 +148,7 @@ contract SapphireCoreV1 {
     }
 
     function withdraw(
-        uint256 owner,
+        address owner,
         uint256 amount,
         SapphireTypes.ScoreProof memory scoreProof
     )
@@ -158,7 +158,7 @@ contract SapphireCoreV1 {
     }
 
     function liquidate(
-        uint256 positionId,
+        address owner,
         SapphireTypes.ScoreProof memory scoreProof
     )
         public
@@ -181,7 +181,7 @@ contract SapphireCoreV1 {
     /* ========== Private Functions ========== */
 
     function _borrow(
-        uint256 owner,
+        address owner,
         uint256 amount
     )
         private
@@ -191,7 +191,7 @@ contract SapphireCoreV1 {
 
 
     function _repay(
-        uint256 owner,
+        address owner,
         uint256 amount
     )
         private
@@ -200,7 +200,7 @@ contract SapphireCoreV1 {
     }
 
     function _deposit(
-        uint256 owner,
+        address owner,
         uint256 amount
     )
         private
@@ -209,8 +209,16 @@ contract SapphireCoreV1 {
     }
 
     function _withdraw(
-        uint256 owner,
+        address owner,
         uint256 amount
+    )
+        private
+    {
+
+    }
+
+    function _liqiuidate(
+        address owner
     )
         private
     {
