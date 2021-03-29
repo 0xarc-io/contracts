@@ -30,7 +30,7 @@ describe('SapphireCore.open()', () => {
 
   async function init(ctx: ITestContext): Promise<void> {
     creditScore1 = {
-      account: ctx.signers.minter.address,
+      account: ctx.signers.scoredMinter.address,
       amount: BigNumber.from(500),
     };
     creditScore2 = {
@@ -64,7 +64,7 @@ describe('SapphireCore.open()', () => {
         BORROW_AMOUNT,
         undefined,
         undefined,
-        ctx.signers.unauthorised,
+        ctx.signers.minter,
       );
 
       // Ensure the events emitted correct information
@@ -91,7 +91,7 @@ describe('SapphireCore.open()', () => {
         BORROW_AMOUNT,
         undefined,
         undefined,
-        ctx.signers.unauthorised,
+        ctx.signers.minter,
       );
 
       const { borrowedAmount, collateralAmount } = await arc.core().getVault(unauthorisedAddress);
@@ -106,7 +106,7 @@ describe('SapphireCore.open()', () => {
           BORROW_AMOUNT.add(1),
           undefined,
           undefined,
-          ctx.signers.unauthorised,
+          ctx.signers.minter,
         ),
       ).to.be.reverted;
 
@@ -116,7 +116,7 @@ describe('SapphireCore.open()', () => {
           BORROW_AMOUNT,
           undefined,
           undefined,
-          ctx.signers.unauthorised,
+          ctx.signers.minter,
         ),
       ).to.be.reverted;
     });
@@ -128,7 +128,7 @@ describe('SapphireCore.open()', () => {
         BORROW_AMOUNT,
         undefined,
         undefined,
-        ctx.signers.unauthorised,
+        ctx.signers.minter,
       );
 
       const { borrowedAmount, collateralAmount } = await arc
@@ -140,21 +140,21 @@ describe('SapphireCore.open()', () => {
 
     it('revert if a score for address exists on-chain', async () => {
       await expect(
-        arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT, undefined, undefined, ctx.signers.minter),
+        arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT, undefined, undefined, ctx.signers.scoredMinter),
       ).to.be.reverted;
     });
 
     it('revert if opened below the minimum position amount', async () => {
       await arc.core().setLimits(0, BORROW_AMOUNT.add(1), 0);
       await expect(
-        arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT, undefined, undefined, ctx.signers.unauthorised),
+        arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT, undefined, undefined, ctx.signers.minter),
       ).to.be.reverted;
     });
   
     it('revert if opened above the maximum borrowed amount', async () => {
       await arc.core().setLimits(0, 0, BORROW_AMOUNT.sub(1));
       await expect(
-        arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT, undefined, undefined, ctx.signers.unauthorised),
+        arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT, undefined, undefined, ctx.signers.minter),
       ).to.be.reverted;
     });
   });
@@ -177,7 +177,7 @@ describe('SapphireCore.open()', () => {
         BORROW_AMOUNT,
         creditScoreProof,
         undefined,
-        ctx.signers.minter,
+        ctx.signers.scoredMinter,
       );
 
       // Check created vault
@@ -200,7 +200,7 @@ describe('SapphireCore.open()', () => {
         BORROW_AMOUNT,
         creditScoreProof,
         undefined,
-        ctx.signers.minter,
+        ctx.signers.scoredMinter,
       );
 
       const { borrowedAmount, collateralAmount } = await arc.core().getVault(minterAddress);
@@ -214,7 +214,7 @@ describe('SapphireCore.open()', () => {
         BORROW_AMOUNT,
         creditScoreProof,
         undefined,
-        ctx.signers.minter,
+        ctx.signers.scoredMinter,
       );
 
       const { borrowedAmount, collateralAmount } = await arc.core().getVault(minterAddress);
@@ -228,7 +228,7 @@ describe('SapphireCore.open()', () => {
         BORROW_AMOUNT,
         creditScoreProof,
         undefined,
-        ctx.signers.minter,
+        ctx.signers.scoredMinter,
       );
 
       const { borrowedAmount, collateralAmount } = await arc.core().getVault(minterAddress);
@@ -238,7 +238,7 @@ describe('SapphireCore.open()', () => {
 
     it('revert if opened below c-ratio based on credit score', async () => {
       await expect(
-        arc.open(constants.One, BORROW_AMOUNT, creditScoreProof, undefined, ctx.signers.minter),
+        arc.open(constants.One, BORROW_AMOUNT, creditScoreProof, undefined, ctx.signers.scoredMinter),
       ).to.be.reverted;
     });
 
@@ -250,7 +250,7 @@ describe('SapphireCore.open()', () => {
           BORROW_AMOUNT,
           creditScoreProof,
           undefined,
-          ctx.signers.minter,
+          ctx.signers.scoredMinter,
         ),
       ).to.be.reverted;
 
@@ -259,7 +259,7 @@ describe('SapphireCore.open()', () => {
         BORROW_AMOUNT,
         creditScoreProof,
         undefined,
-        ctx.signers.minter,
+        ctx.signers.scoredMinter,
       );
 
       const { borrowedAmount, collateralAmount } = await arc
@@ -276,7 +276,7 @@ describe('SapphireCore.open()', () => {
         BORROW_AMOUNT,
         creditScoreProof,
         undefined,
-        ctx.signers.minter,
+        ctx.signers.scoredMinter,
       );
 
       const { borrowedAmount, collateralAmount } = await arc.core().getVault(minterAddress);
@@ -287,14 +287,14 @@ describe('SapphireCore.open()', () => {
     it('revert if opened below the minimum position amount', async () => {
       await arc.core().setLimits(0, BORROW_AMOUNT.add(1), 0);
       await expect(
-        arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT, creditScoreProof, undefined, ctx.signers.minter),
+        arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT, creditScoreProof, undefined, ctx.signers.scoredMinter),
       ).to.be.reverted;
     });
 
     it('revert if opened above the maximum borrowed amount', async () => {
       await arc.core().setLimits(0, 0, BORROW_AMOUNT.sub(1));
       await expect(
-        arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT, creditScoreProof, undefined, ctx.signers.minter),
+        arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT, creditScoreProof, undefined, ctx.signers.scoredMinter),
       ).to.be.reverted;
     });
   });

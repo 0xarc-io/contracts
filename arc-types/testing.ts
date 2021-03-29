@@ -31,6 +31,7 @@ export interface TestingSigners {
   globalOperator: SignerWithAddress;
   positionOperator: SignerWithAddress;
   unauthorised: SignerWithAddress;
+  scoredMinter: SignerWithAddress;
 }
 
 export interface SDKs {
