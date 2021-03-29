@@ -94,6 +94,16 @@ contract SapphireCoreV1 {
 
     event StrategyUpdated(address _newStrategy);
 
+    /* ========== Admin Setters ========== */
+
+    function setLimits(
+        uint256 _collateralLimit,
+        uint256 _accountCollateralMinimum,
+        uint256 _accountBorrowMaximum
+    )
+        public
+    {}
+
     /* ========== Public Functions ========== */
 
     function executeActions(
