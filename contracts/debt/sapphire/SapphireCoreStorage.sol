@@ -50,4 +50,20 @@ contract SapphireCoreStorage {
      *      the amount of interest accrued.
      */
     uint256 public totalBorrowed;
+
+    /**
+     * @dev The limit of how much collateral can be deposited from this contract.
+     */
+    uint256 internal collateralLimit;
+
+    /**
+     * @dev The amount of account's collateral should have at the minimum
+     */
+    uint256 internal accountCollateralMinimum;
+
+    /**
+     * @dev The amount of maximum borrowed amount, which account can borrow
+     */
+    uint256 internal accountBorrowMaximum;
+
 }
