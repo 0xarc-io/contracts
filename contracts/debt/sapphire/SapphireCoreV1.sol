@@ -99,7 +99,7 @@ contract SapphireCoreV1 {
     function setLimits(
         uint256 _collateralLimit,
         uint256 _accountCollateralMinimum,
-        uint256 _accountBorrowMaximum
+        uint256 _accountBorrowedMaximum
     )
         public
     {}
