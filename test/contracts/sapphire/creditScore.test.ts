@@ -1,4 +1,4 @@
-import { CreditScore } from '@arc-types/core';
+import { CreditScore } from '@arc-types/sapphireCore';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 import { MockSapphireCreditScore } from '@src/typings';
