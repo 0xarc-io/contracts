@@ -29,8 +29,8 @@ export class SapphireTestArc extends SapphireArc {
     return await this.synth().core.getTotals();
   }
 
-  public async getPosition(owner: string) {
-    return await this.synth().core.getPosition(owner);
+  public async getVault(owner: string) {
+    return await this.synth().core.getVault(owner);
   }
 
   public core() {
