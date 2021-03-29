@@ -97,9 +97,9 @@ contract SapphireCoreV1 {
     /* ========== Admin Setters ========== */
 
     function setLimits(
-        uint256 _collateralLimit,
-        uint256 _accountCollateralMinimum,
-        uint256 _accountBorrowedMaximum
+        uint256 _totalBorrowLimit,
+        uint256 _valutCollateralMinimum,
+        uint256 _vaultBorrowMaximum
     )
         public
     {}
