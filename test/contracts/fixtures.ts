@@ -27,6 +27,7 @@ import { Signer } from 'ethers';
 import { ITestContext, ITestContextArgs } from './context';
 import { MozartTestArc } from '@src/MozartTestArc';
 import { SpritzTestArc } from '../../src/SpritzTestArc';
+import { SapphireTestArc } from '@src/SapphireTestArc';
 
 export async function mozartFixture(ctx: ITestContext, args?: ITestContextArgs) {
   const deployer: Signer = ctx.signers.admin;
@@ -134,4 +135,6 @@ export async function sapphireFixture(ctx: ITestContext, args?: ITestContextArgs
     ctx.signers.interestSetter.address,
   );
   await ctx.contracts.sapphire.creditScore.setPause(false);
+
+  ctx.sdks.sapphire = SapphireTestArc.new(deployer)
 }

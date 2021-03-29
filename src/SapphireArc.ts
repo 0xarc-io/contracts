@@ -1,5 +1,6 @@
-import { ActionOperated, Synth } from '@arc-types/core';
+import { Synth } from '@arc-types/core';
 import { TransactionOverrides } from '@arc-types/ethereum';
+import { Action, CreditScoreProof, Position } from '@arc-types/sapphireCore';
 import { BigNumber, BigNumberish, Signer } from 'ethers';
 import { SapphireCoreV1 } from './typings';
 
@@ -9,7 +10,7 @@ export class SapphireArc {
   public synths: Record<string, SapphireSynth | undefined> = {};
 
   constructor(public readonly signer: Signer) {}
-  static async new(signer: Signer): Promise<SapphireArc> {
+  static new(signer: Signer): SapphireArc {
     return new SapphireArc(signer);
   }
 
@@ -32,13 +33,74 @@ export class SapphireArc {
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
-  ): Promise<ActionOperated> {
-    return {} as ActionOperated;
+  ): Promise<Position> {
+    return {} as Position;
   }
-}
 
-export interface CreditScoreProof {
-  account: string;
-  score: BigNumberish;
-  merkleProof: string[];
+  async liquidate(
+    owner: string,
+    synthName: string = this.getSynthNames()[0],
+    caller: Signer = this.signer,
+    overrides: TransactionOverrides = {},
+  ): Promise<Position> {
+    return {} as Position;
+  }
+
+  async executeActions(
+    actions: Action[],
+    owner: string,
+    creditScoreProof?: CreditScoreProof,
+    synthName: string = this.getSynthNames()[0],
+    caller: Signer = this.signer,
+    overrides: TransactionOverrides = {},
+  ): Promise<Position> {
+    return {} as Position;
+  }
+
+  /* ========== Borrow functions ==========*/
+
+  async borrow(
+    owner: string,
+    amount: BigNumber,
+    creditScoreProof?: CreditScoreProof,
+    synthName: string = this.getSynthNames()[0],
+    caller: Signer = this.signer,
+    overrides: TransactionOverrides = {},
+  ): Promise<Position> {
+    return {} as Position;
+  }
+
+  async repay(
+    owner: string,
+    amount: BigNumber,
+    creditScoreProof?: CreditScoreProof,
+    synthName: string = this.getSynthNames()[0],
+    caller: Signer = this.signer,
+    overrides: TransactionOverrides = {},
+  ): Promise<Position> {
+    return {} as Position;
+  }
+
+  /* ========== Collateral functions ========== */
+
+  async deposit(
+    owner: string,
+    amount: BigNumber,
+    creditScoreProof?: CreditScoreProof,
+    synthName: string = this.getSynthNames()[0],
+    caller: Signer = this.signer,
+    overrides: TransactionOverrides = {},
+  ): Promise<Position> {
+    return {} as Position;
+  }
+
+  async withdraw(
+    owner: string,
+    amount: BigNumber,
+    creditScoreProof?: CreditScoreProof,
+    synthName: string = this.getSynthNames()[0],
+    caller: Signer = this.signer,
+  ): Promise<Position> {
+    return {} as Position;
+  }
 }
