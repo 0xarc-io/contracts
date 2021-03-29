@@ -64,6 +64,6 @@ contract SapphireCoreStorage {
     /**
      * @dev The amount of maximum borrowed amount, which account can borrow
      */
-    uint256 internal accountBorrowMaximum;
+    uint256 internal accountBorrowedMaximum;
 
 }
