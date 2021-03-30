@@ -288,7 +288,12 @@ describe('SapphireCore.borrow()', () => {
 
   it.skip('should not borrow more than the liquidity of the borrow asset');
 
-  it('should not borrow if contract is paused');
+  it('should not borrow if contract is paused', async () => {
+    await arc.core().setPause(true);
+    await expect(
+      arc.borrow(scoredMinter.address, BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter),
+    ).to.be.reverted;
+  });
 
   it('should not borrow if oracle is not set', async () => {
     await arc.core().setOracle(constants.AddressZero);
