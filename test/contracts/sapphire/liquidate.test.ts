@@ -490,11 +490,6 @@ describe('SapphireCore.liquidate()', () => {
     expect(postSTablexTotalSupply).to.eq(preSTablexTotalSupply.sub(maxBorrowAmount));
   });
 
-  it('liquidates the remains if the price crashes by a large amount', async () => {
-    // If the price drops more than the value of the collateral
-    // A liquidator can take whatever remaining value is in the position
-  });
-
   it('should not liquidate a collateralized position ', async () => {});
 
   it('should not liquidate if the credit score improved such that vault is immune to liquidations', async () => {
