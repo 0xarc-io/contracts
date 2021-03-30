@@ -240,7 +240,12 @@ describe('SapphireCore.borrow()', () => {
     );
   });
 
-  it(`should not borrow if the price from the oracle is 0`);
+  it(`should not borrow if the price from the oracle is 0`, async () => {
+    await ctx.contracts.oracle.setPrice({ value: 0 });
+    await expect(
+      arc.borrow(scoredMinter.address, BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter),
+    ).to.be.reverted;
+  });
 
   it(`should not borrow from someone else's vault if called by a position operator, but on an unapproved vault`, async () => {
     // 1. User A opens vault X
