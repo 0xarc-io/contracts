@@ -18,7 +18,8 @@ export interface MozartSetupOptions {
 
 export interface SapphireSetupOptions {
   merkleRoot?: string;
-  collateralRatio?: BigNumberish;
+  lowCollateralRatio?: BigNumberish;
+  highCollateralRatio?: BigNumberish;
 }
 
 export async function setupMozart(ctx: ITestContext, options: MozartSetupOptions) {
@@ -53,11 +54,23 @@ export async function setupMozart(ctx: ITestContext, options: MozartSetupOptions
     );
 }
 
-export async function setupSapphire(ctx: ITestContext, {merkleRoot, collateralRatio}: SapphireSetupOptions) {
+/**
+ * Note: sapphire takes low an high collateral ratios, to use as boundaries
+ * to determine the maximum borrow amount given the user's credit score
+ */
+export async function setupSapphire(
+  ctx: ITestContext,
+  { merkleRoot, lowCollateralRatio, highCollateralRatio }: SapphireSetupOptions,
+) {
   const arc = ctx.sdks.sapphire;
 
   // Update the collateral ratio
-  await arc.synth().core.setCollateralRatio({ value: collateralRatio || constants.WeiPerEther });
+  await arc
+    .synth()
+    .core.setCollateralRatios(
+      lowCollateralRatio || constants.WeiPerEther,
+      highCollateralRatio || constants.WeiPerEther,
+    );
 
   // Set the merkle root
   if (merkleRoot) {
