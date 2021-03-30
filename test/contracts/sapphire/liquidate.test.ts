@@ -13,16 +13,14 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import {
   MockSapphireCreditScore,
   MockSapphireCreditScoreFactory,
-  SapphireCreditScore,
   SapphireMapperLinear,
   TestTokenFactory,
 } from '@src/typings';
 import chai, { expect } from 'chai';
 import { solidity } from 'ethereum-waffle';
-import { IERC20 } from '@src/typings/IERC20';
 import { IERC20Factory } from '@src/typings/IERC20Factory';
-import { CreditScore } from '@arc-types/sapphireCore';
-import { BASE } from '@src/constants';
+import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
+import { BASE, ONE_YEAR_IN_SECONDS } from '@src/constants';
 
 chai.use(solidity);
 
@@ -60,6 +58,35 @@ describe('SapphireCore.liquidate()', () => {
   let minterCreditScore: CreditScore;
   let liquidatorCreditScore: CreditScore;
   let collateralTokenAddress: string;
+
+  function getScoreProof(creditScore: CreditScore): CreditScoreProof {
+    return {
+      account: creditScore.account,
+      score: creditScore.amount,
+      merkleProof: creditScoreTree.getProof(creditScore.account, creditScore.amount),
+    };
+  }
+
+  /**
+   * Returns useful balances to use when validating numbers before and after
+   * a liquidation.
+   * @param user The user to get the balances for
+   */
+  async function getBalancesForLiquidation(user: SignerWithAddress) {
+    const userAddress = user.address;
+
+    const stablexAmt = await arc.synthetic().balanceOf(userAddress);
+    const collateralAmt = await arc.collateral().balanceOf(userAddress);
+    const arcCollateralAmt = await arc.collateral().balanceOf(arc.core().address);
+    const stablexTotalSupply = await arc.synthetic().totalSupply();
+
+    return {
+      stablexAmt,
+      collateralAmt,
+      arcCollateralAmt,
+      stablexTotalSupply,
+    };
+  }
 
   /**
    * Returns the c-ratio when the liquidation happens for the minter
@@ -113,18 +140,23 @@ describe('SapphireCore.liquidate()', () => {
 
   /**
    * Sets up a basic position using the `COLLATERAL_AMOUNT` amount at a price of `COLLATERAL_PRICE`
-   * and a debt of `DEBT_AMOUNT`
+   * and a debt of `DEBT_AMOUNT` as defaults amounts, unless specified otherwise
    */
-  async function setupBasePosition() {
+  async function setupBasePosition(
+    collateralAmount = COLLATERAL_AMOUNT,
+    debtAmount = DEBT_AMOUNT,
+    collateralPrice = COLLATERAL_PRICE,
+    scoreProof?: CreditScoreProof,
+  ) {
     // Mint and approve collateral
     const collateralAddress = arc.collateral().address;
-    await mintAndApprove(signers.minter, collateralAddress, arc.core().address, COLLATERAL_AMOUNT);
+    await mintAndApprove(signers.minter, collateralAddress, arc.core().address, collateralAmount);
 
     // Set collateral price
-    await arc.updatePrice(COLLATERAL_PRICE);
+    await arc.updatePrice(collateralPrice);
 
     // Open position and mint debt
-    await arc.open(COLLATERAL_AMOUNT, DEBT_AMOUNT);
+    await arc.open(collateralAmount, debtAmount, scoreProof);
   }
 
   async function init(ctx: ITestContext) {
@@ -155,9 +187,6 @@ describe('SapphireCore.liquidate()', () => {
 
     // Set the price to $1
     await arc.updatePrice(COLLATERAL_PRICE);
-
-    // Sets up a basic position
-    await setupBasePosition();
 
     // Mints enough STABLEx to the liquidator
     await mint(signers.liquidator, arc.synth().synthetic.address, COLLATERAL_AMOUNT);
@@ -194,6 +223,9 @@ describe('SapphireCore.liquidate()', () => {
      * - A portion of collateral is sent to the fee collector
      */
 
+    // Sets up a basic position
+    await setupBasePosition();
+
     expect(await balanceOf(signers.liquidator, debtTokenAddress)).to.be.gte(DEBT_AMOUNT);
 
     // Drop the price by half to make the position under-collateralized
@@ -205,31 +237,38 @@ describe('SapphireCore.liquidate()', () => {
     const currentCRatio = COLLATERAL_AMOUNT.mul(newPrice).div(DEBT_AMOUNT);
     expect(currentCRatio).to.be.lte(liquidationCRatio);
 
-    const preLiquidatorStablex = await balanceOf(signers.liquidator, debtTokenAddress);
-    const preLiquidatorCollateralAmt = await balanceOf(signers.liquidator, collateralTokenAddress);
-    const preArcCollateralAmt = await arc.collateral().balanceOf(arc.synth().core.address);
-    const preTotalSupply = await arc.synthetic().totalSupply();
+    const {
+      stablexAmt: preStablexBalance,
+      collateralAmt: preCollateralBalance,
+      arcCollateralAmt: preArcCollateralAmt,
+      stablexTotalSupply: preStablexTotalSupply,
+    } = await getBalancesForLiquidation(signers.liquidator);
 
     // Liquidate position
     await arc.liquidate(signers.minter.address, undefined, undefined, signers.liquidator);
 
+    const {
+      stablexAmt: postStablexBalance,
+      collateralAmt: postCollateralBalance,
+      arcCollateralAmt: postArcCollateralAmt,
+      stablexTotalSupply: postStablexTotalSupply,
+    } = await getBalancesForLiquidation(signers.liquidator);
+
     // The debt has been taken from the liquidator (STABLEx)
-    expect(await balanceOf(signers.liquidator, debtTokenAddress)).to.eq(
-      preLiquidatorStablex.sub(ArcNumber.new(475)),
-    );
+    expect(postStablexBalance).to.eq(preStablexBalance.sub(ArcNumber.new(475)));
 
     // The collateral has been given to the liquidator
-    expect(await balanceOf(signers.liquidator, collateralTokenAddress)).to.eq(
-      preLiquidatorCollateralAmt.add(ArcDecimal.new(994.736842105263).value),
+    expect(postCollateralBalance).to.eq(
+      preCollateralBalance.add(ArcDecimal.new(994.736842105263).value),
     );
 
     // A portion of collateral is sent to the fee collector
-    expect(await arc.collateral().balanceOf(arc.synth().core.address)).eq(
+    expect(postArcCollateralAmt).eq(
       preArcCollateralAmt.add(ArcDecimal.new(5.26315789473684).value),
     );
 
     // The total STABLEx supply has decreased
-    expect(await arc.synthetic().totalSupply()).to.eq(preTotalSupply.sub(ArcNumber.new(475)));
+    expect(postStablexTotalSupply).to.eq(preStablexTotalSupply.sub(ArcNumber.new(475)));
 
     // The position collateral amount has decreased
     const postLiquidationPosition = await arc.getPosition(signers.minter.address);
@@ -250,6 +289,9 @@ describe('SapphireCore.liquidate()', () => {
      * goes below 148.25%.
      */
 
+    // Sets up a basic position
+    await setupBasePosition();
+
     // Change the price to drop the c-ratio to 135%
     const newPrice = ArcDecimal.new(0.68);
     await arc.updatePrice(newPrice.value);
@@ -262,39 +304,43 @@ describe('SapphireCore.liquidate()', () => {
     const newCreditTree = new CreditScoreTree([newMinterCreditScore, liquidatorCreditScore]);
     await creditScoreContract.updateMerkleRoot(newCreditTree.getHexRoot());
 
-    const preLiquidatorStablex = await balanceOf(signers.liquidator, debtTokenAddress);
-    const preLiquidatorCollateralAmt = await balanceOf(signers.liquidator, collateralTokenAddress);
-    const preArcCollateralAmt = await arc.collateral().balanceOf(arc.synth().core.address);
-    const preTotalSupply = await arc.synthetic().totalSupply();
+    const {
+      stablexAmt: preStablexBalance,
+      collateralAmt: preCollateralBalance,
+      arcCollateralAmt: preArcCollateralAmt,
+      stablexTotalSupply: preStablexTotalSupply,
+    } = await getBalancesForLiquidation(signers.liquidator);
 
     // The liquidator submits the user's credit score and is then able to liquidate
-    const scoreProof = {
-      account: newMinterCreditScore.account,
-      score: newMinterCreditScore.amount,
-      merkleProof: newCreditTree.getProof(
-        newMinterCreditScore.account,
-        newMinterCreditScore.amount,
-      ),
-    };
-    await arc.liquidate(signers.minter.address, scoreProof, undefined, signers.liquidator);
-
-    // The debt has been taken from the liquidator (STABLEx)
-    expect(await balanceOf(signers.liquidator, debtTokenAddress)).to.eq(
-      preLiquidatorStablex.sub(DEBT_AMOUNT),
+    await arc.liquidate(
+      signers.minter.address,
+      getScoreProof(newMinterCreditScore),
+      undefined,
+      signers.liquidator,
     );
 
+    const {
+      stablexAmt: postStablexBalance,
+      collateralAmt: postCollateralBalance,
+      arcCollateralAmt: postArcCollateralAmt,
+      stablexTotalSupply: postStablexTotalSupply,
+    } = await getBalancesForLiquidation(signers.liquidator);
+
+    // The debt has been taken from the liquidator (STABLEx)
+    expect(postStablexBalance).to.eq(preStablexBalance.sub(DEBT_AMOUNT));
+
     // The collateral has been given to the liquidator
-    expect(await balanceOf(signers.liquidator, collateralTokenAddress)).to.eq(
-      preLiquidatorCollateralAmt.add(ArcDecimal.new(769.920156428222).value),
+    expect(postCollateralBalance).to.eq(
+      preCollateralBalance.add(ArcDecimal.new(769.920156428222).value),
     );
 
     // A portion of collateral is sent to the fee collector
-    expect(await arc.collateral().balanceOf(arc.synth().core.address)).eq(
+    expect(postArcCollateralAmt).eq(
       preArcCollateralAmt.add(ArcDecimal.new(4.07365162131336).value),
     );
 
     // The total STABLEx supply has decreased
-    expect(await arc.synthetic().totalSupply()).to.eq(preTotalSupply.sub(DEBT_AMOUNT));
+    expect(postStablexTotalSupply).to.eq(preStablexTotalSupply.sub(DEBT_AMOUNT));
 
     // The position collateral amount has decreased
     const postLiquidationPosition = await arc.getPosition(signers.minter.address);
@@ -306,21 +352,142 @@ describe('SapphireCore.liquidate()', () => {
 
   it('liquidates if interest accumulates (1 day)', async () => {
     // Open a position at the boundary
+    // Set the liquidation safety margin to 0 so we can borrow at the edge
+    await arc.core().setBorrowSafetyMargin(0);
+
+    // When opening a position without a credit score, a credit score of 0 is assumed
+    const maxBorrowAmount = COLLATERAL_AMOUNT.mul(BASE).div(HIGH_C_RATIO.value);
+    await setupBasePosition(COLLATERAL_AMOUNT, maxBorrowAmount);
+
     // Test that a liquidation will occur if the user accumulates enough debt via interest
+    await arc.updateTime(60 * 60 * 24);
+
+    await arc.core().updateIndex();
+
+    const preStablexBalance = await arc.synthetic().balanceOf(signers.liquidator.address);
+    const preCollateralBalance = await arc.collateral().balanceOf(signers.liquidator.address);
+
+    await arc.liquidate(signers.minter.address, undefined, undefined, signers.liquidator);
+
+    const position = await arc.getPosition(signers.minter.address);
+
+    expect(position.borrowedAmount).to.eq(0);
+    expect(position.collateralAmount).to.be.lt(COLLATERAL_AMOUNT);
+    // Checking for "less than" because the interest had also been paid
+    expect(await arc.synthetic().balanceOf(signers.liquidator.address)).to.be.lt(
+      preStablexBalance.sub(maxBorrowAmount),
+    );
+    expect(await arc.collateral().balanceOf(signers.liquidator.address)).to.be.gt(
+      preCollateralBalance,
+    );
   });
 
   it('liquidates if interest accumulates (1 year)', async () => {
     // Open a position at the boundary
+    // Set the liquidation safety margin to 0 so we can borrow at the edge
+    await arc.core().setBorrowSafetyMargin(0);
+
+    // When opening a position without a credit score, a credit score of 0 is assumed
+    const maxBorrowAmount = COLLATERAL_AMOUNT.mul(BASE).div(HIGH_C_RATIO.value);
+    await setupBasePosition(COLLATERAL_AMOUNT, maxBorrowAmount);
+
     // Test that a liquidation will occur if the user accumulates enough debt via interest
+    await arc.updateTime(ONE_YEAR_IN_SECONDS);
+
+    await arc.core().updateIndex();
+
+    const preStablexBalance = await arc.synthetic().balanceOf(signers.liquidator.address);
+    const preCollateralBalance = await arc.collateral().balanceOf(signers.liquidator.address);
+
+    await arc.liquidate(signers.minter.address, undefined, undefined, signers.liquidator);
+
+    const position = await arc.getPosition(signers.minter.address);
+
+    expect(position.borrowedAmount).to.eq(0);
+    expect(position.collateralAmount).to.be.lt(COLLATERAL_AMOUNT);
+    // Checking for "less than" because the interest had also been paid
+    expect(await arc.synthetic().balanceOf(signers.liquidator.address)).to.be.lt(
+      preStablexBalance.sub(maxBorrowAmount),
+    );
+    expect(await arc.collateral().balanceOf(signers.liquidator.address)).to.be.gt(
+      preCollateralBalance,
+    );
   });
 
-  it('liquidates if the price drops', async () => {
-    // Update the price to below the position's collateral ratio
-    // Check if the position was liquidated correctly
-  });
-
+  // Test 3 in https://docs.google.com/spreadsheets/d/1rmFbUxnM4gyi1xhcYKBwcdadvXrHBPKbeX7DLk8KQgE/edit?usp=sharing
   it('liquidates again if the price drops', async () => {
     // If the price drops twice, the position bes liquidated twice
+
+    await setupBasePosition(COLLATERAL_AMOUNT, DEBT_AMOUNT);
+
+    // Set the price to $0.75 so the c-ratio drops at 150%
+    let newPrice = ArcDecimal.new(0.75).value;
+    await arc.updatePrice(newPrice);
+
+    let {
+      stablexAmt: preStablexBalance,
+      collateralAmt: preCollateralBalance,
+      arcCollateralAmt: preArcCollateralAmt,
+      stablexTotalSupply: preSTablexTotalSupply,
+    } = await getBalancesForLiquidation(signers.liquidator);
+
+    // Liquidate
+    await arc.liquidate(signers.minter.address, undefined, undefined, signers.liquidator);
+
+    let {
+      stablexAmt: postStablexBalance,
+      collateralAmt: postCollateralBalance,
+      arcCollateralAmt: postArcCollateralAmt,
+      stablexTotalSupply: postSTablexTotalSupply,
+    } = await getBalancesForLiquidation(signers.liquidator);
+
+    expect(postStablexBalance).to.eq(preStablexBalance.sub(DEBT_AMOUNT));
+    expect(postCollateralBalance).to.eq(
+      preCollateralBalance.add(ArcDecimal.new(698.060941828255).value),
+    );
+    expect(postArcCollateralAmt).to.eq(
+      preArcCollateralAmt.add(ArcDecimal.new(3.69344413665743).value),
+    );
+    expect(postSTablexTotalSupply).to.eq(preSTablexTotalSupply.sub(DEBT_AMOUNT));
+
+    // Borrow to the limit (up to 160% c-ratio)
+    const position = await arc.getPosition(signers.minter.address);
+    const maxBorrowAmount = COLLATERAL_AMOUNT.sub(position.collateralAmount.value)
+      .mul(newPrice)
+      .div(ArcDecimal.new(1.6).value);
+
+    await arc.borrow(signers.minter.address, maxBorrowAmount);
+
+    // Drop the price to $0.70 to bring the c-ratio down to 150% again
+    newPrice = ArcDecimal.new(0.7).value;
+    await arc.updatePrice(newPrice);
+
+    ({
+      stablexAmt: preStablexBalance,
+      collateralAmt: preCollateralBalance,
+      arcCollateralAmt: preArcCollateralAmt,
+      stablexTotalSupply: preSTablexTotalSupply,
+    } = await getBalancesForLiquidation(signers.liquidator));
+
+    // Liquidate again
+    await arc.liquidate(signers.minter.address, undefined, undefined, signers.liquidator);
+
+    ({
+      stablexAmt: postStablexBalance,
+      collateralAmt: postCollateralBalance,
+      arcCollateralAmt: postArcCollateralAmt,
+      stablexTotalSupply: postSTablexTotalSupply,
+    } = await getBalancesForLiquidation(signers.liquidator));
+
+    // check the numbers again
+    expect(postStablexBalance).to.eq(preStablexBalance.sub(maxBorrowAmount));
+    expect(postCollateralBalance).to.eq(
+      preCollateralBalance.add(ArcDecimal.new(208.19361422948).value),
+    );
+    expect(postArcCollateralAmt).to.eq(
+      preArcCollateralAmt.add(ArcDecimal.new(1.10155351444169).value),
+    );
+    expect(postSTablexTotalSupply).to.eq(preSTablexTotalSupply.sub(maxBorrowAmount));
   });
 
   it('liquidates the remains if the price crashes by a large amount', async () => {
