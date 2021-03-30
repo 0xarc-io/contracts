@@ -218,7 +218,7 @@ describe('SapphireCore.borrow()', () => {
       scoredMinter,
     );
     expect(borrowedAmount).eq(borrowedAmount1);
-    expect(await ctx.contracts.sapphire.core.totalBorrowed()).eq(borrowedAmount1)
+    expect(await ctx.contracts.sapphire.core.totalBorrowed()).eq(borrowedAmount1);
 
     await arc.deposit(
       ctx.signers.minter.address,
@@ -235,7 +235,9 @@ describe('SapphireCore.borrow()', () => {
       undefined,
       ctx.signers.minter,
     );
-    expect(await ctx.contracts.sapphire.core.totalBorrowed()).eq(borrowedAmount1.add(BORROW_AMOUNT))
+    expect(await ctx.contracts.sapphire.core.totalBorrowed()).eq(
+      borrowedAmount1.add(BORROW_AMOUNT),
+    );
   });
 
   it(`should not borrow if the price from the oracle is 0`);
@@ -250,13 +252,7 @@ describe('SapphireCore.borrow()', () => {
     // You can't borrow with a credit score if no assesor is set in the Core
     await arc.core().setAssessor(constants.AddressZero);
     await expect(
-      arc.borrow(
-        scoredMinter.address,
-        BORROW_AMOUNT,
-        creditScoreProof,
-        undefined,
-        scoredMinter,
-      ),
+      arc.borrow(scoredMinter.address, BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter),
     ).to.be.reverted;
   });
 
@@ -268,24 +264,27 @@ describe('SapphireCore.borrow()', () => {
 
   it("should not borrow from someone else's account", async () => {});
 
-  it('should not borrow without enough collateral', async () => {});
-
   it('should not borrow more if the price decreases', async () => {});
 
   it('should not borrow more if more interest has accrued', async () => {});
 
-  it('should not borrow more than the collateral limit', async () => {});
+  it.skip('should not borrow more than the collateral limit', async () => {});
 
   it('should not borrow more than the maximum amount', async () => {
     // 1. Borrow half of allowed amount
     // 2. Borrow another half + 1 -> expect revert
   });
 
-  it('should not borrow from an inexistent vault');
+  it.skip('should not borrow from an inexistent vault');
 
-  it('should not borrow more than the liquidity of the borrow asset');
+  it.skip('should not borrow more than the liquidity of the borrow asset');
 
   it('should not borrow if contract is paused');
 
-  it('should not borrow if oracle is not set');
+  it('should not borrow if oracle is not set', async () => {
+    await arc.core().setOracle(constants.AddressZero);
+    await expect(
+      arc.borrow(scoredMinter.address, BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter),
+    ).to.be.reverted;
+  });
 });
