@@ -297,5 +297,12 @@ describe('SapphireCore.open()', () => {
         arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT, creditScoreProof, undefined, ctx.signers.scoredMinter),
       ).to.be.reverted;
     });
+
+    it('revert if opened above the total maximum borrowed amount', async () => {
+      await arc.core().setLimits(BORROW_AMOUNT.sub(1), 0, 0);
+      await expect(
+        arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT, creditScoreProof, undefined, ctx.signers.scoredMinter),
+      ).to.be.reverted;
+    });
   });
 });
