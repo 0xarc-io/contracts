@@ -39,7 +39,8 @@ describe('SapphireCore.open()', () => {
     };
     creditScoreTree = new CreditScoreTree([creditScore1, creditScore2]);
     await setupSapphire(ctx, {
-      collateralRatio: constants.WeiPerEther.mul(2),
+      lowCollateralRatio: constants.WeiPerEther.mul(2),
+      highCollateralRatio: constants.WeiPerEther.mul(2),
       merkleRoot: creditScoreTree.getHexRoot(),
     });
   }
