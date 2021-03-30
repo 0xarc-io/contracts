@@ -59,11 +59,14 @@ describe('SapphireCore.liquidate()', () => {
   let liquidatorCreditScore: CreditScore;
   let collateralTokenAddress: string;
 
-  function getScoreProof(creditScore: CreditScore): CreditScoreProof {
+  function getScoreProof(
+    creditScore: CreditScore,
+    creditScoreTreeToCheck = creditScoreTree,
+  ): CreditScoreProof {
     return {
       account: creditScore.account,
       score: creditScore.amount,
-      merkleProof: creditScoreTree.getProof(creditScore.account, creditScore.amount),
+      merkleProof: creditScoreTreeToCheck.getProof(creditScore.account, creditScore.amount),
     };
   }
 
@@ -245,7 +248,12 @@ describe('SapphireCore.liquidate()', () => {
     } = await getBalancesForLiquidation(signers.liquidator);
 
     // Liquidate position
-    await arc.liquidate(signers.minter.address, undefined, undefined, signers.liquidator);
+    await arc.liquidate(
+      signers.minter.address,
+      getScoreProof(minterCreditScore),
+      undefined,
+      signers.liquidator,
+    );
 
     const {
       stablexAmt: postStablexBalance,
@@ -314,7 +322,7 @@ describe('SapphireCore.liquidate()', () => {
     // The liquidator submits the user's credit score and is then able to liquidate
     await arc.liquidate(
       signers.minter.address,
-      getScoreProof(newMinterCreditScore),
+      getScoreProof(newMinterCreditScore, newCreditTree),
       undefined,
       signers.liquidator,
     );
@@ -367,7 +375,12 @@ describe('SapphireCore.liquidate()', () => {
     const preStablexBalance = await arc.synthetic().balanceOf(signers.liquidator.address);
     const preCollateralBalance = await arc.collateral().balanceOf(signers.liquidator.address);
 
-    await arc.liquidate(signers.minter.address, undefined, undefined, signers.liquidator);
+    await arc.liquidate(
+      signers.minter.address,
+      getScoreProof(minterCreditScore),
+      undefined,
+      signers.liquidator,
+    );
 
     const position = await arc.getPosition(signers.minter.address);
 
@@ -399,7 +412,12 @@ describe('SapphireCore.liquidate()', () => {
     const preStablexBalance = await arc.synthetic().balanceOf(signers.liquidator.address);
     const preCollateralBalance = await arc.collateral().balanceOf(signers.liquidator.address);
 
-    await arc.liquidate(signers.minter.address, undefined, undefined, signers.liquidator);
+    await arc.liquidate(
+      signers.minter.address,
+      getScoreProof(minterCreditScore),
+      undefined,
+      signers.liquidator,
+    );
 
     const position = await arc.getPosition(signers.minter.address);
 
@@ -432,7 +450,12 @@ describe('SapphireCore.liquidate()', () => {
     } = await getBalancesForLiquidation(signers.liquidator);
 
     // Liquidate
-    await arc.liquidate(signers.minter.address, undefined, undefined, signers.liquidator);
+    await arc.liquidate(
+      signers.minter.address,
+      getScoreProof(minterCreditScore),
+      undefined,
+      signers.liquidator,
+    );
 
     let {
       stablexAmt: postStablexBalance,
@@ -470,7 +493,12 @@ describe('SapphireCore.liquidate()', () => {
     } = await getBalancesForLiquidation(signers.liquidator));
 
     // Liquidate again
-    await arc.liquidate(signers.minter.address, undefined, undefined, signers.liquidator);
+    await arc.liquidate(
+      signers.minter.address,
+      getScoreProof(minterCreditScore),
+      undefined,
+      signers.liquidator,
+    );
 
     ({
       stablexAmt: postStablexBalance,
@@ -490,18 +518,101 @@ describe('SapphireCore.liquidate()', () => {
     expect(postSTablexTotalSupply).to.eq(preSTablexTotalSupply.sub(maxBorrowAmount));
   });
 
-  it('should not liquidate a collateralized position ', async () => {});
+  it('should not liquidate a collateralized position ', async () => {
+    await setupBasePosition();
 
+    await expect(
+      arc.liquidate(
+        signers.minter.address,
+        getScoreProof(minterCreditScore),
+        undefined,
+        signers.liquidator,
+      ),
+    ).to.be.revertedWith('SapphireCoreV1: position is collateralized');
+  });
+
+  // Test 4 in https://docs.google.com/spreadsheets/d/1rmFbUxnM4gyi1xhcYKBwcdadvXrHBPKbeX7DLk8KQgE/edit?usp=sharing
   it('should not liquidate if the credit score improved such that vault is immune to liquidations', async () => {
     /**
      * The user is under-collateralised, but their credit score increases
      * making them immune to the liquidation and causing it to throw
      */
+
+    // First, open the position with a credit score of 0
+    let newMinterCreditScore = {
+      account: signers.minter.address,
+      amount: BigNumber.from(0),
+    };
+    let newCreditTree = new CreditScoreTree([newMinterCreditScore, liquidatorCreditScore]);
+    await creditScoreContract.updateMerkleRoot(newCreditTree.getHexRoot());
+
+    await setupBasePosition(
+      COLLATERAL_AMOUNT,
+      DEBT_AMOUNT,
+      undefined,
+      getScoreProof(newMinterCreditScore, newCreditTree),
+    );
+
+    // Drop the price to $0.70 to bring the c-ratio down to 140%
+    await arc.updatePrice(ArcDecimal.new(0.7).value);
+
+    /**
+     * The position is vulnerable for liquidation at this point.
+     * The user increases his credit score to 500 to protect himself from liquidation
+     * since the liquidation c-ratio decreases from 150% to 132.5%
+     */
+
+    newMinterCreditScore = {
+      account: signers.minter.address,
+      amount: BigNumber.from(500),
+    };
+    newCreditTree = new CreditScoreTree([newMinterCreditScore, liquidatorCreditScore]);
+    await creditScoreContract.updateMerkleRoot(newCreditTree.getHexRoot());
+
+    // The user tries to liquidate but tx is reverted
+    await expect(
+      arc.liquidate(signers.minter.address, getScoreProof(newMinterCreditScore, newCreditTree)),
+    ).to.be.revertedWith('SapphireCoreV1: position is collateralized');
   });
 
-  it('should not liquidate without enough debt', async () => {});
+  it('should not liquidate without enough debt', async () => {
+    await setupBasePosition();
 
-  it('should not liquidate if the price increases', async () => {});
+    await arc.updatePrice(ArcDecimal.new(0.65).value);
+
+    // Burn enough stablex from the liquidator so that only half the amount required remains
+    const { stablexAmt: curerntStablexBalance } = await getBalancesForLiquidation(
+      signers.liquidator,
+    );
+    const burnAmount = curerntStablexBalance
+      .sub(curerntStablexBalance.sub(DEBT_AMOUNT))
+      .sub(DEBT_AMOUNT.div(2));
+    await arc.synthetic().burn(signers.liquidator.address, burnAmount);
+
+    await expect(
+      arc.liquidate(
+        signers.minter.address,
+        getScoreProof(minterCreditScore),
+        undefined,
+        signers.liquidator,
+      ),
+    ).to.be.revertedWith('SyntheticToken: cannot burn more than the user balance');
+  });
+
+  it('should not liquidate if the price increases', async () => {
+    await setupBasePosition();
+
+    // Price drops, setting the c-ratio to 130%
+    await arc.updatePrice(ArcDecimal.new(0.65).value);
+
+    // Position is vulnerable here. Price increases again so the c-ratio becomes 133%
+    // (the liquidation c-ratio is 132.5%)
+    await arc.updatePrice(ArcDecimal.new(0.665).value);
+
+    await expect(
+      arc.liquidate(signers.minter.address, getScoreProof(minterCreditScore)),
+    ).to.be.revertedWith('SapphireCoreV1: position is collateralized');
+  });
 
   it('should not liquidate twice in a row', async () => {
     /**
@@ -510,6 +621,16 @@ describe('SapphireCore.liquidate()', () => {
      */
     // 1. Liquidate
     // 2. Liquidate again -> expect revert: position is collateralized
+  });
+
+  it('should not liquidate if the credit score proof is not given', async () => {
+    await setupBasePosition();
+
+    await arc.updatePrice(ArcDecimal.new(0.5).value);
+
+    await expect(
+      arc.liquidate(signers.minter.address, undefined, undefined, signers.liquidator),
+    ).to.be.revertedWith('SapphireCoreV1: the credit score is required for liquidation');
   });
 });
 
