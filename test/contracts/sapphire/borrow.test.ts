@@ -1,5 +1,5 @@
 import { BigNumber, constants, utils } from 'ethers';
-import { CreditScore } from '@arc-types/sapphireCore';
+import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
 import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
@@ -22,7 +22,7 @@ import { expect, util } from 'chai';
 
 describe('SapphireCore.borrow()', () => {
   const COLLATERAL_AMOUNT = utils.parseEther('100');
-  const BORROW_AMOUNT = utils.parseEther('10');
+  const BORROW_AMOUNT = utils.parseEther('50');
 
   let ctx: ITestContext;
   let arc: SapphireTestArc;
@@ -30,6 +30,7 @@ describe('SapphireCore.borrow()', () => {
   let creditScore2: CreditScore;
   let creditScoreTree: CreditScoreTree;
   let scoredMinter: SignerWithAddress;
+  let creditScoreProof: CreditScoreProof;
 
   async function init(ctx: ITestContext): Promise<void> {
     creditScore1 = {
@@ -58,6 +59,11 @@ describe('SapphireCore.borrow()', () => {
     ctx = await generateContext(sapphireFixture, init);
     arc = ctx.sdks.sapphire;
     scoredMinter = ctx.signers.scoredMinter;
+    creditScoreProof = {
+      account: creditScore1.account,
+      score: creditScore1.amount,
+      merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
+    };
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -72,27 +78,57 @@ describe('SapphireCore.borrow()', () => {
     await arc.borrow(
       scoredMinter.address,
       BORROW_AMOUNT,
-      {
-        account: scoredMinter.address,
-        score: creditScore1.amount,
-        merkleProof: creditScoreTree.getProof(scoredMinter.address, creditScore1.amount),
-      },
+      creditScoreProof,
       undefined,
       scoredMinter,
     );
-    const { collateralAmount, borrowedAmount } = await arc.getPosition(scoredMinter.address);
+    const { collateralAmount, borrowedAmount } = await arc.getVault(scoredMinter.address);
     expect(collateralAmount).eq(COLLATERAL_AMOUNT);
     expect(borrowedAmount).eq(BORROW_AMOUNT);
   });
 
-  it('borrows above the c-ratio', async () => {});
+  it('borrows with exact c-ratio', async () => {
+    await arc.borrow(scoredMinter.address, BORROW_AMOUNT, undefined, undefined, scoredMinter);
+    const { borrowedAmount } = await arc.getVault(scoredMinter.address);
+    expect(borrowedAmount).eq(BORROW_AMOUNT);
+  });
 
-  it('updates the index', async () => {});
+  it('borrows more if more collateral is provided', async () => {
+    await arc.borrow(scoredMinter.address, BORROW_AMOUNT, undefined, undefined, scoredMinter);
+    const { borrowedAmount } = await arc.getVault(scoredMinter.address);
 
-  it('borrows more if more collateral is provided', async () => {});
+    expect(borrowedAmount).eq(BORROW_AMOUNT);
+    await expect(
+      arc.borrow(scoredMinter.address, BORROW_AMOUNT, undefined, undefined, scoredMinter),
+    ).to.be.reverted;
 
-  it('borrows more if a valid score proof is provided (first time)', async () => {
-    // The user has an existing position, then they obtain a credit score and can borrow more
+    await arc.deposit(
+      ctx.signers.scoredMinter.address,
+      COLLATERAL_AMOUNT,
+      undefined,
+      undefined,
+      ctx.signers.scoredMinter,
+    );
+    await arc.borrow(scoredMinter.address, BORROW_AMOUNT, undefined, undefined, scoredMinter);
+    const { borrowedAmount: updatedBorrowedAmount } = await arc.getVault(scoredMinter.address);
+
+    expect(updatedBorrowedAmount).eq(BORROW_AMOUNT.mul(2));
+  });
+
+  it('borrows more if a valid score proof is provided', async () => {
+    // With the credit score user can borrow more than amount based default collateral ratio 
+    const expectedBorrowAmount = BORROW_AMOUNT.add(BORROW_AMOUNT.div(2).mul(3));
+    const { borrowedAmount } = await arc.borrow(
+      scoredMinter.address,
+      expectedBorrowAmount,
+      creditScoreProof,
+      undefined,
+      scoredMinter,
+    );
+    expect(borrowedAmount).eq(BORROW_AMOUNT);
+    
+    const { borrowedAmount: vaultBorrowAmount } = await arc.getVault(scoredMinter.address);
+    expect(vaultBorrowAmount).eq(expectedBorrowAmount);
   });
 
   it('borrows more if the credit score increases', async () => {
