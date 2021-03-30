@@ -248,6 +248,16 @@ describe('SapphireCore.borrow()', () => {
 
   it('should not borrow with a score proof if no assesor is set', async () => {
     // You can't borrow with a credit score if no assesor is set in the Core
+    await arc.core().setAssessor(constants.AddressZero);
+    await expect(
+      arc.borrow(
+        scoredMinter.address,
+        BORROW_AMOUNT,
+        creditScoreProof,
+        undefined,
+        scoredMinter,
+      ),
+    ).to.be.reverted;
   });
 
   it('should not borrow without a credit proof if a score exists on-chain', async () => {
