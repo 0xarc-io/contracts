@@ -208,7 +208,35 @@ describe('SapphireCore.borrow()', () => {
 
   it(`borrows from someone else's vault if called by an approved position operator`);
 
-  it('updates the total borrowed amount correctly');
+  it('updates the total borrowed amount correctly', async () => {
+    const borrowedAmount1 = BORROW_AMOUNT.add(BORROW_AMOUNT.div(2).mul(3));
+    const { borrowedAmount } = await arc.borrow(
+      scoredMinter.address,
+      borrowedAmount1,
+      creditScoreProof,
+      undefined,
+      scoredMinter,
+    );
+    expect(borrowedAmount).eq(borrowedAmount1);
+    expect(await ctx.contracts.sapphire.core.totalBorrowed()).eq(borrowedAmount1)
+
+    await arc.deposit(
+      ctx.signers.minter.address,
+      COLLATERAL_AMOUNT,
+      undefined,
+      undefined,
+      ctx.signers.minter,
+    );
+
+    await arc.borrow(
+      ctx.signers.minter.address,
+      BORROW_AMOUNT,
+      undefined,
+      undefined,
+      ctx.signers.minter,
+    );
+    expect(await ctx.contracts.sapphire.core.totalBorrowed()).eq(borrowedAmount1.add(BORROW_AMOUNT))
+  });
 
   it(`should not borrow if the price from the oracle is 0`);
 
