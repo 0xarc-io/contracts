@@ -42,12 +42,7 @@ contract SapphireCoreV1 {
     event ActionOperated(
         uint8 _operation,
         OperationParams _params,
-        SapphireTypes.Position _updatedPosition
-    );
-
-    event OwnershipTransfered(
-        uint256 _positionId,
-        address _newOwner
+        SapphireTypes.Vault _updatedVault
     );
 
     event LiquidationFeesUpdated(
@@ -56,8 +51,9 @@ contract SapphireCoreV1 {
     );
 
     event LimitsUpdated(
-        uint256 _collateralLimit,
-        uint256 _collateralMinimum
+        uint256 _totalBorrowLimit,
+        uint256 _valutCollateralMinimum,
+        uint256 _vaultBorrowMaximum
     );
 
     event GlobalOperatorSet(
@@ -65,8 +61,8 @@ contract SapphireCoreV1 {
         bool _status
     );
 
-    event PositionOperatorSet(
-        uint256 _positionId,
+    event VaultOperatorSet(
+        uint256 _owner,
         address _operator,
         bool _status
     );
@@ -93,6 +89,16 @@ contract SapphireCoreV1 {
     );
 
     event StrategyUpdated(address _newStrategy);
+
+    /* ========== Admin Setters ========== */
+
+    function setLimits(
+        uint256 _totalBorrowLimit,
+        uint256 _valutCollateralMinimum,
+        uint256 _vaultBorrowMaximum
+    )
+        public
+    {}
 
     /* ========== Public Functions ========== */
 
@@ -158,12 +164,12 @@ contract SapphireCoreV1 {
 
     /* ========== Public Getters ========== */
 
-    function getPosition(
+    function getVault(
         address owner
     )
         external
         view
-        returns (SapphireTypes.Position memory)
+        returns (SapphireTypes.Vault memory)
     {
 
     }

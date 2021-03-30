@@ -13,7 +13,7 @@ import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 chai.use(solidity);
 
 /**
- * When calling open(), it's calling borrow underneath the hood but just creates a new position
+ * When calling open(), it's calling borrow underneath the hood but just creates a new vault
  * so that no custom logic is used for open versus borrow. The two scenarios to test here are for
  * for with a valid score proof and one without a valid score proof. You only need a score proof
  * if your address has a store proof in the CreditScore contract.
@@ -59,7 +59,7 @@ describe('SapphireCore.open()', () => {
     });
 
     it('open at the exact c-ratio', async () => {
-      const position = await arc.open(
+      const vault = await arc.open(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
         undefined,
@@ -68,13 +68,13 @@ describe('SapphireCore.open()', () => {
       );
 
       // Ensure the events emitted correct information
-      expect(position.borrowedAmount).eq(BORROW_AMOUNT);
-      expect(position.collateralAmount).eq(COLLATERAL_AMOUNT);
+      expect(vault.borrowedAmount).eq(BORROW_AMOUNT);
+      expect(vault.collateralAmount).eq(COLLATERAL_AMOUNT);
 
-      // Check created position
+      // Check created vault
       const { borrowedAmount, collateralAmount } = await arc
         .synth()
-        .core.getPosition(unauthorisedAddress);
+        .core.getVault(unauthorisedAddress);
       expect(borrowedAmount.value).eq(BORROW_AMOUNT);
       expect(collateralAmount.value).eq(COLLATERAL_AMOUNT);
 
@@ -94,7 +94,7 @@ describe('SapphireCore.open()', () => {
         ctx.signers.unauthorised,
       );
 
-      const { borrowedAmount, collateralAmount } = await arc.core().getPosition(unauthorisedAddress);
+      const { borrowedAmount, collateralAmount } = await arc.core().getVault(unauthorisedAddress);
       expect(collateralAmount.value).eq(COLLATERAL_AMOUNT.mul(2));
       expect(borrowedAmount.value).eq(BORROW_AMOUNT);
     });
@@ -133,7 +133,7 @@ describe('SapphireCore.open()', () => {
 
       const { borrowedAmount, collateralAmount } = await arc
         .synth()
-        .core.getPosition(unauthorisedAddress);
+        .core.getVault(unauthorisedAddress);
       expect(borrowedAmount.value).eq(BORROW_AMOUNT);
       expect(collateralAmount.value).eq(COLLATERAL_AMOUNT);
     });
@@ -144,7 +144,7 @@ describe('SapphireCore.open()', () => {
       ).to.be.reverted;
     });
 
-    it('revert if opened below the minimum position amount', async () => {
+    it('revert if opened below the minimum vault amount', async () => {
       await arc.core().setLimits(0, COLLATERAL_AMOUNT.add(1));
       await expect(
         arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT, undefined, undefined, ctx.signers.unauthorised),
@@ -165,7 +165,7 @@ describe('SapphireCore.open()', () => {
     });
 
     it('open at the exact default c-ratio', async () => {
-      const position = await arc.open(
+      const vault = await arc.open(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
         creditScoreProof,
@@ -173,10 +173,10 @@ describe('SapphireCore.open()', () => {
         ctx.signers.minter,
       );
 
-      // Check created position
+      // Check created vault
       const { borrowedAmount, collateralAmount } = await arc
         .synth()
-        .core.getPosition(minterAddress);
+        .core.getVault(minterAddress);
       expect(borrowedAmount.value).eq(BORROW_AMOUNT);
       expect(collateralAmount.value).eq(COLLATERAL_AMOUNT);
 
@@ -196,7 +196,7 @@ describe('SapphireCore.open()', () => {
         ctx.signers.minter,
       );
 
-      const { borrowedAmount, collateralAmount } = await arc.core().getPosition(minterAddress);
+      const { borrowedAmount, collateralAmount } = await arc.core().getVault(minterAddress);
       expect(collateralAmount.value).eq(COLLATERAL_AMOUNT.mul(2));
       expect(borrowedAmount.value).eq(BORROW_AMOUNT);
     });
@@ -210,7 +210,7 @@ describe('SapphireCore.open()', () => {
         ctx.signers.minter,
       );
 
-      const { borrowedAmount, collateralAmount } = await arc.core().getPosition(minterAddress);
+      const { borrowedAmount, collateralAmount } = await arc.core().getVault(minterAddress);
       expect(collateralAmount.value).eq(COLLATERAL_AMOUNT.sub(1));
       expect(borrowedAmount.value).eq(BORROW_AMOUNT);
     });
@@ -224,7 +224,7 @@ describe('SapphireCore.open()', () => {
         ctx.signers.minter,
       );
 
-      const { borrowedAmount, collateralAmount } = await arc.core().getPosition(minterAddress);
+      const { borrowedAmount, collateralAmount } = await arc.core().getVault(minterAddress);
       expect(collateralAmount.value).eq(COLLATERAL_AMOUNT.sub(1));
       expect(borrowedAmount.value).eq(BORROW_AMOUNT);
     });
@@ -257,7 +257,7 @@ describe('SapphireCore.open()', () => {
 
       const { borrowedAmount, collateralAmount } = await arc
         .synth()
-        .core.getPosition(minterAddress);
+        .core.getVault(minterAddress);
       expect(borrowedAmount.value).eq(BORROW_AMOUNT);
       expect(collateralAmount.value).eq(COLLATERAL_AMOUNT);
     });
@@ -272,12 +272,12 @@ describe('SapphireCore.open()', () => {
         ctx.signers.minter,
       );
 
-      const { borrowedAmount, collateralAmount } = await arc.core().getPosition(minterAddress);
+      const { borrowedAmount, collateralAmount } = await arc.core().getVault(minterAddress);
       expect(collateralAmount.value).eq(COLLATERAL_AMOUNT);
       expect(borrowedAmount.value).eq(BORROW_AMOUNT);
     });
 
-    it('revert if opened below the minimum position amount', async () => {
+    it('revert if opened below the minimum vault amount', async () => {
       await arc.core().setLimits(0, COLLATERAL_AMOUNT.add(1));
       await expect(
         arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT, creditScoreProof, undefined, ctx.signers.minter),
