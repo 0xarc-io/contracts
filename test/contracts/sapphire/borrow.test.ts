@@ -262,7 +262,11 @@ describe('SapphireCore.borrow()', () => {
 
   it('should not borrow more if the c-ratio is at the minimum', async () => {});
 
-  it("should not borrow from someone else's account", async () => {});
+  it("should not borrow from someone else's account", async () => {
+    await expect(
+      arc.borrow(ctx.signers.minter.address, BORROW_AMOUNT, undefined, undefined, scoredMinter),
+    ).to.be.reverted;
+  });
 
   it('should not borrow more if the price decreases', async () => {});
 
