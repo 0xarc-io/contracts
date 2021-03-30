@@ -2,7 +2,10 @@ import { BigNumber, constants, utils } from 'ethers';
 import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
 import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
-import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
+import {
+  addSnapshotBeforeRestoreAfterEach,
+  immediatelyUpdateMerkleRoot,
+} from '@test/helpers/testingUtils';
 import 'module-alias/register';
 import { ITestContext, generateContext } from '../context';
 import { sapphireFixture } from '../fixtures';
@@ -34,7 +37,7 @@ describe('SapphireCore.borrow()', () => {
 
   async function init(ctx: ITestContext): Promise<void> {
     creditScore1 = {
-      account: ctx.signers.minter.address,
+      account: ctx.signers.scoredMinter.address,
       amount: BigNumber.from(500),
     };
     creditScore2 = {
@@ -116,7 +119,7 @@ describe('SapphireCore.borrow()', () => {
   });
 
   it('borrows more if a valid score proof is provided', async () => {
-    // With the credit score user can borrow more than amount based default collateral ratio 
+    // With the credit score user can borrow more than amount based default collateral ratio
     const expectedBorrowAmount = BORROW_AMOUNT.add(BORROW_AMOUNT.div(2).mul(3));
     const { borrowedAmount } = await arc.borrow(
       scoredMinter.address,
@@ -125,14 +128,52 @@ describe('SapphireCore.borrow()', () => {
       undefined,
       scoredMinter,
     );
-    expect(borrowedAmount).eq(BORROW_AMOUNT);
-    
+    expect(borrowedAmount).eq(expectedBorrowAmount);
+
     const { borrowedAmount: vaultBorrowAmount } = await arc.getVault(scoredMinter.address);
     expect(vaultBorrowAmount).eq(expectedBorrowAmount);
   });
 
   it('borrows more if the credit score increases', async () => {
     // The user's existing credit score is updated and increases letting them borrow more
+    const expectedBorrowAmount = BORROW_AMOUNT.add(BORROW_AMOUNT.div(2).mul(3));
+    await arc.borrow(
+      scoredMinter.address,
+      expectedBorrowAmount,
+      creditScoreProof,
+      undefined,
+      scoredMinter,
+    );
+
+    await expect(
+      arc.borrow(scoredMinter.address, constants.One, creditScoreProof, undefined, scoredMinter), 'User should not be able to borrow more'
+    ).to.be.reverted;
+
+    // Prepare new credit score hash
+    const creditScore = {
+      account: scoredMinter.address,
+      amount: BigNumber.from(800),
+    };
+    creditScoreTree = new CreditScoreTree([creditScore, creditScore2]);
+    await immediatelyUpdateMerkleRoot(
+      ctx.contracts.sapphire.creditScore,
+      creditScoreTree.getHexRoot(),
+    );
+
+    await arc.borrow(
+      scoredMinter.address,
+      constants.One,
+      {
+        account: creditScore.account,
+        score: creditScore.amount,
+        merkleProof: creditScoreTree.getProof(creditScore.account, creditScore.amount)
+      },
+      undefined,
+      scoredMinter,
+    );
+
+    const { borrowedAmount: vaultBorrowAmount } = await arc.getVault(scoredMinter.address);
+    expect(vaultBorrowAmount).eq(expectedBorrowAmount.add(1));
   });
 
   it('borrows less if the credit score decreases', async () => {
