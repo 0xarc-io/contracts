@@ -30,7 +30,7 @@ export class SapphireTestArc extends SapphireArc {
   }
 
   public async getVault(owner: string) {
-    return await this.synth().core.getVault(owner);
+    return this.synth().core.getVault(owner);
   }
 
   public core() {
