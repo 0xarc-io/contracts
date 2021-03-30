@@ -663,18 +663,91 @@ describe('SapphireCore.liquidate()', () => {
       arc.liquidate(signers.minter.address, undefined, undefined, signers.liquidator),
     ).to.be.revertedWith('SapphireCoreV1: the credit score is required for liquidation');
   });
-});
 
-// Accompanying sheet: https://docs.google.com/spreadsheets/d/1rmFbUxnM4gyi1xhcYKBwcdadvXrHBPKbeX7DLk8KQgE/edit#gid=387958619
-describe('SapphireCore.liquidate() scenarios', () => {
-  it(
-    'Scenario 1: the position gets liquidated because the collateral price hits the liquidation price',
-  );
-  it('Scenario 2: The borrow amount is greater than the collateral value and a liquidation occurs');
-  it(
-    'Scenario 3: the user changes their position, then their credit score decreases and liquidation occurs',
-  );
-  it(
-    'Scenario 4: the user changes their position, then their credit score increases which protects him from liquidation. Then the price drops and gets liquidated',
-  );
+  // Accompanying sheet: https://docs.google.com/spreadsheets/d/1rmFbUxnM4gyi1xhcYKBwcdadvXrHBPKbeX7DLk8KQgE/edit#gid=387958619
+  describe('Scenarios', () => {
+    it('Scenario 1: the position gets liquidated because the collateral price hits the liquidation price', async () => {
+      // User opens a position of 1000 tokens and borrows at a 200% c-ratio
+      await setupBasePosition(
+        COLLATERAL_AMOUNT,
+        DEBT_AMOUNT,
+        undefined,
+        getScoreProof(minterCreditScore),
+      );
+
+      // Price increases to $1.25
+      await arc.updatePrice(ArcDecimal.new(1.25).value);
+
+      // User maxes out his borrow amount.
+      // $377.19298245614 is the max borrow amount ($877.19) - 500
+      await arc.borrow(
+        signers.minter.address,
+        ArcDecimal.new(377.19298245614).value,
+        getScoreProof(minterCreditScore),
+      );
+
+      // Price decreases to $1.16. The position's c-ratio becomes 132.24%
+      await arc.updatePrice(ArcDecimal.new(1.16).value);
+
+      // The collateral price is under the liquidation price. The liquidation occurs
+
+      const {
+        stablexAmt: preStablexBalance,
+        collateralAmt: preCollateralBalance,
+        arcCollateralAmt: preArcCollateralAmt,
+        stablexTotalSupply: preStablexTotalSupply,
+      } = await getBalancesForLiquidation(signers.liquidator);
+
+      // Liquidate position
+      await arc.liquidate(
+        signers.minter.address,
+        getScoreProof(minterCreditScore),
+        undefined,
+        signers.liquidator,
+      );
+
+      const {
+        stablexAmt: postStablexBalance,
+        collateralAmt: postCollateralBalance,
+        arcCollateralAmt: postArcCollateralAmt,
+        stablexTotalSupply: postStablexTotalSupply,
+      } = await getBalancesForLiquidation(signers.liquidator);
+
+      // The debt has been taken from the liquidator (STABLEx)
+      const stableXPaid = ArcDecimal.new(877.19298245614).value;
+      expect(postStablexBalance).to.eq(preStablexBalance.sub(ArcDecimal.new(stableXPaid).value));
+
+      // The collateral has been given to the liquidator
+      expect(postCollateralBalance).to.eq(
+        preCollateralBalance.add(ArcDecimal.new(790.421764628731).value),
+      );
+
+      // A portion of collateral is sent to the fee collector
+      expect(postArcCollateralAmt).eq(
+        preArcCollateralAmt.add(ArcDecimal.new(4.01716287871692).value),
+      );
+
+      // The total STABLEx supply has decreased
+      expect(postStablexTotalSupply).to.eq(preStablexTotalSupply.sub(stableXPaid));
+
+      // The position collateral amount has decreased
+      const postLiquidationPosition = await arc.getPosition(signers.minter.address);
+      expect(postLiquidationPosition.collateralAmount).to.eq(
+        ArcDecimal.new(205.561072492552).value,
+      );
+
+      // The position debt amount has decreased
+      expect(postLiquidationPosition.borrowedAmount).to.eq(0);
+    });
+
+    it(
+      'Scenario 2: The borrow amount is greater than the collateral value and a liquidation occurs',
+    );
+    it(
+      'Scenario 3: the user changes their position, then their credit score decreases and liquidation occurs',
+    );
+    it(
+      'Scenario 4: the user changes their position, then their credit score increases which protects him from liquidation. Then the price drops and gets liquidated',
+    );
+  });
 });
