@@ -349,8 +349,6 @@ describe('SapphireCore.liquidate()', () => {
     // 1. Liquidate
     // 2. Liquidate again -> expect revert: position is collateralized
   });
-
-  it('should not liquidate if user calls liquidate on their own vault');
 });
 
 // Accompanying sheet: https://docs.google.com/spreadsheets/d/1rmFbUxnM4gyi1xhcYKBwcdadvXrHBPKbeX7DLk8KQgE/edit#gid=387958619
