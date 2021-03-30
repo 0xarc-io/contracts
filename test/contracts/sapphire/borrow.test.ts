@@ -1,4 +1,15 @@
+import { BigNumber, constants, utils } from 'ethers';
+import { CreditScore } from '@arc-types/sapphireCore';
+import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
+import { SapphireTestArc } from '@src/SapphireTestArc';
+import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import 'module-alias/register';
+import { ITestContext, generateContext } from '../context';
+import { sapphireFixture } from '../fixtures';
+import { setupSapphire } from '../setup';
+import { BaseERC20Factory } from '@src/typings';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
+import { expect, util } from 'chai';
 
 /**
  * This is the most crucial function of the system as it's how users actually borrow from a vault.
@@ -10,7 +21,69 @@ import 'module-alias/register';
  */
 
 describe('SapphireCore.borrow()', () => {
-  it('borrows the correct amount for collateral tokens that have other than 18 decimal places');
+  const COLLATERAL_AMOUNT = utils.parseEther('100');
+  const BORROW_AMOUNT = utils.parseEther('10');
+
+  let ctx: ITestContext;
+  let arc: SapphireTestArc;
+  let creditScore1: CreditScore;
+  let creditScore2: CreditScore;
+  let creditScoreTree: CreditScoreTree;
+  let scoredMinter: SignerWithAddress;
+
+  async function init(ctx: ITestContext): Promise<void> {
+    creditScore1 = {
+      account: ctx.signers.minter.address,
+      amount: BigNumber.from(500),
+    };
+    creditScore2 = {
+      account: ctx.signers.interestSetter.address,
+      amount: BigNumber.from(20),
+    };
+    creditScoreTree = new CreditScoreTree([creditScore1, creditScore2]);
+    await setupSapphire(ctx, {
+      collateralRatio: constants.WeiPerEther.mul(2),
+      merkleRoot: creditScoreTree.getHexRoot(),
+    });
+    await arc.deposit(
+      ctx.signers.scoredMinter.address,
+      COLLATERAL_AMOUNT,
+      undefined,
+      undefined,
+      ctx.signers.scoredMinter,
+    );
+  }
+
+  before(async () => {
+    ctx = await generateContext(sapphireFixture, init);
+    arc = ctx.sdks.sapphire;
+    scoredMinter = ctx.signers.scoredMinter;
+  });
+
+  addSnapshotBeforeRestoreAfterEach();
+
+  it('borrows the correct amount for collateral tokens that have other than 18 decimal places', async () => {
+    const collateralAddress = await arc.core().collateralAsset();
+    const collateralContract = BaseERC20Factory.connect(collateralAddress, ctx.signers.minter);
+    const collateralDecimals = await collateralContract.decimals();
+
+    expect(collateralDecimals).not.eq(18);
+
+    await arc.borrow(
+      scoredMinter.address,
+      BORROW_AMOUNT,
+      {
+        account: scoredMinter.address,
+        score: creditScore1.amount,
+        merkleProof: creditScoreTree.getProof(scoredMinter.address, creditScore1.amount),
+      },
+      undefined,
+      scoredMinter,
+    );
+    const { collateralAmount, borrowedAmount } = await arc.getPosition(scoredMinter.address);
+    expect(collateralAmount).eq(COLLATERAL_AMOUNT);
+    expect(borrowedAmount).eq(BORROW_AMOUNT);
+  });
 
   it('borrows above the c-ratio', async () => {});
 
