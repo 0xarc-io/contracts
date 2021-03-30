@@ -619,8 +619,39 @@ describe('SapphireCore.liquidate()', () => {
      * Given the price does not change, there isn't a lot of time elapsed and the credit score
      * did not drop significantly, someone should not be able to liquidate twice or more in a row
      */
-    // 1. Liquidate
-    // 2. Liquidate again -> expect revert: position is collateralized
+
+    await setupBasePosition();
+
+    // Price drops, setting the c-ratio to 130%
+    await arc.updatePrice(ArcDecimal.new(0.65).value);
+
+    // Liquidate position
+    await arc.liquidate(
+      signers.minter.address,
+      getScoreProof(minterCreditScore),
+      undefined,
+      signers.liquidator,
+    );
+
+    // Liquidate position again
+    await expect(
+      arc.liquidate(
+        signers.minter.address,
+        getScoreProof(minterCreditScore),
+        undefined,
+        signers.liquidator,
+      ),
+    ).to.be.revertedWith('SapphireCoreV1: there is no debt to liquidate');
+
+    // Liquidate position again
+    await expect(
+      arc.liquidate(
+        signers.minter.address,
+        getScoreProof(minterCreditScore),
+        undefined,
+        signers.liquidator,
+      ),
+    ).to.be.revertedWith('SapphireCoreV1: there is no debt to liquidate');
   });
 
   it('should not liquidate if the credit score proof is not given', async () => {
