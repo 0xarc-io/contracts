@@ -5,6 +5,7 @@ import {
   MockMozartCoreV2Factory,
   MockMozartSavingsV2Factory,
   MockSapphireCoreV1Factory,
+  SapphireMapperLinearFactory,
 } from '@src/typings';
 import ArcDecimal from '@src/utils/ArcDecimal';
 
@@ -129,6 +130,8 @@ export async function sapphireFixture(ctx: ITestContext, args?: ITestContextArgs
   const coreProxy = await deployArcProxy(deployer, coreImp.address, deployerAddress, []);
   ctx.contracts.sapphire.core = MockSapphireCoreV1Factory.connect(coreProxy.address, deployer);
 
+  ctx.contracts.sapphire.linearMapper = await new SapphireMapperLinearFactory(deployer).deploy();
+
   ctx.contracts.sapphire.creditScore = await deployMockSapphireCreditScore(
     deployer,
     '0x1111111111111111111111111111111111111111111111111111111111111111',
@@ -136,5 +139,5 @@ export async function sapphireFixture(ctx: ITestContext, args?: ITestContextArgs
   );
   await ctx.contracts.sapphire.creditScore.setPause(false);
 
-  ctx.sdks.sapphire = SapphireTestArc.new(deployer)
+  ctx.sdks.sapphire = SapphireTestArc.new(deployer);
 }

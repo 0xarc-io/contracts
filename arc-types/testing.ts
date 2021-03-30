@@ -18,7 +18,13 @@ import { MockOracle } from '@src/typings/MockOracle';
 import { TestToken } from '@src/typings/TestToken';
 import { SpritzTestArc } from '@src/SpritzTestArc';
 import { MozartTestArc } from '@src/MozartTestArc';
-import { MockMozartCoreV2, MockMozartSavingsV2, MockSapphireCoreV1, MockSapphireCreditScore } from '@src/typings';
+import {
+  MockMozartCoreV2,
+  MockMozartSavingsV2,
+  MockSapphireCoreV1,
+  MockSapphireCreditScore,
+  SapphireMapperLinear,
+} from '@src/typings';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 
 export interface TestingSigners {
@@ -54,7 +60,8 @@ export interface Contracts {
   sapphire: {
     core: MockSapphireCoreV1;
     creditScore: MockSapphireCreditScore;
-  }
+    linearMapper: SapphireMapperLinear;
+  };
   synthetic: {
     static: StaticSyntheticToken;
     tokenV1: SyntheticTokenV1;

@@ -20,6 +20,11 @@ export interface SapphireSetupOptions {
   merkleRoot?: string;
   lowCollateralRatio?: BigNumberish;
   highCollateralRatio?: BigNumberish;
+  liquidationMarginPercent?: BigNumberish;
+  fees?: {
+    liquidationUserFee?: BigNumberish;
+    liquidationArcRatio?: BigNumberish;
+  };
 }
 
 export async function setupMozart(ctx: ITestContext, options: MozartSetupOptions) {
@@ -60,7 +65,13 @@ export async function setupMozart(ctx: ITestContext, options: MozartSetupOptions
  */
 export async function setupSapphire(
   ctx: ITestContext,
-  { merkleRoot, lowCollateralRatio, highCollateralRatio }: SapphireSetupOptions,
+  {
+    merkleRoot,
+    lowCollateralRatio,
+    highCollateralRatio,
+    fees,
+    liquidationMarginPercent,
+  }: SapphireSetupOptions,
 ) {
   const arc = ctx.sdks.sapphire;
 
@@ -70,7 +81,10 @@ export async function setupSapphire(
     .core.setCollateralRatios(
       lowCollateralRatio || constants.WeiPerEther,
       highCollateralRatio || constants.WeiPerEther,
+      liquidationMarginPercent || 0,
     );
+
+  await arc.synth().core.setFees(fees.liquidationUserFee || 0, fees.liquidationArcRatio || 0);
 
   // Set the merkle root
   if (merkleRoot) {
