@@ -146,10 +146,11 @@ describe('SapphireCore.borrow()', () => {
     );
 
     await expect(
-      arc.borrow(scoredMinter.address, constants.One, creditScoreProof, undefined, scoredMinter), 'User should not be able to borrow more'
+      arc.borrow(scoredMinter.address, constants.One, creditScoreProof, undefined, scoredMinter),
+      'User should not be able to borrow more',
     ).to.be.reverted;
 
-    // Prepare new credit score hash
+    // Prepare the new root hash with the increased credit score for minter
     const creditScore = {
       account: scoredMinter.address,
       amount: BigNumber.from(800),
@@ -166,7 +167,7 @@ describe('SapphireCore.borrow()', () => {
       {
         account: creditScore.account,
         score: creditScore.amount,
-        merkleProof: creditScoreTree.getProof(creditScore.account, creditScore.amount)
+        merkleProof: creditScoreTree.getProof(creditScore.account, creditScore.amount),
       },
       undefined,
       scoredMinter,
@@ -178,6 +179,29 @@ describe('SapphireCore.borrow()', () => {
 
   it('borrows less if the credit score decreases', async () => {
     // The user's existing credit score is updated and decreases letting them borrow less
+
+    // Prepare the new root hash with the decreased credit score for minter
+    const creditScore = {
+      account: scoredMinter.address,
+      amount: BigNumber.from(100),
+    };
+    creditScoreTree = new CreditScoreTree([creditScore, creditScore2]);
+    await immediatelyUpdateMerkleRoot(
+      ctx.contracts.sapphire.creditScore,
+      creditScoreTree.getHexRoot(),
+    );
+
+    // Shouldn't be able to borrow the same as with credit score equals 500
+    const expectedBorrowAmount = BORROW_AMOUNT.add(BORROW_AMOUNT.div(2).mul(3));
+    await expect(
+      arc.borrow(
+        scoredMinter.address,
+        expectedBorrowAmount,
+        creditScoreProof,
+        undefined,
+        scoredMinter,
+      ),
+    ).to.be.reverted;
   });
 
   it(`borrows from someone else's vault if called by the global operator`);
