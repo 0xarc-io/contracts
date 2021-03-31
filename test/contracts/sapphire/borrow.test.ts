@@ -243,7 +243,7 @@ describe('SapphireCore.borrow()', () => {
     ).to.be.reverted;
   });
 
-  it('should not borrow with a score proof if no assesor is set', async () => {
+  it('should not borrow with a score proof if no assessor is set', async () => {
     // You can't borrow with a credit score if no assesor is set in the Core
     await arc.core().setAssessor(constants.AddressZero);
     await expect(
@@ -255,9 +255,11 @@ describe('SapphireCore.borrow()', () => {
     // You cannot borrow without a credit proof if one exists on-chain
   });
 
-  it.skip('should not borrow more if the c-ratio is at the minimum', async () => {
-    // borrow at the border
-    // revert next borrow
+  it('should not borrow more if the c-ratio is at the minimum', async () => {
+    await arc.borrow(scoredMinter.address, BORROW_AMOUNT, undefined, undefined, scoredMinter);
+    const { borrowedAmount } = await arc.getVault(scoredMinter.address);
+    expect(borrowedAmount).eq(BORROW_AMOUNT);
+    await expect(arc.borrow(scoredMinter.address, BORROW_AMOUNT, undefined, undefined, scoredMinter)).to.be.reverted;
   });
 
   it("should not borrow from someone else's account", async () => {
