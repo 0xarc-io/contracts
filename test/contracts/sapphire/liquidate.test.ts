@@ -799,9 +799,78 @@ describe('SapphireCore.liquidate()', () => {
       expect(postLiquidationPosition.borrowedAmount).to.eq(ArcDecimal.new(72.5).value);
     });
 
-    it(
-      'Scenario 3: the user changes their position, then their credit score decreases and liquidation occurs',
-    );
+    it('Scenario 3: the user changes their position, then their credit score decreases and liquidation occurs', async () => {
+      // User opens a position of 1000 tokens and borrows at a 200% c-ratio
+      await setupBasePosition();
+
+      // User removes 100 collateral
+      await arc.withdraw(
+        signers.minter.address,
+        ArcNumber.new(100),
+        getScoreProof(minterCreditScore),
+      );
+
+      // User repays $150
+      await arc.repay(signers.minter.address, ArcNumber.new(150), getScoreProof(minterCreditScore));
+
+      // The collateral price drops to $0.54
+      await arc.updatePrice(ArcDecimal.new(0.54).value);
+
+      // Credit score drops to 50
+      const newMinterCreditScore = {
+        account: signers.minter.address,
+        amount: BigNumber.from(50),
+      };
+      const newCreditTree = new CreditScoreTree([newMinterCreditScore, liquidatorCreditScore]);
+      await creditScoreContract.updateMerkleRoot(newCreditTree.getHexRoot());
+
+      const {
+        stablexAmt: preStablexBalance,
+        collateralAmt: preCollateralBalance,
+        arcCollateralAmt: preArcCollateralAmt,
+        stablexTotalSupply: preStablexTotalSupply,
+      } = await getBalancesForLiquidation(signers.liquidator);
+
+      // Liquidation occurs
+      await arc.liquidate(
+        signers.minter.address,
+        getScoreProof(newMinterCreditScore, newCreditTree),
+        undefined,
+        signers.liquidator,
+      );
+
+      const {
+        stablexAmt: postStablexBalance,
+        collateralAmt: postCollateralBalance,
+        arcCollateralAmt: postArcCollateralAmt,
+        stablexTotalSupply: postStablexTotalSupply,
+      } = await getBalancesForLiquidation(signers.liquidator);
+      const debtPaid = ArcNumber.new(350);
+
+      // The debt has been taken from the liquidator (STABLEx)
+      expect(postStablexBalance).to.eq(preStablexBalance.sub(debtPaid));
+
+      // The collateral has been given to the liquidator
+      expect(postCollateralBalance).to.eq(
+        preCollateralBalance.add(ArcDecimal.new(678.670360110803).value),
+      );
+
+      // A portion of collateral is sent to the fee collector
+      expect(postArcCollateralAmt).eq(
+        preArcCollateralAmt.add(ArcDecimal.new(3.59084846619473).value),
+      );
+
+      // The total STABLEx supply has decreased
+      expect(postStablexTotalSupply).to.eq(preStablexTotalSupply.sub(debtPaid));
+
+      // The position collateral amount has decreased
+      const postLiquidationPosition = await arc.getPosition(signers.minter.address);
+      expect(postLiquidationPosition.collateralAmount).to.eq(ArcDecimal.new(217.738791423).value);
+
+      // The position debt amount has been paid off
+      expect(postLiquidationPosition.borrowedAmount).to.eq(0);
+    });
+
     it(
       'Scenario 4: the user changes their position, then their credit score increases which protects him from liquidation. Then the price drops and gets liquidated',
     );
