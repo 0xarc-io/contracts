@@ -148,10 +148,7 @@ describe('SapphireCore.liquidate()', () => {
     const ctx = await generateContext(sapphireFixture, init);
     signers = ctx.signers;
     arc = ctx.sdks.sapphire;
-    creditScoreContract = MockSapphireCreditScoreFactory.connect(
-      ctx.contracts.sapphire.creditScore.address,
-      signers.admin,
-    );
+    creditScoreContract = ctx.contracts.sapphire.creditScore;
     mapper = ctx.contracts.sapphire.linearMapper;
     debtTokenAddress = arc.synth().synthetic.address;
   });
