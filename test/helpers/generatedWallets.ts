@@ -11,6 +11,7 @@ export const privateKeys = [
   '0x83c6d2cc5ddcf9711a6d59b417dc20eb48afd58d45290099e5987e3d768f328f',
   '0xbb2d3f7c9583780a7d3904a2f55d792707c345f21de1bacb2d389934d82796b2',
   '0xb2fd4d29c1390b71b8795ae81196bfd60293adf99f9d32a0aff06288fcdac55f',
+  '0x1b829dd71d36c51d5376cdf69be54759e6f3a2cb66c225d2ed7313218cd8fa95',
 ];
 
 export function generatedWallets(provider: JsonRpcProvider) {
