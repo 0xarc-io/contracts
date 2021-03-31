@@ -8,7 +8,7 @@ export enum Operation {
   Liquidate,
 }
 
-export type Position = {
+export type Vault = {
   collateralAmount: BigNumber;
   borrowedAmount: BigNumber;
 };

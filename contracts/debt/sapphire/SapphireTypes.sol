@@ -18,7 +18,7 @@ library SapphireTypes {
         uint256 lastUpdated;
     }
 
-    struct Position {
+    struct Vault {
         Amount.Principal collateralAmount;
         Amount.Principal borrowedAmount;
     }

@@ -1,6 +1,6 @@
 import { Synth } from '@arc-types/core';
 import { TransactionOverrides } from '@arc-types/ethereum';
-import { Action, CreditScoreProof, Position } from '@arc-types/sapphireCore';
+import { Action, CreditScoreProof, Vault } from '@arc-types/sapphireCore';
 import { BigNumber, BigNumberish, Signer } from 'ethers';
 import { SapphireCoreV1 } from './typings';
 
@@ -33,8 +33,8 @@ export class SapphireArc {
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
-  ): Promise<Position> {
-    return {} as Position;
+  ): Promise<Vault> {
+    return {} as Vault;
   }
 
   async liquidate(
@@ -43,8 +43,8 @@ export class SapphireArc {
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
-  ): Promise<Position> {
-    return {} as Position;
+  ): Promise<Vault> {
+    return {} as Vault;
   }
 
   async executeActions(
@@ -54,8 +54,8 @@ export class SapphireArc {
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
-  ): Promise<Position> {
-    return {} as Position;
+  ): Promise<Vault> {
+    return {} as Vault;
   }
 
   /* ========== Borrow functions ==========*/
@@ -67,8 +67,8 @@ export class SapphireArc {
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
-  ): Promise<Position> {
-    return {} as Position;
+  ): Promise<Vault> {
+    return {} as Vault;
   }
 
   async repay(
@@ -78,8 +78,8 @@ export class SapphireArc {
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
-  ): Promise<Position> {
-    return {} as Position;
+  ): Promise<Vault> {
+    return {} as Vault;
   }
 
   /* ========== Collateral functions ========== */
@@ -91,8 +91,8 @@ export class SapphireArc {
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
-  ): Promise<Position> {
-    return {} as Position;
+  ): Promise<Vault> {
+    return {} as Vault;
   }
 
   async withdraw(
@@ -101,7 +101,7 @@ export class SapphireArc {
     creditScoreProof?: CreditScoreProof,
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
-  ): Promise<Position> {
-    return {} as Position;
+  ): Promise<Vault> {
+    return {} as Vault;
   }
 }
