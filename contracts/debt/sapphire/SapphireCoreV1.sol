@@ -103,7 +103,6 @@ contract SapphireCoreV1 {
     /* ========== Public Functions ========== */
 
     function executeActions(
-        address owner,
         SapphireTypes.Action[] memory actions,
         SapphireTypes.ScoreProof memory scoreProof
     )
@@ -113,7 +112,6 @@ contract SapphireCoreV1 {
     }
 
     function borrow(
-        address owner,
         uint256 amount,
         SapphireTypes.ScoreProof memory scoreProof
     )
@@ -124,7 +122,6 @@ contract SapphireCoreV1 {
 
 
     function repay(
-        address owner,
         uint256 amount,
         SapphireTypes.ScoreProof memory scoreProof
     )
@@ -134,7 +131,6 @@ contract SapphireCoreV1 {
     }
 
     function deposit(
-        address owner,
         uint256 amount,
         SapphireTypes.ScoreProof memory scoreProof
     )
@@ -144,7 +140,6 @@ contract SapphireCoreV1 {
     }
 
     function withdraw(
-        address owner,
         uint256 amount,
         SapphireTypes.ScoreProof memory scoreProof
     )
@@ -177,7 +172,6 @@ contract SapphireCoreV1 {
     /* ========== Private Functions ========== */
 
     function _borrow(
-        address owner,
         uint256 amount
     )
         private
@@ -187,7 +181,6 @@ contract SapphireCoreV1 {
 
 
     function _repay(
-        address owner,
         uint256 amount
     )
         private
@@ -196,7 +189,6 @@ contract SapphireCoreV1 {
     }
 
     function _deposit(
-        address owner,
         uint256 amount
     )
         private
@@ -205,7 +197,6 @@ contract SapphireCoreV1 {
     }
 
     function _withdraw(
-        address owner,
         uint256 amount
     )
         private
