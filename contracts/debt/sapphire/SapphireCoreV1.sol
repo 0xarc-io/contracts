@@ -21,19 +21,10 @@ contract SapphireCoreV1 {
 
     /* ========== Types ========== */
 
-    enum Operation {
-        Open,
-        Borrow,
-        Repay,
-        Liquidate,
-        TransferOwnership
-    }
-
     struct OperationParams {
-        uint256 id;
+        address owner;
         uint256 amountOne;
         uint256 amountTwo;
-        address addressOne;
         SapphireTypes.ScoreProof _scoreProof;
     }
 
