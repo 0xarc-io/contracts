@@ -100,6 +100,13 @@ contract SapphireCoreV1 {
         public
     {}
 
+    function setFees(
+        uint256 _liquidationDiscountFee,
+        uint256 _liquidationArcRatio
+    )
+        public
+    {}
+
     /* ========== Public Functions ========== */
 
     function executeActions(
