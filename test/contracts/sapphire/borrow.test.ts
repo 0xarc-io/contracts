@@ -292,8 +292,21 @@ describe('SapphireCore.borrow()', () => {
   it.skip('should not borrow more than the collateral limit', async () => {});
 
   it('should not borrow more than the maximum amount', async () => {
-    // 1. Borrow half of allowed amount
-    // 2. Borrow another half + 1 -> expect revert
+    await arc.core().setLimits(0, BORROW_AMOUNT, 0);
+    await arc.borrow(
+      scoredMinter.address,
+      BORROW_AMOUNT.div(2),
+      creditScoreProof,
+      undefined,
+      scoredMinter,
+    );
+    await expect(arc.borrow(
+      scoredMinter.address,
+      BORROW_AMOUNT.div(2).add(1),
+      creditScoreProof,
+      undefined,
+      scoredMinter,
+    )).to.be.reverted;
   });
 
   it.skip('should not borrow from an inexistent vault');
