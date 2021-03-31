@@ -89,11 +89,6 @@ describe('SapphireCore.liquidate()', () => {
     return minCRatio.sub(MARGIN_MAX_BORROW_AND_LIQ_PERCENT);
   }
 
-  function balanceOf(user: SignerWithAddress, tokenAddress: string): Promise<BigNumber> {
-    const tokenContract = IERC20Factory.connect(tokenAddress, user);
-    return tokenContract.balanceOf(user.address);
-  }
-
   /**
    * Mints an amount of tokens to a user
    * @param receiver The user receiving the minted amount
@@ -214,7 +209,7 @@ describe('SapphireCore.liquidate()', () => {
     // Sets up a basic vault
     await setupBaseVault();
 
-    expect(await balanceOf(signers.liquidator, debtTokenAddress)).to.be.gte(DEBT_AMOUNT);
+    expect(await arc.synthetic().balanceOf(signers.liquidator.address)).to.be.gte(DEBT_AMOUNT);
 
     // Drop the price by half to make the vault under-collateralized
     const newPrice = COLLATERAL_PRICE.div(2);
