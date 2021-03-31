@@ -204,10 +204,6 @@ describe('SapphireCore.borrow()', () => {
     ).to.be.reverted;
   });
 
-  it(`borrows from someone else's vault if called by the global operator`);
-
-  it(`borrows from someone else's vault if called by an approved position operator`);
-
   it('updates the total borrowed amount correctly', async () => {
     const borrowedAmount1 = BORROW_AMOUNT.add(BORROW_AMOUNT.div(2).mul(3));
     const { borrowedAmount } = await arc.borrow(
@@ -247,12 +243,6 @@ describe('SapphireCore.borrow()', () => {
     ).to.be.reverted;
   });
 
-  it(`should not borrow from someone else's vault if called by a position operator, but on an unapproved vault`, async () => {
-    // 1. User A opens vault X
-    // 2. Position operator P is approved on vault Y
-    // 3. P tries to borrow on X -> expect revert
-  });
-
   it('should not borrow with a score proof if no assesor is set', async () => {
     // You can't borrow with a credit score if no assesor is set in the Core
     await arc.core().setAssessor(constants.AddressZero);
@@ -261,11 +251,14 @@ describe('SapphireCore.borrow()', () => {
     ).to.be.reverted;
   });
 
-  it('should not borrow without a credit proof if a score exists on-chain', async () => {
+  it.skip('should not borrow without a credit proof if a score exists on-chain', async () => {
     // You cannot borrow without a credit proof if one exists on-chain
   });
 
-  it('should not borrow more if the c-ratio is at the minimum', async () => {});
+  it.skip('should not borrow more if the c-ratio is at the minimum', async () => {
+    // borrow at the border
+    // revert next borrow
+  });
 
   it("should not borrow from someone else's account", async () => {
     await expect(
@@ -283,13 +276,30 @@ describe('SapphireCore.borrow()', () => {
     );
     await ctx.contracts.oracle.setPrice({ value: utils.parseEther('0.1') });
     await expect(
-      arc.borrow(scoredMinter.address, BORROW_AMOUNT.div(2), creditScoreProof, undefined, scoredMinter),
+      arc.borrow(
+        scoredMinter.address,
+        BORROW_AMOUNT.div(2),
+        creditScoreProof,
+        undefined,
+        scoredMinter,
+      ),
     ).to.be.reverted;
   });
 
-  it('should not borrow more if more interest has accrued', async () => {});
+  it('should not borrow more if more interest has accrued', async () => {
+    //  timetravel
+  });
 
-  it.skip('should not borrow more than the collateral limit', async () => {});
+  it('should not borrow less than the minimum borrow limit', async () => {
+    await arc.core().setLimits(BORROW_AMOUNT, 0, 0);
+    await expect(arc.borrow(
+      scoredMinter.address,
+      BORROW_AMOUNT.sub(1),
+      creditScoreProof,
+      undefined,
+      scoredMinter,
+    )).to.be.reverted;
+  });
 
   it('should not borrow more than the maximum amount', async () => {
     await arc.core().setLimits(0, BORROW_AMOUNT, 0);
@@ -300,18 +310,16 @@ describe('SapphireCore.borrow()', () => {
       undefined,
       scoredMinter,
     );
-    await expect(arc.borrow(
-      scoredMinter.address,
-      BORROW_AMOUNT.div(2).add(1),
-      creditScoreProof,
-      undefined,
-      scoredMinter,
-    )).to.be.reverted;
+    await expect(
+      arc.borrow(
+        scoredMinter.address,
+        BORROW_AMOUNT.div(2).add(1),
+        creditScoreProof,
+        undefined,
+        scoredMinter,
+      ),
+    ).to.be.reverted;
   });
-
-  it.skip('should not borrow from an inexistent vault');
-
-  it.skip('should not borrow more than the liquidity of the borrow asset');
 
   it('should not borrow if contract is paused', async () => {
     await arc.core().setPause(true);
