@@ -90,38 +90,6 @@ describe('SapphireCore.liquidate()', () => {
   }
 
   /**
-   * Mints an amount of tokens to a user
-   * @param receiver The user receiving the minted amount
-   * @param tokenAddress The token address
-   * @param mintAmount The amount to be minted
-   */
-  function mint(receiver: SignerWithAddress, tokenAddress: string, mintAmount: BigNumber) {
-    const tokenContract = TestTokenFactory.connect(tokenAddress, receiver);
-    return tokenContract.mintShare(receiver.address, mintAmount);
-  }
-
-  /**
-   * Mints a `mintAmount` of `tokenAddress` to the `receiver` and approves
-   * it to the `approveToAddress`
-   *
-   * @param receiver The user receiving the minted amount
-   * @param tokenAddress The token address
-   * @param approveToAddress Contract address to give the approval to
-   * @param mintAmount The amount to be minted
-   */
-  async function mintAndApprove(
-    receiver: SignerWithAddress,
-    tokenAddress: string,
-    approveToAddress: string,
-    mintAmount: BigNumber,
-  ) {
-    const tokenContract = TestTokenFactory.connect(tokenAddress, receiver);
-
-    await tokenContract.mintShare(receiver.address, mintAmount);
-    await tokenContract.approve(approveToAddress, mintAmount);
-  }
-
-  /**
    * Sets up a basic vault using the `COLLATERAL_AMOUNT` amount at a price of `COLLATERAL_PRICE`
    * and a debt of `DEBT_AMOUNT` as defaults amounts, unless specified otherwise
    */
@@ -133,7 +101,9 @@ describe('SapphireCore.liquidate()', () => {
   ) {
     // Mint and approve collateral
     const collateralAddress = arc.collateral().address;
-    await mintAndApprove(signers.minter, collateralAddress, arc.core().address, collateralAmount);
+    const collateralContract = TestTokenFactory.connect(collateralAddress, signers.minter);
+    await collateralContract.mintShare(signers.minter.address, collateralAmount);
+    await collateralContract.approve(arc.core().address, collateralAmount);
 
     // Set collateral price
     await arc.updatePrice(collateralPrice);
@@ -172,7 +142,7 @@ describe('SapphireCore.liquidate()', () => {
     await arc.updatePrice(COLLATERAL_PRICE);
 
     // Mints enough STABLEx to the liquidator
-    await mint(signers.liquidator, arc.synth().synthetic.address, COLLATERAL_AMOUNT);
+    await arc.synthetic().mint(signers.liquidator.address, COLLATERAL_AMOUNT);
   }
 
   before(async () => {
