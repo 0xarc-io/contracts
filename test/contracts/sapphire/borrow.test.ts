@@ -12,7 +12,7 @@ import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 import { BaseERC20Factory } from '@src/typings';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { expect, util } from 'chai';
+import { expect } from 'chai';
 import { ONE_YEAR_IN_SECONDS } from '@src/constants';
 
 /**
@@ -27,6 +27,8 @@ import { ONE_YEAR_IN_SECONDS } from '@src/constants';
 describe('SapphireCore.borrow()', () => {
   const COLLATERAL_AMOUNT = utils.parseEther('100');
   const BORROW_AMOUNT = utils.parseEther('50');
+  const PRICE = utils.parseEther('1');
+  const COLLATERAL_RATIO = COLLATERAL_AMOUNT.mul(PRICE).div(BORROW_AMOUNT)
 
   let ctx: ITestContext;
   let arc: SapphireTestArc;
@@ -47,7 +49,7 @@ describe('SapphireCore.borrow()', () => {
     };
     creditScoreTree = new CreditScoreTree([creditScore1, creditScore2]);
     await setupSapphire(ctx, {
-      collateralRatio: constants.WeiPerEther.mul(2),
+      collateralRatio: COLLATERAL_RATIO,
       merkleRoot: creditScoreTree.getHexRoot(),
     });
     await arc.deposit(
