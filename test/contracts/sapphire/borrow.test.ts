@@ -13,6 +13,7 @@ import { setupSapphire } from '../setup';
 import { BaseERC20Factory } from '@src/typings';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { expect, util } from 'chai';
+import { ONE_YEAR_IN_SECONDS } from '@src/constants';
 
 /**
  * This is the most crucial function of the system as it's how users actually borrow from a vault.
@@ -300,7 +301,20 @@ describe('SapphireCore.borrow()', () => {
   });
 
   it('should not borrow more if more interest has accrued', async () => {
-    //  timetravel
+    const secondBorrowAmount = BigNumber.from(10);
+    const firstBorrowAmount = BORROW_AMOUNT.sub(secondBorrowAmount);
+
+    await arc.borrow(scoredMinter.address, firstBorrowAmount, undefined, undefined, scoredMinter);
+    const { borrowedAmount } = await arc.getVault(scoredMinter.address);
+    expect(borrowedAmount).eq(firstBorrowAmount);
+
+    const currentTimeStamp = await arc.core().currentTimestamp();
+    await arc.core().setInterestRate(constants.WeiPerEther);
+    await arc.core().setCurrentTimestamp(currentTimeStamp.add(ONE_YEAR_IN_SECONDS));
+
+    await expect(
+      arc.borrow(scoredMinter.address, BORROW_AMOUNT, undefined, undefined, scoredMinter),
+    ).to.be.reverted;
   });
 
   it('should not borrow less than the minimum borrow limit', async () => {
