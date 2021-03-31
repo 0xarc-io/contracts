@@ -654,16 +654,6 @@ describe('SapphireCore.liquidate()', () => {
     ).to.be.revertedWith('SapphireCoreV1: there is no debt to liquidate');
   });
 
-  it('should not liquidate if the credit score proof is not given', async () => {
-    await setupBasePosition();
-
-    await arc.updatePrice(ArcDecimal.new(0.5).value);
-
-    await expect(
-      arc.liquidate(signers.minter.address, undefined, undefined, signers.liquidator),
-    ).to.be.revertedWith('SapphireCoreV1: the credit score is required for liquidation');
-  });
-
   // Accompanying sheet: https://docs.google.com/spreadsheets/d/1rmFbUxnM4gyi1xhcYKBwcdadvXrHBPKbeX7DLk8KQgE/edit#gid=387958619
   describe('Scenarios', () => {
     it('Scenario 1: the position gets liquidated because the collateral price hits the liquidation price', async () => {
