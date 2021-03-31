@@ -273,7 +273,19 @@ describe('SapphireCore.borrow()', () => {
     ).to.be.reverted;
   });
 
-  it('should not borrow more if the price decreases', async () => {});
+  it('should not borrow more if the price decreases', async () => {
+    await arc.borrow(
+      scoredMinter.address,
+      BORROW_AMOUNT.div(2),
+      creditScoreProof,
+      undefined,
+      scoredMinter,
+    );
+    await ctx.contracts.oracle.setPrice({ value: utils.parseEther('0.1') });
+    await expect(
+      arc.borrow(scoredMinter.address, BORROW_AMOUNT.div(2), creditScoreProof, undefined, scoredMinter),
+    ).to.be.reverted;
+  });
 
   it('should not borrow more if more interest has accrued', async () => {});
 
