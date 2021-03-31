@@ -58,7 +58,6 @@ describe('SapphireCore.liquidate()', () => {
   let debtTokenAddress: string;
   let minterCreditScore: CreditScore;
   let liquidatorCreditScore: CreditScore;
-  let collateralTokenAddress: string;
 
   /**
    * Returns useful balances to use when validating numbers before and after
@@ -154,7 +153,6 @@ describe('SapphireCore.liquidate()', () => {
       signers.admin,
     );
     mapper = ctx.contracts.sapphire.linearMapper;
-    collateralTokenAddress = arc.collateral().address;
     debtTokenAddress = arc.synth().synthetic.address;
   });
 
