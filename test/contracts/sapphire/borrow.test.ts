@@ -251,15 +251,26 @@ describe('SapphireCore.borrow()', () => {
     ).to.be.reverted;
   });
 
-  it.skip('should not borrow without a credit proof if a score exists on-chain', async () => {
-    // You cannot borrow without a credit proof if one exists on-chain
+  it('should not borrow without a credit proof if a score exists on-chain', async () => {
+    await arc.borrow(
+      scoredMinter.address,
+      constants.One,
+      creditScoreProof,
+      undefined,
+      scoredMinter,
+    );
+    await expect(
+      arc.borrow(scoredMinter.address, constants.One, undefined, undefined, scoredMinter),
+    ).to.be.reverted;
   });
 
   it('should not borrow more if the c-ratio is at the minimum', async () => {
     await arc.borrow(scoredMinter.address, BORROW_AMOUNT, undefined, undefined, scoredMinter);
     const { borrowedAmount } = await arc.getVault(scoredMinter.address);
     expect(borrowedAmount).eq(BORROW_AMOUNT);
-    await expect(arc.borrow(scoredMinter.address, BORROW_AMOUNT, undefined, undefined, scoredMinter)).to.be.reverted;
+    await expect(
+      arc.borrow(scoredMinter.address, BORROW_AMOUNT, undefined, undefined, scoredMinter),
+    ).to.be.reverted;
   });
 
   it("should not borrow from someone else's account", async () => {
@@ -294,13 +305,15 @@ describe('SapphireCore.borrow()', () => {
 
   it('should not borrow less than the minimum borrow limit', async () => {
     await arc.core().setLimits(BORROW_AMOUNT, 0, 0);
-    await expect(arc.borrow(
-      scoredMinter.address,
-      BORROW_AMOUNT.sub(1),
-      creditScoreProof,
-      undefined,
-      scoredMinter,
-    )).to.be.reverted;
+    await expect(
+      arc.borrow(
+        scoredMinter.address,
+        BORROW_AMOUNT.sub(1),
+        creditScoreProof,
+        undefined,
+        scoredMinter,
+      ),
+    ).to.be.reverted;
   });
 
   it('should not borrow more than the maximum amount', async () => {
