@@ -682,7 +682,8 @@ describe('SapphireCore.liquidate()', () => {
       const vault = await arc.getVault(signers.minter.address)
 
       // Ensure that vault is undercollateralized
-      expect(vault.collateralAmount.value.mul(newPrice).div(vault.borrowedAmount.value)).to.be.lt(utils.parseEther('1'))
+      const cRatio = vault.collateralAmount.value.mul(newPrice).div(vault.borrowedAmount.value)
+      expect(cRatio).to.be.lt(utils.parseEther('1'))
       
       // The liquidation occurs. The entire collateral is sold at discount and the user has an outstanding debt
 
