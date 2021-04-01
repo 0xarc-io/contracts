@@ -169,6 +169,8 @@ describe('SapphireCore.liquidate()', () => {
       stablexTotalSupply: preStablexTotalSupply,
     } = await getBalancesForLiquidation(signers.liquidator);
 
+    const preCollateralVaultBalance = await arc.collateral().balanceOf(arc.core().address)
+
     // Liquidate vault
     await arc.liquidate(
       signers.minter.address,
@@ -184,13 +186,19 @@ describe('SapphireCore.liquidate()', () => {
       stablexTotalSupply: postStablexTotalSupply,
     } = await getBalancesForLiquidation(signers.liquidator);
 
+    const postCollateralVaultBalance = await arc.collateral().balanceOf(arc.core().address)
+
     // The debt has been taken from the liquidator (STABLEx)
     expect(postStablexBalance).to.eq(preStablexBalance.sub(ArcNumber.new(475)));
 
     // The collateral has been given to the liquidator
+    const liquidatedCollateral = utils.parseEther('994.736842105263')
     expect(postCollateralBalance).to.eq(
-      preCollateralBalance.add(utils.parseEther('994.736842105263')),
+      preCollateralBalance.add(liquidatedCollateral),
     );
+    
+    // Check collateral vault balance
+    expect(preCollateralVaultBalance.sub(postCollateralVaultBalance)).to.eq(liquidatedCollateral)
 
     // A portion of collateral is sent to the fee collector
     expect(postArcCollateralAmt).eq(preArcCollateralAmt.add(utils.parseEther('5.26315789473684')));
