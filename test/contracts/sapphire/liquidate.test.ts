@@ -280,8 +280,6 @@ describe('SapphireCore.liquidate()', () => {
 
   it('liquidates if interest accumulates (1 day)', async () => {
     // Open a vault at the boundary
-    // Set the liquidation safety margin to 0 so we can borrow at the edge
-    await arc.core().setBorrowSafetyMargin(0);
 
     // When opening a vault without a credit score, a credit score of 0 is assumed
     const maxBorrowAmount = COLLATERAL_AMOUNT.mul(BASE).div(HIGH_C_RATIO);
@@ -317,8 +315,6 @@ describe('SapphireCore.liquidate()', () => {
 
   it('liquidates if interest accumulates (1 year)', async () => {
     // Open a vault at the boundary
-    // Set the liquidation safety margin to 0 so we can borrow at the edge
-    await arc.core().setBorrowSafetyMargin(0);
 
     // When opening a vault without a credit score, a credit score of 0 is assumed
     const maxBorrowAmount = COLLATERAL_AMOUNT.mul(BASE).div(HIGH_C_RATIO);
