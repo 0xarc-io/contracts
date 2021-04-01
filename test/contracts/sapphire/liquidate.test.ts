@@ -9,11 +9,7 @@ import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import ArcNumber from '@src/utils/ArcNumber';
 import { TestingSigners } from '@arc-types/testing';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import {
-  MockSapphireCreditScore,
-  SapphireMapperLinear,
-  TestTokenFactory,
-} from '@src/typings';
+import { MockSapphireCreditScore, SapphireMapperLinear, TestTokenFactory } from '@src/typings';
 import chai, { expect } from 'chai';
 import { solidity } from 'ethereum-waffle';
 import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
@@ -126,7 +122,6 @@ describe('SapphireCore.liquidate()', () => {
     arc = ctx.sdks.sapphire;
     creditScoreContract = ctx.contracts.sapphire.creditScore;
     mapper = ctx.contracts.sapphire.linearMapper;
-    debtTokenAddress = arc.synth().synthetic.address;
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -157,7 +152,12 @@ describe('SapphireCore.liquidate()', () => {
     await arc.updatePrice(newPrice);
 
     // Make sure vault is under-collateralized
-    const liquidationCRatio = await mapper.map(minterCreditScore.amount, 1000, LOW_C_RATIO, HIGH_C_RATIO);
+    const liquidationCRatio = await mapper.map(
+      minterCreditScore.amount,
+      1000,
+      LOW_C_RATIO,
+      HIGH_C_RATIO,
+    );
     const currentCRatio = COLLATERAL_AMOUNT.mul(newPrice).div(DEBT_AMOUNT);
     expect(currentCRatio).to.be.lte(liquidationCRatio);
 
@@ -168,7 +168,7 @@ describe('SapphireCore.liquidate()', () => {
       stablexTotalSupply: preStablexTotalSupply,
     } = await getBalancesForLiquidation(signers.liquidator);
 
-    const preCollateralVaultBalance = await arc.collateral().balanceOf(arc.core().address)
+    const preCollateralVaultBalance = await arc.collateral().balanceOf(arc.core().address);
 
     // Liquidate vault
     await arc.liquidate(
@@ -185,19 +185,17 @@ describe('SapphireCore.liquidate()', () => {
       stablexTotalSupply: postStablexTotalSupply,
     } = await getBalancesForLiquidation(signers.liquidator);
 
-    const postCollateralVaultBalance = await arc.collateral().balanceOf(arc.core().address)
+    const postCollateralVaultBalance = await arc.collateral().balanceOf(arc.core().address);
 
     // The debt has been taken from the liquidator (STABLEx)
     expect(postStablexBalance).to.eq(preStablexBalance.sub(ArcNumber.new(475)));
 
     // The collateral has been given to the liquidator
-    const liquidatedCollateral = utils.parseEther('994.736842105263')
-    expect(postCollateralBalance).to.eq(
-      preCollateralBalance.add(liquidatedCollateral),
-    );
-    
+    const liquidatedCollateral = utils.parseEther('994.736842105263');
+    expect(postCollateralBalance).to.eq(preCollateralBalance.add(liquidatedCollateral));
+
     // Check collateral vault balance
-    expect(preCollateralVaultBalance.sub(postCollateralVaultBalance)).to.eq(liquidatedCollateral)
+    expect(preCollateralVaultBalance.sub(postCollateralVaultBalance)).to.eq(liquidatedCollateral);
 
     // A portion of collateral is sent to the fee collector
     expect(postArcCollateralAmt).eq(preArcCollateralAmt.add(utils.parseEther('5.26315789473684')));
@@ -582,16 +580,36 @@ describe('SapphireCore.liquidate()', () => {
     await arc.updatePrice(utils.parseEther('0.65'));
 
     // Set the fee collector to the zero address
-    await arc.core().setFeeCollector('0x0000000000000000000000000000000000000000')
-    
-    // Liquidation should fail because 
-    await expect(arc.liquidate(
-      signers.minter.address,
-      getScoreProof(minterCreditScore, creditScoreTree),
-      undefined,
-      signers.liquidator,
-    )).to.be.revertedWith('SapphireCoreV1: the fee collector is not set')
-  })
+    await arc.core().setFeeCollector('0x0000000000000000000000000000000000000000');
+
+    // Liquidation should fail because
+    await expect(
+      arc.liquidate(
+        signers.minter.address,
+        getScoreProof(minterCreditScore, creditScoreTree),
+        undefined,
+        signers.liquidator,
+      ),
+    ).to.be.revertedWith('SapphireCoreV1: the fee collector is not set');
+  });
+
+  it('should not liquidate if contract is paused', async () => {
+    await setupBaseVault();
+
+    // Price drops, setting the c-ratio to 130%
+    await arc.updatePrice(utils.parseEther('0.65'));
+
+    await arc.core().setPause(true);
+
+    await expect(
+      arc.liquidate(
+        signers.minter.address,
+        getScoreProof(minterCreditScore, creditScoreTree),
+        undefined,
+        signers.liquidator,
+      ),
+    ).to.be.revertedWith('SapphireCoreV1: the contract is paused');
+  });
 
   // Accompanying sheet: https://docs.google.com/spreadsheets/d/1rmFbUxnM4gyi1xhcYKBwcdadvXrHBPKbeX7DLk8KQgE/edit#gid=387958619
   describe('Scenarios', () => {
@@ -676,15 +694,15 @@ describe('SapphireCore.liquidate()', () => {
       );
 
       // Price decreases to $0.45
-      const newPrice = utils.parseEther('0.45')
+      const newPrice = utils.parseEther('0.45');
       await arc.updatePrice(newPrice);
 
-      const vault = await arc.getVault(signers.minter.address)
+      const vault = await arc.getVault(signers.minter.address);
 
       // Ensure that vault is undercollateralized
-      const cRatio = vault.collateralAmount.value.mul(newPrice).div(vault.borrowedAmount.value)
-      expect(cRatio).to.be.lt(utils.parseEther('1'))
-      
+      const cRatio = vault.collateralAmount.value.mul(newPrice).div(vault.borrowedAmount.value);
+      expect(cRatio).to.be.lt(utils.parseEther('1'));
+
       // The liquidation occurs. The entire collateral is sold at discount and the user has an outstanding debt
 
       const {
