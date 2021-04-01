@@ -70,7 +70,7 @@ describe('SapphireCore.setters', () => {
 
   describe('#setLimits', () => {
     it('reverts if called by non-owner')
-    it('sets the collateral limit and position collateral min')
+    it('sets the borrow limits')
   })
   
 })
