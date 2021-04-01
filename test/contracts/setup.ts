@@ -20,7 +20,6 @@ export interface SapphireSetupOptions {
   merkleRoot?: string;
   lowCollateralRatio?: BigNumberish;
   highCollateralRatio?: BigNumberish;
-  liquidationMarginPercent?: BigNumberish;
   fees?: {
     liquidationUserFee?: BigNumberish;
     liquidationArcRatio?: BigNumberish;
@@ -70,7 +69,6 @@ export async function setupSapphire(
     lowCollateralRatio,
     highCollateralRatio,
     fees,
-    liquidationMarginPercent,
   }: SapphireSetupOptions,
 ) {
   const arc = ctx.sdks.sapphire;
@@ -81,7 +79,6 @@ export async function setupSapphire(
     .core.setCollateralRatios(
       lowCollateralRatio || constants.WeiPerEther,
       highCollateralRatio || constants.WeiPerEther,
-      liquidationMarginPercent || 0,
     );
 
   await arc.synth().core.setFees(fees.liquidationUserFee || 0, fees.liquidationArcRatio || 0);
