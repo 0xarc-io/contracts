@@ -279,7 +279,7 @@ describe('SapphireCore.borrow()', () => {
     const { borrowedAmount } = await arc.getVault(scoredMinter.address);
     expect(borrowedAmount).eq(BORROW_AMOUNT);
     await expect(
-      arc.borrow(scoredMinter.address, BORROW_AMOUNT, undefined, undefined, scoredMinter),
+      arc.borrow(scoredMinter.address, constants.One, undefined, undefined, scoredMinter),
     ).to.be.reverted;
   });
 
