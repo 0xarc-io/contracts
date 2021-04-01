@@ -26,15 +26,6 @@ const LOW_C_RATIO = utils.parseEther('1.15');
 const HIGH_C_RATIO = utils.parseEther('1.5');
 const LIQUIDATION_USER_FEE = utils.parseEther('0.1');
 const LIQUIDATION_ARC_RATIO = utils.parseEther('0.1');
-/**
- * The margin between the maximum borrow c-ratio and the c-ratio
- * when the vault gets liquidated.
- *
- * Ex: The maximum borrow amount has a c-ratio of 130% and the
- * c-ratio when the vault is liquidated is 120%, assuming the margin
- * is set at 10%
- */
-const MARGIN_MAX_BORROW_AND_LIQ_PERCENT = utils.parseEther('0.1');
 
 const COLLATERAL_AMOUNT = ArcNumber.new(1000);
 const COLLATERAL_PRICE = ArcNumber.new(1);
@@ -78,14 +69,6 @@ describe('SapphireCore.liquidate()', () => {
   }
 
   /**
-   * Returns the c-ratio when the liquidation happens for the minter
-   */
-  async function getLiquidationCRatio(): Promise<BigNumber> {
-    const minCRatio = await mapper.map(minterCreditScore.amount, 1000, LOW_C_RATIO, HIGH_C_RATIO);
-    return minCRatio.sub(MARGIN_MAX_BORROW_AND_LIQ_PERCENT);
-  }
-
-  /**
    * Sets up a basic vault using the `COLLATERAL_AMOUNT` amount at a price of `COLLATERAL_PRICE`
    * and a debt of `DEBT_AMOUNT` as defaults amounts, unless specified otherwise
    */
@@ -126,7 +109,6 @@ describe('SapphireCore.liquidate()', () => {
     await setupSapphire(ctx, {
       lowCollateralRatio: LOW_C_RATIO,
       highCollateralRatio: HIGH_C_RATIO,
-      liquidationMarginPercent: MARGIN_MAX_BORROW_AND_LIQ_PERCENT,
       merkleRoot: creditScoreTree.getHexRoot(),
       fees: {
         liquidationUserFee: LIQUIDATION_USER_FEE,
@@ -178,7 +160,7 @@ describe('SapphireCore.liquidate()', () => {
     await arc.updatePrice(newPrice);
 
     // Make sure vault is under-collateralized
-    const liquidationCRatio = await getLiquidationCRatio();
+    const liquidationCRatio = await mapper.map(minterCreditScore.amount, 1000, LOW_C_RATIO, HIGH_C_RATIO);
     const currentCRatio = COLLATERAL_AMOUNT.mul(newPrice).div(DEBT_AMOUNT);
     expect(currentCRatio).to.be.lte(liquidationCRatio);
 
@@ -603,14 +585,14 @@ describe('SapphireCore.liquidate()', () => {
         getScoreProof(minterCreditScore, creditScoreTree),
       );
 
-      // Price increases to $1.25
-      await arc.updatePrice(utils.parseEther('1.25'));
+      // Price increases to $1.35
+      await arc.updatePrice(utils.parseEther('1.35'));
 
       // User maxes out his borrow amount.
-      // $377.19298245614 is the max borrow amount ($877.19) - 500
+      // $518.867924528302 is the max borrow amount ($877.19) - 500
       await arc.borrow(
         signers.minter.address,
-        utils.parseEther('377.19298245614'),
+        utils.parseEther('518.867924528302'),
         getScoreProof(minterCreditScore, creditScoreTree),
       );
 
@@ -642,17 +624,17 @@ describe('SapphireCore.liquidate()', () => {
       } = await getBalancesForLiquidation(signers.liquidator);
 
       // The debt has been taken from the liquidator (STABLEx)
-      const stableXPaid = utils.parseEther('877.19298245614');
+      const stableXPaid = utils.parseEther('1018.8679245283');
       expect(postStablexBalance).to.eq(preStablexBalance.sub(stableXPaid));
 
       // The collateral has been given to the liquidator
       expect(postCollateralBalance).to.eq(
-        preCollateralBalance.add(utils.parseEther('790.421764628731')),
+        preCollateralBalance.add(utils.parseEther('919.696426286413')),
       );
 
       // A portion of collateral is sent to the fee collector
       expect(postArcCollateralAmt).eq(
-        preArcCollateralAmt.add(utils.parseEther('4.01716287871692')),
+        preArcCollateralAmt.add(utils.parseEther('4.86611865760007')),
       );
 
       // The total STABLEx supply has decreased
@@ -660,7 +642,7 @@ describe('SapphireCore.liquidate()', () => {
 
       // The vault collateral amount has decreased
       const postLiquidationVault = await arc.getVault(signers.minter.address);
-      expect(postLiquidationVault.collateralAmount).to.eq(utils.parseEther('205.561072492552'));
+      expect(postLiquidationVault.collateralAmount).to.eq(utils.parseEther('75.437455055987'));
 
       expect(postLiquidationVault.borrowedAmount).to.eq(0);
     });
@@ -810,10 +792,11 @@ describe('SapphireCore.liquidate()', () => {
         getScoreProof(minterCreditScore, creditScoreTree),
       );
 
-      // User borrows maximum amount, which is up to 142.50% or $701.754385964912 - $500 = 201.7543859649
+      // User borrows close to the maximum amount. The min c-ratio is 132.5% so user borrows up to 133.5%, namely
+      // $749.063670411985 - $500 = 249.063670411985
       await arc.borrow(
         signers.minter.address,
-        utils.parseEther('201.7543859649'),
+        utils.parseEther('249.063670411985'),
         getScoreProof(minterCreditScore, creditScoreTree),
       );
 
@@ -860,12 +843,12 @@ describe('SapphireCore.liquidate()', () => {
 
       // The collateral has been given to the liquidator
       expect(postCollateralBalance).to.eq(
-        preCollateralBalance.add(utils.parseEther('896.09876999776')),
+        preCollateralBalance.add(utils.parseEther('956.509923031317')),
       );
 
       // A portion of collateral is sent to the fee collector
       expect(postArcCollateralAmt).eq(
-        preArcCollateralAmt.add(utils.parseEther('4.74126333332148')),
+        preArcCollateralAmt.add(utils.parseEther('5.06089906365778')),
       );
 
       // The total STABLEx supply has decreased
@@ -873,7 +856,7 @@ describe('SapphireCore.liquidate()', () => {
 
       // The vault collateral amount has decreased
       const postLiquidationVault = await arc.getVault(signers.minter.address);
-      expect(postLiquidationVault.collateralAmount).to.eq(utils.parseEther('298.245614035088'));
+      expect(postLiquidationVault.collateralAmount).to.eq(utils.parseEther('250.936329588015'));
 
       // The vault debt amount has been paid off
       expect(postLiquidationVault.borrowedAmount).to.eq(0);
