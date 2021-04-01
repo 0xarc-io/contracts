@@ -104,8 +104,6 @@ describe('SapphireCore.liquidate()', () => {
 
     creditScoreTree = new CreditScoreTree([minterCreditScore, liquidatorCreditScore]);
 
-    creditScoreTree;
-
     await setupSapphire(ctx, {
       lowCollateralRatio: LOW_C_RATIO,
       highCollateralRatio: HIGH_C_RATIO,
@@ -569,6 +567,24 @@ describe('SapphireCore.liquidate()', () => {
       ),
     ).to.be.revertedWith('SapphireCoreV1: there is no debt to liquidate');
   });
+
+  it('should not liquidate if fee collector is not set', async () => {
+    await setupBaseVault();
+
+    // Price drops, setting the c-ratio to 130%
+    await arc.updatePrice(utils.parseEther('0.65'));
+
+    // Set the fee collector to the zero address
+    await arc.core().setFeeCollector('0x0000000000000000000000000000000000000000')
+    
+    // Liquidation should fail because 
+    await expect(arc.liquidate(
+      signers.minter.address,
+      getScoreProof(minterCreditScore, creditScoreTree),
+      undefined,
+      signers.liquidator,
+    )).to.be.revertedWith('SapphireCoreV1: the fee collector is not set')
+  })
 
   // Accompanying sheet: https://docs.google.com/spreadsheets/d/1rmFbUxnM4gyi1xhcYKBwcdadvXrHBPKbeX7DLk8KQgE/edit#gid=387958619
   describe('Scenarios', () => {
