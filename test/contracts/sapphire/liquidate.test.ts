@@ -57,7 +57,7 @@ describe('SapphireCore.liquidate()', () => {
 
     const stablexAmt = await arc.synthetic().balanceOf(userAddress);
     const collateralAmt = await arc.collateral().balanceOf(userAddress);
-    const arcCollateralAmt = await arc.collateral().balanceOf(arc.core().address);
+    const arcCollateralAmt = await arc.collateral().balanceOf(await arc.core().feeCollector());
     const stablexTotalSupply = await arc.synthetic().totalSupply();
 
     return {
