@@ -47,7 +47,7 @@ contract SapphireCoreV1 {
 
     event LiquidationFeesUpdated(
         Decimal.D256 _liquidationUserFee,
-        Decimal.D256 _liquidationArcRatio
+        Decimal.D256 _liquidationArcFee
     );
 
     event LimitsUpdated(
@@ -102,7 +102,7 @@ contract SapphireCoreV1 {
 
     function setFees(
         uint256 _liquidationDiscountFee,
-        uint256 _liquidationArcRatio
+        uint256 _liquidationArcFee
     )
         public
     {}
