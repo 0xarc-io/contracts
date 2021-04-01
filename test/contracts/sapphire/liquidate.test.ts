@@ -25,7 +25,7 @@ chai.use(solidity);
 const LOW_C_RATIO = utils.parseEther('1.15');
 const HIGH_C_RATIO = utils.parseEther('1.5');
 const LIQUIDATION_USER_FEE = utils.parseEther('0.1');
-const LIQUIDATION_ARC_RATIO = utils.parseEther('0.1');
+const LIQUIDATION_ARC_FEE = utils.parseEther('0.1');
 
 const COLLATERAL_AMOUNT = ArcNumber.new(1000);
 const COLLATERAL_PRICE = ArcNumber.new(1);
@@ -43,7 +43,6 @@ describe('SapphireCore.liquidate()', () => {
   let signers: TestingSigners;
   let creditScoreTree: CreditScoreTree;
   let mapper: SapphireMapperLinear;
-  let debtTokenAddress: string;
   let minterCreditScore: CreditScore;
   let liquidatorCreditScore: CreditScore;
 
@@ -110,7 +109,7 @@ describe('SapphireCore.liquidate()', () => {
       merkleRoot: creditScoreTree.getHexRoot(),
       fees: {
         liquidationUserFee: LIQUIDATION_USER_FEE,
-        liquidationArcRatio: LIQUIDATION_ARC_RATIO,
+        liquidationArcFee: LIQUIDATION_ARC_FEE,
       },
     });
 

@@ -22,7 +22,7 @@ export interface SapphireSetupOptions {
   highCollateralRatio?: BigNumberish;
   fees?: {
     liquidationUserFee?: BigNumberish;
-    liquidationArcRatio?: BigNumberish;
+    liquidationArcFee?: BigNumberish;
   };
 }
 
@@ -81,7 +81,7 @@ export async function setupSapphire(
       highCollateralRatio || constants.WeiPerEther,
     );
 
-  await arc.synth().core.setFees(fees.liquidationUserFee || 0, fees.liquidationArcRatio || 0);
+  await arc.synth().core.setFees(fees.liquidationUserFee || 0, fees.liquidationArcFee || 0);
 
   // Set the merkle root
   if (merkleRoot) {
