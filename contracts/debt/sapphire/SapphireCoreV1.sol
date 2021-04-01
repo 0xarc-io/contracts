@@ -144,7 +144,7 @@ contract SapphireCoreV1 {
      *      every second rather than being purely linear, the calculate for r is expressed
      *      as the following (assuming you want 5% APY):
      *
-     *      r^N = 1.005
+     *      r^N = 1.05
      *      since N = 364 * 24 * 60 * 60 (number of seconds in a year)
      *      r = 1.000000000158153903837946258002097
      *      rate = 1000000000158153903 (18 decimal places solidity value)
