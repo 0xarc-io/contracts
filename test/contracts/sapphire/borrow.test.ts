@@ -28,7 +28,8 @@ describe('SapphireCore.borrow()', () => {
   const COLLATERAL_AMOUNT = utils.parseEther('100');
   const BORROW_AMOUNT = utils.parseEther('50');
   const PRICE = utils.parseEther('1');
-  const COLLATERAL_RATIO = COLLATERAL_AMOUNT.mul(PRICE).div(BORROW_AMOUNT)
+  const HiGH_C_RATIO = constants.WeiPerEther.mul(2)
+  const LOW_C_RATIO = constants.WeiPerEther.mul(3).div(2);
 
   let ctx: ITestContext;
   let arc: SapphireTestArc;
@@ -36,12 +37,13 @@ describe('SapphireCore.borrow()', () => {
   let creditScore2: CreditScore;
   let creditScoreTree: CreditScoreTree;
   let scoredMinter: SignerWithAddress;
+  let minter: SignerWithAddress;
   let creditScoreProof: CreditScoreProof;
 
   async function init(ctx: ITestContext): Promise<void> {
     creditScore1 = {
       account: ctx.signers.scoredMinter.address,
-      amount: BigNumber.from(500),
+      amount: BigNumber.from(1000),
     };
     creditScore2 = {
       account: ctx.signers.interestSetter.address,
@@ -54,7 +56,9 @@ describe('SapphireCore.borrow()', () => {
       merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
     };
     await setupSapphire(ctx, {
-      collateralRatio: COLLATERAL_RATIO,
+      collateralRatio: HiGH_C_RATIO,
+      price: PRICE,
+      // lowCollateralRatio: LOW_C_RATIO,
       merkleRoot: creditScoreTree.getHexRoot(),
     });
     await arc.deposit(
@@ -77,6 +81,7 @@ describe('SapphireCore.borrow()', () => {
     ctx = await generateContext(sapphireFixture, init);
     arc = ctx.sdks.sapphire;
     scoredMinter = ctx.signers.scoredMinter;
+    minter = ctx.signers.minter;
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -101,29 +106,29 @@ describe('SapphireCore.borrow()', () => {
   });
 
   it('borrows with exact c-ratio', async () => {
-    await arc.borrow(scoredMinter.address, BORROW_AMOUNT, undefined, undefined, scoredMinter);
-    const { borrowedAmount } = await arc.getVault(scoredMinter.address);
+    await arc.borrow(minter.address, BORROW_AMOUNT, undefined, undefined, minter);
+    const { borrowedAmount } = await arc.getVault(minter.address);
     expect(borrowedAmount).eq(BORROW_AMOUNT);
   });
 
   it('borrows more if more collateral is provided', async () => {
-    await arc.borrow(scoredMinter.address, BORROW_AMOUNT, undefined, undefined, scoredMinter);
-    const { borrowedAmount } = await arc.getVault(scoredMinter.address);
+    await arc.borrow(minter.address, BORROW_AMOUNT, undefined, undefined, minter);
+    const { borrowedAmount } = await arc.getVault(minter.address);
 
     expect(borrowedAmount).eq(BORROW_AMOUNT);
     await expect(
-      arc.borrow(scoredMinter.address, BORROW_AMOUNT, undefined, undefined, scoredMinter),
+      arc.borrow(minter.address, BORROW_AMOUNT, undefined, undefined, minter),
     ).to.be.reverted;
 
     await arc.deposit(
-      ctx.signers.scoredMinter.address,
+      ctx.signers.minter.address,
       COLLATERAL_AMOUNT,
       undefined,
       undefined,
-      ctx.signers.scoredMinter,
+      ctx.signers.minter,
     );
-    await arc.borrow(scoredMinter.address, BORROW_AMOUNT, undefined, undefined, scoredMinter);
-    const { borrowedAmount: updatedBorrowedAmount } = await arc.getVault(scoredMinter.address);
+    await arc.borrow(minter.address, BORROW_AMOUNT, undefined, undefined, minter);
+    const { borrowedAmount: updatedBorrowedAmount } = await arc.getVault(minter.address);
 
     expect(updatedBorrowedAmount).eq(BORROW_AMOUNT.mul(2));
   });
@@ -165,10 +170,10 @@ describe('SapphireCore.borrow()', () => {
       account: scoredMinter.address,
       amount: BigNumber.from(800),
     };
-    creditScoreTree = new CreditScoreTree([creditScore, creditScore2]);
+    const newCreditScoreTree = new CreditScoreTree([creditScore, creditScore2]);
     await immediatelyUpdateMerkleRoot(
       ctx.contracts.sapphire.creditScore,
-      creditScoreTree.getHexRoot(),
+      newCreditScoreTree.getHexRoot(),
     );
 
     await arc.borrow(
@@ -177,7 +182,7 @@ describe('SapphireCore.borrow()', () => {
       {
         account: creditScore.account,
         score: creditScore.amount,
-        merkleProof: creditScoreTree.getProof(creditScore.account, creditScore.amount),
+        merkleProof: newCreditScoreTree.getProof(creditScore.account, creditScore.amount),
       },
       undefined,
       scoredMinter,
@@ -275,11 +280,11 @@ describe('SapphireCore.borrow()', () => {
   });
 
   it('should not borrow more if the c-ratio is at the minimum', async () => {
-    await arc.borrow(scoredMinter.address, BORROW_AMOUNT, undefined, undefined, scoredMinter);
-    const { borrowedAmount } = await arc.getVault(scoredMinter.address);
+    await arc.borrow(minter.address, BORROW_AMOUNT, undefined, undefined, minter);
+    const { borrowedAmount } = await arc.getVault(minter.address);
     expect(borrowedAmount).eq(BORROW_AMOUNT);
     await expect(
-      arc.borrow(scoredMinter.address, constants.One, undefined, undefined, scoredMinter),
+      arc.borrow(minter.address, constants.One, undefined, undefined, minter),
     ).to.be.reverted;
   });
 
