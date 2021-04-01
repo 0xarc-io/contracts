@@ -48,6 +48,11 @@ describe('SapphireCore.borrow()', () => {
       amount: BigNumber.from(20),
     };
     creditScoreTree = new CreditScoreTree([creditScore1, creditScore2]);
+    creditScoreProof = {
+      account: creditScore1.account,
+      score: creditScore1.amount,
+      merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
+    };
     await setupSapphire(ctx, {
       collateralRatio: COLLATERAL_RATIO,
       merkleRoot: creditScoreTree.getHexRoot(),
@@ -55,9 +60,16 @@ describe('SapphireCore.borrow()', () => {
     await arc.deposit(
       ctx.signers.scoredMinter.address,
       COLLATERAL_AMOUNT,
-      undefined,
+      creditScoreProof,
       undefined,
       ctx.signers.scoredMinter,
+    );
+    await arc.deposit(
+      ctx.signers.minter.address,
+      COLLATERAL_AMOUNT,
+      undefined,
+      undefined,
+      ctx.signers.minter,
     );
   }
 
@@ -65,11 +77,6 @@ describe('SapphireCore.borrow()', () => {
     ctx = await generateContext(sapphireFixture, init);
     arc = ctx.sdks.sapphire;
     scoredMinter = ctx.signers.scoredMinter;
-    creditScoreProof = {
-      account: creditScore1.account,
-      score: creditScore1.amount,
-      merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
-    };
   });
 
   addSnapshotBeforeRestoreAfterEach();
