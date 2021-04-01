@@ -121,8 +121,9 @@ contract SapphireCoreV1 {
     {}
 
     function setLimits(
-        uint256 _collateralLimit,
-        uint256 _positionCollateralMinimum
+        uint256 _totalBorrowLimit,
+        uint256 _vaultBorrowMinimum,
+        uint256 _vaultBorrowMaximum
     )
         public
     {}
@@ -141,14 +142,6 @@ contract SapphireCoreV1 {
 
     function setFeeCollector(
         address _newFeeCollector
-    )
-        public
-    {}
-
-    function setLimits(
-        uint256 _totalBorrowLimit,
-        uint256 _valutCollateralMinimum,
-        uint256 _vaultBorrowMaximum
     )
         public
     {}
