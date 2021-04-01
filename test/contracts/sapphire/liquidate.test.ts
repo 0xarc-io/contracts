@@ -676,8 +676,14 @@ describe('SapphireCore.liquidate()', () => {
       );
 
       // Price decreases to $0.45
-      await arc.updatePrice(utils.parseEther('0.45'));
+      const newPrice = utils.parseEther('0.45')
+      await arc.updatePrice(newPrice);
 
+      const vault = await arc.getVault(signers.minter.address)
+
+      // Ensure that vault is undercollateralized
+      expect(vault.collateralAmount.value.mul(newPrice).div(vault.borrowedAmount.value)).to.be.lt(utils.parseEther('1'))
+      
       // The liquidation occurs. The entire collateral is sold at discount and the user has an outstanding debt
 
       const {
