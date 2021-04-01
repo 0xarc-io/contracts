@@ -73,6 +73,17 @@ contract SapphireCoreV1 {
 
     event InterestSetterUpdated(address _newInterestSetter);
 
+    event AssessorUpdated(address _newAssessor);
+
+    event CollateralRatiosUpdated(
+        uint256 _lowCollateralRatio,
+        uint256 _highCollateralRatio
+    );
+
+    event FeeCollectorUpdated(
+        address _feeCollector
+    );
+
     event TokensWithdrawn(
         address _token,
         address _destination,
@@ -83,10 +94,67 @@ contract SapphireCoreV1 {
 
     /* ========== Admin Setters ========== */
 
+    function setInterestRate(
+        uint256 _rate
+    )
+        public
+    {}
+
+    function setOracle(
+        address _newOracle
+    )
+        public
+    {}
+
+    function setCollateralRatios(
+        uint256 _lowCollateralRatio,
+        uint256 _highCollateralRatio
+    )
+        public
+    {}
+
+    function setFees(
+        uint256 _liquidationUserFee,
+        uint256 _liquidationArcRatio
+    )
+        public
+    {}
+
+    function setLimits(
+        uint256 _collateralLimit,
+        uint256 _positionCollateralMinimum
+    )
+        public
+    {}
+
+    function setInterestSetter(
+        address _newInterestSetter
+    )
+        public
+    {}
+
+    function setcollateralRatioAssessor(
+        address _newAssessor
+    )
+        public
+    {}
+
+    function setFeeCollector(
+        address _newFeeCollector
+    )
+        public
+    {}
+
     function setLimits(
         uint256 _totalBorrowLimit,
         uint256 _valutCollateralMinimum,
         uint256 _vaultBorrowMaximum
+    )
+        public
+    {}
+
+    function setPause(
+        bool _value
     )
         public
     {}
