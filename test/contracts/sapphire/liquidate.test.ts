@@ -4,7 +4,6 @@ import 'module-alias/register';
 import { generateContext, ITestContext } from '../context';
 import { setupSapphire } from '../setup';
 import { sapphireFixture } from '../fixtures';
-import ArcDecimal from '@src/utils/ArcDecimal';
 import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import ArcNumber from '@src/utils/ArcNumber';
@@ -12,20 +11,18 @@ import { TestingSigners } from '@arc-types/testing';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import {
   MockSapphireCreditScore,
-  MockSapphireCreditScoreFactory,
   SapphireMapperLinear,
   TestTokenFactory,
 } from '@src/typings';
 import chai, { expect } from 'chai';
 import { solidity } from 'ethereum-waffle';
-import { IERC20Factory } from '@src/typings/IERC20Factory';
 import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
 import { BASE, ONE_YEAR_IN_SECONDS } from '@src/constants';
 import { getScoreProof } from '@src/utils/getScoreProof';
 
 chai.use(solidity);
 
-const LOW_C_RATIO = utils.parseEther('1.5');
+const LOW_C_RATIO = utils.parseEther('1.15');
 const HIGH_C_RATIO = utils.parseEther('1.5');
 const LIQUIDATION_USER_FEE = utils.parseEther('0.1');
 const LIQUIDATION_ARC_RATIO = utils.parseEther('0.1');
