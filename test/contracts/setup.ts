@@ -3,6 +3,7 @@ import { BASE } from '@src/constants';
 import ArcNumber from '@src/utils/ArcNumber';
 import { ITestContext } from './context';
 import { immediatelyUpdateMerkleRoot, setStartingBalances } from '../helpers/testingUtils';
+import _ from 'lodash';
 
 export interface MozartSetupOptions {
   oraclePrice: BigNumberish;
@@ -81,7 +82,9 @@ export async function setupSapphire(
       highCollateralRatio || constants.WeiPerEther,
     );
 
-  await arc.synth().core.setFees(fees.liquidationUserFee || 0, fees.liquidationArcFee || 0);
+  if (!_.isEmpty(fees)) {
+    await arc.synth().core.setFees(fees.liquidationUserFee, fees.liquidationArcFee);
+  }
 
   // Set the merkle root
   if (merkleRoot) {
