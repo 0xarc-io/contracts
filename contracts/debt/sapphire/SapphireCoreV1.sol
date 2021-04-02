@@ -8,8 +8,9 @@ import {SafeMath} from "../../lib/SafeMath.sol";
 import {Decimal} from "../../lib/Decimal.sol";
 
 import {SapphireTypes} from "./SapphireTypes.sol";
+import {SapphireCoreStorage} from "./SapphireCoreStorage.sol";
 
-contract SapphireCoreV1 {
+contract SapphireCoreV1 is SapphireCoreStorage {
 
     /* ========== Libraries ========== */
 
