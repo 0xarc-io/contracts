@@ -33,6 +33,11 @@ contract SapphireCoreStorage {
     address internal feeCollector;
 
     /**
+     * @dev The instance of the oracle that reports prices for the collateral
+     */
+    IOracle internal oracle;
+
+    /**
      * @dev The actual address of the collateral used for this core system.
      */
     address public collateralAsset;
