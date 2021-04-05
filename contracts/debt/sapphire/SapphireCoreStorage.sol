@@ -19,11 +19,6 @@ contract SapphireCoreStorage {
     address internal collateralRatioAssesor;
 
     /**
-    * @dev The strategy for this particular vault instance.
-    */
-    address internal strategyAddress;
-
-    /**
     * @dev The address which collects fees when liquidations occur.
     */
     address internal feeCollector;
