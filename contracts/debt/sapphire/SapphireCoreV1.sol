@@ -47,17 +47,6 @@ contract SapphireCoreV1 {
         uint256 _vaultBorrowMaximum
     );
 
-    event GlobalOperatorSet(
-        address _operator,
-        bool _status
-    );
-
-    event VaultOperatorSet(
-        uint256 _owner,
-        address _operator,
-        bool _status
-    );
-
     event IndexUpdated(
         uint256 _newIndex,
         uint256 _lastUpdateTime
@@ -78,8 +67,6 @@ contract SapphireCoreV1 {
         address _destination,
         uint256 _amount
     );
-
-    event StrategyUpdated(address _newStrategy);
 
     /* ========== Admin Setters ========== */
 
