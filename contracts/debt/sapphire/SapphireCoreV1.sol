@@ -21,19 +21,10 @@ contract SapphireCoreV1 {
 
     /* ========== Types ========== */
 
-    enum Operation {
-        Open,
-        Borrow,
-        Repay,
-        Liquidate,
-        TransferOwnership
-    }
-
     struct OperationParams {
-        uint256 id;
+        address owner;
         uint256 amountOne;
         uint256 amountTwo;
-        address addressOne;
         SapphireTypes.ScoreProof _scoreProof;
     }
 
@@ -56,17 +47,6 @@ contract SapphireCoreV1 {
         uint256 _vaultBorrowMaximum
     );
 
-    event GlobalOperatorSet(
-        address _operator,
-        bool _status
-    );
-
-    event VaultOperatorSet(
-        uint256 _owner,
-        address _operator,
-        bool _status
-    );
-
     event IndexUpdated(
         uint256 _newIndex,
         uint256 _lastUpdateTime
@@ -82,27 +62,79 @@ contract SapphireCoreV1 {
 
     event InterestSetterUpdated(address _newInterestSetter);
 
+    event AssessorUpdated(address _newAssessor);
+
+    event CollateralRatiosUpdated(
+        uint256 _lowCollateralRatio,
+        uint256 _highCollateralRatio
+    );
+
+    event FeeCollectorUpdated(
+        address _feeCollector
+    );
+
     event TokensWithdrawn(
         address _token,
         address _destination,
         uint256 _amount
     );
 
-    event StrategyUpdated(address _newStrategy);
-
     /* ========== Admin Setters ========== */
 
-    function setLimits(
-        uint256 _totalBorrowLimit,
-        uint256 _valutCollateralMinimum,
-        uint256 _vaultBorrowMaximum
+    function setInterestRate(
+        uint256 _rate
+    )
+        public
+    {}
+
+    function setOracle(
+        address _newOracle
+    )
+        public
+    {}
+
+    function setCollateralRatios(
+        uint256 _lowCollateralRatio,
+        uint256 _highCollateralRatio
     )
         public
     {}
 
     function setFees(
-        uint256 _liquidationDiscountFee,
-        uint256 _liquidationArcFee
+        uint256 _liquidationUserFee,
+        uint256 _liquidationArcRatio
+    )
+        public
+    {}
+
+    function setLimits(
+        uint256 _totalBorrowLimit,
+        uint256 _vaultBorrowMinimum,
+        uint256 _vaultBorrowMaximum
+    )
+        public
+    {}
+
+    function setInterestSetter(
+        address _newInterestSetter
+    )
+        public
+    {}
+
+    function setcollateralRatioAssessor(
+        address _newAssessor
+    )
+        public
+    {}
+
+    function setFeeCollector(
+        address _newFeeCollector
+    )
+        public
+    {}
+
+    function setPause(
+        bool _value
     )
         public
     {}
@@ -110,7 +142,6 @@ contract SapphireCoreV1 {
     /* ========== Public Functions ========== */
 
     function executeActions(
-        address owner,
         SapphireTypes.Action[] memory actions,
         SapphireTypes.ScoreProof memory scoreProof
     )
@@ -120,7 +151,6 @@ contract SapphireCoreV1 {
     }
 
     function borrow(
-        address owner,
         uint256 amount,
         SapphireTypes.ScoreProof memory scoreProof
     )
@@ -131,7 +161,6 @@ contract SapphireCoreV1 {
 
 
     function repay(
-        address owner,
         uint256 amount,
         SapphireTypes.ScoreProof memory scoreProof
     )
@@ -141,7 +170,6 @@ contract SapphireCoreV1 {
     }
 
     function deposit(
-        address owner,
         uint256 amount,
         SapphireTypes.ScoreProof memory scoreProof
     )
@@ -151,7 +179,6 @@ contract SapphireCoreV1 {
     }
 
     function withdraw(
-        address owner,
         uint256 amount,
         SapphireTypes.ScoreProof memory scoreProof
     )
@@ -184,7 +211,6 @@ contract SapphireCoreV1 {
     /* ========== Private Functions ========== */
 
     function _borrow(
-        address owner,
         uint256 amount
     )
         private
@@ -194,7 +220,6 @@ contract SapphireCoreV1 {
 
 
     function _repay(
-        address owner,
         uint256 amount
     )
         private
@@ -203,7 +228,6 @@ contract SapphireCoreV1 {
     }
 
     function _deposit(
-        address owner,
         uint256 amount
     )
         private
@@ -212,7 +236,6 @@ contract SapphireCoreV1 {
     }
 
     function _withdraw(
-        address owner,
         uint256 amount
     )
         private
