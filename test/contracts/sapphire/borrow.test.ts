@@ -26,11 +26,12 @@ import { ONE_YEAR_IN_SECONDS } from '@src/constants';
 
 describe('SapphireCore.borrow()', () => {
   const HiGH_C_RATIO = constants.WeiPerEther.mul(2);
-  const LOW_C_RATIO = constants.WeiPerEther.mul(3).div(2);
+  const LOW_C_RATIO = constants.WeiPerEther;
   const PRICE = utils.parseEther('1');
   const COLLATERAL_AMOUNT = utils.parseEther('100');
   const BORROW_AMOUNT = COLLATERAL_AMOUNT.mul(PRICE).div(HiGH_C_RATIO);
-  const MAX_BORROW_AMOUNT = COLLATERAL_AMOUNT.mul(PRICE).div(LOW_C_RATIO);
+  // for credit score equals 500 what is the a half of max credit score
+  const MAX_BORROW_AMOUNT = COLLATERAL_AMOUNT.mul(PRICE).div(LOW_C_RATIO.add(HiGH_C_RATIO).div(2));
 
   let ctx: ITestContext;
   let arc: SapphireTestArc;
@@ -44,7 +45,7 @@ describe('SapphireCore.borrow()', () => {
   async function init(ctx: ITestContext): Promise<void> {
     creditScore1 = {
       account: ctx.signers.scoredMinter.address,
-      amount: BigNumber.from(1000),
+      amount: BigNumber.from(500),
     };
     creditScore2 = {
       account: ctx.signers.interestSetter.address,
@@ -131,7 +132,7 @@ describe('SapphireCore.borrow()', () => {
 
   it('borrows more if a valid score proof is provided', async () => {
     // With the credit score user can borrow more than amount based default collateral ratio
-    const expectedBorrowAmount = BORROW_AMOUNT.add(BORROW_AMOUNT.div(2).mul(3));
+    const expectedBorrowAmount = BORROW_AMOUNT.add(MAX_BORROW_AMOUNT);
     const { borrowedAmount } = await arc.borrow(
       expectedBorrowAmount,
       creditScoreProof,
@@ -146,7 +147,7 @@ describe('SapphireCore.borrow()', () => {
 
   it('borrows more if the credit score increases', async () => {
     // The user's existing credit score is updated and increases letting them borrow more
-    const expectedBorrowAmount = BORROW_AMOUNT.add(BORROW_AMOUNT.div(2).mul(3));
+    const expectedBorrowAmount = BORROW_AMOUNT.add(MAX_BORROW_AMOUNT);
     await arc.borrow(
       expectedBorrowAmount,
       creditScoreProof,
@@ -200,10 +201,9 @@ describe('SapphireCore.borrow()', () => {
     );
 
     // Shouldn't be able to borrow the same as with credit score equals 500
-    const expectedBorrowAmount = BORROW_AMOUNT.add(BORROW_AMOUNT.div(2).mul(3));
     await expect(
       arc.borrow(
-        expectedBorrowAmount,
+        MAX_BORROW_AMOUNT,
         creditScoreProof,
         undefined,
         scoredMinter,
@@ -212,15 +212,14 @@ describe('SapphireCore.borrow()', () => {
   });
 
   it('updates the total borrowed amount correctly', async () => {
-    const borrowedAmount1 = BORROW_AMOUNT.add(BORROW_AMOUNT.div(2).mul(3));
     const { borrowedAmount } = await arc.borrow(
-      borrowedAmount1,
+      MAX_BORROW_AMOUNT,
       creditScoreProof,
       undefined,
       scoredMinter,
     );
-    expect(borrowedAmount).eq(borrowedAmount1);
-    expect(await ctx.contracts.sapphire.core.totalBorrowed()).eq(borrowedAmount1);
+    expect(borrowedAmount).eq(MAX_BORROW_AMOUNT);
+    expect(await ctx.contracts.sapphire.core.totalBorrowed()).eq(MAX_BORROW_AMOUNT);
 
     await arc.deposit(
       COLLATERAL_AMOUNT,
@@ -236,7 +235,7 @@ describe('SapphireCore.borrow()', () => {
       ctx.signers.minter,
     );
     expect(await ctx.contracts.sapphire.core.totalBorrowed()).eq(
-      borrowedAmount1.add(BORROW_AMOUNT),
+      MAX_BORROW_AMOUNT.add(BORROW_AMOUNT),
     );
   });
 
@@ -248,7 +247,7 @@ describe('SapphireCore.borrow()', () => {
   });
 
   it('should not borrow with a score proof if no assessor is set', async () => {
-    // You can't borrow with a credit score if no assesor is set in the Core
+    // You can't borrow with a credit score if no assessor is set in the Core
     await arc.core().setAssessor(constants.AddressZero);
     await expect(
       arc.borrow(BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter),
@@ -277,15 +276,15 @@ describe('SapphireCore.borrow()', () => {
 
   it('should not borrow more if the price decreases', async () => {
     await arc.borrow(
-      BORROW_AMOUNT.div(2),
+      MAX_BORROW_AMOUNT.div(2),
       creditScoreProof,
       undefined,
       scoredMinter,
     );
-    await ctx.contracts.oracle.setPrice({ value: utils.parseEther('0.1') });
+    await ctx.contracts.oracle.setPrice({ value: utils.parseEther('0.99') });
     await expect(
       arc.borrow(
-        BORROW_AMOUNT.div(2),
+        MAX_BORROW_AMOUNT.div(2),
         creditScoreProof,
         undefined,
         scoredMinter,
