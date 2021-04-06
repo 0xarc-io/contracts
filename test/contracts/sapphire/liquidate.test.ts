@@ -289,7 +289,7 @@ describe('SapphireCore.liquidate()', () => {
     await setupBaseVault(COLLATERAL_AMOUNT, maxBorrowAmount);
 
     // Test that a liquidation will occur if the user accumulates enough debt via interest
-    await arc.core().setInterestRate(constants.WeiPerEther);
+    await arc.core().setInterestRate(utils.parseUnits('1', 'gwei'));
     
     await arc.updateTime(60 * 60 * 24);
 
@@ -324,9 +324,10 @@ describe('SapphireCore.liquidate()', () => {
     await setupBaseVault(COLLATERAL_AMOUNT, maxBorrowAmount);
 
     // Test that a liquidation will occur if the user accumulates enough debt via interest
+    await arc.core().setInterestRate('1000000');
+
     await arc.updateTime(ONE_YEAR_IN_SECONDS);
 
-    await arc.core().updateIndex();
 
     const preStablexBalance = await arc.synthetic().balanceOf(signers.liquidator.address);
     const preCollateralBalance = await arc.collateral().balanceOf(signers.liquidator.address);
