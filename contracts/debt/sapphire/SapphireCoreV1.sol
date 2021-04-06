@@ -145,9 +145,9 @@ contract SapphireCoreV1 {
      *      as the following (assuming you want 5% APY):
      *
      *      r^N = 1.05
-     *      since N = 364 * 24 * 60 * 60 (number of seconds in a year)
-     *      r = 1.000000000158153903837946258002097
-     *      rate = 1000000000158153903 (18 decimal places solidity value)
+     *      since N = 365 * 24 * 60 * 60 (number of seconds in a year)
+     *      r = 1.000000001547125957863212...
+     *      rate = 1000000001547125957 (18 decimal places solidity value)
      *
      * @notice Can only be called by the interest setter of the protocol and the maximum
      *         rate settable by the admin is 99% (21820606489)
