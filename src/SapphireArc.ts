@@ -49,7 +49,6 @@ export class SapphireArc {
 
   async executeActions(
     actions: Action[],
-    owner: string,
     creditScoreProof?: CreditScoreProof,
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
@@ -61,7 +60,6 @@ export class SapphireArc {
   /* ========== Borrow functions ==========*/
 
   async borrow(
-    owner: string,
     amount: BigNumber,
     creditScoreProof?: CreditScoreProof,
     synthName: string = this.getSynthNames()[0],
@@ -72,7 +70,6 @@ export class SapphireArc {
   }
 
   async repay(
-    owner: string,
     amount: BigNumber,
     creditScoreProof?: CreditScoreProof,
     synthName: string = this.getSynthNames()[0],
@@ -85,7 +82,6 @@ export class SapphireArc {
   /* ========== Collateral functions ========== */
 
   async deposit(
-    owner: string,
     amount: BigNumber,
     creditScoreProof?: CreditScoreProof,
     synthName: string = this.getSynthNames()[0],
@@ -96,7 +92,6 @@ export class SapphireArc {
   }
 
   async withdraw(
-    owner: string,
     amount: BigNumber,
     creditScoreProof?: CreditScoreProof,
     synthName: string = this.getSynthNames()[0],

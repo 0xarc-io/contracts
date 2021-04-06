@@ -2,7 +2,16 @@
 
 pragma solidity ^0.5.16;
 
+import {IOracle} from "../../oracle/IOracle.sol";
+
 contract SapphireCoreStorage {
+    /**
+     * @notice Determines whether the contract is paused or not
+     */
+    bool public paused;
+
+    IOracle internal oracle;
+    
     /**
     * @dev The high/default collateral ratio for an untrusted borrower.
     */
@@ -17,11 +26,6 @@ contract SapphireCoreStorage {
     * @dev The assesor that will determine the collateral-ratio.
     */
     address internal collateralRatioAssesor;
-
-    /**
-    * @dev The strategy for this particular vault instance.
-    */
-    address internal strategyAddress;
 
     /**
     * @dev The address which collects fees when liquidations occur.
