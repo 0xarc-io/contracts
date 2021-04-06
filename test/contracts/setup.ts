@@ -83,7 +83,7 @@ export async function setupSapphire(
     );
 
   if (!_.isEmpty(fees)) {
-    await arc.synth().core.setFees(fees.liquidationUserFee, fees.liquidationArcFee);
+    await arc.synth().core.setFees(fees.liquidationUserFee || '0', fees.liquidationArcFee || '0');
   }
 
   // Set the merkle root
