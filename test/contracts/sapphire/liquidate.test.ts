@@ -5,7 +5,7 @@ import { generateContext, ITestContext } from '../context';
 import { setupSapphire } from '../setup';
 import { sapphireFixture } from '../fixtures';
 import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
-import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
+import { addSnapshotBeforeRestoreAfterEach, immediatelyUpdateMerkleRoot } from '@test/helpers/testingUtils';
 import ArcNumber from '@src/utils/ArcNumber';
 import { TestingSigners } from '@arc-types/testing';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
@@ -15,6 +15,7 @@ import { solidity } from 'ethereum-waffle';
 import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
 import { BASE, ONE_YEAR_IN_SECONDS } from '@src/constants';
 import { getScoreProof } from '@src/utils/getScoreProof';
+import { sign } from 'crypto';
 
 chai.use(solidity);
 
@@ -235,7 +236,7 @@ describe('SapphireCore.liquidate()', () => {
       amount: BigNumber.from(50),
     };
     const newCreditTree = new CreditScoreTree([newMinterCreditScore, liquidatorCreditScore]);
-    await creditScoreContract.updateMerkleRoot(newCreditTree.getHexRoot());
+    await immediatelyUpdateMerkleRoot(creditScoreContract, newCreditTree.getHexRoot());
 
     const {
       stablexAmt: preStablexBalance,
@@ -399,7 +400,7 @@ describe('SapphireCore.liquidate()', () => {
       .mul(newPrice)
       .div(utils.parseEther('1.6'));
 
-    await arc.borrow(signers.minter.address, maxBorrowAmount);
+    await arc.borrow(maxBorrowAmount, getScoreProof(minterCreditScore, creditScoreTree), undefined, signers.minter);
 
     // Drop the price to $0.70 to bring the c-ratio down to 150% again
     newPrice = utils.parseEther('0.7');
@@ -629,9 +630,10 @@ describe('SapphireCore.liquidate()', () => {
       // User maxes out his borrow amount.
       // $518.867924528302 is the max borrow amount ($877.19) - 500
       await arc.borrow(
-        signers.minter.address,
         utils.parseEther('518.867924528302'),
         getScoreProof(minterCreditScore, creditScoreTree),
+        undefined,
+        signers.minter,
       );
 
       // Price decreases to $1.16. The vault's c-ratio becomes 132.24%
@@ -758,16 +760,18 @@ describe('SapphireCore.liquidate()', () => {
 
       // User removes 100 collateral
       await arc.withdraw(
-        signers.minter.address,
         ArcNumber.new(100),
         getScoreProof(minterCreditScore, creditScoreTree),
+        undefined,
+        signers.minter
       );
 
       // User repays $150
       await arc.repay(
-        signers.minter.address,
         ArcNumber.new(150),
         getScoreProof(minterCreditScore, creditScoreTree),
+        undefined,
+        signers.
       );
 
       // The collateral price drops to $0.54
