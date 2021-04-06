@@ -1,5 +1,5 @@
 import { SapphireTestArc } from '@src/SapphireTestArc';
-import { BigNumber, utils } from 'ethers';
+import { BigNumber, constants, utils } from 'ethers';
 import 'module-alias/register';
 import { generateContext, ITestContext } from '../context';
 import { setupSapphire } from '../setup';
@@ -289,9 +289,9 @@ describe('SapphireCore.liquidate()', () => {
     await setupBaseVault(COLLATERAL_AMOUNT, maxBorrowAmount);
 
     // Test that a liquidation will occur if the user accumulates enough debt via interest
+    await arc.core().setInterestRate(constants.WeiPerEther);
+    
     await arc.updateTime(60 * 60 * 24);
-
-    await arc.core().updateIndex();
 
     const preStablexBalance = await arc.synthetic().balanceOf(signers.liquidator.address);
     const preCollateralBalance = await arc.collateral().balanceOf(signers.liquidator.address);
