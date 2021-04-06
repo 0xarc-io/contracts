@@ -25,11 +25,12 @@ import { ONE_YEAR_IN_SECONDS } from '@src/constants';
  */
 
 describe('SapphireCore.borrow()', () => {
-  const COLLATERAL_AMOUNT = utils.parseEther('100');
-  const BORROW_AMOUNT = utils.parseEther('50');
-  const PRICE = utils.parseEther('1');
   const HiGH_C_RATIO = constants.WeiPerEther.mul(2);
   const LOW_C_RATIO = constants.WeiPerEther.mul(3).div(2);
+  const PRICE = utils.parseEther('1');
+  const COLLATERAL_AMOUNT = utils.parseEther('100');
+  const BORROW_AMOUNT = COLLATERAL_AMOUNT.mul(PRICE).div(HiGH_C_RATIO);
+  const MAX_BORROW_AMOUNT = COLLATERAL_AMOUNT.mul(PRICE).div(LOW_C_RATIO);
 
   let ctx: ITestContext;
   let arc: SapphireTestArc;
@@ -56,20 +57,18 @@ describe('SapphireCore.borrow()', () => {
       merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
     };
     await setupSapphire(ctx, {
-      collateralRatio: HiGH_C_RATIO,
+      highCollateralRatio: HiGH_C_RATIO,
+      lowCollateralRatio: LOW_C_RATIO,
       price: PRICE,
-      // lowCollateralRatio: LOW_C_RATIO,
       merkleRoot: creditScoreTree.getHexRoot(),
     });
     await arc.deposit(
-      ctx.signers.scoredMinter.address,
       COLLATERAL_AMOUNT,
       creditScoreProof,
       undefined,
       ctx.signers.scoredMinter,
     );
     await arc.deposit(
-      ctx.signers.minter.address,
       COLLATERAL_AMOUNT,
       undefined,
       undefined,
@@ -94,7 +93,6 @@ describe('SapphireCore.borrow()', () => {
     expect(collateralDecimals).not.eq(18);
 
     await arc.borrow(
-      scoredMinter.address,
       BORROW_AMOUNT,
       creditScoreProof,
       undefined,
@@ -106,27 +104,26 @@ describe('SapphireCore.borrow()', () => {
   });
 
   it('borrows with exact c-ratio', async () => {
-    await arc.borrow(minter.address, BORROW_AMOUNT, undefined, undefined, minter);
+    await arc.borrow(BORROW_AMOUNT, undefined, undefined, minter);
     const { borrowedAmount } = await arc.getVault(minter.address);
     expect(borrowedAmount).eq(BORROW_AMOUNT);
   });
 
   it('borrows more if more collateral is provided', async () => {
-    await arc.borrow(minter.address, BORROW_AMOUNT, undefined, undefined, minter);
+    await arc.borrow(BORROW_AMOUNT, undefined, undefined, minter);
     const { borrowedAmount } = await arc.getVault(minter.address);
 
     expect(borrowedAmount).eq(BORROW_AMOUNT);
-    await expect(arc.borrow(minter.address, BORROW_AMOUNT, undefined, undefined, minter)).to.be
+    await expect(arc.borrow(BORROW_AMOUNT, undefined, undefined, minter)).to.be
       .reverted;
 
     await arc.deposit(
-      ctx.signers.minter.address,
       COLLATERAL_AMOUNT,
       undefined,
       undefined,
       ctx.signers.minter,
     );
-    await arc.borrow(minter.address, BORROW_AMOUNT, undefined, undefined, minter);
+    await arc.borrow(BORROW_AMOUNT, undefined, undefined, minter);
     const { borrowedAmount: updatedBorrowedAmount } = await arc.getVault(minter.address);
 
     expect(updatedBorrowedAmount).eq(BORROW_AMOUNT.mul(2));
@@ -136,7 +133,6 @@ describe('SapphireCore.borrow()', () => {
     // With the credit score user can borrow more than amount based default collateral ratio
     const expectedBorrowAmount = BORROW_AMOUNT.add(BORROW_AMOUNT.div(2).mul(3));
     const { borrowedAmount } = await arc.borrow(
-      scoredMinter.address,
       expectedBorrowAmount,
       creditScoreProof,
       undefined,
@@ -152,7 +148,6 @@ describe('SapphireCore.borrow()', () => {
     // The user's existing credit score is updated and increases letting them borrow more
     const expectedBorrowAmount = BORROW_AMOUNT.add(BORROW_AMOUNT.div(2).mul(3));
     await arc.borrow(
-      scoredMinter.address,
       expectedBorrowAmount,
       creditScoreProof,
       undefined,
@@ -160,7 +155,7 @@ describe('SapphireCore.borrow()', () => {
     );
 
     await expect(
-      arc.borrow(scoredMinter.address, constants.One, creditScoreProof, undefined, scoredMinter),
+      arc.borrow(constants.One, creditScoreProof, undefined, scoredMinter),
       'User should not be able to borrow more',
     ).to.be.reverted;
 
@@ -176,7 +171,6 @@ describe('SapphireCore.borrow()', () => {
     );
 
     await arc.borrow(
-      scoredMinter.address,
       constants.One,
       {
         account: creditScore.account,
@@ -209,7 +203,6 @@ describe('SapphireCore.borrow()', () => {
     const expectedBorrowAmount = BORROW_AMOUNT.add(BORROW_AMOUNT.div(2).mul(3));
     await expect(
       arc.borrow(
-        scoredMinter.address,
         expectedBorrowAmount,
         creditScoreProof,
         undefined,
@@ -221,7 +214,6 @@ describe('SapphireCore.borrow()', () => {
   it('updates the total borrowed amount correctly', async () => {
     const borrowedAmount1 = BORROW_AMOUNT.add(BORROW_AMOUNT.div(2).mul(3));
     const { borrowedAmount } = await arc.borrow(
-      scoredMinter.address,
       borrowedAmount1,
       creditScoreProof,
       undefined,
@@ -231,7 +223,6 @@ describe('SapphireCore.borrow()', () => {
     expect(await ctx.contracts.sapphire.core.totalBorrowed()).eq(borrowedAmount1);
 
     await arc.deposit(
-      ctx.signers.minter.address,
       COLLATERAL_AMOUNT,
       undefined,
       undefined,
@@ -239,7 +230,6 @@ describe('SapphireCore.borrow()', () => {
     );
 
     await arc.borrow(
-      ctx.signers.minter.address,
       BORROW_AMOUNT,
       undefined,
       undefined,
@@ -253,7 +243,7 @@ describe('SapphireCore.borrow()', () => {
   it(`should not borrow if the price from the oracle is 0`, async () => {
     await ctx.contracts.oracle.setPrice({ value: 0 });
     await expect(
-      arc.borrow(scoredMinter.address, BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter),
+      arc.borrow(BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter),
     ).to.be.reverted;
   });
 
@@ -261,40 +251,32 @@ describe('SapphireCore.borrow()', () => {
     // You can't borrow with a credit score if no assesor is set in the Core
     await arc.core().setAssessor(constants.AddressZero);
     await expect(
-      arc.borrow(scoredMinter.address, BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter),
+      arc.borrow(BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter),
     ).to.be.reverted;
   });
 
   it('should not borrow without a credit proof if a score exists on-chain', async () => {
     await arc.borrow(
-      scoredMinter.address,
       constants.One,
       creditScoreProof,
       undefined,
       scoredMinter,
     );
     await expect(
-      arc.borrow(scoredMinter.address, constants.One, undefined, undefined, scoredMinter),
+      arc.borrow(constants.One, undefined, undefined, scoredMinter),
     ).to.be.reverted;
   });
 
   it('should not borrow more if the c-ratio is at the minimum', async () => {
-    await arc.borrow(minter.address, BORROW_AMOUNT, undefined, undefined, minter);
+    await arc.borrow(BORROW_AMOUNT, undefined, undefined, minter);
     const { borrowedAmount } = await arc.getVault(minter.address);
     expect(borrowedAmount).eq(BORROW_AMOUNT);
-    await expect(arc.borrow(minter.address, constants.One, undefined, undefined, minter)).to.be
+    await expect(arc.borrow(constants.One, undefined, undefined, minter)).to.be
       .reverted;
-  });
-
-  it("should not borrow from someone else's account", async () => {
-    await expect(
-      arc.borrow(ctx.signers.minter.address, BORROW_AMOUNT, undefined, undefined, scoredMinter),
-    ).to.be.reverted;
   });
 
   it('should not borrow more if the price decreases', async () => {
     await arc.borrow(
-      scoredMinter.address,
       BORROW_AMOUNT.div(2),
       creditScoreProof,
       undefined,
@@ -303,7 +285,6 @@ describe('SapphireCore.borrow()', () => {
     await ctx.contracts.oracle.setPrice({ value: utils.parseEther('0.1') });
     await expect(
       arc.borrow(
-        scoredMinter.address,
         BORROW_AMOUNT.div(2),
         creditScoreProof,
         undefined,
@@ -316,7 +297,7 @@ describe('SapphireCore.borrow()', () => {
     const secondBorrowAmount = BigNumber.from(10);
     const firstBorrowAmount = BORROW_AMOUNT.sub(secondBorrowAmount);
 
-    await arc.borrow(scoredMinter.address, firstBorrowAmount, undefined, undefined, scoredMinter);
+    await arc.borrow(firstBorrowAmount, undefined, undefined, scoredMinter);
     const { borrowedAmount } = await arc.getVault(scoredMinter.address);
     expect(borrowedAmount).eq(firstBorrowAmount);
 
@@ -325,7 +306,7 @@ describe('SapphireCore.borrow()', () => {
     await arc.core().setCurrentTimestamp(currentTimeStamp.add(ONE_YEAR_IN_SECONDS));
 
     await expect(
-      arc.borrow(scoredMinter.address, BORROW_AMOUNT, undefined, undefined, scoredMinter),
+      arc.borrow(BORROW_AMOUNT, undefined, undefined, scoredMinter),
     ).to.be.reverted;
   });
 
@@ -333,7 +314,6 @@ describe('SapphireCore.borrow()', () => {
     await arc.core().setLimits(0, BORROW_AMOUNT, 0);
     await expect(
       arc.borrow(
-        scoredMinter.address,
         BORROW_AMOUNT.sub(1),
         creditScoreProof,
         undefined,
@@ -345,7 +325,6 @@ describe('SapphireCore.borrow()', () => {
   it('should not borrow more than the maximum amount', async () => {
     await arc.core().setLimits(0, 0, BORROW_AMOUNT);
     await arc.borrow(
-      scoredMinter.address,
       BORROW_AMOUNT.div(2),
       creditScoreProof,
       undefined,
@@ -353,7 +332,6 @@ describe('SapphireCore.borrow()', () => {
     );
     await expect(
       arc.borrow(
-        scoredMinter.address,
         BORROW_AMOUNT.div(2).add(1),
         creditScoreProof,
         undefined,
@@ -365,14 +343,14 @@ describe('SapphireCore.borrow()', () => {
   it('should not borrow if contract is paused', async () => {
     await arc.core().setPause(true);
     await expect(
-      arc.borrow(scoredMinter.address, BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter),
+      arc.borrow(BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter),
     ).to.be.reverted;
   });
 
   it('should not borrow if oracle is not set', async () => {
     await arc.core().setOracle(constants.AddressZero);
     await expect(
-      arc.borrow(scoredMinter.address, BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter),
+      arc.borrow(BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter),
     ).to.be.reverted;
   });
 });
