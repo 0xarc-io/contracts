@@ -39,6 +39,7 @@ export class SapphireArc {
 
   async liquidate(
     owner: string,
+    creditScoreProof?: CreditScoreProof,
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},

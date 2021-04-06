@@ -3,6 +3,7 @@ import { BASE } from '@src/constants';
 import ArcNumber from '@src/utils/ArcNumber';
 import { ITestContext } from './context';
 import { immediatelyUpdateMerkleRoot, setStartingBalances } from '../helpers/testingUtils';
+import _ from 'lodash';
 
 export interface MozartSetupOptions {
   oraclePrice: BigNumberish;
@@ -20,6 +21,10 @@ export interface SapphireSetupOptions {
   merkleRoot?: string;
   lowCollateralRatio?: BigNumberish;
   highCollateralRatio?: BigNumberish;
+  fees?: {
+    liquidationUserFee?: BigNumberish;
+    liquidationArcFee?: BigNumberish;
+  };
 }
 
 export async function setupMozart(ctx: ITestContext, options: MozartSetupOptions) {
@@ -60,7 +65,12 @@ export async function setupMozart(ctx: ITestContext, options: MozartSetupOptions
  */
 export async function setupSapphire(
   ctx: ITestContext,
-  { merkleRoot, lowCollateralRatio, highCollateralRatio }: SapphireSetupOptions,
+  {
+    merkleRoot,
+    lowCollateralRatio,
+    highCollateralRatio,
+    fees,
+  }: SapphireSetupOptions,
 ) {
   const arc = ctx.sdks.sapphire;
 
@@ -71,6 +81,10 @@ export async function setupSapphire(
       lowCollateralRatio || constants.WeiPerEther,
       highCollateralRatio || constants.WeiPerEther,
     );
+
+  if (!_.isEmpty(fees)) {
+    await arc.synth().core.setFees(fees.liquidationUserFee || '0', fees.liquidationArcFee || '0');
+  }
 
   // Set the merkle root
   if (merkleRoot) {

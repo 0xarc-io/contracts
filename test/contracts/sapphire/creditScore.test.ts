@@ -2,10 +2,7 @@ import { CreditScore } from '@arc-types/sapphireCore';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 import { MockSapphireCreditScore } from '@src/typings';
-import {
-  addSnapshotBeforeRestoreAfterEach,
-  advanceEpoch,
-} from '@test/helpers/testingUtils';
+import { addSnapshotBeforeRestoreAfterEach, advanceEpoch } from '@test/helpers/testingUtils';
 import chai, { expect } from 'chai';
 import { solidity } from 'ethereum-waffle';
 import { BigNumber } from 'ethers';
@@ -73,9 +70,9 @@ describe('SapphireCreditScore', () => {
     it('revert if trying to pause as an unauthorised user', async () => {
       expect(await creditScoreContract.merkleRootUpdater()).not.eq(unauthorised.address);
       expect(await creditScoreContract.owner()).not.eq(unauthorised.address);
-      await expect(
-        creditScoreContract.connect(unauthorised).setPause(false),
-      ).to.be.revertedWith('Ownable: caller is not the owner');
+      await expect(creditScoreContract.connect(unauthorised).setPause(false)).to.be.revertedWith(
+        'Ownable: caller is not the owner',
+      );
     });
 
     it('revert if set pause as merkle root updater', async () => {
@@ -180,7 +177,7 @@ describe('SapphireCreditScore', () => {
       const maliciousTxnTimestamp = await advanceEpoch(creditScoreContract);
       const maliciousUpdateTxn = creditScoreContract
         .connect(merkleRootUpdater)
-        .updateMerkleRoot(maliciousRoot);      
+        .updateMerkleRoot(maliciousRoot);
 
       await expect(maliciousUpdateTxn)
         .to.emit(creditScoreContract, 'MerkleRootUpdated')

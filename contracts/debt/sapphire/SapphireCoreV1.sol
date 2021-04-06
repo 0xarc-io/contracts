@@ -38,7 +38,7 @@ contract SapphireCoreV1 {
 
     event LiquidationFeesUpdated(
         Decimal.D256 _liquidationUserFee,
-        Decimal.D256 _liquidationArcRatio
+        Decimal.D256 _liquidationArcFee
     );
 
     event LimitsUpdated(
