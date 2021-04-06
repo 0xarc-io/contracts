@@ -759,13 +759,13 @@ describe('SapphireCore.liquidate()', () => {
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.minter)
-      ).to.be.revertedWith('SapphireCoreV1: vault is under collateralized');
+      ).to.be.revertedWith('SapphireCoreV1: the vault is undercollateralized');
       await expect(arc.withdraw(
         constants.One,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.minter)
-      ).to.be.revertedWith('SapphireCoreV1: vault is under collateralized');
+      ).to.be.revertedWith('SapphireCoreV1: the vault is undercollateralized');
 
       await arc.repay(
         outstandingDebt,
