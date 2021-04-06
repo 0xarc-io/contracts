@@ -158,7 +158,7 @@ describe('SapphireCore.borrow()', () => {
     await expect(
       arc.borrow(constants.One, creditScoreProof, undefined, scoredMinter),
       'User should not be able to borrow more',
-    ).to.be.reverted;
+    ).to.be.revertedWith('SapphireCoreV1: the vault is undercollateralized');
 
     // Prepare the new root hash with the increased credit score for minter
     const creditScore = {
