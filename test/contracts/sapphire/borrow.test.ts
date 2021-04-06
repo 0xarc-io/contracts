@@ -28,7 +28,7 @@ describe('SapphireCore.borrow()', () => {
   const COLLATERAL_AMOUNT = utils.parseEther('100');
   const BORROW_AMOUNT = utils.parseEther('50');
   const PRICE = utils.parseEther('1');
-  const HiGH_C_RATIO = constants.WeiPerEther.mul(2)
+  const HiGH_C_RATIO = constants.WeiPerEther.mul(2);
   const LOW_C_RATIO = constants.WeiPerEther.mul(3).div(2);
 
   let ctx: ITestContext;
@@ -116,9 +116,8 @@ describe('SapphireCore.borrow()', () => {
     const { borrowedAmount } = await arc.getVault(minter.address);
 
     expect(borrowedAmount).eq(BORROW_AMOUNT);
-    await expect(
-      arc.borrow(minter.address, BORROW_AMOUNT, undefined, undefined, minter),
-    ).to.be.reverted;
+    await expect(arc.borrow(minter.address, BORROW_AMOUNT, undefined, undefined, minter)).to.be
+      .reverted;
 
     await arc.deposit(
       ctx.signers.minter.address,
@@ -283,9 +282,8 @@ describe('SapphireCore.borrow()', () => {
     await arc.borrow(minter.address, BORROW_AMOUNT, undefined, undefined, minter);
     const { borrowedAmount } = await arc.getVault(minter.address);
     expect(borrowedAmount).eq(BORROW_AMOUNT);
-    await expect(
-      arc.borrow(minter.address, constants.One, undefined, undefined, minter),
-    ).to.be.reverted;
+    await expect(arc.borrow(minter.address, constants.One, undefined, undefined, minter)).to.be
+      .reverted;
   });
 
   it("should not borrow from someone else's account", async () => {
@@ -332,7 +330,7 @@ describe('SapphireCore.borrow()', () => {
   });
 
   it('should not borrow less than the minimum borrow limit', async () => {
-    await arc.core().setLimits(BORROW_AMOUNT, 0, 0);
+    await arc.core().setLimits(0, BORROW_AMOUNT, 0);
     await expect(
       arc.borrow(
         scoredMinter.address,
@@ -345,7 +343,7 @@ describe('SapphireCore.borrow()', () => {
   });
 
   it('should not borrow more than the maximum amount', async () => {
-    await arc.core().setLimits(0, BORROW_AMOUNT, 0);
+    await arc.core().setLimits(0, 0, BORROW_AMOUNT);
     await arc.borrow(
       scoredMinter.address,
       BORROW_AMOUNT.div(2),
