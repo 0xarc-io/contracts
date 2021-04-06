@@ -276,10 +276,16 @@ describe('SapphireCore.borrow()', () => {
       undefined,
       scoredMinter,
     );
+    await arc.borrow(
+      MAX_BORROW_AMOUNT.div(4),
+      creditScoreProof,
+      undefined,
+      scoredMinter,
+    );
     await ctx.contracts.oracle.setPrice({ value: utils.parseEther('0.99') });
     await expect(
       arc.borrow(
-        MAX_BORROW_AMOUNT.div(2),
+        MAX_BORROW_AMOUNT.div(4),
         creditScoreProof,
         undefined,
         scoredMinter,
