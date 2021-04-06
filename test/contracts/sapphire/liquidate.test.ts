@@ -752,6 +752,20 @@ describe('SapphireCore.liquidate()', () => {
       expect(postLiquidationVault.collateralAmount).to.eq(0);
 
       expect(postLiquidationVault.borrowedAmount).to.eq(utils.parseEther('72.5'));
+
+      // User shouldn't be able borrow and withdraw when vault is under collateralized and borrow amount is 0
+      await expect(arc.borrow(
+        constants.One,
+        getScoreProof(minterCreditScore, creditScoreTree),
+        undefined,
+        signers.minter)
+      ).to.be.revertedWith('SapphireCoreV1: vault is under collateralized');
+      await expect(arc.withdraw(
+        constants.One,
+        getScoreProof(minterCreditScore, creditScoreTree),
+        undefined,
+        signers.minter)
+      ).to.be.revertedWith('SapphireCoreV1: vault is under collateralized');
     });
 
     it('Scenario 3: the user changes their vault, then their credit score decreases and liquidation occurs', async () => {
