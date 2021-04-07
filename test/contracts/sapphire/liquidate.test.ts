@@ -887,6 +887,8 @@ describe.skip('SapphireCore.liquidate()', () => {
       await arc.borrow(
         utils.parseEther('249.063670411985'),
         getScoreProof(minterCreditScore, creditScoreTree),
+        undefined,
+        signers.minter,
       );
 
       // Price drops to $0.91. Vault is in danger but not liquidated yet
