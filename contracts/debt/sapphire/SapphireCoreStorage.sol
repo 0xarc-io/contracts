@@ -13,17 +13,17 @@ contract SapphireCoreStorage {
     /**
     * @dev The high/default collateral ratio for an untrusted borrower.
     */
-    uint256 internal highCollateralRatio;
+    uint256 public highCollateralRatio;
 
     /**
     * @dev The lowest collateral ratio for an untrusted borrower.
     */
-    uint256 internal lowCollateralRatio;
+    uint256 public lowCollateralRatio;
 
     /**
     * @dev The assesor that will determine the collateral-ratio.
     */
-    address internal collateralRatioAssesor;
+    address public collateralRatioAssessor;
 
     /**
     * @dev The address which collects fees when liquidations occur.
