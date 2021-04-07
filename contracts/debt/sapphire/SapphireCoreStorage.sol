@@ -9,8 +9,6 @@ contract SapphireCoreStorage {
      * @notice Determines whether the contract is paused or not
      */
     bool public paused;
-
-    IOracle internal oracle;
     
     /**
     * @dev The high/default collateral ratio for an untrusted borrower.
@@ -31,6 +29,11 @@ contract SapphireCoreStorage {
     * @dev The address which collects fees when liquidations occur.
     */
     address internal feeCollector;
+
+    /**
+     * @dev The instance of the oracle that reports prices for the collateral
+     */
+    IOracle internal oracle;
 
     /**
      * @dev The actual address of the collateral used for this core system.
