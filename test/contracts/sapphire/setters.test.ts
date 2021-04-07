@@ -79,11 +79,25 @@ describe('SapphireCore.setters', () => {
   });
 
   describe('#setFeeCollector', () => {
-    it('reverts if called by non-owner');
-    it('reverts if set to address 0');
+    it('reverts if called by non-owner', async () => {
+      await expect(
+        sapphireCore.connect(ctx.signers.unauthorised).setFeeCollector(randomAddress),
+      ).to.be.revertedWith('Ownable: caller is not the owner');
+    });
+
+    it('reverts if set to address 0', async () => {
+      await expect(sapphireCore.setFeeCollector(constants.AddressZero)).to.be.revertedWith(
+        'SapphireCoreV1: fee collector is required',
+      );
+    });
+
     it('reverts if set to the same fee collector');
-    it('sets the fee collector address');
-    it('emits the FeeCollectorUpdated event');
+
+    it('sets the fee collector address', async () => {
+      await expect(sapphireCore.setFeeCollector(randomAddress))
+        .to.emit(sapphireCore, 'CollateralRatiosUpdated')
+        .withArgs(randomAddress);
+    });
   });
 
   describe('#setPause', () => {
