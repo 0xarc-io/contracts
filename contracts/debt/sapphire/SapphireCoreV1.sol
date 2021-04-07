@@ -144,7 +144,7 @@ contract SapphireCoreV1 is SapphireCoreStorage {
         public
     {}
 
-    function setcollateralRatioAssessor(
+    function setCollateralRatioAssessor(
         address _newAssessor
     )
         public

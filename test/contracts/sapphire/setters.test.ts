@@ -1,6 +1,6 @@
 import { SapphireCoreV1 } from '@src/typings';
 import { expect } from 'chai';
-import { constants } from 'ethers';
+import { constants, Wallet } from 'ethers';
 import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
@@ -9,8 +9,11 @@ describe('SapphireCore.setters', () => {
   let ctx: ITestContext;
   let sapphireCore: SapphireCoreV1;
 
+  let randomAddress: string;
+
   before(async () => {
     ctx = await generateContext(sapphireFixture, (ctx) => setupSapphire(ctx, {}));
+    randomAddress = Wallet.createRandom().address;
   });
 
   describe('#setCollateralRatios', () => {
@@ -45,8 +48,7 @@ describe('SapphireCore.setters', () => {
       expect(await sapphireCore.highCollateralRatio()).not.eq(highRatio);
       expect(await sapphireCore.lowCollateralRatio()).not.eq(lowRatio);
 
-      const transactionPromise = sapphireCore.setCollateralRatios(lowRatio, highRatio);
-      await expect(transactionPromise)
+      await expect(sapphireCore.setCollateralRatios(lowRatio, highRatio))
         .to.emit(sapphireCore, 'CollateralRatiosUpdated')
         .withArgs(lowRatio, highRatio);
 
@@ -55,11 +57,25 @@ describe('SapphireCore.setters', () => {
     });
   });
 
-  describe('#setcollateralRatioAssessor', () => {
-    it('reverts if called by non-owner');
-    it('reverts if set to address 0');
-    it('sets the assessor address');
-    it('emits the AssessorUpdated event');
+  describe('#setCollateralRatioAssessor', () => {
+    it('reverts if called by non-owner', async () => {
+      await expect(
+        sapphireCore.connect(ctx.signers.unauthorised).setCollateralRatioAssessor(randomAddress),
+      ).to.be.revertedWith('Ownable: caller is not the owner');
+    });
+
+    it('reverts if set to address 0', async () => {
+      await expect(
+        sapphireCore.setCollateralRatioAssessor(constants.AddressZero),
+      ).to.be.revertedWith('SapphireCoreV1: assessor is required');
+    });
+
+    it('sets the assessor address', async () => {
+      await expect(sapphireCore.setCollateralRatioAssessor(randomAddress))
+        .to.emit(sapphireCore, 'CollateralRatiosUpdated')
+        .withArgs(randomAddress);
+      expect(await sapphireCore.collateralRatioAssessor()).eq(randomAddress);
+    });
   });
 
   describe('#setFeeCollector', () => {
