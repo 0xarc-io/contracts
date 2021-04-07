@@ -125,24 +125,52 @@ describe('SapphireCore.setters', () => {
   });
 
   describe('#setOracle', () => {
-    it('reverts if called by non-owner');
-    it('reverts if set to the same oracle');
-    it('reverts if set to address 0');
-    it('sets the oracle');
-    it('emits the OracleUpdated event');
+    it('reverts if called by non-owner', async () => {
+      await expect(
+        sapphireCore.connect(ctx.signers.unauthorised).setOracle(randomAddress),
+      ).to.be.revertedWith('Ownable: caller is not the owner');
+    });
+
+    it('reverts if set to address 0', async () => {
+      await expect(sapphireCore.setOracle(constants.AddressZero)).to.be.revertedWith(
+        'SapphireCoreV1: oracle is required',
+      );
+    });
+
+    it('sets the oracle', async () => {
+      await expect(sapphireCore.setFeeCollector(randomAddress))
+        .to.emit(sapphireCore, 'OracleUpdated')
+        .withArgs(randomAddress);
+    });
   });
 
   describe('#setInterestSetter', () => {
-    it('reverts if called by non-owner');
-    it('reverts if set to he same interest setter');
-    it('reverts if set to the address 0');
-    it('sets the interest setter');
-    it('emits the InterestSetterUpdated event');
+    it('reverts if called by non-owner', async () => {
+      await expect(
+        sapphireCore.connect(ctx.signers.unauthorised).setInterestSetter(randomAddress),
+      ).to.be.revertedWith('Ownable: caller is not the owner');
+    });
+
+    it('sets the interest setter', async () => {
+      await expect(sapphireCore.setInterestSetter(randomAddress))
+        .to.emit(sapphireCore, 'InterestSetterUpdated')
+        .withArgs(randomAddress);
+    });
   });
 
   describe('#setFees', () => {
-    it('reverts if called by non-owner');
-    it('reverts if the liquidation user fee is 0');
+    const userFee = constants.WeiPerEther.mul(10);
+    const arcFee = constants.WeiPerEther.mul(5);
+
+    it('reverts if called by non-owner', async () => {
+      await expect(
+        sapphireCore.connect(ctx.signers.unauthorised).setFees(userFee, arcFee),
+      ).to.be.revertedWith('Ownable: caller is not the owner');
+    });
+
+    it('reverts if the liquidation user fee is 0', async () => {
+      
+    });
     it('reverts if the fee is over 100%');
     it('reverts if the arc ratio is over 100%');
     it('sets the liquidation fee and the arc ratio');

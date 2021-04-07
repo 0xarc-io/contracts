@@ -90,7 +90,7 @@ contract SapphireCoreV1 is SapphireCoreStorage {
      * @param _highCollateralRatio High limit of how much colalteral is needed to borrow
      * @param _lowCollateralRatio  Low limit of how much colalteral is needed to borrow
      * @param _liquidationUserFee  How much is a user penalised if they go below their c-ratio
-     * @param _liquidationArcRatio How much of the liquidation profit should ARC take
+     * @param _liquidationArcFee How much of the liquidation profit should ARC take
      */
     function init(
         uint8   _collateralDecimals,
@@ -102,7 +102,7 @@ contract SapphireCoreV1 is SapphireCoreStorage {
         uint256 _highCollateralRatio,
         uint256 _lowCollateralRatio,
         uint256 _liquidationUserFee,
-        uint256 _liquidationArcRatio
+        uint256 _liquidationArcFee
     )
         public
     {
@@ -123,7 +123,7 @@ contract SapphireCoreV1 is SapphireCoreStorage {
 
     function setFees(
         uint256 _liquidationUserFee,
-        uint256 _liquidationArcRatio
+        uint256 _liquidationArcFee
     )
         public
     {}
