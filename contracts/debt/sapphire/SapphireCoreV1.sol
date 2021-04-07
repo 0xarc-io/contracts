@@ -5,11 +5,10 @@ pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 import {SafeMath} from "../../lib/SafeMath.sol";
 
-import {Decimal} from "../../lib/Decimal.sol";
-
 import {SapphireTypes} from "./SapphireTypes.sol";
+import {SapphireCoreStorage} from "./SapphireCoreStorage.sol";
 
-contract SapphireCoreV1 {
+contract SapphireCoreV1 is SapphireCoreStorage {
 
     /* ========== Libraries ========== */
 
@@ -37,8 +36,8 @@ contract SapphireCoreV1 {
     );
 
     event LiquidationFeesUpdated(
-        Decimal.D256 _liquidationUserFee,
-        Decimal.D256 _liquidationArcFee
+        uint256 _liquidationUserFee,
+        uint256 _liquidationArcFee
     );
 
     event LimitsUpdated(
@@ -56,7 +55,7 @@ contract SapphireCoreV1 {
 
     event OracleUpdated(address _oracle);
 
-    event CollateralRatioUpdated(Decimal.D256 _collateralRatio);
+    event CollateralRatioUpdated(uint256 _collateralRatio);
 
     event PauseStatusUpdated(bool _pauseStatus);
 
@@ -80,12 +79,6 @@ contract SapphireCoreV1 {
     );
 
     /* ========== Admin Setters ========== */
-
-    function setInterestRate(
-        uint256 _rate
-    )
-        public
-    {}
 
     function setOracle(
         address _newOracle
