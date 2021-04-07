@@ -173,8 +173,6 @@ describe('SapphireCore.repay()', () => {
     expect(vault.borrowedAmount.value).to.eq(BORROW_AMOUNT.div(2));
   });
 
-  it('should be able to repay accumulated interest (12 months)');
-
   it('emits ActionOperated event when a repay happens', async () => {
     // Repay with score proof
     await expect(arc.repay(BORROW_AMOUNT.div(2), undefined, undefined, signers.scoredMinter))
