@@ -9,8 +9,6 @@ contract SapphireCoreStorage {
      * @notice Determines whether the contract is paused or not
      */
     bool public paused;
-
-    IOracle internal oracle;
     
     /**
     * @dev The high/default collateral ratio for an untrusted borrower.

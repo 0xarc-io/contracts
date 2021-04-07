@@ -80,12 +80,6 @@ contract SapphireCoreV1 is SapphireCoreStorage {
 
     /* ========== Admin Setters ========== */
 
-    function setInterestRate(
-        uint256 _rate
-    )
-        public
-    {}
-
     function setOracle(
         address _newOracle
     )
