@@ -225,8 +225,8 @@ describe('SapphireCore.open()', () => {
 
     it('open at the c-ratio based on credit score', async () => {
       await arc.open(
-        COLLATERAL_AMOUNT.sub(COLLATERAL_AMOUNT.div(2)),
-        BORROW_AMOUNT,
+        COLLATERAL_AMOUNT,
+        BORROW_AMOUNT.add(BORROW_AMOUNT.div(2).mul(3)),
         creditScoreProof,
         undefined,
         ctx.signers.scoredMinter,

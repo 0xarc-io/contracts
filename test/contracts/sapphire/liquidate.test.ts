@@ -15,7 +15,6 @@ import { solidity } from 'ethereum-waffle';
 import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
 import { BASE, ONE_YEAR_IN_SECONDS } from '@src/constants';
 import { getScoreProof } from '@src/utils/getScoreProof';
-import { sign } from 'crypto';
 
 chai.use(solidity);
 
@@ -760,13 +759,13 @@ describe('SapphireCore.liquidate()', () => {
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.minter)
-      ).to.be.revertedWith('SapphireCoreV1: vault is under collateralized');
+      ).to.be.revertedWith('SapphireCoreV1: the vault is undercollateralized');
       await expect(arc.withdraw(
         constants.One,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.minter)
-      ).to.be.revertedWith('SapphireCoreV1: vault is under collateralized');
+      ).to.be.revertedWith('SapphireCoreV1: the vault is undercollateralized');
 
       await arc.repay(
         outstandingDebt,
