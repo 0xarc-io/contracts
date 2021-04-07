@@ -55,8 +55,6 @@ contract SapphireCoreV1 is SapphireCoreStorage {
 
     event OracleUpdated(address _oracle);
 
-    event CollateralRatioUpdated(uint256 _collateralRatio);
-
     event PauseStatusUpdated(bool _pauseStatus);
 
     event InterestSetterUpdated(address _newInterestSetter);
