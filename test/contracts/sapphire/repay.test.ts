@@ -1,11 +1,10 @@
 import { CreditScore } from '@arc-types/sapphireCore';
 import { TestingSigners } from '@arc-types/testing';
 import { BigNumber } from '@ethersproject/bignumber';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { BASE } from '@src/constants';
 import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
-import { MockSapphireCoreV1Factory, SapphireCoreV1Factory, TestTokenFactory } from '@src/typings';
+import { TestTokenFactory } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
@@ -35,17 +34,14 @@ describe('SapphireCore.repay()', () => {
   let creditScoreTree: CreditScoreTree;
 
   /**
-   * Sets up a basic vault using the `COLLATERAL_AMOUNT` amount at a price of `COLLATERAL_PRICE`
-   * and a debt of `DEBT_AMOUNT` as defaults amounts, unless specified otherwise
+   * Setup base vault with 1000 collateral and 500 debt for a c-ratio of
+   * 200%, when the collateral price is $1
    */
   async function setupBaseVault() {
     const collateralContract = TestTokenFactory.connect(arc.collateral().address, signers.minter);
 
     await collateralContract.mintShare(signers.minter.address, COLLATERAL_AMOUNT);
     await collateralContract.approve(arc.core().address, COLLATERAL_AMOUNT);
-
-    // Set collateral price
-    await arc.updatePrice(COLLATERAL_PRICE);
 
     // Open vault and mint debt
     await arc.open(
@@ -72,7 +68,10 @@ describe('SapphireCore.repay()', () => {
       lowCollateralRatio: LOW_C_RATIO,
       highCollateralRatio: HIGH_C_RATIO,
       merkleRoot: creditScoreTree.getHexRoot(),
+      price: COLLATERAL_PRICE,
     });
+
+    await setupBaseVault();
   }
 
   before(async () => {
@@ -84,8 +83,6 @@ describe('SapphireCore.repay()', () => {
   addSnapshotBeforeRestoreAfterEach();
 
   it('repays to increase the c-ratio', async () => {
-    await setupBaseVault();
-
     let vault = await arc.getVault(signers.minter.address);
     // Confirm c-ratio of 200%
     let cRatio = vault.collateralAmount.value.mul(BASE).div(vault.borrowedAmount.value);
@@ -116,12 +113,6 @@ describe('SapphireCore.repay()', () => {
 
   it('repays to make the position collateralized', async () => {
     /**
-     * Setup base vault with 1000 collateral and 500 debt for a c-ratio of
-     * 200%, when the collateral price is $1
-     */
-    await setupBaseVault();
-
-    /**
      * Drop the price to make the position undercollateralized.
      * The new c-ratio is 1000 * 0.45 / 500 = 90%
      */
@@ -142,8 +133,6 @@ describe('SapphireCore.repay()', () => {
   });
 
   it('repays without a score proof even if one exists on-chain', async () => {
-    await setupBaseVault();
-
     // Do two repays. One with credit score and one without. Both should pass
     let vault = await arc.getVault(signers.minter.address);
     expect(vault.borrowedAmount.value).to.eq(BORROW_AMOUNT);
@@ -165,8 +154,6 @@ describe('SapphireCore.repay()', () => {
   });
 
   it('updates the totalBorrowed after a repay', async () => {
-    await setupBaseVault();
-
     expect(await arc.core().totalBorrowed()).to.eq(BORROW_AMOUNT);
 
     await arc.repay(BORROW_AMOUNT.div(2), undefined, undefined, signers.minter);
@@ -176,12 +163,6 @@ describe('SapphireCore.repay()', () => {
 
   it('updates the vault borrow amount', async () => {
     let vault = await arc.getVault(signers.minter.address);
-    expect(vault.collateralAmount.value).to.eq(0);
-    expect(vault.borrowedAmount.value).to.eq(0);
-
-    await setupBaseVault();
-
-    vault = await arc.getVault(signers.minter.address);
     expect(vault.collateralAmount.value).to.eq(COLLATERAL_AMOUNT);
     expect(vault.borrowedAmount.value).to.eq(BORROW_AMOUNT);
 
@@ -195,8 +176,6 @@ describe('SapphireCore.repay()', () => {
   it('should be able to repay accumulated interest (12 months)');
 
   it('emits ActionOperated event when a repay happens', async () => {
-    await setupBaseVault();
-
     // Repay with score proof
     await expect(arc.repay(BORROW_AMOUNT.div(2), undefined, undefined, signers.minter))
       .to.emit(arc.core(), 'ActionOperated')
@@ -235,10 +214,7 @@ describe('SapphireCore.repay()', () => {
   });
 
   it('should not repay if the oracle is not added', async () => {
-    await setupBaseVault();
-
-    const mockCore = MockSapphireCoreV1Factory.connect(arc.coreAddress(), signers.admin);
-    await mockCore.setOracle(constants.AddressZero);
+    await arc.core().setOracle(constants.AddressZero);
 
     await expect(
       arc.repay(BORROW_AMOUNT.div(2), undefined, undefined, signers.minter),
@@ -246,8 +222,6 @@ describe('SapphireCore.repay()', () => {
   });
 
   it('should not repay if the oracle price is 0', async () => {
-    await setupBaseVault();
-
     await arc.updatePrice(0);
 
     await expect(
@@ -256,20 +230,13 @@ describe('SapphireCore.repay()', () => {
   });
 
   it('should not repay to a vault that does not exist', async () => {
-    await setupBaseVault();
-
-    const coreContract = SapphireCoreV1Factory.connect(arc.coreAddress(), signers.minter);
-
-    await expect(coreContract.repay(BORROW_AMOUNT.div(2), undefined)).to.be.revertedWith(
+    await expect(arc.core().repay(BORROW_AMOUNT.div(2), undefined)).to.be.revertedWith(
       'SapphireCoreV1: there is not enough debt to repay',
     );
   });
 
   it('should not repay with a score proof if no assesor is added', async () => {
-    await setupBaseVault();
-
-    const coreContract = MockSapphireCoreV1Factory.connect(arc.coreAddress(), signers.admin);
-    coreContract.setCollateralRatioAssessor(constants.AddressZero);
+    await arc.core().setCollateralRatioAssessor(constants.AddressZero);
 
     await expect(
       arc.repay(
@@ -282,11 +249,8 @@ describe('SapphireCore.repay()', () => {
   });
 
   it(`should not repay more than the vault's debt`, async () => {
-    await setupBaseVault();
-
     // Mint more stablex
-    const stablexContract = TestTokenFactory.connect(arc.syntheticAddress(), signers.minter);
-    stablexContract.mintShare(signers.minter.address, constants.WeiPerEther);
+    await arc.synthetic().mint(signers.minter.address, constants.WeiPerEther);
 
     await expect(
       arc.repay(BORROW_AMOUNT.add(constants.WeiPerEther), undefined, undefined, signers.minter),
@@ -294,10 +258,7 @@ describe('SapphireCore.repay()', () => {
   });
 
   it('should not repay if contract is paused', async () => {
-    await setupBaseVault();
-
-    const coreContract = SapphireCoreV1Factory.connect(arc.coreAddress(), signers.admin);
-    await coreContract.setPause(true);
+    await arc.core().connect(signers.admin).setPause(true);
 
     await expect(
       arc.repay(BORROW_AMOUNT.div(2), undefined, undefined, signers.minter),
