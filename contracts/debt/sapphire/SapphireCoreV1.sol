@@ -139,6 +139,27 @@ contract SapphireCoreV1 {
         public
     {}
 
+    /**
+     * @dev Update the interest rate of the protocol. Since this rate is compounded
+     *      every second rather than being purely linear, the calculate for r is expressed
+     *      as the following (assuming you want 5% APY):
+     *
+     *      r^N = 1.05
+     *      since N = 365 * 24 * 60 * 60 (number of seconds in a year)
+     *      r = 1.000000001547125957863212...
+     *      rate = 1000000001547125957 (18 decimal places solidity value)
+     *
+     * @notice Can only be called by the interest setter of the protocol and the maximum
+     *         rate settable by the admin is 99% (21820606489)
+     *
+     * @param _interestRate The interest rate expressed per second
+     */
+    function setInterestRate(
+        uint256 _interestRate
+    )
+        public
+    {}
+
     /* ========== Public Functions ========== */
 
     function executeActions(

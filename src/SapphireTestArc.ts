@@ -25,12 +25,12 @@ export class SapphireTestArc extends SapphireArc {
     await mockArc.setCurrentTimestamp(value);
   }
 
-  public async getSynthTotals() {
-    return await this.synth().core.getTotals();
+  public getSynthTotals() {
+    return this.synth().core.getTotals();
   }
 
-  public async getVault(owner: string) {
-    return await this.synth().core.getVault(owner);
+  public getVault(owner: string) {
+    return this.synth().core.getVault(owner);
   }
 
   public core() {

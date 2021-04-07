@@ -25,6 +25,7 @@ export interface SapphireSetupOptions {
     liquidationUserFee?: BigNumberish;
     liquidationArcFee?: BigNumberish;
   };
+  price?: BigNumberish;
 }
 
 export async function setupMozart(ctx: ITestContext, options: MozartSetupOptions) {
@@ -70,6 +71,7 @@ export async function setupSapphire(
     lowCollateralRatio,
     highCollateralRatio,
     fees,
+    price,
   }: SapphireSetupOptions,
 ) {
   const arc = ctx.sdks.sapphire;
@@ -84,6 +86,10 @@ export async function setupSapphire(
 
   if (!_.isEmpty(fees)) {
     await arc.synth().core.setFees(fees.liquidationUserFee || '0', fees.liquidationArcFee || '0');
+  }
+
+  if (price) {
+    await ctx.contracts.oracle.setPrice({ value: price });
   }
 
   // Set the merkle root
