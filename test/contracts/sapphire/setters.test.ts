@@ -72,7 +72,7 @@ describe('SapphireCore.setters', () => {
 
     it('sets the assessor address', async () => {
       await expect(sapphireCore.setCollateralRatioAssessor(randomAddress))
-        .to.emit(sapphireCore, 'CollateralRatiosUpdated')
+        .to.emit(sapphireCore, 'AssessorUpdated')
         .withArgs(randomAddress);
       expect(await sapphireCore.collateralRatioAssessor()).eq(randomAddress);
     });
@@ -95,16 +95,33 @@ describe('SapphireCore.setters', () => {
 
     it('sets the fee collector address', async () => {
       await expect(sapphireCore.setFeeCollector(randomAddress))
-        .to.emit(sapphireCore, 'CollateralRatiosUpdated')
+        .to.emit(sapphireCore, 'FeeCollectorUpdated')
         .withArgs(randomAddress);
     });
   });
 
   describe('#setPause', () => {
-    it('reverts if called by non-owner');
+    it('reverts if called by non-owner', async () => {
+      await expect(
+        sapphireCore.connect(ctx.signers.unauthorised).setPause(true),
+      ).to.be.revertedWith('Ownable: caller is not the owner');
+    });
+
     it('reverts if the contract is already paused or already unpaused');
-    it('pauses and un-pauses the contract');
-    it('emits the PauseStatusUpdated event');
+
+    it('pauses and un-pauses the contract', async () => {
+      const initialPaused = await sapphireCore.paused();
+
+      await expect(sapphireCore.setPause(!initialPaused))
+        .to.emit(sapphireCore, 'PauseStatusUpdated')
+        .withArgs(!initialPaused);
+      expect(await sapphireCore.paused()).eq(!initialPaused);
+
+      await expect(sapphireCore.setPause(initialPaused))
+        .to.emit(sapphireCore, 'PauseStatusUpdated')
+        .withArgs(initialPaused);
+      expect(await sapphireCore.paused()).eq(initialPaused);
+    });
   });
 
   describe('#setOracle', () => {
