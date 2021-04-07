@@ -795,7 +795,7 @@ describe('SapphireCore.liquidate()', () => {
         ArcNumber.new(150),
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
-        signers.
+        signers.minter
       );
 
       // The collateral price drops to $0.54
@@ -868,7 +868,6 @@ describe('SapphireCore.liquidate()', () => {
       // User borrows close to the maximum amount. The min c-ratio is 132.5% so user borrows up to 133.5%, namely
       // $749.063670411985 - $500 = 249.063670411985
       await arc.borrow(
-        signers.minter.address,
         utils.parseEther('249.063670411985'),
         getScoreProof(minterCreditScore, creditScoreTree),
       );
