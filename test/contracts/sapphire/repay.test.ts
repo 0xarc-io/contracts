@@ -38,9 +38,9 @@ describe('SapphireCore.repay()', () => {
    * 200%, when the collateral price is $1
    */
   async function setupBaseVault() {
-    const collateralContract = TestTokenFactory.connect(arc.collateral().address, signers.minter);
+    const collateralContract = TestTokenFactory.connect(arc.collateral().address, signers.scoredMinter);
 
-    await collateralContract.mintShare(signers.minter.address, COLLATERAL_AMOUNT);
+    await collateralContract.mintShare(signers.scoredMinter.address, COLLATERAL_AMOUNT);
     await collateralContract.approve(arc.core().address, COLLATERAL_AMOUNT);
 
     // Open vault and mint debt
@@ -49,13 +49,13 @@ describe('SapphireCore.repay()', () => {
       BORROW_AMOUNT,
       getScoreProof(minterCreditScore, creditScoreTree),
       undefined,
-      signers.minter,
+      signers.scoredMinter,
     );
   }
 
   async function init(ctx: ITestContext) {
     minterCreditScore = {
-      account: ctx.signers.minter.address,
+      account: ctx.signers.scoredMinter.address,
       amount: BigNumber.from(500),
     };
     const creditScore2 = {
@@ -83,21 +83,21 @@ describe('SapphireCore.repay()', () => {
   addSnapshotBeforeRestoreAfterEach();
 
   it('repays to increase the c-ratio', async () => {
-    let vault = await arc.getVault(signers.minter.address);
+    let vault = await arc.getVault(signers.scoredMinter.address);
     // Confirm c-ratio of 200%
     let cRatio = vault.collateralAmount.value.mul(BASE).div(vault.borrowedAmount.value);
     expect(cRatio).to.eq(constants.WeiPerEther.mul(2));
 
-    const preStablexBalance = await arc.synthetic().balanceOf(signers.minter.address);
+    const preStablexBalance = await arc.synthetic().balanceOf(signers.scoredMinter.address);
     expect(preStablexBalance).to.eq(BORROW_AMOUNT);
 
     // Repay half the amount
-    await arc.repay(BORROW_AMOUNT.div(2), undefined, undefined, signers.minter);
+    await arc.repay(BORROW_AMOUNT.div(2), undefined, undefined, signers.scoredMinter);
 
-    const postStablexBalance = await arc.synthetic().balanceOf(signers.minter.address);
+    const postStablexBalance = await arc.synthetic().balanceOf(signers.scoredMinter.address);
     expect(postStablexBalance).to.eq(BORROW_AMOUNT.div(2));
 
-    vault = await arc.getVault(signers.minter.address);
+    vault = await arc.getVault(signers.scoredMinter.address);
 
     // Ensure that collateral amount didn't change
     expect(vault.collateralAmount.sign).to.eq(COLLATERAL_AMOUNT);
@@ -120,55 +120,55 @@ describe('SapphireCore.repay()', () => {
     await arc.updatePrice(newPrice);
 
     // Ensure position is undercollateralized
-    let vault = await arc.getVault(signers.minter.address);
+    let vault = await arc.getVault(signers.scoredMinter.address);
     let cRatio = vault.collateralAmount.value.mul(newPrice).div(BORROW_AMOUNT);
     expect(cRatio).to.eq(utils.parseEther('0.9'));
 
     // Repay to make the position collateralized
     await arc.repay(BORROW_AMOUNT.div(2));
 
-    vault = await arc.getVault(signers.minter.address);
+    vault = await arc.getVault(signers.scoredMinter.address);
     cRatio = vault.collateralAmount.value.mul(newPrice).div(BORROW_AMOUNT);
     expect(cRatio).to.eq(utils.parseEther('1.8'));
   });
 
   it('repays without a score proof even if one exists on-chain', async () => {
     // Do two repays. One with credit score and one without. Both should pass
-    let vault = await arc.getVault(signers.minter.address);
+    let vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.borrowedAmount.value).to.eq(BORROW_AMOUNT);
 
-    await arc.repay(constants.WeiPerEther, undefined, undefined, signers.minter);
+    await arc.repay(constants.WeiPerEther, undefined, undefined, signers.scoredMinter);
 
-    vault = await arc.getVault(signers.minter.address);
+    vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.borrowedAmount.value).to.eq(BORROW_AMOUNT.sub(constants.WeiPerEther));
 
     await arc.repay(
       constants.WeiPerEther,
       getScoreProof(minterCreditScore, creditScoreTree),
       undefined,
-      signers.minter,
+      signers.scoredMinter,
     );
 
-    vault = await arc.getVault(signers.minter.address);
+    vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.borrowedAmount.value).to.eq(BORROW_AMOUNT.sub(constants.WeiPerEther.mul(2)));
   });
 
   it('updates the totalBorrowed after a repay', async () => {
     expect(await arc.core().totalBorrowed()).to.eq(BORROW_AMOUNT);
 
-    await arc.repay(BORROW_AMOUNT.div(2), undefined, undefined, signers.minter);
+    await arc.repay(BORROW_AMOUNT.div(2), undefined, undefined, signers.scoredMinter);
 
     expect(await arc.core().totalBorrowed()).to.eq(BORROW_AMOUNT.div(2));
   });
 
   it('updates the vault borrow amount', async () => {
-    let vault = await arc.getVault(signers.minter.address);
+    let vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.collateralAmount.value).to.eq(COLLATERAL_AMOUNT);
     expect(vault.borrowedAmount.value).to.eq(BORROW_AMOUNT);
 
-    await arc.repay(BORROW_AMOUNT.div(2), undefined, undefined, signers.minter);
+    await arc.repay(BORROW_AMOUNT.div(2), undefined, undefined, signers.scoredMinter);
 
-    vault = await arc.getVault(signers.minter.address);
+    vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.collateralAmount.value).to.eq(COLLATERAL_AMOUNT);
     expect(vault.borrowedAmount.value).to.eq(BORROW_AMOUNT.div(2));
   });
@@ -177,30 +177,30 @@ describe('SapphireCore.repay()', () => {
 
   it('emits ActionOperated event when a repay happens', async () => {
     // Repay with score proof
-    await expect(arc.repay(BORROW_AMOUNT.div(2), undefined, undefined, signers.minter))
+    await expect(arc.repay(BORROW_AMOUNT.div(2), undefined, undefined, signers.scoredMinter))
       .to.emit(arc.core(), 'ActionOperated')
       .withArgs(
         0, // Repay operation
         {
-          owner: signers.minter.address,
+          owner: signers.scoredMinter.address,
           amountOne: BORROW_AMOUNT.div(2),
           amountTwo: BigNumber.from(0),
           scoreProof: {
-            account: signers.minter.address,
+            account: signers.scoredMinter.address,
             score: minterCreditScore.amount,
             merkleProof: getScoreProof(minterCreditScore, creditScoreTree),
           },
         },
-        signers.minter.address,
+        signers.scoredMinter.address,
       );
 
     // Repay without score proof
-    await expect(arc.repay(BORROW_AMOUNT.div(2), undefined, undefined, signers.minter))
+    await expect(arc.repay(BORROW_AMOUNT.div(2), undefined, undefined, signers.scoredMinter))
       .to.emit(arc.core(), 'ActionOperated')
       .withArgs(
         0,
         {
-          owner: signers.minter.address,
+          owner: signers.scoredMinter.address,
           amountOne: BORROW_AMOUNT.div(2),
           amountTwo: BigNumber.from(0),
           scoreProof: {
@@ -209,7 +209,7 @@ describe('SapphireCore.repay()', () => {
             merkleProof: [],
           },
         },
-        signers.minter.address,
+        signers.scoredMinter.address,
       );
   });
 
@@ -217,7 +217,7 @@ describe('SapphireCore.repay()', () => {
     await arc.core().setOracle(constants.AddressZero);
 
     await expect(
-      arc.repay(BORROW_AMOUNT.div(2), undefined, undefined, signers.minter),
+      arc.repay(BORROW_AMOUNT.div(2), undefined, undefined, signers.scoredMinter),
     ).to.be.revertedWith('SapphireCoreV1: cannot repay if oracle is not set');
   });
 
@@ -225,7 +225,7 @@ describe('SapphireCore.repay()', () => {
     await arc.updatePrice(0);
 
     await expect(
-      arc.repay(BORROW_AMOUNT.div(2), undefined, undefined, signers.minter),
+      arc.repay(BORROW_AMOUNT.div(2), undefined, undefined, signers.scoredMinter),
     ).to.be.revertedWith('SapphireCoreV1: the oracle price returned 0');
   });
 
@@ -243,17 +243,17 @@ describe('SapphireCore.repay()', () => {
         BORROW_AMOUNT.div(2),
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
-        signers.minter,
+        signers.scoredMinter,
       ),
     ).to.be.revertedWith('SapphireCoreV1: the credit score assessor is not set');
   });
 
   it(`should not repay more than the vault's debt`, async () => {
     // Mint more stablex
-    await arc.synthetic().mint(signers.minter.address, constants.WeiPerEther);
+    await arc.synthetic().mint(signers.scoredMinter.address, constants.WeiPerEther);
 
     await expect(
-      arc.repay(BORROW_AMOUNT.add(constants.WeiPerEther), undefined, undefined, signers.minter),
+      arc.repay(BORROW_AMOUNT.add(constants.WeiPerEther), undefined, undefined, signers.scoredMinter),
     ).to.be.revertedWith('SapphireCoreV1: there is not enough debt to repay');
   });
 
@@ -261,7 +261,7 @@ describe('SapphireCore.repay()', () => {
     await arc.core().connect(signers.admin).setPause(true);
 
     await expect(
-      arc.repay(BORROW_AMOUNT.div(2), undefined, undefined, signers.minter),
+      arc.repay(BORROW_AMOUNT.div(2), undefined, undefined, signers.scoredMinter),
     ).to.be.revertedWith('SapphireCoreV1: the contract is paused');
   });
 });
