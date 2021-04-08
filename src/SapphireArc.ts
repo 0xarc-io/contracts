@@ -2,7 +2,13 @@ import { Synth } from '@arc-types/core';
 import { TransactionOverrides } from '@arc-types/ethereum';
 import { Action, CreditScoreProof, Vault } from '@arc-types/sapphireCore';
 import { BigNumber, BigNumberish, Signer } from 'ethers';
-import { SapphireCoreV1 } from './typings';
+import {
+  BaseERC20Factory,
+  SapphireCoreV1,
+  SapphireCoreV1Factory,
+  SyntheticTokenV1Factory,
+} from './typings';
+import { IOracleFactory } from './typings/IOracleFactory';
 
 export type SapphireSynth = Synth<SapphireCoreV1>;
 
@@ -12,6 +18,20 @@ export class SapphireArc {
   constructor(public readonly signer: Signer) {}
   static new(signer: Signer): SapphireArc {
     return new SapphireArc(signer);
+  }
+
+  public async addSynths(synths: Record<string, string | undefined>) {
+    const keys = Object.keys(synths);
+    for (const key of keys) {
+      const core = SapphireCoreV1Factory.connect(synths[key], this.signer);
+
+      this.synths[key] = {
+        core,
+        oracle: IOracleFactory.connect(await core.oracle(), this.signer),
+        collateral: BaseERC20Factory.connect(await core.collateralAsset(), this.signer),
+        synthetic: SyntheticTokenV1Factory.connect(await core.syntheticAsset(), this.signer),
+      };
+    }
   }
 
   getSynth(name: string): SapphireSynth {

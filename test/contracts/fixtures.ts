@@ -140,4 +140,5 @@ export async function sapphireFixture(ctx: ITestContext, args?: ITestContextArgs
   await ctx.contracts.sapphire.creditScore.setPause(false);
 
   ctx.sdks.sapphire = SapphireTestArc.new(deployer);
+  await ctx.sdks.sapphire.addSynths({sapphireSynth: coreProxy.address})
 }

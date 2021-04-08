@@ -5,7 +5,7 @@ import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 
-describe('SapphireCore.setters', () => {
+describe.only('SapphireCore.setters', () => {
   let ctx: ITestContext;
   let sapphireCore: SapphireCoreV1;
 
@@ -13,6 +13,7 @@ describe('SapphireCore.setters', () => {
 
   before(async () => {
     ctx = await generateContext(sapphireFixture, (ctx) => setupSapphire(ctx, {}));
+    sapphireCore = ctx.contracts.sapphire.core;
     randomAddress = Wallet.createRandom().address;
   });
 
