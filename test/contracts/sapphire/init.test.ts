@@ -83,7 +83,7 @@ describe.only('SapphireCore.init', () => {
     );
   });
 
-  it('reverts if high c-ratios is 0', async () => {
+  it('reverts if high c-ratio is 0', async () => {
     await expect(init({ highCollateralRatio: 0 })).to.be.revertedWith(
       'SapphireCoreV1: collateral ratio has to be greater than 0',
     );
