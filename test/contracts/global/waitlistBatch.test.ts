@@ -3,20 +3,35 @@ import 'module-alias/register';
 import { BigNumber } from 'ethers';
 import chai from 'chai';
 
-import { expectRevert } from '@test/helpers/expectRevert';
 import { ethers } from 'hardhat';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import ArcNumber from '@src/utils/ArcNumber';
 import { solidity } from 'ethereum-waffle';
+import { addSnapshotBeforeRestoreAfterEach } from '../../helpers/testingUtils';
+import { WaitlistBatch } from '@src/typings/WaitlistBatch';
+import { WaitlistBatchFactory } from '@src/typings/WaitlistBatchFactory';
 
 chai.use(solidity);
 const expect = chai.expect;
 
-let signers: SignerWithAddress[];
-let ownerAccount: SignerWithAddress;
-let userAccount: SignerWithAddress;
-
 describe('WhitelistBatch', () => {
+  let ownerAccount: SignerWithAddress;
+  let userAccount: SignerWithAddress;
+  let waitlist: WaitlistBatch;
+
+  before(async () => {
+    const signers = await ethers.getSigners();
+    ownerAccount = signers[0];
+    userAccount = signers[1];
+
+    waitlist = await new WaitlistBatchFactory(ownerAccount).deploy();
+  });
+
+  addSnapshotBeforeRestoreAfterEach();
+
+  describe('#constructor', () => {
+    it('sets the deposit currency');
+  });
+
   describe('#applyToBatch', () => {
     xit('cannot apply to a non-existent batch');
 
@@ -74,6 +89,22 @@ describe('WhitelistBatch', () => {
   describe('#transferTokens', () => {
     it('cannot transfer tokens as a non-owner');
 
+    it('cannot transfer tokens of the deposit currency');
+
     it('can transfer tokens as the owner');
+  });
+
+  describe('#reclaimTokens', () => {
+    it('cannot reclaim tokens if caller did not participate in a batch');
+
+    it(
+      'cannot reclaim tokens if the batch the user participated to does not have the tokens claimable',
+    );
+  });
+
+  describe('#getBatchInfoForUser', () => {
+    it('returns false if user did not participate to a batch');
+
+    it('returns true, the batch number and the deposit amount for a user who participated');
   });
 });

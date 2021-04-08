@@ -11,6 +11,8 @@ import {IERC20} from "../token/IERC20.sol";
 
 contract WaitlistBatch is Ownable {
 
+    /* ========== Types ========== */
+
     struct Batch {
         uint256 totalSpots;
         uint256 filledSpots;
@@ -19,7 +21,15 @@ contract WaitlistBatch is Ownable {
         bool claimable;
     }
 
-    address public depositCurrency;
+    struct UserBatchInfo {
+        bool hasParticipated;
+        uint256 batchNumber;
+        uint256 depositAmount;
+    }
+
+    /* ========== Variables ========== */
+
+    IERC20 public depositCurrency;
 
     uint256 public totalNumberOfBatches;
 
@@ -27,7 +37,9 @@ contract WaitlistBatch is Ownable {
 
     mapping (uint256 => Batch) public batchMapping;
 
-    mapping (address => bool) hasUserApplied;
+    mapping (address => bool) userBatchMapping;
+
+    /* ========== Events ========== */
 
     event AppliedToBatch(
         address indexed user,
@@ -55,6 +67,26 @@ contract WaitlistBatch is Ownable {
         uint256 batchNumber
     );
 
+    /* ========== Constructor ========== */
+
+    constructor(address _depostCurrency) public {
+        depositCurrency = IERC20(_depostCurrency);
+    }
+
+    /* ========== Public Getters ========== */
+
+    function getBatchInfoForUser(
+        address _user
+    )
+        public
+        view
+        returns (UserBatchInfo memory)
+    {
+
+    }
+
+    /* ========== Public Functions ========== */
+
     function applyToBatch(
         uint256 _batchNumber
     )
@@ -62,6 +94,8 @@ contract WaitlistBatch is Ownable {
     {
 
     }
+
+    /* ========== Admin Functions ========== */
 
     function startNewBatch(
         uint256 _totalSpots,
@@ -108,5 +142,4 @@ contract WaitlistBatch is Ownable {
     {
 
     }
-
 }
