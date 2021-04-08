@@ -21,6 +21,16 @@ contract SapphireCoreStorage {
     uint256 public lowCollateralRatio;
 
     /**
+     * @dev How much should the liquidation penalty be, expressed as a decimal.
+     */
+    uint256 public liquidationUserFee;
+
+    /**
+     * @dev How much of the profit acquired from a liquidation should ARC receive
+     */
+    uint256 public liquidationArcFee;
+
+    /**
     * @dev The assesor that will determine the collateral-ratio.
     */
     address public collateralRatioAssessor;

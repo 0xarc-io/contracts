@@ -1,6 +1,6 @@
 import { SapphireCoreV1 } from '@src/typings';
 import { expect } from 'chai';
-import { constants, Wallet } from 'ethers';
+import { constants, utils, Wallet } from 'ethers';
 import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
@@ -28,13 +28,19 @@ describe('SapphireCore.setters', () => {
 
     it('reverts if low c-ratio is 0', async () => {
       await expect(sapphireCore.setCollateralRatios(0, highRatio)).to.be.revertedWith(
-        'SapphireCoreV1: collateral ratio has to be greater than 0',
+        'SapphireCoreV1: collateral ratio has to be at least 1',
       );
+    });
+
+    it('reverts if low c-ratio is 0.999..99', async () => {
+      await expect(
+        sapphireCore.setCollateralRatios(constants.WeiPerEther.sub(1), highRatio),
+      ).to.be.revertedWith('SapphireCoreV1: collateral ratio has to be at least 1');
     });
 
     it('reverts if high c-ratio is 0', async () => {
       await expect(sapphireCore.setCollateralRatios(lowRatio, 0)).to.be.revertedWith(
-        'SapphireCoreV1: collateral ratio has to be greater than 0',
+        'SapphireCoreV1: collateral ratio has to be at least 1',
       );
     });
 
@@ -91,8 +97,6 @@ describe('SapphireCore.setters', () => {
       );
     });
 
-    it('reverts if set to the same fee collector');
-
     it('sets the fee collector address', async () => {
       await expect(sapphireCore.setFeeCollector(randomAddress))
         .to.emit(sapphireCore, 'FeeCollectorUpdated')
@@ -106,8 +110,6 @@ describe('SapphireCore.setters', () => {
         sapphireCore.connect(ctx.signers.unauthorised).setPause(true),
       ).to.be.revertedWith('Ownable: caller is not the owner');
     });
-
-    it('reverts if the contract is already paused or already unpaused');
 
     it('pauses and un-pauses the contract', async () => {
       const initialPaused = await sapphireCore.paused();
@@ -129,12 +131,6 @@ describe('SapphireCore.setters', () => {
       await expect(
         sapphireCore.connect(ctx.signers.unauthorised).setOracle(randomAddress),
       ).to.be.revertedWith('Ownable: caller is not the owner');
-    });
-
-    it('reverts if set to address 0', async () => {
-      await expect(sapphireCore.setOracle(constants.AddressZero)).to.be.revertedWith(
-        'SapphireCoreV1: oracle is required',
-      );
     });
 
     it('sets the oracle', async () => {
@@ -168,13 +164,23 @@ describe('SapphireCore.setters', () => {
       ).to.be.revertedWith('Ownable: caller is not the owner');
     });
 
-    it('reverts if the liquidation user fee is 0', async () => {
-      
+    it('reverts if fee sum is over 100%', async () => {
+      await expect(
+        sapphireCore.setFees(utils.parseEther('60'), utils.parseEther('40').add(1)),
+      ).to.be.revertedWith('SapphireCoreV1: fee sum has to be no more than 100%');
+
+      await expect(sapphireCore.setFees(utils.parseEther('100'), '1')).to.be.revertedWith(
+        'SapphireCoreV1: fee sum has to be no more than 100%',
+      );
     });
-    it('reverts if the fee is over 100%');
-    it('reverts if the arc ratio is over 100%');
-    it('sets the liquidation fee and the arc ratio');
-    it('emits the FeesUpdated event');
+
+    it('sets the liquidation fee and the arc ratio', async () => {
+      await expect(sapphireCore.setFees(userFee, arcFee))
+        .to.emit(sapphireCore, 'LiquidationFeesUpdated')
+        .withArgs(userFee, arcFee);
+      expect(await sapphireCore.liquidationUserFee()).eq(userFee);
+      expect(await sapphireCore.liquidationArcFee()).eq(arcFee);
+    });
   });
 
   describe('#setLimits', () => {
