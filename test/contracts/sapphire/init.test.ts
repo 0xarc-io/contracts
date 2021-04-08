@@ -126,6 +126,8 @@ describe.only('SapphireCore.init', () => {
     expect(await sapphireCore.highCollateralRatio()).eq(defaultOptions.highCollateralRatio);
     expect(await sapphireCore.lowCollateralRatio()).eq(defaultOptions.lowCollateralRatio);
     expect(await sapphireCore.collateralRatioAssessor()).eq(defaultOptions.assessor);
+    expect(await sapphireCore.liquidationUserFee()).eq(defaultOptions.liquidationUserFee);
+    expect(await sapphireCore.liquidationArcFee()).eq(defaultOptions.liquidationArcFee);
   });
 
   it('revert if owner inits twice ', async () => {
