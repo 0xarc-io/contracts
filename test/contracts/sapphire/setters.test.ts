@@ -184,7 +184,43 @@ describe('SapphireCore.setters', () => {
   });
 
   describe('#setLimits', () => {
-    it('reverts if called by non-owner');
-    it('sets the borrow limits');
+    const totalBorrowLimit = utils.parseEther('1000000');
+    const vaultBorrowMaximum = utils.parseEther('1000');
+    const vaultBorrowMinimum = utils.parseEther('100');
+
+    it('reverts if called by non-owner', async () => {
+      await expect(
+        sapphireCore
+          .connect(ctx.signers.unauthorised)
+          .setLimits(totalBorrowLimit, vaultBorrowMinimum, vaultBorrowMaximum),
+      ).to.be.revertedWith('Ownable: caller is not the owner');
+    });
+
+    it('reverts if max limit is lower than the min limit', async () => {
+      await expect(
+        sapphireCore.setLimits(totalBorrowLimit, vaultBorrowMaximum, vaultBorrowMinimum),
+      ).to.be.revertedWith(
+        'SapphireCoreV1: limits condition is unfulfilled (vaultBorrowMinimum  <= vaultBorrowMaximum <= totalBorrowLimit)',
+      );
+      await expect(
+        sapphireCore.setLimits(vaultBorrowMinimum, totalBorrowLimit, vaultBorrowMaximum),
+      ).to.be.revertedWith(
+        'SapphireCoreV1: limits condition is unfulfilled (vaultBorrowMinimum  <= vaultBorrowMaximum <= totalBorrowLimit)',
+      );
+      await expect(
+        sapphireCore.setLimits(vaultBorrowMaximum, vaultBorrowMinimum, totalBorrowLimit),
+      ).to.be.revertedWith(
+        'SapphireCoreV1: limits condition is unfulfilled (vaultBorrowMinimum  <= vaultBorrowMaximum <= totalBorrowLimit)',
+      );
+    });
+
+    it('sets the borrow limits', async () => {
+      await expect(sapphireCore.setLimits(totalBorrowLimit, vaultBorrowMinimum, vaultBorrowMaximum))
+        .to.emit(sapphireCore, 'SapphireCoreV1')
+        .withArgs(totalBorrowLimit, vaultBorrowMinimum, vaultBorrowMaximum);
+      expect(await sapphireCore.totalBorrowLimit()).eq(totalBorrowLimit);
+      expect(await sapphireCore.vaultBorrowMaximum()).eq(vaultBorrowMaximum);
+      expect(await sapphireCore.vaultBorrowMinimum()).eq(vaultBorrowMinimum);
+    });
   });
 });

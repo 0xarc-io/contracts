@@ -3,7 +3,7 @@ import { Wallet } from '@ethersproject/wallet';
 import { MockSapphireCoreV1, MockSapphireCoreV1Factory, TestToken } from '@src/typings';
 import { expect } from 'chai';
 import { createFixtureLoader } from 'ethereum-waffle';
-import { constants } from 'ethers';
+import { constants, utils } from 'ethers';
 import { deployArcProxy, deployMockSapphireCoreV1, deployTestToken } from '../deployers';
 
 export async function setup([deployer, unauthorized]: Wallet[]): Promise<any> {
@@ -42,6 +42,9 @@ describe.only('SapphireCore.init', () => {
       lowCollateralRation: constants.WeiPerEther,
       liquidationUserFee: constants.WeiPerEther,
       liquidationArcFee: constants.WeiPerEther,
+      totalBorrowLimit: constants.WeiPerEther,
+      vaultBorrowMaximum: constants.WeiPerEther,
+      vaultBorrowMinimum: constants.WeiPerEther,
       executor: deployer,
     };
 
@@ -79,18 +82,6 @@ describe.only('SapphireCore.init', () => {
     );
   });
 
-  it('reverts if oracle address is 0', async () => {
-    await expect(init({ oracle: constants.AddressZero })).to.be.revertedWith(
-      'SapphireCoreV1: oracle is required',
-    );
-  });
-
-  it('reverts if interest setter is 0', async () => {
-    await expect(init({ interestSetter: constants.AddressZero })).to.be.revertedWith(
-      'SapphireCoreV1: interest setter is required',
-    );
-  });
-
   it('reverts if low c-ratio is 0', async () => {
     await expect(init({ lowCollateralRatio: 0 })).to.be.revertedWith(
       'SapphireCoreV1: collateral ratio has to be greater than 0',
@@ -113,8 +104,14 @@ describe.only('SapphireCore.init', () => {
   });
 
   it('reverts if liquidation user fee is 0', async () => {
-    await expect(init({ liquidationUserFee: 0 })).to.be.revertedWith(
-      'SapphireCoreV1: liquidation user fee has to be greater than 0',
+    await expect(init({ liquidationUserFee: utils.parseEther('101') })).to.be.revertedWith(
+        'SapphireCoreV1: fee sum has to be no more than 100%',
+    );
+  });
+
+  it('reverts if limits condition is unfulfilled ', async () => {
+    await expect(init({ vaultBorrowMaximum: '0' })).to.be.revertedWith(
+        'SapphireCoreV1: limits condition is unfulfilled (vaultBorrowMinimum  <= vaultBorrowMaximum <= totalBorrowLimit)',
     );
   });
 
@@ -128,6 +125,9 @@ describe.only('SapphireCore.init', () => {
     expect(await sapphireCore.collateralRatioAssessor()).eq(defaultOptions.assessor);
     expect(await sapphireCore.liquidationUserFee()).eq(defaultOptions.liquidationUserFee);
     expect(await sapphireCore.liquidationArcFee()).eq(defaultOptions.liquidationArcFee);
+    expect(await sapphireCore.totalBorrowLimit()).eq(defaultOptions.totalBorrowLimit);
+    expect(await sapphireCore.vaultBorrowMaximum()).eq(defaultOptions.vaultBorrowMaximum);
+    expect(await sapphireCore.vaultBorrowMinimum()).eq(defaultOptions.vaultBorrowMinimum);
   });
 
   it('revert if owner inits twice ', async () => {
