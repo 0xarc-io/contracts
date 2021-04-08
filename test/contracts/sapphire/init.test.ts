@@ -10,8 +10,8 @@ export async function setup([deployer, unauthorized]: Wallet[]): Promise<any> {
   const coreImp = await deployMockSapphireCoreV1(deployer);
   const coreProxy = await deployArcProxy(deployer, coreImp.address, deployer.address, []);
   const sapphireCore = MockSapphireCoreV1Factory.connect(coreProxy.address, deployer);
-  const collateral = await deployTestToken(deployer, 'Token Name', 'TKN');
-  const synthetic = await deployTestToken(deployer, 'Token Name', 'TKN');
+  const collateral = await deployTestToken(deployer, 'Collateral Token Name', 'CTKN6', 6);
+  const synthetic = await deployTestToken(deployer, 'Synthetic Token Name', 'STKN');
 
   return { sapphireCore, deployer, unauthorized, collateral, synthetic };
 }
@@ -32,7 +32,6 @@ describe.only('SapphireCore.init', () => {
     )(setup));
 
     defaultOptions = {
-      collateralDecimals: 18,
       collateralAddress: collateral.address,
       syntheticAddress: synthetic.address,
       oracle: Wallet.createRandom().address,
@@ -53,7 +52,6 @@ describe.only('SapphireCore.init', () => {
       return sapphireCore
         .connect(options.executor)
         .init(
-          options.collateralDecimals,
           options.collateralAddress,
           options.syntheticAddress,
           options.oracle,
@@ -62,7 +60,7 @@ describe.only('SapphireCore.init', () => {
           options.highCollateralRatio,
           options.lowCollateralRation,
           options.liquidationUserFee,
-          options.liquidationArcFee
+          options.liquidationArcFee,
         );
     };
   });
@@ -102,18 +100,23 @@ describe.only('SapphireCore.init', () => {
 
   it('reverts if liquidation user fee is 0', async () => {
     await expect(init({ liquidationUserFee: utils.parseEther('101') })).to.be.revertedWith(
-        'SapphireCoreV1: fee sum has to be no more than 100%',
+      'SapphireCoreV1: fee sum has to be no more than 100%',
     );
   });
 
   it('reverts if limits condition is unfulfilled ', async () => {
     await expect(init({ vaultBorrowMaximum: '0' })).to.be.revertedWith(
-        'SapphireCoreV1: limits condition is unfulfilled (vaultBorrowMinimum  <= vaultBorrowMaximum <= totalBorrowLimit)',
+      'SapphireCoreV1: limits condition is unfulfilled (vaultBorrowMinimum  <= vaultBorrowMaximum <= totalBorrowLimit)',
     );
   });
 
   it('sets all the passed parameters', async () => {
     await expect(init()).to.not.be.reverted;
+
+    const decimals = await collateral.decimals();
+    expect(decimals).eq(6);
+
+    expect(await sapphireCore.precisionScalar()).eq(utils.parseUnits('10', 18 - decimals));
     expect(await sapphireCore.paused()).to.be.true;
     expect(await sapphireCore.feeCollector()).eq(defaultOptions.feeCollector);
     expect(await sapphireCore.oracle()).eq(defaultOptions.oracle);

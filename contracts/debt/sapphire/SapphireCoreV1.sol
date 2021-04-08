@@ -81,7 +81,6 @@ contract SapphireCoreV1 is SapphireCoreStorage {
     /**
      * @dev Intitialise the protocol with the appropriate parameters. Can only be called once.
      *
-     * @param _collateralDecimals  How many decimals does the collateral contain
      * @param _collateralAddress   The address of the collateral to be used
      * @param _syntheticAddress    The address of the synthetic token proxy
      * @param _oracleAddress       Address of the IOracle conforming contract
@@ -93,7 +92,6 @@ contract SapphireCoreV1 is SapphireCoreStorage {
      * @param _liquidationArcFee How much of the liquidation profit should ARC take
      */
     function init(
-        uint8   _collateralDecimals,
         address _collateralAddress,
         address _syntheticAddress,
         address _oracleAddress,

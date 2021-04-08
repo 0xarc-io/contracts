@@ -46,6 +46,12 @@ contract SapphireCoreStorage {
     IOracle public oracle;
 
     /**
+     * @dev If a collateral asset is used that has less than 18 decimal places
+     *      a precision scalar is required to calcualte the corect values.
+     */
+    uint256 internal precisionScalar;
+
+    /**
      * @dev The actual address of the collateral used for this core system.
      */
     address public collateralAsset;
