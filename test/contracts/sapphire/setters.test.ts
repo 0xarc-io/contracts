@@ -101,6 +101,7 @@ describe('SapphireCore.setters', () => {
       await expect(sapphireCore.setFeeCollector(randomAddress))
         .to.emit(sapphireCore, 'FeeCollectorUpdated')
         .withArgs(randomAddress);
+      expect(await sapphireCore.feeCollector()).eq(randomAddress);
     });
   });
 
@@ -137,6 +138,7 @@ describe('SapphireCore.setters', () => {
       await expect(sapphireCore.setFeeCollector(randomAddress))
         .to.emit(sapphireCore, 'OracleUpdated')
         .withArgs(randomAddress);
+      expect(await sapphireCore.oracle()).eq(randomAddress);
     });
   });
 

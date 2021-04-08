@@ -22,6 +22,6 @@ contract MockSapphireCoreV1 is MockTimestamp, SapphireCoreV1 {
     )
         public
     {
-        collateralRatioAssesor = _assessor;
+        collateralRatioAssessor = _assessor;
     }
 }

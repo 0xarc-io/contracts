@@ -42,9 +42,6 @@ describe.only('SapphireCore.init', () => {
       lowCollateralRation: constants.WeiPerEther,
       liquidationUserFee: constants.WeiPerEther,
       liquidationArcFee: constants.WeiPerEther,
-      totalBorrowLimit: constants.WeiPerEther,
-      vaultBorrowMaximum: constants.WeiPerEther,
-      vaultBorrowMinimum: constants.WeiPerEther,
       executor: deployer,
     };
 
@@ -65,7 +62,7 @@ describe.only('SapphireCore.init', () => {
           options.highCollateralRatio,
           options.lowCollateralRation,
           options.liquidationUserFee,
-          options.liquidationArcFee,
+          options.liquidationArcFee
         );
     };
   });
@@ -118,6 +115,8 @@ describe.only('SapphireCore.init', () => {
   it('sets all the passed parameters', async () => {
     await expect(init()).to.not.be.reverted;
     expect(await sapphireCore.paused()).to.be.true;
+    expect(await sapphireCore.feeCollector()).eq(defaultOptions.feeCollector);
+    expect(await sapphireCore.oracle()).eq(defaultOptions.oracle);
     expect(await sapphireCore.collateralAsset()).eq(defaultOptions.collateralAddress);
     expect(await sapphireCore.syntheticAsset()).eq(defaultOptions.syntheticAddress);
     expect(await sapphireCore.highCollateralRatio()).eq(defaultOptions.highCollateralRatio);
@@ -125,9 +124,6 @@ describe.only('SapphireCore.init', () => {
     expect(await sapphireCore.collateralRatioAssessor()).eq(defaultOptions.assessor);
     expect(await sapphireCore.liquidationUserFee()).eq(defaultOptions.liquidationUserFee);
     expect(await sapphireCore.liquidationArcFee()).eq(defaultOptions.liquidationArcFee);
-    expect(await sapphireCore.totalBorrowLimit()).eq(defaultOptions.totalBorrowLimit);
-    expect(await sapphireCore.vaultBorrowMaximum()).eq(defaultOptions.vaultBorrowMaximum);
-    expect(await sapphireCore.vaultBorrowMinimum()).eq(defaultOptions.vaultBorrowMinimum);
   });
 
   it('revert if owner inits twice ', async () => {
