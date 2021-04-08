@@ -72,18 +72,18 @@ contract SapphireCoreStorage {
      * @dev The maximum amount which can be borrowed within a contract. This includes
      *      the amount of interest accrued.
      */
-    uint256 internal totalBorrowLimit;
+    uint256 public totalBorrowLimit;
 
     /**
      * @dev The minimum amount which has to be borrowed by a vault. This includes
      *      the amount of interest accrued.
      */
-    uint256 internal vaultBorrowMinimum;
+    uint256 public vaultBorrowMinimum;
 
     /**
      * @dev The maximum amount which has to be borrowed by a vault. This includes
      *      the amount of interest accrued.
      */
-    uint256 internal vaultBorrowMaximum;
+    uint256 public vaultBorrowMaximum;
 
 }
