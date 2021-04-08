@@ -106,7 +106,7 @@ describe.only('SapphireCore.init', () => {
 
   it('reverts if limits condition is unfulfilled ', async () => {
     await expect(init({ vaultBorrowMaximum: '0' })).to.be.revertedWith(
-      'SapphireCoreV1: limits condition is unfulfilled (vaultBorrowMinimum  <= vaultBorrowMaximum <= totalBorrowLimit)',
+      'SapphireCoreV1: required condition is vaultMin <= vaultMax <= totalLimit',
     );
   });
 

@@ -191,17 +191,17 @@ describe.only('SapphireCore.setters', () => {
       await expect(
         sapphireCore.setLimits(totalBorrowLimit, vaultBorrowMaximum, vaultBorrowMinimum),
       ).to.be.revertedWith(
-        'SapphireCoreV1: limits condition is unfulfilled (vaultBorrowMinimum  <= vaultBorrowMaximum <= totalBorrowLimit)',
+        'SapphireCoreV1: required condition is vaultMin <= vaultMax <= totalLimit)',
       );
       await expect(
         sapphireCore.setLimits(vaultBorrowMinimum, totalBorrowLimit, vaultBorrowMaximum),
       ).to.be.revertedWith(
-        'SapphireCoreV1: limits condition is unfulfilled (vaultBorrowMinimum  <= vaultBorrowMaximum <= totalBorrowLimit)',
+        'SapphireCoreV1: required condition is vaultMin <= vaultMax <= totalLimit)',
       );
       await expect(
         sapphireCore.setLimits(vaultBorrowMaximum, vaultBorrowMinimum, totalBorrowLimit),
       ).to.be.revertedWith(
-        'SapphireCoreV1: limits condition is unfulfilled (vaultBorrowMinimum  <= vaultBorrowMaximum <= totalBorrowLimit)',
+        'SapphireCoreV1: required condition is vaultMin <= vaultMax <= totalLimit)',
       );
     });
 
