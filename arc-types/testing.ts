@@ -23,6 +23,7 @@ import {
   MockMozartSavingsV2,
   MockSapphireCoreV1,
   MockSapphireCreditScore,
+  SapphireAssessor,
   SapphireMapperLinear,
 } from '@src/typings';
 import { SapphireTestArc } from '@src/SapphireTestArc';
@@ -62,6 +63,7 @@ export interface Contracts {
     core: MockSapphireCoreV1;
     creditScore: MockSapphireCreditScore;
     linearMapper: SapphireMapperLinear;
+    assessor: SapphireAssessor;
   };
   synthetic: {
     static: StaticSyntheticToken;
