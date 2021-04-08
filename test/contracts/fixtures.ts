@@ -85,7 +85,8 @@ export async function spritzFixture(ctx: ITestContext, args?: ITestContextArgs) 
   const core = CoreV4Factory.connect(coreProxy.address, deployer);
 
   const synth = await deployStaticSynthetic(deployer);
-  const collateral = await deployTestToken(deployer, 'Test', 'TEST');
+  const collateral = await deployTestToken(deployer, 'Test', 'TEST', args?.decimals);
+
   const oracle = await deployMockOracle(deployer);
 
   const state = await deploySpritzStateV1(
@@ -125,9 +126,11 @@ export async function distributorFixture(ctx: ITestContext, args?: ITestContextA
 export async function sapphireFixture(ctx: ITestContext, args?: ITestContextArgs) {
   const deployer: Signer = ctx.signers.admin;
   const deployerAddress = await deployer.getAddress();
+  const collateral = await deployTestToken(deployer, 'Test', 'TEST', args?.decimals);
 
   const coreImp = await deployMockSapphireCoreV1(deployer);
   const coreProxy = await deployArcProxy(deployer, coreImp.address, deployerAddress, []);
+  // core should be initialized
   ctx.contracts.sapphire.core = MockSapphireCoreV1Factory.connect(coreProxy.address, deployer);
 
   ctx.contracts.sapphire.linearMapper = await new SapphireMapperLinearFactory(deployer).deploy();
