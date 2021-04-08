@@ -9,6 +9,8 @@ import {SafeERC20} from "../lib/SafeERC20.sol";
 
 import {IERC20} from "../token/IERC20.sol";
 
+import "hardhat/console.sol";
+
 contract WaitlistBatch is Ownable {
 
     /* ========== Types ========== */
@@ -37,7 +39,7 @@ contract WaitlistBatch is Ownable {
 
     mapping (uint256 => Batch) public batchMapping;
 
-    mapping (address => bool) userBatchMapping;
+    mapping (address => uint256) userBatchMapping;
 
     /* ========== Events ========== */
 
@@ -47,10 +49,11 @@ contract WaitlistBatch is Ownable {
         uint256 amount
     );
 
-    event NewBatchStarted(
+    event NewBatchAdded(
         uint256 totalSpots,
         uint256 batchStartTimestamp,
-        uint256 depositAmount
+        uint256 depositAmount,
+        uint256 batchNumber
     );
 
     event BatchTimestampChanged(
@@ -97,14 +100,51 @@ contract WaitlistBatch is Ownable {
 
     /* ========== Admin Functions ========== */
 
-    function startNewBatch(
+    /**
+     * @dev Adds a new batch to the `batchMapping` and increases the
+     *      count of `totalNumberOfBatches`
+     */
+    function addNewBatch(
         uint256 _totalSpots,
         uint256 _batchStartTimestamp,
         uint256 _depositAmount
     )
         public
+        onlyOwner
     {
+        console.log(block.timestamp);
+        require(
+            _batchStartTimestamp >= block.timestamp,
+            "WaitlistBatch: batch start time cannot be in the past"
+        );
 
+        require(
+            _depositAmount > 0,
+            "WaitlistBatch: deposit amount cannot be 0"
+        );
+
+        require(
+            _totalSpots > 0,
+            "WaitlistBatch: batch cannot have 0 spots"
+        );
+
+        Batch memory batch = Batch(
+            _totalSpots,
+            0,
+            _batchStartTimestamp,
+            _depositAmount,
+            false
+        );
+
+        batchMapping[totalNumberOfBatches] = batch;
+        totalNumberOfBatches = totalNumberOfBatches + 1;
+
+        emit NewBatchAdded(
+            _totalSpots,
+            _batchStartTimestamp,
+            _depositAmount,
+            totalNumberOfBatches - 1
+        );
     }
 
     function changeBatchStartTimestamp(
