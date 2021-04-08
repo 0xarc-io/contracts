@@ -71,12 +71,6 @@ describe.only('SapphireCore.setters', () => {
       ).to.be.revertedWith('Ownable: caller is not the owner');
     });
 
-    it('reverts if set to address 0', async () => {
-      await expect(
-        sapphireCore.setCollateralRatioAssessor(constants.AddressZero),
-      ).to.be.revertedWith('SapphireCoreV1: assessor is required');
-    });
-
     it('sets the assessor address', async () => {
       await expect(sapphireCore.setCollateralRatioAssessor(randomAddress))
         .to.emit(sapphireCore, 'AssessorUpdated')
@@ -90,12 +84,6 @@ describe.only('SapphireCore.setters', () => {
       await expect(
         sapphireCore.connect(ctx.signers.unauthorised).setFeeCollector(randomAddress),
       ).to.be.revertedWith('Ownable: caller is not the owner');
-    });
-
-    it('reverts if set to address 0', async () => {
-      await expect(sapphireCore.setFeeCollector(constants.AddressZero)).to.be.revertedWith(
-        'SapphireCoreV1: fee collector is required',
-      );
     });
 
     it('sets the fee collector address', async () => {
