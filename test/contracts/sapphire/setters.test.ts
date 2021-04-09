@@ -142,6 +142,7 @@ describe.only('SapphireCore.setters', () => {
       await expect(sapphireCore.setInterestSetter(randomAddress))
         .to.emit(sapphireCore, 'InterestSetterUpdated')
         .withArgs(randomAddress);
+      expect(await sapphireCore.interestSetter()).eq(randomAddress);
     });
   });
 

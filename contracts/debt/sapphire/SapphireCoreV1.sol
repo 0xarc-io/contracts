@@ -157,10 +157,14 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     {}
 
     function setInterestSetter(
-        address _newInterestSetter
+        address _interestSetter
     )
         public
-    {}
+        onlyAdmin
+    {
+        interestSetter = _interestSetter;
+        emit InterestSetterUpdated(interestSetter);
+    }
 
     function setCollateralRatioAssessor(
         address _newAssessor

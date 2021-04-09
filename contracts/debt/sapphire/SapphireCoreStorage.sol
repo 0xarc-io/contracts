@@ -75,6 +75,11 @@ contract SapphireCoreStorage {
     uint256 public totalBorrowed;
 
     /**
+     * @notice Which address can set interest rates for this contract
+     */
+    address public interestSetter;
+
+    /**
      * @dev The maximum amount which can be borrowed within a contract. This includes
      *      the amount of interest accrued.
      */
