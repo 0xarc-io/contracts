@@ -7,8 +7,9 @@ import {SafeMath} from "../../lib/SafeMath.sol";
 
 import {SapphireTypes} from "./SapphireTypes.sol";
 import {SapphireCoreStorage} from "./SapphireCoreStorage.sol";
+import {Adminable} from "../../lib/Adminable.sol";
 
-contract SapphireCoreV1 is SapphireCoreStorage {
+contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
     /* ========== Libraries ========== */
 
