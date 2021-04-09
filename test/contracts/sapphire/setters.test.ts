@@ -207,7 +207,7 @@ describe.only('SapphireCore.setters', () => {
 
     it('sets the borrow limits', async () => {
       await expect(sapphireCore.setLimits(totalBorrowLimit, vaultBorrowMinimum, vaultBorrowMaximum))
-        .to.emit(sapphireCore, 'SapphireCoreV1')
+        .to.emit(sapphireCore, 'LimitsUpdated')
         .withArgs(totalBorrowLimit, vaultBorrowMinimum, vaultBorrowMaximum);
       expect(await sapphireCore.totalBorrowLimit()).eq(totalBorrowLimit);
       expect(await sapphireCore.vaultBorrowMaximum()).eq(vaultBorrowMaximum);
