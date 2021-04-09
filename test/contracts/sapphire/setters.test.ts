@@ -5,7 +5,7 @@ import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 
-describe.only('SapphireCore.setters', () => {
+describe('SapphireCore.setters', () => {
   let ctx: ITestContext;
   let sapphireCore: SapphireCoreV1;
 
@@ -192,17 +192,17 @@ describe.only('SapphireCore.setters', () => {
       await expect(
         sapphireCore.setLimits(totalBorrowLimit, vaultBorrowMaximum, vaultBorrowMinimum),
       ).to.be.revertedWith(
-        'SapphireCoreV1: required condition is vaultMin <= vaultMax <= totalLimit)',
+        'SapphireCoreV1: required condition is vaultMin <= vaultMax <= totalLimit',
       );
       await expect(
         sapphireCore.setLimits(vaultBorrowMinimum, totalBorrowLimit, vaultBorrowMaximum),
       ).to.be.revertedWith(
-        'SapphireCoreV1: required condition is vaultMin <= vaultMax <= totalLimit)',
+        'SapphireCoreV1: required condition is vaultMin <= vaultMax <= totalLimit',
       );
       await expect(
         sapphireCore.setLimits(vaultBorrowMaximum, vaultBorrowMinimum, totalBorrowLimit),
       ).to.be.revertedWith(
-        'SapphireCoreV1: required condition is vaultMin <= vaultMax <= totalLimit)',
+        'SapphireCoreV1: required condition is vaultMin <= vaultMax <= totalLimit',
       );
     });
 
