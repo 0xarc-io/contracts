@@ -24,7 +24,7 @@ import { ONE_YEAR_IN_SECONDS } from '@src/constants';
  * is tested.
  */
 
-describe('SapphireCore.borrow()', () => {
+describe.skip('SapphireCore.borrow()', () => {
   const HiGH_C_RATIO = constants.WeiPerEther.mul(2);
   const LOW_C_RATIO = constants.WeiPerEther;
   const PRICE = utils.parseEther('1');
