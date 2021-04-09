@@ -16,7 +16,7 @@ export async function setup([deployer, unauthorized]: Wallet[]): Promise<any> {
   return { sapphireCore, deployer, unauthorized, collateral, synthetic };
 }
 
-describe.only('SapphireCore.init', () => {
+describe('SapphireCore.init', () => {
   let sapphireCore: MockSapphireCoreV1;
   let deployer: Wallet;
   let unauthorized: Wallet;
