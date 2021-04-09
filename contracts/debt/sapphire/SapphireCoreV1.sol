@@ -118,7 +118,23 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         uint256 _highCollateralRatio
     )
         public
-    {}
+        onlyAdmin
+    {
+        require(
+            _lowCollateralRatio >= BASE &&  _highCollateralRatio >= BASE,
+            "SapphireCoreV1: collateral ratio has to be at least 1"
+        );
+
+        require(
+            _lowCollateralRatio <=  _highCollateralRatio,
+            "SapphireCoreV1: high c-ratio is lower than the low c-ratio"
+        );
+
+        lowCollateralRatio = _lowCollateralRatio;
+        highCollateralRatio = _highCollateralRatio;
+
+        emit CollateralRatiosUpdated(lowCollateralRatio, highCollateralRatio);
+    }
 
     function setFees(
         uint256 _liquidationUserFee,
