@@ -124,7 +124,7 @@ describe.only('SapphireCore.setters', () => {
     });
 
     it('sets the oracle', async () => {
-      await expect(sapphireCore.setFeeCollector(randomAddress))
+      await expect(sapphireCore.setOracle(randomAddress))
         .to.emit(sapphireCore, 'OracleUpdated')
         .withArgs(randomAddress);
       expect(await sapphireCore.oracle()).eq(randomAddress);
