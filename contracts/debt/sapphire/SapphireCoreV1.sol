@@ -4,10 +4,11 @@
 pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 import {SafeMath} from "../../lib/SafeMath.sol";
+import {Adminable} from "../../lib/Adminable.sol";
+import {IOracle} from "../../oracle/IOracle.sol";
 
 import {SapphireTypes} from "./SapphireTypes.sol";
 import {SapphireCoreStorage} from "./SapphireCoreStorage.sol";
-import {Adminable} from "../../lib/Adminable.sol";
 
 contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
@@ -108,13 +109,13 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     }
 
     function setOracle(
-        address _newOracle
+        address _oracle
     )
         public
         onlyAdmin
     {
-        oracle = _newOracle;
-        emit OracleUpdated(oracle);
+        oracle = IOracle(_oracle);
+        emit OracleUpdated(_oracle);
     }
 
     function setCollateralRatios(
