@@ -147,8 +147,8 @@ describe.only('SapphireCore.setters', () => {
   });
 
   describe('#setFees', () => {
-    const userFee = constants.WeiPerEther.mul(10);
-    const arcFee = constants.WeiPerEther.mul(5);
+    const userFee = utils.parseEther('0.1');
+    const arcFee = utils.parseEther('0.05');
 
     it('reverts if called by non-owner', async () => {
       await expect(
@@ -158,10 +158,10 @@ describe.only('SapphireCore.setters', () => {
 
     it('reverts if fee sum is over 100%', async () => {
       await expect(
-        sapphireCore.setFees(utils.parseEther('60'), utils.parseEther('40').add(1)),
+        sapphireCore.setFees(utils.parseEther('0.6'), utils.parseEther('0.4').add(1)),
       ).to.be.revertedWith('SapphireCoreV1: fee sum has to be no more than 100%');
 
-      await expect(sapphireCore.setFees(utils.parseEther('100'), '1')).to.be.revertedWith(
+      await expect(sapphireCore.setFees(utils.parseEther('1'), '1')).to.be.revertedWith(
         'SapphireCoreV1: fee sum has to be no more than 100%',
       );
     });
