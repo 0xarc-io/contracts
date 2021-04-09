@@ -111,7 +111,11 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         address _newOracle
     )
         public
-    {}
+        onlyAdmin
+    {
+        oracle = _newOracle;
+        emit OracleUpdated(oracle);
+    }
 
     function setCollateralRatios(
         uint256 _lowCollateralRatio,
@@ -181,7 +185,11 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         bool _value
     )
         public
-    {}
+        onlyAdmin
+    {
+        paused = _value;
+        emit PauseStatusUpdated(paused);
+    }
 
     /**
      * @dev Update the interest rate of the protocol. Since this rate is compounded
