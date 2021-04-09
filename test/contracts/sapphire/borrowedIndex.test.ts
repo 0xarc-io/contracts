@@ -46,6 +46,7 @@ describe('borrowed index (integration)', () => {
       lowCollateralRatio: constants.WeiPerEther.mul(2),
       highCollateralRatio: constants.WeiPerEther.mul(2),
       merkleRoot: creditScoreTree.getHexRoot(),
+      price: COLLATERAL_PRICE,
     });
   }
 
@@ -87,9 +88,6 @@ describe('borrowed index (integration)', () => {
 
     await collateralContract.mintShare(signer.address, COLLATERAL_AMOUNT);
     await collateralContract.approve(arc.core().address, COLLATERAL_AMOUNT);
-
-    // Set collateral price
-    await arc.updatePrice(COLLATERAL_PRICE);
 
     // Open vault and mint debt
     await arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT, scoreProof, undefined, signer);
