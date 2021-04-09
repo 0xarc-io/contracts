@@ -1,11 +1,11 @@
-import { BigNumber, BigNumberish } from "ethers";
+import { BigNumber, BigNumberish } from 'ethers';
 
 export enum Operation {
-  Repay,
-  Deposit,
-  Borrow,
-  Withdraw,
-  Liquidate,
+  Repay = 0,
+  Deposit = 1,
+  Borrow = 2,
+  Withdraw = 3,
+  Liquidate = 4,
 }
 
 export type Vault = {
@@ -25,6 +25,6 @@ export interface CreditScoreProof {
 }
 
 export type Action = {
-  actionType: Operation,
-  amount: BigNumberish,
-}
+  operation: Operation;
+  amount: BigNumberish;
+};
