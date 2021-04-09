@@ -6,6 +6,7 @@ import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { TestTokenFactory } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
+import { setupBaseVault } from '@test/helpers/setupBaseVault';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { constants, utils } from 'ethers';
@@ -33,26 +34,6 @@ describe('SapphireCore.repay()', () => {
   let minterCreditScore: CreditScore;
   let creditScoreTree: CreditScoreTree;
 
-  /**
-   * Setup base vault with 1000 collateral and 500 debt for a c-ratio of
-   * 200%, when the collateral price is $1
-   */
-  async function setupBaseVault() {
-    const collateralContract = TestTokenFactory.connect(arc.collateral().address, signers.scoredMinter);
-
-    await collateralContract.mintShare(signers.scoredMinter.address, COLLATERAL_AMOUNT);
-    await collateralContract.approve(arc.core().address, COLLATERAL_AMOUNT);
-
-    // Open vault and mint debt
-    await arc.open(
-      COLLATERAL_AMOUNT,
-      BORROW_AMOUNT,
-      getScoreProof(minterCreditScore, creditScoreTree),
-      undefined,
-      signers.scoredMinter,
-    );
-  }
-
   async function init(ctx: ITestContext) {
     minterCreditScore = {
       account: ctx.signers.scoredMinter.address,
@@ -71,7 +52,13 @@ describe('SapphireCore.repay()', () => {
       price: COLLATERAL_PRICE,
     });
 
-    await setupBaseVault();
+    await setupBaseVault(
+      arc,
+      signers.scoredMinter,
+      COLLATERAL_AMOUNT,
+      BORROW_AMOUNT,
+      getScoreProof(minterCreditScore, creditScoreTree),
+    );
   }
 
   before(async () => {
@@ -251,7 +238,12 @@ describe('SapphireCore.repay()', () => {
     await arc.synthetic().mint(signers.scoredMinter.address, constants.WeiPerEther);
 
     await expect(
-      arc.repay(BORROW_AMOUNT.add(constants.WeiPerEther), undefined, undefined, signers.scoredMinter),
+      arc.repay(
+        BORROW_AMOUNT.add(constants.WeiPerEther),
+        undefined,
+        undefined,
+        signers.scoredMinter,
+      ),
     ).to.be.revertedWith('SapphireCoreV1: there is not enough debt to repay');
   });
 
