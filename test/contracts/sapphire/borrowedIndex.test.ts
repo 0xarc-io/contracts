@@ -26,6 +26,10 @@ const COLLATERAL_PRICE = utils.parseEther('1');
 const SECONDS_PER_MONTH = BigNumber.from(30 * 24 * 60 * 60);
 const SECONDS_PER_YEAR = BigNumber.from(365 * 24 * 60 * 60);
 
+// Set interest rate for a 5% APY. Calculated using
+// https://www.wolframalpha.com/input/?i=31536000th+root+of+1.05
+const INTEREST_RATE = BigNumber.from(1547125957);
+
 describe('borrowed index (integration)', () => {
   let arc: SapphireTestArc;
   let signers: TestingSigners;
@@ -48,6 +52,21 @@ describe('borrowed index (integration)', () => {
       merkleRoot: creditScoreTree.getHexRoot(),
       price: COLLATERAL_PRICE,
     });
+  }
+
+  /**
+   * Returns the expected borrow index to be if core is about to update
+   * its index
+   * @param prevBorrowIndex the current borrow index (before updating it)
+   */
+  async function getBorrowIndex(
+    lastUpdateIndex: BigNumber,
+    prevBorrowIndex: BigNumber,
+    interestRate = INTEREST_RATE,
+  ) {
+    const currentTimestamp = arc.core().currentTimestamp();
+    const accumulatedInterest = interestRate.mul(currentTimestamp.sub(lastUpdateIndex)).div(BASE);
+    return prevBorrowIndex.add(accumulatedInterest);
   }
 
   /**
@@ -102,13 +121,10 @@ describe('borrowed index (integration)', () => {
   addSnapshotBeforeRestoreAfterEach();
 
   // Scenario 1 in the Google SpreadSheet (see link at the top of this file)
-  it.only('calculates the interest amount correctly for one user', async () => {
+  it('calculates the interest amount correctly for one user', async () => {
     await arc.updateTime(1);
 
-    // Set interest rate for a 5% APY. Calculated using
-    // https://www.wolframalpha.com/input/?i=31536000th+root+of+1.05
-    const interestRate = BigNumber.from(1547125957);
-    await arc.core().setInterestRate(interestRate);
+    await arc.core().setInterestRate(INTEREST_RATE);
 
     // User A opens position of n tokens and $500 debt
     await arc.updateTime(2);
@@ -121,7 +137,12 @@ describe('borrowed index (integration)', () => {
 
     // Update time to 6 months
     await advanceNMonths(6);
+    let lastUpdateIndex = await arc.core().indexLastUpdate();
+    let prevBorrowIndex = await arc.core().borrowIndex();
     await arc.core().updateIndex();
+
+    let borrowIndex = await arc.core().borrowIndex();
+    expect(borrowIndex).to.eq(await getBorrowIndex(lastUpdateIndex, prevBorrowIndex));
 
     // Borrow $100 more
     await arc.borrow(
@@ -140,7 +161,12 @@ describe('borrowed index (integration)', () => {
 
     // Update time to 3 months
     await advanceNMonths(3);
+    lastUpdateIndex = await arc.core().indexLastUpdate();
+    prevBorrowIndex = await arc.core().borrowIndex();
     await arc.core().updateIndex();
+
+    borrowIndex = await arc.core().borrowIndex();
+    expect(borrowIndex).to.eq(await getBorrowIndex(lastUpdateIndex, prevBorrowIndex));
 
     // Repay principal of $600
     await arc.repay(
@@ -163,7 +189,12 @@ describe('borrowed index (integration)', () => {
 
     // Update time to 3 months
     await advanceNMonths(3);
+    lastUpdateIndex = await arc.core().indexLastUpdate();
+    prevBorrowIndex = await arc.core().borrowIndex();
     await arc.core().updateIndex();
+
+    borrowIndex = await arc.core().borrowIndex();
+    expect(borrowIndex).to.eq(await getBorrowIndex(lastUpdateIndex, prevBorrowIndex));
 
     // Repay remaining interest
     vault = await arc.getVault(signers.scoredMinter.address);
@@ -198,7 +229,12 @@ describe('borrowed index (integration)', () => {
 
     // Update time to 6 months and update index
     await advanceNMonths(6);
+    let lastUpdateIndex = await arc.core().indexLastUpdate();
+    let prevBorrowIndex = await arc.core().borrowIndex();
     await arc.core().updateIndex();
+
+    let borrowIndex = await arc.core().borrowIndex();
+    expect(borrowIndex).to.eq(await getBorrowIndex(lastUpdateIndex, prevBorrowIndex));
 
     // User B opens position at 1000 tokens at $1 and $500 debt
     await setupBaseVault(signers.minter, null);
@@ -210,7 +246,12 @@ describe('borrowed index (integration)', () => {
 
     // Update time to 3 months and update index
     await advanceNMonths(3);
+    lastUpdateIndex = await arc.core().indexLastUpdate();
+    prevBorrowIndex = await arc.core().borrowIndex();
     await arc.core().updateIndex();
+
+    borrowIndex = await arc.core().borrowIndex();
+    expect(borrowIndex).to.eq(await getBorrowIndex(lastUpdateIndex, prevBorrowIndex));
 
     // User A repays his initial debt ($500). His vault should contain the accumulated interest
     await arc.repay(
@@ -227,7 +268,12 @@ describe('borrowed index (integration)', () => {
 
     // Update time to 3 months and update index
     await advanceNMonths(3);
+    lastUpdateIndex = await arc.core().indexLastUpdate();
+    prevBorrowIndex = await arc.core().borrowIndex();
     await arc.core().updateIndex();
+
+    borrowIndex = await arc.core().borrowIndex();
+    expect(borrowIndex).to.eq(await getBorrowIndex(lastUpdateIndex, prevBorrowIndex));
 
     // User B repays his entire debt and interest
     vaultB = await arc.getVault(signers.minter.address);
@@ -245,15 +291,20 @@ describe('borrowed index (integration)', () => {
 
     // Update time to 1 month and update index
     await advanceNMonths(1);
+    lastUpdateIndex = await arc.core().indexLastUpdate();
+    prevBorrowIndex = await arc.core().borrowIndex();
     await arc.core().updateIndex();
+
+    borrowIndex = await arc.core().borrowIndex();
+    expect(borrowIndex).to.eq(await getBorrowIndex(lastUpdateIndex, prevBorrowIndex));
 
     // User A should just have the accumulated interest,
     // which is equal to the totalBorrowed amount of the system
   });
 
   // TODO develop spreadsheet scenarios for the following cases:
-  // it.skip('2 users borrow, then interest is set to 0');
-  // it.skip('3 users borrow, then halfway the interest rate increases');
-  // it.skip('2 users borrow, then one is liquidated');
-  // it.skip('User repays more than the debt amount');
+  xit('2 users borrow, then interest is set to 0');
+  xit('3 users borrow, then halfway the interest rate increases');
+  xit('2 users borrow, then one is liquidated');
+  xit('User repays more than the debt amount');
 });
