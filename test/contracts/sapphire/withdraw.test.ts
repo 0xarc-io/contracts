@@ -4,7 +4,7 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { BASE } from '@src/constants';
 import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
-import { BaseERC20Factory, SapphireAssessor, TestTokenFactory } from '@src/typings';
+import { BaseERC20Factory, SapphireAssessor } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import { setupBaseVault } from '@test/helpers/setupBaseVault';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
