@@ -142,7 +142,9 @@ describe('borrowed index (integration)', () => {
     await arc.core().updateIndex();
 
     let borrowIndex = await arc.core().borrowIndex();
+    let newLastUpdateIndex = await arc.core().indexLastUpdate();
     expect(borrowIndex).to.eq(await getBorrowIndex(lastUpdateIndex, prevBorrowIndex));
+    expect(newLastUpdateIndex).to.eq(lastUpdateIndex.add(SECONDS_PER_MONTH.mul(6)));
 
     // Borrow $100 more
     await arc.borrow(
@@ -166,7 +168,9 @@ describe('borrowed index (integration)', () => {
     await arc.core().updateIndex();
 
     borrowIndex = await arc.core().borrowIndex();
+    newLastUpdateIndex = await arc.core().indexLastUpdate();
     expect(borrowIndex).to.eq(await getBorrowIndex(lastUpdateIndex, prevBorrowIndex));
+    expect(newLastUpdateIndex).to.eq(lastUpdateIndex.add(SECONDS_PER_MONTH.mul(3)));
 
     // Repay principal of $600
     await arc.repay(
@@ -194,7 +198,9 @@ describe('borrowed index (integration)', () => {
     await arc.core().updateIndex();
 
     borrowIndex = await arc.core().borrowIndex();
+    newLastUpdateIndex = await arc.core().indexLastUpdate();
     expect(borrowIndex).to.eq(await getBorrowIndex(lastUpdateIndex, prevBorrowIndex));
+    expect(newLastUpdateIndex).to.eq(lastUpdateIndex.add(SECONDS_PER_MONTH.mul(3)));
 
     // Repay remaining interest
     vault = await arc.getVault(signers.scoredMinter.address);
@@ -234,7 +240,9 @@ describe('borrowed index (integration)', () => {
     await arc.core().updateIndex();
 
     let borrowIndex = await arc.core().borrowIndex();
+    let newLastUpdateIndex = await arc.core().indexLastUpdate();
     expect(borrowIndex).to.eq(await getBorrowIndex(lastUpdateIndex, prevBorrowIndex));
+    expect(newLastUpdateIndex).to.eq(lastUpdateIndex.add(SECONDS_PER_MONTH.mul(6)));
 
     // User B opens position at 1000 tokens at $1 and $500 debt
     await setupBaseVault(signers.minter, null);
@@ -251,7 +259,9 @@ describe('borrowed index (integration)', () => {
     await arc.core().updateIndex();
 
     borrowIndex = await arc.core().borrowIndex();
+    newLastUpdateIndex = await arc.core().indexLastUpdate();
     expect(borrowIndex).to.eq(await getBorrowIndex(lastUpdateIndex, prevBorrowIndex));
+    expect(newLastUpdateIndex).to.eq(lastUpdateIndex.add(SECONDS_PER_MONTH.mul(3)));
 
     // User A repays his initial debt ($500). His vault should contain the accumulated interest
     await arc.repay(
@@ -273,7 +283,9 @@ describe('borrowed index (integration)', () => {
     await arc.core().updateIndex();
 
     borrowIndex = await arc.core().borrowIndex();
+    newLastUpdateIndex = await arc.core().indexLastUpdate();
     expect(borrowIndex).to.eq(await getBorrowIndex(lastUpdateIndex, prevBorrowIndex));
+    expect(newLastUpdateIndex).to.eq(lastUpdateIndex.add(SECONDS_PER_MONTH.mul(3)));
 
     // User B repays his entire debt and interest
     vaultB = await arc.getVault(signers.minter.address);
@@ -296,7 +308,9 @@ describe('borrowed index (integration)', () => {
     await arc.core().updateIndex();
 
     borrowIndex = await arc.core().borrowIndex();
+    newLastUpdateIndex = await arc.core().indexLastUpdate();
     expect(borrowIndex).to.eq(await getBorrowIndex(lastUpdateIndex, prevBorrowIndex));
+    expect(newLastUpdateIndex).to.eq(lastUpdateIndex.add(SECONDS_PER_MONTH));
 
     // User A should just have the accumulated interest,
     // which is equal to the totalBorrowed amount of the system
