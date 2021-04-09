@@ -3,6 +3,7 @@
 
 pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
+import {BaseERC20} from "../../token/BaseERC20.sol";
 import {SafeMath} from "../../lib/SafeMath.sol";
 import {Adminable} from "../../lib/Adminable.sol";
 import {IOracle} from "../../oracle/IOracle.sol";
@@ -105,7 +106,36 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         uint256 _liquidationArcFee
     )
         public
+        onlyAdmin
     {
+        require(
+            collateralAsset == address(0),
+            "SapphireCoreV1: cannot re-initialize contract"
+        );
+
+        require(
+            _collateralAddress != address(0),
+            "SapphireCoreV1: collateral is required"
+        );
+
+        require(
+            _syntheticAddress != address(0),
+            "SapphireCoreV1: synthetic is required"
+        );
+
+        paused = true;
+        borrowIndex = BASE;
+        borrowIndexLastUpdate = getCurrentTimestamp();
+        collateralAsset = _collateralAddress;
+        syntheticAsset = _syntheticAddress;
+
+        BaseERC20 collateral = BaseERC20(collateralAsset);
+        precisionScalar = 10 ** (18 - collateral.decimals());
+
+        setCollateralRatioAssessor(_assessor);
+        setOracle(_oracleAddress);
+        setCollateralRatios(_lowCollateralRatio, _highCollateralRatio);
+        setFees(_liquidationUserFee, _liquidationArcFee);
     }
 
     function setOracle(
@@ -194,12 +224,12 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     }
 
     function setCollateralRatioAssessor(
-        address _newAssessor
+        address _assessor
     )
         public
         onlyAdmin
     {
-        collateralRatioAssessor= _newAssessor;
+        collateralRatioAssessor= _assessor;
         emit AssessorUpdated(collateralRatioAssessor);
     }
 
@@ -302,6 +332,19 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     }
 
     /* ========== Public Getters ========== */
+
+    /**
+     * @dev Returns current block's timestamp
+     *
+     * @notice This function is introduced in order to properly test time delays in this contract
+     */
+    function getCurrentTimestamp()
+        public
+        view
+        returns (uint256)
+    {
+        return block.timestamp;
+    }
 
     function getVault(
         address owner

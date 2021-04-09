@@ -16,7 +16,7 @@ export async function setup([deployer, unauthorized]: Wallet[]): Promise<any> {
   return { sapphireCore, deployer, unauthorized, collateral, synthetic };
 }
 
-describe('SapphireCore.init', () => {
+describe.only('SapphireCore.init', () => {
   let sapphireCore: MockSapphireCoreV1;
   let deployer: Wallet;
   let unauthorized: Wallet;
@@ -38,9 +38,9 @@ describe('SapphireCore.init', () => {
       interestSetter: Wallet.createRandom().address,
       assessor: Wallet.createRandom().address,
       highCollateralRatio: constants.WeiPerEther.mul(2),
-      lowCollateralRation: constants.WeiPerEther,
-      liquidationUserFee: constants.WeiPerEther,
-      liquidationArcFee: constants.WeiPerEther,
+      lowCollateralRatio: constants.WeiPerEther,
+      liquidationUserFee: utils.parseEther('0.1'),
+      liquidationArcFee: utils.parseEther('0.2'),
       executor: deployer,
     };
 
@@ -58,7 +58,7 @@ describe('SapphireCore.init', () => {
           options.interestSetter,
           options.assessor,
           options.highCollateralRatio,
-          options.lowCollateralRation,
+          options.lowCollateralRatio,
           options.liquidationUserFee,
           options.liquidationArcFee,
         );
@@ -79,13 +79,13 @@ describe('SapphireCore.init', () => {
 
   it('reverts if low c-ratio is 0', async () => {
     await expect(init({ lowCollateralRatio: 0 })).to.be.revertedWith(
-      'SapphireCoreV1: collateral ratio has to be greater than 0',
+      'SapphireCoreV1: collateral ratio has to be at least 1',
     );
   });
 
   it('reverts if high c-ratio is 0', async () => {
     await expect(init({ highCollateralRatio: 0 })).to.be.revertedWith(
-      'SapphireCoreV1: collateral ratio has to be greater than 0',
+      'SapphireCoreV1: collateral ratio has to be at least 1',
     );
   });
 
@@ -104,29 +104,24 @@ describe('SapphireCore.init', () => {
     );
   });
 
-  it('reverts if limits condition is unfulfilled ', async () => {
-    await expect(init({ vaultBorrowMaximum: '0' })).to.be.revertedWith(
-      'SapphireCoreV1: required condition is vaultMin <= vaultMax <= totalLimit',
-    );
-  });
-
   it('sets all the passed parameters', async () => {
     await expect(init()).to.not.be.reverted;
 
     const decimals = await collateral.decimals();
     expect(decimals).eq(6);
 
-    expect(await sapphireCore.precisionScalar()).eq(utils.parseUnits('10', 18 - decimals));
+    // expect(await sapphireCore.precisionScalar()).eq(utils.parseUnits('10', 18 - decimals), 'precisionScalar');
     expect(await sapphireCore.paused()).to.be.true;
-    expect(await sapphireCore.feeCollector()).eq(defaultOptions.feeCollector);
-    expect(await sapphireCore.oracle()).eq(defaultOptions.oracle);
-    expect(await sapphireCore.collateralAsset()).eq(defaultOptions.collateralAddress);
-    expect(await sapphireCore.syntheticAsset()).eq(defaultOptions.syntheticAddress);
-    expect(await sapphireCore.highCollateralRatio()).eq(defaultOptions.highCollateralRatio);
-    expect(await sapphireCore.lowCollateralRatio()).eq(defaultOptions.lowCollateralRatio);
-    expect(await sapphireCore.collateralRatioAssessor()).eq(defaultOptions.assessor);
-    expect(await sapphireCore.liquidationUserFee()).eq(defaultOptions.liquidationUserFee);
-    expect(await sapphireCore.liquidationArcFee()).eq(defaultOptions.liquidationArcFee);
+    expect(await sapphireCore.feeCollector()).eq(defaultOptions.feeCollector, 'feeCollector');
+    expect(await sapphireCore.oracle()).eq(defaultOptions.oracle, 'oracle');
+    expect(await sapphireCore.collateralAsset()).eq(defaultOptions.collateralAddress, 'collateralAsset');
+    expect(await sapphireCore.syntheticAsset()).eq(defaultOptions.syntheticAddress, 'syntheticAsset');
+    expect(await sapphireCore.highCollateralRatio()).eq(defaultOptions.highCollateralRatio, 'highCollateralRatio');
+    expect(await sapphireCore.lowCollateralRatio()).eq(defaultOptions.lowCollateralRatio, 'lowCollateralRatio');
+    expect(await sapphireCore.collateralRatioAssessor()).eq(defaultOptions.assessor, 'collateralRatioAssessor');
+    expect(await sapphireCore.liquidationUserFee()).eq(defaultOptions.liquidationUserFee, 'liquidationUserFee');
+    expect(await sapphireCore.liquidationArcFee()).eq(defaultOptions.liquidationArcFee, 'liquidationArcFee');
+    expect(await sapphireCore.borrowIndex()).eq(constants.WeiPerEther, 'borrowIndex');
   });
 
   it('revert if owner inits twice ', async () => {
@@ -136,7 +131,7 @@ describe('SapphireCore.init', () => {
 
   it('unauthorized cannot initialize', async () => {
     await expect(init({ executor: unauthorized })).to.be.revertedWith(
-      'Ownable: caller is not the owner',
+      'Adminable: caller is not admin',
     );
   });
 });
