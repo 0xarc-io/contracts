@@ -44,7 +44,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
     event LimitsUpdated(
         uint256 _totalBorrowLimit,
-        uint256 _valutCollateralMinimum,
+        uint256 _valutBorrowMinimum,
         uint256 _vaultBorrowMaximum
     );
 
@@ -164,7 +164,24 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         uint256 _vaultBorrowMaximum
     )
         public
-    {}
+        onlyAdmin
+    {
+        require(
+            _vaultBorrowMinimum <= _vaultBorrowMaximum,
+            "SapphireCoreV1: required condition is vaultMin <= vaultMax <= totalLimit"
+        );
+
+        require(
+            _vaultBorrowMaximum <= _totalBorrowLimit,
+            "SapphireCoreV1: required condition is vaultMin <= vaultMax <= totalLimit"
+        );
+
+        vaultBorrowMinimum = _vaultBorrowMinimum;
+        vaultBorrowMaximum = _vaultBorrowMaximum;
+        totalBorrowLimit = _totalBorrowLimit;
+
+        emit LimitsUpdated(totalBorrowLimit, vaultBorrowMinimum, vaultBorrowMaximum);
+    }
 
     function setInterestSetter(
         address _interestSetter
