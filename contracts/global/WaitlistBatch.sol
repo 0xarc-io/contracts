@@ -81,8 +81,8 @@ contract WaitlistBatch is Ownable {
 
     /* ========== Constructor ========== */
 
-    constructor(address _depostCurrency) public {
-        depositCurrency = IERC20(_depostCurrency);
+    constructor(address _depositCurrency) public {
+        depositCurrency = IERC20(_depositCurrency);
 
         // Set the next batch number to 1 to avoid some complications
         // caused by batch number 0

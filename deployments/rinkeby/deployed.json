@@ -327,5 +327,15 @@
     "version": 1,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "WaitlistBatch",
+    "source": "WaitlistBatch",
+    "address": "0xa956BE0DD7BF1d674D04cA152F74761994a95e20",
+    "txn": "0xbd0a25607fab84e4edeaf701cfe187f25809f6bdf046c7246891ece9513fd6a4",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": ""
   }
 ]
