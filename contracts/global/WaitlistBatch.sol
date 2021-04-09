@@ -128,10 +128,9 @@ contract WaitlistBatch is Ownable {
         );
 
         // Check if user already applied to a batch
-        uint256 alreadyAppliedBatchNr = userBatchMapping[msg.sender];
-        uint256 amtAlreadyDeposited = userDepositMapping[alreadyAppliedBatchNr][msg.sender];
+        UserBatchInfo memory batchInfo = getBatchInfoForUser(msg.sender);
         require(
-            amtAlreadyDeposited == 0,
+            !batchInfo.hasParticipated,
             "WaitlistBatch: cannot apply to more than one batch"
         );
 

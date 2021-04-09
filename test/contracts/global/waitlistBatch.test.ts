@@ -107,6 +107,17 @@ describe('WhitelistBatch', () => {
       );
     });
 
+    it('cannot apply again after having reclaimed', async () => {
+      await waitlist.setCurrentTimestamp(batch.startTimestamp);
+      await waitlist.enableClaims([1]);
+      await userWaitlist.applyToBatch(1);
+      await userWaitlist.reclaimTokens();
+
+      await expect(userWaitlist.applyToBatch(1)).to.be.revertedWith(
+        'WaitlistBatch: cannot apply to more than one batch',
+      );
+    });
+
     it('can apply to a valid batch', async () => {
       // Add new batch to increment the batch number
       await waitlist.addNewBatch(batch.totalSpots.sub(1), CURRENT_TIMESTAMP, batch.depositAmount);
