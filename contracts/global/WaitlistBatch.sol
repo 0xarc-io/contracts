@@ -9,8 +9,6 @@ import {SafeERC20} from "../lib/SafeERC20.sol";
 
 import {IERC20} from "../token/IERC20.sol";
 
-import "hardhat/console.sol";
-
 contract WaitlistBatch is Ownable {
 
     /* ========== Types ========== */
@@ -33,13 +31,13 @@ contract WaitlistBatch is Ownable {
 
     IERC20 public depositCurrency;
 
-    uint256 public totalNumberOfBatches;
+    uint256 public nextBatchNumber;
 
     mapping (uint256 => mapping (address => uint256)) public userDepositMapping;
 
     mapping (uint256 => Batch) public batchMapping;
 
-    mapping (address => uint256) userBatchMapping;
+    mapping (address => uint256) public userBatchMapping;
 
     /* ========== Events ========== */
 
@@ -67,13 +65,28 @@ contract WaitlistBatch is Ownable {
     );
 
     event BatchClaimsEnabled(
-        uint256 batchNumber
+        uint256[] batchNumbers
+    );
+
+    event TokensReclaimed(
+        address user,
+        uint256 amount
+    );
+
+    event TokensTransfered(
+        address tokenAddress,
+        uint256 amount,
+        address destination
     );
 
     /* ========== Constructor ========== */
 
     constructor(address _depostCurrency) public {
         depositCurrency = IERC20(_depostCurrency);
+
+        // Set the next batch number to 1 to avoid some complications
+        // caused by batch number 0
+        nextBatchNumber = 1;
     }
 
     /* ========== Public Getters ========== */
@@ -85,7 +98,21 @@ contract WaitlistBatch is Ownable {
         view
         returns (UserBatchInfo memory)
     {
+        uint256 participatingBatch = userBatchMapping[_user];
 
+        return UserBatchInfo({
+            hasParticipated: participatingBatch > 0,
+            batchNumber: participatingBatch,
+            depositAmount: userDepositMapping[participatingBatch][_user]
+        });
+    }
+
+    function getTotalNumberOfBatches()
+        public
+        view
+        returns (uint256)
+    {
+        return nextBatchNumber - 1;
     }
 
     /* ========== Public Functions ========== */
@@ -95,7 +122,84 @@ contract WaitlistBatch is Ownable {
     )
         public
     {
+        require(
+            _batchNumber > 0 && _batchNumber < nextBatchNumber,
+            "WaitlistBatch: batch does not exist"
+        );
 
+        // Check if user already applied to a batch
+        uint256 alreadyAppliedBatchNr = userBatchMapping[msg.sender];
+        uint256 amtAlreadyDeposited = userDepositMapping[alreadyAppliedBatchNr][msg.sender];
+        require(
+            amtAlreadyDeposited == 0,
+            "WaitlistBatch: cannot apply to more than one batch"
+        );
+
+        Batch storage batch = batchMapping[_batchNumber];
+
+        require(
+            batch.filledSpots < batch.totalSpots,
+            "WaitlistBatch: batch is filled"
+        );
+
+        require(
+            currentTimestamp() >= batch.batchStartTimestamp,
+            "WaitlistBatch: cannot apply before the start time"
+        );
+
+        batch.filledSpots++;
+
+        userDepositMapping[_batchNumber][msg.sender] = batch.depositAmount;
+        userBatchMapping[msg.sender] = _batchNumber;
+
+        SafeERC20.safeTransferFrom(
+            depositCurrency,
+            msg.sender,
+            address(this),
+            batch.depositAmount
+        );
+
+        emit AppliedToBatch(
+            msg.sender,
+            _batchNumber,
+            batch.depositAmount
+        );
+    }
+
+    function reclaimTokens()
+        public
+    {
+        UserBatchInfo memory batchInfo = getBatchInfoForUser(msg.sender);
+
+        require(
+            batchInfo.hasParticipated,
+            "WaitlistBatch: user did not participate in a batch"
+        );
+
+        require(
+            batchInfo.depositAmount > 0,
+            "WaitlistBatch: there are no tokens to reclaim"
+        );
+
+        Batch memory batch = batchMapping[batchInfo.batchNumber];
+
+        require(
+            batch.claimable,
+            "WaitlistBatch: the tokens are not yet claimable"
+        );
+
+        userDepositMapping[batchInfo.batchNumber][msg.sender] -= batchInfo.depositAmount;
+
+        SafeERC20.safeTransfer(
+            depositCurrency,
+            msg.sender,
+            batchInfo.depositAmount
+        );
+
+        emit TokensReclaimed(
+            msg.sender,
+            batchInfo.depositAmount
+        );
     }
 
     /* ========== Admin Functions ========== */
@@ -112,9 +216,8 @@ contract WaitlistBatch is Ownable {
         public
         onlyOwner
     {
-        console.log(block.timestamp);
         require(
-            _batchStartTimestamp >= block.timestamp,
+            _batchStartTimestamp >= currentTimestamp(),
             "WaitlistBatch: batch start time cannot be in the past"
         );
 
@@ -136,14 +239,14 @@ contract WaitlistBatch is Ownable {
             false
         );
 
-        batchMapping[totalNumberOfBatches] = batch;
-        totalNumberOfBatches = totalNumberOfBatches + 1;
+        batchMapping[nextBatchNumber] = batch;
+        nextBatchNumber = nextBatchNumber + 1;
 
         emit NewBatchAdded(
             _totalSpots,
             _batchStartTimestamp,
             _depositAmount,
-            totalNumberOfBatches - 1
+            nextBatchNumber - 1
         );
     }
 
@@ -152,8 +255,25 @@ contract WaitlistBatch is Ownable {
         uint256 _newStartTimestamp
     )
         public
+        onlyOwner
     {
+        require(
+            _batchNumber > 0 && _batchNumber < nextBatchNumber,
+            "WaitlistBatch: batch does not exit"
+        );
 
+        require(
+            _newStartTimestamp >= currentTimestamp(),
+            "WaitlistBatch: batch start time cannot be in the past"
+        );
+
+        Batch storage batch = batchMapping[_batchNumber];
+        batch.batchStartTimestamp = _newStartTimestamp;
+
+        emit BatchTimestampChanged(
+            _batchNumber,
+            _newStartTimestamp
+        );
     }
 
     function changeBatchTotalSpots(
@@ -161,25 +281,88 @@ contract WaitlistBatch is Ownable {
         uint256 _newSpots
     )
         public
+        onlyOwner
     {
+        require(
+            _batchNumber > 0 && _batchNumber < nextBatchNumber,
+            "WaitlistBatch: the batch does not exist"
+        );
 
+        Batch storage batch = batchMapping[_batchNumber];
+
+        require(
+            currentTimestamp() < batch.batchStartTimestamp,
+            "WaitlistBatch: the batch start date already passed"
+        );
+
+        require(
+            batch.totalSpots < _newSpots,
+            "WaitlistBatch: cannot change total spots to a smaller or equal number"
+        );
+
+        batch.totalSpots = _newSpots;
+
+        emit BatchTotalSpotsUpdated(
+            _batchNumber,
+            _newSpots
+        );
     }
 
     function enableClaims(
         uint256[] memory _batchNumbers
     )
         public
+        onlyOwner
     {
+        for (uint256 i = 0; i < _batchNumbers.length; i++) {
+            uint256 batchNumber = _batchNumbers[i];
 
+            require(
+                batchNumber > 0 && batchNumber < nextBatchNumber,
+                "WaitlistBatch: the batch does not exist"
+            );
+
+            Batch storage batch = batchMapping[batchNumber];
+
+            require(
+                batch.claimable == false,
+                "WaitlistBatch: batch has already claimable tokens"
+            );
+
+            batch.claimable = true;
+        }
+
+        emit BatchClaimsEnabled(_batchNumbers);
     }
 
     function transferTokens(
         address _tokenAddress,
         uint256 _amount,
-        address _desination
+        address _destination
     )
         public
+        onlyOwner
     {
+        SafeERC20.safeTransfer(
+            IERC20(_tokenAddress),
+            _destination,
+            _amount
+        );
 
+        emit TokensTransfered(
+            _tokenAddress,
+            _amount,
+            _destination
+        );
+    }
+
+    /* ========== Dev Functions ========== */
+
+    function currentTimestamp()
+        public
+        view
+        returns (uint256)
+    {
+        return block.timestamp;
     }
 }
