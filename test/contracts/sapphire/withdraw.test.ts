@@ -6,6 +6,7 @@ import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { BaseERC20Factory, SapphireAssessor, TestTokenFactory } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
+import { setupBaseVault } from '@test/helpers/setupBaseVault';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { constants, utils } from 'ethers';
@@ -32,27 +33,6 @@ describe('SapphireCore.withdraw()', () => {
   let creditScoreTree: CreditScoreTree;
   let assessor: SapphireAssessor;
 
-  /**
-   * Setup base vault with 1000 collateral and 500 debt for a c-ratio of
-   * 200%, when the collateral price is $1
-   */
-  async function setupBaseVault(
-    collateralAmt = COLLATERAL_AMOUNT,
-    borrowAmt = BORROW_AMOUNT,
-    scoreProof = getScoreProof(minterCreditScore, creditScoreTree),
-  ) {
-    const collateralContract = TestTokenFactory.connect(
-      arc.collateral().address,
-      signers.scoredMinter,
-    );
-
-    await collateralContract.mintShare(signers.scoredMinter.address, collateralAmt);
-    await collateralContract.approve(arc.core().address, collateralAmt);
-
-    // Open vault and mint debt
-    await arc.open(collateralAmt, borrowAmt, scoreProof, undefined, signers.scoredMinter);
-  }
-
   async function init(ctx: ITestContext) {
     minterCreditScore = {
       account: ctx.signers.scoredMinter.address,
@@ -71,7 +51,13 @@ describe('SapphireCore.withdraw()', () => {
       price: COLLATERAL_PRICE,
     });
 
-    await setupBaseVault();
+    await setupBaseVault(
+      arc,
+      signers.scoredMinter,
+      COLLATERAL_AMOUNT,
+      BORROW_AMOUNT,
+      getScoreProof(minterCreditScore, creditScoreTree),
+    );
   }
 
   before(async () => {
@@ -84,7 +70,7 @@ describe('SapphireCore.withdraw()', () => {
   addSnapshotBeforeRestoreAfterEach();
 
   it('withdraws the entire collateral amount if no debt is minted', async () => {
-    await setupBaseVault(COLLATERAL_AMOUNT, BigNumber.from(0), null);
+    await setupBaseVault(arc, signers.scoredMinter, COLLATERAL_AMOUNT, BigNumber.from(0));
 
     let vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.collateralAmount).to.eq(COLLATERAL_AMOUNT);
@@ -101,7 +87,7 @@ describe('SapphireCore.withdraw()', () => {
   });
 
   it('withdraws to the limit', async () => {
-    await setupBaseVault(COLLATERAL_AMOUNT, BORROW_AMOUNT, null);
+    await setupBaseVault(arc, signers.scoredMinter, COLLATERAL_AMOUNT, BORROW_AMOUNT);
 
     // Withdraw the max collateral to respect the c-ratio set by HIGH_C_RATIO
     const remainingAmount = BORROW_AMOUNT.mul(HIGH_C_RATIO).div(BASE);
@@ -127,7 +113,13 @@ describe('SapphireCore.withdraw()', () => {
      * c-ratio is lower
      */
 
-    await setupBaseVault();
+    await setupBaseVault(
+      arc,
+      signers.scoredMinter,
+      COLLATERAL_AMOUNT,
+      BORROW_AMOUNT,
+      getScoreProof(minterCreditScore, creditScoreTree),
+    );
 
     // Withdraw the max collateral to respect the c-ratio set by HIGH_C_RATIO
     let remainingAmount = BORROW_AMOUNT.mul(HIGH_C_RATIO).div(BASE);
@@ -185,7 +177,13 @@ describe('SapphireCore.withdraw()', () => {
   });
 
   it('updates the totalCollateral amount after a withdraw', async () => {
-    await setupBaseVault();
+    await setupBaseVault(
+      arc,
+      signers.scoredMinter,
+      COLLATERAL_AMOUNT,
+      BORROW_AMOUNT,
+      getScoreProof(minterCreditScore, creditScoreTree),
+    );
 
     const preTotalSupply = await arc.core().totalCollateral();
 
@@ -197,7 +195,7 @@ describe('SapphireCore.withdraw()', () => {
   });
 
   it('reverts if the resulting vault ends up below the minimum c-ratio', async () => {
-    await setupBaseVault(COLLATERAL_AMOUNT, BORROW_AMOUNT, null);
+    await setupBaseVault(arc, signers.scoredMinter, COLLATERAL_AMOUNT, BORROW_AMOUNT);
 
     const minCollateral = HIGH_C_RATIO.mul(BORROW_AMOUNT).div(BASE);
     const maxWithdrawAmt = COLLATERAL_AMOUNT.sub(minCollateral);
@@ -210,7 +208,13 @@ describe('SapphireCore.withdraw()', () => {
   });
 
   it('reverts if vault is undercollateralized', async () => {
-    await setupBaseVault();
+    await setupBaseVault(
+      arc,
+      signers.scoredMinter,
+      COLLATERAL_AMOUNT,
+      BORROW_AMOUNT,
+      getScoreProof(minterCreditScore, creditScoreTree),
+    );
 
     // Drop price to make position undercollateralized
     await arc.updatePrice(utils.parseEther('0.15'));
@@ -229,7 +233,13 @@ describe('SapphireCore.withdraw()', () => {
   });
 
   it('reverts if contract is paused', async () => {
-    await setupBaseVault();
+    await setupBaseVault(
+      arc,
+      signers.scoredMinter,
+      COLLATERAL_AMOUNT,
+      BORROW_AMOUNT,
+      getScoreProof(minterCreditScore, creditScoreTree),
+    );
 
     await arc.core().setPause(true);
 
