@@ -146,7 +146,17 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         uint256 _liquidationArcFee
     )
         public
-    {}
+        onlyAdmin
+    {
+        require(
+            _liquidationUserFee.add(_liquidationArcFee) <= BASE,
+            "SapphireCoreV1: fee sum has to be no more than 100%"
+        );
+
+        liquidationUserFee = _liquidationUserFee;
+        liquidationArcFee = _liquidationArcFee;
+        emit LiquidationFeesUpdated(liquidationUserFee, liquidationArcFee);
+    }
 
     function setLimits(
         uint256 _totalBorrowLimit,
