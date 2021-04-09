@@ -24,7 +24,7 @@ describe.only('SapphireCore.setters', () => {
     it('reverts if called by non-owner', async () => {
       await expect(
         sapphireCore.connect(ctx.signers.unauthorised).setCollateralRatios(lowRatio, highRatio),
-      ).to.be.revertedWith('Ownable: caller is not the owner');
+      ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
     it('reverts if low c-ratio is 0', async () => {
@@ -68,7 +68,7 @@ describe.only('SapphireCore.setters', () => {
     it('reverts if called by non-owner', async () => {
       await expect(
         sapphireCore.connect(ctx.signers.unauthorised).setCollateralRatioAssessor(randomAddress),
-      ).to.be.revertedWith('Ownable: caller is not the owner');
+      ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
     it('sets the assessor address', async () => {
@@ -83,7 +83,7 @@ describe.only('SapphireCore.setters', () => {
     it('reverts if called by non-owner', async () => {
       await expect(
         sapphireCore.connect(ctx.signers.unauthorised).setFeeCollector(randomAddress),
-      ).to.be.revertedWith('Ownable: caller is not the owner');
+      ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
     it('sets the fee collector address', async () => {
@@ -98,7 +98,7 @@ describe.only('SapphireCore.setters', () => {
     it('reverts if called by non-owner', async () => {
       await expect(
         sapphireCore.connect(ctx.signers.unauthorised).setPause(true),
-      ).to.be.revertedWith('Ownable: caller is not the owner');
+      ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
     it('pauses and un-pauses the contract', async () => {
@@ -120,7 +120,7 @@ describe.only('SapphireCore.setters', () => {
     it('reverts if called by non-owner', async () => {
       await expect(
         sapphireCore.connect(ctx.signers.unauthorised).setOracle(randomAddress),
-      ).to.be.revertedWith('Ownable: caller is not the owner');
+      ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
     it('sets the oracle', async () => {
@@ -135,7 +135,7 @@ describe.only('SapphireCore.setters', () => {
     it('reverts if called by non-owner', async () => {
       await expect(
         sapphireCore.connect(ctx.signers.unauthorised).setInterestSetter(randomAddress),
-      ).to.be.revertedWith('Ownable: caller is not the owner');
+      ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
     it('sets the interest setter', async () => {
@@ -152,7 +152,7 @@ describe.only('SapphireCore.setters', () => {
     it('reverts if called by non-owner', async () => {
       await expect(
         sapphireCore.connect(ctx.signers.unauthorised).setFees(userFee, arcFee),
-      ).to.be.revertedWith('Ownable: caller is not the owner');
+      ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
     it('reverts if fee sum is over 100%', async () => {
@@ -184,7 +184,7 @@ describe.only('SapphireCore.setters', () => {
         sapphireCore
           .connect(ctx.signers.unauthorised)
           .setLimits(totalBorrowLimit, vaultBorrowMinimum, vaultBorrowMaximum),
-      ).to.be.revertedWith('Ownable: caller is not the owner');
+      ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
     it('reverts if max limit is lower than the min limit', async () => {
