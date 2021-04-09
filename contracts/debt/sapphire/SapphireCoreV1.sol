@@ -161,13 +161,21 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         address _newAssessor
     )
         public
-    {}
+        onlyAdmin
+    {
+        collateralRatioAssessor= _newAssessor;
+        emit AssessorUpdated(collateralRatioAssessor);
+    }
 
     function setFeeCollector(
         address _newFeeCollector
     )
         public
-    {}
+        onlyAdmin
+    {
+        feeCollector = _newFeeCollector;
+        emit FeeCollectorUpdated(feeCollector);
+    }
 
     function setPause(
         bool _value
