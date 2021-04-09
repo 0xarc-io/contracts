@@ -55,7 +55,7 @@ describe('borrowed index (integration)', () => {
    * @param principal principal amount to convert
    */
   async function convertPrincipal(principal: BigNumber) {
-    const borrowIndex = (await arc.core().borrowIndex()).add(BASE);
+    const borrowIndex = await arc.core().borrowIndex();
     return principal.mul(BASE).div(borrowIndex);
   }
 
