@@ -113,14 +113,6 @@ describe('SapphireCore.withdraw()', () => {
      * c-ratio is lower
      */
 
-    await setupBaseVault(
-      arc,
-      signers.scoredMinter,
-      COLLATERAL_AMOUNT,
-      BORROW_AMOUNT,
-      getScoreProof(minterCreditScore, creditScoreTree),
-    );
-
     // Withdraw the max collateral to respect the c-ratio set by HIGH_C_RATIO
     let remainingAmount = BORROW_AMOUNT.mul(HIGH_C_RATIO).div(BASE);
     const withdrawAmt1 = COLLATERAL_AMOUNT.sub(remainingAmount);
