@@ -13,27 +13,43 @@ contract SapphireCoreStorage {
     /**
     * @dev The high/default collateral ratio for an untrusted borrower.
     */
-    uint256 internal highCollateralRatio;
+    uint256 public highCollateralRatio;
 
     /**
     * @dev The lowest collateral ratio for an untrusted borrower.
     */
-    uint256 internal lowCollateralRatio;
+    uint256 public lowCollateralRatio;
+
+    /**
+     * @dev How much should the liquidation penalty be, expressed as a decimal.
+     */
+    uint256 public liquidationUserFee;
+
+    /**
+     * @dev How much of the profit acquired from a liquidation should ARC receive
+     */
+    uint256 public liquidationArcFee;
 
     /**
     * @dev The assesor that will determine the collateral-ratio.
     */
-    address internal collateralRatioAssesor;
+    address public collateralRatioAssessor;
 
     /**
     * @dev The address which collects fees when liquidations occur.
     */
-    address internal feeCollector;
+    address public feeCollector;
 
     /**
      * @dev The instance of the oracle that reports prices for the collateral
      */
-    IOracle internal oracle;
+    IOracle public oracle;
+
+    /**
+     * @dev If a collateral asset is used that has less than 18 decimal places
+     *      a precision scalar is required to calcualte the corect values.
+     */
+    uint256 internal precisionScalar;
 
     /**
      * @dev The actual address of the collateral used for this core system.
@@ -62,18 +78,18 @@ contract SapphireCoreStorage {
      * @dev The maximum amount which can be borrowed within a contract. This includes
      *      the amount of interest accrued.
      */
-    uint256 internal totalBorrowLimit;
+    uint256 public totalBorrowLimit;
 
     /**
      * @dev The minimum amount which has to be borrowed by a vault. This includes
      *      the amount of interest accrued.
      */
-    uint256 internal vaultBorrowMinimum;
+    uint256 public vaultBorrowMinimum;
 
     /**
      * @dev The maximum amount which has to be borrowed by a vault. This includes
      *      the amount of interest accrued.
      */
-    uint256 internal vaultBorrowMaximum;
+    uint256 public vaultBorrowMaximum;
 
 }

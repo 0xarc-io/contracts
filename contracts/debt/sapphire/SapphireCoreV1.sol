@@ -55,8 +55,6 @@ contract SapphireCoreV1 is SapphireCoreStorage {
 
     event OracleUpdated(address _oracle);
 
-    event CollateralRatioUpdated(uint256 _collateralRatio);
-
     event PauseStatusUpdated(bool _pauseStatus);
 
     event InterestSetterUpdated(address _newInterestSetter);
@@ -80,6 +78,34 @@ contract SapphireCoreV1 is SapphireCoreStorage {
 
     /* ========== Admin Setters ========== */
 
+    /**
+     * @dev Intitialise the protocol with the appropriate parameters. Can only be called once.
+     *
+     * @param _collateralAddress   The address of the collateral to be used
+     * @param _syntheticAddress    The address of the synthetic token proxy
+     * @param _oracleAddress       Address of the IOracle conforming contract
+     * @param _interestSetter      Address which can update interest rates
+     * @param _assessor,           Address of assessor contract, which provides credit score functionality
+     * @param _highCollateralRatio High limit of how much colalteral is needed to borrow
+     * @param _lowCollateralRatio  Low limit of how much colalteral is needed to borrow
+     * @param _liquidationUserFee  How much is a user penalised if they go below their c-ratio
+     * @param _liquidationArcFee How much of the liquidation profit should ARC take
+     */
+    function init(
+        address _collateralAddress,
+        address _syntheticAddress,
+        address _oracleAddress,
+        address _interestSetter,
+        address _assessor,
+        uint256 _highCollateralRatio,
+        uint256 _lowCollateralRatio,
+        uint256 _liquidationUserFee,
+        uint256 _liquidationArcFee
+    )
+        public
+    {
+    }
+
     function setOracle(
         address _newOracle
     )
@@ -95,7 +121,7 @@ contract SapphireCoreV1 is SapphireCoreStorage {
 
     function setFees(
         uint256 _liquidationUserFee,
-        uint256 _liquidationArcRatio
+        uint256 _liquidationArcFee
     )
         public
     {}
@@ -114,7 +140,7 @@ contract SapphireCoreV1 is SapphireCoreStorage {
         public
     {}
 
-    function setcollateralRatioAssessor(
+    function setCollateralRatioAssessor(
         address _newAssessor
     )
         public
