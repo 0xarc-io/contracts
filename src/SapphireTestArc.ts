@@ -12,16 +12,13 @@ export class SapphireTestArc extends SapphireArc {
     return this.getSynth(this.getSynthNames()[0]);
   }
 
-
   public async updatePrice(price: BigNumberish) {
     const mockOracle = new MockOracleFactory(this.signer).attach(this.synth().oracle.address);
     await mockOracle.setPrice({ value: price });
   }
 
   public async updateTime(value: BigNumberish) {
-    const mockArc = new MockSapphireCoreV1Factory(this.signer).attach(
-      this.synth().core.address,
-    );
+    const mockArc = new MockSapphireCoreV1Factory(this.signer).attach(this.synth().core.address);
     await mockArc.setCurrentTimestamp(value);
   }
 
