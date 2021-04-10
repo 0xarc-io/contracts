@@ -134,7 +134,7 @@ export async function sapphireFixture(ctx: ITestContext, args?: ITestContextArgs
     'COLL',
     args?.decimals,
   );
-  ctx.contracts.synthetic.static = await deployStaticSynthetic(deployer);
+  ctx.contracts.synthetic.tokenV1 = await deploySyntheticTokenV1(deployer);
   ctx.contracts.oracle = await deployMockOracle(deployer);
 
   const coreImp = await deployMockSapphireCoreV1(deployer);
@@ -152,7 +152,7 @@ export async function sapphireFixture(ctx: ITestContext, args?: ITestContextArgs
   ctx.contracts.sapphire.core = MockSapphireCoreV1Factory.connect(coreProxy.address, deployer);
   await ctx.contracts.sapphire.core.init(
     ctx.contracts.collateral.address,
-    ctx.contracts.synthetic.static.address,
+    ctx.contracts.synthetic.tokenV1.address,
     ctx.contracts.oracle.address,
     ctx.signers.interestSetter.address,
     constants.AddressZero,
