@@ -42,6 +42,7 @@ describe.only('SapphireCore.init', () => {
       liquidationUserFee: utils.parseEther('0.1'),
       liquidationArcFee: utils.parseEther('0.2'),
       executor: deployer,
+      feeCollector: Wallet.createRandom().address,
     };
 
     init = (overrides) => {
@@ -57,6 +58,7 @@ describe.only('SapphireCore.init', () => {
           options.oracle,
           options.interestSetter,
           options.assessor,
+          options.feeCollector,
           options.highCollateralRatio,
           options.lowCollateralRatio,
           options.liquidationUserFee,
@@ -110,17 +112,44 @@ describe.only('SapphireCore.init', () => {
     const decimals = await collateral.decimals();
     expect(decimals).eq(6);
 
-    // expect(await sapphireCore.precisionScalar()).eq(utils.parseUnits('10', 18 - decimals), 'precisionScalar');
+    expect(await sapphireCore.precisionScalar(), 'precisionScalar').eq(
+      utils.parseUnits('1', 18 - decimals),
+    );
     expect(await sapphireCore.paused()).to.be.true;
     expect(await sapphireCore.feeCollector()).eq(defaultOptions.feeCollector, 'feeCollector');
     expect(await sapphireCore.oracle()).eq(defaultOptions.oracle, 'oracle');
-    expect(await sapphireCore.collateralAsset()).eq(defaultOptions.collateralAddress, 'collateralAsset');
-    expect(await sapphireCore.syntheticAsset()).eq(defaultOptions.syntheticAddress, 'syntheticAsset');
-    expect(await sapphireCore.highCollateralRatio()).eq(defaultOptions.highCollateralRatio, 'highCollateralRatio');
-    expect(await sapphireCore.lowCollateralRatio()).eq(defaultOptions.lowCollateralRatio, 'lowCollateralRatio');
-    expect(await sapphireCore.collateralRatioAssessor()).eq(defaultOptions.assessor, 'collateralRatioAssessor');
-    expect(await sapphireCore.liquidationUserFee()).eq(defaultOptions.liquidationUserFee, 'liquidationUserFee');
-    expect(await sapphireCore.liquidationArcFee()).eq(defaultOptions.liquidationArcFee, 'liquidationArcFee');
+    expect(await sapphireCore.collateralAsset()).eq(
+      defaultOptions.collateralAddress,
+      'collateralAsset',
+    );
+    expect(await sapphireCore.syntheticAsset()).eq(
+      defaultOptions.syntheticAddress,
+      'syntheticAsset',
+    );
+    expect(await sapphireCore.highCollateralRatio()).eq(
+      defaultOptions.highCollateralRatio,
+      'highCollateralRatio',
+    );
+    expect(await sapphireCore.lowCollateralRatio()).eq(
+      defaultOptions.lowCollateralRatio,
+      'lowCollateralRatio',
+    );
+    expect(await sapphireCore.collateralRatioAssessor()).eq(
+      defaultOptions.assessor,
+      'collateralRatioAssessor',
+    );
+    expect(await sapphireCore.liquidationUserFee()).eq(
+      defaultOptions.liquidationUserFee,
+      'liquidationUserFee',
+    );
+    expect(await sapphireCore.liquidationArcFee()).eq(
+      defaultOptions.liquidationArcFee,
+      'liquidationArcFee',
+    );
+    expect(await sapphireCore.interestSetter()).eq(
+      defaultOptions.interestSetter,
+      'interest setter',
+    );
     expect(await sapphireCore.borrowIndex()).eq(constants.WeiPerEther, 'borrowIndex');
   });
 
