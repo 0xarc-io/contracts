@@ -156,6 +156,11 @@ export async function sapphireFixture(ctx: ITestContext, args?: ITestContextArgs
 
   await ctx.contracts.sapphire.creditScore.setPause(false);
 
+  ctx.contracts.sapphire.assessor = await new SapphireAssessorFactory(deployer).deploy(
+    ctx.contracts.sapphire.linearMapper.address,
+    ctx.contracts.sapphire.creditScore.address,
+  );
+
   ctx.contracts.sapphire.core = MockSapphireCoreV1Factory.connect(coreProxy.address, deployer);
   await ctx.contracts.sapphire.core.init(
     ctx.contracts.collateral.address,
