@@ -97,16 +97,15 @@ export class SapphireArc {
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
   ): Promise<Vault> {
-    const synth = this.getSynth(synthName);
-    const core = SapphireCoreV1Factory.connect(synth.core.address, caller);
+    const core = this._getCore(synthName, caller);
 
     await core.executeActions(actions, creditScoreProof, overrides);
 
     const vault = await core.getVault(await caller.getAddress());
 
     return {
-      collateralAmount: vault.collateralAmount.value,
-      borrowedAmount: vault.borrowedAmount.value,
+      collateralAmount: vault.collateralAmount,
+      borrowedAmount: vault.borrowedAmount,
     } as Vault;
   }
 
@@ -141,7 +140,16 @@ export class SapphireArc {
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
   ): Promise<Vault> {
-    return {} as Vault;
+    const core = this._getCore(synthName, caller);
+
+    const tx = await core.deposit(
+      amount,
+      creditScoreProof ?? (await this._getEmptyProof(caller)),
+      overrides,
+    );
+    await tx.wait();
+
+    return core.getVault(await caller.getAddress());
   }
 
   async withdraw(
@@ -151,5 +159,18 @@ export class SapphireArc {
     caller: Signer = this.signer,
   ): Promise<Vault> {
     return {} as Vault;
+  }
+
+  private _getCore(synthName: string, caller: Signer): SapphireCoreV1 {
+    const synth = this.getSynth(synthName);
+    return SapphireCoreV1Factory.connect(synth.core.address, caller);
+  }
+
+  private async _getEmptyProof(caller: Signer): Promise<CreditScoreProof> {
+    return {
+      account: await caller.getAddress(),
+      score: BigNumber.from(0),
+      merkleProof: [],
+    };
   }
 }

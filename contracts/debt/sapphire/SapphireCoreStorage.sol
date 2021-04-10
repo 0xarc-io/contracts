@@ -1,14 +1,22 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.5.16;
+pragma experimental ABIEncoderV2;
 
 import {IOracle} from "../../oracle/IOracle.sol";
+
+import {SapphireTypes} from "./SapphireTypes.sol";
 
 contract SapphireCoreStorage {
     /**
      * @notice Determines whether the contract is paused or not
      */
     bool public paused;
+
+    /**
+     * @dev The details about a vault, identified by a unint256
+     */
+    mapping (address => SapphireTypes.Vault) public vaults;
 
     /**
     * @dev The high/default collateral ratio for an untrusted borrower.
@@ -90,6 +98,11 @@ contract SapphireCoreStorage {
      * @notice Which address can set interest rates for this contract
      */
     address public interestSetter;
+
+     /**
+     * @dev The limit of how much collateral can be deposited from this contract.
+     */
+    uint256 public collateralLimit;
 
     /**
      * @dev The maximum amount which can be borrowed within a contract. This includes
