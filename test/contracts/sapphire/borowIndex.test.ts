@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-describe('borrowIndex', () => {
+describe.skip('borrowIndex', () => {
   describe('calculate the index for opening a position', () => {
     it('for one year', () => {});
 

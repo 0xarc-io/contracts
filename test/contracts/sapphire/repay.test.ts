@@ -6,6 +6,12 @@ import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { TestTokenFactory } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
+import {
+  DEFAULT_HiGH_C_RATIO,
+  DEFAULT_LOW_C_RATIO,
+  DEFAULT_PRICE,
+} from '@test/helpers/sapphireDefaults';
+import { setupBaseVault } from '@test/helpers/setupBaseVault';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { constants, utils } from 'ethers';
@@ -14,12 +20,8 @@ import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 
-const LOW_C_RATIO = constants.WeiPerEther;
-const HIGH_C_RATIO = constants.WeiPerEther.mul(2);
-
 const COLLATERAL_AMOUNT = utils.parseEther('1000');
 const BORROW_AMOUNT = utils.parseEther('500');
-const COLLATERAL_PRICE = constants.WeiPerEther;
 
 /**
  * The repay function allows a user to repay the STABLEx debt. This function, withdraw and liquidate
@@ -27,31 +29,11 @@ const COLLATERAL_PRICE = constants.WeiPerEther;
  * Our front-end will always send the proof but in the case that it can't, users can still repay
  * and withdraw directly.
  */
-describe('SapphireCore.repay()', () => {
+describe.skip('SapphireCore.repay()', () => {
   let arc: SapphireTestArc;
   let signers: TestingSigners;
   let minterCreditScore: CreditScore;
   let creditScoreTree: CreditScoreTree;
-
-  /**
-   * Setup base vault with 1000 collateral and 500 debt for a c-ratio of
-   * 200%, when the collateral price is $1
-   */
-  async function setupBaseVault() {
-    const collateralContract = TestTokenFactory.connect(arc.collateral().address, signers.scoredMinter);
-
-    await collateralContract.mintShare(signers.scoredMinter.address, COLLATERAL_AMOUNT);
-    await collateralContract.approve(arc.core().address, COLLATERAL_AMOUNT);
-
-    // Open vault and mint debt
-    await arc.open(
-      COLLATERAL_AMOUNT,
-      BORROW_AMOUNT,
-      getScoreProof(minterCreditScore, creditScoreTree),
-      undefined,
-      signers.scoredMinter,
-    );
-  }
 
   async function init(ctx: ITestContext) {
     minterCreditScore = {
@@ -65,13 +47,19 @@ describe('SapphireCore.repay()', () => {
     creditScoreTree = new CreditScoreTree([minterCreditScore, creditScore2]);
 
     await setupSapphire(ctx, {
-      lowCollateralRatio: LOW_C_RATIO,
-      highCollateralRatio: HIGH_C_RATIO,
+      lowCollateralRatio: DEFAULT_LOW_C_RATIO,
+      highCollateralRatio: DEFAULT_HiGH_C_RATIO,
       merkleRoot: creditScoreTree.getHexRoot(),
-      price: COLLATERAL_PRICE,
+      price: DEFAULT_PRICE,
     });
 
-    await setupBaseVault();
+    await setupBaseVault(
+      arc,
+      signers.scoredMinter,
+      COLLATERAL_AMOUNT,
+      BORROW_AMOUNT,
+      getScoreProof(minterCreditScore, creditScoreTree),
+    );
   }
 
   before(async () => {
@@ -251,7 +239,12 @@ describe('SapphireCore.repay()', () => {
     await arc.synthetic().mint(signers.scoredMinter.address, constants.WeiPerEther);
 
     await expect(
-      arc.repay(BORROW_AMOUNT.add(constants.WeiPerEther), undefined, undefined, signers.scoredMinter),
+      arc.repay(
+        BORROW_AMOUNT.add(constants.WeiPerEther),
+        undefined,
+        undefined,
+        signers.scoredMinter,
+      ),
     ).to.be.revertedWith('SapphireCoreV1: there is not enough debt to repay');
   });
 
