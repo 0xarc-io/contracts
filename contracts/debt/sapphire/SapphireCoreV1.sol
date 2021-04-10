@@ -128,7 +128,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
         paused = true;
         borrowIndex = BASE;
-        borrowIndexLastUpdate = getCurrentTimestamp();
+        indexLastUpdate = getCurrentTimestamp();
         collateralAsset = _collateralAddress;
         syntheticAsset = _syntheticAddress;
         interestSetter = _interestSetter;
@@ -336,6 +336,13 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
     }
 
+    function updateIndex()
+        public
+        returns (uint256)
+    {
+
+    }
+
     /* ========== Public Getters ========== */
 
     /**
@@ -359,6 +366,32 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         returns (SapphireTypes.Vault memory)
     {
 
+    }
+
+    function accumulatedInterest()
+        public
+        view
+        returns (uint256)
+    {
+
+    }
+
+    function currentBorrowIndex()
+        public
+        view
+        returns (uint256)
+    {
+        
+    }
+
+    /* ========== Developer Functions ========== */
+
+    function currentTimestamp()
+        public
+        view
+        returns (uint256)
+    {
+        return block.timestamp;
     }
 
     /* ========== Private Functions ========== */
