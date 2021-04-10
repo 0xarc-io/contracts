@@ -1,6 +1,6 @@
 import { Synth } from '@arc-types/core';
 import { TransactionOverrides } from '@arc-types/ethereum';
-import { Action, CreditScoreProof, Vault } from '@arc-types/sapphireCore';
+import { Action, CreditScoreProof, Operation, Vault } from '@arc-types/sapphireCore';
 import { BigNumber, BigNumberish, Signer } from 'ethers';
 import {
   BaseERC20Factory,
@@ -46,6 +46,10 @@ export class SapphireArc {
     return Object.keys(this.synths);
   }
 
+  /**
+   * Runs deposit and borrow on the given core
+   * @returns The new vault
+   */
   async open(
     collateralAmount: BigNumberish,
     borrowAmount: BigNumber,
@@ -54,7 +58,26 @@ export class SapphireArc {
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
   ): Promise<Vault> {
-    return {} as Vault;
+    const actions: Action[] = [
+      {
+        operation: Operation.Deposit,
+        amount: collateralAmount,
+      },
+    ];
+
+    if (!borrowAmount.isZero()) {
+      actions.push({
+        operation: Operation.Borrow,
+        amount: borrowAmount,
+      });
+    }
+
+    await this.executeActions(actions, creditScoreProof, synthName, caller, overrides);
+
+    return {
+      collateralAmount: collateralAmount,
+      borrowedAmount: borrowAmount,
+    } as Vault;
   }
 
   async liquidate(
@@ -74,7 +97,17 @@ export class SapphireArc {
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
   ): Promise<Vault> {
-    return {} as Vault;
+    const synth = this.getSynth(synthName);
+    const core = SapphireCoreV1Factory.connect(synth.core.address, caller);
+
+    await core.executeActions(actions, creditScoreProof, overrides);
+
+    const vault = await core.getVault(await caller.getAddress());
+
+    return {
+      collateralAmount: vault.collateralAmount.value,
+      borrowedAmount: vault.borrowedAmount.value,
+    } as Vault;
   }
 
   /* ========== Borrow functions ==========*/

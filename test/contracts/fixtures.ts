@@ -5,6 +5,7 @@ import {
   MockMozartCoreV2Factory,
   MockMozartSavingsV2Factory,
   MockSapphireCoreV1Factory,
+  SapphireAssessorFactory,
   SapphireMapperLinearFactory,
 } from '@src/typings';
 import ArcDecimal from '@src/utils/ArcDecimal';
@@ -147,6 +148,12 @@ export async function sapphireFixture(ctx: ITestContext, args?: ITestContextArgs
     '0x1111111111111111111111111111111111111111111111111111111111111111',
     ctx.signers.interestSetter.address,
   );
+
+  ctx.contracts.sapphire.assessor = await new SapphireAssessorFactory(deployer).deploy(
+    ctx.contracts.sapphire.linearMapper.address,
+    ctx.contracts.sapphire.creditScore.address,
+  );
+
   await ctx.contracts.sapphire.creditScore.setPause(false);
 
   ctx.contracts.sapphire.core = MockSapphireCoreV1Factory.connect(coreProxy.address, deployer);
@@ -155,7 +162,8 @@ export async function sapphireFixture(ctx: ITestContext, args?: ITestContextArgs
     ctx.contracts.synthetic.tokenV1.address,
     ctx.contracts.oracle.address,
     ctx.signers.interestSetter.address,
-    constants.AddressZero,
+    ctx.contracts.sapphire.assessor.address,
+    ctx.contracts.sapphire.core.address,
     DEFAULT_HiGH_C_RATIO,
     DEFAULT_LOW_C_RATIO,
     0,
