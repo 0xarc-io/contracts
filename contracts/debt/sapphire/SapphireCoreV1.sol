@@ -5,12 +5,15 @@ pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {BaseERC20} from "../../token/BaseERC20.sol";
+import {IERC20} from "../../token/IERC20.sol";
+import {SafeERC20} from "../../lib/SafeERC20.sol";
 import {SafeMath} from "../../lib/SafeMath.sol";
 import {Adminable} from "../../lib/Adminable.sol";
 import {IOracle} from "../../oracle/IOracle.sol";
 
 import {SapphireTypes} from "./SapphireTypes.sol";
 import {SapphireCoreStorage} from "./SapphireCoreStorage.sol";
+import {SapphireAssessor} from "./SapphireAssessor.sol";
 
 import "hardhat/console.sol";
 
@@ -24,21 +27,12 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
     uint256 constant BASE = 10**18;
 
-    /* ========== Types ========== */
-
-    struct OperationParams {
-        address owner;
-        uint256 amountOne;
-        uint256 amountTwo;
-        SapphireTypes.ScoreProof _scoreProof;
-    }
-
     /* ========== Events ========== */
 
-    event ActionOperated(
-        uint8 _operation,
-        OperationParams _params,
-        SapphireTypes.Vault _updatedVault
+    event ActionsOperated(
+        SapphireTypes.Action[] actions,
+        SapphireTypes.ScoreProof _scoreProof,
+        address _user
     );
 
     event LiquidationFeesUpdated(
@@ -47,6 +41,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     );
 
     event LimitsUpdated(
+        uint256 _collateralLimit,
         uint256 _totalBorrowLimit,
         uint256 _valutBorrowMinimum,
         uint256 _vaultBorrowMaximum
@@ -196,6 +191,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     }
 
     function setLimits(
+        uint256 _totalCollateralLimit,
         uint256 _totalBorrowLimit,
         uint256 _vaultBorrowMinimum,
         uint256 _vaultBorrowMaximum
@@ -213,11 +209,12 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             "SapphireCoreV1: required condition is vaultMin <= vaultMax <= totalLimit"
         );
 
+        collateralLimit = _totalCollateralLimit;
         vaultBorrowMinimum = _vaultBorrowMinimum;
         vaultBorrowMaximum = _vaultBorrowMaximum;
         totalBorrowLimit = _totalBorrowLimit;
 
-        emit LimitsUpdated(totalBorrowLimit, vaultBorrowMinimum, vaultBorrowMaximum);
+        emit LimitsUpdated(collateralLimit, totalBorrowLimit, vaultBorrowMinimum, vaultBorrowMaximum);
     }
 
     function setInterestSetter(
@@ -283,9 +280,30 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
     /* ========== Public Functions ========== */
 
-    function executeActions(
-        SapphireTypes.Action[] memory actions,
-        SapphireTypes.ScoreProof memory scoreProof
+    /**
+     * @dev Deposits the given `_amount` of collateral to the `msg.sender`'s vault.
+     *
+     * @param _amount The amount of collateral to deposit
+     * @param _scoreProof The credit score proof - optional
+     */
+    function deposit(
+        uint256 _amount,
+        SapphireTypes.ScoreProof memory _scoreProof
+    )
+        public
+    {
+        SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
+        actions[0] = SapphireTypes.Action(
+            _amount,
+            SapphireTypes.Operation.Deposit
+        );
+
+        executeActions(actions, _scoreProof);
+    }
+
+    function withdraw(
+        uint256 _amount,
+        SapphireTypes.ScoreProof memory _scoreProof
     )
         public
     {
@@ -293,36 +311,17 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     }
 
     function borrow(
-        uint256 amount,
-        SapphireTypes.ScoreProof memory scoreProof
+        uint256 _amount,
+        SapphireTypes.ScoreProof memory _scoreProof
     )
         public
     {
 
     }
-
 
     function repay(
-        uint256 amount,
-        SapphireTypes.ScoreProof memory scoreProof
-    )
-        public
-    {
-
-    }
-
-    function deposit(
-        uint256 amount,
-        SapphireTypes.ScoreProof memory scoreProof
-    )
-        public
-    {
-
-    }
-
-    function withdraw(
-        uint256 amount,
-        SapphireTypes.ScoreProof memory scoreProof
+        uint256 _amount,
+        SapphireTypes.ScoreProof memory _scoreProof
     )
         public
     {
@@ -330,12 +329,61 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     }
 
     function liquidate(
-        address owner,
-        SapphireTypes.ScoreProof memory scoreProof
+        address _owner,
+        SapphireTypes.ScoreProof memory _scoreProof
     )
         public
     {
 
+    }
+
+    /**
+     * @dev All other user-called functions use this function to execute the 
+     *      passed actions. This function first updates the indeces before
+     *      actually executing the actions.
+     *
+     * @param _actions      An array of actions to execute
+     * @param _scoreProof   The credit score proof of the user that calles this
+     *                      function
+     */
+    function executeActions(
+        SapphireTypes.Action[] memory _actions,
+        SapphireTypes.ScoreProof memory _scoreProof
+    )
+        public
+    {
+        require(
+            paused == false,
+            "SapphireCoreV1: the contract is paused"
+        );
+
+        SapphireAssessor assessor = SapphireAssessor(collateralRatioAssessor);
+
+        // Update the index to calculate how much interest has accrued
+        updateIndex();
+
+        for (uint256 i = 0; i < _actions.length; i++) {
+            SapphireTypes.Action memory action = _actions[i];
+
+            if (action.operation == SapphireTypes.Operation.Deposit) {
+                // Update the user's credit score
+                assessor.assess(
+                    lowCollateralRatio,
+                    highCollateralRatio,
+                    _scoreProof,
+                    false
+                );
+                
+                // Deposit collateral
+                _deposit(action.amount);
+            }
+        }
+
+        emit ActionsOperated(
+            _actions,
+            _scoreProof,
+            msg.sender
+        );
     }
 
     function updateIndex()
@@ -363,7 +411,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     function getVault(
         address owner
     )
-        external
+        public
         view
         returns (SapphireTypes.Vault memory)
     {
@@ -415,12 +463,40 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
     }
 
+    /**
+     * @dev Deposits the collateral amount in the user's vault, then ensures
+     *      the deposit amount is not greater than the collateral limit
+     */
     function _deposit(
-        uint256 amount
+        uint256 _amount
     )
         private
-    {
+    {   
+        // Record deposit
+        SapphireTypes.Vault storage vault = vaults[msg.sender];
 
+        if (_amount == 0) {
+            return;
+        }
+
+        vault.collateralAmount = vault.collateralAmount.add(_amount);
+
+        totalCollateral = totalCollateral.add(_amount);
+
+        // Execute transfer
+        IERC20 collateralAsset = IERC20(collateralAsset);
+        SafeERC20.safeTransferFrom(
+            collateralAsset,
+            msg.sender,
+            address(this),
+            _amount
+        );
+
+        // Ensure the total collateral <= collateral limit
+        require (
+            totalCollateral <= collateralLimit,
+            "SapphireCoreV1: collateral limit reached"
+        );
     }
 
     function _withdraw(
