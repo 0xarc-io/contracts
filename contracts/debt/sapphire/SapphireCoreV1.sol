@@ -11,6 +11,8 @@ import {IOracle} from "../../oracle/IOracle.sol";
 import {SapphireTypes} from "./SapphireTypes.sol";
 import {SapphireCoreStorage} from "./SapphireCoreStorage.sol";
 
+import "hardhat/console.sol";
+
 contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
     /* ========== Libraries ========== */
@@ -100,6 +102,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         address _oracleAddress,
         address _interestSetter,
         address _assessor,
+        address _feeCollector,
         uint256 _highCollateralRatio,
         uint256 _lowCollateralRatio,
         uint256 _liquidationUserFee,
@@ -128,9 +131,11 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         borrowIndexLastUpdate = getCurrentTimestamp();
         collateralAsset = _collateralAddress;
         syntheticAsset = _syntheticAddress;
+        interestSetter = _interestSetter;
+        feeCollector = _feeCollector;
 
         BaseERC20 collateral = BaseERC20(collateralAsset);
-        precisionScalar = 10 ** (18 - collateral.decimals());
+        precisionScalar = 10 ** (18 - uint256(collateral.decimals()));
 
         setCollateralRatioAssessor(_assessor);
         setOracle(_oracleAddress);
