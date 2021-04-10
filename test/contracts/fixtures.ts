@@ -24,11 +24,12 @@ import {
   deployMockSapphireCoreV1,
 } from './deployers';
 
-import { Signer } from 'ethers';
+import { constants, Signer } from 'ethers';
 import { ITestContext, ITestContextArgs } from './context';
 import { MozartTestArc } from '@src/MozartTestArc';
 import { SpritzTestArc } from '../../src/SpritzTestArc';
 import { SapphireTestArc } from '@src/SapphireTestArc';
+import { DEFAULT_HiGH_C_RATIO, DEFAULT_LOW_C_RATIO } from '@test/helpers/sapphireDefaults';
 
 export async function mozartFixture(ctx: ITestContext, args?: ITestContextArgs) {
   const deployer: Signer = ctx.signers.admin;
@@ -126,12 +127,18 @@ export async function distributorFixture(ctx: ITestContext, args?: ITestContextA
 export async function sapphireFixture(ctx: ITestContext, args?: ITestContextArgs) {
   const deployer: Signer = ctx.signers.admin;
   const deployerAddress = await deployer.getAddress();
-  const collateral = await deployTestToken(deployer, 'Test', 'TEST', args?.decimals);
+
+  ctx.contracts.collateral = await deployTestToken(
+    deployer,
+    'Test collateral',
+    'COLL',
+    args?.decimals,
+  );
+  ctx.contracts.synthetic.tokenV1 = await deploySyntheticTokenV1(deployer);
+  ctx.contracts.oracle = await deployMockOracle(deployer);
 
   const coreImp = await deployMockSapphireCoreV1(deployer);
   const coreProxy = await deployArcProxy(deployer, coreImp.address, deployerAddress, []);
-  // core should be initialized
-  ctx.contracts.sapphire.core = MockSapphireCoreV1Factory.connect(coreProxy.address, deployer);
 
   ctx.contracts.sapphire.linearMapper = await new SapphireMapperLinearFactory(deployer).deploy();
 
@@ -142,6 +149,20 @@ export async function sapphireFixture(ctx: ITestContext, args?: ITestContextArgs
   );
   await ctx.contracts.sapphire.creditScore.setPause(false);
 
+  ctx.contracts.sapphire.core = MockSapphireCoreV1Factory.connect(coreProxy.address, deployer);
+  await ctx.contracts.sapphire.core.init(
+    ctx.contracts.collateral.address,
+    ctx.contracts.synthetic.tokenV1.address,
+    ctx.contracts.oracle.address,
+    ctx.signers.interestSetter.address,
+    constants.AddressZero,
+    DEFAULT_HiGH_C_RATIO,
+    DEFAULT_LOW_C_RATIO,
+    0,
+    0,
+  );
+  await ctx.contracts.sapphire.core.setPause(false);
+
   ctx.sdks.sapphire = SapphireTestArc.new(deployer);
-  await ctx.sdks.sapphire.addSynths({sapphireSynth: coreProxy.address})
+  await ctx.sdks.sapphire.addSynths({ sapphireSynth: coreProxy.address });
 }
