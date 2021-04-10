@@ -1,7 +1,7 @@
 import { Synth } from '@arc-types/core';
 import { TransactionOverrides } from '@arc-types/ethereum';
 import { Action, CreditScoreProof, Operation, Vault } from '@arc-types/sapphireCore';
-import { BigNumber, BigNumberish, Signer } from 'ethers';
+import { BigNumber, BigNumberish, ContractTransaction, Signer } from 'ethers';
 import {
   BaseERC20Factory,
   SapphireCoreV1,
@@ -139,17 +139,10 @@ export class SapphireArc {
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
-  ): Promise<Vault> {
+  ): Promise<ContractTransaction> {
     const core = this._getCore(synthName, caller);
 
-    const tx = await core.deposit(
-      amount,
-      creditScoreProof ?? (await this._getEmptyProof(caller)),
-      overrides,
-    );
-    await tx.wait();
-
-    return core.getVault(await caller.getAddress());
+    return core.deposit(amount, creditScoreProof ?? (await this._getEmptyProof(caller)), overrides);
   }
 
   async withdraw(

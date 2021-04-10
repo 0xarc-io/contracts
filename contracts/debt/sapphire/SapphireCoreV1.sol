@@ -30,7 +30,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     /* ========== Events ========== */
 
     event ActionsOperated(
-        SapphireTypes.Action[] actions,
+        SapphireTypes.Action[] _actions,
         SapphireTypes.ScoreProof _scoreProof,
         address _user
     );
@@ -378,6 +378,11 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
                 _deposit(action.amount);
             }
         }
+
+        console.log(
+            "actions length: %s",
+            _actions.length
+        );
 
         emit ActionsOperated(
             _actions,
