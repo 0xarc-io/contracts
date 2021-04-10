@@ -64,7 +64,7 @@ describe('borrowed index (integration)', () => {
     prevBorrowIndex: BigNumber,
     interestRate = INTEREST_RATE,
   ) {
-    const currentTimestamp = arc.core().currentTimestamp();
+    const currentTimestamp = await arc.core().currentTimestamp();
     const accumulatedInterest = interestRate.mul(currentTimestamp.sub(lastUpdateIndex)).div(BASE);
     return prevBorrowIndex.mul(accumulatedInterest).div(BASE).add(prevBorrowIndex);
   }
