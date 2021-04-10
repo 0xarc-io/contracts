@@ -142,10 +142,34 @@ describe('SapphireCore.deposit()', () => {
     // );
   });
 
-  xit('updates the credit score if a valid proof is provided', async () => {
+  it('updates the credit score if a valid proof is provided', async () => {
     // Update the merkle root containing the user's new credit score
+    const newCreditScore1 = {
+      account: ctx.signers.scoredMinter.address,
+      amount: creditScore1.amount.sub(100),
+    };
+    const newCreditScoreTree = new CreditScoreTree([newCreditScore1, creditScore2]);
+    const creditScoreContract = ctx.contracts.sapphire.creditScore;
+
+    await creditScoreContract.setPause(true);
+    await creditScoreContract.updateMerkleRoot(newCreditScoreTree.getHexRoot());
+    await creditScoreContract.setPause(false);
+
+    const lastCreditScore = await creditScoreContract.getLastScore(scoredMinter.address);
+
+    expect(lastCreditScore[0]).to.eq(creditScore1.amount);
+
     // Deposit while passing new credit score
+    await arc.deposit(
+      COLLATERAL_AMOUNT,
+      getScoreProof(newCreditScore1, newCreditScoreTree),
+      undefined,
+      scoredMinter,
+    );
+
     // Check the user's last credit score and ensure it's updated
+    const updatedLastCreditScore = await creditScoreContract.getLastScore(scoredMinter.address);
+    expect(updatedLastCreditScore).to.eq(newCreditScore1.amount);
   });
 
   xit('updates the indeces');
