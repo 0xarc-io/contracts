@@ -5,7 +5,7 @@ import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 
-describe.only('SapphireCore.setters', () => {
+describe('SapphireCore.setters', () => {
   let ctx: ITestContext;
   let sapphireCore: SapphireCoreV1;
 
