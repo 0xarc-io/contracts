@@ -9,7 +9,7 @@ contract SapphireCoreStorage {
      * @notice Determines whether the contract is paused or not
      */
     bool public paused;
-    
+
     /**
     * @dev The high/default collateral ratio for an untrusted borrower.
     */
@@ -84,7 +84,7 @@ contract SapphireCoreStorage {
      * @dev The last time the updateIndex() function was called. This helps to determine how much
      *      interest has accrued in the contract since a user interacted with the protocol.
      */
-    uint256 public borrowIndexLastUpdate;
+    uint256 public indexLastUpdate;
 
     /**
      * @notice Which address can set interest rates for this contract
