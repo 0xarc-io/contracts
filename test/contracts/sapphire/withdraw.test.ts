@@ -27,7 +27,7 @@ const BORROW_AMOUNT = utils.parseEther('200');
  * It does not require a credit score proof, but if provided, the user can potentially withdraw
  * more, depending on the amount of debt they have.
  */
-describe('SapphireCore.withdraw()', () => {
+describe.skip('SapphireCore.withdraw()', () => {
   let arc: SapphireTestArc;
   let signers: TestingSigners;
   let minterCreditScore: CreditScore;
