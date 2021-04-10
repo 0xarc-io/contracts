@@ -119,11 +119,34 @@ describe('SapphireCore.deposit()', () => {
     );
   });
 
-  it('emits the ActionsOperated event');
+  it('emits the ActionsOperated event', async () => {
+    await expect(
+      arc.deposit(
+        COLLATERAL_AMOUNT,
+        getScoreProof(creditScore1, creditScoreTree),
+        undefined,
+        scoredMinter,
+      ),
+    ).to.emit(arc.core(), 'ActionsOperated');
+    /**
+     * if uncommenting below, it fails with
+     * "AssertionError: expected [ Array(2) ] to equal [ Array(2) ]"
+     *
+     * Feel free to fix this
+     */
+
+    // .withArgs(
+    //   [[COLLATERAL_AMOUNT, 0]],
+    //   getScoreProof(creditScore1, creditScoreTree),
+    //   scoredMinter.address,
+    // );
+  });
 
   xit('updates the credit score if a valid proof is provided', async () => {
     // Update the merkle root containing the user's new credit score
     // Deposit while passing new credit score
     // Check the user's last credit score and ensure it's updated
   });
+
+  xit('updates the indeces');
 });

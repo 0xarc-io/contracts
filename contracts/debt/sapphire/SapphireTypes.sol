@@ -22,10 +22,10 @@ library SapphireTypes {
     }
 
     enum Operation {
-        Repay,
         Deposit,
-        Borrow,
         Withraw,
+        Borrow,
+        Repay,
         Liquidate
     }
 
