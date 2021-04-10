@@ -3,6 +3,7 @@
 
 pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
+
 import {BaseERC20} from "../../token/BaseERC20.sol";
 import {SafeMath} from "../../lib/SafeMath.sol";
 import {Adminable} from "../../lib/Adminable.sol";
@@ -84,17 +85,18 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     /* ========== Admin Setters ========== */
 
     /**
-     * @dev Intitialise the protocol with the appropriate parameters. Can only be called once.
+     * @dev Initialize the protocol with the appropriate parameters. Can only be called once.
      *
-     * @param _collateralAddress   The address of the collateral to be used
-     * @param _syntheticAddress    The address of the synthetic token proxy
-     * @param _oracleAddress       Address of the IOracle conforming contract
-     * @param _interestSetter      Address which can update interest rates
-     * @param _assessor,           Address of assessor contract, which provides credit score functionality
-     * @param _highCollateralRatio High limit of how much colalteral is needed to borrow
-     * @param _lowCollateralRatio  Low limit of how much colalteral is needed to borrow
-     * @param _liquidationUserFee  How much is a user penalised if they go below their c-ratio
-     * @param _liquidationArcFee How much of the liquidation profit should ARC take
+     * @param _collateralAddress    The address of the collateral to be used
+     * @param _syntheticAddress     The address of the synthetic token proxy
+     * @param _oracleAddress        The address of the IOracle conforming contract
+     * @param _interestSetter       The address which can update interest rates
+     * @param _assessor,            The address of assessor contract, which provides credit score functionality
+     * @param _feeCollector         The address of the ARC fee collector when a liquidation occurs
+     * @param _highCollateralRatio  High limit of how much collateral is needed to borrow
+     * @param _lowCollateralRatio   Low limit of how much collateral is needed to borrow
+     * @param _liquidationUserFee   How much is a user penalized if they go below their c-ratio
+     * @param _liquidationArcFee    How much of the liquidation profit should ARC take
      */
     function init(
         address _collateralAddress,
