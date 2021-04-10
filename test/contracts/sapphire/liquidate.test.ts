@@ -33,7 +33,7 @@ const DEBT_AMOUNT = ArcNumber.new(500);
  * another user's debt is because they acquire the user's collateral at a discount and can make
  * an insta profit by selling the collateral they got a discount.
  */
-describe('SapphireCore.liquidate()', () => {
+describe.skip('SapphireCore.liquidate()', () => {
   let arc: SapphireTestArc;
   let creditScoreContract: MockSapphireCreditScore;
   let signers: TestingSigners;

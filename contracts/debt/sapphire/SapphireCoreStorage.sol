@@ -49,7 +49,7 @@ contract SapphireCoreStorage {
      * @dev If a collateral asset is used that has less than 18 decimal places
      *      a precision scalar is required to calcualte the corect values.
      */
-    uint256 internal precisionScalar;
+    uint256 public precisionScalar;
 
     /**
      * @dev The actual address of the collateral used for this core system.
@@ -73,6 +73,23 @@ contract SapphireCoreStorage {
      *      the amount of interest accrued.
      */
     uint256 public totalBorrowed;
+
+    /**
+     * @dev The accumulated borrow index. Each time a borrows, their borrow amount is expressed
+     *      in relation to the borrow index.
+     */
+    uint256 public borrowIndex;
+
+    /**
+     * @dev The last time the updateIndex() function was called. This helps to determine how much
+     *      interest has accrued in the contract since a user interacted with the protocol.
+     */
+    uint256 public borrowIndexLastUpdate;
+
+    /**
+     * @notice Which address can set interest rates for this contract
+     */
+    address public interestSetter;
 
     /**
      * @dev The maximum amount which can be borrowed within a contract. This includes

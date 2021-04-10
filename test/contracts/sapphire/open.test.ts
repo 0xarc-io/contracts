@@ -18,7 +18,7 @@ chai.use(solidity);
  * The two scenarios to test here are for with a valid score proof and one without a valid score proof. 
  * You only need a score proof if your address has a store proof in the CreditScore contract.
  */
-describe('SapphireCore.open()', () => {
+describe.skip('SapphireCore.open()', () => {
   const COLLATERAL_AMOUNT = utils.parseEther('100');
   const BORROW_AMOUNT = utils.parseEther('50');
 
