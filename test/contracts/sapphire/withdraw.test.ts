@@ -6,17 +6,18 @@ import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { BaseERC20Factory, SapphireAssessor } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
+import {
+  DEFAULT_HiGH_C_RATIO,
+  DEFAULT_LOW_C_RATIO,
+  DEFAULT_PRICE,
+} from '@test/helpers/sapphireDefaults';
 import { setupBaseVault } from '@test/helpers/setupBaseVault';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
-import { constants, utils } from 'ethers';
+import { utils } from 'ethers';
 import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
-
-const LOW_C_RATIO = constants.WeiPerEther;
-const HIGH_C_RATIO = constants.WeiPerEther.mul(2);
-const COLLATERAL_PRICE = constants.WeiPerEther;
 
 const COLLATERAL_AMOUNT = utils.parseEther('1000');
 const BORROW_AMOUNT = utils.parseEther('200');
@@ -45,10 +46,10 @@ describe('SapphireCore.withdraw()', () => {
     creditScoreTree = new CreditScoreTree([minterCreditScore, creditScore2]);
 
     await setupSapphire(ctx, {
-      lowCollateralRatio: LOW_C_RATIO,
-      highCollateralRatio: HIGH_C_RATIO,
+      lowCollateralRatio: DEFAULT_LOW_C_RATIO,
+      highCollateralRatio: DEFAULT_HiGH_C_RATIO,
       merkleRoot: creditScoreTree.getHexRoot(),
-      price: COLLATERAL_PRICE,
+      price: DEFAULT_PRICE,
     });
 
     await setupBaseVault(
@@ -89,8 +90,8 @@ describe('SapphireCore.withdraw()', () => {
   it('withdraws to the limit', async () => {
     await setupBaseVault(arc, signers.scoredMinter, COLLATERAL_AMOUNT, BORROW_AMOUNT);
 
-    // Withdraw the max collateral to respect the c-ratio set by HIGH_C_RATIO
-    const remainingAmount = BORROW_AMOUNT.mul(HIGH_C_RATIO).div(BASE);
+    // Withdraw the max collateral to respect the c-ratio set by DEFAULT_HiGH_C_RATIO
+    const remainingAmount = BORROW_AMOUNT.mul(DEFAULT_HiGH_C_RATIO).div(BASE);
     const withdrawAmt = COLLATERAL_AMOUNT.sub(remainingAmount);
     const preBalance = await arc.collateral().balanceOf(signers.scoredMinter.address);
 
@@ -113,8 +114,8 @@ describe('SapphireCore.withdraw()', () => {
      * c-ratio is lower
      */
 
-    // Withdraw the max collateral to respect the c-ratio set by HIGH_C_RATIO
-    let remainingAmount = BORROW_AMOUNT.mul(HIGH_C_RATIO).div(BASE);
+    // Withdraw the max collateral to respect the c-ratio set by DEFAULT_HiGH_C_RATIO
+    let remainingAmount = BORROW_AMOUNT.mul(DEFAULT_HiGH_C_RATIO).div(BASE);
     const withdrawAmt1 = COLLATERAL_AMOUNT.sub(remainingAmount);
 
     const preBalance = await arc.collateral().balanceOf(signers.scoredMinter.address);
@@ -128,8 +129,8 @@ describe('SapphireCore.withdraw()', () => {
     );
 
     let assessmentTx = await assessor.assess(
-      LOW_C_RATIO,
-      HIGH_C_RATIO,
+      DEFAULT_LOW_C_RATIO,
+      DEFAULT_HiGH_C_RATIO,
       getScoreProof(minterCreditScore, creditScoreTree),
       true,
     );
@@ -189,7 +190,7 @@ describe('SapphireCore.withdraw()', () => {
   it('reverts if the resulting vault ends up below the minimum c-ratio', async () => {
     await setupBaseVault(arc, signers.scoredMinter, COLLATERAL_AMOUNT, BORROW_AMOUNT);
 
-    const minCollateral = HIGH_C_RATIO.mul(BORROW_AMOUNT).div(BASE);
+    const minCollateral = DEFAULT_HiGH_C_RATIO.mul(BORROW_AMOUNT).div(BASE);
     const maxWithdrawAmt = COLLATERAL_AMOUNT.sub(minCollateral);
 
     await arc.withdraw(maxWithdrawAmt, undefined, undefined, signers.scoredMinter);
