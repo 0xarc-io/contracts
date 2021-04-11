@@ -103,6 +103,9 @@ describe('SapphireCore.deposit()', () => {
     expect(await collateral.balanceOf(arc.coreAddress()), 'core balance').eq(
       preCoreBalance.add(COLLATERAL_AMOUNT),
     );
+
+    const { collateralAmount } = await arc.getVault(scoredMinter.address);
+    expect(collateralAmount).to.eq(COLLATERAL_AMOUNT);
   });
 
   it('emits the ActionsOperated event', async () => {

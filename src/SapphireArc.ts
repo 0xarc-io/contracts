@@ -117,8 +117,10 @@ export class SapphireArc {
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
-  ): Promise<Vault> {
-    return {} as Vault;
+  ): Promise<ContractTransaction> {
+    const core = this._getCore(synthName, caller);
+
+    return core.borrow(amount, creditScoreProof ?? (await this._getEmptyProof(caller)), overrides);
   }
 
   async repay(
