@@ -5,7 +5,10 @@ import { SapphireTestArc } from '@src/SapphireTestArc';
 import { TestToken, TestTokenFactory } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import { DEFAULT_COLLATERAL_DECIMALS, DEFAULT_PRICE } from '@test/helpers/sapphireDefaults';
-import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
+import {
+  addSnapshotBeforeRestoreAfterEach,
+  immediatelyUpdateMerkleRoot,
+} from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { BigNumber, utils } from 'ethers';
 import { generateContext, ITestContext } from '../context';
@@ -126,7 +129,6 @@ describe('SapphireCore.deposit()', () => {
   });
 
   it('updates the credit score if a valid proof is provided', async () => {
-    // Update the merkle root containing the user's new credit score
     const newCreditScore1 = {
       account: ctx.signers.scoredMinter.address,
       amount: creditScore1.amount.sub(100),
@@ -134,25 +136,37 @@ describe('SapphireCore.deposit()', () => {
     const newCreditScoreTree = new CreditScoreTree([newCreditScore1, creditScore2]);
     const creditScoreContract = ctx.contracts.sapphire.creditScore;
 
-    await creditScoreContract.setPause(true);
-    await creditScoreContract.updateMerkleRoot(newCreditScoreTree.getHexRoot());
-    await creditScoreContract.setPause(false);
+    let lastCreditScore = await creditScoreContract.getLastScore(scoredMinter.address);
+    expect(lastCreditScore[0], 'original credit score - not set yet').to.eq(0);
 
-    const lastCreditScore = await creditScoreContract.getLastScore(scoredMinter.address);
+    // Deposit while passing credit score
+    await arc.deposit(
+      COLLATERAL_AMOUNT.div(2),
+      getScoreProof(creditScore1, creditScoreTree),
+      undefined,
+      scoredMinter,
+    );
 
-    expect(lastCreditScore[0]).to.eq(creditScore1.amount);
+    lastCreditScore = await creditScoreContract.getLastScore(scoredMinter.address);
+    expect(lastCreditScore[0], 'updated credit score - original score').to.eq(creditScore1.amount);
+
+    // Update the merkle root containing the user's new credit score
+    await immediatelyUpdateMerkleRoot(
+      creditScoreContract.connect(ctx.signers.interestSetter),
+      newCreditScoreTree.getHexRoot(),
+    );
 
     // Deposit while passing new credit score
     await arc.deposit(
-      COLLATERAL_AMOUNT,
+      COLLATERAL_AMOUNT.div(2),
       getScoreProof(newCreditScore1, newCreditScoreTree),
       undefined,
       scoredMinter,
     );
 
     // Check the user's last credit score and ensure it's updated
-    const updatedLastCreditScore = await creditScoreContract.getLastScore(scoredMinter.address);
-    expect(updatedLastCreditScore).to.eq(newCreditScore1.amount);
+    lastCreditScore = await creditScoreContract.getLastScore(scoredMinter.address);
+    expect(lastCreditScore[0], 'updated credit score - new score').to.eq(newCreditScore1.amount);
   });
 
   xit('updates the indexes');
