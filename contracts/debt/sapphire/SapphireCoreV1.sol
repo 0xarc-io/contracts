@@ -458,6 +458,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         uint256 unscaledCollateralRequired = _collateralRatio
             .mul(_borrowedAmount)
             .div(_collateralPrice);
+
         // Scale the collateral required to the match the collateral's decimals
         return unscaledCollateralRequired.div(precisionScalar);
     }
@@ -465,10 +466,11 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     /* ========== Private Functions ========== */
 
     /**
-     * @dev Calculates borrow amount, which should be used for manipulations with 
-     *      existing borrow values in order to take in account current borrowIndex
+     * @dev Converts the passed amount, by dividing it with the borrow index.
+     *      It is used when manipulating with other borrow values 
+     *      in order to take in account current borrowIndex.
      */
-    function calculateBorrowAmount(
+    function convertBorrowAmount(
         uint256 _amount
     )
         private
@@ -548,9 +550,9 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         );
 
         // Record borrow amount (update vault and total amount)
-        uint256 _borrowAmount = calculateBorrowAmount(_amount);
-        vault.borrowedAmount = vault.borrowedAmount.add(_borrowAmount);
-        totalBorrowed = totalBorrowed.add(_borrowAmount);
+        uint256 convertedBorrowAmt = convertBorrowAmount(_amount);
+        vault.borrowedAmount = vault.borrowedAmount.add(convertedBorrowAmt);
+        totalBorrowed = totalBorrowed.add(convertedBorrowAmt);
 
         // Mint tokens
         ISyntheticToken(syntheticAsset).mint(
@@ -591,7 +593,9 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         private
         returns (uint256, uint256)
     {
+        uint256 assessedCRatio;
         Decimal.D256 memory collateralPrice;
+
         bool mandatoryProof = false;
         bool needsCollateralPrice = false;
 
@@ -618,13 +622,12 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             collateralPrice = oracle.fetchCurrentPrice();
         }
 
-        uint256 assessedCRatio = assessor.assess(
+        assessedCRatio = assessor.assess(
             lowCollateralRatio,
             highCollateralRatio,
             _scoreProof,
             mandatoryProof
         );
-
 
         return (assessedCRatio, collateralPrice.value);
     }
