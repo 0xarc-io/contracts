@@ -46,8 +46,6 @@ describe.skip('SapphireCore.withdraw()', () => {
     creditScoreTree = new CreditScoreTree([minterCreditScore, creditScore2]);
 
     await setupSapphire(ctx, {
-      lowCollateralRatio: DEFAULT_LOW_C_RATIO,
-      highCollateralRatio: DEFAULT_HiGH_C_RATIO,
       merkleRoot: creditScoreTree.getHexRoot(),
       price: DEFAULT_PRICE,
     });

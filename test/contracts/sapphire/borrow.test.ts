@@ -62,9 +62,6 @@ describe.skip('SapphireCore.borrow()', () => {
       merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
     };
     await setupSapphire(ctx, {
-      highCollateralRatio: DEFAULT_HiGH_C_RATIO,
-      lowCollateralRatio: DEFAULT_LOW_C_RATIO,
-      price: DEFAULT_PRICE,
       merkleRoot: creditScoreTree.getHexRoot(),
     });
     await arc.deposit(COLLATERAL_AMOUNT, creditScoreProof, undefined, ctx.signers.scoredMinter);
