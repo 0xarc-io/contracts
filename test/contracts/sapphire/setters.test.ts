@@ -176,7 +176,6 @@ describe('SapphireCore.setters', () => {
   });
 
   describe('#setLimits', () => {
-    const totalCollateralLimit = utils.parseUnits('1000000000', 6);
     const totalBorrowLimit = utils.parseEther('1000000');
     const vaultBorrowMaximum = utils.parseEther('1000');
     const vaultBorrowMinimum = utils.parseEther('100');
@@ -211,12 +210,9 @@ describe('SapphireCore.setters', () => {
       await expect(sapphireCore.setLimits(totalBorrowLimit, vaultBorrowMinimum, vaultBorrowMaximum))
         .to.emit(sapphireCore, 'LimitsUpdated')
         .withArgs(totalBorrowLimit, vaultBorrowMinimum, vaultBorrowMaximum);
-      expect(await sapphireCore.collateralLimit, 'collateral limit').to.eq(totalCollateralLimit);
       expect(await sapphireCore.totalBorrowLimit()).eq(totalBorrowLimit);
       expect(await sapphireCore.vaultBorrowMaximum()).eq(vaultBorrowMaximum);
       expect(await sapphireCore.vaultBorrowMinimum()).eq(vaultBorrowMinimum);
     });
-
-    it('sets the collateral limit');
   });
 });

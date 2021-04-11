@@ -41,7 +41,6 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     );
 
     event LimitsUpdated(
-        uint256 _collateralLimit,
         uint256 _totalBorrowLimit,
         uint256 _valutBorrowMinimum,
         uint256 _vaultBorrowMaximum
@@ -191,7 +190,6 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     }
 
     function setLimits(
-        uint256 _totalCollateralLimit,
         uint256 _totalBorrowLimit,
         uint256 _vaultBorrowMinimum,
         uint256 _vaultBorrowMaximum
@@ -209,12 +207,11 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             "SapphireCoreV1: required condition is vaultMin <= vaultMax <= totalLimit"
         );
 
-        collateralLimit = _totalCollateralLimit;
         vaultBorrowMinimum = _vaultBorrowMinimum;
         vaultBorrowMaximum = _vaultBorrowMaximum;
         totalBorrowLimit = _totalBorrowLimit;
 
-        emit LimitsUpdated(collateralLimit, totalBorrowLimit, vaultBorrowMinimum, vaultBorrowMaximum);
+        emit LimitsUpdated(totalBorrowLimit, vaultBorrowMinimum, vaultBorrowMaximum);
     }
 
     function setInterestSetter(
@@ -495,12 +492,6 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             msg.sender,
             address(this),
             _amount
-        );
-
-        // Ensure the total collateral <= collateral limit
-        require (
-            totalCollateral <= collateralLimit,
-            "SapphireCoreV1: collateral limit reached"
         );
     }
 
