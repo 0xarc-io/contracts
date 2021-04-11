@@ -168,6 +168,4 @@ describe('SapphireCore.deposit()', () => {
     lastCreditScore = await creditScoreContract.getLastScore(scoredMinter.address);
     expect(lastCreditScore[0], 'updated credit score - new score').to.eq(newCreditScore1.amount);
   });
-
-  xit('updates the indexes');
 });
