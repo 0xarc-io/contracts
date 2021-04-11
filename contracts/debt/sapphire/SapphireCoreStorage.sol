@@ -99,11 +99,6 @@ contract SapphireCoreStorage {
      */
     address public interestSetter;
 
-     /**
-     * @dev The limit of how much collateral can be deposited from this contract.
-     */
-    uint256 public collateralLimit;
-
     /**
      * @dev The maximum amount which can be borrowed within a contract. This includes
      *      the amount of interest accrued.

@@ -5,7 +5,6 @@ import { ITestContext } from './context';
 import { immediatelyUpdateMerkleRoot, setStartingBalances } from '../helpers/testingUtils';
 import _ from 'lodash';
 import {
-  DEFAULT_COLLATERAL_LIMIT,
   DEFAULT_HiGH_C_RATIO,
   DEFAULT_LOW_C_RATIO,
   DEFAULT_TOTAL_BORROW_LIMIT,
@@ -30,7 +29,6 @@ export interface SapphireSetupOptions {
   limits?: {
     lowCollateralRatio?: BigNumberish;
     highCollateralRatio?: BigNumberish;
-    collateralLimit?: BigNumber;
     borrowLimit?: BigNumber;
     vaultBorrowMinimum?: BigNumber;
     vaultBorrowMaximum?: BigNumber;
@@ -93,7 +91,6 @@ export async function setupSapphire(
 
   // Set limits
   await core.setLimits(
-    limits?.collateralLimit || DEFAULT_COLLATERAL_LIMIT,
     limits?.borrowLimit || DEFAULT_TOTAL_BORROW_LIMIT,
     limits?.vaultBorrowMinimum || DEFAULT_VAULT_BORROW_MIN,
     limits?.vaultBorrowMaximum || DEFAULT_VAULT_BORROW_MAXIMUM,
