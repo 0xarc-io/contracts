@@ -41,6 +41,14 @@ export async function immediatelyUpdateMerkleRoot(
   targetCurrentRoot: string,
   targetUpcomingRoot?: string,
 ) {
+  // advance time if merkle root was recently updated
+  const lastUpdate = await creditScoreContract.lastMerkleRootUpdate();
+  const delayDuration = await creditScoreContract.merkleRootDelayDuration();
+  const now = await creditScoreContract.getCurrentTimestamp();
+  if (now < lastUpdate.add(delayDuration)) {
+    await advanceEpoch(creditScoreContract);
+  }
+
   await creditScoreContract.updateMerkleRoot(targetCurrentRoot);
 
   await advanceEpoch(creditScoreContract);
