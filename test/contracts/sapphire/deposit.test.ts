@@ -4,11 +4,7 @@ import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { TestToken, TestTokenFactory } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
-import {
-  DEFAULT_COLLATERAL_DECIMALS,
-  DEFAULT_COLLATERAL_LIMIT,
-  DEFAULT_PRICE,
-} from '@test/helpers/sapphireDefaults';
+import { DEFAULT_COLLATERAL_DECIMALS, DEFAULT_PRICE } from '@test/helpers/sapphireDefaults';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { BigNumber, utils } from 'ethers';
@@ -74,19 +70,6 @@ describe('SapphireCore.deposit()', () => {
 
     await expect(arc.deposit(preMinterBalance.add(1), undefined, undefined, minter)).revertedWith(
       'SafeERC20: TRANSFER_FROM_FAILED',
-    );
-  });
-
-  it('reverts if the max collateral amount has been reached', async () => {
-    const excessiveAmt = DEFAULT_COLLATERAL_LIMIT.add(1);
-
-    await collateral.mintShare(minter.address, excessiveAmt);
-    await collateral.approveOnBehalf(minter.address, arc.coreAddress(), excessiveAmt);
-
-    await arc.deposit(DEFAULT_COLLATERAL_LIMIT, undefined, undefined, minter);
-
-    await expect(arc.deposit(BigNumber.from(1), undefined, undefined, minter)).to.be.revertedWith(
-      'SapphireCoreV1: collateral limit reached',
     );
   });
 
@@ -172,5 +155,5 @@ describe('SapphireCore.deposit()', () => {
     expect(updatedLastCreditScore).to.eq(newCreditScore1.amount);
   });
 
-  xit('updates the indeces');
+  xit('updates the indexes');
 });
