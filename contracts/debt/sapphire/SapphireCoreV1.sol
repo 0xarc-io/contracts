@@ -354,23 +354,17 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             "SapphireCoreV1: the contract is paused"
         );
 
-        SapphireAssessor assessor = SapphireAssessor(collateralRatioAssessor);
-
         // Update the index to calculate how much interest has accrued
         updateIndex();
+
+        // Assess the score proof
+        /* solium-disable-next-line */
+        uint256 assessedCRatio = _assessCRatio(_actions, _scoreProof);
 
         for (uint256 i = 0; i < _actions.length; i++) {
             SapphireTypes.Action memory action = _actions[i];
 
             if (action.operation == SapphireTypes.Operation.Deposit) {
-                // Update the user's credit score
-                assessor.assess(
-                    lowCollateralRatio,
-                    highCollateralRatio,
-                    _scoreProof,
-                    false
-                );
-                
                 // Deposit collateral
                 _deposit(action.amount);
             }
@@ -509,5 +503,46 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         private
     {
 
+    }
+
+    /**
+     * @dev Passes the `_scoreProof` to the assessor and returns the
+     *      assessed c-ratio for the related credit score. Because every
+     *      action has different criteria regarding the credit score, this
+     *      function goes through all the actions and calls the assess
+     *      function that is most appropriate for the actions.
+     *
+     * @param _actions      the actions that are about to be ran
+     * @param _scoreProof   the credit score proof
+     */
+    function _assessCRatio(
+        SapphireTypes.Action[] memory _actions,
+        SapphireTypes.ScoreProof memory _scoreProof
+    )
+        private
+        returns (uint256)
+    {
+        SapphireAssessor assessor = SapphireAssessor(collateralRatioAssessor);
+        bool mandatoryProof = false;
+
+        /**
+         * Only the borrow action requires a mandatory score proof, so break
+         * the loop when that action is found.
+         */
+        for (uint256 i = 0; i < _actions.length; i++) {
+            SapphireTypes.Action memory action = _actions[i];
+            
+            if (action.operation == SapphireTypes.Operation.Borrow) {
+                mandatoryProof = true;
+                break;
+            }
+        }
+
+        return assessor.assess(
+            lowCollateralRatio,
+            highCollateralRatio,
+            _scoreProof,
+            mandatoryProof
+        );
     }
 }
