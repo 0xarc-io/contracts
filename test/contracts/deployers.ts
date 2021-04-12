@@ -18,6 +18,7 @@ import { MockMozartSavingsV2, MockSapphireCoreV1 } from '@src/typings';
 import { MerkleDistributor } from '@src/typings/MerkleDistributor';
 import { SapphireCreditScore } from '@src/typings/SapphireCreditScore';
 import { MockSapphireCreditScore } from '@src/typings/MockSapphireCreditScore';
+import { DEFAULT_MAX_CREDIT_SCORE } from '@test/helpers/sapphireDefaults';
 
 export async function deployMockMozartCore(deployer: Signer) {
   const Contract = await ethers.getContractFactory('MockMozartCoreV2', deployer);
@@ -147,29 +148,43 @@ export async function deployMerkleDistributor(deployer: Signer, token: string, m
   return distributor as MerkleDistributor;
 }
 
-export async function deploySapphireCreditScore(deployer: Signer, merkleRoot: string, merkleTreeUpdater: string, maxScore: number) {
+export async function deploySapphireCreditScore(
+  deployer: Signer,
+  merkleRoot: string,
+  merkleTreeUpdater: string,
+  maxScore: number,
+) {
   const sapphireCreditScoreFactory = await ethers.getContractFactory(
     'SapphireCreditScore',
     deployer,
   );
-  const sapphireCreditScore = await sapphireCreditScoreFactory.deploy(merkleRoot, merkleTreeUpdater, maxScore);
+  const sapphireCreditScore = await sapphireCreditScoreFactory.deploy(
+    merkleRoot,
+    merkleTreeUpdater,
+    maxScore,
+  );
   return sapphireCreditScore as SapphireCreditScore;
 }
 
-export async function deployMockSapphireCreditScore(deployer: Signer, merkleRoot: string, merkleTreeUpdater: string) {
+export async function deployMockSapphireCreditScore(
+  deployer: Signer,
+  merkleRoot: string,
+  merkleTreeUpdater: string,
+) {
   const mockSapphireCreditScoreFactory = await ethers.getContractFactory(
     'MockSapphireCreditScore',
     deployer,
   );
-  const mockSapphireCreditScore = await mockSapphireCreditScoreFactory.deploy(merkleRoot, merkleTreeUpdater);
+  const mockSapphireCreditScore = await mockSapphireCreditScoreFactory.deploy(
+    merkleRoot,
+    merkleTreeUpdater,
+    DEFAULT_MAX_CREDIT_SCORE,
+  );
   return mockSapphireCreditScore as MockSapphireCreditScore;
 }
 
 export async function deployMockSapphireCoreV1(deployer: Signer) {
-  const factory = await ethers.getContractFactory(
-    'MockSapphireCoreV1',
-    deployer,
-  );
+  const factory = await ethers.getContractFactory('MockSapphireCoreV1', deployer);
   const contract = await factory.deploy();
   return contract as MockSapphireCoreV1;
 }
