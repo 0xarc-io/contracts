@@ -307,7 +307,13 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     )
         public
     {
+        SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
+        actions[0] = SapphireTypes.Action(
+            _amount,
+            SapphireTypes.Operation.Withdraw
+        );
 
+        executeActions(actions, _scoreProof);
     }
 
     /**
