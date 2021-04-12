@@ -7,9 +7,10 @@ pragma experimental ABIEncoderV2;
 import {SapphireTypes} from "./SapphireTypes.sol";
 import {ISapphireMapper} from "./ISapphireMapper.sol";
 import {ISapphireCreditScore} from "./ISapphireCreditScore.sol";
+import {ISapphireAssessor} from "./ISapphireAssessor.sol";
 import {Ownable} from "../../lib/Ownable.sol";
 
-contract SapphireAssessor is Ownable {
+contract SapphireAssessor is Ownable, ISapphireAssessor {
 
     /* ========== Variables ========== */
 
