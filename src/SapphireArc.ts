@@ -152,8 +152,15 @@ export class SapphireArc {
     creditScoreProof?: CreditScoreProof,
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
-  ): Promise<Vault> {
-    return {} as Vault;
+    overrides: TransactionOverrides = {},
+  ): Promise<ContractTransaction> {
+    const core = this._getCore(synthName, caller);
+
+    return core.withdraw(
+      amount,
+      creditScoreProof ?? (await this._getEmptyProof(caller)),
+      overrides,
+    );
   }
 
   private _getCore(synthName: string, caller: Signer): SapphireCoreV1 {

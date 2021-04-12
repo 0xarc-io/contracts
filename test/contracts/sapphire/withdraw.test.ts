@@ -27,7 +27,7 @@ const BORROW_AMOUNT = utils.parseEther('200');
  * It does not require a credit score proof, but if provided, the user can potentially withdraw
  * more, depending on the amount of debt they have.
  */
-describe.skip('SapphireCore.withdraw()', () => {
+describe.only('SapphireCore.withdraw()', () => {
   let arc: SapphireTestArc;
   let signers: TestingSigners;
   let minterCreditScore: CreditScore;
@@ -51,8 +51,8 @@ describe.skip('SapphireCore.withdraw()', () => {
     });
 
     await setupBaseVault(
-      arc,
-      signers.scoredMinter,
+      ctx.sdks.sapphire,
+      ctx.signers.scoredMinter,
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
       getScoreProof(minterCreditScore, creditScoreTree),
