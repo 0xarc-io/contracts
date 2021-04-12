@@ -7,6 +7,7 @@ import _ from 'lodash';
 import {
   DEFAULT_HiGH_C_RATIO,
   DEFAULT_LOW_C_RATIO,
+  DEFAULT_PRICE,
   DEFAULT_TOTAL_BORROW_LIMIT,
   DEFAULT_VAULT_BORROW_MAXIMUM,
   DEFAULT_VAULT_BORROW_MIN,
@@ -78,7 +79,7 @@ export async function setupMozart(ctx: ITestContext, options: MozartSetupOptions
  */
 export async function setupSapphire(
   ctx: ITestContext,
-  { merkleRoot, limits, fees, price }: SapphireSetupOptions,
+  { merkleRoot, limits, fees, price = DEFAULT_PRICE }: SapphireSetupOptions,
 ) {
   const arc = ctx.sdks.sapphire;
 

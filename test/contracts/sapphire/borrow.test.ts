@@ -13,7 +13,7 @@ import { setupSapphire } from '../setup';
 import { BaseERC20Factory, TestTokenFactory } from '@src/typings';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { expect } from 'chai';
-import { ONE_YEAR_IN_SECONDS } from '@src/constants';
+import { BASE, ONE_YEAR_IN_SECONDS } from '@src/constants';
 import {
   DEFAULT_COLLATERAL_DECIMALS,
   DEFAULT_HiGH_C_RATIO,
@@ -31,7 +31,7 @@ import { getScoreProof } from '@src/utils/getScoreProof';
  * is tested.
  */
 
-describe.only('SapphireCore.borrow()', () => {
+describe('SapphireCore.borrow()', () => {
   const NORMALIZED_COLLATERAL_AMOUNT = utils.parseEther('100');
   const COLLATERAL_AMOUNT = utils.parseUnits('100', DEFAULT_COLLATERAL_DECIMALS);
   const BORROW_AMOUNT = NORMALIZED_COLLATERAL_AMOUNT.mul(DEFAULT_PRICE).div(DEFAULT_HiGH_C_RATIO);
@@ -40,6 +40,7 @@ describe.only('SapphireCore.borrow()', () => {
     DEFAULT_LOW_C_RATIO.add(DEFAULT_HiGH_C_RATIO).div(2),
   );
 
+describe('SapphireCore.borrow()', () => {
   let ctx: ITestContext;
   let arc: SapphireTestArc;
   let creditScore1: CreditScore;
@@ -48,6 +49,16 @@ describe.only('SapphireCore.borrow()', () => {
   let scoredMinter: SignerWithAddress;
   let minter: SignerWithAddress;
   let creditScoreProof: CreditScoreProof;
+
+  /**
+   * Mints `amount` of collateral tokens to the `caller` and approves it on the core
+   */
+  async function mintAndApproveCollateral(caller: SignerWithAddress, amount = COLLATERAL_AMOUNT) {
+    const collateral = TestTokenFactory.connect(arc.collateral().address, minter);
+
+    await collateral.mintShare(caller.address, amount);
+    await collateral.approveOnBehalf(caller.address, arc.coreAddress(), amount);
+  }
 
   async function init(ctx: ITestContext): Promise<void> {
     creditScore1 = {
@@ -76,11 +87,8 @@ describe.only('SapphireCore.borrow()', () => {
     minter = ctx.signers.minter;
 
     // mint and approve token
-    const collateral = TestTokenFactory.connect(arc.collateral().address, minter);
-    await collateral.mintShare(minter.address, COLLATERAL_AMOUNT.mul(2));
-    await collateral.mintShare(scoredMinter.address, COLLATERAL_AMOUNT);
-    await collateral.approveOnBehalf(minter.address, arc.coreAddress(), COLLATERAL_AMOUNT.mul(2));
-    await collateral.approveOnBehalf(scoredMinter.address, arc.coreAddress(), COLLATERAL_AMOUNT);
+    await mintAndApproveCollateral(minter, COLLATERAL_AMOUNT.mul(2));
+    await mintAndApproveCollateral(scoredMinter, COLLATERAL_AMOUNT);
 
     await arc.deposit(COLLATERAL_AMOUNT, creditScoreProof, undefined, scoredMinter);
     await arc.deposit(COLLATERAL_AMOUNT, undefined, undefined, minter);
@@ -127,7 +135,9 @@ describe.only('SapphireCore.borrow()', () => {
     expect(borrowedAmount).eq(BORROW_AMOUNT);
     await expect(arc.borrow(BORROW_AMOUNT, undefined, undefined, minter)).to.be.reverted;
 
-    await arc.deposit(COLLATERAL_AMOUNT, undefined, undefined, ctx.signers.minter);
+    await mintAndApproveCollateral(minter);
+
+    await arc.deposit(COLLATERAL_AMOUNT, undefined, undefined, minter);
     await arc.borrow(BORROW_AMOUNT, undefined, undefined, minter);
     const { borrowedAmount: updatedBorrowedAmount } = await arc.getVault(minter.address);
 
