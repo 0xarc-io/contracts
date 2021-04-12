@@ -64,18 +64,18 @@ describe('SapphireCore.setters', () => {
     });
   });
 
-  describe('#setCollateralRatioAssessor', () => {
+  describe('#setAssessor', () => {
     it('reverts if called by non-owner', async () => {
       await expect(
-        sapphireCore.connect(ctx.signers.unauthorised).setCollateralRatioAssessor(randomAddress),
+        sapphireCore.connect(ctx.signers.unauthorised).setAssessor(randomAddress),
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
     it('sets the assessor address', async () => {
-      await expect(sapphireCore.setCollateralRatioAssessor(randomAddress))
+      await expect(sapphireCore.setAssessor(randomAddress))
         .to.emit(sapphireCore, 'AssessorUpdated')
         .withArgs(randomAddress);
-      expect(await sapphireCore.collateralRatioAssessor()).eq(randomAddress);
+      expect(await sapphireCore.assessor()).eq(randomAddress);
     });
   });
 

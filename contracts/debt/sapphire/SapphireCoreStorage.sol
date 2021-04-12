@@ -4,6 +4,7 @@ pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {IOracle} from "../../oracle/IOracle.sol";
+import {ISapphireAssessor} from "./ISapphireAssessor.sol";
 
 import {SapphireTypes} from "./SapphireTypes.sol";
 
@@ -41,7 +42,7 @@ contract SapphireCoreStorage {
     /**
     * @dev The assesor that will determine the collateral-ratio.
     */
-    address public collateralRatioAssessor;
+    ISapphireAssessor public assessor;
 
     /**
     * @dev The address which collects fees when liquidations occur.

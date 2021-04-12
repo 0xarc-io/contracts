@@ -14,6 +14,7 @@ import {IOracle} from "../../oracle/IOracle.sol";
 import {SapphireTypes} from "./SapphireTypes.sol";
 import {SapphireCoreStorage} from "./SapphireCoreStorage.sol";
 import {SapphireAssessor} from "./SapphireAssessor.sol";
+import {ISapphireAssessor} from "./ISapphireAssessor.sol";
 
 import "hardhat/console.sol";
 
@@ -133,7 +134,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         BaseERC20 collateral = BaseERC20(collateralAsset);
         precisionScalar = 10 ** (18 - uint256(collateral.decimals()));
 
-        setCollateralRatioAssessor(_assessor);
+        setAssessor(_assessor);
         setOracle(_oracleAddress);
         setCollateralRatios(_lowCollateralRatio, _highCollateralRatio);
         setFees(_liquidationUserFee, _liquidationArcFee);
@@ -224,14 +225,14 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         emit InterestSetterUpdated(interestSetter);
     }
 
-    function setCollateralRatioAssessor(
+    function setAssessor(
         address _assessor
     )
         public
         onlyAdmin
     {
-        collateralRatioAssessor= _assessor;
-        emit AssessorUpdated(collateralRatioAssessor);
+        assessor = ISapphireAssessor(_assessor);
+        emit AssessorUpdated(_assessor);
     }
 
     function setFeeCollector(
@@ -522,7 +523,6 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         private
         returns (uint256)
     {
-        SapphireAssessor assessor = SapphireAssessor(collateralRatioAssessor);
         bool mandatoryProof = false;
 
         /**
