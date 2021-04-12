@@ -619,6 +619,11 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         }
 
         if (needsCollateralPrice) {
+            require(
+                address(oracle) != address(0),
+                "SapphireCoreV1: oracle is not set"
+            );
+            
             // Collateral price denominated in 18 decimals
             collateralPrice = oracle.fetchCurrentPrice();
         }
