@@ -1,7 +1,7 @@
 import { Synth } from '@arc-types/core';
 import { TransactionOverrides } from '@arc-types/ethereum';
 import { Action, CreditScoreProof, Operation, Vault } from '@arc-types/sapphireCore';
-import { BigNumber, BigNumberish, Signer } from 'ethers';
+import { BigNumber, BigNumberish, ContractTransaction, Signer } from 'ethers';
 import {
   BaseERC20Factory,
   SapphireCoreV1,
@@ -97,16 +97,15 @@ export class SapphireArc {
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
   ): Promise<Vault> {
-    const synth = this.getSynth(synthName);
-    const core = SapphireCoreV1Factory.connect(synth.core.address, caller);
+    const core = this._getCore(synthName, caller);
 
     await core.executeActions(actions, creditScoreProof, overrides);
 
     const vault = await core.getVault(await caller.getAddress());
 
     return {
-      collateralAmount: vault.collateralAmount.value,
-      borrowedAmount: vault.borrowedAmount.value,
+      collateralAmount: vault.collateralAmount,
+      borrowedAmount: vault.borrowedAmount,
     } as Vault;
   }
 
@@ -140,8 +139,10 @@ export class SapphireArc {
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
-  ): Promise<Vault> {
-    return {} as Vault;
+  ): Promise<ContractTransaction> {
+    const core = this._getCore(synthName, caller);
+
+    return core.deposit(amount, creditScoreProof ?? (await this._getEmptyProof(caller)), overrides);
   }
 
   async withdraw(
@@ -151,5 +152,18 @@ export class SapphireArc {
     caller: Signer = this.signer,
   ): Promise<Vault> {
     return {} as Vault;
+  }
+
+  private _getCore(synthName: string, caller: Signer): SapphireCoreV1 {
+    const synth = this.getSynth(synthName);
+    return SapphireCoreV1Factory.connect(synth.core.address, caller);
+  }
+
+  private async _getEmptyProof(caller: Signer): Promise<CreditScoreProof> {
+    return {
+      account: await caller.getAddress(),
+      score: BigNumber.from(0),
+      merkleProof: [],
+    };
   }
 }
