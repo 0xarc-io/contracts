@@ -159,10 +159,12 @@ describe('SapphireCore.borrow()', () => {
 
     const additionalBorrowAmount = utils.parseEther('0.01');
 
+    // Borrowing BASE rather than BigNumber.from(1), because that number is too small adn won't cause a reversal
+    // due to rounding margins
     await expect(
       arc.borrow(additionalBorrowAmount, creditScoreProof, undefined, scoredMinter),
       'User should not be able to borrow more',
-    ).to.be.revertedWith('SapphireCoreV1: the vault is undercollateralized');
+    ).to.be.revertedWith('SapphireCoreV1: the vault will become undercollateralized');
 
     // Prepare the new root hash with the increased credit score for minter
     const creditScore = {
@@ -170,6 +172,8 @@ describe('SapphireCore.borrow()', () => {
       amount: BigNumber.from(800),
     };
     const newCreditScoreTree = new CreditScoreTree([creditScore, creditScore2]);
+    const creditScoreContract = ctx.contracts.sapphire.creditScore;
+
     await immediatelyUpdateMerkleRoot(
       ctx.contracts.sapphire.creditScore.connect(ctx.signers.interestSetter),
       newCreditScoreTree.getHexRoot(),
