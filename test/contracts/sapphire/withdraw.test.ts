@@ -236,6 +236,6 @@ describe.only('SapphireCore.withdraw()', () => {
 
     await expect(
       arc.withdraw(BigNumber.from(1), undefined, undefined, signers.scoredMinter),
-    ).to.be.revertedWith('SapphireCoreV1: contract is paused');
+    ).to.be.revertedWith('SapphireCoreV1: the contract is paused');
   });
 });
