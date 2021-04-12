@@ -49,14 +49,6 @@ describe.only('SapphireCore.withdraw()', () => {
       merkleRoot: creditScoreTree.getHexRoot(),
       price: DEFAULT_PRICE,
     });
-
-    await setupBaseVault(
-      ctx.sdks.sapphire,
-      ctx.signers.scoredMinter,
-      COLLATERAL_AMOUNT,
-      BORROW_AMOUNT,
-      getScoreProof(minterCreditScore, creditScoreTree),
-    );
   }
 
   before(async () => {
@@ -68,11 +60,13 @@ describe.only('SapphireCore.withdraw()', () => {
 
   addSnapshotBeforeRestoreAfterEach();
 
-  it('withdraws the entire collateral amount if no debt is minted', async () => {
+  it.only('withdraws the entire collateral amount if no debt is minted', async () => {
+    console.log('setupBaseVault');
     await setupBaseVault(arc, signers.scoredMinter, COLLATERAL_AMOUNT, BigNumber.from(0));
-
+    console.log('getVault');
     let vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.collateralAmount).to.eq(COLLATERAL_AMOUNT);
+    expect(vault.borrowedAmount).to.eq(0);
 
     const preBalance = await arc.collateral().balanceOf(signers.scoredMinter.address);
 
@@ -107,6 +101,13 @@ describe.only('SapphireCore.withdraw()', () => {
   });
 
   it('withdraws more collateral with a valid score proof', async () => {
+    await setupBaseVault(
+      arc,
+      signers.scoredMinter,
+      COLLATERAL_AMOUNT,
+      BORROW_AMOUNT,
+      undefined,
+    );
     /**
      * Since the credit score is higher, the user can withdraw more because the minimum
      * c-ratio is lower

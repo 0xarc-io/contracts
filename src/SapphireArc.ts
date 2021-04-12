@@ -99,7 +99,7 @@ export class SapphireArc {
   ): Promise<Vault> {
     const core = this._getCore(synthName, caller);
 
-    await core.executeActions(actions, creditScoreProof, overrides);
+    await core.executeActions(actions, creditScoreProof ?? (await this._getEmptyProof(caller)) , overrides);
 
     const vault = await core.getVault(await caller.getAddress());
 
