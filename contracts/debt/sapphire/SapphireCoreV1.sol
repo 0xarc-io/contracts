@@ -530,7 +530,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         uint256 _collateralPrice
     )
         private
-    {   
+    {
         // Get the user's vault
         SapphireTypes.Vault storage vault = vaults[msg.sender];
         
@@ -546,7 +546,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
         require(
             vault.collateralAmount >= collateralRequired,
-            "SapphireCoreV1: the vault is undercollateralized"
+            "SapphireCoreV1: the vault will become undercollateralized"
         );
 
         // Record borrow amount (update vault and total amount)
@@ -619,6 +619,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         }
 
         if (needsCollateralPrice) {
+            // Collateral price denominated in 18 decimals
             collateralPrice = oracle.fetchCurrentPrice();
         }
 
