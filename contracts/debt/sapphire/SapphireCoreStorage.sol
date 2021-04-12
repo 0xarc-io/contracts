@@ -1,14 +1,23 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.5.16;
+pragma experimental ABIEncoderV2;
 
 import {IOracle} from "../../oracle/IOracle.sol";
+import {ISapphireAssessor} from "./ISapphireAssessor.sol";
+
+import {SapphireTypes} from "./SapphireTypes.sol";
 
 contract SapphireCoreStorage {
     /**
      * @notice Determines whether the contract is paused or not
      */
     bool public paused;
+
+    /**
+     * @dev The details about a vault, identified by a unint256
+     */
+    mapping (address => SapphireTypes.Vault) public vaults;
 
     /**
     * @dev The high/default collateral ratio for an untrusted borrower.
@@ -33,7 +42,7 @@ contract SapphireCoreStorage {
     /**
     * @dev The assesor that will determine the collateral-ratio.
     */
-    address public collateralRatioAssessor;
+    ISapphireAssessor public assessor;
 
     /**
     * @dev The address which collects fees when liquidations occur.

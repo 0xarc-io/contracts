@@ -4,6 +4,13 @@ import ArcNumber from '@src/utils/ArcNumber';
 import { ITestContext } from './context';
 import { immediatelyUpdateMerkleRoot, setStartingBalances } from '../helpers/testingUtils';
 import _ from 'lodash';
+import {
+  DEFAULT_HiGH_C_RATIO,
+  DEFAULT_LOW_C_RATIO,
+  DEFAULT_TOTAL_BORROW_LIMIT,
+  DEFAULT_VAULT_BORROW_MAXIMUM,
+  DEFAULT_VAULT_BORROW_MIN,
+} from '@test/helpers/sapphireDefaults';
 
 export interface MozartSetupOptions {
   oraclePrice: BigNumberish;
@@ -19,8 +26,13 @@ export interface MozartSetupOptions {
 
 export interface SapphireSetupOptions {
   merkleRoot?: string;
-  lowCollateralRatio?: BigNumberish;
-  highCollateralRatio?: BigNumberish;
+  limits?: {
+    lowCollateralRatio?: BigNumberish;
+    highCollateralRatio?: BigNumberish;
+    borrowLimit?: BigNumber;
+    vaultBorrowMinimum?: BigNumber;
+    vaultBorrowMaximum?: BigNumber;
+  };
   fees?: {
     liquidationUserFee?: BigNumberish;
     liquidationArcFee?: BigNumberish;
@@ -66,23 +78,23 @@ export async function setupMozart(ctx: ITestContext, options: MozartSetupOptions
  */
 export async function setupSapphire(
   ctx: ITestContext,
-  {
-    merkleRoot,
-    lowCollateralRatio,
-    highCollateralRatio,
-    fees,
-    price,
-  }: SapphireSetupOptions,
+  { merkleRoot, limits, fees, price }: SapphireSetupOptions,
 ) {
   const arc = ctx.sdks.sapphire;
 
   // Update the collateral ratio
-  await arc
-    .synth()
-    .core.setCollateralRatios(
-      lowCollateralRatio || constants.WeiPerEther,
-      highCollateralRatio || constants.WeiPerEther,
-    );
+  const core = await arc.synth().core;
+  await core.setCollateralRatios(
+    limits?.lowCollateralRatio || DEFAULT_LOW_C_RATIO,
+    limits?.highCollateralRatio || DEFAULT_HiGH_C_RATIO,
+  );
+
+  // Set limits
+  await core.setLimits(
+    limits?.borrowLimit || DEFAULT_TOTAL_BORROW_LIMIT,
+    limits?.vaultBorrowMinimum || DEFAULT_VAULT_BORROW_MIN,
+    limits?.vaultBorrowMaximum || DEFAULT_VAULT_BORROW_MAXIMUM,
+  );
 
   if (!_.isEmpty(fees)) {
     await arc.synth().core.setFees(fees.liquidationUserFee || '0', fees.liquidationArcFee || '0');

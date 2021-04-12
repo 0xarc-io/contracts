@@ -103,8 +103,10 @@ describe.skip('SapphireCore.liquidate()', () => {
     creditScoreTree = new CreditScoreTree([minterCreditScore, liquidatorCreditScore]);
 
     await setupSapphire(ctx, {
-      lowCollateralRatio: LOW_C_RATIO,
-      highCollateralRatio: HIGH_C_RATIO,
+      limits: {
+        lowCollateralRatio: LOW_C_RATIO,
+        highCollateralRatio: HIGH_C_RATIO,
+      },
       merkleRoot: creditScoreTree.getHexRoot(),
       fees: {
         liquidationUserFee: LIQUIDATION_USER_FEE,
@@ -397,7 +399,7 @@ describe.skip('SapphireCore.liquidate()', () => {
 
     // Borrow to the limit (up to 160% c-ratio)
     const vault = await arc.getVault(signers.scoredMinter.address);
-    const maxBorrowAmount = COLLATERAL_AMOUNT.sub(vault.collateralAmount.value)
+    const maxBorrowAmount = COLLATERAL_AMOUNT.sub(vault.collateralAmount)
       .mul(newPrice)
       .div(utils.parseEther('1.6'));
 
@@ -715,7 +717,7 @@ describe.skip('SapphireCore.liquidate()', () => {
       const vault = await arc.getVault(signers.scoredMinter.address);
 
       // Ensure that vault is undercollateralized
-      const cRatio = vault.collateralAmount.value.mul(newPrice).div(vault.borrowedAmount.value);
+      const cRatio = vault.collateralAmount.mul(newPrice).div(vault.borrowedAmount);
       expect(cRatio).to.be.lt(utils.parseEther('1'));
 
       // The liquidation occurs. The entire collateral is sold at discount and the user has an outstanding debt

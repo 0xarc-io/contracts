@@ -30,7 +30,11 @@ import { ITestContext, ITestContextArgs } from './context';
 import { MozartTestArc } from '@src/MozartTestArc';
 import { SpritzTestArc } from '../../src/SpritzTestArc';
 import { SapphireTestArc } from '@src/SapphireTestArc';
-import { DEFAULT_HiGH_C_RATIO, DEFAULT_LOW_C_RATIO } from '@test/helpers/sapphireDefaults';
+import {
+  DEFAULT_COLLATERAL_DECIMALS,
+  DEFAULT_HiGH_C_RATIO,
+  DEFAULT_LOW_C_RATIO,
+} from '@test/helpers/sapphireDefaults';
 
 export async function mozartFixture(ctx: ITestContext, args?: ITestContextArgs) {
   const deployer: Signer = ctx.signers.admin;
@@ -133,7 +137,7 @@ export async function sapphireFixture(ctx: ITestContext, args?: ITestContextArgs
     deployer,
     'Test collateral',
     'COLL',
-    args?.decimals,
+    args?.decimals ?? DEFAULT_COLLATERAL_DECIMALS,
   );
   ctx.contracts.synthetic.tokenV1 = await deploySyntheticTokenV1(deployer);
   ctx.contracts.oracle = await deployMockOracle(deployer);

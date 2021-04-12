@@ -134,9 +134,9 @@ describe('SapphireCore.init', () => {
       defaultOptions.lowCollateralRatio,
       'lowCollateralRatio',
     );
-    expect(await sapphireCore.collateralRatioAssessor()).eq(
+    expect(await sapphireCore.assessor()).eq(
       defaultOptions.assessor,
-      'collateralRatioAssessor',
+      'assessor',
     );
     expect(await sapphireCore.liquidationUserFee()).eq(
       defaultOptions.liquidationUserFee,

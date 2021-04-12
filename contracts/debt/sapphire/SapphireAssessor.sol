@@ -7,9 +7,10 @@ pragma experimental ABIEncoderV2;
 import {SapphireTypes} from "./SapphireTypes.sol";
 import {ISapphireMapper} from "./ISapphireMapper.sol";
 import {ISapphireCreditScore} from "./ISapphireCreditScore.sol";
+import {ISapphireAssessor} from "./ISapphireAssessor.sol";
 import {Ownable} from "../../lib/Ownable.sol";
 
-contract SapphireAssessor is Ownable {
+contract SapphireAssessor is Ownable, ISapphireAssessor {
 
     /* ========== Variables ========== */
 
@@ -46,13 +47,14 @@ contract SapphireAssessor is Ownable {
     /* ========== Public Functions ========== */
 
     /**
-     * @notice Takes a lower and upper bound, and based on the user's credit score
-     * and given its proof, returns the appropriate value between these bounds.
+     * @notice  Takes a lower and upper bound, and based on the user's credit score
+     *          and given its proof, returns the appropriate value between these bounds.
      *
-     * @param _lowerBound The lower bound
-     * @param _upperBound The upper bound
-     * @param _scoreProof The score proof
-     * @param _isScoreRequred The flag, which require the proof of score if account already has some score
+     * @param _lowerBound       The lower bound
+     * @param _upperBound       The upper bound
+     * @param _scoreProof       The score proof
+     * @param _isScoreRequred   The flag, which require the proof of score if the account already
+                                has a score
      * @return A value between the lower and upper bounds depending on the credit score
      */
     function assess(

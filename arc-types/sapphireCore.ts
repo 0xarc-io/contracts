@@ -1,10 +1,10 @@
 import { BigNumber, BigNumberish } from 'ethers';
 
 export enum Operation {
-  Repay = 0,
-  Deposit = 1,
+  Deposit = 0,
+  Withdraw = 1,
   Borrow = 2,
-  Withdraw = 3,
+  Repay = 3,
   Liquidate = 4,
 }
 
