@@ -8,8 +8,8 @@ import {IOracle} from "../oracle/IOracle.sol";
 
 contract MockOracle is IOracle {
 
-    // Priced at $10.00 (18 d.p)
-    Decimal.D256 public CURRENT_PRICE = Decimal.D256({ value: 10**19 });
+    // Priced at $1.00 (18 d.p)
+    Decimal.D256 public CURRENT_PRICE = Decimal.D256({ value: 10**18 });
 
     function fetchCurrentPrice()
         external
