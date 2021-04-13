@@ -60,17 +60,21 @@ describe.only('SapphireCore.withdraw()', () => {
 
   addSnapshotBeforeRestoreAfterEach();
 
-  it.only('withdraws the entire collateral amount if no debt is minted', async () => {
-    console.log('setupBaseVault');
+  it('withdraws the entire collateral amount if no debt is minted', async () => {
     await setupBaseVault(arc, signers.scoredMinter, COLLATERAL_AMOUNT, BigNumber.from(0));
-    console.log('getVault');
     let vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.collateralAmount).to.eq(COLLATERAL_AMOUNT);
     expect(vault.borrowedAmount).to.eq(0);
 
     const preBalance = await arc.collateral().balanceOf(signers.scoredMinter.address);
 
-    await arc.withdraw(COLLATERAL_AMOUNT, undefined, undefined, signers.scoredMinter);
+    const { wait } = await arc.withdraw(
+      COLLATERAL_AMOUNT,
+      undefined,
+      undefined,
+      signers.scoredMinter,
+    );
+    await wait();
 
     const postBalance = await arc.collateral().balanceOf(signers.scoredMinter.address);
     vault = await arc.getVault(signers.scoredMinter.address);
@@ -101,13 +105,7 @@ describe.only('SapphireCore.withdraw()', () => {
   });
 
   it('withdraws more collateral with a valid score proof', async () => {
-    await setupBaseVault(
-      arc,
-      signers.scoredMinter,
-      COLLATERAL_AMOUNT,
-      BORROW_AMOUNT,
-      undefined,
-    );
+    await setupBaseVault(arc, signers.scoredMinter, COLLATERAL_AMOUNT, BORROW_AMOUNT, undefined);
     /**
      * Since the credit score is higher, the user can withdraw more because the minimum
      * c-ratio is lower
