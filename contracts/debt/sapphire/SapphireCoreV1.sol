@@ -466,17 +466,30 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     /* ========== Private Functions ========== */
 
     /**
-     * @dev Converts the passed amount, by dividing it with the borrow index.
+     * @dev Converts the given amount by dividing it with the borrow index.
      *      It is used when manipulating with other borrow values 
      *      in order to take in account current borrowIndex.
      */
-    function convertBorrowAmount(
+    function _convertBorrowAmount(
         uint256 _amount
     )
         private
         returns (uint256)
     {
         return _amount.mul(BASE).div(borrowIndex);
+    }
+
+    /**
+     * @dev Multiply the given amount by the borrow index. Used to convert
+     *      borrow amounts back to their real value.
+     */
+    function _normalizeBorrowAmount(
+        uint256 _amount
+    )
+        private
+        returns (uint256)
+    {
+        return _amount.mul(borrowIndex).div(BASE);
     }
 
     /**
@@ -550,9 +563,28 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         );
 
         // Record borrow amount (update vault and total amount)
-        uint256 convertedBorrowAmt = convertBorrowAmount(_amount);
+        uint256 convertedBorrowAmt = _convertBorrowAmount(_amount);
         vault.borrowedAmount = vault.borrowedAmount.add(convertedBorrowAmt);
         totalBorrowed = totalBorrowed.add(convertedBorrowAmt);
+
+        uint256 normalVaultBorrowAmt = _normalizeBorrowAmount(vault.borrowedAmount);
+
+        // Do not borrow more than the maximum vault borrow amount
+        require(
+            normalVaultBorrowAmt <= vaultBorrowMaximum,
+            "SapphireCoreV1: borrowed amount cannot be greater than vault limit"
+        );
+
+        // Do not borrow if amount is smaller than limit
+        require(
+            normalVaultBorrowAmt >= vaultBorrowMinimum,
+            "SapphireCoreV1: borrowed amount cannot be less than limit"
+        );
+
+        require(
+            _normalizeBorrowAmount(totalBorrowed) <= totalBorrowLimit,
+            "SapphireCoreV1: borrowed amount cannot be greater than limit"
+        );
 
         // Mint tokens
         ISyntheticToken(syntheticAsset).mint(

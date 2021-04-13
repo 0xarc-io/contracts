@@ -289,18 +289,24 @@ describe('SapphireCore.borrow()', () => {
   });
 
   it('should not borrow less than the minimum borrow limit', async () => {
-    await arc.core().setLimits(0, BORROW_AMOUNT, 0);
+    const totalBorrowLimit = await arc.core().totalBorrowLimit();
+    const vaultBorrowMaximum = await arc.core().vaultBorrowMaximum();
+    await arc.core().setLimits(totalBorrowLimit, BORROW_AMOUNT, 0);
     await expect(
       arc.borrow(BORROW_AMOUNT.sub(1), creditScoreProof, undefined, scoredMinter),
     ).to.be.revertedWith('SapphireCoreV1: borrowed amount cannot be less than limit');
   });
 
   it('should not borrow more than the maximum amount', async () => {
-    await arc.core().setLimits(0, 0, BORROW_AMOUNT);
+    const totalBorrowLimit = await arc.core().totalBorrowLimit();
+    const vaultBorrowMinimum = await arc.core().vaultBorrowMinimum();
+    // Only update the vault borrow maximum
+    await arc.core().setLimits(totalBorrowLimit, vaultBorrowMinimum, BORROW_AMOUNT);
+
     await arc.borrow(BORROW_AMOUNT.div(2), creditScoreProof, undefined, scoredMinter);
     await expect(
       arc.borrow(BORROW_AMOUNT.div(2).add(1), creditScoreProof, undefined, scoredMinter),
-    ).to.be.revertedWith('SapphireCoreV1: borrowed amount cannot be greater than limit');
+    ).to.be.revertedWith('SapphireCoreV1: borrowed amount cannot be greater than vault limit');
   });
 
   it('should not borrow if contract is paused', async () => {
