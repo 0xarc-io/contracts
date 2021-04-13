@@ -242,7 +242,7 @@ describe('SapphireCore.borrow()', () => {
     await arc.core().setAssessor(constants.AddressZero);
     await expect(
       arc.borrow(BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter),
-    ).to.be.revertedWith('SapphireCoreV1: assessor is not set');
+    ).to.be.revertedWith('SapphireCoreV1: the assessor is not set');
   });
 
   it('should not borrow without a credit proof if a score exists on-chain', async () => {
@@ -319,8 +319,14 @@ describe('SapphireCore.borrow()', () => {
     await arc.core().setOracle(constants.AddressZero);
     await expect(
       arc.borrow(BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter),
-    ).to.be.revertedWith('SapphireCoreV1: oracle is not set');
+    ).to.be.revertedWith('SapphireCoreV1: the oracle is not set');
   });
 
-  it('emits ActionsOperated event when a borrow occurs');
+  it('emits ActionsOperated event when a borrow occurs', async () => {
+    await expect(arc.borrow(BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter)).to.emit(
+      arc.core(),
+      'ActionsOperated',
+    );
+    // .withArgs([[BORROW_AMOUNT, 2]], creditScoreProof, scoredMinter.address);
+  });
 });
