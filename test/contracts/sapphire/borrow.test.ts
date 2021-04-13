@@ -321,4 +321,6 @@ describe('SapphireCore.borrow()', () => {
       arc.borrow(BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter),
     ).to.be.revertedWith('SapphireCoreV1: oracle is not set');
   });
+
+  it('emits ActionsOperated event when a borrow occurs');
 });

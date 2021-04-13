@@ -343,7 +343,13 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     )
         public
     {
+        SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
+        actions[0] = SapphireTypes.Action(
+            _amount,
+            SapphireTypes.Operation.Repay
+        );
 
+        executeActions(actions, _scoreProof);
     }
 
     function liquidate(
@@ -389,13 +395,16 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             SapphireTypes.Action memory action = _actions[i];
 
             if (action.operation == SapphireTypes.Operation.Deposit) {
-                // Deposit collateral
                 _deposit(action.amount);
-            } else if (action.operation == SapphireTypes.Operation.Borrow) {
-                // Borrow synthetic
-                _borrow(action.amount, assessedCRatio, currentPrice);
+
             } else if (action.operation == SapphireTypes.Operation.Withdraw){
                 _withdraw(action.amount, assessedCRatio, currentPrice);
+                
+            } else if (action.operation == SapphireTypes.Operation.Borrow) {
+                _borrow(action.amount, assessedCRatio, currentPrice);
+
+            }  else if (action.operation == SapphireTypes.Operation.Repay) {
+                _repay(action.amount);
             }
         }
 
@@ -429,6 +438,23 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         returns (uint256)
     {
         
+    }
+
+    /**
+     * @notice Returns the vault with the normalized borrow amount, which includes
+     *         the accumulated interest.
+     */
+    function getVault(
+        address _user
+    )
+        public
+        view
+        returns (SapphireTypes.Vault memory)
+    {
+        SapphireTypes.Vault memory vault = vaults[_user];
+        vault.borrowedAmount = _normalizeBorrowAmount(vault.borrowedAmount);
+
+        return vault;
     }
 
     /* ========== Developer Functions ========== */
@@ -481,6 +507,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         uint256 _amount
     )
         private
+        view
         returns (uint256)
     {
         return _amount.mul(BASE).div(borrowIndex);
@@ -494,6 +521,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         uint256 _amount
     )
         private
+        view
         returns (uint256)
     {
         return _amount.mul(borrowIndex).div(BASE);
@@ -633,12 +661,37 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         );
     }
 
+    /**
+     * @dev Repays the given `_amount` of the synthetic back
+     *
+     * @param _amount The amount to repay
+     */
     function _repay(
-        uint256 amount
+        uint256 _amount
     )
         private
     {
+        // Get the user's vault
+        SapphireTypes.Vault storage vault = vaults[msg.sender];
 
+        // Update vault
+        uint256 convertedBorrowAmt = _convertBorrowAmount(_amount);
+
+        require(
+            convertedBorrowAmt <= vault.borrowedAmount,
+            "SapphireCoreV1: there is not enough debt to repay"
+        );
+        
+        vault.borrowedAmount = vault.borrowedAmount.sub(convertedBorrowAmt);
+
+        // Update total borrow amount
+        totalBorrowed = totalBorrowed.sub(convertedBorrowAmt);
+
+        // Burn the tokens
+        ISyntheticToken(syntheticAsset).burn(
+            msg.sender,
+            _amount
+        );
     }
 
     function _liqiuidate(
@@ -673,7 +726,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
         require(
             address(assessor) != address(0),
-            "SapphireCoreV1: assessor is not set"
+            "SapphireCoreV1: the assessor is not set"
         );
 
         /**
@@ -698,7 +751,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         if (needsCollateralPrice) {
             require(
                 address(oracle) != address(0),
-                "SapphireCoreV1: oracle is not set"
+                "SapphireCoreV1: the oracle is not set"
             );
             
             // Collateral price denominated in 18 decimals

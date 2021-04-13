@@ -14,7 +14,7 @@ import { TokenStakingAccrual } from '@src/typings/TokenStakingAccrual';
 import { KYFV2 } from '@src/typings/KYFV2';
 import { MockOracle } from '@src/typings/MockOracle';
 import { MockMozartCoreV2 } from '@src/typings/MockMozartCoreV2';
-import { MockMozartSavingsV2, MockSapphireCoreV1 } from '@src/typings';
+import { MockMozartSavingsV2, MockSapphireCoreV1, MockSyntheticTokenV1 } from '@src/typings';
 import { MerkleDistributor } from '@src/typings/MerkleDistributor';
 import { SapphireCreditScore } from '@src/typings/SapphireCreditScore';
 import { MockSapphireCreditScore } from '@src/typings/MockSapphireCreditScore';
@@ -73,6 +73,12 @@ export async function deploySyntheticTokenV1(deployer: Signer) {
   const Contract = await ethers.getContractFactory('SyntheticTokenV1', deployer);
   const syntheticTokenV1 = await Contract.deploy();
   return syntheticTokenV1 as SyntheticTokenV1;
+}
+
+export async function deployMockSyntheticTokenV1(deployer: Signer) {
+  const Contract = await ethers.getContractFactory('MockSyntheticTokenV1', deployer);
+  const mockSyntheticTokenV1 = await Contract.deploy();
+  return mockSyntheticTokenV1 as MockSyntheticTokenV1;
 }
 
 export async function deployMockOracle(deployer: Signer) {
