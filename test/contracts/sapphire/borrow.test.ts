@@ -31,14 +31,13 @@ import { getScoreProof } from '@src/utils/getScoreProof';
  * is tested.
  */
 
-describe('SapphireCore.borrow()', () => {
-  const NORMALIZED_COLLATERAL_AMOUNT = utils.parseEther('100');
-  const COLLATERAL_AMOUNT = utils.parseUnits('100', DEFAULT_COLLATERAL_DECIMALS);
-  const BORROW_AMOUNT = NORMALIZED_COLLATERAL_AMOUNT.mul(DEFAULT_PRICE).div(DEFAULT_HiGH_C_RATIO);
-  // for credit score equals 500 what is the a half of max credit score
-  const MAX_BORROW_AMOUNT = NORMALIZED_COLLATERAL_AMOUNT.mul(DEFAULT_PRICE).div(
-    DEFAULT_LOW_C_RATIO.add(DEFAULT_HiGH_C_RATIO).div(2),
-  );
+const NORMALIZED_COLLATERAL_AMOUNT = utils.parseEther('100');
+const COLLATERAL_AMOUNT = utils.parseUnits('100', DEFAULT_COLLATERAL_DECIMALS);
+const BORROW_AMOUNT = NORMALIZED_COLLATERAL_AMOUNT.mul(DEFAULT_PRICE).div(DEFAULT_HiGH_C_RATIO);
+// for credit score equals 500 what is the a half of max credit score
+const MAX_BORROW_AMOUNT = NORMALIZED_COLLATERAL_AMOUNT.mul(DEFAULT_PRICE).div(
+  DEFAULT_LOW_C_RATIO.add(DEFAULT_HiGH_C_RATIO).div(2),
+);
 
 describe('SapphireCore.borrow()', () => {
   let ctx: ITestContext;
@@ -125,7 +124,7 @@ describe('SapphireCore.borrow()', () => {
 
     await expect(
       arc.borrow(BORROW_AMOUNT.mul(10), undefined, undefined, minter),
-    ).to.be.revertedWith('SapphireCoreV1: the vault is undercollateralized');
+    ).to.be.revertedWith('SapphireCoreV1: the vault will become undercollateralized');
   });
 
   it('borrows more if more collateral is provided', async () => {
@@ -212,7 +211,7 @@ describe('SapphireCore.borrow()', () => {
         undefined,
         scoredMinter,
       ),
-    ).to.be.revertedWith('SapphireCoreV1: the vault is undercollateralized');
+    ).to.be.revertedWith('SapphireCoreV1: the vault will become undercollateralized');
   });
 
   it('updates the total borrowed amount correctly', async () => {
@@ -235,7 +234,7 @@ describe('SapphireCore.borrow()', () => {
     await ctx.contracts.oracle.setPrice({ value: 0 });
     await expect(
       arc.borrow(BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter),
-    ).to.be.revertedWith('SapphireCoreV1: the vault is undercollateralized');
+    ).to.be.revertedWith('SapphireCoreV1: the oracle returned a price of 0');
   });
 
   it('should not borrow with a score proof if no assessor is set', async () => {
@@ -249,7 +248,7 @@ describe('SapphireCore.borrow()', () => {
   it('should not borrow without a credit proof if a score exists on-chain', async () => {
     // credit score is verified by deposit
     await expect(arc.borrow(constants.One, undefined, undefined, scoredMinter)).to.be.revertedWith(
-      'SapphireCoreV1: the credit proof is required',
+      'SapphireAssessor: proof should be provided for credit score',
     );
   });
 
@@ -257,9 +256,9 @@ describe('SapphireCore.borrow()', () => {
     await arc.borrow(BORROW_AMOUNT, undefined, undefined, minter);
     const { borrowedAmount } = await arc.getVault(minter.address);
     expect(borrowedAmount).eq(BORROW_AMOUNT);
-    await expect(arc.borrow(constants.One, undefined, undefined, minter)).to.be.revertedWith(
-      'SapphireCoreV1: the vault is undercollateralized',
-    );
+    await expect(
+      arc.borrow(utils.parseEther('0.01'), undefined, undefined, minter),
+    ).to.be.revertedWith('SapphireCoreV1: the vault will become undercollateralized');
   });
 
   it('should not borrow more if the price decreases', async () => {
@@ -268,30 +267,30 @@ describe('SapphireCore.borrow()', () => {
     await ctx.contracts.oracle.setPrice({ value: utils.parseEther('0.99') });
     await expect(
       arc.borrow(MAX_BORROW_AMOUNT.div(4), creditScoreProof, undefined, scoredMinter),
-    ).to.be.revertedWith('SapphireCoreV1: the vault is undercollateralized');
+    ).to.be.revertedWith('SapphireCoreV1: the vault will become undercollateralized');
   });
 
   it('should not borrow more if more interest has accrued', async () => {
     const secondBorrowAmount = BigNumber.from(10);
     const firstBorrowAmount = BORROW_AMOUNT.sub(secondBorrowAmount);
 
-    await arc.borrow(firstBorrowAmount, undefined, undefined, scoredMinter);
+    await arc.borrow(firstBorrowAmount, creditScoreProof, undefined, scoredMinter);
     const { borrowedAmount } = await arc.getVault(scoredMinter.address);
     expect(borrowedAmount).eq(firstBorrowAmount);
 
     const currentTimeStamp = await arc.core().currentTimestamp();
     await arc.core().setInterestRate(constants.WeiPerEther);
-    await arc.core().setCurrentTimestamp(currentTimeStamp.add(ONE_YEAR_IN_SECONDS));
+    await arc.updateTime(currentTimeStamp.add(ONE_YEAR_IN_SECONDS));
 
-    await expect(arc.borrow(BORROW_AMOUNT, undefined, undefined, scoredMinter)).to.be.revertedWith(
-      'SapphireCoreV1: the vault is undercollateralized',
-    );
+    await expect(
+      arc.borrow(BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter),
+    ).to.be.revertedWith('SapphireCoreV1: the vault will become undercollateralized');
   });
 
   it('should not borrow less than the minimum borrow limit', async () => {
     const totalBorrowLimit = await arc.core().totalBorrowLimit();
     const vaultBorrowMaximum = await arc.core().vaultBorrowMaximum();
-    await arc.core().setLimits(totalBorrowLimit, BORROW_AMOUNT, 0);
+    await arc.core().setLimits(totalBorrowLimit, BORROW_AMOUNT, vaultBorrowMaximum);
     await expect(
       arc.borrow(BORROW_AMOUNT.sub(1), creditScoreProof, undefined, scoredMinter),
     ).to.be.revertedWith('SapphireCoreV1: borrowed amount cannot be less than limit');
