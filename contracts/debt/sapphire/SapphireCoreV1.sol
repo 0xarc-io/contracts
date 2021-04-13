@@ -523,12 +523,24 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         );
     }
 
+    /**
+     * @dev Withdraw the collateral amount in the user's vault, then ensures
+     *      the withdraw amount is not greater than the deposited collateral.
+     *      Afterwards ensure that collatteral limit is not smaller than returned
+     *      from assessor one.
+     */
     function _withdraw(
-        uint256 amount
+        uint256 _amount
     )
         private
     {
+        SapphireTypes.Vault storage vault = vaults[msg.sender];
 
+        vault.collateralAmount = vault.collateralAmount.sub(_amount);
+
+        // Execute transfer
+        IERC20 collateralAsset = IERC20(collateralAsset);
+        SafeERC20.safeTransfer(collateralAsset, msg.sender, _amount);
     }
 
     /**
