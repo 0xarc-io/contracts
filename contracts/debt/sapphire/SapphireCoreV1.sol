@@ -362,7 +362,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     }
 
     /**
-     * @dev All other user-called functions use this function to execute the 
+     * @dev All other user-called functions use this function to execute the
      *      passed actions. This function first updates the indeces before
      *      actually executing the actions.
      *
@@ -387,7 +387,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         // Get the c-ratio and current price if necessary. The current price only be >0 if
         // it's required by an action
         (
-            uint256 assessedCRatio, 
+            uint256 assessedCRatio,
             uint256 currentPrice
         ) = _getVariablesForActions(_actions, _scoreProof);
 
@@ -437,7 +437,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         view
         returns (uint256)
     {
-        
+
     }
 
     /**
@@ -534,7 +534,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         uint256 _amount
     )
         private
-    {   
+    {
         // Record deposit
         SapphireTypes.Vault storage vault = vaults[msg.sender];
 
@@ -602,7 +602,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
      *      still maintains the required collateral ratio
      *
      * @param _amount           The amount of synthetic to borrow, in 18 decimals
-     * @param _assessedCRatio   The assessed c-ratio for user's credit score  
+     * @param _assessedCRatio   The assessed c-ratio for user's credit score
      * @param _collateralPrice  The current collateral price
      */
     function _borrow(
@@ -674,18 +674,18 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         // Get the user's vault
         SapphireTypes.Vault storage vault = vaults[msg.sender];
 
-        // Update vault
-        uint256 convertedBorrowAmt = _convertBorrowAmount(_amount);
+        uint256 convertedBorrowAmount = _normalizeBorrowAmount(_amount);(_amount);
 
         require(
-            convertedBorrowAmt <= vault.borrowedAmount,
+            convertedBorrowAmount <= vault.borrowedAmount,
             "SapphireCoreV1: there is not enough debt to repay"
         );
-        
-        vault.borrowedAmount = vault.borrowedAmount.sub(convertedBorrowAmt);
+
+        // Update vault
+        vault.borrowedAmount = vault.borrowedAmount.sub(convertedBorrowAmount);
 
         // Update total borrow amount
-        totalBorrowed = totalBorrowed.sub(convertedBorrowAmt);
+        totalBorrowed = totalBorrowed.sub(convertedBorrowAmount);
 
         // Burn the tokens
         ISyntheticToken(syntheticAsset).burn(
@@ -735,7 +735,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
          */
         for (uint256 i = 0; i < _actions.length; i++) {
             SapphireTypes.Action memory action = _actions[i];
-            
+
             if (action.operation == SapphireTypes.Operation.Borrow) {
                 mandatoryProof = true;
                 needsCollateralPrice = true;
@@ -743,7 +743,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             } else if (
                 action.operation == SapphireTypes.Operation.Liquidate ||
                 action.operation == SapphireTypes.Operation.Withdraw) {
-                
+
                 needsCollateralPrice = true;
             }
         }
@@ -753,7 +753,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
                 address(oracle) != address(0),
                 "SapphireCoreV1: the oracle is not set"
             );
-            
+
             // Collateral price denominated in 18 decimals
             collateralPrice = oracle.fetchCurrentPrice();
 
