@@ -458,7 +458,6 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         uint256 unscaledCollateralRequired = _collateralRatio
             .mul(_borrowedAmount)
             .div(_collateralPrice);
-
         // Scale the collateral required to the match the collateral's decimals
         return unscaledCollateralRequired.div(precisionScalar);
     }
@@ -582,7 +581,6 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         private
         returns (uint256, uint256)
     {
-        uint256 assessedCRatio;
         Decimal.D256 memory collateralPrice;
         bool mandatoryProof = false;
         bool needsCollateralPrice = false;
