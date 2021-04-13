@@ -9,4 +9,11 @@ import {SapphireCoreV1} from "../debt/sapphire/SapphireCoreV1.sol";
 import {MockTimestamp} from "./MockTimestamp.sol";
 
 contract MockSapphireCoreV1 is MockTimestamp, SapphireCoreV1 {
+    function updateBorrowIndex(
+        uint256 _borrowIndex
+    )
+        public
+    {
+        borrowIndex = _borrowIndex;
+    }
 }
