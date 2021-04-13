@@ -31,8 +31,9 @@ import {
  */
 
 describe('SapphireCore.borrow()', () => {
+  const NORMALIZED_COLLATERAL_AMOUNT = utils.parseEther('100');
   const COLLATERAL_AMOUNT = utils.parseUnits('100', DEFAULT_COLLATERAL_DECIMALS);
-  const BORROW_AMOUNT = COLLATERAL_AMOUNT.mul(DEFAULT_PRICE).div(DEFAULT_HiGH_C_RATIO);
+  const BORROW_AMOUNT = NORMALIZED_COLLATERAL_AMOUNT.mul(DEFAULT_PRICE).div(DEFAULT_HiGH_C_RATIO).mul(DEFAULT_COLLATERAL_DECIMALS);
   // for credit score equals 500 what is the a half of max credit score
   const MAX_BORROW_AMOUNT = COLLATERAL_AMOUNT.mul(DEFAULT_PRICE).div(
     DEFAULT_LOW_C_RATIO.add(DEFAULT_HiGH_C_RATIO).div(2),
@@ -75,9 +76,9 @@ describe('SapphireCore.borrow()', () => {
 
     // mint and approve token
     const collateral = TestTokenFactory.connect(arc.collateral().address, minter);
-    await collateral.mintShare(minter.address, COLLATERAL_AMOUNT);
+    await collateral.mintShare(minter.address, COLLATERAL_AMOUNT.mul(2));
     await collateral.mintShare(scoredMinter.address, COLLATERAL_AMOUNT);
-    await collateral.approveOnBehalf(minter.address, arc.coreAddress(), COLLATERAL_AMOUNT);
+    await collateral.approveOnBehalf(minter.address, arc.coreAddress(), COLLATERAL_AMOUNT.mul(2));
     await collateral.approveOnBehalf(scoredMinter.address, arc.coreAddress(), COLLATERAL_AMOUNT);
 
     await arc.deposit(COLLATERAL_AMOUNT, creditScoreProof, undefined, scoredMinter);
@@ -105,6 +106,17 @@ describe('SapphireCore.borrow()', () => {
     await arc.borrow(BORROW_AMOUNT, undefined, undefined, minter);
     const { borrowedAmount } = await arc.getVault(minter.address);
     expect(borrowedAmount).eq(BORROW_AMOUNT);
+  });
+
+  it('reverts if borrower cross the c-ratio', async () => {
+    const { borrowedAmount, collateralAmount } = await arc.getVault(minter.address);
+
+    expect(borrowedAmount).eq(0);
+    expect(collateralAmount).eq(COLLATERAL_AMOUNT);
+  
+    await expect(arc.borrow(BORROW_AMOUNT.mul(10), undefined, undefined, minter)).to.be.revertedWith(
+      'SapphireCoreV1: the vault is undercollateralized',
+    );
   });
 
   it('borrows more if more collateral is provided', async () => {
