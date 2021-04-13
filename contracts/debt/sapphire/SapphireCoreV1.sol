@@ -394,6 +394,8 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             } else if (action.operation == SapphireTypes.Operation.Borrow) {
                 // Borrow synthetic
                 _borrow(action.amount, assessedCRatio, currentPrice);
+            } else if (action.operation == SapphireTypes.Operation.Withdraw){
+                _withdraw(action.amount);
             }
         }
 
