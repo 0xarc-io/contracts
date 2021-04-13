@@ -465,6 +465,19 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     /* ========== Private Functions ========== */
 
     /**
+     * @dev Calculates borrow amount, which should be used for manipulations with 
+     *      existing borrow values in order to take in account current borrowIndex
+     */
+    function calculateBorrowAmount(
+        uint256 _amount
+    )
+        private
+        returns (uint256)
+    {
+        return _amount.mul(BASE).div(borrowIndex);
+    }
+
+    /**
      * @dev Deposits the collateral amount in the user's vault
      */
     function _deposit(
@@ -515,12 +528,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         uint256 _collateralPrice
     )
         private
-    {
-        if (_amount == 0) {
-            // Nothing to borrow
-            return;
-        }
-        
+    {   
         // Get the user's vault
         SapphireTypes.Vault storage vault = vaults[msg.sender];
         
@@ -539,8 +547,10 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             "SapphireCoreV1: the vault is undercollateralized"
         );
 
-        // Record borrow amount (update vault)
-        vault.borrowedAmount = vault.borrowedAmount.add(_amount);
+        // Record borrow amount (update vault and total amount)
+        uint256 _borrowAmount = calculateBorrowAmount(_amount);
+        vault.borrowedAmount = vault.borrowedAmount.add(_borrowAmount);
+        totalBorrowed = totalBorrowed.add(_borrowAmount);
 
         // Mint tokens
         ISyntheticToken(syntheticAsset).mint(
