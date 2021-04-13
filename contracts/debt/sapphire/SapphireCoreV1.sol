@@ -631,6 +631,11 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         bool mandatoryProof = false;
         bool needsCollateralPrice = false;
 
+        require(
+            address(assessor) != address(0),
+            "SapphireCoreV1: assessor is not set"
+        );
+
         /**
          * Only the borrow action requires a mandatory score proof, so break
          * the loop when that action is found.
@@ -658,6 +663,11 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             
             // Collateral price denominated in 18 decimals
             collateralPrice = oracle.fetchCurrentPrice();
+
+            require(
+                collateralPrice.value > 0,
+                "SapphireCoreV1: the oracle returned a price of 0"
+            );
         }
 
         assessedCRatio = assessor.assess(
