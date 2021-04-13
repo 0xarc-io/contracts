@@ -9,6 +9,7 @@ import {
   SyntheticTokenV1Factory,
 } from './typings';
 import { IOracleFactory } from './typings/IOracleFactory';
+import { getEmptyScoreProof } from './utils/getScoreProof';
 
 export type SapphireSynth = Synth<SapphireCoreV1>;
 
@@ -101,12 +102,9 @@ export class SapphireArc {
 
     await core.executeActions(actions, creditScoreProof, overrides);
 
-    const vault = await core.getVault(await caller.getAddress());
+    const vault = await this.getVault(await caller.getAddress());
 
-    return {
-      collateralAmount: vault.collateralAmount,
-      borrowedAmount: vault.borrowedAmount,
-    } as Vault;
+    return vault;
   }
 
   /* ========== Borrow functions ==========*/
@@ -120,7 +118,7 @@ export class SapphireArc {
   ): Promise<ContractTransaction> {
     const core = this._getCore(synthName, caller);
 
-    return core.borrow(amount, creditScoreProof ?? (await this._getEmptyProof(caller)), overrides);
+    return core.borrow(amount, creditScoreProof ?? (await getEmptyScoreProof(caller)), overrides);
   }
 
   async repay(
@@ -129,8 +127,10 @@ export class SapphireArc {
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
-  ): Promise<Vault> {
-    return {} as Vault;
+  ): Promise<ContractTransaction> {
+    const core = this._getCore(synthName, caller);
+
+    return core.repay(amount, creditScoreProof ?? (await getEmptyScoreProof(caller)), overrides);
   }
 
   /* ========== Collateral functions ========== */
@@ -144,7 +144,7 @@ export class SapphireArc {
   ): Promise<ContractTransaction> {
     const core = this._getCore(synthName, caller);
 
-    return core.deposit(amount, creditScoreProof ?? (await this._getEmptyProof(caller)), overrides);
+    return core.deposit(amount, creditScoreProof ?? (await getEmptyScoreProof(caller)), overrides);
   }
 
   async withdraw(
@@ -156,16 +156,14 @@ export class SapphireArc {
     return {} as Vault;
   }
 
+  getVault(userAddress: string, synthName = this.getSynthNames()[0]): Promise<Vault> {
+    const synth = this.getSynth(synthName);
+
+    return synth.core.getVault(userAddress);
+  }
+
   private _getCore(synthName: string, caller: Signer): SapphireCoreV1 {
     const synth = this.getSynth(synthName);
     return SapphireCoreV1Factory.connect(synth.core.address, caller);
-  }
-
-  private async _getEmptyProof(caller: Signer): Promise<CreditScoreProof> {
-    return {
-      account: await caller.getAddress(),
-      score: BigNumber.from(0),
-      merkleProof: [],
-    };
   }
 }

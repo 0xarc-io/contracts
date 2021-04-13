@@ -5,6 +5,7 @@ import {
   MockMozartCoreV2Factory,
   MockMozartSavingsV2Factory,
   MockSapphireCoreV1Factory,
+  MockSyntheticTokenV1Factory,
   SapphireAssessorFactory,
   SapphireMapperLinearFactory,
 } from '@src/typings';
@@ -23,6 +24,7 @@ import {
   deployMockSavings,
   deployMockSapphireCreditScore,
   deployMockSapphireCoreV1,
+  deployMockSyntheticTokenV1,
 } from './deployers';
 
 import { constants, Signer } from 'ethers';
@@ -145,9 +147,9 @@ export async function sapphireFixture(ctx: ITestContext, args?: ITestContextArgs
   const coreImp = await deployMockSapphireCoreV1(deployer);
   const coreProxy = await deployArcProxy(deployer, coreImp.address, deployerAddress, []);
 
-  const syntheticImp = await deploySyntheticTokenV1(deployer);
+  const syntheticImp = await deployMockSyntheticTokenV1(deployer);
   const syntheticProxy = await deployArcProxy(deployer, syntheticImp.address, deployerAddress, []);
-  const tokenV1 = SyntheticTokenV1Factory.connect(syntheticProxy.address, deployer);
+  const tokenV1 = MockSyntheticTokenV1Factory.connect(syntheticProxy.address, deployer);
 
   ctx.contracts.synthetic.tokenV1 = tokenV1;
 

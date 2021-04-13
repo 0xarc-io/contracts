@@ -3,6 +3,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { TestTokenFactory } from '@src/typings';
 import { utils } from 'ethers';
+import { DEFAULT_COLLATERAL_DECIMALS } from './sapphireDefaults';
 
 /**
  * Setup base **Sapphire** vault with 1000 collateral and 200 debt for a c-ratio of
@@ -11,7 +12,7 @@ import { utils } from 'ethers';
 export async function setupBaseVault(
   arc: SapphireTestArc,
   caller: SignerWithAddress,
-  collateralAmt = utils.parseEther('1000'),
+  collateralAmt = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS),
   borrowAmt = utils.parseEther('200'),
   scoreProof?: CreditScoreProof,
   synthName?: string,
