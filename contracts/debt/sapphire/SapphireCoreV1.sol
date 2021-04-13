@@ -356,7 +356,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     }
 
     /**
-     * @dev All other user-called functions use this function to execute the 
+     * @dev All other user-called functions use this function to execute the
      *      passed actions. This function first updates the indeces before
      *      actually executing the actions.
      *
@@ -381,7 +381,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         // Get the c-ratio and current price if necessary. The current price only be >0 if
         // it's required by an action
         (
-            uint256 assessedCRatio, 
+            uint256 assessedCRatio,
             uint256 currentPrice
         ) = _getVariablesForActions(_actions, _scoreProof);
 
@@ -429,7 +429,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         view
         returns (uint256)
     {
-        
+
     }
 
     /**
@@ -470,7 +470,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
      * @param _borrowedAmount   The borrowed amount expressed as a uint256 (NOT principal)
      * @param _collateralRatio  The c-ratio required for the position to remain collateralized
      * @param _collateralPrice  What price do you want to calculate the inverse at
-     * @return                  The amount of collateral, in its original decimals   
+     * @return                  The amount of collateral, in its original decimals
      */
     function calculateCollateralRequired(
         uint256 _borrowedAmount,
@@ -493,7 +493,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
     /**
      * @dev Converts the given amount by dividing it with the borrow index.
-     *      It is used when manipulating with other borrow values 
+     *      It is used when manipulating with other borrow values
      *      in order to take in account current borrowIndex.
      */
     function _convertBorrowAmount(
@@ -527,7 +527,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         uint256 _amount
     )
         private
-    {   
+    {
         // Record deposit
         SapphireTypes.Vault storage vault = vaults[msg.sender];
 
@@ -562,7 +562,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
      *      still maintains the required collateral ratio
      *
      * @param _amount           The amount of synthetic to borrow, in 18 decimals
-     * @param _assessedCRatio   The assessed c-ratio for user's credit score  
+     * @param _assessedCRatio   The assessed c-ratio for user's credit score
      * @param _collateralPrice  The current collateral price
      */
     function _borrow(
@@ -574,7 +574,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     {
         // Get the user's vault
         SapphireTypes.Vault storage vault = vaults[msg.sender];
-        
+
         // Ensure vault is collateralized if the borrow actionw would succeed
         uint256 collateralRequired = calculateCollateralRequired(
             vault.borrowedAmount
@@ -641,7 +641,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             convertedBorrowAmt <= vault.borrowedAmount,
             "SapphireCoreV1: there is not enough debt to repay"
         );
-        
+
         vault.borrowedAmount = vault.borrowedAmount.sub(convertedBorrowAmt);
 
         // Update total borrow amount
@@ -695,7 +695,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
          */
         for (uint256 i = 0; i < _actions.length; i++) {
             SapphireTypes.Action memory action = _actions[i];
-            
+
             if (action.operation == SapphireTypes.Operation.Borrow) {
                 mandatoryProof = true;
                 needsCollateralPrice = true;
@@ -703,7 +703,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             } else if (
                 action.operation == SapphireTypes.Operation.Liquidate ||
                 action.operation == SapphireTypes.Operation.Withdraw) {
-                
+
                 needsCollateralPrice = true;
             }
         }
@@ -713,7 +713,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
                 address(oracle) != address(0),
                 "SapphireCoreV1: the oracle is not set"
             );
-            
+
             // Collateral price denominated in 18 decimals
             collateralPrice = oracle.fetchCurrentPrice();
 
