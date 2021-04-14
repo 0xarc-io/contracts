@@ -99,14 +99,13 @@ export class SapphireArc {
   ): Promise<Vault> {
     const core = this._getCore(synthName, caller);
 
-    const { wait } = await core.executeActions(
+    await core.executeActions(
       actions,
       creditScoreProof ?? (await this._getEmptyProof(caller)),
       overrides,
     );
-    await wait();
 
-    const vault = await core.getVault(await caller.getAddress());
+    const vault = await core.vaults(await caller.getAddress());
 
     return {
       collateralAmount: vault.collateralAmount,
