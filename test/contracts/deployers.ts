@@ -69,6 +69,12 @@ export async function deploySpritzStateV1(
   return coreV4 as StateV1;
 }
 
+export async function deploySyntheticTokenV2(deployer: Signer) {
+  const Contract = await ethers.getContractFactory('SyntheticTokenV2', deployer);
+  const syntheticTokenV2 = await Contract.deploy();
+  return syntheticTokenV2 as SyntheticTokenV2;
+}
+
 export async function deploySyntheticTokenV1(deployer: Signer) {
   const Contract = await ethers.getContractFactory('SyntheticTokenV1', deployer);
   const syntheticTokenV1 = await Contract.deploy();
