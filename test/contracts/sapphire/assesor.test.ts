@@ -8,6 +8,7 @@ import { MockSapphireMapperLinearFactory } from '@src/typings/MockSapphireMapper
 import { SapphireAssessor } from '@src/typings/SapphireAssessor';
 import { SapphireAssessorFactory } from '@src/typings/SapphireAssessorFactory';
 import ArcNumber from '@src/utils/ArcNumber';
+import { DEFAULT_MAX_CREDIT_SCORE } from '@test/helpers/sapphireDefaults';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 import { ethers } from 'hardhat';
@@ -52,6 +53,7 @@ describe('SapphireAssessor', () => {
     const testCreditScoreContract = await new MockSapphireCreditScoreFactory(owner).deploy(
       testCreditScoreTree.getHexRoot(),
       owner.address,
+      DEFAULT_MAX_CREDIT_SCORE,
     );
 
     const testAssessor = await new SapphireAssessorFactory(owner).deploy(
@@ -94,6 +96,7 @@ describe('SapphireAssessor', () => {
     creditScoreContract = await new MockSapphireCreditScoreFactory(owner).deploy(
       creditScoreTree.getHexRoot(),
       '0x0000000000000000000000000000000000000000',
+      DEFAULT_MAX_CREDIT_SCORE,
     );
 
     assessor = await new SapphireAssessorFactory(owner).deploy(
@@ -475,6 +478,7 @@ describe('SapphireAssessor', () => {
       const testCreditScoreContract = await new MockSapphireCreditScoreFactory(owner).deploy(
         testCreditScoreTree.getHexRoot(),
         owner.address,
+        DEFAULT_MAX_CREDIT_SCORE,
       );
 
       await assessor.setCreditScoreContract(testCreditScoreContract.address);
@@ -488,6 +492,7 @@ describe('SapphireAssessor', () => {
       const testCreditScoreContract = await new MockSapphireCreditScoreFactory(owner).deploy(
         testCreditScoreTree.getHexRoot(),
         owner.address,
+        DEFAULT_MAX_CREDIT_SCORE,
       );
 
       await expect(assessor.setCreditScoreContract(testCreditScoreContract.address))
