@@ -53,7 +53,7 @@ export async function mozartFixture(ctx: ITestContext, args?: ITestContextArgs) 
 
   const coreV2 = MockMozartCoreV2Factory.connect(coreProxy.address, deployer);
   await coreV2.init(
-    args.decimals,
+    args?.decimals ||  18,
     collateral.address,
     syntheticProxy.address,
     oracle.address,
@@ -139,11 +139,17 @@ export async function sapphireFixture(ctx: ITestContext, args?: ITestContextArgs
     'COLL',
     args?.decimals ?? DEFAULT_COLLATERAL_DECIMALS,
   );
-  ctx.contracts.synthetic.tokenV1 = await deploySyntheticTokenV1(deployer);
+
   ctx.contracts.oracle = await deployMockOracle(deployer);
 
   const coreImp = await deployMockSapphireCoreV1(deployer);
   const coreProxy = await deployArcProxy(deployer, coreImp.address, deployerAddress, []);
+
+  const syntheticImp = await deploySyntheticTokenV1(deployer);
+  const syntheticProxy = await deployArcProxy(deployer, syntheticImp.address, deployerAddress, []);
+  const tokenV1 = SyntheticTokenV1Factory.connect(syntheticProxy.address, deployer);
+
+  ctx.contracts.synthetic.tokenV1 = tokenV1;
 
   ctx.contracts.sapphire.linearMapper = await new SapphireMapperLinearFactory(deployer).deploy();
 
@@ -178,6 +184,9 @@ export async function sapphireFixture(ctx: ITestContext, args?: ITestContextArgs
     0,
     0,
   );
+
+  await tokenV1.addMinter(ctx.contracts.sapphire.core.address, MAX_UINT256);
+
   await ctx.contracts.sapphire.core.setPause(false);
 
   ctx.sdks.sapphire = SapphireTestArc.new(deployer);
