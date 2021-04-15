@@ -175,6 +175,12 @@ describe('SyntheticTokenV1', () => {
         'SyntheticTokenV2: Minter already exists',
       );
     });
+
+    it('emits MinterAdded', async () => {
+      await expect(syntheticTokenV2.addMinter(arcAccount1.address, 100))
+        .to.emit(syntheticTokenV2, 'MinterAdded')
+        .withArgs(arcAccount1.address, 100);
+    });
   });
 
   describe('#removeMinter', () => {
