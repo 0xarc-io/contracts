@@ -31,7 +31,7 @@ describe('SyntheticTokenV2', () => {
     arcAccount1 = signers[4];
     arcAccount2 = signers[5];
 
-    syntheticToken = await deploySyntheticTokenV2(ownerAccount);
+    syntheticToken = await deploySyntheticTokenV2(ownerAccount, 'STABLEx', '2.0');
 
     const proxy = await deployArcProxy(
       ownerAccount,
