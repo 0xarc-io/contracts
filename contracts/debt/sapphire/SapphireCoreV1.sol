@@ -442,25 +442,20 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
      * @dev Calculate how much collateral you need given a certain borrow amount
      *
      * @param _borrowedAmount   The borrowed amount expressed as a uint256 (NOT principal)
-     * @param _collateralRatio  The c-ratio required for the position to remain collateralized
+     * @param _collateralAmount  The amount of collateral, in its original decimals
      * @param _collateralPrice  What price do you want to calculate the inverse at
-     * @return                  The amount of collateral, in its original decimals   
+     * @return                  The calculated c-ratio   
      */
-    function calculateCollateralRequired(
+    function calculateCollateralRatio(
         uint256 _borrowedAmount,
-        uint256 _collateralRatio,
+        uint256 _collateralAmount,
         uint256 _collateralPrice
     )
         public
         view
         returns (uint256)
     {
-        uint256 unscaledCollateralRequired = _collateralRatio
-            .mul(_borrowedAmount)
-            .div(_collateralPrice);
-
-        // Scale the collateral required to the match the collateral's decimals
-        return unscaledCollateralRequired.div(precisionScalar);
+        return _collateralAmount.mul(precisionScalar).mul(_collateralPrice).div(_borrowedAmount);
     }
 
     /* ========== Private Functions ========== */
@@ -548,17 +543,17 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         SapphireTypes.Vault storage vault = vaults[msg.sender];
         
         // Ensure vault is collateralized if the borrow actionw would succeed
-        uint256 collateralRequired = calculateCollateralRequired(
+        uint256 collateralRatio = calculateCollateralRatio(
             vault.borrowedAmount
                 .mul(borrowIndex)
                 .div(BASE)
                 .add(_amount),
-            _assessedCRatio,
+            vault.collateralAmount,
             _collateralPrice
         );
 
         require(
-            vault.collateralAmount >= collateralRequired,
+            collateralRatio >= _assessedCRatio,
             "SapphireCoreV1: the vault will become undercollateralized"
         );
 
