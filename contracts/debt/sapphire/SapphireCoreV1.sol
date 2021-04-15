@@ -462,11 +462,11 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     /* ========== Private Functions ========== */
 
     /**
-     * @dev Converts the given amount by dividing it with the borrow index.
+     * @dev Normalize the given borrow amount by dividing it with the borrow index.
      *      It is used when manipulating with other borrow values 
      *      in order to take in account current borrowIndex.
      */
-    function _convertBorrowAmount(
+    function _normalizeBorrowAmount(
         uint256 _amount
     )
         private
@@ -479,7 +479,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
      * @dev Multiply the given amount by the borrow index. Used to convert
      *      borrow amounts back to their real value.
      */
-    function _normalizeBorrowAmount(
+    function _denormalizeBorrowAmount(
         uint256 _amount
     )
         private
@@ -559,26 +559,26 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         );
 
         // Record borrow amount (update vault and total amount)
-        uint256 convertedBorrowAmt = _convertBorrowAmount(_amount);
-        vault.borrowedAmount = vault.borrowedAmount.add(convertedBorrowAmt);
-        totalBorrowed = totalBorrowed.add(convertedBorrowAmt);
+        uint256 normalizedBorrowAmt = _normalizeBorrowAmount(_amount);
+        vault.borrowedAmount = vault.borrowedAmount.add(normalizedBorrowAmt);
+        totalBorrowed = totalBorrowed.add(normalizedBorrowAmt);
 
-        uint256 normalVaultBorrowAmt = _normalizeBorrowAmount(vault.borrowedAmount);
+        uint256 actualVaultBorrowAmt = _denormalizeBorrowAmount(vault.borrowedAmount);
 
         // Do not borrow more than the maximum vault borrow amount
         require(
-            normalVaultBorrowAmt <= vaultBorrowMaximum,
+            actualVaultBorrowAmt <= vaultBorrowMaximum,
             "SapphireCoreV1: borrowed amount cannot be greater than vault limit"
         );
 
         // Do not borrow if amount is smaller than limit
         require(
-            normalVaultBorrowAmt >= vaultBorrowMinimum,
+            actualVaultBorrowAmt >= vaultBorrowMinimum,
             "SapphireCoreV1: borrowed amount cannot be less than limit"
         );
 
         require(
-            _normalizeBorrowAmount(totalBorrowed) <= totalBorrowLimit,
+            _denormalizeBorrowAmount(totalBorrowed) <= totalBorrowLimit,
             "SapphireCoreV1: borrowed amount cannot be greater than limit"
         );
 
