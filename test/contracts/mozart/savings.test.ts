@@ -20,7 +20,7 @@ import { Signer } from '@ethersproject/abstract-signer';
 const COLLATERAL_AMOUNT = ArcNumber.new(200);
 const BORROW_AMOUNT = ArcNumber.new(50);
 
-describe('MozartSavingsV1', () => {
+xdescribe('MozartSavingsV1', () => {
   let ctx: ITestContext;
   let arc: MozartTestArc;
   let savings: MozartSavingsV1;

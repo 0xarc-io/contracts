@@ -191,7 +191,6 @@ export async function deployMockSapphireCreditScore(
   const mockSapphireCreditScore = await mockSapphireCreditScoreFactory.deploy(
     merkleRoot,
     merkleTreeUpdater,
-    DEFAULT_MAX_CREDIT_SCORE,
   );
   return mockSapphireCreditScore as MockSapphireCreditScore;
 }

@@ -11,7 +11,7 @@ import { SpritzTestArc } from '@src/SpritzTestArc';
 import { spritzFixture } from '../fixtures';
 import { addSnapshotBeforeRestoreAfterEach } from '../../helpers/testingUtils';
 
-describe('Spritz.operateAction(Liquidation)', () => {
+xdescribe('Spritz.operateAction(Liquidation)', () => {
   let ctx: ITestContext;
   let arc: SpritzTestArc;
 
