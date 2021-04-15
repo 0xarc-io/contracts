@@ -19,6 +19,7 @@ import { MerkleDistributor } from '@src/typings/MerkleDistributor';
 import { SapphireCreditScore } from '@src/typings/SapphireCreditScore';
 import { MockSapphireCreditScore } from '@src/typings/MockSapphireCreditScore';
 import { DEFAULT_MAX_CREDIT_SCORE } from '@test/helpers/sapphireDefaults';
+import { SyntheticTokenV2 } from '@src/typings/SyntheticTokenV2';
 
 export async function deployMockMozartCore(deployer: Signer) {
   const Contract = await ethers.getContractFactory('MockMozartCoreV2', deployer);
@@ -69,9 +70,9 @@ export async function deploySpritzStateV1(
   return coreV4 as StateV1;
 }
 
-export async function deploySyntheticTokenV2(deployer: Signer) {
+export async function deploySyntheticTokenV2(deployer: Signer, name: string, version: string) {
   const Contract = await ethers.getContractFactory('SyntheticTokenV2', deployer);
-  const syntheticTokenV2 = await Contract.deploy();
+  const syntheticTokenV2 = await Contract.deploy(name, version);
   return syntheticTokenV2 as SyntheticTokenV2;
 }
 

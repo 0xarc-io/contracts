@@ -22,7 +22,11 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
 
     event MinterLimitUpdated(address _minter, uint256 _limit);
 
-    event InitCalled();
+    event InitCalled(
+        string name,
+        string symbol,
+        string version
+    );
 
     /* ========== Modifiers ========== */
 
@@ -34,68 +38,50 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
         _;
     }
 
+    /* ========== Constructor ========== */
+
+    constructor(
+        string memory _name,
+        string memory _version
+    )
+        Permittable(_name, _version)
+        public
+    { }
+    
     /* ========== Init Function ========== */
 
 /**
      * @dev Initialise the synthetic token
      *
-     * @param name The name of the token
-     * @param symbol The symbol of the token
-     * @param version The version number of this token
+     * @param _name The name of the token
+     * @param _symbol The symbol of the token
+     * @param _version The version number of this token
      */
     function init(
-        string memory name,
-        string memory symbol,
-        string memory version
+        string memory _name,
+        string memory _symbol,
+        string memory _version
     )
         public
         onlyAdmin
     {
-        _name = name;
-        _symbol = symbol;
-        _version = version;
+        name = _name;
+        symbol = _symbol;
+        version = _version;
 
-        DOMAIN_SEPARATOR = _initDomainSeparator(name, version);
+        DOMAIN_SEPARATOR = _initDomainSeparator(_name, _symbol);
 
-        emit InitCalled();
+        emit InitCalled(
+            _name,
+            _symbol,
+            _version
+        );
     }
 
     /* ========== View Functions ========== */
 
-    function name()
-        external
-        view
-        returns (string memory)
-    {
-        return _name;
-    }
-
-    function symbol()
-        external
-        view
-        returns (string memory)
-    {
-        return _symbol;
-    }
-
-    function decimals()
-        external
-        pure
-        returns (uint8)
-    {
-        return 18;
-    }
-
-    function version()
-        external
-        view
-        returns (string memory)
-    {
-        return _version;
-    }
-
     function totalSupply()
-        public
+        external
         view
         returns (uint256)
     {
@@ -250,7 +236,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
      *
      * @notice Can only be called by a valid minter.
      *
-     * @param _to The destination to mint the synth to
+     * @param _to The destination  to mint the synth to
      * @param _value The amount of synths to mint
      */
     function mint(
@@ -450,6 +436,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
         );
 
         _allowances[_owner][_spender] = _amount;
+        
         emit Approval(_owner, _spender, _amount);
     }
 }

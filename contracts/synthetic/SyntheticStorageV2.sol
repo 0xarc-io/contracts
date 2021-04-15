@@ -9,10 +9,11 @@ contract SyntheticStorageV2 {
     /**
      * @dev ERC20 Properties
      */
-    string  internal _name;
-    string  internal _symbol;
-    uint256 internal _totalSupply;
-    string  internal _version;
+    uint8   public      decimals = 18;
+    string  public      name;
+    string  public      symbol;
+    string  public      version;
+    uint256 internal    _totalSupply;
 
     /**
      * @dev _balances records the amounts minted to each user by each minter
