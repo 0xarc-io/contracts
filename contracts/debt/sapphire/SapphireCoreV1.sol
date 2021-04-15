@@ -395,7 +395,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
                 // Borrow synthetic
                 _borrow(action.amount, assessedCRatio, currentPrice);
             } else if (action.operation == SapphireTypes.Operation.Withdraw){
-                _withdraw(action.amount);
+                _withdraw(action.amount, assessedCRatio, currentPrice);
             }
         }
 
@@ -464,6 +464,9 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         view
         returns (uint256)
     {
+        if (_borrowedAmount == 0) {
+            return 2**256 - 1;
+        }
         return _collateralAmount.mul(precisionScalar).mul(_collateralPrice).div(_borrowedAmount);
     }
 
@@ -532,13 +535,26 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
      *      from assessor one.
      */
     function _withdraw(
-        uint256 _amount
+        uint256 _amount,
+        uint256 _assessedCRatio,
+        uint256 _collateralPrice
     )
         private
     {
         SapphireTypes.Vault storage vault = vaults[msg.sender];
 
         vault.collateralAmount = vault.collateralAmount.sub(_amount);
+
+        uint256 collateralRatio = calculateCollateralRatio(
+            _denormalizeBorrowAmount(vault.borrowedAmount),
+            vault.collateralAmount,
+            _collateralPrice
+        );
+
+        require(
+            collateralRatio >= _assessedCRatio,
+            "SapphireCoreV1: the vault will become undercollateralized"
+        );
 
         // Execute transfer
         IERC20 collateralAsset = IERC20(collateralAsset);
