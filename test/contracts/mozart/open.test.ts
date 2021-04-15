@@ -15,7 +15,7 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { MozartTestArc } from '@src/MozartTestArc';
 import { ONE_YEAR_IN_SECONDS } from '@src/constants';
 
-describe('Mozart.operateAction(Open)', () => {
+xdescribe('Mozart.operateAction(Open)', () => {
   const COLLATERAL_AMOUNT = ArcNumber.new(100);
   const BORROW_AMOUNT = ArcNumber.new(50);
 

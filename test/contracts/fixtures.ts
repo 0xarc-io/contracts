@@ -55,7 +55,7 @@ export async function mozartFixture(ctx: ITestContext, args?: ITestContextArgs) 
 
   const coreV2 = MockMozartCoreV2Factory.connect(coreProxy.address, deployer);
   await coreV2.init(
-    args?.decimals ||  18,
+    args?.decimals || 18,
     collateral.address,
     syntheticProxy.address,
     oracle.address,

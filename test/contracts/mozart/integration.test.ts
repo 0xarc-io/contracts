@@ -17,7 +17,7 @@ import { MockMozartSavingsV2Factory } from '@src/typings';
 const COLLATERAL_AMOUNT = ArcNumber.new(200);
 const BORROW_AMOUNT = ArcNumber.new(50);
 
-describe('Mozart.integration', () => {
+xdescribe('Mozart.integration', () => {
   let ctx: ITestContext;
   let arc: MozartTestArc;
   let savings: MozartSavingsV1;
