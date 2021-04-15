@@ -32,7 +32,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
 
     modifier onlyMinter() {
         require(
-            _minters[msg.sender] = true,
+            _minters[msg.sender] == true,
             "SyntheticTokenV2: only callable by minter"
         );
         _;
