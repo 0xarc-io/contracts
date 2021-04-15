@@ -439,10 +439,11 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     }
 
     /**
-     * @dev Calculate how much collateral you need given a certain borrow amount
+     * @dev Calculate how much collateralRatio you would have
+     *      with a certain borrow and collateral amount
      *
      * @param _borrowedAmount   The borrowed amount expressed as a uint256 (NOT principal)
-     * @param _collateralAmount  The amount of collateral, in its original decimals
+     * @param _collateralAmount The amount of collateral, in its original decimals
      * @param _collateralPrice  What price do you want to calculate the inverse at
      * @return                  The calculated c-ratio   
      */
