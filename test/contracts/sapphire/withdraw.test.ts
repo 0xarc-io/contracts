@@ -188,6 +188,8 @@ describe.only('SapphireCore.withdraw()', () => {
   });
 
   it('updates the totalCollateral amount after a withdraw', async () => {
+    expect(await arc.core().totalCollateral()).to.eq(0);
+
     await setupBaseVault(
       arc,
       signers.scoredMinter,
@@ -196,13 +198,12 @@ describe.only('SapphireCore.withdraw()', () => {
       getScoreProof(minterCreditScore, creditScoreTree),
     );
 
-    const preTotalSupply = await arc.core().totalCollateral();
+    expect(await arc.core().totalCollateral()).to.eq(COLLATERAL_AMOUNT);
 
-    await arc.withdraw(COLLATERAL_AMOUNT, undefined, undefined, signers.scoredMinter);
+    const withdrawAmount = utils.parseUnits('100', DEFAULT_COLLATERAL_DECIMALS);
+    await arc.withdraw(withdrawAmount, undefined, undefined, signers.scoredMinter);
 
-    const postTotalSupply = await arc.core().totalCollateral();
-
-    expect(postTotalSupply).to.eq(preTotalSupply.sub(COLLATERAL_AMOUNT));
+    expect(await arc.core().totalCollateral()).to.eq(COLLATERAL_AMOUNT.sub(withdrawAmount));
   });
 
   it('reverts if the resulting vault ends up below the minimum c-ratio', async () => {

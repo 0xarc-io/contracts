@@ -559,6 +559,9 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         // Execute transfer
         IERC20 collateralAsset = IERC20(collateralAsset);
         SafeERC20.safeTransfer(collateralAsset, msg.sender, _amount);
+
+        // Change total collateral amount
+        totalCollateral = totalCollateral - _amount;
     }
 
     /**
