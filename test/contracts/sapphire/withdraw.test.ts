@@ -1,11 +1,10 @@
 import { CreditScore } from '@arc-types/sapphireCore';
 import { TestingSigners } from '@arc-types/testing';
-import { EventFragment } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';
 import { BASE } from '@src/constants';
 import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
-import { BaseERC20Factory, SapphireAssessor, TestTokenFactory } from '@src/typings';
+import { SapphireAssessor, TestTokenFactory } from '@src/typings';
 import { getEvent } from '@src/utils/getEvent';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import {
@@ -22,16 +21,19 @@ import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 
-const NORMALIZED_COLLATERAL_AMOUNT = utils.parseEther('1000');
 const COLLATERAL_AMOUNT = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS);
 const BORROW_AMOUNT = utils.parseEther('200');
+const COLLATERAL_LIMIT = BORROW_AMOUNT.mul(DEFAULT_HiGH_C_RATIO)
+  .div(DEFAULT_PRICE)
+  .div(BASE)
+  .mul(BigNumber.from(10).pow(DEFAULT_COLLATERAL_DECIMALS));
 
 /**
  * The withdraw function allows a user to withdraw collateral from a vault, partially or completely.
  * It does not require a credit score proof, but if provided, the user can potentially withdraw
  * more, depending on the amount of debt they have.
  */
-describe.only('SapphireCore.withdraw()', () => {
+describe('SapphireCore.withdraw()', () => {
   let arc: SapphireTestArc;
   let signers: TestingSigners;
   let minterCreditScore: CreditScore;
@@ -90,11 +92,7 @@ describe.only('SapphireCore.withdraw()', () => {
     await setupBaseVault(arc, signers.minter, COLLATERAL_AMOUNT, BORROW_AMOUNT);
 
     // Withdraw the max collateral to respect the c-ratio set by DEFAULT_HiGH_C_RATIO
-    const remainingAmount = BORROW_AMOUNT.mul(DEFAULT_HiGH_C_RATIO)
-      .div(DEFAULT_PRICE)
-      .mul(BigNumber.from(10).pow(DEFAULT_COLLATERAL_DECIMALS))
-      .div(BASE);
-    const withdrawAmt = COLLATERAL_AMOUNT.sub(remainingAmount);
+    const withdrawAmt = COLLATERAL_AMOUNT.sub(COLLATERAL_LIMIT);
     const preBalance = await arc.collateral().balanceOf(signers.minter.address);
 
     await arc.withdraw(withdrawAmt, undefined, undefined, signers.minter);
@@ -102,7 +100,7 @@ describe.only('SapphireCore.withdraw()', () => {
     const postBalance = await arc.collateral().balanceOf(signers.minter.address);
     const vault = await arc.getVault(signers.minter.address);
 
-    expect(vault.collateralAmount).to.eq(remainingAmount);
+    expect(vault.collateralAmount).to.eq(COLLATERAL_LIMIT);
     expect(postBalance).to.eq(preBalance.add(withdrawAmt));
 
     await expect(
@@ -118,11 +116,7 @@ describe.only('SapphireCore.withdraw()', () => {
      */
 
     // Withdraw the max collateral to respect the c-ratio set by DEFAULT_HiGH_C_RATIO
-    let remainingAmount = BORROW_AMOUNT.mul(DEFAULT_HiGH_C_RATIO)
-      .div(DEFAULT_PRICE)
-      .div(BASE)
-      .mul(BigNumber.from(10).pow(DEFAULT_COLLATERAL_DECIMALS));
-    const withdrawAmt1 = COLLATERAL_AMOUNT.sub(remainingAmount);
+    const withdrawAmt1 = COLLATERAL_AMOUNT.sub(COLLATERAL_LIMIT);
 
     const preBalance = await arc.collateral().balanceOf(signers.scoredMinter.address);
 
@@ -147,7 +141,7 @@ describe.only('SapphireCore.withdraw()', () => {
       .mul(BigNumber.from(10).pow(DEFAULT_COLLATERAL_DECIMALS))
       .div(DEFAULT_PRICE)
       .div(BASE);
-    const withdrawAmt2 = remainingAmount.sub(remainingAmount2);
+    const withdrawAmt2 = COLLATERAL_LIMIT.sub(remainingAmount2);
 
     // Withdraw more amount - to the limit permitted by the credit score
     await arc.withdraw(
@@ -209,14 +203,13 @@ describe.only('SapphireCore.withdraw()', () => {
   it('reverts if the resulting vault ends up below the minimum c-ratio', async () => {
     await setupBaseVault(arc, signers.scoredMinter, COLLATERAL_AMOUNT, BORROW_AMOUNT);
 
-    const minCollateral = DEFAULT_HiGH_C_RATIO.mul(BORROW_AMOUNT).div(BASE);
-    const maxWithdrawAmt = COLLATERAL_AMOUNT.sub(minCollateral);
+    const maxWithdrawAmt = COLLATERAL_AMOUNT.sub(COLLATERAL_LIMIT);
 
     await arc.withdraw(maxWithdrawAmt, undefined, undefined, signers.scoredMinter);
 
     await expect(
       arc.withdraw(BigNumber.from(1), undefined, undefined, signers.scoredMinter),
-    ).to.be.revertedWith('SapphireArcV1: cannot withdraw more than allowed');
+    ).to.be.revertedWith('SapphireCoreV1: the vault will become undercollateralized');
   });
 
   it('reverts if vault is undercollateralized', async () => {
@@ -233,15 +226,14 @@ describe.only('SapphireCore.withdraw()', () => {
 
     await expect(
       arc.withdraw(BigNumber.from(1), undefined, undefined, signers.scoredMinter),
-    ).to.be.revertedWith('SapphireArcV1: cannot withdraw more than allowed');
+    ).to.be.revertedWith('SapphireCoreV1: the vault will become undercollateralized');
   });
 
   it('reverts if withdrawing more collateral than the amount in the vault', async () => {
-    await arc.deposit(COLLATERAL_AMOUNT, undefined, undefined, signers.scoredMinter);
-
+    await setupBaseVault(arc, signers.scoredMinter, COLLATERAL_AMOUNT, BigNumber.from('0'));
     await expect(
       arc.withdraw(COLLATERAL_AMOUNT.add(1), undefined, undefined, signers.scoredMinter),
-    ).to.be.revertedWith('SapphireArcV1: cannot withdraw more than allowed');
+    ).to.be.revertedWith('SafeMath: subtraction overflow');
   });
 
   it('reverts if contract is paused', async () => {
