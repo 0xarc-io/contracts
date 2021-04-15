@@ -5,7 +5,7 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { BASE } from '@src/constants';
 import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
-import { BaseERC20Factory, SapphireAssessor } from '@src/typings';
+import { BaseERC20Factory, SapphireAssessor, TestTokenFactory } from '@src/typings';
 import { getEvent } from '@src/utils/getEvent';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import {
@@ -148,7 +148,7 @@ describe.only('SapphireCore.withdraw()', () => {
       .div(DEFAULT_PRICE)
       .div(BASE);
     const withdrawAmt2 = remainingAmount.sub(remainingAmount2);
-    
+
     // Withdraw more amount - to the limit permitted by the credit score
     await arc.withdraw(
       withdrawAmt2,
@@ -166,16 +166,25 @@ describe.only('SapphireCore.withdraw()', () => {
 
   it('withdraws the correct amount of collateral, given that collateral has a different number of decimals than 18', async () => {
     const collateralAddress = await arc.core().collateralAsset();
-    const collateralContract = BaseERC20Factory.connect(collateralAddress, signers.minter);
-    const collateralDecimals = await collateralContract.decimals();
+    const collateralContract = TestTokenFactory.connect(collateralAddress, signers.scoredMinter);
 
+    const collateralDecimals = await collateralContract.decimals();
     expect(collateralDecimals).not.eq(18);
 
+    await collateralContract.mintShare(signers.scoredMinter.address, COLLATERAL_AMOUNT);
+    await collateralContract.approve(arc.core().address, COLLATERAL_AMOUNT);
+
+    expect(await collateralContract.balanceOf(signers.scoredMinter.address)).eq(COLLATERAL_AMOUNT);
+
     await arc.deposit(COLLATERAL_AMOUNT, undefined, undefined, signers.scoredMinter);
-    await arc.withdraw(COLLATERAL_AMOUNT, undefined, undefined, signers.scoredMinter);
 
     const { collateralAmount } = await arc.getVault(signers.scoredMinter.address);
     expect(collateralAmount).to.eq(COLLATERAL_AMOUNT);
+    expect(await collateralContract.balanceOf(arc.coreAddress())).eq(COLLATERAL_AMOUNT);
+
+    await arc.withdraw(COLLATERAL_AMOUNT, undefined, undefined, signers.scoredMinter);
+
+    expect(await collateralContract.balanceOf(signers.scoredMinter.address)).eq(COLLATERAL_AMOUNT);
   });
 
   it('updates the totalCollateral amount after a withdraw', async () => {
