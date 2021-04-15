@@ -24,17 +24,18 @@ contract Permittable {
     )
         public
     {
-        DOMAIN_SEPARATOR = initDomainSeparator(name, version);
+        DOMAIN_SEPARATOR = _initDomainSeparator(name, version);
     }
 
     /**
      * @dev Initializes EIP712 DOMAIN_SEPARATOR based on the current contract and chain ID.
      */
-    function initDomainSeparator(
+    function _initDomainSeparator(
         string memory name,
         string memory version
     )
-        private
+        internal
+        view
         returns (bytes32)
     {
         uint256 chainID;
