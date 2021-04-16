@@ -6,10 +6,11 @@ import {Amount} from "../lib/Amount.sol";
 
 contract SyntheticStorageV2 {
 
+    bool internal _initCalled;
+
     /**
      * @dev ERC20 Properties
      */
-    uint8   public      decimals = 18;
     string  public      name;
     string  public      symbol;
     string  public      version;
