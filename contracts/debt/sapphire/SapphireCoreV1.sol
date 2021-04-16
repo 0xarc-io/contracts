@@ -603,21 +603,21 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         );
 
         // Record borrow amount (update vault and total amount)
-        uint256 normalizedBorrowAmt = _normalizeBorrowAmount(_amount);
-        vault.borrowedAmount = vault.borrowedAmount.add(normalizedBorrowAmt);
-        totalBorrowed = totalBorrowed.add(normalizedBorrowAmt);
+        uint256 normalizedBorrowAmount = _normalizeBorrowAmount(_amount);
+        vault.borrowedAmount = vault.borrowedAmount.add(normalizedBorrowAmount);
+        totalBorrowed = totalBorrowed.add(normalizedBorrowAmount);
 
-        uint256 actualVaultBorrowAmt = _denormalizeBorrowAmount(vault.borrowedAmount);
+        uint256 actualVaultBorrowAmount = _denormalizeBorrowAmount(vault.borrowedAmount);
 
         // Do not borrow more than the maximum vault borrow amount
         require(
-            actualVaultBorrowAmt <= vaultBorrowMaximum,
+            actualVaultBorrowAmount <= vaultBorrowMaximum,
             "SapphireCoreV1: borrowed amount cannot be greater than vault limit"
         );
 
         // Do not borrow if amount is smaller than limit
         require(
-            actualVaultBorrowAmt >= vaultBorrowMinimum,
+            actualVaultBorrowAmount >= vaultBorrowMinimum,
             "SapphireCoreV1: borrowed amount cannot be less than limit"
         );
 
