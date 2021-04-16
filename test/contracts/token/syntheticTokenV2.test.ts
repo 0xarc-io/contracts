@@ -1,16 +1,15 @@
 import 'module-alias/register';
-import { expect, util } from 'chai';
+import { expect } from 'chai';
 import { deployArcProxy, deploySyntheticTokenV2 } from '../deployers';
 import { ethers } from 'hardhat';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expectRevert } from '../../helpers/expectRevert';
-import { BigNumber } from '@ethersproject/bignumber';
 import { SyntheticTokenV2 } from '@src/typings/SyntheticTokenV2';
-import { constants, utils } from 'ethers';
-import { signPermit } from '@src/utils/signPermit';
-import hre from 'hardhat';
-import { SyntheticTokenV2__factory } from '@src/typings';
+import { BigNumber, constants, Wallet } from 'ethers';
+import { SignatureResult, signPermit } from '@src/utils/signPermit';
+import { SyntheticTokenV2Factory } from '@src/typings';
+import { EVM } from '@test/helpers/EVM';
 
 describe('SyntheticTokenV2', () => {
   let syntheticToken: SyntheticTokenV2;
@@ -18,21 +17,24 @@ describe('SyntheticTokenV2', () => {
   let arcAccount: SignerWithAddress;
   let arcAccount1: SignerWithAddress;
   let arcAccount2: SignerWithAddress;
-  let userAccount: SignerWithAddress;
   let otherAccount: SignerWithAddress;
+  let userAccount: SignerWithAddress;
 
-  function getContract(caller: SignerWithAddress) {
-    return SyntheticTokenV2__factory.connect(syntheticToken.address, caller);
+  function getContract(caller: SignerWithAddress | Wallet) {
+    return SyntheticTokenV2Factory.connect(syntheticToken.address, caller);
   }
 
   before(async () => {
     const signers = await ethers.getSigners();
-    ownerAccount = signers[0];
-    arcAccount = signers[1];
-    userAccount = signers[2];
-    otherAccount = signers[3];
-    arcAccount1 = signers[4];
-    arcAccount2 = signers[5];
+    arcAccount = signers[0];
+    ownerAccount = signers[1];
+    otherAccount = signers[2];
+    arcAccount1 = signers[3];
+    arcAccount2 = signers[4];
+    userAccount = signers[5];
+
+    // userAccount = Wallet.createRandom();
+    // userAccount = userAccount.connect(ethers.provider);
 
     const synthImpl = await deploySyntheticTokenV2(ownerAccount, 'ARCx', '1');
 
@@ -43,7 +45,7 @@ describe('SyntheticTokenV2', () => {
       [],
     );
 
-    syntheticToken = SyntheticTokenV2__factory.connect(
+    syntheticToken = SyntheticTokenV2Factory.connect(
       proxy.address,
       ownerAccount,
     );
@@ -149,7 +151,7 @@ describe('SyntheticTokenV2', () => {
           [],
         );
 
-        const synthProxy = SyntheticTokenV2__factory.connect(
+        const synthProxy = SyntheticTokenV2Factory.connect(
           proxy.address,
           ownerAccount,
         );
@@ -527,35 +529,163 @@ describe('SyntheticTokenV2', () => {
       });
     });
 
-    describe('#permit', () => {
-      let signature: any;
+    // describe('#permit', () => {
+    //   const permitAmount = BigNumber.from(10);
+    //   const deadline = BigNumber.from(Date.now() + 1000);
+    //   let signature: SignatureResult;
 
-      before(async () => {
-        const nonce = await syntheticToken.permitNonces(ownerAccount.address);
-        const tokenVersion = await syntheticToken.version();
+    //   before(async () => {
+    //     const nonce = await syntheticToken.permitNonces(ownerAccount.address);
 
-        signature = await signPermit(
-          userAccount,
-          hre.network.config.chainId,
-          syntheticToken.address,
-          tokenVersion,
-          arcAccount.address,
-          Date.now() + 1000,
-          nonce.toNumber(),
-        );
-      });
+    //     signature = await signPermit(
+    //       userAccount,
+    //       syntheticToken,
+    //       arcAccount.address,
+    //       permitAmount,
+    //       BigNumber.from(Date.now() + 1000),
+    //       nonce,
+    //     );
+    //   });
 
-      it.only('reverts if the signature is wrong', async () => {
-        console.log({ signature });
-      });
+    //   it('reverts if the signature is wrong', async () => {
+    //     const minter = getContract(arcAccount);
+    //     await expect(
+    //       minter.permit(
+    //         userAccount.address,
+    //         arcAccount.address,
+    //         permitAmount.add(1), // Invalidate signature
+    //         deadline,
+    //         signature.v,
+    //         signature.r,
+    //         signature.s,
+    //       ),
+    //     ).to.be.revertedWith('Permittable: Signature invalid');
+    //   });
 
-      it('reverts if the signature is expired');
+    //   it('reverts if the signature is expired', async () => {
+    //     const minter = getContract(arcAccount);
+    //     const evm = new EVM(ethers.provider);
 
-      it('permits and increases allowance');
-    });
+    //     await evm.fastForward(1001);
 
-    describe('integration', () => {
-      it('successfully calls transferFrom() after calling permit()');
-    });
+    //     await expect(
+    //       minter.permit(
+    //         userAccount.address,
+    //         arcAccount.address,
+    //         permitAmount,
+    //         deadline,
+    //         signature.v,
+    //         signature.r,
+    //         signature.s,
+    //       ),
+    //     ).to.be.revertedWith('Permittable: Signature invalid');
+    //   });
+
+    //   it('permits and increases allowance', async () => {
+    //     const minter = getContract(arcAccount);
+
+    //     await minter.permit(
+    //       userAccount.address,
+    //       arcAccount.address,
+    //       permitAmount,
+    //       deadline,
+    //       signature.v,
+    //       signature.r,
+    //       signature.s,
+    //     );
+
+    //     expect(
+    //       await syntheticToken.allowance(
+    //         userAccount.address,
+    //         arcAccount.address,
+    //       ),
+    //     ).to.be.eq(permitAmount);
+    //   });
+
+    //   //  it('permit', async () => {
+    //   //    const nonce = await token.nonces(wallet.address);
+    //   //    const deadline = MaxUint256;
+    //   //    const digest = await getApprovalDigest(
+    //   //      token,
+    //   //      {
+    //   //        owner: wallet.address,
+    //   //        spender: other.address,
+    //   //        value: TEST_AMOUNT,
+    //   //      },
+    //   //      nonce,
+    //   //      deadline,
+    //   //    );
+
+    //   //    const { v, r, s } = ecsign(
+    //   //      Buffer.from(digest.slice(2), 'hex'),
+    //   //      Buffer.from(wallet.privateKey.slice(2), 'hex'),
+    //   //    );
+
+    //   //    await expect(
+    //   //      token.permit(
+    //   //        wallet.address,
+    //   //        other.address,
+    //   //        TEST_AMOUNT,
+    //   //        deadline,
+    //   //        v,
+    //   //        hexlify(r),
+    //   //        hexlify(s),
+    //   //      ),
+    //   //    )
+    //   //      .to.emit(token, 'Approval')
+    //   //      .withArgs(wallet.address, other.address, TEST_AMOUNT);
+    //   //    expect(await token.allowance(wallet.address, other.address)).to.eq(
+    //   //      TEST_AMOUNT,
+    //   //    );
+    //   //    expect(await token.nonces(wallet.address)).to.eq(bigNumberify(1));
+    //   //  });
+    // });
+
+    // describe('integration', () => {
+    //   const deadline = BigNumber.from(Date.now() + 1000);
+    //   const permitAmount = BigNumber.from(10);
+    //   let signature: SignatureResult;
+
+    //   before(async () => {
+    //     const nonce = await syntheticToken.permitNonces(ownerAccount.address);
+    //     const tokenVersion = await syntheticToken.version();
+    //     const chainId = await (await userAccount.provider.getNetwork()).chainId;
+
+    //     signature = await signPermit(
+    //       userAccount,
+    //       syntheticToken,
+    //       arcAccount.address,
+    //       permitAmount,
+    //       BigNumber.from(Date.now() + 1000),
+    //       nonce,
+    //     );
+    //   });
+
+    //   it('successfully calls transferFrom() after calling permit()', async () => {
+    //     const minter = getContract(arcAccount);
+
+    //     await minter.permit(
+    //       userAccount.address,
+    //       arcAccount.address,
+    //       permitAmount,
+    //       deadline,
+    //       signature.v,
+    //       signature.r,
+    //       signature.s,
+    //     );
+
+    //     expect(await syntheticToken.balanceOf(arcAccount.address)).to.eq(0);
+
+    //     await minter.transferFrom(
+    //       userAccount.address,
+    //       arcAccount.address,
+    //       permitAmount,
+    //     );
+
+    //     expect(await syntheticToken.balanceOf(arcAccount.address)).to.eq(
+    //       permitAmount,
+    //     );
+    //   });
+    // });
   });
 });
