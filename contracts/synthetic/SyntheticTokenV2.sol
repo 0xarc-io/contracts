@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.5.16;
+pragma experimental ABIEncoderV2;
 
 import {IERC20} from "../token/IERC20.sol";
 
 import {Adminable} from "../lib/Adminable.sol";
 import {SafeMath} from "../lib/SafeMath.sol";
+import {Amount} from "../lib/Amount.sol";
 import {Permittable} from "../token/Permittable.sol";
 
 import {SyntheticStorageV2} from "./SyntheticStorageV2.sol";
@@ -13,6 +15,7 @@ import {SyntheticStorageV2} from "./SyntheticStorageV2.sol";
 contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable {
 
     using SafeMath for uint256;
+    using Amount for Amount.Principal;
 
     /* ========== Events ========== */
 
@@ -147,7 +150,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
     )
         external
         view
-        returns (uint256)
+        returns (Amount.Principal memory)
     {
         return _minterIssued[_minter];
     }
@@ -261,10 +264,12 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
         external
         onlyMinter
     {
-        uint256 issuedAmount = _minterIssued[msg.sender].add(_value);
+        Amount.Principal memory issuedAmount = _minterIssued[msg.sender].add(
+            Amount.Principal({ sign: true, value: _value })
+        );
 
         require(
-            issuedAmount <= _minterLimits[msg.sender],
+            issuedAmount.value <= _minterLimits[msg.sender] || issuedAmount.sign == false,
             "SyntheticTokenV2: minter limit reached"
         );
 
@@ -275,6 +280,20 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
     /**
      * @dev Burn synthetic tokens of the msg.sender
      *
+     * @param _value The amount of the synth to destroy
+     */
+    function burn(
+        uint256 _value
+    )
+        external
+    {
+        _burn(_value);
+    }
+
+    /**
+     * @dev Burn synthetic tokens of the minter. Same as `burn()` but
+     *      only callable by the minter. Used to record amounts issued
+     *
      * @notice Can only be called by a valid minter
      *
      * @param _value The amount of the synth to destroy
@@ -284,15 +303,12 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
     )
         external
         onlyMinter
-    {
-        require(
-            _minterIssued[msg.sender] >= _value,
-            "SyntheticTokenV2: cannot destroy more than minted"
+    {        
+        _minterIssued[msg.sender] = _minterIssued[msg.sender].sub(
+            Amount.Principal({ sign: true, value: _value })
         );
         
-        _minterIssued[msg.sender] = _minterIssued[msg.sender].sub(_value);
-
-        _destroy(_value);
+        _burn(_value);
     }
 
     /* ========== ERC20 Mutative Functions ========== */
@@ -432,7 +448,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
         emit Transfer(address(0), _account, _amount);
     }
 
-    function _destroy(
+    function _burn(
         uint256 _value
     )
         internal

@@ -104,7 +104,7 @@ describe('SyntheticTokenV2', () => {
           arcAccount.address,
         );
 
-        expect(amtIssued).to.eq(10);
+        expect(amtIssued.value).to.eq(10);
 
         await syntheticToken.addMinter(arcAccount1.address, 15);
 
@@ -112,7 +112,7 @@ describe('SyntheticTokenV2', () => {
         await minterContract.mint(userAccount.address, 12);
 
         amtIssued = await syntheticToken.getMinterIssued(arcAccount1.address);
-        expect(amtIssued).to.eq(12);
+        expect(amtIssued.value).to.eq(12);
       });
     });
   });
@@ -168,7 +168,8 @@ describe('SyntheticTokenV2', () => {
           arcAccount.address,
         );
         const issued = await syntheticToken.getMinterIssued(arcAccount.address);
-        expect(currentLimit.sub(issued)).to.equal(10);
+        expect(issued.sign).to.be.true;
+        expect(currentLimit.sub(issued.value)).to.equal(10);
       });
 
       it('should not be able to mint as an unauthorised user', async () => {
@@ -198,7 +199,8 @@ describe('SyntheticTokenV2', () => {
         const issuance = await syntheticToken.getMinterIssued(
           arcAccount.address,
         );
-        expect(issuance).to.equal(20);
+        expect(issuance.value).to.equal(20);
+        expect(issuance.sign).to.be.true;
         await expect(contract.mint(arcAccount.address, 10)).to.be.revertedWith(
           'SyntheticTokenV2: minter limit reached',
         );
@@ -384,14 +386,14 @@ describe('SyntheticTokenV2', () => {
         );
         await syntheticToken.updateMinterLimit(
           arcAccount.address,
-          currentIssued.add(100),
+          currentIssued.value.add(100),
         );
 
         const minterContract = await getContract(arcAccount);
 
         await minterContract.mint(otherAccount.address, 100);
         let issuance = await minterContract.getMinterIssued(arcAccount.address);
-        expect(issuance).to.equal(currentIssued.add(100));
+        expect(issuance.value).to.equal(currentIssued.value.add(100));
 
         await expect(
           minterContract.mint(otherAccount.address, 1),
@@ -400,7 +402,7 @@ describe('SyntheticTokenV2', () => {
 
         await ownerContract.updateMinterLimit(
           arcAccount.address,
-          currentIssued.add(200),
+          currentIssued.value.add(200),
         );
         await minterContract.mint(otherAccount.address, 100);
 
@@ -408,7 +410,7 @@ describe('SyntheticTokenV2', () => {
         expect(
           await minterContract.getMinterLimit(arcAccount.address),
         ).to.equal(210);
-        expect(issuance).to.equal(210);
+        expect(issuance.value).to.equal(210);
 
         await expect(
           minterContract.mint(otherAccount.address, 1),
@@ -416,23 +418,42 @@ describe('SyntheticTokenV2', () => {
       });
     });
 
-    describe('#destroy', () => {
-      it('reverts if trying to destroy more tokens than minted', async () => {
-        const userBalance = await syntheticToken.balanceOf(userAccount.address);
-        expect(userBalance).to.eq(10);
+    describe('#burn', () => {
+      it('reverts if trying to burn more tokens than the balance', async () => {
+        expect(await syntheticToken.balanceOf(userAccount.address)).to.eq(10);
 
-        // Add second minter with limit of 5
-        await syntheticToken.addMinter(arcAccount1.address, 5);
-
-        // User transfers coins to the minter
         const userContract = getContract(userAccount);
-        await userContract.transfer(arcAccount1.address, 10);
+        await expect(userContract.burn(11)).to.be.revertedWith(
+          'SyntheticTokenV2: cannot destroy more tokens than the balance',
+        );
+      });
 
-        expect(await syntheticToken.balanceOf(arcAccount1.address)).to.eq(10);
+      it(`burns the caller's tokens`, async () => {
+        expect(await syntheticToken.balanceOf(userAccount.address)).to.eq(10);
 
-        const minter1 = getContract(arcAccount1);
-        await expect(minter1.destroy(10)).to.be.revertedWith(
-          'SyntheticTokenV2: cannot destroy more than minted',
+        const userContract = getContract(userAccount);
+        await userContract.burn(10);
+
+        expect(await syntheticToken.balanceOf(userAccount.address)).to.eq(0);
+      });
+    });
+
+    describe('#destroy', () => {
+      it('reverts if called by a non-minter', async () => {
+        const userContract = getContract(userAccount);
+
+        await expect(userContract.destroy(10)).to.be.revertedWith(
+          'SyntheticTokenV2: only callable by minter',
+        );
+      });
+
+      it('reverts if trying to destroy more tokens than the balance', async () => {
+        // Mint 10 tokens to itself
+        const minterContract = await getContract(arcAccount);
+        await minterContract.mint(userAccount.address, 10);
+
+        await expect(minterContract.destroy(11)).to.be.revertedWith(
+          'SyntheticTokenV2: cannot destroy more tokens than the balance',
         );
       });
 
@@ -451,6 +472,35 @@ describe('SyntheticTokenV2', () => {
 
         expect(await syntheticToken.balanceOf(arcAccount.address)).to.eq(0);
         expect(await syntheticToken.balanceOf(userAccount.address)).to.eq(0);
+      });
+
+      it('destroys more than the issue limit', async () => {
+        // Add a second minter
+        await syntheticToken.addMinter(arcAccount1.address, 25);
+
+        // Mint 25 tokens to the original minter
+        const minter1Contract = getContract(arcAccount1);
+        await minter1Contract.mint(arcAccount.address, 25);
+
+        expect(await syntheticToken.balanceOf(arcAccount.address)).to.eq(25);
+        expect(await syntheticToken.getMinterLimit(arcAccount.address)).to.eq(
+          20,
+        );
+        let minterIssued = await syntheticToken.getMinterIssued(
+          arcAccount.address,
+        );
+        expect(minterIssued.value).eq(10);
+
+        // Destroy 25 tokens, even if its mint limit is 20
+        const minterContract = getContract(arcAccount);
+        await minterContract.destroy(25);
+
+        expect(await syntheticToken.balanceOf(arcAccount.address)).to.eq(0);
+
+        minterIssued = await syntheticToken.getMinterIssued(arcAccount.address);
+        // 10 minted - 25 burned = -15
+        expect(minterIssued.value).to.eq(15);
+        expect(minterIssued.sign).to.be.false;
       });
     });
 
