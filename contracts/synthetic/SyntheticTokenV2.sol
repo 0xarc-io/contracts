@@ -65,11 +65,18 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
         public
         onlyAdmin
     {
+        require(
+            _initCalled == false,
+            "SyntheticTokenV2: cannot be initialized twice"
+        );
+        
         name = _name;
         symbol = _symbol;
         version = _version;
 
         DOMAIN_SEPARATOR = _initDomainSeparator(_name, _symbol);
+
+        _initCalled = true;
 
         emit InitCalled(
             _name,
@@ -79,6 +86,14 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
     }
 
     /* ========== View Functions ========== */
+
+    function decimals()
+        external
+        pure
+        returns (uint8)
+    {
+        return 18;
+    }
 
     function totalSupply()
         external
@@ -270,6 +285,11 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
         external
         onlyMinter
     {
+        require(
+            _minterIssued[msg.sender] >= _value,
+            "SyntheticTokenV2: cannot destroy more than minted"
+        );
+        
         _minterIssued[msg.sender] = _minterIssued[msg.sender].sub(_value);
 
         _destroy(_value);
@@ -283,7 +303,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
     )
         public
         returns (bool)
-    {
+    {   
         _transfer(msg.sender, recipient, amount);
         return true;
     }
@@ -307,6 +327,11 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
         public
         returns (bool)
     {
+        require(
+            _allowances[sender][msg.sender] >= amount,
+            "SyntheticTokenv2: the amount has not been approved for this spender"
+        );
+        
         _transfer(sender, recipient, amount);
         _approve(
             sender,
@@ -376,6 +401,11 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
         require(
             _recipient != address(0),
             "SyntheticTokenV2: transfer to the zero address"
+        );
+
+        require(
+            _balances[_sender] >= _amount,
+            "SyntheticTokenV2: sender does not have enough balance"
         );
 
         _balances[_sender]      = _balances[_sender].sub(_amount);
