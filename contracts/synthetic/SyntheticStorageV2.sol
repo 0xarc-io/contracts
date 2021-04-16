@@ -25,8 +25,8 @@ contract SyntheticStorageV2 {
     /**
      * @dev Minter Properties
      */
-    address[]                   internal _mintersArray;
-    mapping(address => bool)    internal _minters;
-    mapping(address => uint256) internal _minterLimits;
-    mapping(address => uint256) internal _minterIssued;
+    address[]                               internal _mintersArray;
+    mapping(address => bool)                internal _minters;
+    mapping(address => uint256)             internal _minterLimits;
+    mapping(address => Amount.Principal)    internal _minterIssued;
 }
