@@ -464,10 +464,10 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         view
         returns (uint256)
     {
-        if (_borrowedAmount == 0) {
-            return 2**256 - 1;
-        }
-        return _collateralAmount.mul(precisionScalar).mul(_collateralPrice).div(_borrowedAmount);
+        return _collateralAmount
+            .mul(precisionScalar)
+            .mul(_collateralPrice)
+            .div(_borrowedAmount);
     }
 
     /* ========== Private Functions ========== */
@@ -545,16 +545,21 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
         vault.collateralAmount = vault.collateralAmount.sub(_amount);
 
-        uint256 collateralRatio = calculateCollateralRatio(
-            _denormalizeBorrowAmount(vault.borrowedAmount),
-            vault.collateralAmount,
-            _collateralPrice
-        );
+        // if we doesn't have debt we can withdraw this much as we want 
+        if (vault.borrowedAmount > 0) {
 
-        require(
-            collateralRatio >= _assessedCRatio,
-            "SapphireCoreV1: the vault will become undercollateralized"
-        );
+            uint256 collateralRatio = calculateCollateralRatio(
+                _denormalizeBorrowAmount(vault.borrowedAmount),
+                vault.collateralAmount,
+                _collateralPrice
+            );
+
+            require(
+                collateralRatio >= _assessedCRatio,
+                "SapphireCoreV1: the vault will become undercollateralized"
+            );
+            
+        }
 
         // Execute transfer
         IERC20 collateralAsset = IERC20(collateralAsset);
@@ -582,7 +587,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         // Get the user's vault
         SapphireTypes.Vault storage vault = vaults[msg.sender];
         
-        // Ensure vault is collateralized if the borrow actionw would succeed
+        // Ensure vault is collateralized if the borrow action would succeed
         uint256 collateralRatio = calculateCollateralRatio(
             vault.borrowedAmount
                 .mul(borrowIndex)
