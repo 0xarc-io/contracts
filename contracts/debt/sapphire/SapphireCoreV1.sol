@@ -587,7 +587,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         // Get the user's vault
         SapphireTypes.Vault storage vault = vaults[msg.sender];
         
-        // Ensure vault is collateralized if the borrow action would succeed
+        // Ensure the vault is collateralized if the borrow action succeeds
         uint256 collateralRatio = calculateCollateralRatio(
             vault.borrowedAmount
                 .mul(borrowIndex)
