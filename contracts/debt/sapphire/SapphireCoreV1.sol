@@ -54,7 +54,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         uint256 _lastUpdateTime
     );
 
-    event RateUpdated(uint256 _value);
+    event InterestRateUpdated(uint256 _value);
 
     event OracleUpdated(address _oracle);
 
@@ -276,7 +276,21 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         uint256 _interestRate
     )
         public
-    {}
+    {
+
+        require(
+            msg.sender == interestSetter, 
+            "SapphireCoreV1: caller is not interest setter"
+        );
+
+        require(
+            _interestRate < 21820606489,
+            "SapphireCoreV1: APY cannot be more than 99%, interest rate - 21820606489"
+        );
+
+        interestRate = _interestRate;
+        emit InterestRateUpdated(interestRate);
+    }
 
     /* ========== Public Functions ========== */
 
