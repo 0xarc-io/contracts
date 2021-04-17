@@ -10,7 +10,18 @@ export function getScoreProof(
   return {
     account: creditScore.account,
     score: creditScore.amount,
-    merkleProof: creditScoreTreeToCheck.getProof(creditScore.account, creditScore.amount),
+    merkleProof: creditScoreTreeToCheck.getProof(
+      creditScore.account,
+      creditScore.amount,
+    ),
+  };
+}
+
+export async function getEmptyScoreProof(caller: Signer) {
+  return {
+    account: await caller.getAddress(),
+    score: BigNumber.from(0),
+    merkleProof: [],
   };
 }
 

@@ -12,12 +12,7 @@ import {
 import ArcNumber from '@src/utils/ArcNumber';
 import { TestingSigners } from '@arc-types/testing';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import {
-  MockSapphireCreditScore,
-  SapphireMapperLinear,
-  SyntheticTokenV1Factory,
-  TestTokenFactory,
-} from '@src/typings';
+import { MockSapphireCreditScore, SapphireMapperLinear } from '@src/typings';
 import chai, { expect } from 'chai';
 import { solidity } from 'ethereum-waffle';
 import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
@@ -702,7 +697,7 @@ describe('SapphireCore.liquidate()', () => {
   });
 
   // Accompanying sheet: https://docs.google.com/spreadsheets/d/1rmFbUxnM4gyi1xhcYKBwcdadvXrHBPKbeX7DLk8KQgE/edit#gid=387958619
-  describe('Scenarios', () => {
+  xdescribe('Scenarios', () => {
     it('Scenario 1: the vault gets liquidated because the collateral price hits the liquidation price', async () => {
       // User opens a vault of 1000 tokens and borrows at a 200% c-ratio
       await setupBaseVault(
