@@ -102,7 +102,7 @@ export class SapphireArc {
 
     await core.executeActions(
       actions,
-      creditScoreProof ?? (await this._getEmptyProof(caller)),
+      creditScoreProof ?? (await getEmptyScoreProof(caller)),
       overrides,
     );
 
@@ -162,7 +162,7 @@ export class SapphireArc {
 
     return core.withdraw(
       amount,
-      creditScoreProof ?? (await this._getEmptyProof(caller)),
+      creditScoreProof ?? (await getEmptyScoreProof(caller)),
       overrides,
     );
   }
