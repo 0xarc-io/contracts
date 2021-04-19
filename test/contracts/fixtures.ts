@@ -24,7 +24,7 @@ import {
   deployMockSavings,
   deployMockSapphireCreditScore,
   deployMockSapphireCoreV1,
-  deployMockSyntheticTokenV1,
+  deployMockSyntheticTokenV2,
 } from './deployers';
 
 import { constants, Signer } from 'ethers';
@@ -37,8 +37,12 @@ import {
   DEFAULT_HiGH_C_RATIO,
   DEFAULT_LOW_C_RATIO,
 } from '@test/helpers/sapphireDefaults';
+import { MockSyntheticTokenV2Factory } from '@src/typings/MockSyntheticTokenV2Factory';
 
-export async function mozartFixture(ctx: ITestContext, args?: ITestContextArgs) {
+export async function mozartFixture(
+  ctx: ITestContext,
+  args?: ITestContextArgs,
+) {
   const deployer: Signer = ctx.signers.admin;
   const deployerAddress = await deployer.getAddress();
 
@@ -46,12 +50,32 @@ export async function mozartFixture(ctx: ITestContext, args?: ITestContextArgs) 
   const syntheticImp = await deploySyntheticTokenV1(deployer);
   const savingsImp = await deployMockSavings(deployer);
 
-  const collateral = await deployTestToken(deployer, 'Test', 'TEST', args?.decimals);
+  const collateral = await deployTestToken(
+    deployer,
+    'Test',
+    'TEST',
+    args?.decimals,
+  );
   const oracle = await deployMockOracle(deployer);
 
-  const coreProxy = await deployArcProxy(deployer, coreImp.address, deployerAddress, []);
-  const syntheticProxy = await deployArcProxy(deployer, syntheticImp.address, deployerAddress, []);
-  const savingsProxy = await deployArcProxy(deployer, savingsImp.address, deployerAddress, []);
+  const coreProxy = await deployArcProxy(
+    deployer,
+    coreImp.address,
+    deployerAddress,
+    [],
+  );
+  const syntheticProxy = await deployArcProxy(
+    deployer,
+    syntheticImp.address,
+    deployerAddress,
+    [],
+  );
+  const savingsProxy = await deployArcProxy(
+    deployer,
+    savingsImp.address,
+    deployerAddress,
+    [],
+  );
 
   const coreV2 = MockMozartCoreV2Factory.connect(coreProxy.address, deployer);
   await coreV2.init(
@@ -65,11 +89,17 @@ export async function mozartFixture(ctx: ITestContext, args?: ITestContextArgs) 
     ArcDecimal.new(0),
   );
 
-  const savingsV2 = MockMozartSavingsV2Factory.connect(savingsProxy.address, deployer);
+  const savingsV2 = MockMozartSavingsV2Factory.connect(
+    savingsProxy.address,
+    deployer,
+  );
   await savingsV2.init('TEST', 'TEST', syntheticProxy.address, { value: 0 });
   await savingsV2.setPaused(false);
 
-  const synthetic = SyntheticTokenV1Factory.connect(syntheticProxy.address, deployer);
+  const synthetic = SyntheticTokenV1Factory.connect(
+    syntheticProxy.address,
+    deployer,
+  );
   await synthetic.addMinter(coreV2.address, MAX_UINT256);
   await synthetic.addMinter(savingsProxy.address, MAX_UINT256);
 
@@ -83,17 +113,30 @@ export async function mozartFixture(ctx: ITestContext, args?: ITestContextArgs) 
   await ctx.sdks.mozart.addSynths({ ETHX: coreV2.address });
 }
 
-export async function spritzFixture(ctx: ITestContext, args?: ITestContextArgs) {
+export async function spritzFixture(
+  ctx: ITestContext,
+  args?: ITestContextArgs,
+) {
   const deployer: Signer = ctx.signers.admin;
   const deployerAddress = await deployer.getAddress();
 
   const coreV3Imp = await deploySpritzCoreV3(deployer);
   const coreV4Imp = await deploySpritzCoreV4(deployer);
-  const coreProxy = await deployArcProxy(deployer, coreV4Imp.address, deployerAddress, []);
+  const coreProxy = await deployArcProxy(
+    deployer,
+    coreV4Imp.address,
+    deployerAddress,
+    [],
+  );
   const core = CoreV4Factory.connect(coreProxy.address, deployer);
 
   const synth = await deployStaticSynthetic(deployer);
-  const collateral = await deployTestToken(deployer, 'Test', 'TEST', args?.decimals);
+  const collateral = await deployTestToken(
+    deployer,
+    'Test',
+    'TEST',
+    args?.decimals,
+  );
 
   const oracle = await deployMockOracle(deployer);
 
@@ -127,11 +170,22 @@ export async function spritzFixture(ctx: ITestContext, args?: ITestContextArgs) 
   });
 }
 
-export async function distributorFixture(ctx: ITestContext, args?: ITestContextArgs) {
-  ctx.contracts.collateral = await deployTestToken(ctx.signers.admin, 'ARC GOVERNANCE', 'ARCX', 18);
+export async function distributorFixture(
+  ctx: ITestContext,
+  args?: ITestContextArgs,
+) {
+  ctx.contracts.collateral = await deployTestToken(
+    ctx.signers.admin,
+    'ARC GOVERNANCE',
+    'ARCX',
+    18,
+  );
 }
 
-export async function sapphireFixture(ctx: ITestContext, args?: ITestContextArgs) {
+export async function sapphireFixture(
+  ctx: ITestContext,
+  args?: ITestContextArgs,
+) {
   const deployer: Signer = ctx.signers.admin;
   const deployerAddress = await deployer.getAddress();
 
@@ -145,15 +199,30 @@ export async function sapphireFixture(ctx: ITestContext, args?: ITestContextArgs
   ctx.contracts.oracle = await deployMockOracle(deployer);
 
   const coreImp = await deployMockSapphireCoreV1(deployer);
-  const coreProxy = await deployArcProxy(deployer, coreImp.address, deployerAddress, []);
+  const coreProxy = await deployArcProxy(
+    deployer,
+    coreImp.address,
+    deployerAddress,
+    [],
+  );
 
-  const syntheticImp = await deployMockSyntheticTokenV1(deployer);
-  const syntheticProxy = await deployArcProxy(deployer, syntheticImp.address, deployerAddress, []);
-  const tokenV1 = MockSyntheticTokenV1Factory.connect(syntheticProxy.address, deployer);
+  const synthImp = await deployMockSyntheticTokenV2(deployer);
+  const syntheticProxy = await deployArcProxy(
+    deployer,
+    synthImp.address,
+    deployerAddress,
+    [],
+  );
+  const tokenV2 = MockSyntheticTokenV2Factory.connect(
+    syntheticProxy.address,
+    deployer,
+  );
 
-  ctx.contracts.synthetic.tokenV1 = tokenV1;
+  ctx.contracts.synthetic.tokenV2 = tokenV2;
 
-  ctx.contracts.sapphire.linearMapper = await new SapphireMapperLinearFactory(deployer).deploy();
+  ctx.contracts.sapphire.linearMapper = await new SapphireMapperLinearFactory(
+    deployer,
+  ).deploy();
 
   ctx.contracts.sapphire.creditScore = await deployMockSapphireCreditScore(
     deployer,
@@ -161,22 +230,29 @@ export async function sapphireFixture(ctx: ITestContext, args?: ITestContextArgs
     ctx.signers.interestSetter.address,
   );
 
-  ctx.contracts.sapphire.assessor = await new SapphireAssessorFactory(deployer).deploy(
+  ctx.contracts.sapphire.assessor = await new SapphireAssessorFactory(
+    deployer,
+  ).deploy(
     ctx.contracts.sapphire.linearMapper.address,
     ctx.contracts.sapphire.creditScore.address,
   );
 
   await ctx.contracts.sapphire.creditScore.setPause(false);
 
-  ctx.contracts.sapphire.assessor = await new SapphireAssessorFactory(deployer).deploy(
+  ctx.contracts.sapphire.assessor = await new SapphireAssessorFactory(
+    deployer,
+  ).deploy(
     ctx.contracts.sapphire.linearMapper.address,
     ctx.contracts.sapphire.creditScore.address,
   );
 
-  ctx.contracts.sapphire.core = MockSapphireCoreV1Factory.connect(coreProxy.address, deployer);
+  ctx.contracts.sapphire.core = MockSapphireCoreV1Factory.connect(
+    coreProxy.address,
+    deployer,
+  );
   await ctx.contracts.sapphire.core.init(
     ctx.contracts.collateral.address,
-    ctx.contracts.synthetic.tokenV1.address,
+    ctx.contracts.synthetic.tokenV2.address,
     ctx.contracts.oracle.address,
     ctx.signers.interestSetter.address,
     ctx.contracts.sapphire.assessor.address,
@@ -187,7 +263,7 @@ export async function sapphireFixture(ctx: ITestContext, args?: ITestContextArgs
     0,
   );
 
-  await tokenV1.addMinter(ctx.contracts.sapphire.core.address, MAX_UINT256);
+  await tokenV2.addMinter(ctx.contracts.sapphire.core.address, MAX_UINT256);
 
   await ctx.contracts.sapphire.core.setPause(false);
 
