@@ -643,7 +643,7 @@ describe('SapphireCore.liquidate()', () => {
         undefined,
         signers.liquidator,
       ),
-    ).to.be.revertedWith('SapphireCoreV1: there is no debt to liquidate');
+    ).to.be.revertedWith('SapphireCoreV1: vault is collateralized');
 
     // Liquidate vault again
     await expect(
@@ -653,7 +653,7 @@ describe('SapphireCore.liquidate()', () => {
         undefined,
         signers.liquidator,
       ),
-    ).to.be.revertedWith('SapphireCoreV1: there is no debt to liquidate');
+    ).to.be.revertedWith('SapphireCoreV1: vault is collateralized');
   });
 
   it('should not liquidate if fee collector is not set', async () => {

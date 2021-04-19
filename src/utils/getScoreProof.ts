@@ -24,11 +24,3 @@ export async function getEmptyScoreProof(caller: Signer) {
     merkleProof: [],
   };
 }
-
-export async function getEmptyScoreProof(caller: Signer) {
-  return {
-    account: await caller.getAddress(),
-    score: BigNumber.from(0),
-    merkleProof: [],
-  };
-}
