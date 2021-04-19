@@ -99,9 +99,13 @@ export class SapphireArc {
   ): Promise<Vault> {
     const core = this._getCore(synthName, caller);
 
-    await core.executeActions(actions, creditScoreProof, overrides);
+    await core.executeActions(
+      actions,
+      creditScoreProof ?? (await this._getEmptyProof(caller)),
+      overrides,
+    );
 
-    const vault = await core.getVault(await caller.getAddress());
+    const vault = await core.vaults(await caller.getAddress());
 
     return {
       collateralAmount: vault.collateralAmount,
@@ -152,8 +156,15 @@ export class SapphireArc {
     creditScoreProof?: CreditScoreProof,
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
-  ): Promise<Vault> {
-    return {} as Vault;
+    overrides: TransactionOverrides = {},
+  ): Promise<ContractTransaction> {
+    const core = this._getCore(synthName, caller);
+
+    return core.withdraw(
+      amount,
+      creditScoreProof ?? (await this._getEmptyProof(caller)),
+      overrides,
+    );
   }
 
   private _getCore(synthName: string, caller: Signer): SapphireCoreV1 {
