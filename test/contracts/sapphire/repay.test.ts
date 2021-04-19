@@ -227,6 +227,19 @@ describe('SapphireCore.repay()', () => {
     // );
   });
 
+  it('should not repay if user did not approve', async () => {
+    await expect(
+      arc.repay(
+        BORROW_AMOUNT.div(2),
+        undefined,
+        undefined,
+        signers.scoredMinter,
+      ),
+    ).to.be.revertedWith(
+      'SyntheticTokenv2: the amount has not been approved for this spender',
+    );
+  });
+
   it('should not repay to a vault that does not exist', async () => {
     await arc.synthetic().mint(signers.minter.address, constants.WeiPerEther);
 
