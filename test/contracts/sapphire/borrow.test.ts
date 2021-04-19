@@ -279,7 +279,7 @@ describe('SapphireCore.borrow()', () => {
     expect(borrowedAmount).eq(firstBorrowAmount);
 
     const currentTimeStamp = await arc.core().currentTimestamp();
-    await arc.core().connect(ctx.signers.interestSetter).setInterestRate(utils.parseEther('0.99'));
+    await arc.core().connect(ctx.signers.interestSetter).setInterestRate('21820606488');
     await arc.updateTime(currentTimeStamp.add(ONE_YEAR_IN_SECONDS));
 
     await expect(
