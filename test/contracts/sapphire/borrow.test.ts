@@ -13,7 +13,7 @@ import { setupSapphire } from '../setup';
 import { BaseERC20Factory, TestTokenFactory } from '@src/typings';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { expect } from 'chai';
-import { BASE, ONE_YEAR_IN_SECONDS } from '@src/constants';
+import { ONE_YEAR_IN_SECONDS } from '@src/constants';
 import {
   DEFAULT_COLLATERAL_DECIMALS,
   DEFAULT_HiGH_C_RATIO,
@@ -241,8 +241,8 @@ describe('SapphireCore.borrow()', () => {
     // You can't borrow with a credit score if no assessor is set in the Core
     await arc.core().setAssessor(constants.AddressZero);
     await expect(
-      arc.borrow(BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter),
-    ).to.be.revertedWith('SapphireCoreV1: the assessor is not set');
+      arc.borrow(MAX_BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter),
+    ).to.be.revertedWith('SapphireCoreV1: the vault will become undercollateralized');
   });
 
   it('should not borrow without a credit proof if a score exists on-chain', async () => {
