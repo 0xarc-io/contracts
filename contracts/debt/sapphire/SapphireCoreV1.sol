@@ -545,7 +545,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
         vault.collateralAmount = vault.collateralAmount.sub(_amount);
 
-        // if we doesn't have debt we can withdraw this much as we want 
+        // if we don't have debt we can withdraw as much as we want 
         if (vault.borrowedAmount > 0) {
 
             uint256 collateralRatio = calculateCollateralRatio(
@@ -566,7 +566,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         SafeERC20.safeTransfer(collateralAsset, msg.sender, _amount);
 
         // Change total collateral amount
-        totalCollateral = totalCollateral - _amount;
+        totalCollateral = totalCollateral.sub(_amount);
     }
 
     /**
