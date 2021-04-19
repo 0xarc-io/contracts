@@ -1,6 +1,11 @@
 import { Synth } from '@arc-types/core';
 import { TransactionOverrides } from '@arc-types/ethereum';
-import { Action, CreditScoreProof, Operation, Vault } from '@arc-types/sapphireCore';
+import {
+  Action,
+  CreditScoreProof,
+  Operation,
+  Vault,
+} from '@arc-types/sapphireCore';
 import { BigNumber, BigNumberish, ContractTransaction, Signer } from 'ethers';
 import {
   BaseERC20Factory,
@@ -29,8 +34,14 @@ export class SapphireArc {
       this.synths[key] = {
         core,
         oracle: IOracleFactory.connect(await core.oracle(), this.signer),
-        collateral: BaseERC20Factory.connect(await core.collateralAsset(), this.signer),
-        synthetic: SyntheticTokenV1Factory.connect(await core.syntheticAsset(), this.signer),
+        collateral: BaseERC20Factory.connect(
+          await core.collateralAsset(),
+          this.signer,
+        ),
+        synthetic: SyntheticTokenV1Factory.connect(
+          await core.syntheticAsset(),
+          this.signer,
+        ),
       };
     }
   }
@@ -73,7 +84,13 @@ export class SapphireArc {
       });
     }
 
-    await this.executeActions(actions, creditScoreProof, synthName, caller, overrides);
+    await this.executeActions(
+      actions,
+      creditScoreProof,
+      synthName,
+      caller,
+      overrides,
+    );
 
     return {
       collateralAmount: collateralAmount,
@@ -122,7 +139,11 @@ export class SapphireArc {
   ): Promise<ContractTransaction> {
     const core = this._getCore(synthName, caller);
 
-    return core.borrow(amount, creditScoreProof ?? (await getEmptyScoreProof(caller)), overrides);
+    return core.borrow(
+      amount,
+      creditScoreProof ?? (await getEmptyScoreProof(caller)),
+      overrides,
+    );
   }
 
   async repay(
@@ -134,7 +155,11 @@ export class SapphireArc {
   ): Promise<ContractTransaction> {
     const core = this._getCore(synthName, caller);
 
-    return core.repay(amount, creditScoreProof ?? (await getEmptyScoreProof(caller)), overrides);
+    return core.repay(
+      amount,
+      creditScoreProof ?? (await getEmptyScoreProof(caller)),
+      overrides,
+    );
   }
 
   /* ========== Collateral functions ========== */
@@ -148,7 +173,11 @@ export class SapphireArc {
   ): Promise<ContractTransaction> {
     const core = this._getCore(synthName, caller);
 
-    return core.deposit(amount, creditScoreProof ?? (await getEmptyScoreProof(caller)), overrides);
+    return core.deposit(
+      amount,
+      creditScoreProof ?? (await getEmptyScoreProof(caller)),
+      overrides,
+    );
   }
 
   async withdraw(
@@ -167,7 +196,10 @@ export class SapphireArc {
     );
   }
 
-  getVault(userAddress: string, synthName = this.getSynthNames()[0]): Promise<Vault> {
+  getVault(
+    userAddress: string,
+    synthName = this.getSynthNames()[0],
+  ): Promise<Vault> {
     const synth = this.getSynth(synthName);
 
     return synth.core.getVault(userAddress);

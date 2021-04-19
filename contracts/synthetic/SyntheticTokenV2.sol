@@ -117,14 +117,14 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
     }
 
     function allowance(
-        address _owner,
-        address _spender
+        address owner,
+        address spender
     )
         public
         view
         returns (uint256)
     {
-        return _allowances[_owner][_spender];
+        return _allowances[owner][spender];
     }
 
     function getAllMinters()
