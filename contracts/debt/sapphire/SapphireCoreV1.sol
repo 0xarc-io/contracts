@@ -674,7 +674,8 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         // Get the user's vault
         SapphireTypes.Vault storage vault = vaults[msg.sender];
 
-        uint256 convertedBorrowAmount = _normalizeBorrowAmount(_amount);(_amount);
+        // Update vault
+        uint256 convertedBorrowAmount = _normalizeBorrowAmount(_amount);
 
         require(
             convertedBorrowAmount <= vault.borrowedAmount,
