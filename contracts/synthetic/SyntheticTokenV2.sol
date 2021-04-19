@@ -50,7 +50,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
         Permittable(_name, _version)
         public
     { }
-    
+
     /* ========== Init Function ========== */
 
 /**
@@ -72,7 +72,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
             _initCalled == false,
             "SyntheticTokenV2: cannot be initialized twice"
         );
-        
+
         name = _name;
         symbol = _symbol;
         version = _version;
@@ -303,11 +303,11 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
     )
         external
         onlyMinter
-    {        
+    {
         _minterIssued[msg.sender] = _minterIssued[msg.sender].sub(
             Amount.Principal({ sign: true, value: _value })
         );
-        
+
         _burn(_value);
     }
 
@@ -319,7 +319,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
     )
         public
         returns (bool)
-    {   
+    {
         _transfer(msg.sender, recipient, amount);
         return true;
     }
@@ -347,7 +347,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
             _allowances[sender][msg.sender] >= amount,
             "SyntheticTokenv2: the amount has not been approved for this spender"
         );
-        
+
         _transfer(sender, recipient, amount);
         _approve(
             sender,
@@ -482,7 +482,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
         );
 
         _allowances[_owner][_spender] = _amount;
-        
+
         emit Approval(_owner, _spender, _amount);
     }
 }
