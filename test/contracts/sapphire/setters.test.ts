@@ -1,4 +1,5 @@
 import { SapphireCoreV1 } from '@src/typings';
+import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { constants, utils, Wallet } from 'ethers';
 import { generateContext, ITestContext } from '../context';
@@ -16,6 +17,8 @@ describe('SapphireCore.setters', () => {
     sapphireCore = ctx.contracts.sapphire.core;
     randomAddress = Wallet.createRandom().address;
   });
+
+  addSnapshotBeforeRestoreAfterEach();
 
   describe('#setCollateralRatios', () => {
     const lowRatio = constants.WeiPerEther.mul(3);
