@@ -6,7 +6,13 @@ import {
   Operation,
   Vault,
 } from '@arc-types/sapphireCore';
-import { BigNumber, BigNumberish, ContractTransaction, Signer } from 'ethers';
+import {
+  BigNumber,
+  BigNumberish,
+  constants,
+  ContractTransaction,
+  Signer,
+} from 'ethers';
 import {
   BaseERC20Factory,
   SapphireCoreV1,
@@ -74,6 +80,7 @@ export class SapphireArc {
       {
         operation: Operation.Deposit,
         amount: collateralAmount,
+        userToLiquidate: constants.AddressZero,
       },
     ];
 
@@ -81,6 +88,7 @@ export class SapphireArc {
       actions.push({
         operation: Operation.Borrow,
         amount: borrowAmount,
+        userToLiquidate: constants.AddressZero,
       });
     }
 

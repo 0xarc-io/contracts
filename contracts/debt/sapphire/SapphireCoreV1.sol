@@ -309,7 +309,8 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
         actions[0] = SapphireTypes.Action(
             _amount,
-            SapphireTypes.Operation.Deposit
+            SapphireTypes.Operation.Deposit,
+            address(0)
         );
 
         executeActions(actions, _scoreProof);
@@ -324,7 +325,8 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
         actions[0] = SapphireTypes.Action(
             _amount,
-            SapphireTypes.Operation.Withdraw
+            SapphireTypes.Operation.Withdraw,
+            address(0)
         );
 
         executeActions(actions, _scoreProof);
@@ -345,7 +347,8 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
         actions[0] = SapphireTypes.Action(
             _amount,
-            SapphireTypes.Operation.Borrow
+            SapphireTypes.Operation.Borrow,
+            address(0)
         );
 
         executeActions(actions, _scoreProof);
@@ -366,13 +369,28 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         executeActions(actions, _scoreProof);
     }
 
+    /**
+     * @dev Liquidate a user's vault. When this process occurs you're essentially
+     *      purchasing the user's debt at a discount in exchange for the collateral
+     *      they have deposited inside their vault.
+     *
+     * @param _owner the owner of the vault to liquidate
+     * @param _scoreProof The credit score proof (optional)
+     */
     function liquidate(
         address _owner,
         SapphireTypes.ScoreProof memory _scoreProof
     )
         public
     {
+        SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
+        actions[0] = SapphireTypes.Action(
+            0,
+            SapphireTypes.Operation.Liquidate,
+            _owner
+        );
 
+        executeActions(actions, _scoreProof);
     }
 
     /**
@@ -419,6 +437,9 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
             }  else if (action.operation == SapphireTypes.Operation.Repay) {
                 _repay(action.amount);
+
+            } else if (action.operation == SapphireTypes.Operation.Liquidate) {
+                _liquidate(action.userToLiquidate);
             }
         }
 
@@ -731,12 +752,28 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         );
     }
 
-    function _liqiuidate(
-        address owner
+    function _liquidate(
+        address _owner
     )
         private
     {
+        // CHECKS:
+        // 1. Ensure that the position is valid (check if there is a non-0x0 owner) 
+        // 2. Ensure that the position is indeed undercollateralized
 
+        // EFFECTS:
+        // 1. Calculate the liquidation price based on the liquidation penalty
+        // 2. Calculate the amount of collateral to be sold based on the entire debt
+        //    in the vault
+        // 3. If the discounted collateral is more than the amount in the vault, limit
+        //    the sale to that amount
+        // 4. Decrease the owner's debt
+        // 5. Decrease the owner's collateral
+
+        // INTEGRATIONS
+        // 1. Transfer the debt to pay from the liquidator to the core
+        // 2. Destroy the debt to be paid
+        // 
     }
 
     /**
