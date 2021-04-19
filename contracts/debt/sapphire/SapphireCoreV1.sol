@@ -399,7 +399,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
             } else if (action.operation == SapphireTypes.Operation.Withdraw){
                 _withdraw(action.amount, assessedCRatio, currentPrice);
-                
+
             } else if (action.operation == SapphireTypes.Operation.Borrow) {
                 _borrow(action.amount, assessedCRatio, currentPrice);
 
@@ -479,7 +479,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
      * @param _borrowedAmount   The borrowed amount expressed as a uint256 (NOT principal)
      * @param _collateralAmount The amount of collateral, in its original decimals
      * @param _collateralPrice  What price do you want to calculate the inverse at
-     * @return                  The calculated c-ratio   
+     * @return                  The calculated c-ratio
      */
     function calculateCollateralRatio(
         uint256 _borrowedAmount,
@@ -500,7 +500,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
     /**
      * @dev Normalize the given borrow amount by dividing it with the borrow index.
-     *      It is used when manipulating with other borrow values 
+     *      It is used when manipulating with other borrow values
      *      in order to take in account current borrowIndex.
      */
     function _normalizeBorrowAmount(
@@ -573,7 +573,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
         vault.collateralAmount = vault.collateralAmount.sub(_amount);
 
-        // if we don't have debt we can withdraw as much as we want 
+        // if we don't have debt we can withdraw as much as we want
         if (vault.borrowedAmount > 0) {
 
             uint256 collateralRatio = calculateCollateralRatio(
@@ -586,7 +586,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
                 collateralRatio >= _assessedCRatio,
                 "SapphireCoreV1: the vault will become undercollateralized"
             );
-            
+
         }
 
         // Change total collateral amount
@@ -614,7 +614,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     {
         // Get the user's vault
         SapphireTypes.Vault storage vault = vaults[msg.sender];
-        
+
         // Ensure the vault is collateralized if the borrow action succeeds
         uint256 collateralRatio = calculateCollateralRatio(
             vault.borrowedAmount

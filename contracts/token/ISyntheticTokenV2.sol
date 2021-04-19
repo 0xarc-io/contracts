@@ -14,7 +14,7 @@ interface ISyntheticTokenV2 {
         uint256 value
     )
         external;
-    
+
     function transferFrom(
         address sender,
         address recipient,
