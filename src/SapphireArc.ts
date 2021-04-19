@@ -84,18 +84,13 @@ export class SapphireArc {
       });
     }
 
-    await this.executeActions(
+    return this.executeActions(
       actions,
       creditScoreProof,
       synthName,
       caller,
       overrides,
     );
-
-    return {
-      collateralAmount: collateralAmount,
-      borrowedAmount: borrowAmount,
-    } as Vault;
   }
 
   async liquidate(
@@ -206,7 +201,6 @@ export class SapphireArc {
   }
 
   private _getCore(synthName: string, caller: Signer): SapphireCoreV1 {
-    const synth = this.getSynth(synthName);
-    return SapphireCoreV1Factory.connect(synth.core.address, caller);
+    return this.getSynth(synthName).core.connect(caller);
   }
 }
