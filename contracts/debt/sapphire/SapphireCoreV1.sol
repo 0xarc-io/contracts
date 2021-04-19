@@ -363,7 +363,8 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
         actions[0] = SapphireTypes.Action(
             _amount,
-            SapphireTypes.Operation.Repay
+            SapphireTypes.Operation.Repay,
+            address(0)
         );
 
         executeActions(actions, _scoreProof);
@@ -383,6 +384,11 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     )
         public
     {
+        require(
+            feeCollector != address(0),
+            "SapphireCoreV1: the fee collector is not set"
+        );
+        
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
         actions[0] = SapphireTypes.Action(
             0,
@@ -436,10 +442,10 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
                 _borrow(action.amount, assessedCRatio, currentPrice);
 
             }  else if (action.operation == SapphireTypes.Operation.Repay) {
-                _repay(action.amount);
+                _repay(msg.sender, msg.sender, action.amount);
 
             } else if (action.operation == SapphireTypes.Operation.Liquidate) {
-                _liquidate(action.userToLiquidate);
+                _liquidate(action.userToLiquidate, currentPrice, assessedCRatio);
             }
         }
 
@@ -493,20 +499,34 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     }
 
     /**
-     * @notice Returns the vault with the normalized borrow amount, which includes
-     *         the accumulated interest.
+     * @dev Check if the vault is collateralised or not
+     *
+     * @param _owner The owner of the vault
+     * @param _currentPrice The current price of the collateral
+     * @param _assessedCRatio The assessed collateral ratio of the owner
      */
-    function getVault(
-        address _user
+    function isCollateralized(
+        address _owner,
+        uint256 _currentPrice,
+        uint256 _assessedCRatio
     )
         public
         view
-        returns (SapphireTypes.Vault memory)
+        returns (bool)
     {
-        SapphireTypes.Vault memory vault = vaults[_user];
-        vault.borrowedAmount = _normalizeBorrowAmount(vault.borrowedAmount);
+        SapphireTypes.Vault memory vault = vaults[_owner];
+        
+        if (vault.borrowedAmount == 0) {
+            return true;
+        }
 
-        return vault;
+        uint256 currentCRatio = calculateCollateralRatio(
+            vault.borrowedAmount, 
+            vault.collateralAmount, 
+            _currentPrice
+        );
+
+        return _assessedCRatio >= currentCRatio;
     }
 
     /* ========== Developer Functions ========== */
@@ -716,15 +736,19 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     /**
      * @dev Repays the given `_amount` of the synthetic back
      *
+     * @param _owner The owner of the vault
+     * @param _repayer The person who repays the debt
      * @param _amount The amount to repay
      */
     function _repay(
+        address _owner,
+        address _repayer,
         uint256 _amount
     )
         private
     {
         // Get the user's vault
-        SapphireTypes.Vault storage vault = vaults[msg.sender];
+        SapphireTypes.Vault storage vault = vaults[_owner];
 
         // Update vault
         uint256 convertedBorrowAmount = _normalizeBorrowAmount(_amount);
@@ -742,7 +766,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
         // Transfer tokens to the core
         ISyntheticTokenV2(syntheticAsset).transferFrom(
-            msg.sender,
+            _repayer,
             address(this),
             _amount
         );
@@ -753,7 +777,9 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     }
 
     function _liquidate(
-        address _owner
+        address _owner,
+        uint256 _currentPrice,
+        uint256 _assessedCRatio
     )
         private
     {
@@ -773,7 +799,100 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         // INTEGRATIONS
         // 1. Transfer the debt to pay from the liquidator to the core
         // 2. Destroy the debt to be paid
-        // 
+        // 3. Transfer the user portion of the collateral sold to the msg.sender
+        // 4. Transfer Arc's portion of the profit to the fee collector
+
+        // --- CHECKS ---
+
+        require(
+            _owner != address(0),
+            "SapphireCoreV1: position owner cannot be address 0"
+        );
+
+        SapphireTypes.Vault storage vault = vaults[_owner];
+
+        // Ensure that the vault is not collateralized
+        require(
+            isCollateralized(
+                _owner, 
+                _currentPrice,
+                _assessedCRatio
+            ) == false,
+            "SapphireCoreV1: vault is collateralized"
+        );
+
+        // --- EFFECTS ---
+
+        // Get the liquidation price of the asset (discount for liquidator)
+        uint256 liquidationPrice = _currentPrice
+            .mul(BASE.sub(liquidationUserFee))
+            .div(BASE);
+
+        // Calculate the amount of collateral to be sold based on the entire debt
+        // in the vault
+        uint256 debtToRepay = _denormalizeBorrowAmount(vault.borrowedAmount);
+        uint256 collateralToSell = debtToRepay
+            .mul(liquidationPrice)
+            .div(BASE)
+            .div(precisionScalar);
+        
+        // If the discounted collateral is more than the amount in the vault, limit
+        // the sale to that amount
+        if (collateralToSell > vault.collateralAmount) {
+            collateralToSell = vault.collateralAmount;
+            // Calculate the new debt to repay
+            debtToRepay = collateralToSell
+                .mul(precisionScalar)
+                .mul(liquidationPrice)
+                .div(BASE);
+        }
+
+        // Calculate the profit made
+        uint256 valueCollateralSold = collateralToSell
+            .mul(precisionScalar)
+            .mul(_currentPrice);
+
+        uint256 profit = valueCollateralSold.sub(debtToRepay);
+
+        // Calculate the ARC share
+        uint256 arcShare = profit
+            .mul(liquidationArcFee)
+            .div(BASE)
+            .div(precisionScalar);
+
+        // Calculate liquidator's share
+        uint256 liquidatorCollateralShare = collateralToSell.sub(arcShare);
+
+        // Update owner's vault
+        vault.borrowedAmount = vault.borrowedAmount
+            .sub(_normalizeBorrowAmount(debtToRepay));
+        
+        vault.collateralAmount = vault.collateralAmount
+            .sub(collateralToSell);
+
+        // --- INTEGRATIONS ---
+
+        // Repay the debt
+        _repay(
+            _owner,
+            msg.sender,
+            debtToRepay
+        );
+        
+        // Transfer user collateral
+        IERC20 collateralAsset = IERC20(collateralAsset);
+        SafeERC20.safeTransfer(
+            collateralAsset,
+            msg.sender,
+            liquidatorCollateralShare
+        );
+
+        // Transfer Arc's share of collateral
+        SafeERC20.safeTransfer(
+            collateralAsset,
+            feeCollector,
+            arcShare
+        );
     }
 
     /**
