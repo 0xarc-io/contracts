@@ -307,7 +307,13 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     )
         public
     {
+        SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
+        actions[0] = SapphireTypes.Action(
+            _amount,
+            SapphireTypes.Operation.Withdraw
+        );
 
+        executeActions(actions, _scoreProof);
     }
 
     /**
@@ -388,6 +394,8 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             } else if (action.operation == SapphireTypes.Operation.Borrow) {
                 // Borrow synthetic
                 _borrow(action.amount, assessedCRatio, currentPrice);
+            } else if (action.operation == SapphireTypes.Operation.Withdraw){
+                _withdraw(action.amount, assessedCRatio, currentPrice);
             }
         }
 
@@ -456,7 +464,10 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         view
         returns (uint256)
     {
-        return _collateralAmount.mul(precisionScalar).mul(_collateralPrice).div(_borrowedAmount);
+        return _collateralAmount
+            .mul(precisionScalar)
+            .mul(_collateralPrice)
+            .div(_borrowedAmount);
     }
 
     /* ========== Private Functions ========== */
@@ -517,12 +528,45 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         );
     }
 
+    /**
+     * @dev Withdraw the collateral amount in the user's vault, then ensures
+     *      the withdraw amount is not greater than the deposited collateral.
+     *      Afterwards ensure that collatteral limit is not smaller than returned
+     *      from assessor one.
+     */
     function _withdraw(
-        uint256 amount
+        uint256 _amount,
+        uint256 _assessedCRatio,
+        uint256 _collateralPrice
     )
         private
     {
+        SapphireTypes.Vault storage vault = vaults[msg.sender];
 
+        vault.collateralAmount = vault.collateralAmount.sub(_amount);
+
+        // if we don't have debt we can withdraw as much as we want 
+        if (vault.borrowedAmount > 0) {
+
+            uint256 collateralRatio = calculateCollateralRatio(
+                _denormalizeBorrowAmount(vault.borrowedAmount),
+                vault.collateralAmount,
+                _collateralPrice
+            );
+
+            require(
+                collateralRatio >= _assessedCRatio,
+                "SapphireCoreV1: the vault will become undercollateralized"
+            );
+            
+        }
+
+        // Change total collateral amount
+        totalCollateral = totalCollateral.sub(_amount);
+
+        // Execute transfer
+        IERC20 collateralAsset = IERC20(collateralAsset);
+        SafeERC20.safeTransfer(collateralAsset, msg.sender, _amount);
     }
 
     /**
@@ -543,7 +587,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         // Get the user's vault
         SapphireTypes.Vault storage vault = vaults[msg.sender];
         
-        // Ensure vault is collateralized if the borrow actionw would succeed
+        // Ensure the vault is collateralized if the borrow action succeeds
         uint256 collateralRatio = calculateCollateralRatio(
             vault.borrowedAmount
                 .mul(borrowIndex)
@@ -559,21 +603,21 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         );
 
         // Record borrow amount (update vault and total amount)
-        uint256 normalizedBorrowAmt = _normalizeBorrowAmount(_amount);
-        vault.borrowedAmount = vault.borrowedAmount.add(normalizedBorrowAmt);
-        totalBorrowed = totalBorrowed.add(normalizedBorrowAmt);
+        uint256 normalizedBorrowAmount = _normalizeBorrowAmount(_amount);
+        vault.borrowedAmount = vault.borrowedAmount.add(normalizedBorrowAmount);
+        totalBorrowed = totalBorrowed.add(normalizedBorrowAmount);
 
-        uint256 actualVaultBorrowAmt = _denormalizeBorrowAmount(vault.borrowedAmount);
+        uint256 actualVaultBorrowAmount = _denormalizeBorrowAmount(vault.borrowedAmount);
 
         // Do not borrow more than the maximum vault borrow amount
         require(
-            actualVaultBorrowAmt <= vaultBorrowMaximum,
+            actualVaultBorrowAmount <= vaultBorrowMaximum,
             "SapphireCoreV1: borrowed amount cannot be greater than vault limit"
         );
 
         // Do not borrow if amount is smaller than limit
         require(
-            actualVaultBorrowAmt >= vaultBorrowMinimum,
+            actualVaultBorrowAmount >= vaultBorrowMinimum,
             "SapphireCoreV1: borrowed amount cannot be less than limit"
         );
 
