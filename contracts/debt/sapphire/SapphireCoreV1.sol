@@ -11,7 +11,7 @@ import {SafeMath} from "../../lib/SafeMath.sol";
 import {Adminable} from "../../lib/Adminable.sol";
 import {IOracle} from "../../oracle/IOracle.sol";
 import {Decimal} from "../../lib/Decimal.sol";
-import {ISyntheticToken} from "../../token/ISyntheticToken.sol";
+import {ISyntheticTokenV2} from "../../token/ISyntheticTokenV2.sol";
 
 import {SapphireTypes} from "./SapphireTypes.sol";
 import {SapphireCoreStorage} from "./SapphireCoreStorage.sol";
@@ -655,7 +655,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         );
 
         // Mint tokens
-        ISyntheticToken(syntheticAsset).mint(
+        ISyntheticTokenV2(syntheticAsset).mint(
             msg.sender,
             _amount
         );
@@ -688,9 +688,14 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         // Update total borrow amount
         totalBorrowed = totalBorrowed.sub(convertedBorrowAmount);
 
-        // Burn the tokens
-        ISyntheticToken(syntheticAsset).burn(
+        // Transfer tokens to the core
+        ISyntheticTokenV2(syntheticAsset).transferFrom(
             msg.sender,
+            address(this),
+            _amount
+        );
+        // Destroy `_amount` of tokens tokens that the core owns
+        ISyntheticTokenV2(syntheticAsset).destroy(
             _amount
         );
     }
