@@ -26,10 +26,6 @@ export class SapphireTestArc extends SapphireArc {
     return this.synth().core.getTotals();
   }
 
-  public getVault(owner: string) {
-    return this.synth().core.vaults(owner);
-  }
-
   public core() {
     return this.synth().core;
   }

@@ -15,7 +15,7 @@ import { ONE_YEAR_IN_SECONDS } from '@src/constants';
 
 import Token from '@src/utils/Token';
 
-describe('Mozart.operateAction(Repay)', () => {
+xdescribe('Mozart.operateAction(Repay)', () => {
   const COLLATERAL_AMOUNT = ArcNumber.new(100);
   const BORROW_AMOUNT = ArcNumber.new(50);
 

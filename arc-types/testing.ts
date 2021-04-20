@@ -25,6 +25,7 @@ import {
   MockSapphireCreditScore,
   SapphireAssessor,
   SapphireMapperLinear,
+  SyntheticTokenV2,
 } from '@src/typings';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 
@@ -68,6 +69,7 @@ export interface Contracts {
   synthetic: {
     static: StaticSyntheticToken;
     tokenV1: SyntheticTokenV1;
+    tokenV2: SyntheticTokenV2;
   };
   staking: {
     addressAccrual: AddressAccrual;

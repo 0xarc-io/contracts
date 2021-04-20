@@ -18,7 +18,7 @@ let otherAccount: SignerWithAddress;
 
 let syntheticToken: SyntheticTokenV1;
 
-describe('SyntheticTokenV1', () => {
+describe.skip('SyntheticTokenV1', () => {
   before(async () => {
     const signers = await ethers.getSigners();
     ownerAccount = signers[0];

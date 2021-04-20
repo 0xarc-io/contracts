@@ -11,7 +11,7 @@ import {SafeMath} from "../../lib/SafeMath.sol";
 import {Adminable} from "../../lib/Adminable.sol";
 import {IOracle} from "../../oracle/IOracle.sol";
 import {Decimal} from "../../lib/Decimal.sol";
-import {ISyntheticToken} from "../../token/ISyntheticToken.sol";
+import {ISyntheticTokenV2} from "../../token/ISyntheticTokenV2.sol";
 
 import {SapphireTypes} from "./SapphireTypes.sol";
 import {SapphireCoreStorage} from "./SapphireCoreStorage.sol";
@@ -343,7 +343,13 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     )
         public
     {
+        SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
+        actions[0] = SapphireTypes.Action(
+            _amount,
+            SapphireTypes.Operation.Repay
+        );
 
+        executeActions(actions, _scoreProof);
     }
 
     function liquidate(
@@ -356,7 +362,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     }
 
     /**
-     * @dev All other user-called functions use this function to execute the 
+     * @dev All other user-called functions use this function to execute the
      *      passed actions. This function first updates the indeces before
      *      actually executing the actions.
      *
@@ -381,7 +387,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         // Get the c-ratio and current price if necessary. The current price only be >0 if
         // it's required by an action
         (
-            uint256 assessedCRatio, 
+            uint256 assessedCRatio,
             uint256 currentPrice
         ) = _getVariablesForActions(_actions, _scoreProof);
 
@@ -389,13 +395,16 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             SapphireTypes.Action memory action = _actions[i];
 
             if (action.operation == SapphireTypes.Operation.Deposit) {
-                // Deposit collateral
                 _deposit(action.amount);
-            } else if (action.operation == SapphireTypes.Operation.Borrow) {
-                // Borrow synthetic
-                _borrow(action.amount, assessedCRatio, currentPrice);
+
             } else if (action.operation == SapphireTypes.Operation.Withdraw){
                 _withdraw(action.amount, assessedCRatio, currentPrice);
+
+            } else if (action.operation == SapphireTypes.Operation.Borrow) {
+                _borrow(action.amount, assessedCRatio, currentPrice);
+
+            }  else if (action.operation == SapphireTypes.Operation.Repay) {
+                _repay(action.amount);
             }
         }
 
@@ -428,7 +437,24 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         view
         returns (uint256)
     {
-        
+
+    }
+
+    /**
+     * @notice Returns the vault with the normalized borrow amount, which includes
+     *         the accumulated interest.
+     */
+    function getVault(
+        address _user
+    )
+        public
+        view
+        returns (SapphireTypes.Vault memory)
+    {
+        SapphireTypes.Vault memory vault = vaults[_user];
+        vault.borrowedAmount = _normalizeBorrowAmount(vault.borrowedAmount);
+
+        return vault;
     }
 
     /* ========== Developer Functions ========== */
@@ -453,7 +479,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
      * @param _borrowedAmount   The borrowed amount expressed as a uint256 (NOT principal)
      * @param _collateralAmount The amount of collateral, in its original decimals
      * @param _collateralPrice  What price do you want to calculate the inverse at
-     * @return                  The calculated c-ratio   
+     * @return                  The calculated c-ratio
      */
     function calculateCollateralRatio(
         uint256 _borrowedAmount,
@@ -474,13 +500,14 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
     /**
      * @dev Normalize the given borrow amount by dividing it with the borrow index.
-     *      It is used when manipulating with other borrow values 
+     *      It is used when manipulating with other borrow values
      *      in order to take in account current borrowIndex.
      */
     function _normalizeBorrowAmount(
         uint256 _amount
     )
         private
+        view
         returns (uint256)
     {
         return _amount.mul(BASE).div(borrowIndex);
@@ -494,6 +521,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         uint256 _amount
     )
         private
+        view
         returns (uint256)
     {
         return _amount.mul(borrowIndex).div(BASE);
@@ -506,7 +534,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         uint256 _amount
     )
         private
-    {   
+    {
         // Record deposit
         SapphireTypes.Vault storage vault = vaults[msg.sender];
 
@@ -545,7 +573,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
         vault.collateralAmount = vault.collateralAmount.sub(_amount);
 
-        // if we don't have debt we can withdraw as much as we want 
+        // if we don't have debt we can withdraw as much as we want
         if (vault.borrowedAmount > 0) {
 
             uint256 collateralRatio = calculateCollateralRatio(
@@ -558,7 +586,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
                 collateralRatio >= _assessedCRatio,
                 "SapphireCoreV1: the vault will become undercollateralized"
             );
-            
+
         }
 
         // Change total collateral amount
@@ -574,7 +602,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
      *      still maintains the required collateral ratio
      *
      * @param _amount           The amount of synthetic to borrow, in 18 decimals
-     * @param _assessedCRatio   The assessed c-ratio for user's credit score  
+     * @param _assessedCRatio   The assessed c-ratio for user's credit score
      * @param _collateralPrice  The current collateral price
      */
     function _borrow(
@@ -586,7 +614,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     {
         // Get the user's vault
         SapphireTypes.Vault storage vault = vaults[msg.sender];
-        
+
         // Ensure the vault is collateralized if the borrow action succeeds
         uint256 collateralRatio = calculateCollateralRatio(
             vault.borrowedAmount
@@ -627,18 +655,49 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         );
 
         // Mint tokens
-        ISyntheticToken(syntheticAsset).mint(
+        ISyntheticTokenV2(syntheticAsset).mint(
             msg.sender,
             _amount
         );
     }
 
+    /**
+     * @dev Repays the given `_amount` of the synthetic back
+     *
+     * @param _amount The amount to repay
+     */
     function _repay(
-        uint256 amount
+        uint256 _amount
     )
         private
     {
+        // Get the user's vault
+        SapphireTypes.Vault storage vault = vaults[msg.sender];
 
+        // Update vault
+        uint256 convertedBorrowAmount = _normalizeBorrowAmount(_amount);
+
+        require(
+            convertedBorrowAmount <= vault.borrowedAmount,
+            "SapphireCoreV1: there is not enough debt to repay"
+        );
+
+        // Update vault
+        vault.borrowedAmount = vault.borrowedAmount.sub(convertedBorrowAmount);
+
+        // Update total borrow amount
+        totalBorrowed = totalBorrowed.sub(convertedBorrowAmount);
+
+        // Transfer tokens to the core
+        ISyntheticTokenV2(syntheticAsset).transferFrom(
+            msg.sender,
+            address(this),
+            _amount
+        );
+        // Destroy `_amount` of tokens tokens that the core owns
+        ISyntheticTokenV2(syntheticAsset).destroy(
+            _amount
+        );
     }
 
     function _liqiuidate(
@@ -673,7 +732,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
         require(
             address(assessor) != address(0),
-            "SapphireCoreV1: assessor is not set"
+            "SapphireCoreV1: the assessor is not set"
         );
 
         /**
@@ -682,7 +741,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
          */
         for (uint256 i = 0; i < _actions.length; i++) {
             SapphireTypes.Action memory action = _actions[i];
-            
+
             if (action.operation == SapphireTypes.Operation.Borrow) {
                 mandatoryProof = true;
                 needsCollateralPrice = true;
@@ -690,7 +749,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             } else if (
                 action.operation == SapphireTypes.Operation.Liquidate ||
                 action.operation == SapphireTypes.Operation.Withdraw) {
-                
+
                 needsCollateralPrice = true;
             }
         }
@@ -698,9 +757,9 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         if (needsCollateralPrice) {
             require(
                 address(oracle) != address(0),
-                "SapphireCoreV1: oracle is not set"
+                "SapphireCoreV1: the oracle is not set"
             );
-            
+
             // Collateral price denominated in 18 decimals
             collateralPrice = oracle.fetchCurrentPrice();
 
