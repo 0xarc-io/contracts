@@ -258,7 +258,7 @@ describe('SapphireCore.repay()', () => {
         signers.minter,
         getScoreProof(minterCreditScore, creditScoreTree),
       ),
-    ).to.be.revertedWith('SapphireCoreV1: the assessor is not set');
+    ).to.be.revertedWith('SapphireCoreV1: there is not enough debt to repay');
   });
 
   it(`should not repay more than the vault's debt`, async () => {
