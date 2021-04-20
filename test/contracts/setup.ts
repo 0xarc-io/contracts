@@ -107,7 +107,7 @@ export async function setupSapphire(
   }
 
   if (interestRate) {
-    await core.setInterestRate(interestRate);
+    await core.connect(ctx.signers.interestSetter).setInterestRate(interestRate);
   }
 
   // Set the merkle root
