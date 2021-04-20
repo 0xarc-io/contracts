@@ -27,7 +27,7 @@ import {
   deploySyntheticTokenV2,
 } from './deployers';
 
-import { constants, Signer } from 'ethers';
+import { Signer } from 'ethers';
 import { ITestContext, ITestContextArgs } from './context';
 import { MozartTestArc } from '@src/MozartTestArc';
 import { SpritzTestArc } from '../../src/SpritzTestArc';

@@ -40,6 +40,10 @@ const COLLATERAL_AMOUNT = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS);
 const COLLATERAL_PRICE = DEFAULT_PRICE;
 const BORROW_AMOUNT = utils.parseEther('500');
 
+const PRECISION_SCALAR = BigNumber.from(10).pow(
+  18 - DEFAULT_COLLATERAL_DECIMALS.toNumber(),
+);
+
 /**
  * When a liquidation occurs, what's really happening is that the debt which a user owes the
  * the system needs to be repaid by someone else. The incentive for this other user to repay
@@ -294,7 +298,7 @@ describe('SapphireCore.liquidate()', () => {
       liquidatorCreditScore,
     ]);
     await immediatelyUpdateMerkleRoot(
-      creditScoreContract,
+      creditScoreContract.connect(signers.interestSetter),
       newCreditTree.getHexRoot(),
     );
 
@@ -435,20 +439,20 @@ describe('SapphireCore.liquidate()', () => {
     await setupBaseVault(COLLATERAL_AMOUNT, BORROW_AMOUNT);
 
     // Set the price to $0.75 so the c-ratio drops at 150%
-    let newPrice = utils.parseEther('0.75');
+    let newPrice = utils.parseEther('0.65');
     await arc.updatePrice(newPrice);
 
     let {
       stablexAmt: preStablexBalance,
       collateralAmt: preCollateralBalance,
       arcCollateralAmt: preArcCollateralAmt,
-      stablexTotalSupply: preSTablexTotalSupply,
+      stablexTotalSupply: preStablexTotalSupply,
     } = await getBalancesForLiquidation(signers.liquidator);
 
     // Liquidate
     await arc.liquidate(
       signers.scoredMinter.address,
-      getScoreProof(minterCreditScore, creditScoreTree),
+      undefined,
       undefined,
       signers.liquidator,
     );
@@ -457,48 +461,53 @@ describe('SapphireCore.liquidate()', () => {
       stablexAmt: postStablexBalance,
       collateralAmt: postCollateralBalance,
       arcCollateralAmt: postArcCollateralAmt,
-      stablexTotalSupply: postSTablexTotalSupply,
+      stablexTotalSupply: postStablexTotalSupply,
     } = await getBalancesForLiquidation(signers.liquidator);
 
     expect(postStablexBalance).to.eq(preStablexBalance.sub(BORROW_AMOUNT));
     expect(postCollateralBalance).to.eq(
-      preCollateralBalance.add(utils.parseEther('698.060941828255')),
+      preCollateralBalance.add(
+        utils.parseUnits('805.454933', DEFAULT_COLLATERAL_DECIMALS),
+      ),
     );
     expect(postArcCollateralAmt).to.eq(
-      preArcCollateralAmt.add(utils.parseEther('3.69344413665743')),
+      preArcCollateralAmt.add(
+        utils.parseUnits('4.261666', DEFAULT_COLLATERAL_DECIMALS),
+      ),
     );
-    expect(postSTablexTotalSupply).to.eq(
-      preSTablexTotalSupply.sub(BORROW_AMOUNT),
+    expect(postStablexTotalSupply).to.eq(
+      preStablexTotalSupply.sub(BORROW_AMOUNT),
     );
 
-    // Borrow to the limit (up to 160% c-ratio)
+    // Borrow to the limit (up to 150% c-ratio)
     const vault = await arc.getVault(signers.scoredMinter.address);
-    const maxBorrowAmount = COLLATERAL_AMOUNT.sub(vault.collateralAmount)
+    const maxBorrowAmount = vault.collateralAmount
+      .mul(PRECISION_SCALAR)
       .mul(newPrice)
-      .div(utils.parseEther('1.6'));
+      .div(utils.parseEther('1.5'));
 
     await arc.borrow(
       maxBorrowAmount,
-      getScoreProof(minterCreditScore, creditScoreTree),
+      undefined,
       undefined,
       signers.scoredMinter,
     );
 
-    // Drop the price to $0.70 to bring the c-ratio down to 150% again
-    newPrice = utils.parseEther('0.7');
+    // Drop the price to $0.56 to bring the c-ratio down to ~130% again
+    newPrice = utils.parseEther('0.56');
     await arc.updatePrice(newPrice);
 
     ({
       stablexAmt: preStablexBalance,
       collateralAmt: preCollateralBalance,
       arcCollateralAmt: preArcCollateralAmt,
-      stablexTotalSupply: preSTablexTotalSupply,
+      stablexTotalSupply: preStablexTotalSupply,
     } = await getBalancesForLiquidation(signers.liquidator));
 
     // Liquidate again
     await arc.liquidate(
       signers.scoredMinter.address,
-      getScoreProof(minterCreditScore, creditScoreTree),
+      undefined,
       undefined,
       signers.liquidator,
     );
@@ -507,19 +516,25 @@ describe('SapphireCore.liquidate()', () => {
       stablexAmt: postStablexBalance,
       collateralAmt: postCollateralBalance,
       arcCollateralAmt: postArcCollateralAmt,
-      stablexTotalSupply: postSTablexTotalSupply,
+      stablexTotalSupply: postStablexTotalSupply,
     } = await getBalancesForLiquidation(signers.liquidator));
 
     // check the numbers again
-    expect(postStablexBalance).to.eq(preStablexBalance.sub(maxBorrowAmount));
-    expect(postCollateralBalance).to.eq(
-      preCollateralBalance.add(utils.parseEther('208.19361422948')),
+    expect(postStablexBalance, 'stablex').to.eq(
+      preStablexBalance.sub(maxBorrowAmount),
     );
-    expect(postArcCollateralAmt).to.eq(
-      preArcCollateralAmt.add(utils.parseEther('1.10155351444169')),
+    expect(postCollateralBalance, 'collat').to.eq(
+      preCollateralBalance.add(
+        utils.parseUnits('154.176994', DEFAULT_COLLATERAL_DECIMALS),
+      ),
     );
-    expect(postSTablexTotalSupply).to.eq(
-      preSTablexTotalSupply.sub(maxBorrowAmount),
+    expect(postArcCollateralAmt, 'arc').to.eq(
+      preArcCollateralAmt.add(
+        utils.parseUnits('0.815751', DEFAULT_COLLATERAL_DECIMALS),
+      ),
+    );
+    expect(postStablexTotalSupply, 'supply').to.eq(
+      preStablexTotalSupply.sub(maxBorrowAmount),
     );
   });
 
@@ -552,7 +567,10 @@ describe('SapphireCore.liquidate()', () => {
       newMinterCreditScore,
       liquidatorCreditScore,
     ]);
-    await creditScoreContract.updateMerkleRoot(newCreditTree.getHexRoot());
+    await immediatelyUpdateMerkleRoot(
+      creditScoreContract.connect(signers.interestSetter),
+      newCreditTree.getHexRoot(),
+    );
 
     await setupBaseVault(
       COLLATERAL_AMOUNT,
@@ -578,7 +596,10 @@ describe('SapphireCore.liquidate()', () => {
       newMinterCreditScore,
       liquidatorCreditScore,
     ]);
-    await creditScoreContract.updateMerkleRoot(newCreditTree.getHexRoot());
+    await immediatelyUpdateMerkleRoot(
+      creditScoreContract.connect(signers.interestSetter),
+      newCreditTree.getHexRoot(),
+    );
 
     // The user tries to liquidate but tx is reverted
     await expect(
@@ -926,7 +947,10 @@ describe('SapphireCore.liquidate()', () => {
         newMinterCreditScore,
         liquidatorCreditScore,
       ]);
-      await creditScoreContract.updateMerkleRoot(newCreditTree.getHexRoot());
+      await immediatelyUpdateMerkleRoot(
+        creditScoreContract.connect(signers.interestSetter),
+        newCreditTree.getHexRoot(),
+      );
 
       const {
         stablexAmt: preStablexBalance,
@@ -1009,7 +1033,10 @@ describe('SapphireCore.liquidate()', () => {
         newMinterCreditScore,
         liquidatorCreditScore,
       ]);
-      await creditScoreContract.updateMerkleRoot(newCreditTree.getHexRoot());
+      await immediatelyUpdateMerkleRoot(
+        creditScoreContract.connect(signers.interestSetter),
+        newCreditTree.getHexRoot(),
+      );
 
       // Liquidator tries to liquidate but tx reverts, because the user's credit score
       // lowered the c-ratio when the liquidation happens
