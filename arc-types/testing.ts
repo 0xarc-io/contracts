@@ -35,7 +35,7 @@ export interface TestingSigners {
   interestSetter: SignerWithAddress;
   liquidator: SignerWithAddress;
   staker: SignerWithAddress;
-  revenue: SignerWithAddress;
+  feeCollector: SignerWithAddress;
   globalOperator: SignerWithAddress;
   positionOperator: SignerWithAddress;
   unauthorised: SignerWithAddress;

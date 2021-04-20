@@ -12,7 +12,11 @@ import {
 import ArcNumber from '@src/utils/ArcNumber';
 import { TestingSigners } from '@arc-types/testing';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { MockSapphireCreditScore, SapphireMapperLinear } from '@src/typings';
+import {
+  MockSapphireCreditScore,
+  SapphireMapperLinear,
+  SyntheticTokenV2Factory,
+} from '@src/typings';
 import chai, { expect } from 'chai';
 import { solidity } from 'ethereum-waffle';
 import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
@@ -142,6 +146,19 @@ describe('SapphireCore.liquidate()', () => {
       BORROW_AMOUNT.mul(2),
       getScoreProof(liquidatorCreditScore, creditScoreTree),
     );
+
+    // Set liquidation user fees and arc fees
+    await arc.core().setFees(
+      utils.parseEther('0.05'), // 5% price discount
+      utils.parseEther('0.1'), // 10% arc tax on profit
+    );
+
+    // Approve synth to the core for liquidation
+    const synthContract = SyntheticTokenV2Factory.connect(
+      arc.syntheticAddress(),
+      signers.liquidator,
+    );
+    await synthContract.approve(arc.coreAddress(), BORROW_AMOUNT.mul(2));
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -167,6 +184,7 @@ describe('SapphireCore.liquidate()', () => {
 
     expect(
       await arc.synthetic().balanceOf(signers.liquidator.address),
+      '1',
     ).to.be.gte(BORROW_AMOUNT);
 
     // Drop the price by half to make the vault under-collateralized
@@ -181,7 +199,7 @@ describe('SapphireCore.liquidate()', () => {
       HIGH_C_RATIO,
     );
     const currentCRatio = COLLATERAL_AMOUNT.mul(newPrice).div(BORROW_AMOUNT);
-    expect(currentCRatio).to.be.lte(liquidationCRatio);
+    expect(currentCRatio, '2').to.be.lte(liquidationCRatio);
 
     const {
       stablexAmt: preStablexBalance,
@@ -189,10 +207,6 @@ describe('SapphireCore.liquidate()', () => {
       arcCollateralAmt: preArcCollateralAmt,
       stablexTotalSupply: preStablexTotalSupply,
     } = await getBalancesForLiquidation(signers.liquidator);
-
-    const preCollateralVaultBalance = await arc
-      .collateral()
-      .balanceOf(arc.core().address);
 
     // Liquidate vault
     await arc.liquidate(
@@ -209,31 +223,33 @@ describe('SapphireCore.liquidate()', () => {
       stablexTotalSupply: postStablexTotalSupply,
     } = await getBalancesForLiquidation(signers.liquidator);
 
-    const postCollateralVaultBalance = await arc
-      .collateral()
-      .balanceOf(arc.core().address);
+    const { collateralAmount: postCollateralVaultBalance } = await arc.getVault(
+      signers.scoredMinter.address,
+    );
 
     // The debt has been taken from the liquidator (STABLEx)
-    expect(postStablexBalance).to.eq(preStablexBalance.sub(ArcNumber.new(475)));
+    expect(postStablexBalance, '3').to.eq(
+      preStablexBalance.sub(ArcNumber.new(475)),
+    );
 
     // The collateral has been given to the liquidator
-    const liquidatedCollateral = utils.parseEther('994.736842105263');
-    expect(postCollateralBalance).to.eq(
+    const liquidatedCollateral = BigNumber.from('994736843');
+    expect(postCollateralBalance, '4').to.eq(
       preCollateralBalance.add(liquidatedCollateral),
     );
 
-    // Check collateral vault balance
-    expect(preCollateralVaultBalance.sub(postCollateralVaultBalance)).to.eq(
-      liquidatedCollateral,
-    );
+    // Check collateral vault balance. Collateral was completely sold
+    expect(postCollateralVaultBalance).to.eq(0);
 
     // A portion of collateral is sent to the fee collector
-    expect(postArcCollateralAmt).eq(
-      preArcCollateralAmt.add(utils.parseEther('5.26315789473684')),
+    expect(postArcCollateralAmt, '6').eq(
+      preArcCollateralAmt.add(
+        utils.parseUnits('5.263157', DEFAULT_COLLATERAL_DECIMALS),
+      ),
     );
 
     // The total STABLEx supply has decreased
-    expect(postStablexTotalSupply).to.eq(
+    expect(postStablexTotalSupply, '7').to.eq(
       preStablexTotalSupply.sub(ArcNumber.new(475)),
     );
 
@@ -241,10 +257,10 @@ describe('SapphireCore.liquidate()', () => {
     const postLiquidationVault = await arc.getVault(
       signers.scoredMinter.address,
     );
-    expect(postLiquidationVault.collateralAmount).to.eq(0);
+    expect(postLiquidationVault.collateralAmount, '8').to.eq(0);
 
     // The vault debt amount has decreased
-    expect(postLiquidationVault.borrowedAmount).to.eq(
+    expect(postLiquidationVault.borrowedAmount, '9').to.eq(
       BORROW_AMOUNT.sub(ArcNumber.new(475)),
     );
   });
