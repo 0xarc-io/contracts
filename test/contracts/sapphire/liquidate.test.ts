@@ -457,7 +457,7 @@ describe('SapphireCore.liquidate()', () => {
       // Liquidate
       await arc.liquidate(
         signers.scoredMinter.address,
-        undefined,
+        getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.liquidator,
       );
@@ -493,7 +493,7 @@ describe('SapphireCore.liquidate()', () => {
 
       await arc.borrow(
         maxBorrowAmount,
-        undefined,
+        getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.scoredMinter,
       );
@@ -512,7 +512,7 @@ describe('SapphireCore.liquidate()', () => {
       // Liquidate again
       await arc.liquidate(
         signers.scoredMinter.address,
-        undefined,
+        getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.liquidator,
       );
@@ -540,6 +540,21 @@ describe('SapphireCore.liquidate()', () => {
       );
       expect(postStablexTotalSupply, 'supply').to.eq(
         preStablexTotalSupply.sub(maxBorrowAmount),
+      );
+    });
+
+    it('should not liquidate if proof is not provided', async () => {
+      await setupBaseVault(COLLATERAL_AMOUNT, BORROW_AMOUNT);
+
+      await expect(
+        arc.liquidate(
+          signers.scoredMinter.address,
+          undefined,
+          undefined,
+          signers.liquidator,
+        ),
+      ).to.be.revertedWith(
+        'SapphireAssessor: proof should be provided for credit score',
       );
     });
 
