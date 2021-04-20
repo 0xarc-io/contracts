@@ -12,7 +12,7 @@ import Token from '@src/utils/Token';
 import { expect } from 'chai';
 import { ArcProxyFactory } from '@src/typings/ArcProxyFactory';
 
-describe('Spritz.coreV4Migration', () => {
+xdescribe('Spritz.coreV4Migration', () => {
   let ctx: ITestContext;
   let arc: SpritzTestArc;
   let positionId: BigNumberish;

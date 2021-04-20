@@ -10,7 +10,7 @@ import { SpritzTestArc } from '../../../src/SpritzTestArc';
 import { spritzFixture } from '../fixtures';
 import { AddressZero } from '@ethersproject/constants';
 
-describe('Spritz', () => {
+xdescribe('Spritz', () => {
   let ctx: ITestContext;
   let arc: SpritzTestArc;
 
