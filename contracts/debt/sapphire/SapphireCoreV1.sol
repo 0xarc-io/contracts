@@ -429,6 +429,11 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             uint256 currentPrice
         ) = _getVariablesForActions(_actions, _scoreProof);
 
+        console.log(
+            "assessed c-ratio: %s",
+            assessedCRatio
+        );
+
         for (uint256 i = 0; i < _actions.length; i++) {
             SapphireTypes.Action memory action = _actions[i];
 
