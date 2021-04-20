@@ -1039,13 +1039,12 @@ describe('SapphireCore.liquidate()', () => {
         getScoreProof(minterCreditScore, creditScoreTree),
       );
 
-      // User borrows close to the maximum amount. The min c-ratio is 132.5% so user borrows up to 133.5%, namely
-      // $749.063670411985 - $500 = 249.063670411985
+      // User borrows close to the maximum amount. The min c-ratio is 132.5% so user $245 more
       await arc.borrow(
-        utils.parseEther('249.063670411985'),
+        utils.parseEther('245'),
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
-        signers.minter,
+        signers.scoredMinter,
       );
 
       // Price drops to $0.91. Vault is in danger but not liquidated yet
@@ -1070,7 +1069,7 @@ describe('SapphireCore.liquidate()', () => {
       await expect(
         arc.liquidate(
           signers.scoredMinter.address,
-          undefined,
+          getScoreProof(newMinterCreditScore, newCreditTree),
           undefined,
           signers.liquidator,
         ),
@@ -1089,7 +1088,7 @@ describe('SapphireCore.liquidate()', () => {
       // Liquidation occurs
       await arc.liquidate(
         signers.scoredMinter.address,
-        undefined,
+        getScoreProof(newMinterCreditScore, newCreditTree),
         undefined,
         signers.liquidator,
       );
@@ -1100,34 +1099,45 @@ describe('SapphireCore.liquidate()', () => {
         arcCollateralAmt: postArcCollateralAmt,
         stablexTotalSupply: postStablexTotalSupply,
       } = await getBalancesForLiquidation(signers.liquidator);
-      const debtPaid = utils.parseEther('701.754385964912');
+      const debtPaid = utils.parseEther('745');
 
       // The debt has been taken from the liquidator (STABLEx)
-      expect(postStablexBalance).to.eq(preStablexBalance.sub(debtPaid));
+      expect(postStablexBalance, 'stablex').to.eq(
+        preStablexBalance.sub(debtPaid),
+      );
 
       // The collateral has been given to the liquidator
-      expect(postCollateralBalance).to.eq(
-        preCollateralBalance.add(utils.parseEther('956.509923031317')),
+      expect(postCollateralBalance, 'collateral').to.eq(
+        preCollateralBalance.add(
+          utils.parseUnits('951.320857', DEFAULT_COLLATERAL_DECIMALS),
+        ),
       );
 
       // A portion of collateral is sent to the fee collector
-      expect(postArcCollateralAmt).eq(
-        preArcCollateralAmt.add(utils.parseEther('5.06089906365778')),
+      expect(postArcCollateralAmt, 'arc share').eq(
+        preArcCollateralAmt.add(
+          utils.parseUnits('5.033443', DEFAULT_COLLATERAL_DECIMALS),
+        ),
       );
 
       // The total STABLEx supply has decreased
-      expect(postStablexTotalSupply).to.eq(preStablexTotalSupply.sub(debtPaid));
+      expect(postStablexTotalSupply, 'stablex total supply').to.eq(
+        preStablexTotalSupply.sub(debtPaid),
+      );
 
       // The vault collateral amount has decreased
       const postLiquidationVault = await arc.getVault(
         signers.scoredMinter.address,
       );
-      expect(postLiquidationVault.collateralAmount).to.eq(
-        utils.parseEther('250.936329588015'),
+      expect(postLiquidationVault.collateralAmount, 'vault collateral').to.eq(
+        utils.parseUnits('43.645700', DEFAULT_COLLATERAL_DECIMALS),
       );
 
       // The vault debt amount has been paid off
-      expect(postLiquidationVault.borrowedAmount).to.eq(0);
+      expect(
+        postLiquidationVault.borrowedAmount,
+        'vault borrowed amount',
+      ).to.eq(0);
     });
   });
 });
