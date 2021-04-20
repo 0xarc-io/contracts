@@ -22,9 +22,7 @@ import {
 import { MerkleDistributor } from '@src/typings/MerkleDistributor';
 import { SapphireCreditScore } from '@src/typings/SapphireCreditScore';
 import { MockSapphireCreditScore } from '@src/typings/MockSapphireCreditScore';
-import { DEFAULT_MAX_CREDIT_SCORE } from '@test/helpers/sapphireDefaults';
 import { SyntheticTokenV2 } from '@src/typings/SyntheticTokenV2';
-import { MockSyntheticTokenV2 } from '@src/typings/MockSyntheticTokenV2';
 
 export async function deployMockMozartCore(deployer: Signer) {
   const Contract = await ethers.getContractFactory(

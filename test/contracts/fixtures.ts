@@ -5,7 +5,6 @@ import {
   MockMozartCoreV2Factory,
   MockMozartSavingsV2Factory,
   MockSapphireCoreV1Factory,
-  MockSyntheticTokenV1Factory,
   SapphireAssessorFactory,
   SapphireMapperLinearFactory,
   SyntheticTokenV2Factory,
@@ -38,7 +37,6 @@ import {
   DEFAULT_HiGH_C_RATIO,
   DEFAULT_LOW_C_RATIO,
 } from '@test/helpers/sapphireDefaults';
-import { MockSyntheticTokenV2Factory } from '@src/typings/MockSyntheticTokenV2Factory';
 
 export async function mozartFixture(
   ctx: ITestContext,
