@@ -230,13 +230,6 @@ export async function sapphireFixture(
     ctx.signers.interestSetter.address,
   );
 
-  ctx.contracts.sapphire.assessor = await new SapphireAssessorFactory(
-    deployer,
-  ).deploy(
-    ctx.contracts.sapphire.linearMapper.address,
-    ctx.contracts.sapphire.creditScore.address,
-  );
-
   await ctx.contracts.sapphire.creditScore.setPause(false);
 
   ctx.contracts.sapphire.assessor = await new SapphireAssessorFactory(
