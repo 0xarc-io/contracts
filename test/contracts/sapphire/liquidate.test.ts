@@ -14,6 +14,7 @@ import { TestingSigners } from '@arc-types/testing';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import {
   MockSapphireCreditScore,
+  MockSyntheticTokenV2Factory,
   SapphireMapperLinear,
   SyntheticTokenV2Factory,
 } from '@src/typings';
@@ -594,13 +595,12 @@ describe('SapphireCore.liquidate()', () => {
     await arc.updatePrice(utils.parseEther('0.65'));
 
     // Burn enough stablex from the liquidator so that only half the amount required remains
-    const {
-      stablexAmt: curerntStablexBalance,
-    } = await getBalancesForLiquidation(signers.liquidator);
-    const burnAmount = curerntStablexBalance
-      .sub(curerntStablexBalance.sub(BORROW_AMOUNT))
-      .sub(BORROW_AMOUNT.div(2));
-    await arc.synthetic().burn(signers.liquidator.address, burnAmount);
+    const burnAmount = BORROW_AMOUNT.mul(utils.parseEther('1.5')).div(BASE);
+    const synthContract = MockSyntheticTokenV2Factory.connect(
+      arc.syntheticAddress(),
+      signers.liquidator,
+    );
+    await synthContract.burn(burnAmount);
 
     await expect(
       arc.liquidate(
@@ -610,7 +610,7 @@ describe('SapphireCore.liquidate()', () => {
         signers.liquidator,
       ),
     ).to.be.revertedWith(
-      'SyntheticToken: cannot burn more than the user balance',
+      'SyntheticTokenV2: sender does not have enough balance',
     );
   });
 
