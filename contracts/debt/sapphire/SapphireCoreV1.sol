@@ -526,6 +526,13 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             _currentPrice
         );
 
+        console.log(
+            "borrowed amount: %s, collat amount: %s, current c-ratio: %s",
+            vault.borrowedAmount,
+            vault.collateralAmount,
+            currentCRatio
+        );
+
         return currentCRatio >= _assessedCRatio;
     }
 
