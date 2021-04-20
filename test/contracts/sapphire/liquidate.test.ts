@@ -873,12 +873,16 @@ describe('SapphireCore.liquidate()', () => {
 
       // The collateral has been given to the liquidator
       expect(postCollateralBalance).to.eq(
-        preCollateralBalance.add(utils.parseEther('994.736842105263')),
+        preCollateralBalance.add(
+          utils.parseUnits('994.736843', DEFAULT_COLLATERAL_DECIMALS),
+        ),
       );
 
       // A portion of collateral is sent to the fee collector
       expect(postArcCollateralAmt).eq(
-        preArcCollateralAmt.add(utils.parseEther('5.26315789473684')),
+        preArcCollateralAmt.add(
+          utils.parseUnits('5.263157', DEFAULT_COLLATERAL_DECIMALS),
+        ),
       );
 
       // The total STABLEx supply has decreased
@@ -903,7 +907,9 @@ describe('SapphireCore.liquidate()', () => {
           undefined,
           signers.scoredMinter,
         ),
-      ).to.be.revertedWith('SapphireCoreV1: the vault is undercollateralized');
+      ).to.be.revertedWith(
+        'SapphireCoreV1: the vault will become undercollateralized',
+      );
       await expect(
         arc.withdraw(
           constants.One,
@@ -911,8 +917,12 @@ describe('SapphireCore.liquidate()', () => {
           undefined,
           signers.scoredMinter,
         ),
-      ).to.be.revertedWith('SapphireCoreV1: the vault is undercollateralized');
+      ).to.be.revertedWith(
+        'SapphireCoreV1: cannot withdraw more collateral than the vault balance',
+      );
 
+      const synthContract = arc.synthetic().connect(signers.scoredMinter);
+      await synthContract.approve(arc.coreAddress(), outstandingDebt);
       await arc.repay(
         outstandingDebt,
         getScoreProof(minterCreditScore, creditScoreTree),
