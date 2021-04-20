@@ -96,6 +96,11 @@ contract SapphireCoreStorage {
     uint256 public indexLastUpdate;
 
     /**
+     * @dev The interest rate charged to borrowers. Expressed as the interest rate per second and 18 d.p
+     */
+    uint256 public interestRate;
+
+    /**
      * @notice Which address can set interest rates for this contract
      */
     address public interestSetter;

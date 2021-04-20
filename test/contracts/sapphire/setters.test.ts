@@ -1,4 +1,5 @@
 import { SapphireCoreV1 } from '@src/typings';
+import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { constants, utils, Wallet } from 'ethers';
 import { generateContext, ITestContext } from '../context';
@@ -16,6 +17,8 @@ describe('SapphireCore.setters', () => {
     sapphireCore = ctx.contracts.sapphire.core;
     randomAddress = Wallet.createRandom().address;
   });
+
+  addSnapshotBeforeRestoreAfterEach();
 
   describe('#setCollateralRatios', () => {
     const lowRatio = constants.WeiPerEther.mul(3);
@@ -143,6 +146,39 @@ describe('SapphireCore.setters', () => {
         .to.emit(sapphireCore, 'InterestSetterUpdated')
         .withArgs(randomAddress);
       expect(await sapphireCore.interestSetter()).eq(randomAddress);
+    });
+  });
+
+  describe('#setInterestRate', () => {
+    const maxInterestRate = 21820606488;
+
+    it('reverts if called by unauthorized', async () => {
+      await expect(
+        sapphireCore.connect(ctx.signers.unauthorised).setInterestRate(1),
+      ).to.be.revertedWith('SapphireCoreV1: caller is not interest setter');
+    });
+
+    it('reverts if called by owner', async () => {
+      await expect(sapphireCore.connect(ctx.signers.admin).setInterestRate(1)).to.be.revertedWith(
+        'SapphireCoreV1: caller is not interest setter',
+      );
+    });
+
+    it('sets the interest setter', async () => {
+      await expect(
+        sapphireCore.connect(ctx.signers.interestSetter).setInterestRate(maxInterestRate + 1),
+      ).to.be.revertedWith(
+        'SapphireCoreV1: APY cannot be more than 99%, interest rate - 21820606489',
+      );
+    });
+
+    it('sets the interest setter', async () => {
+      await expect(
+        sapphireCore.connect(ctx.signers.interestSetter).setInterestRate(maxInterestRate),
+      )
+        .to.emit(sapphireCore, 'InterestRateUpdated')
+        .withArgs(maxInterestRate);
+      expect(await sapphireCore.interestRate()).eq(maxInterestRate);
     });
   });
 
