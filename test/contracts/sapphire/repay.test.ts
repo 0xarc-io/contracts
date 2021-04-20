@@ -241,7 +241,8 @@ describe('SapphireCore.repay()', () => {
   });
 
   it('should not repay to a vault that does not exist', async () => {
-    await arc.synthetic().mint(signers.minter.address, constants.WeiPerEther);
+    const adminSynth = arc.synthetic().connect(signers.admin);
+    await adminSynth.mint(signers.minter.address, constants.WeiPerEther);
 
     await expect(
       repay(constants.WeiPerEther, signers.minter),
@@ -262,9 +263,8 @@ describe('SapphireCore.repay()', () => {
 
   it(`should not repay more than the vault's debt`, async () => {
     // Mint more stablex
-    await arc
-      .synthetic()
-      .mint(signers.scoredMinter.address, constants.WeiPerEther);
+    const adminSynth = arc.synthetic().connect(signers.admin);
+    await adminSynth.mint(signers.scoredMinter.address, constants.WeiPerEther);
 
     await expect(
       repay(BORROW_AMOUNT.add(constants.WeiPerEther), signers.scoredMinter),

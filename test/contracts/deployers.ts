@@ -100,15 +100,6 @@ export async function deploySyntheticTokenV1(deployer: Signer) {
   return syntheticTokenV1 as SyntheticTokenV1;
 }
 
-export async function deployMockSyntheticTokenV2(deployer: Signer) {
-  const Contract = await ethers.getContractFactory(
-    'MockSyntheticTokenV2',
-    deployer,
-  );
-  const mockSyntheticTokenV2 = await Contract.deploy('TESTV2', '1');
-  return mockSyntheticTokenV2 as MockSyntheticTokenV2;
-}
-
 export async function deployMockSyntheticTokenV1(deployer: Signer) {
   const Contract = await ethers.getContractFactory(
     'MockSyntheticTokenV1',
