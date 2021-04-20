@@ -655,6 +655,11 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     {
         SapphireTypes.Vault storage vault = vaults[msg.sender];
 
+        require(
+            vault.collateralAmount >= _amount,
+            "SapphireCoreV1: cannot withdraw more collateral than the vault balance"
+        );
+
         vault.collateralAmount = vault.collateralAmount.sub(_amount);
 
         // if we don't have debt we can withdraw as much as we want
