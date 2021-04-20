@@ -8,6 +8,7 @@ import {
   MockSyntheticTokenV1Factory,
   SapphireAssessorFactory,
   SapphireMapperLinearFactory,
+  SyntheticTokenV2Factory,
 } from '@src/typings';
 import ArcDecimal from '@src/utils/ArcDecimal';
 
@@ -24,7 +25,7 @@ import {
   deployMockSavings,
   deployMockSapphireCreditScore,
   deployMockSapphireCoreV1,
-  deployMockSyntheticTokenV2,
+  deploySyntheticTokenV2,
 } from './deployers';
 
 import { constants, Signer } from 'ethers';
@@ -206,17 +207,18 @@ export async function sapphireFixture(
     [],
   );
 
-  const synthImp = await deployMockSyntheticTokenV2(deployer);
+  const synthImp = await deploySyntheticTokenV2(deployer, 'STABLExV2', '1');
   const syntheticProxy = await deployArcProxy(
     deployer,
     synthImp.address,
     deployerAddress,
     [],
   );
-  const tokenV2 = MockSyntheticTokenV2Factory.connect(
+  const tokenV2 = SyntheticTokenV2Factory.connect(
     syntheticProxy.address,
     deployer,
   );
+  await tokenV2.init('STABLExV2', 'STABLExV2', '1');
 
   ctx.contracts.synthetic.tokenV2 = tokenV2;
 
@@ -264,6 +266,9 @@ export async function sapphireFixture(
   );
 
   await tokenV2.addMinter(ctx.contracts.sapphire.core.address, MAX_UINT256);
+
+  // Add admin minter
+  await tokenV2.addMinter(ctx.signers.admin.address, MAX_UINT256);
 
   await ctx.contracts.sapphire.core.setPause(false);
 
