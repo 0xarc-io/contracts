@@ -249,7 +249,7 @@ export async function sapphireFixture(
     ctx.contracts.oracle.address,
     ctx.signers.interestSetter.address,
     ctx.contracts.sapphire.assessor.address,
-    ctx.contracts.sapphire.core.address,
+    ctx.signers.feeCollector.address,
     DEFAULT_HiGH_C_RATIO,
     DEFAULT_LOW_C_RATIO,
     0,
