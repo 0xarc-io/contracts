@@ -923,6 +923,7 @@ describe('SapphireCore.liquidate()', () => {
 
       const synthContract = arc.synthetic().connect(signers.scoredMinter);
       await synthContract.approve(arc.coreAddress(), outstandingDebt);
+
       await arc.repay(
         outstandingDebt,
         getScoreProof(minterCreditScore, creditScoreTree),
@@ -940,15 +941,18 @@ describe('SapphireCore.liquidate()', () => {
 
       // User removes 100 collateral
       await arc.withdraw(
-        ArcNumber.new(100),
+        utils.parseUnits('100', DEFAULT_COLLATERAL_DECIMALS),
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.scoredMinter,
       );
 
       // User repays $150
+      const synthContract = arc.synthetic().connect(signers.scoredMinter);
+      await synthContract.approve(arc.coreAddress(), utils.parseEther('150'));
+
       await arc.repay(
-        ArcNumber.new(150),
+        utils.parseEther('150'),
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.scoredMinter,
@@ -999,12 +1003,16 @@ describe('SapphireCore.liquidate()', () => {
 
       // The collateral has been given to the liquidator
       expect(postCollateralBalance).to.eq(
-        preCollateralBalance.add(utils.parseEther('678.670360110803')),
+        preCollateralBalance.add(
+          utils.parseUnits('678.670360', DEFAULT_COLLATERAL_DECIMALS),
+        ),
       );
 
       // A portion of collateral is sent to the fee collector
       expect(postArcCollateralAmt).eq(
-        preArcCollateralAmt.add(utils.parseEther('3.59084846619473')),
+        preArcCollateralAmt.add(
+          utils.parseUnits('3.590848', DEFAULT_COLLATERAL_DECIMALS),
+        ),
       );
 
       // The total STABLEx supply has decreased
@@ -1015,7 +1023,7 @@ describe('SapphireCore.liquidate()', () => {
         signers.scoredMinter.address,
       );
       expect(postLiquidationVault.collateralAmount).to.eq(
-        utils.parseEther('217.738791423'),
+        utils.parseUnits('217.738792', DEFAULT_COLLATERAL_DECIMALS),
       );
 
       // The vault debt amount has been paid off
