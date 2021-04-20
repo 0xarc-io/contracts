@@ -9,6 +9,11 @@ import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
+import { DEFAULT_COLLATERAL_DECIMALS, DEFAULT_PRICE } from '@test/helpers/sapphireDefaults';
+import { mintApprovedCollateral } from '@test/helpers/setupBaseVault';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
+import { BASE } from '@src/constants';
+import { getScoreProof } from '@src/utils/getScoreProof';
 
 chai.use(solidity);
 
@@ -18,9 +23,9 @@ chai.use(solidity);
  * The two scenarios to test here are for with a valid score proof and one without a valid score proof.
  * You only need a score proof if your address has a store proof in the CreditScore contract.
  */
-describe.skip('SapphireCore.open()', () => {
-  const COLLATERAL_AMOUNT = utils.parseEther('100');
-  const BORROW_AMOUNT = utils.parseEther('50');
+describe('SapphireCore.open()', () => {
+  const COLLATERAL_AMOUNT = utils.parseUnits('100', DEFAULT_COLLATERAL_DECIMALS);
+  const BORROW_AMOUNT = utils.parseEther('50').mul(DEFAULT_PRICE).div(BASE);
 
   let ctx: ITestContext;
   let arc: SapphireTestArc;
@@ -39,12 +44,15 @@ describe.skip('SapphireCore.open()', () => {
     };
     creditScoreTree = new CreditScoreTree([creditScore1, creditScore2]);
     await setupSapphire(ctx, {
-      limits: {
-        lowCollateralRatio: constants.WeiPerEther.mul(2),
-        highCollateralRatio: constants.WeiPerEther.mul(2),
-      },
       merkleRoot: creditScoreTree.getHexRoot(),
     });
+
+    await mintApprovedCollateral(ctx.sdks.sapphire, ctx.signers.minter, COLLATERAL_AMOUNT.mul(2));
+    await mintApprovedCollateral(
+      ctx.sdks.sapphire,
+      ctx.signers.scoredMinter,
+      COLLATERAL_AMOUNT.mul(2),
+    );
   }
 
   before(async () => {
@@ -55,10 +63,10 @@ describe.skip('SapphireCore.open()', () => {
   addSnapshotBeforeRestoreAfterEach();
 
   describe('without score proof', () => {
-    let unauthorisedAddress: string;
+    let minterAddress: string;
 
     before(() => {
-      unauthorisedAddress = ctx.signers.unauthorised.address;
+      minterAddress = ctx.signers.minter.address;
     });
 
     it('open at the exact c-ratio', async () => {
@@ -70,14 +78,12 @@ describe.skip('SapphireCore.open()', () => {
         ctx.signers.minter,
       );
 
-      // Ensure the events emitted correct information
+      // Ensure the function returned correct information
       expect(vault.borrowedAmount).eq(BORROW_AMOUNT);
       expect(vault.collateralAmount).eq(COLLATERAL_AMOUNT);
 
       // Check created vault
-      const { borrowedAmount, collateralAmount } = await arc
-        .synth()
-        .core.getVault(unauthorisedAddress);
+      const { borrowedAmount, collateralAmount } = await arc.getVault(minterAddress);
       expect(borrowedAmount).eq(BORROW_AMOUNT);
       expect(collateralAmount).eq(COLLATERAL_AMOUNT);
 
@@ -85,7 +91,7 @@ describe.skip('SapphireCore.open()', () => {
       expect(await arc.core().totalCollateral()).eq(COLLATERAL_AMOUNT);
       expect(await arc.core().totalBorrowed()).eq(BORROW_AMOUNT);
 
-      expect(await arc.synth().collateral.balanceOf(arc.syntheticAddress())).eq(COLLATERAL_AMOUNT);
+      expect(await arc.synth().collateral.balanceOf(arc.coreAddress())).eq(COLLATERAL_AMOUNT);
     });
 
     it('open above the c-ratio', async () => {
@@ -97,63 +103,79 @@ describe.skip('SapphireCore.open()', () => {
         ctx.signers.minter,
       );
 
-      const { borrowedAmount, collateralAmount } = await arc.core().getVault(unauthorisedAddress);
+      const { borrowedAmount, collateralAmount } = await arc.getVault(minterAddress);
       expect(collateralAmount).eq(COLLATERAL_AMOUNT.mul(2));
       expect(borrowedAmount).eq(BORROW_AMOUNT);
     });
 
     it('revert if opened below the c-ratio', async () => {
+      const change = utils.parseUnits('1', DEFAULT_COLLATERAL_DECIMALS);
       await expect(
-        arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT.add(1), undefined, undefined, ctx.signers.minter),
-      ).to.be.reverted;
+        arc.open(
+          COLLATERAL_AMOUNT,
+          BORROW_AMOUNT.add(change),
+          undefined,
+          undefined,
+          ctx.signers.minter,
+        ),
+      ).to.be.revertedWith('SapphireCoreV1: the vault will become undercollateralized');
 
       await expect(
-        arc.open(COLLATERAL_AMOUNT.sub(1), BORROW_AMOUNT, undefined, undefined, ctx.signers.minter),
-      ).to.be.reverted;
+        arc.open(
+          COLLATERAL_AMOUNT.sub(change),
+          BORROW_AMOUNT,
+          undefined,
+          undefined,
+          ctx.signers.minter,
+        ),
+      ).to.be.revertedWith('SapphireCoreV1: the vault will become undercollateralized');
     });
 
     it('open if no assessor is set', async () => {
       await arc.core().setAssessor(constants.AddressZero);
       await arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT, undefined, undefined, ctx.signers.minter);
 
-      const { borrowedAmount, collateralAmount } = await arc
-        .synth()
-        .core.getVault(unauthorisedAddress);
+      const { borrowedAmount, collateralAmount } = await arc.getVault(minterAddress);
       expect(borrowedAmount).eq(BORROW_AMOUNT);
       expect(collateralAmount).eq(COLLATERAL_AMOUNT);
     });
 
     it('revert if a score for address exists on-chain', async () => {
+      await arc.open(
+        COLLATERAL_AMOUNT,
+        BORROW_AMOUNT,
+        getScoreProof(creditScore1, creditScoreTree),
+        undefined,
+        ctx.signers.scoredMinter,
+      );
       await expect(
         arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT, undefined, undefined, ctx.signers.scoredMinter),
-      ).to.be.reverted;
+      ).to.be.revertedWith('SapphireAssessor: proof should be provided for credit score');
     });
 
     it('revert if opened below the minimum position amount', async () => {
-      await arc.core().setLimits(0, BORROW_AMOUNT.add(1), 0);
+      await arc
+        .core()
+        .setLimits(BORROW_AMOUNT.add(100), BORROW_AMOUNT.add(1), BORROW_AMOUNT.add(100));
       await expect(
         arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT, undefined, undefined, ctx.signers.minter),
-      ).to.be.reverted;
+      ).to.be.revertedWith('SapphireCoreV1: borrowed amount cannot be less than limit');
     });
 
     it('revert if opened above the maximum borrowed amount', async () => {
-      await arc.core().setLimits(0, 0, BORROW_AMOUNT.sub(1));
+      await arc.core().setLimits(BORROW_AMOUNT, BORROW_AMOUNT.sub(100), BORROW_AMOUNT.sub(1));
       await expect(
         arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT, undefined, undefined, ctx.signers.minter),
-      ).to.be.reverted;
+      ).to.be.revertedWith('SapphireCoreV1: borrowed amount cannot be greater than vault limit');
     });
   });
 
   describe('with score proof', () => {
     let creditScoreProof: CreditScoreProof;
-    let minterAddress: string;
+    let scoredMinter: SignerWithAddress;
     before(() => {
-      creditScoreProof = {
-        account: creditScore1.account,
-        score: creditScore1.amount,
-        merkleProof: creditScoreTree.getProof(creditScore1.account, creditScore1.amount),
-      };
-      minterAddress = ctx.signers.minter.address;
+      creditScoreProof = getScoreProof(creditScore1, creditScoreTree);
+      scoredMinter = ctx.signers.scoredMinter;
     });
 
     it('open at the exact default c-ratio', async () => {
@@ -162,19 +184,19 @@ describe.skip('SapphireCore.open()', () => {
         BORROW_AMOUNT,
         creditScoreProof,
         undefined,
-        ctx.signers.scoredMinter,
+        scoredMinter,
       );
 
       // Check created vault
-      const { borrowedAmount, collateralAmount } = await arc.synth().core.getVault(minterAddress);
+      const { borrowedAmount, collateralAmount } = await arc.getVault(scoredMinter.address);
       expect(borrowedAmount).eq(BORROW_AMOUNT);
       expect(collateralAmount).eq(COLLATERAL_AMOUNT);
 
       // Check total collateral and borrowed values
-      expect(await arc.core().getTotalCollateral()).eq(COLLATERAL_AMOUNT);
-      expect(await arc.core().getTotalBorrowed()).eq(BORROW_AMOUNT);
+      expect(await arc.core().totalCollateral()).eq(COLLATERAL_AMOUNT);
+      expect(await arc.core().totalBorrowed()).eq(BORROW_AMOUNT);
 
-      expect(await arc.synth().collateral.balanceOf(arc.syntheticAddress())).eq(COLLATERAL_AMOUNT);
+      expect(await arc.synth().collateral.balanceOf(arc.coreAddress())).eq(COLLATERAL_AMOUNT);
     });
 
     it('open above the default c-ratio', async () => {
@@ -183,10 +205,10 @@ describe.skip('SapphireCore.open()', () => {
         BORROW_AMOUNT,
         creditScoreProof,
         undefined,
-        ctx.signers.scoredMinter,
+        scoredMinter,
       );
 
-      const { borrowedAmount, collateralAmount } = await arc.core().getVault(minterAddress);
+      const { borrowedAmount, collateralAmount } = await arc.getVault(scoredMinter.address);
       expect(collateralAmount).eq(COLLATERAL_AMOUNT.mul(2));
       expect(borrowedAmount).eq(BORROW_AMOUNT);
     });
@@ -197,38 +219,39 @@ describe.skip('SapphireCore.open()', () => {
         BORROW_AMOUNT,
         creditScoreProof,
         undefined,
-        ctx.signers.scoredMinter,
+        scoredMinter,
       );
 
-      const { borrowedAmount, collateralAmount } = await arc.core().getVault(minterAddress);
+      const { borrowedAmount, collateralAmount } = await arc.getVault(scoredMinter.address);
       expect(collateralAmount).eq(COLLATERAL_AMOUNT.sub(1));
       expect(borrowedAmount).eq(BORROW_AMOUNT);
     });
 
     it('open at the c-ratio based on credit score', async () => {
+      //  defaultBorrow * 2 = defaultCollateral
+      // 2 => 3/2
+      // maxBorrow = defaultCollateral / (3/2)
+      // maxBorrow = 2 * 2 * defaultBorrow / 3
+      // maxBorrow = 4/3 * defaultBorrow
+      const MAX_BORROW_AMOUNT = BORROW_AMOUNT.mul(4).div(3)
+
       await arc.open(
         COLLATERAL_AMOUNT,
-        BORROW_AMOUNT.add(BORROW_AMOUNT.div(2).mul(3)),
+        MAX_BORROW_AMOUNT,
         creditScoreProof,
         undefined,
-        ctx.signers.scoredMinter,
+        scoredMinter,
       );
 
-      const { borrowedAmount, collateralAmount } = await arc.core().getVault(minterAddress);
-      expect(collateralAmount).eq(COLLATERAL_AMOUNT.sub(1));
-      expect(borrowedAmount).eq(BORROW_AMOUNT);
+      const { borrowedAmount, collateralAmount } = await arc.getVault(scoredMinter.address);
+      expect(collateralAmount).eq(COLLATERAL_AMOUNT);
+      expect(borrowedAmount).eq(MAX_BORROW_AMOUNT);
     });
 
     it('revert if opened below c-ratio based on credit score', async () => {
       await expect(
-        arc.open(
-          constants.One,
-          BORROW_AMOUNT,
-          creditScoreProof,
-          undefined,
-          ctx.signers.scoredMinter,
-        ),
-      ).to.be.reverted;
+        arc.open(constants.One, BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter),
+      ).to.be.revertedWith('SapphireCoreV1: the vault will become undercollateralized');
     });
 
     it('ignore proof(behavior based only on high c-ratio value) if no assessor is set', async () => {
@@ -239,75 +262,62 @@ describe.skip('SapphireCore.open()', () => {
           BORROW_AMOUNT,
           creditScoreProof,
           undefined,
-          ctx.signers.scoredMinter,
+          scoredMinter,
         ),
-      ).to.be.reverted;
+      ).to.be.revertedWith('SapphireCoreV1: the vault will become undercollateralized');
 
-      await arc.open(
-        COLLATERAL_AMOUNT,
-        BORROW_AMOUNT,
-        creditScoreProof,
-        undefined,
-        ctx.signers.scoredMinter,
-      );
+      await arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter);
 
-      const { borrowedAmount, collateralAmount } = await arc.synth().core.getVault(minterAddress);
+      const { borrowedAmount, collateralAmount } = await arc.getVault(scoredMinter.address);
       expect(borrowedAmount).eq(BORROW_AMOUNT);
       expect(collateralAmount).eq(COLLATERAL_AMOUNT);
     });
 
     it('open if a score for address exists on-chain', async () => {
       await ctx.contracts.sapphire.creditScore.verifyAndUpdate(creditScoreProof);
-      await arc.open(
-        COLLATERAL_AMOUNT,
-        BORROW_AMOUNT,
-        creditScoreProof,
-        undefined,
-        ctx.signers.scoredMinter,
-      );
+      await arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter);
 
-      const { borrowedAmount, collateralAmount } = await arc.core().getVault(minterAddress);
+      const { borrowedAmount, collateralAmount } = await arc.getVault(scoredMinter.address);
       expect(collateralAmount).eq(COLLATERAL_AMOUNT);
       expect(borrowedAmount).eq(BORROW_AMOUNT);
     });
 
     it('revert if opened below the minimum position amount', async () => {
-      await arc.core().setLimits(0, BORROW_AMOUNT.add(1), 0);
+      await arc
+        .core()
+        .setLimits(BORROW_AMOUNT.add(100), BORROW_AMOUNT.add(1), BORROW_AMOUNT.add(100));
       await expect(
-        arc.open(
-          COLLATERAL_AMOUNT,
-          BORROW_AMOUNT,
-          creditScoreProof,
-          undefined,
-          ctx.signers.scoredMinter,
-        ),
-      ).to.be.reverted;
+        arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter),
+      ).to.be.revertedWith('SapphireCoreV1: borrowed amount cannot be less than limit');
     });
 
     it('revert if opened above the maximum borrowed amount', async () => {
-      await arc.core().setLimits(0, 0, BORROW_AMOUNT.sub(1));
+      await arc.core().setLimits(BORROW_AMOUNT, BORROW_AMOUNT.sub(100), BORROW_AMOUNT.sub(1));
       await expect(
-        arc.open(
-          COLLATERAL_AMOUNT,
-          BORROW_AMOUNT,
-          creditScoreProof,
-          undefined,
-          ctx.signers.scoredMinter,
-        ),
-      ).to.be.reverted;
+        arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter),
+      ).to.be.revertedWith('SapphireCoreV1: borrowed amount cannot be greater than vault limit');
     });
 
     it('revert if opened above the total maximum borrowed amount', async () => {
-      await arc.core().setLimits(BORROW_AMOUNT.sub(1), 0, 0);
+      await arc.core().setLimits(BORROW_AMOUNT, BORROW_AMOUNT.sub(100), BORROW_AMOUNT.sub(10));
+      // borrow the minimal limit
+      await arc.open(
+        COLLATERAL_AMOUNT,
+        BORROW_AMOUNT.sub(100),
+        undefined,
+        undefined,
+        ctx.signers.minter,
+      );
+      // borrow the minimal limit for another vault, so total max limit will be exceed
       await expect(
         arc.open(
           COLLATERAL_AMOUNT,
-          BORROW_AMOUNT,
+          BORROW_AMOUNT.sub(100),
           creditScoreProof,
           undefined,
-          ctx.signers.scoredMinter,
+          scoredMinter,
         ),
-      ).to.be.reverted;
+      ).to.be.revertedWith('SapphireCoreV1: borrowed amount cannot be greater than limit');
     });
   });
 });

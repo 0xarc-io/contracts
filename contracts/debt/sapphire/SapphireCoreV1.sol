@@ -744,11 +744,6 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         bool mandatoryProof = false;
         bool needsCollateralPrice = false;
 
-        require(
-            address(assessor) != address(0),
-            "SapphireCoreV1: the assessor is not set"
-        );
-
         /**
          * Only the borrow action requires a mandatory score proof, so break
          * the loop when that action is found.
@@ -783,12 +778,16 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             );
         }
 
-        assessedCRatio = assessor.assess(
-            lowCollateralRatio,
-            highCollateralRatio,
-            _scoreProof,
-            mandatoryProof
-        );
+        if (address(assessor) == address(0)) {
+            assessedCRatio = highCollateralRatio;
+        } else {
+            assessedCRatio = assessor.assess(
+                lowCollateralRatio,
+                highCollateralRatio,
+                _scoreProof,
+                mandatoryProof
+            );
+        }
 
         return (assessedCRatio, collateralPrice.value);
     }
