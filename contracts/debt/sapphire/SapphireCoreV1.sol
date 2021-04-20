@@ -975,14 +975,14 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         for (uint256 i = 0; i < _actions.length; i++) {
             SapphireTypes.Action memory action = _actions[i];
 
-            if (action.operation == SapphireTypes.Operation.Borrow) {
+            if (action.operation == SapphireTypes.Operation.Borrow ||
+                action.operation == SapphireTypes.Operation.Liquidate
+            ) {
                 mandatoryProof = true;
                 needsCollateralPrice = true;
                 break;
-            } else if (
-                action.operation == SapphireTypes.Operation.Liquidate ||
-                action.operation == SapphireTypes.Operation.Withdraw) {
 
+            } else if (action.operation == SapphireTypes.Operation.Withdraw) {
                 needsCollateralPrice = true;
             }
         }
