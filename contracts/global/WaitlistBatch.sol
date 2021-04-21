@@ -9,8 +9,6 @@ import {SafeERC20} from "../lib/SafeERC20.sol";
 
 import {IERC20} from "../token/IERC20.sol";
 
-import "hardhat/console.sol";
-
 contract WaitlistBatch is Ownable {
 
     /* ========== Types ========== */
@@ -228,13 +226,9 @@ contract WaitlistBatch is Ownable {
             batchInfo.depositAmount
         );
 
-        console.log(
-            "is blacklisted: %s",
-            blacklist[msg.sender]
-        );
         if (blacklist[msg.sender] == true) {
             emit TokensReclaimedBlacklist(
-                msg.sender, 
+                msg.sender,
                 batchInfo.depositAmount
             );
         } else {
@@ -422,7 +416,7 @@ contract WaitlistBatch is Ownable {
 
         emit AddedToBlacklist(_user);
     }
-    
+
     function removeFromBlacklist(
         address _user
     )
