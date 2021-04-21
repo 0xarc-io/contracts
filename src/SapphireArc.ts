@@ -17,7 +17,7 @@ import {
   BaseERC20Factory,
   SapphireCoreV1,
   SapphireCoreV1Factory,
-  SyntheticTokenV1Factory,
+  SyntheticTokenV2Factory,
 } from './typings';
 import { IOracleFactory } from './typings/IOracleFactory';
 import { getEmptyScoreProof } from './utils/getScoreProof';
@@ -44,7 +44,7 @@ export class SapphireArc {
           await core.collateralAsset(),
           this.signer,
         ),
-        synthetic: SyntheticTokenV1Factory.connect(
+        synthetic: SyntheticTokenV2Factory.connect(
           await core.syntheticAsset(),
           this.signer,
         ),

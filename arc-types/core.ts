@@ -1,5 +1,5 @@
 import { BigNumber, BigNumberish } from 'ethers';
-import { SyntheticTokenV1 } from '@src/typings';
+import { SyntheticTokenV1, SyntheticTokenV2 } from '@src/typings';
 import { IERC20 } from '@src/typings/IERC20';
 import { IOracle } from '@src/typings/IOracle';
 
@@ -101,10 +101,16 @@ export type D2Fees = {
   liquidationArcRatio: BigNumberish;
 };
 
+export type SynthV1<T> = {
+  core: T;
+  oracle: IOracle;
+  collateral: IERC20;
+  synthetic: SyntheticTokenV1;
+};
 
 export type Synth<T> = {
   core: T;
   oracle: IOracle;
   collateral: IERC20;
-  synthetic: SyntheticTokenV1;
+  synthetic: SyntheticTokenV2;
 };
