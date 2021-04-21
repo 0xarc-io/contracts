@@ -5,13 +5,7 @@ import { deployContract, DeploymentType, loadDetails, pruneDeployments } from '.
 
 task('deploy-waitlist-batch', 'Deploy the WaitlistBatch contract')
   .addParam('currency', 'The address of the deposit currency')
-  .addParam(
-    'path',
-    'The path to the solidity file for Etherscan verification',
-    undefined,
-    undefined,
-    true,
-  )
+  .addOptionalParam('path', 'The path to the solidity file for Etherscan verification')
   .setAction(async (taskArgs, hre) => {
     const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
     const { currency, path } = taskArgs;
