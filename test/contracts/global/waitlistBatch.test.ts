@@ -19,6 +19,7 @@ const CURRENT_TIMESTAMP = 100;
 describe('WhitelistBatch', () => {
   let ownerAccount: SignerWithAddress;
   let userAccount: SignerWithAddress;
+  let moderator: SignerWithAddress;
   let user2: SignerWithAddress;
   let waitlist: WaitlistBatch;
   let userWaitlist: WaitlistBatch;
@@ -35,6 +36,7 @@ describe('WhitelistBatch', () => {
     ownerAccount = signers[0];
     userAccount = signers[1];
     user2 = signers[2];
+    moderator = signers[3];
 
     depositToken = await new TestTokenFactory(ownerAccount).deploy('TEST', 'TEST', 18);
 
@@ -378,6 +380,93 @@ describe('WhitelistBatch', () => {
     });
   });
 
+  describe('#setModerator', () => {
+    it('reverts if called by a normie', async () => {
+      const unauthorizedWaitlist = MockWaitlistBatchFactory.connect(waitlist.address, userAccount);
+
+      await expect(
+        unauthorizedWaitlist.setModerator(unauthorizedWaitlist.address),
+      ).to.be.revertedWith('Ownable: caller is not the owner');
+    });
+
+    it('sets the moderator if called by admin', async () => {
+      await waitlist.setModerator(moderator.address);
+
+      expect(await waitlist.moderator()).to.eq(moderator.address);
+    });
+
+    it('emits ModeratorSet event', async () => {
+      await expect(waitlist.setModerator(moderator.address))
+        .to.emit(waitlist, 'ModeratorSet')
+        .withArgs(moderator.address);
+    });
+  });
+
+  describe('#addToBlacklist', () => {
+    before(async () => {
+      await waitlist.setModerator(moderator.address);
+    });
+
+    it('reverts if called by non-moderator', async () => {
+      const unauthorizedWaitlist = waitlist.connect(user2.address);
+
+      await expect(unauthorizedWaitlist.addToBlacklist(userAccount.address)).to.be.revertedWith(
+        'WaitlistBatch: caller is not moderator',
+      );
+    });
+
+    it('adds address to the blacklist', async () => {
+      const moderatorWaitlist = waitlist.connect(moderator);
+
+      await moderatorWaitlist.addToBlacklist(userAccount.address);
+
+      expect(await moderatorWaitlist.blacklist(userAccount.address)).to.be.true;
+    });
+
+    it('emits AddedToBlacklist event', async () => {
+      const moderatorWaitlist = waitlist.connect(moderator);
+
+      await expect(moderatorWaitlist.addToBlacklist(userAccount.address))
+        .to.emit(moderatorWaitlist, 'AddedToBlacklist')
+        .withArgs(userAccount.address);
+    });
+  });
+
+  describe('#removeFromBlacklist', () => {
+    let moderatorWaitlist: WaitlistBatch;
+
+    before(async () => {
+      moderatorWaitlist = waitlist.connect(moderator);
+      await moderatorWaitlist.addToBlacklist(userAccount.address);
+    });
+
+    after(async () => {
+      await moderatorWaitlist.removeFromBlacklist(userAccount.address);
+    });
+
+    it('reverts if called by non-moderator', async () => {
+      const unauthorizedWaitlist = MockWaitlistBatchFactory.connect(waitlist.address, userAccount);
+
+      await expect(
+        unauthorizedWaitlist.removeFromBlacklist(userAccount.address),
+      ).to.be.revertedWith('WaitlistBatch: caller is not moderator');
+    });
+
+    it('removes address to the blacklist', async () => {
+      expect(await moderatorWaitlist.blacklist(userAccount.address)).to.be.true;
+
+      await moderatorWaitlist.removeFromBlacklist(userAccount.address);
+
+      expect(await moderatorWaitlist.blacklist(userAccount.address)).to.be.false;
+    });
+
+    it('emits RemovedFromBlacklist event', async () => {
+      await expect(moderatorWaitlist.removeFromBlacklist(userAccount.address))
+        .to.emit(moderatorWaitlist, 'RemovedFromBlacklist')
+        .withArgs(userAccount.address);
+    });
+  });
+
   describe('#transferTokens', () => {
     const tokensAmt = utils.parseEther('10');
     let otherToken: TestToken;
@@ -469,6 +558,20 @@ describe('WhitelistBatch', () => {
 
       await expect(userWaitlist.reclaimTokens())
         .to.emit(userWaitlist, 'TokensReclaimed')
+        .withArgs(userAccount.address, batch.depositAmount);
+    });
+
+    it('emits the TokensReclaimedBlacklist event if called by a blacklisted address', async () => {
+      await waitlist.enableClaims([1]);
+      await waitlist.setCurrentTimestamp(batch.startTimestamp);
+      await userWaitlist.applyToBatch(1);
+
+      await waitlist.setModerator(moderator.address);
+      const moderatorWaitlist = waitlist.connect(moderator);
+      await moderatorWaitlist.addToBlacklist(userAccount.address);
+
+      await expect(userWaitlist.reclaimTokens())
+        .to.emit(userWaitlist, 'TokensReclaimedBlacklist')
         .withArgs(userAccount.address, batch.depositAmount);
     });
   });

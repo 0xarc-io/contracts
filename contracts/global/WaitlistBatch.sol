@@ -9,6 +9,8 @@ import {SafeERC20} from "../lib/SafeERC20.sol";
 
 import {IERC20} from "../token/IERC20.sol";
 
+import "hardhat/console.sol";
+
 contract WaitlistBatch is Ownable {
 
     /* ========== Types ========== */
@@ -29,6 +31,8 @@ contract WaitlistBatch is Ownable {
 
     /* ========== Variables ========== */
 
+    address public moderator;
+
     IERC20 public depositCurrency;
 
     uint256 public nextBatchNumber;
@@ -38,6 +42,8 @@ contract WaitlistBatch is Ownable {
     mapping (uint256 => Batch) public batchMapping;
 
     mapping (address => uint256) public userBatchMapping;
+
+    mapping (address => bool) public blacklist;
 
     /* ========== Events ========== */
 
@@ -73,11 +79,38 @@ contract WaitlistBatch is Ownable {
         uint256 amount
     );
 
+    event TokensReclaimedBlacklist(
+        address user,
+        uint256 amount
+    );
+
     event TokensTransfered(
         address tokenAddress,
         uint256 amount,
         address destination
     );
+
+    event RemovedFromBlacklist(
+        address user
+    );
+
+    event AddedToBlacklist(
+        address user
+    );
+
+    event ModeratorSet(
+        address user
+    );
+
+    /* ========== Modifiers ========== */
+
+    modifier onlyModerator() {
+        require(
+            msg.sender == moderator,
+            "WaitlistBatch: caller is not moderator"
+        );
+        _;
+    }
 
     /* ========== Constructor ========== */
 
@@ -195,10 +228,21 @@ contract WaitlistBatch is Ownable {
             batchInfo.depositAmount
         );
 
-        emit TokensReclaimed(
-            msg.sender,
-            batchInfo.depositAmount
+        console.log(
+            "is blacklisted: %s",
+            blacklist[msg.sender]
         );
+        if (blacklist[msg.sender] == true) {
+            emit TokensReclaimedBlacklist(
+                msg.sender, 
+                batchInfo.depositAmount
+            );
+        } else {
+            emit TokensReclaimed(
+                msg.sender,
+                batchInfo.depositAmount
+            );
+        }
     }
 
     /* ========== Admin Functions ========== */
@@ -353,6 +397,41 @@ contract WaitlistBatch is Ownable {
             _amount,
             _destination
         );
+    }
+
+    function setModerator(
+        address _user
+    )
+        public
+        onlyOwner
+    {
+        moderator = _user;
+
+        emit ModeratorSet(_user);
+    }
+
+    /* ========== Moderator Functions ========== */
+
+    function addToBlacklist(
+        address _user
+    )
+        public
+        onlyModerator
+    {
+        blacklist[_user] = true;
+
+        emit AddedToBlacklist(_user);
+    }
+    
+    function removeFromBlacklist(
+        address _user
+    )
+        public
+        onlyModerator
+    {
+        blacklist[_user] = false;
+
+        emit RemovedFromBlacklist(_user);
     }
 
     /* ========== Dev Functions ========== */
