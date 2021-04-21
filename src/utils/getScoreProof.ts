@@ -10,7 +10,10 @@ export function getScoreProof(
   return {
     account: creditScore.account,
     score: creditScore.amount,
-    merkleProof: creditScoreTreeToCheck.getProof(creditScore.account, creditScore.amount),
+    merkleProof: creditScoreTreeToCheck.getProof(
+      creditScore.account,
+      creditScore.amount,
+    ),
   };
 }
 

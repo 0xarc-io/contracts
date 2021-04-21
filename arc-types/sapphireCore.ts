@@ -27,4 +27,5 @@ export interface CreditScoreProof {
 export type Action = {
   operation: Operation;
   amount: BigNumberish;
+  userToLiquidate: string;
 };

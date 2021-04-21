@@ -6,12 +6,18 @@ import {
   Operation,
   Vault,
 } from '@arc-types/sapphireCore';
-import { BigNumber, BigNumberish, ContractTransaction, Signer } from 'ethers';
+import {
+  BigNumber,
+  BigNumberish,
+  constants,
+  ContractTransaction,
+  Signer,
+} from 'ethers';
 import {
   BaseERC20Factory,
   SapphireCoreV1,
   SapphireCoreV1Factory,
-  SyntheticTokenV1Factory,
+  SyntheticTokenV2Factory,
 } from './typings';
 import { IOracleFactory } from './typings/IOracleFactory';
 import { getEmptyScoreProof } from './utils/getScoreProof';
@@ -38,7 +44,7 @@ export class SapphireArc {
           await core.collateralAsset(),
           this.signer,
         ),
-        synthetic: SyntheticTokenV1Factory.connect(
+        synthetic: SyntheticTokenV2Factory.connect(
           await core.syntheticAsset(),
           this.signer,
         ),
@@ -74,6 +80,7 @@ export class SapphireArc {
       {
         operation: Operation.Deposit,
         amount: collateralAmount,
+        userToLiquidate: constants.AddressZero,
       },
     ];
 
@@ -81,6 +88,7 @@ export class SapphireArc {
       actions.push({
         operation: Operation.Borrow,
         amount: borrowAmount,
+        userToLiquidate: constants.AddressZero,
       });
     }
 
@@ -99,8 +107,14 @@ export class SapphireArc {
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
-  ): Promise<Vault> {
-    return {} as Vault;
+  ): Promise<ContractTransaction> {
+    const core = this._getCore(synthName, caller);
+
+    return core.liquidate(
+      owner,
+      creditScoreProof ?? (await getEmptyScoreProof(caller)),
+      overrides,
+    );
   }
 
   async executeActions(

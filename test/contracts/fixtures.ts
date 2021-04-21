@@ -27,7 +27,7 @@ import {
   deploySyntheticTokenV2,
 } from './deployers';
 
-import { constants, Signer } from 'ethers';
+import { Signer } from 'ethers';
 import { ITestContext, ITestContextArgs } from './context';
 import { MozartTestArc } from '@src/MozartTestArc';
 import { SpritzTestArc } from '../../src/SpritzTestArc';
@@ -249,7 +249,7 @@ export async function sapphireFixture(
     ctx.contracts.oracle.address,
     ctx.signers.interestSetter.address,
     ctx.contracts.sapphire.assessor.address,
-    ctx.contracts.sapphire.core.address,
+    ctx.signers.feeCollector.address,
     DEFAULT_HiGH_C_RATIO,
     DEFAULT_LOW_C_RATIO,
     0,
