@@ -175,7 +175,7 @@ describe.only('borrowed index (integration)', () => {
       );
 
       const minterVault = await arc.getVault(signers.minter.address);
-      expect(minterVault.borrowedAmount).eq(borrowIndex.mul(BORROW_AMOUNT));
+      expect(minterVault.borrowedAmount).eq(borrowIndex.mul(BORROW_AMOUNT).div(BASE));
 
       const scoredMinterVault = await arc.getVault(
         signers.scoredMinter.address,
@@ -201,7 +201,7 @@ describe.only('borrowed index (integration)', () => {
       );
 
       const minterVault = await arc.getVault(signers.minter.address);
-      expect(minterVault.borrowedAmount).eq(borrowIndex.mul(BORROW_AMOUNT));
+      expect(minterVault.borrowedAmount).eq(borrowIndex.mul(BORROW_AMOUNT).div(BASE));
 
       const scoredMinterVault = await arc.getVault(
         signers.scoredMinter.address,
@@ -227,7 +227,7 @@ describe.only('borrowed index (integration)', () => {
       );
 
       const minterVault = await arc.getVault(signers.minter.address);
-      expect(minterVault.borrowedAmount).eq(borrowIndex.mul(BORROW_AMOUNT));
+      expect(minterVault.borrowedAmount).eq(borrowIndex.mul(BORROW_AMOUNT).div(BASE));
 
       const scoredMinterVault = await arc.getVault(
         signers.scoredMinter.address,
@@ -258,10 +258,10 @@ describe.only('borrowed index (integration)', () => {
       const minterVault = await arc.getVault(signers.minter.address);
       const accumulatedBorrowAmountFor12Months = borrowIndexFor12Months.mul(
         BORROW_AMOUNT,
-      );
+      ).div(BASE);
       const accumulatedBorrowAmountFor24Months = currentBorrowIndex.mul(
         BORROW_AMOUNT,
-      );
+      ).div(BASE);
       const totalBorrowed = accumulatedBorrowAmountFor12Months.add(
         accumulatedBorrowAmountFor24Months,
       );
@@ -275,7 +275,7 @@ describe.only('borrowed index (integration)', () => {
       const borrowIndexFor12Months = await arc.core().currentBorrowIndex();
       // repay a half accumulated debt
       await arc.repay(
-        BORROW_AMOUNT.div(2).mul(borrowIndexFor12Months),
+        BORROW_AMOUNT.div(2).mul(borrowIndexFor12Months).div(BASE),
         undefined,
         undefined,
         signers.minter,
