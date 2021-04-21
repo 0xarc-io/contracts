@@ -146,7 +146,7 @@ describe.only('borrowed index (integration)', () => {
     });
 
     it('for two years', async () => {
-      await advanceNYears(1);
+      await advanceNYears(2);
       const currentBorrowIndex = await arc.core().currentBorrowIndex();
       expect(currentBorrowIndex).eq(
         ONE_YEAR_IN_SECONDS.mul(2).mul(INTEREST_RATE).add(BASE),
@@ -160,14 +160,14 @@ describe.only('borrowed index (integration)', () => {
 
   describe('calculate the index for opening two positions', () => {
     it('the first for one year, the second for half a year', async () => {
-      await advanceNMonths(9);
+      await advanceNMonths(6);
       await setupBaseVault(
         arc,
         signers.scoredMinter,
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
       );
-      await advanceNMonths(3);
+      await advanceNMonths(6);
 
       const borrowIndex = await arc.core().currentBorrowIndex();
       expect(borrowIndex).eq(
@@ -186,7 +186,7 @@ describe.only('borrowed index (integration)', () => {
     });
 
     it('the first for one and a half years, the second for 3 months', async () => {
-      await advanceNMonths(15);
+      await advanceNMonths(18);
       await setupBaseVault(
         arc,
         signers.scoredMinter,
@@ -197,7 +197,7 @@ describe.only('borrowed index (integration)', () => {
 
       const borrowIndex = await arc.core().currentBorrowIndex();
       expect(borrowIndex).eq(
-        SECONDS_PER_MONTH.mul(15).mul(INTEREST_RATE).add(BASE),
+        SECONDS_PER_MONTH.mul(18).mul(INTEREST_RATE).add(BASE),
       );
 
       const minterVault = await arc.getVault(signers.minter.address);
@@ -212,14 +212,14 @@ describe.only('borrowed index (integration)', () => {
     });
 
     it('the first for two years, the second for one and half years', async () => {
-      await advanceNMonths(21);
+      await advanceNMonths(6);
       await setupBaseVault(
         arc,
         signers.scoredMinter,
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
       );
-      await advanceNMonths(3);
+      await advanceNMonths(18);
 
       const borrowIndex = await arc.core().currentBorrowIndex();
       expect(borrowIndex).eq(
