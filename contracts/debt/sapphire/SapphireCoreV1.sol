@@ -18,8 +18,6 @@ import {SapphireCoreStorage} from "./SapphireCoreStorage.sol";
 import {SapphireAssessor} from "./SapphireAssessor.sol";
 import {ISapphireAssessor} from "./ISapphireAssessor.sol";
 
-import "hardhat/console.sol";
-
 contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
     /* ========== Libraries ========== */
@@ -429,11 +427,6 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             uint256 currentPrice
         ) = _getVariablesForActions(_actions, _scoreProof);
 
-        console.log(
-            "assessed c-ratio: %s",
-            assessedCRatio
-        );
-
         for (uint256 i = 0; i < _actions.length; i++) {
             SapphireTypes.Action memory action = _actions[i];
 
@@ -529,13 +522,6 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             vault.borrowedAmount,
             vault.collateralAmount,
             _currentPrice
-        );
-
-        console.log(
-            "borrowed amount: %s, collat amount: %s, current c-ratio: %s",
-            vault.borrowedAmount,
-            vault.collateralAmount,
-            currentCRatio
         );
 
         return currentCRatio >= _assessedCRatio;
@@ -841,14 +827,13 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         // --- EFFECTS ---
 
         // Get the liquidation price of the asset (discount for liquidator)
-        console.log("1");
+        uint256 liquidationPricePercent = BASE.sub(liquidationUserFee);
         uint256 liquidationPrice = _currentPrice
-            .mul(BASE.sub(liquidationUserFee))
+            .mul(liquidationPricePercent)
             .div(BASE);
 
         // Calculate the amount of collateral to be sold based on the entire debt
         // in the vault
-        console.log("2");
         uint256 debtToRepay = _denormalizeBorrowAmount(vault.borrowedAmount);
         uint256 collateralToSell = debtToRepay
             .mul(BASE)
@@ -857,7 +842,6 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
         // If the discounted collateral is more than the amount in the vault, limit
         // the sale to that amount
-        console.log("3");
         if (collateralToSell > vault.collateralAmount) {
             collateralToSell = vault.collateralAmount;
             // Calculate the new debt to repay
@@ -868,35 +852,15 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         }
 
         // Calculate the profit made
-        console.log("4");
         uint256 valueCollateralSold = collateralToSell
             .mul(precisionScalar)
             .mul(_currentPrice)
             .div(BASE);
 
-        console.log(
-            "vault collateral: %s, debt: %s, liquidation user fee: %s",
-            vault.collateralAmount,
-            vault.borrowedAmount,
-            liquidationUserFee
-        );
-        console.log(
-            "collateral to sell: %s, current price: %s, liquidation price: %s",
-            collateralToSell,
-            _currentPrice,
-            liquidationPrice
-        );
-        console.log(
-            "debt to repay: %s, value collateral sold: %s",
-            debtToRepay,
-            valueCollateralSold
-        );
-
         // Total profit in dollar amount
         uint256 profit = valueCollateralSold.sub(debtToRepay);
 
         // Calculate the ARC share
-        console.log("5");
         uint256 arcShare = profit
             .mul(BASE)
             .div(liquidationPrice)
@@ -905,18 +869,15 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             .div(precisionScalar);
 
         // Calculate liquidator's share
-        console.log("6");
         uint256 liquidatorCollateralShare = collateralToSell.sub(arcShare);
 
         // Update owner's vault
-        console.log("8");
         vault.collateralAmount = vault.collateralAmount
             .sub(collateralToSell);
 
         // --- INTEGRATIONS ---
 
         // Repay the debt
-        console.log("9");
         _repay(
             _owner,
             msg.sender,
@@ -924,7 +885,6 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         );
 
         // Transfer user collateral
-        console.log("10");
         IERC20 collateralAsset = IERC20(collateralAsset);
         SafeERC20.safeTransfer(
             collateralAsset,
@@ -936,12 +896,6 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         SafeERC20.safeTransfer(
             collateralAsset,
             feeCollector,
-            arcShare
-        );
-
-        console.log(
-            "liquidator share: %s, arc share: %s",
-            liquidatorCollateralShare,
             arcShare
         );
     }
