@@ -382,11 +382,6 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     )
         public
     {
-        require(
-            feeCollector != address(0),
-            "SapphireCoreV1: the fee collector is not set"
-        );
-
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
         actions[0] = SapphireTypes.Action(
             0,
@@ -491,7 +486,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         returns (SapphireTypes.Vault memory)
     {
         SapphireTypes.Vault memory vault = vaults[_user];
-        vault.borrowedAmount = _normalizeBorrowAmount(vault.borrowedAmount);
+        vault.borrowedAmount = _denormalizeBorrowAmount(vault.borrowedAmount);
 
         return vault;
     }
@@ -851,7 +846,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
                 .div(BASE);
         }
 
-        // Calculate the profit made
+        // Calculate the profit made in USD
         uint256 valueCollateralSold = collateralToSell
             .mul(precisionScalar)
             .mul(_currentPrice)
@@ -862,10 +857,8 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
         // Calculate the ARC share
         uint256 arcShare = profit
-            .mul(BASE)
-            .div(liquidationPrice)
             .mul(liquidationArcFee)
-            .div(BASE)
+            .div(liquidationPrice)
             .div(precisionScalar);
 
         // Calculate liquidator's share

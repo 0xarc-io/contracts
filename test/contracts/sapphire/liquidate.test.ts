@@ -14,7 +14,6 @@ import { TestingSigners } from '@arc-types/testing';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import {
   MockSapphireCreditScore,
-  MockSyntheticTokenV2Factory,
   SapphireMapperLinear,
   SyntheticTokenV2Factory,
 } from '@src/typings';
@@ -637,10 +636,7 @@ describe('SapphireCore.liquidate()', () => {
 
       // Burn enough stablex from the liquidator so that only half the amount required remains
       const burnAmount = BORROW_AMOUNT.mul(utils.parseEther('1.5')).div(BASE);
-      const synthContract = MockSyntheticTokenV2Factory.connect(
-        arc.syntheticAddress(),
-        signers.liquidator,
-      );
+      const synthContract = arc.synthetic().connect(signers.liquidator);
       await synthContract.burn(burnAmount);
 
       await expect(
@@ -711,28 +707,6 @@ describe('SapphireCore.liquidate()', () => {
           signers.liquidator,
         ),
       ).to.be.revertedWith('SapphireCoreV1: vault is collateralized');
-    });
-
-    it('should not liquidate if fee collector is not set', async () => {
-      await setupBaseVault();
-
-      // Price drops, setting the c-ratio to 130%
-      await arc.updatePrice(utils.parseEther('0.65'));
-
-      // Set the fee collector to the zero address
-      await arc
-        .core()
-        .setFeeCollector('0x0000000000000000000000000000000000000000');
-
-      // Liquidation should fail because
-      await expect(
-        arc.liquidate(
-          signers.scoredMinter.address,
-          getScoreProof(minterCreditScore, creditScoreTree),
-          undefined,
-          signers.liquidator,
-        ),
-      ).to.be.revertedWith('SapphireCoreV1: the fee collector is not set');
     });
 
     it('should not liquidate if contract is paused', async () => {
