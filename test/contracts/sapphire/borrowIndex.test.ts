@@ -15,7 +15,7 @@ import { DEFAULT_COLLATERAL_DECIMALS } from '@test/helpers/sapphireDefaults';
 import { setupBaseVault } from '@test/helpers/setupBaseVault';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
-import { BigNumber, BigNumberish, constants, utils } from 'ethers';
+import { BigNumber, BigNumberish, utils } from 'ethers';
 import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
