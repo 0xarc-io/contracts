@@ -122,14 +122,14 @@ describe.only('borrowed index (integration)', () => {
     it('for one year', async () => {
       await advanceNYears(1);
       const currentBorrowIndex = await arc.core().currentBorrowIndex();
-      // 10^18 + (1547125957 * 365 * 24 * 60 * 60 / 10^18)
+      // 10^18 + 1547125957 * 365 * 24 * 60 * 60
       expect(currentBorrowIndex).eq('1048790164179952000');
       expect(currentBorrowIndex).eq(
         ONE_YEAR_IN_SECONDS.mul(INTEREST_RATE).add(BASE),
       );
       const minterVault = await arc.getVault(signers.minter.address);
       expect(minterVault.borrowedAmount).eq(
-        currentBorrowIndex.mul(BORROW_AMOUNT),
+        currentBorrowIndex.mul(BORROW_AMOUNT).div(BASE),
       );
     });
 
@@ -141,7 +141,7 @@ describe.only('borrowed index (integration)', () => {
       );
       const minterVault = await arc.getVault(signers.minter.address);
       expect(minterVault.borrowedAmount).eq(
-        currentBorrowIndex.mul(BORROW_AMOUNT),
+        currentBorrowIndex.mul(BORROW_AMOUNT).div(BASE),
       );
     });
 
@@ -153,7 +153,7 @@ describe.only('borrowed index (integration)', () => {
       );
       const minterVault = await arc.getVault(signers.minter.address);
       expect(minterVault.borrowedAmount).eq(
-        currentBorrowIndex.mul(BORROW_AMOUNT),
+        currentBorrowIndex.mul(BORROW_AMOUNT).div(BASE),
       );
     });
   });
@@ -181,7 +181,7 @@ describe.only('borrowed index (integration)', () => {
         signers.scoredMinter.address,
       );
       expect(scoredMinterVault.borrowedAmount).eq(
-        borrowIndex.mul(BORROW_AMOUNT),
+        borrowIndex.mul(BORROW_AMOUNT).div(BASE),
       );
     });
 
@@ -207,7 +207,7 @@ describe.only('borrowed index (integration)', () => {
         signers.scoredMinter.address,
       );
       expect(scoredMinterVault.borrowedAmount).eq(
-        borrowIndex.mul(BORROW_AMOUNT),
+        borrowIndex.mul(BORROW_AMOUNT).div(BASE),
       );
     });
 
@@ -233,7 +233,7 @@ describe.only('borrowed index (integration)', () => {
         signers.scoredMinter.address,
       );
       expect(scoredMinterVault.borrowedAmount).eq(
-        borrowIndex.mul(BORROW_AMOUNT),
+        borrowIndex.mul(BORROW_AMOUNT).div(BASE),
       );
     });
   });
@@ -299,7 +299,7 @@ describe.only('borrowed index (integration)', () => {
       let currentBorrowIndex = await arc.core().currentBorrowIndex();
 
       await arc.repay(
-        currentBorrowIndex.mul(BORROW_AMOUNT),
+        currentBorrowIndex.mul(BORROW_AMOUNT).div(BASE),
         undefined,
         undefined,
         signers.minter,
