@@ -11,6 +11,9 @@ import {Adminable} from "../lib/Adminable.sol";
 
 import {IERC20} from "../token/IERC20.sol";
 
+/**
+ * @notice A farm that does not require minting debt to earn rewards
+ */
 contract LiquidityCampaign is Adminable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
