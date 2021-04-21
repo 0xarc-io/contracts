@@ -127,6 +127,7 @@ describe.only('borrowed index (integration)', () => {
       expect(currentBorrowIndex).eq(
         ONE_YEAR_IN_SECONDS.mul(INTEREST_RATE).add(BASE),
       );
+      await arc.core().updateIndex();
       const minterVault = await arc.getVault(signers.minter.address);
       expect(minterVault.borrowedAmount).eq(
         currentBorrowIndex.mul(BORROW_AMOUNT).div(BASE),
@@ -139,6 +140,7 @@ describe.only('borrowed index (integration)', () => {
       expect(currentBorrowIndex).eq(
         SECONDS_PER_MONTH.mul(18).mul(INTEREST_RATE).add(BASE),
       );
+      await arc.core().updateIndex();
       const minterVault = await arc.getVault(signers.minter.address);
       expect(minterVault.borrowedAmount).eq(
         currentBorrowIndex.mul(BORROW_AMOUNT).div(BASE),
@@ -151,6 +153,7 @@ describe.only('borrowed index (integration)', () => {
       expect(currentBorrowIndex).eq(
         ONE_YEAR_IN_SECONDS.mul(2).mul(INTEREST_RATE).add(BASE),
       );
+      await arc.core().updateIndex();
       const minterVault = await arc.getVault(signers.minter.address);
       expect(minterVault.borrowedAmount).eq(
         currentBorrowIndex.mul(BORROW_AMOUNT).div(BASE),
@@ -169,13 +172,17 @@ describe.only('borrowed index (integration)', () => {
       );
       await advanceNMonths(6);
 
+      await arc.core().updateIndex();
+
       const borrowIndex = await arc.core().currentBorrowIndex();
       expect(borrowIndex).eq(
         SECONDS_PER_MONTH.mul(12).mul(INTEREST_RATE).add(BASE),
       );
 
       const minterVault = await arc.getVault(signers.minter.address);
-      expect(minterVault.borrowedAmount).eq(borrowIndex.mul(BORROW_AMOUNT).div(BASE));
+      expect(minterVault.borrowedAmount).eq(
+        borrowIndex.mul(BORROW_AMOUNT).div(BASE),
+      );
 
       const scoredMinterVault = await arc.getVault(
         signers.scoredMinter.address,
@@ -201,7 +208,9 @@ describe.only('borrowed index (integration)', () => {
       );
 
       const minterVault = await arc.getVault(signers.minter.address);
-      expect(minterVault.borrowedAmount).eq(borrowIndex.mul(BORROW_AMOUNT).div(BASE));
+      expect(minterVault.borrowedAmount).eq(
+        borrowIndex.mul(BORROW_AMOUNT).div(BASE),
+      );
 
       const scoredMinterVault = await arc.getVault(
         signers.scoredMinter.address,
@@ -227,7 +236,9 @@ describe.only('borrowed index (integration)', () => {
       );
 
       const minterVault = await arc.getVault(signers.minter.address);
-      expect(minterVault.borrowedAmount).eq(borrowIndex.mul(BORROW_AMOUNT).div(BASE));
+      expect(minterVault.borrowedAmount).eq(
+        borrowIndex.mul(BORROW_AMOUNT).div(BASE),
+      );
 
       const scoredMinterVault = await arc.getVault(
         signers.scoredMinter.address,
@@ -256,12 +267,12 @@ describe.only('borrowed index (integration)', () => {
       );
 
       const minterVault = await arc.getVault(signers.minter.address);
-      const accumulatedBorrowAmountFor12Months = borrowIndexFor12Months.mul(
-        BORROW_AMOUNT,
-      ).div(BASE);
-      const accumulatedBorrowAmountFor24Months = currentBorrowIndex.mul(
-        BORROW_AMOUNT,
-      ).div(BASE);
+      const accumulatedBorrowAmountFor12Months = borrowIndexFor12Months
+        .mul(BORROW_AMOUNT)
+        .div(BASE);
+      const accumulatedBorrowAmountFor24Months = currentBorrowIndex
+        .mul(BORROW_AMOUNT)
+        .div(BASE);
       const totalBorrowed = accumulatedBorrowAmountFor12Months.add(
         accumulatedBorrowAmountFor24Months,
       );

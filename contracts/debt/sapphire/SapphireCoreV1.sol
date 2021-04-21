@@ -453,7 +453,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         public
         returns (uint256)
     {
-
+        borrowIndex = currentBorrowIndex();
     }
 
     /* ========== Public Getters ========== */
@@ -463,7 +463,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         view
         returns (uint256)
     {
-
+        return interestRate.mul(currentTimestamp().sub(indexLastUpdate));
     }
 
     function currentBorrowIndex()
@@ -471,7 +471,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         view
         returns (uint256)
     {
-        
+        return borrowIndex.mul(accumulatedInterest()).div(BASE).add(borrowIndex);
     }
 
     /**
