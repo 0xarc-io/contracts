@@ -21,8 +21,14 @@ export interface ITestContextArgs {
 const provider = ethers.provider;
 const evm = new EVM(provider);
 
-export type fixtureFunction = (ctx: ITestContext, args?: ITestContextArgs) => Promise<void>;
-export type initFunction = (ctx: ITestContext, args?: ITestContextArgs) => Promise<void>;
+export type fixtureFunction = (
+  ctx: ITestContext,
+  args?: ITestContextArgs,
+) => Promise<void>;
+export type initFunction = (
+  ctx: ITestContext,
+  args?: ITestContextArgs,
+) => Promise<void>;
 
 export async function generateContext(
   fixture: fixtureFunction,
@@ -37,7 +43,7 @@ export async function generateContext(
   signers.interestSetter = retrievedSigners[2];
   signers.liquidator = retrievedSigners[3];
   signers.staker = retrievedSigners[4];
-  signers.revenue = retrievedSigners[5];
+  signers.feeCollector = retrievedSigners[5];
   signers.globalOperator = retrievedSigners[6];
   signers.positionOperator = retrievedSigners[7];
   signers.unauthorised = retrievedSigners[8];

@@ -20,7 +20,13 @@ export async function setupBaseVault(
   await mintApprovedCollateral(arc, caller, collateralAmount);
 
   // Open vault and mint debt
-  return arc.open(collateralAmount, borrowAmount, scoreProof, synthName, caller);
+  return arc.open(
+    collateralAmount,
+    borrowAmount,
+    scoreProof,
+    synthName,
+    caller,
+  );
 }
 
 export async function mintApprovedCollateral(
@@ -28,7 +34,10 @@ export async function mintApprovedCollateral(
   caller: SignerWithAddress,
   collateralAmount: BigNumberish,
 ) {
-  const collateralContract = TestTokenFactory.connect(arc.collateral().address, caller);
+  const collateralContract = TestTokenFactory.connect(
+    arc.collateral().address,
+    caller,
+  );
 
   await collateralContract.mintShare(caller.address, collateralAmount);
   await collateralContract.approve(arc.core().address, collateralAmount);
