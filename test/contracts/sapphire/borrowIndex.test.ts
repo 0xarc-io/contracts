@@ -62,9 +62,9 @@ describe.only('borrowed index (integration)', () => {
     interestRate = INTEREST_RATE,
   ) {
     const currentTimestamp = await arc.core().currentTimestamp();
-    const accumulatedInterest = interestRate
-      .mul(currentTimestamp.sub(lastUpdateIndex))
-      .div(BASE);
+    const accumulatedInterest = interestRate.mul(
+      currentTimestamp.sub(lastUpdateIndex),
+    );
     return prevBorrowIndex
       .mul(accumulatedInterest)
       .div(BASE)
