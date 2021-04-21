@@ -114,13 +114,13 @@ describe.only('borrowed index (integration)', () => {
     arc = ctx.sdks.sapphire;
     minter1 = signers.minter;
     minter2 = signers.scoredMinter;
-    await setupBaseVault(arc, minter1, COLLATERAL_AMOUNT, BORROW_AMOUNT);
   });
 
   addSnapshotBeforeRestoreAfterEach();
 
   describe('calculate the index for opening a position', () => {
     it('for one year', async () => {
+      await setupBaseVault(arc, minter1, COLLATERAL_AMOUNT, BORROW_AMOUNT);
       await advanceNYears(1);
       const currentBorrowIndex = await arc.core().currentBorrowIndex();
       // 10^18 + 1547125957 * 365 * 24 * 60 * 60
@@ -135,6 +135,7 @@ describe.only('borrowed index (integration)', () => {
     });
 
     it('for one and half years', async () => {
+      await setupBaseVault(arc, minter1, COLLATERAL_AMOUNT, BORROW_AMOUNT);
       await advanceNMonths(18);
       const currentBorrowIndex = await arc.core().currentBorrowIndex();
       expect(currentBorrowIndex).eq(
@@ -148,6 +149,7 @@ describe.only('borrowed index (integration)', () => {
     });
 
     it('for two years', async () => {
+      await setupBaseVault(arc, minter1, COLLATERAL_AMOUNT, BORROW_AMOUNT);
       await advanceNYears(2);
       const currentBorrowIndex = await arc.core().currentBorrowIndex();
       expect(currentBorrowIndex).eq(
@@ -163,6 +165,7 @@ describe.only('borrowed index (integration)', () => {
 
   describe('calculate the index for opening two positions', () => {
     it('the first for one year, the second for half a year', async () => {
+      await setupBaseVault(arc, minter1, COLLATERAL_AMOUNT, BORROW_AMOUNT);
       await advanceNMonths(6);
       await setupBaseVault(arc, minter2, COLLATERAL_AMOUNT, BORROW_AMOUNT);
 
@@ -198,6 +201,7 @@ describe.only('borrowed index (integration)', () => {
     });
 
     it('the first for one and a half years, the second for 3 months', async () => {
+      await setupBaseVault(arc, minter1, COLLATERAL_AMOUNT, BORROW_AMOUNT);
       await advanceNMonths(18);
       await setupBaseVault(arc, minter2, COLLATERAL_AMOUNT, BORROW_AMOUNT);
 
@@ -231,6 +235,7 @@ describe.only('borrowed index (integration)', () => {
     });
 
     it('the first for two years, the second for one and half years', async () => {
+      await setupBaseVault(arc, minter1, COLLATERAL_AMOUNT, BORROW_AMOUNT);
       await advanceNMonths(6);
 
       await setupBaseVault(arc, minter2, COLLATERAL_AMOUNT, BORROW_AMOUNT);
