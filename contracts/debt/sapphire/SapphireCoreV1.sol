@@ -277,7 +277,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     {
 
         require(
-            msg.sender == interestSetter, 
+            msg.sender == interestSetter,
             "SapphireCoreV1: caller is not interest setter"
         );
 
