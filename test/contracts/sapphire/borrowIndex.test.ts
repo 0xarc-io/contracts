@@ -466,11 +466,10 @@ describe.only('borrowed index (integration)', () => {
       );
 
       // Repay remaining interest
-      // TODO: resolve rounding - that's why I added 1 
-      const outstandingRepayAmt = (await getVaultBorrowAmount(
-        signers.scoredMinter,
-      )).add(1);
-      const total = await arc.core().totalBorrowed();
+      // TODO: resolve rounding - that's why I added 1
+      const outstandingRepayAmt = (
+        await getVaultBorrowAmount(signers.scoredMinter)
+      ).add(1);
 
       // Owner doesn't have enough money to repay all debt because of interest rate
       await arc
