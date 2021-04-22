@@ -9,6 +9,9 @@ import {Adminable} from "../lib/Adminable.sol";
 
 import {IERC20} from "../token/IERC20.sol";
 
+import {SapphireAssessor} from "../debt/sapphire/SapphireAssessor.sol";
+import {SapphireTypes} from "../debt/sapphire/SapphireTypes.sol";
+
 import "hardhat/console.sol";
 
 /**
@@ -35,6 +38,8 @@ contract PassportCampaign is Adminable {
 
     /* ========== Variables ========== */
 
+    SapphireAssessor public assessor;
+
     IERC20 public rewardsToken;
     IERC20 public stakingToken;
 
@@ -48,7 +53,7 @@ contract PassportCampaign is Adminable {
     uint256 public rewardsDuration = 0;
     uint256 public lastUpdateTime;
     uint256 public rewardPerTokenStored;
-    uint256 public creditScoreThreshold;
+    uint16 public creditScoreThreshold;
 
     uint256 public daoAllocation;
 
@@ -94,7 +99,7 @@ contract PassportCampaign is Adminable {
     modifier onlyRewardsDistributor() {
         require(
             msg.sender == rewardsDistributor,
-            "LiquidityCampaign:updateReward() Caller is not RewardsDistributor"
+            "PassportCampaign: caller is not a rewards distributor"
         );
         _;
     }
@@ -137,7 +142,7 @@ contract PassportCampaign is Adminable {
     {
         require(
             rewardsDuration != 0,
-            "LiquidityCampaign:notifyRewardAmount() rewards duration must first be set"
+            "PassportCampaign: rewards duration must first be set"
         );
 
         if (currentTimestamp() >= periodFinish) {
@@ -155,7 +160,7 @@ contract PassportCampaign is Adminable {
         uint balance = rewardsToken.balanceOf(address(this));
         require(
             rewardRate <= balance.div(rewardsDuration),
-            "LiquidityCampaign:notifyRewardAmount() Provided reward too high"
+            "PassportCampaign: provided reward too high"
         );
 
         periodFinish = currentTimestamp().add(rewardsDuration);
@@ -177,7 +182,7 @@ contract PassportCampaign is Adminable {
         // Cannot recover the staking token or the rewards token
         require(
             _tokenAddress != address(stakingToken) && _tokenAddress != address(rewardsToken),
-            "LiquidityCampaign:recoverERC20() Can't withdraw staking or rewards tokens"
+            "PassportCampaign: cannot withdraw staking or rewards tokens"
         );
 
         IERC20(_tokenAddress).safeTransfer(getAdmin(), _tokenAmount);
@@ -195,20 +200,30 @@ contract PassportCampaign is Adminable {
         emit ClaimableStatusUpdated(_enabled);
     }
 
+    function setCreditScoreThreshold(
+        uint16 _newThreshold
+    )
+        external
+        onlyAdmin
+    {
+        creditScoreThreshold = _newThreshold;
+    }
+
     function init(
         address _arcDAO,
         address _rewardsDistributor,
         address _rewardsToken,
         address _stakingToken,
+        address _sapphireAssessor,
         uint256 _daoAllocation,
-        uint256 _creditScoreThreshold
+        uint16 _creditScoreThreshold
     )
         public
         onlyAdmin
     {
         require(
             !_isInitialized,
-            "The init function cannot be called twice"
+            "PassportCampaign: The init function cannot be called twice"
         );
 
         _isInitialized = true;
@@ -218,6 +233,7 @@ contract PassportCampaign is Adminable {
             _rewardsDistributor != address(0) &&
             _rewardsToken != address(0) &&
             _stakingToken != address(0) &&
+            _sapphireAssessor != address(0) &&
             _daoAllocation > 0 &&
             _creditScoreThreshold > 0,
             "One or more parameters of init() cannot be null"
@@ -227,6 +243,7 @@ contract PassportCampaign is Adminable {
         rewardsDistributor      = _rewardsDistributor;
         rewardsToken            = IERC20(_rewardsToken);
         stakingToken            = IERC20(_stakingToken);
+        assessor                = SapphireAssessor(_sapphireAssessor);
         daoAllocation           = _daoAllocation;
         creditScoreThreshold    = _creditScoreThreshold;
     }
@@ -360,7 +377,8 @@ contract PassportCampaign is Adminable {
     /* ========== Mutative Functions ========== */
 
     function stake(
-        uint256 _amount
+        uint256 _amount,
+        SapphireTypes.ScoreProof calldata _scoreProof
     )
         external
         updateReward(msg.sender)
@@ -385,7 +403,7 @@ contract PassportCampaign is Adminable {
     {
         require(
             tokensClaimable == true,
-            "LiquidityCampaign:getReward() Tokens cannot be claimed yet"
+            "PassportCampaign: tokens cannot be claimed yet"
         );
 
         Staker storage staker = stakers[_user];
@@ -410,6 +428,11 @@ contract PassportCampaign is Adminable {
         public
         updateReward(msg.sender)
     {
+        require(
+            stakers[msg.sender].balance >= _amount,
+            "PassportCampaign: cannot withdraw more than the balance"
+        );
+
         totalSupply = totalSupply.sub(_amount);
         stakers[msg.sender].balance = stakers[msg.sender].balance.sub(_amount);
 

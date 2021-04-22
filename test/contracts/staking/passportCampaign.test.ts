@@ -1,6 +1,9 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import {
   ArcProxyFactory,
+  MockSapphireCreditScore,
+  SapphireAssessor,
+  SapphireCreditScore,
   // PassportCampaignFactory,
   TestToken,
   TestTokenFactory,
@@ -11,58 +14,81 @@ import { deployTestToken } from '../deployers';
 import { BigNumber, utils } from 'ethers';
 import chai from 'chai';
 import { BASE } from '@src/constants';
-import { expectRevert } from '@test/helpers/expectRevert';
 import { EVM } from '@test/helpers/EVM';
 import { solidity } from 'ethereum-waffle';
 import { MockPassportCampaign } from '@src/typings/MockPassportCampaign';
 import { MockPassportCampaignFactory } from '@src/typings/MockPassportCampaignFactory';
-import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
+import {
+  addSnapshotBeforeRestoreAfterEach,
+  immediatelyUpdateMerkleRoot,
+} from '@test/helpers/testingUtils';
+import { getEmptyScoreProof, getScoreProof } from '@src/utils/getScoreProof';
+import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
+import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
+import { generateContext, ITestContext } from '../context';
+import { sapphireFixture } from '../fixtures';
+import { setupSapphire } from '../setup';
+import _ from 'lodash';
 
 chai.use(solidity);
 const expect = chai.expect;
-
-let passportCampaignAdmin: MockPassportCampaign;
-let passportCampaignUser1: MockPassportCampaign;
-let passportCampaignUser2: MockPassportCampaign;
 
 const REWARD_AMOUNT = utils.parseEther('100');
 const STAKE_AMOUNT = utils.parseEther('10');
 const REWARD_DURATION = 10;
 
 const DAO_ALLOCATION = utils.parseEther('0.4');
-const USER_ALLOCATION = BASE.sub(DAO_ALLOCATION);
 
 const CREDIT_SCORE_THRESHOLD = BigNumber.from(500);
 
-let stakingToken: TestToken;
-let rewardToken: TestToken;
-let otherErc20: TestToken;
-
-let admin: SignerWithAddress;
-let user1: SignerWithAddress;
-let user2: SignerWithAddress;
-
-let evm: EVM;
-
 describe('PassportCampaign', () => {
+  let adminPassportCampaign: MockPassportCampaign;
+  let stakerPassportCampaign: MockPassportCampaign;
+  let user1PassportCampaign: MockPassportCampaign;
+  let unauthorizedPassportCampaign: MockPassportCampaign;
+
+  let assessor: SapphireAssessor;
+  let creditScoreContract: MockSapphireCreditScore;
+
+  let stakerCreditScore: CreditScore;
+  let user1CreditScore: CreditScore;
+  let unauthorizedCreditScore: CreditScore;
+
+  let stakerScoreProof: CreditScoreProof;
+  let user1ScoreProof: CreditScoreProof;
+  let unauthorizedScoreProof: CreditScoreProof;
+
+  let creditScoreTree: CreditScoreTree;
+
+  let stakingToken: TestToken;
+  let rewardToken: TestToken;
+  let otherErc20: TestToken;
+
+  let admin: SignerWithAddress;
+  let staker: SignerWithAddress;
+  let user1: SignerWithAddress;
+  let unauthorized: SignerWithAddress;
+
+  let evm: EVM;
+
   async function increaseTime(duration: number) {
     await evm.increaseTime(duration);
     await evm.mineBlock();
   }
 
   async function setTimestampTo(timestamp: number) {
-    await passportCampaignAdmin.setCurrentTimestamp(timestamp);
+    await adminPassportCampaign.setCurrentTimestamp(timestamp);
   }
 
-  async function stake(user: SignerWithAddress, amount: BigNumber) {
+  async function stake(
+    user: SignerWithAddress,
+    amount: BigNumber,
+    scoreProof: CreditScoreProof,
+  ) {
     await mintAndApprove(stakingToken, user, amount);
 
     const timestampAtStake = await getCurrentTimestamp();
-    const contract = MockPassportCampaignFactory.connect(
-      passportCampaignAdmin.address,
-      user,
-    );
-    await contract.stake(amount);
+    await adminPassportCampaign.connect(user).stake(amount, scoreProof);
 
     return timestampAtStake;
   }
@@ -77,12 +103,12 @@ describe('PassportCampaign', () => {
       tokenReceiver,
     );
     await tokenContract.mintShare(tokenReceiver.address, amount);
-    await tokenContract.approve(passportCampaignAdmin.address, amount);
+    await tokenContract.approve(adminPassportCampaign.address, amount);
   }
 
   async function withdraw(user: SignerWithAddress, amount?: BigNumber) {
     const contract = MockPassportCampaignFactory.connect(
-      passportCampaignAdmin.address,
+      adminPassportCampaign.address,
       user,
     );
 
@@ -91,7 +117,7 @@ describe('PassportCampaign', () => {
 
   async function exitCampaign(user: SignerWithAddress) {
     const contract = MockPassportCampaignFactory.connect(
-      passportCampaignAdmin.address,
+      adminPassportCampaign.address,
       user,
     );
 
@@ -100,7 +126,7 @@ describe('PassportCampaign', () => {
 
   async function claimReward(user: SignerWithAddress) {
     const contract = MockPassportCampaignFactory.connect(
-      passportCampaignAdmin.address,
+      adminPassportCampaign.address,
       user,
     );
 
@@ -112,67 +138,107 @@ describe('PassportCampaign', () => {
   }
 
   async function earned(user: SignerWithAddress) {
-    return await passportCampaignAdmin.actualEarned(user.address);
+    return await adminPassportCampaign.actualEarned(user.address);
   }
 
   async function getCurrentTimestamp() {
-    return passportCampaignAdmin.currentTimestamp();
+    return adminPassportCampaign.currentTimestamp();
   }
 
   async function setup() {
-    if (!passportCampaignAdmin || !admin) {
+    if (!adminPassportCampaign || !admin) {
       throw 'Liquidity campaign or admin cannot be null';
     }
 
-    await passportCampaignAdmin.setRewardsDistributor(admin.address);
+    await adminPassportCampaign.setRewardsDistributor(admin.address);
 
-    await passportCampaignAdmin.setRewardsDuration(REWARD_DURATION);
+    await adminPassportCampaign.setRewardsDuration(REWARD_DURATION);
 
-    await passportCampaignAdmin.init(
+    await adminPassportCampaign.init(
       admin.address,
       admin.address,
       rewardToken.address,
       stakingToken.address,
+      assessor.address,
       DAO_ALLOCATION,
       CREDIT_SCORE_THRESHOLD,
     );
 
     await setTimestampTo(0);
-    await passportCampaignAdmin.notifyRewardAmount(REWARD_AMOUNT);
+    await adminPassportCampaign.notifyRewardAmount(REWARD_AMOUNT);
+  }
+
+  async function init(ctx: ITestContext) {
+    const signers = await ctx.signers;
+    evm = new EVM(hre.ethers.provider);
+    admin = signers.admin;
+    staker = signers.staker;
+    user1 = signers.scoredMinter;
+    unauthorized = signers.unauthorised;
+
+    stakerCreditScore = {
+      account: staker.address,
+      amount: CREDIT_SCORE_THRESHOLD,
+    };
+
+    user1CreditScore = {
+      account: signers.scoredMinter.address,
+      amount: CREDIT_SCORE_THRESHOLD.add(100),
+    };
+
+    unauthorizedCreditScore = {
+      account: unauthorized.address,
+      amount: CREDIT_SCORE_THRESHOLD.sub(10),
+    };
+
+    creditScoreTree = new CreditScoreTree([
+      stakerCreditScore,
+      unauthorizedCreditScore,
+      user1CreditScore,
+    ]);
+
+    stakerScoreProof = getScoreProof(stakerCreditScore, creditScoreTree);
+    user1ScoreProof = getScoreProof(user1CreditScore, creditScoreTree);
+    unauthorizedScoreProof = getScoreProof(
+      unauthorizedCreditScore,
+      creditScoreTree,
+    );
   }
 
   before(async () => {
-    const signers = await ethers.getSigners();
-    evm = new EVM(hre.ethers.provider);
-    admin = signers[0];
-    user1 = signers[1];
-    user2 = signers[2];
+    // Setup sapphire context
+    const ctx = await generateContext(sapphireFixture, init);
+
+    await setupSapphire(ctx, {
+      merkleRoot: creditScoreTree.getHexRoot(),
+    });
+
+    assessor = ctx.contracts.sapphire.assessor;
+    creditScoreContract = ctx.contracts.sapphire.creditScore;
 
     stakingToken = await deployTestToken(admin, '3Pool', 'CRV');
     rewardToken = await deployTestToken(admin, 'Arc Token', 'ARC');
     otherErc20 = await deployTestToken(admin, 'Another ERC20 token', 'AERC20');
 
-    passportCampaignAdmin = await new MockPassportCampaignFactory(
+    adminPassportCampaign = await new MockPassportCampaignFactory(
       admin,
     ).deploy();
 
     const proxy = await new ArcProxyFactory(admin).deploy(
-      passportCampaignAdmin.address,
+      adminPassportCampaign.address,
       await admin.getAddress(),
       [],
     );
 
-    passportCampaignAdmin = await new MockPassportCampaignFactory(admin).attach(
+    adminPassportCampaign = await new MockPassportCampaignFactory(admin).attach(
       proxy.address,
     );
-    passportCampaignUser1 = await new MockPassportCampaignFactory(user1).attach(
-      proxy.address,
-    );
-    passportCampaignUser2 = await new MockPassportCampaignFactory(user2).attach(
-      proxy.address,
-    );
+    stakerPassportCampaign = adminPassportCampaign.connect(staker);
+    user1PassportCampaign = adminPassportCampaign.connect(user1);
+    unauthorizedPassportCampaign = adminPassportCampaign.connect(unauthorized);
 
-    await rewardToken.mintShare(passportCampaignAdmin.address, REWARD_AMOUNT);
+    await rewardToken.mintShare(adminPassportCampaign.address, REWARD_AMOUNT);
+    await mintAndApprove(stakingToken, staker, STAKE_AMOUNT);
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -186,7 +252,7 @@ describe('PassportCampaign', () => {
       it('should return the block timestamp if called before the reward period finished', async () => {
         const currentTime = await getCurrentTimestamp();
 
-        expect(await passportCampaignAdmin.lastTimeRewardApplicable()).to.eq(
+        expect(await adminPassportCampaign.lastTimeRewardApplicable()).to.eq(
           currentTime,
         );
       });
@@ -194,31 +260,21 @@ describe('PassportCampaign', () => {
       it('should return the period finish if called after reward period has finished', async () => {
         await setTimestampTo(REWARD_DURATION);
 
-        const periodFinish = await passportCampaignAdmin.periodFinish();
-        expect(await passportCampaignAdmin.lastTimeRewardApplicable()).to.eq(
+        const periodFinish = await adminPassportCampaign.periodFinish();
+        expect(await adminPassportCampaign.lastTimeRewardApplicable()).to.eq(
           periodFinish,
         );
       });
     });
 
     describe('#balanceOf', () => {
-      beforeEach(async () => {
-        await setup();
-      });
-
       it('should return the correct balance', async () => {
-        const stakingAmount = utils.parseEther('10');
+        await setup();
 
-        await stakingToken.mintShare(admin.address, stakingAmount);
-        await stakingToken.approve(
-          passportCampaignAdmin.address,
-          stakingAmount,
-        );
+        await stakerPassportCampaign.stake(STAKE_AMOUNT, stakerScoreProof);
 
-        await passportCampaignAdmin.stake(stakingAmount);
-
-        expect(await passportCampaignAdmin.balanceOf(admin.address)).to.eq(
-          stakingAmount,
+        expect(await stakerPassportCampaign.balanceOf(staker.address)).to.eq(
+          STAKE_AMOUNT,
         );
       });
     });
@@ -229,30 +285,27 @@ describe('PassportCampaign', () => {
       });
 
       it('should return the reward per token stored if the supply is 0', async () => {
-        const rewardPerTokenStored = await passportCampaignAdmin.rewardPerTokenStored();
+        const rewardPerTokenStored = await adminPassportCampaign.rewardPerTokenStored();
 
-        expect(await passportCampaignAdmin.rewardPerToken()).to.eq(
+        expect(await adminPassportCampaign.rewardPerToken()).to.eq(
           rewardPerTokenStored,
         );
       });
 
       it('should return a valid reward per token after someone staked', async () => {
-        const stakingAmount = utils.parseEther('10');
-        await mintAndApprove(stakingToken, user1, stakingAmount);
-
-        await passportCampaignUser1.stake(stakingAmount.div(2));
-        await passportCampaignUser1.stake(stakingAmount.div(2));
+        await stakerPassportCampaign.stake(
+          STAKE_AMOUNT.div(2),
+          stakerScoreProof,
+        );
+        await stakerPassportCampaign.stake(
+          STAKE_AMOUNT.div(2),
+          stakerScoreProof,
+        );
 
         await setTimestampTo(1);
 
-        console.log({
-          daoAllocation: (
-            await passportCampaignAdmin.daoAllocation()
-          ).toString(),
-        });
-
-        const rewardPerToken = await passportCampaignUser1.rewardPerToken();
-        const rewardPerTokenStored = await passportCampaignAdmin.rewardPerTokenStored();
+        const rewardPerToken = await stakerPassportCampaign.rewardPerToken();
+        const rewardPerTokenStored = await adminPassportCampaign.rewardPerTokenStored();
 
         expect(rewardPerToken).to.be.gt(BigNumber.from(0));
         expect(rewardPerToken).to.not.eq(rewardPerTokenStored);
@@ -265,7 +318,7 @@ describe('PassportCampaign', () => {
       });
 
       it('should return the correct user allocation', async () => {
-        const userAllocation = await passportCampaignUser1.userAllocation();
+        const userAllocation = await stakerPassportCampaign.userAllocation();
 
         expect(userAllocation).to.eq(BASE.sub(DAO_ALLOCATION));
       });
@@ -277,37 +330,39 @@ describe('PassportCampaign', () => {
       });
 
       it('should return the correct amount earned over time', async () => {
-        await stake(user1, STAKE_AMOUNT);
+        await stakerPassportCampaign.stake(STAKE_AMOUNT, stakerScoreProof);
         // Check amount earned (should be 0)
-        const amountEarned0 = await passportCampaignUser1.earned(user1.address);
+        const amountEarned0 = await stakerPassportCampaign.earned(
+          staker.address,
+        );
         expect(amountEarned0).to.eq(BigNumber.from(0));
 
         // Advance time
         await setTimestampTo(1);
 
-        expect(await earned(user1)).to.eq(utils.parseEther('10'));
+        expect(await earned(staker)).to.eq(utils.parseEther('10'));
 
         await setTimestampTo(2);
 
-        expect(await earned(user1)).to.eq(utils.parseEther('20'));
+        expect(await earned(staker)).to.eq(utils.parseEther('20'));
       });
 
       it('should return the correct amount earned over time while another user stakes in between', async () => {
         await setTimestampTo(1);
 
         // User A stakes
-        await stake(user1, STAKE_AMOUNT);
+        await stakerPassportCampaign.stake(STAKE_AMOUNT, stakerScoreProof);
 
         await setTimestampTo(2);
 
         // User B stakes
-        await stake(user2, STAKE_AMOUNT); // adds 3 epochs
+        await stake(unauthorized, STAKE_AMOUNT, unauthorizedScoreProof);
 
         await setTimestampTo(3);
 
         // Check amount earned
-        expect(await earned(user1)).to.eq(utils.parseEther('15'));
-        expect(await earned(user2)).to.eq(utils.parseEther('5'));
+        expect(await earned(staker)).to.eq(utils.parseEther('15'));
+        expect(await earned(unauthorized)).to.eq(utils.parseEther('5'));
       });
     });
 
@@ -317,7 +372,7 @@ describe('PassportCampaign', () => {
       });
 
       it('returns the correct reward for duration', async () => {
-        const rewardForDuration = await passportCampaignAdmin.getRewardForDuration();
+        const rewardForDuration = await adminPassportCampaign.getRewardForDuration();
 
         expect(
           Math.round(parseFloat(ethers.utils.formatEther(rewardForDuration))),
@@ -333,58 +388,70 @@ describe('PassportCampaign', () => {
       });
 
       it('reverts if called without a valid credit score proof', async () => {
-        const amount = utils.parseEther('10');
-        await mintAndApprove(stakingToken, user1, amount.mul(2));
-
-        await expect(passportCampaignUser1.stake(amount)).to.be.revertedWith(
+        await expect(
+          stakerPassportCampaign.stake(
+            STAKE_AMOUNT,
+            await getEmptyScoreProof(staker),
+          ),
+        ).to.be.revertedWith(
           'SapphireAssessor: proof should be provided for credit score',
         );
       });
 
-      it(
-        'reverts if called by a user with a credit score that is lower than required',
-      );
+      it('reverts if called by a user with a credit score that is lower than required', async () => {
+        await expect(
+          stake(unauthorized, STAKE_AMOUNT, unauthorizedScoreProof),
+        ).to.be.revertedWith(
+          'PassportCampaign: user does not meet the credit score requirement',
+        );
+      });
 
       it('should not be able to stake more than balance', async () => {
-        await mintAndApprove(stakingToken, user1, utils.parseEther('10'));
+        await mintAndApprove(stakingToken, staker, utils.parseEther('10'));
 
-        const balance = await stakingToken.balanceOf(user1.address);
+        const balance = await stakingToken.balanceOf(staker.address);
 
-        await expectRevert(passportCampaignUser1.stake(balance.add(1)));
+        await expect(
+          stakerPassportCampaign.stake(balance.add(1), stakerScoreProof),
+        ).to.be.revertedWith('SafeERC20: TRANSFER_FROM_FAILED');
       });
 
       it('should be able to stake', async () => {
-        const amount = utils.parseEther('10');
-        await mintAndApprove(stakingToken, user1, amount.mul(2));
+        await stakerPassportCampaign.stake(
+          STAKE_AMOUNT.div(2),
+          stakerScoreProof,
+        );
 
-        await passportCampaignUser1.stake(amount);
+        let supply = await stakerPassportCampaign.totalSupply();
 
-        let supply = await passportCampaignUser1.totalSupply();
+        expect(supply).to.eq(STAKE_AMOUNT.div(2));
 
-        expect(supply).to.eq(amount);
+        await stakerPassportCampaign.stake(
+          STAKE_AMOUNT.div(2),
+          stakerScoreProof,
+        );
 
-        await passportCampaignUser1.stake(amount);
+        supply = await stakerPassportCampaign.totalSupply();
+        const farmStakeBalance = await stakingToken.balanceOf(
+          adminPassportCampaign.address,
+        );
 
-        supply = await passportCampaignUser1.totalSupply();
-
-        expect(supply).to.eq(amount.mul(2));
-        expect(
-          await stakingToken.balanceOf(passportCampaignAdmin.address),
-        ).to.eq(amount.mul(2));
+        expect(supply).to.eq(STAKE_AMOUNT);
+        expect(farmStakeBalance).to.eq(STAKE_AMOUNT);
       });
 
       it('should update reward correctly after staking', async () => {
-        await stake(user1, STAKE_AMOUNT);
+        await stakerPassportCampaign.stake(STAKE_AMOUNT, stakerScoreProof);
 
         await setTimestampTo(1);
 
-        let earned = await passportCampaignUser1.earned(user1.address);
+        let earned = await stakerPassportCampaign.earned(staker.address);
 
         expect(earned).to.eq(utils.parseEther('6'));
 
         await setTimestampTo(2);
 
-        earned = await passportCampaignUser1.earned(user1.address);
+        earned = await stakerPassportCampaign.earned(staker.address);
 
         expect(earned).to.eq(utils.parseEther('12'));
       });
@@ -396,61 +463,60 @@ describe('PassportCampaign', () => {
       });
 
       it('should not be able to get the reward if the tokens are not claimable', async () => {
-        await stake(user1, STAKE_AMOUNT);
+        await stakerPassportCampaign.stake(STAKE_AMOUNT, stakerScoreProof);
 
         await increaseTime(REWARD_DURATION / 2);
 
-        await expectRevert(passportCampaignUser1.getReward(user1.address));
+        await expect(
+          stakerPassportCampaign.getReward(staker.address),
+        ).to.be.revertedWith('PassportCampaign: tokens cannot be claimed yet');
       });
 
       it('should be able to claim rewards gradually over time', async () => {
-        await passportCampaignAdmin.setTokensClaimable(true);
-
-        await stake(user1, STAKE_AMOUNT);
+        await adminPassportCampaign.setTokensClaimable(true);
+        await stakerPassportCampaign.stake(STAKE_AMOUNT, stakerScoreProof);
 
         await setTimestampTo(1);
 
-        const currentBalance = await rewardToken.balanceOf(user1.address);
+        await stakerPassportCampaign.getReward(staker.address);
 
-        await passportCampaignUser1.getReward(user1.address);
+        let currentBalance = await rewardToken.balanceOf(staker.address);
 
-        expect(await rewardToken.balanceOf(user1.address)).to.eq(
-          utils.parseEther('6'),
-        );
+        expect(currentBalance).to.eq(utils.parseEther('6'));
 
         await setTimestampTo(2);
 
-        await passportCampaignUser1.getReward(user1.address);
+        await stakerPassportCampaign.getReward(staker.address);
 
-        expect(await rewardToken.balanceOf(user1.address)).to.eq(
-          utils.parseEther('12'),
-        );
+        currentBalance = await rewardToken.balanceOf(staker.address);
+
+        expect(currentBalance).to.eq(utils.parseEther('12'));
       });
 
       it('should be able to claim the right amount of rewards given the number of participants', async () => {
-        await passportCampaignAdmin.setTokensClaimable(true);
+        await adminPassportCampaign.setTokensClaimable(true);
 
-        await stake(user1, STAKE_AMOUNT);
+        await stakerPassportCampaign.stake(STAKE_AMOUNT, stakerScoreProof);
 
         await setTimestampTo(1);
 
-        await passportCampaignUser1.getReward(user1.address);
+        await stakerPassportCampaign.getReward(staker.address);
 
-        expect(await rewardToken.balanceOf(user1.address)).to.eq(
+        expect(await rewardToken.balanceOf(staker.address)).to.eq(
           utils.parseEther('6'),
         );
 
-        await stake(user2, STAKE_AMOUNT);
+        await stake(user1, STAKE_AMOUNT, user1ScoreProof);
 
         await setTimestampTo(2);
 
-        await passportCampaignUser1.getReward(user1.address);
-        await passportCampaignUser2.getReward(user2.address);
+        await stakerPassportCampaign.getReward(staker.address);
+        await user1PassportCampaign.getReward(user1.address);
 
-        expect(await rewardToken.balanceOf(user1.address)).to.eq(
+        expect(await rewardToken.balanceOf(staker.address)).to.eq(
           utils.parseEther('9'),
         );
-        expect(await rewardToken.balanceOf(user2.address)).to.eq(
+        expect(await rewardToken.balanceOf(user1.address)).to.eq(
           utils.parseEther('3'),
         );
       });
@@ -462,17 +528,21 @@ describe('PassportCampaign', () => {
       });
 
       it('should not be able to withdraw more than the balance', async () => {
-        await stake(user1, STAKE_AMOUNT);
+        await stakerPassportCampaign.stake(STAKE_AMOUNT, stakerScoreProof);
 
-        await expectRevert(passportCampaignUser1.withdraw(STAKE_AMOUNT.add(1)));
+        await expect(
+          stakerPassportCampaign.withdraw(STAKE_AMOUNT.add(1)),
+        ).to.be.revertedWith(
+          'PassportCampaign: cannot withdraw more than the balance',
+        );
       });
 
       it('should withdraw the correct amount', async () => {
-        await stake(user1, STAKE_AMOUNT);
+        await stakerPassportCampaign.stake(STAKE_AMOUNT, stakerScoreProof);
 
-        await passportCampaignUser1.withdraw(STAKE_AMOUNT);
+        await stakerPassportCampaign.withdraw(STAKE_AMOUNT);
 
-        const balance = await stakingToken.balanceOf(user1.address);
+        const balance = await stakingToken.balanceOf(staker.address);
 
         expect(balance).to.eq(STAKE_AMOUNT);
       });
@@ -484,16 +554,16 @@ describe('PassportCampaign', () => {
       });
 
       it('should be able to exit and get the right amount of staked tokens and rewards', async () => {
-        await passportCampaignAdmin.setTokensClaimable(true);
+        await adminPassportCampaign.setTokensClaimable(true);
 
-        await stake(user1, STAKE_AMOUNT);
+        await stakerPassportCampaign.stake(STAKE_AMOUNT, stakerScoreProof);
 
         await setTimestampTo(1);
 
-        await passportCampaignUser1.exit();
+        await stakerPassportCampaign.exit();
 
-        const stakingBalance = await stakingToken.balanceOf(user1.address);
-        const rewardBalance = await rewardToken.balanceOf(user1.address);
+        const stakingBalance = await stakingToken.balanceOf(staker.address);
+        const rewardBalance = await rewardToken.balanceOf(staker.address);
 
         expect(stakingBalance).to.eq(STAKE_AMOUNT);
         expect(rewardBalance).to.eq(utils.parseEther('6'));
@@ -504,34 +574,36 @@ describe('PassportCampaign', () => {
   describe('Admin functions', () => {
     describe('#init', () => {
       it('should not be callable by anyone', async () => {
-        await expectRevert(
-          passportCampaignUser1.init(
-            user1.address,
-            user1.address,
+        await expect(
+          stakerPassportCampaign.init(
+            staker.address,
+            staker.address,
             rewardToken.address,
             stakingToken.address,
+            assessor.address,
             DAO_ALLOCATION,
             CREDIT_SCORE_THRESHOLD,
           ),
-        );
+        ).to.be.revertedWith('Adminable: caller is not admin');
       });
 
       it('should only be callable by the contract owner', async () => {
-        await passportCampaignAdmin.init(
+        await adminPassportCampaign.init(
           admin.address,
           admin.address,
           rewardToken.address,
           stakingToken.address,
+          assessor.address,
           DAO_ALLOCATION,
           CREDIT_SCORE_THRESHOLD,
         );
 
-        const arcDao = await passportCampaignAdmin.arcDAO();
-        const rewardsDistributor = await passportCampaignAdmin.rewardsDistributor();
-        const rewardsToken = await passportCampaignAdmin.rewardsToken();
-        const stakingTokenAddress = await passportCampaignAdmin.stakingToken();
-        const daoAllocation = await passportCampaignAdmin.daoAllocation();
-        const scoreThreshold = await passportCampaignAdmin.creditScoreThreshold();
+        const arcDao = await adminPassportCampaign.arcDAO();
+        const rewardsDistributor = await adminPassportCampaign.rewardsDistributor();
+        const rewardsToken = await adminPassportCampaign.rewardsToken();
+        const stakingTokenAddress = await adminPassportCampaign.stakingToken();
+        const daoAllocation = await adminPassportCampaign.daoAllocation();
+        const scoreThreshold = await adminPassportCampaign.creditScoreThreshold();
 
         expect(arcDao).to.eq(admin.address);
         expect(rewardsDistributor).to.eq(admin.address);
@@ -542,77 +614,85 @@ describe('PassportCampaign', () => {
       });
 
       it('should not be called twice by the contract owner', async () => {
-        await passportCampaignAdmin.init(
+        await adminPassportCampaign.init(
           admin.address,
           admin.address,
           rewardToken.address,
           stakingToken.address,
+          assessor.address,
           DAO_ALLOCATION,
           CREDIT_SCORE_THRESHOLD,
         );
 
-        await expectRevert(
-          passportCampaignAdmin.init(
+        await expect(
+          adminPassportCampaign.init(
             admin.address,
             admin.address,
             rewardToken.address,
             stakingToken.address,
+            assessor.address,
             DAO_ALLOCATION,
             CREDIT_SCORE_THRESHOLD,
           ),
+        ).to.be.revertedWith(
+          'PassportCampaign: The init function cannot be called twice',
         );
       });
     });
 
     describe('#notifyRewardAmount', () => {
       it('should not be callable by anyone', async () => {
-        await expectRevert(
-          passportCampaignUser1.notifyRewardAmount(REWARD_AMOUNT),
+        await expect(
+          stakerPassportCampaign.notifyRewardAmount(REWARD_AMOUNT),
+        ).to.be.revertedWith(
+          'PassportCampaign: caller is not a rewards distributor',
         );
       });
 
       it('should only be callable by the rewards distributor', async () => {
-        await passportCampaignAdmin.init(
+        await adminPassportCampaign.init(
           admin.address,
           admin.address,
           rewardToken.address,
           stakingToken.address,
+          assessor.address,
           DAO_ALLOCATION,
           CREDIT_SCORE_THRESHOLD,
         );
 
-        await passportCampaignAdmin.setRewardsDuration(REWARD_DURATION);
+        await adminPassportCampaign.setRewardsDuration(REWARD_DURATION);
 
-        await passportCampaignAdmin.notifyRewardAmount(REWARD_AMOUNT);
+        await adminPassportCampaign.notifyRewardAmount(REWARD_AMOUNT);
 
-        const rewardrate = await passportCampaignAdmin.rewardRate();
+        const rewardrate = await adminPassportCampaign.rewardRate();
 
         expect(rewardrate).to.be.eq(utils.parseEther('10'));
       });
 
       it('should update rewards correctly after a new reward update', async () => {
-        await passportCampaignAdmin.init(
+        await adminPassportCampaign.init(
           admin.address,
           admin.address,
           rewardToken.address,
           stakingToken.address,
+          assessor.address,
           DAO_ALLOCATION,
           CREDIT_SCORE_THRESHOLD,
         );
 
-        await passportCampaignAdmin.setRewardsDuration(REWARD_DURATION);
+        await adminPassportCampaign.setRewardsDuration(REWARD_DURATION);
 
-        await passportCampaignAdmin.notifyRewardAmount(REWARD_AMOUNT.div(2));
+        await adminPassportCampaign.notifyRewardAmount(REWARD_AMOUNT.div(2));
 
-        const rewardRate0 = await passportCampaignAdmin.rewardRate();
+        const rewardRate0 = await adminPassportCampaign.rewardRate();
 
         expect(rewardRate0).to.eq(utils.parseEther('5'));
 
         await setTimestampTo(1);
 
-        await passportCampaignAdmin.notifyRewardAmount(REWARD_AMOUNT.div(2));
+        await adminPassportCampaign.notifyRewardAmount(REWARD_AMOUNT.div(2));
 
-        const rewardrate1 = await passportCampaignAdmin.rewardRate();
+        const rewardrate1 = await adminPassportCampaign.rewardRate();
 
         expect(rewardrate1).to.eq(utils.parseEther('9.5'));
       });
@@ -620,35 +700,35 @@ describe('PassportCampaign', () => {
 
     describe('#setRewardsDistributor', () => {
       it('should not be callable by non-admin', async () => {
-        await expectRevert(
-          passportCampaignUser1.setRewardsDistributor(user1.address),
-        );
+        await expect(
+          stakerPassportCampaign.setRewardsDistributor(staker.address),
+        ).to.be.revertedWith('Adminable: caller is not admin');
       });
 
       it('should set rewardsDistributor if called by admin', async () => {
-        await passportCampaignAdmin.setRewardsDistributor(user2.address);
+        await adminPassportCampaign.setRewardsDistributor(unauthorized.address);
 
-        expect(await passportCampaignAdmin.rewardsDistributor()).to.eq(
-          user2.address,
+        expect(await adminPassportCampaign.rewardsDistributor()).to.eq(
+          unauthorized.address,
         );
       });
     });
 
     describe('#setRewardsDuration', () => {
       it('should not be claimable by anyone', async () => {
-        await expectRevert(
-          passportCampaignUser1.setRewardsDuration(
+        await expect(
+          stakerPassportCampaign.setRewardsDuration(
             BigNumber.from(REWARD_DURATION),
           ),
-        );
+        ).to.be.revertedWith('Adminable: caller is not admin');
       });
 
       it('should only be callable by the contract owner and set the right duration', async () => {
         const duration = BigNumber.from(REWARD_DURATION);
 
-        await passportCampaignAdmin.setRewardsDuration(duration);
+        await adminPassportCampaign.setRewardsDuration(duration);
 
-        expect(await passportCampaignAdmin.rewardsDuration()).to.eq(duration);
+        expect(await adminPassportCampaign.rewardsDuration()).to.eq(duration);
       });
     });
 
@@ -656,32 +736,36 @@ describe('PassportCampaign', () => {
       const erc20Share = utils.parseEther('10');
 
       beforeEach(async () => {
-        await otherErc20.mintShare(passportCampaignAdmin.address, erc20Share);
+        await otherErc20.mintShare(adminPassportCampaign.address, erc20Share);
       });
 
       it('should not be callable by anyone', async () => {
-        await expectRevert(
-          passportCampaignUser1.recoverERC20(otherErc20.address, erc20Share),
-        );
+        await expect(
+          stakerPassportCampaign.recoverERC20(otherErc20.address, erc20Share),
+        ).to.be.revertedWith('Adminable: caller is not admin');
       });
 
       it('should not recover staking or reward token', async () => {
         await setup();
-        await stakingToken.mintShare(passportCampaignAdmin.address, erc20Share);
-        await rewardToken.mintShare(passportCampaignAdmin.address, erc20Share);
+        await stakingToken.mintShare(adminPassportCampaign.address, erc20Share);
+        await rewardToken.mintShare(adminPassportCampaign.address, erc20Share);
 
-        await expectRevert(
-          passportCampaignAdmin.recoverERC20(stakingToken.address, erc20Share),
+        await expect(
+          adminPassportCampaign.recoverERC20(stakingToken.address, erc20Share),
+        ).to.be.revertedWith(
+          'PassportCampaign: cannot withdraw staking or rewards tokens',
         );
-        await expectRevert(
-          passportCampaignAdmin.recoverERC20(rewardToken.address, erc20Share),
+        await expect(
+          adminPassportCampaign.recoverERC20(rewardToken.address, erc20Share),
+        ).to.be.revertedWith(
+          'PassportCampaign: cannot withdraw staking or rewards tokens',
         );
       });
 
       it('should let admin recover the erc20 on this contract', async () => {
         const balance0 = await otherErc20.balanceOf(admin.address);
 
-        await passportCampaignAdmin.recoverERC20(
+        await adminPassportCampaign.recoverERC20(
           otherErc20.address,
           erc20Share,
         );
@@ -694,355 +778,410 @@ describe('PassportCampaign', () => {
 
     describe('#setTokensClaimable', () => {
       it('should not be claimable by anyone', async () => {
-        await expectRevert(passportCampaignUser1.setTokensClaimable(true));
+        await expect(
+          stakerPassportCampaign.setTokensClaimable(true),
+        ).to.be.revertedWith('Adminable: caller is not admin');
       });
 
       it('should only be callable by the contract owner', async () => {
-        await passportCampaignAdmin.setTokensClaimable(true);
+        await adminPassportCampaign.setTokensClaimable(true);
 
-        expect(await passportCampaignAdmin.tokensClaimable()).to.be.eq(true);
+        expect(await adminPassportCampaign.tokensClaimable()).to.be.eq(true);
       });
     });
 
     describe('#setCreditScoreThreshold', () => {
-      it('reverts if called by non-owner');
+      it('reverts if called by non-owner', async () => {
+        await expect(
+          unauthorizedPassportCampaign.setCreditScoreThreshold(
+            BigNumber.from(10),
+          ),
+        ).to.be.revertedWith('Adminable: caller is not admin');
+      });
 
-      it('sets the credit score threshold');
+      it('sets the credit score threshold', async () => {
+        await setup();
+
+        const newThreshold = BigNumber.from(CREDIT_SCORE_THRESHOLD.sub(100));
+
+        expect(await adminPassportCampaign.creditScoreThreshold()).to.eq(
+          CREDIT_SCORE_THRESHOLD,
+        );
+
+        await adminPassportCampaign.setCreditScoreThreshold(newThreshold);
+
+        expect(await adminPassportCampaign.creditScoreThreshold()).to.eq(
+          newThreshold,
+        );
+      });
     });
   });
 
   xdescribe('Scenarios', () => {
-    beforeEach(async () => {
-      await passportCampaignAdmin.setRewardsDistributor(admin.address);
+    let users: Record<string, SignerWithAddress>;
+    let creditScoreProofs: Record<string, CreditScoreProof>;
 
-      await passportCampaignAdmin.init(
+    before(async () => {
+      await adminPassportCampaign.setRewardsDistributor(admin.address);
+
+      await adminPassportCampaign.init(
         admin.address,
         admin.address,
         rewardToken.address,
         stakingToken.address,
+        assessor.address,
         DAO_ALLOCATION,
         CREDIT_SCORE_THRESHOLD,
+      );
+
+      const signers = await ethers.getSigners();
+
+      const users = {
+        userA: signers[1],
+        userB: signers[2],
+        userC: signers[3],
+        userD: signers[4],
+        userE: signers[5],
+      };
+
+      // Set up credit scores for the users of this scenario
+      const creditScores: Record<string, CreditScore> = {};
+      Object.keys(users).forEach((userKey) => {
+        creditScoreTree[userKey] = {
+          account: users[userKey].address,
+          amount: CREDIT_SCORE_THRESHOLD,
+        };
+      });
+
+      const newCreditScoreTree = new CreditScoreTree(
+        Object.values(creditScores),
+      );
+
+      const creditScoreProofs: Record<string, CreditScoreProof> = {};
+      Object.keys(users).forEach((userKey) => {
+        creditScoreProofs[userKey] = getScoreProof(
+          creditScores[userKey],
+          newCreditScoreTree,
+        );
+      });
+
+      await immediatelyUpdateMerkleRoot(
+        creditScoreContract,
+        newCreditScoreTree.getHexRoot(),
       );
     });
 
     it('should not get any rewards if user stakes before the reward is notified', async () => {
-      await passportCampaignAdmin.setRewardsDuration(REWARD_DURATION);
+      await adminPassportCampaign.setRewardsDuration(REWARD_DURATION);
       await setTimestampTo(0);
 
-      await stake(user1, STAKE_AMOUNT);
+      await stakerPassportCampaign.stake(STAKE_AMOUNT, stakerScoreProof);
 
       await setTimestampTo(4);
 
-      expect(await earned(user1)).to.eq(BigNumber.from(0));
+      expect(await earned(staker)).to.eq(BigNumber.from(0));
 
-      await passportCampaignAdmin.notifyRewardAmount(REWARD_AMOUNT);
+      await adminPassportCampaign.notifyRewardAmount(REWARD_AMOUNT);
 
       await setTimestampTo(6);
 
-      expect(await earned(user1)).to.eq(utils.parseEther('20'));
+      expect(await earned(staker)).to.eq(utils.parseEther('20'));
     });
 
     it('should distribute rewards to users correctly', async () => {
-      await passportCampaignAdmin.setRewardsDuration(20);
+      await adminPassportCampaign.setRewardsDuration(20);
       await setTimestampTo(0);
-      const users = await ethers.getSigners();
 
-      const userA = users[1];
-      const userB = users[2];
-      const userC = users[3];
-      const userD = users[4];
-      const userE = users[5];
-
-      await stake(userA, STAKE_AMOUNT);
-      await stake(userB, STAKE_AMOUNT);
+      await stake(users.userA, STAKE_AMOUNT, creditScoreProofs.userA);
+      await stake(users.userB, STAKE_AMOUNT, creditScoreProofs.userB);
 
       await rewardToken.mintShare(
-        passportCampaignAdmin.address,
+        adminPassportCampaign.address,
         utils.parseEther('200'),
       );
 
-      await passportCampaignAdmin.notifyRewardAmount(utils.parseEther('300')); // 0
+      await adminPassportCampaign.notifyRewardAmount(utils.parseEther('300')); // 0
 
-      expect(await earned(userA)).to.eq(utils.parseEther('0'));
-      expect(await earned(userB)).to.eq(utils.parseEther('0'));
-      expect(await earned(userC)).to.eq(utils.parseEther('0'));
-      expect(await earned(userD)).to.eq(utils.parseEther('0'));
-      expect(await earned(userE)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userA)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userB)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userC)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userD)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userE)).to.eq(utils.parseEther('0'));
 
       await setTimestampTo(1);
 
-      expect(await earned(userA)).to.eq(utils.parseEther('7.5'));
-      expect(await earned(userB)).to.eq(utils.parseEther('7.5'));
-      expect(await earned(userC)).to.eq(utils.parseEther('0'));
-      expect(await earned(userD)).to.eq(utils.parseEther('0'));
-      expect(await earned(userE)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userA)).to.eq(utils.parseEther('7.5'));
+      expect(await earned(users.userB)).to.eq(utils.parseEther('7.5'));
+      expect(await earned(users.userC)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userD)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userE)).to.eq(utils.parseEther('0'));
 
       await setTimestampTo(2);
 
-      expect(await earned(userA)).to.eq(utils.parseEther('15'));
-      expect(await earned(userB)).to.eq(utils.parseEther('15'));
-      expect(await earned(userC)).to.eq(utils.parseEther('0'));
-      expect(await earned(userD)).to.eq(utils.parseEther('0'));
-      expect(await earned(userE)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userA)).to.eq(utils.parseEther('15'));
+      expect(await earned(users.userB)).to.eq(utils.parseEther('15'));
+      expect(await earned(users.userC)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userD)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userE)).to.eq(utils.parseEther('0'));
 
       await setTimestampTo(4);
 
-      await stake(userC, STAKE_AMOUNT);
+      await stake(users.userC, STAKE_AMOUNT, creditScoreProofs.userC);
 
-      expect(await earned(userA)).to.eq(utils.parseEther('30'));
-      expect(await earned(userB)).to.eq(utils.parseEther('30'));
-      expect(await earned(userC)).to.eq(utils.parseEther('0'));
-      expect(await earned(userD)).to.eq(utils.parseEther('0'));
-      expect(await earned(userE)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userA)).to.eq(utils.parseEther('30'));
+      expect(await earned(users.userB)).to.eq(utils.parseEther('30'));
+      expect(await earned(users.userC)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userD)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userE)).to.eq(utils.parseEther('0'));
 
       await setTimestampTo(5);
 
-      expect(await earned(userA)).to.eq(utils.parseEther('35'));
-      expect(await earned(userB)).to.eq(utils.parseEther('35'));
-      expect(await earned(userC)).to.eq(utils.parseEther('5'));
-      expect(await earned(userD)).to.eq(utils.parseEther('0'));
-      expect(await earned(userE)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userA)).to.eq(utils.parseEther('35'));
+      expect(await earned(users.userB)).to.eq(utils.parseEther('35'));
+      expect(await earned(users.userC)).to.eq(utils.parseEther('5'));
+      expect(await earned(users.userD)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userE)).to.eq(utils.parseEther('0'));
 
       await setTimestampTo(8);
 
-      await stake(userD, STAKE_AMOUNT);
+      await stake(users.userD, STAKE_AMOUNT, creditScoreProofs.userD);
 
-      expect(await earned(userA)).to.eq(utils.parseEther('50'));
-      expect(await earned(userB)).to.eq(utils.parseEther('50'));
-      expect(await earned(userC)).to.eq(utils.parseEther('20'));
-      expect(await earned(userD)).to.eq(utils.parseEther('0'));
-      expect(await earned(userE)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userA)).to.eq(utils.parseEther('50'));
+      expect(await earned(users.userB)).to.eq(utils.parseEther('50'));
+      expect(await earned(users.userC)).to.eq(utils.parseEther('20'));
+      expect(await earned(users.userD)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userE)).to.eq(utils.parseEther('0'));
 
       await setTimestampTo(9);
 
-      expect(await earned(userA)).to.eq(utils.parseEther('53.75'));
-      expect(await earned(userB)).to.eq(utils.parseEther('53.75'));
-      expect(await earned(userC)).to.eq(utils.parseEther('23.75'));
-      expect(await earned(userD)).to.eq(utils.parseEther('3.75'));
-      expect(await earned(userE)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userA)).to.eq(utils.parseEther('53.75'));
+      expect(await earned(users.userB)).to.eq(utils.parseEther('53.75'));
+      expect(await earned(users.userC)).to.eq(utils.parseEther('23.75'));
+      expect(await earned(users.userD)).to.eq(utils.parseEther('3.75'));
+      expect(await earned(users.userE)).to.eq(utils.parseEther('0'));
 
       await setTimestampTo(10);
 
-      expect(await earned(userA)).to.eq(utils.parseEther('57.5'));
-      expect(await earned(userB)).to.eq(utils.parseEther('57.5'));
-      expect(await earned(userC)).to.eq(utils.parseEther('27.5'));
-      expect(await earned(userD)).to.eq(utils.parseEther('7.5'));
-      expect(await earned(userE)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userA)).to.eq(utils.parseEther('57.5'));
+      expect(await earned(users.userB)).to.eq(utils.parseEther('57.5'));
+      expect(await earned(users.userC)).to.eq(utils.parseEther('27.5'));
+      expect(await earned(users.userD)).to.eq(utils.parseEther('7.5'));
+      expect(await earned(users.userE)).to.eq(utils.parseEther('0'));
 
       await setTimestampTo(13);
 
-      await stake(userE, STAKE_AMOUNT);
+      await stake(users.userE, STAKE_AMOUNT, creditScoreProofs.userE);
 
-      expect(await earned(userA)).to.eq(utils.parseEther('68.75'));
-      expect(await earned(userB)).to.eq(utils.parseEther('68.75'));
-      expect(await earned(userC)).to.eq(utils.parseEther('38.75'));
-      expect(await earned(userD)).to.eq(utils.parseEther('18.75'));
-      expect(await earned(userE)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userA)).to.eq(utils.parseEther('68.75'));
+      expect(await earned(users.userB)).to.eq(utils.parseEther('68.75'));
+      expect(await earned(users.userC)).to.eq(utils.parseEther('38.75'));
+      expect(await earned(users.userD)).to.eq(utils.parseEther('18.75'));
+      expect(await earned(users.userE)).to.eq(utils.parseEther('0'));
 
-      await passportCampaignAdmin.setTokensClaimable(true);
+      await adminPassportCampaign.setTokensClaimable(true);
 
       await setTimestampTo(16);
 
-      expect(await earned(userA)).to.eq(utils.parseEther('77.75'));
-      expect(await earned(userB)).to.eq(utils.parseEther('77.75'));
-      expect(await earned(userC)).to.eq(utils.parseEther('47.75'));
-      expect(await earned(userD)).to.eq(utils.parseEther('27.75'));
-      expect(await earned(userE)).to.eq(utils.parseEther('9'));
+      expect(await earned(users.userA)).to.eq(utils.parseEther('77.75'));
+      expect(await earned(users.userB)).to.eq(utils.parseEther('77.75'));
+      expect(await earned(users.userC)).to.eq(utils.parseEther('47.75'));
+      expect(await earned(users.userD)).to.eq(utils.parseEther('27.75'));
+      expect(await earned(users.userE)).to.eq(utils.parseEther('9'));
 
       await setTimestampTo(17);
 
-      await withdraw(userC);
+      await withdraw(users.userC);
 
       await setTimestampTo(19);
 
-      expect(await earned(userA)).to.eq(utils.parseEther('88.25'));
-      expect(await earned(userB)).to.eq(utils.parseEther('88.25'));
-      expect(await earned(userC)).to.eq(utils.parseEther('50.75'));
-      expect(await earned(userD)).to.eq(utils.parseEther('38.25'));
-      expect(await earned(userE)).to.eq(utils.parseEther('19.5'));
+      expect(await earned(users.userA)).to.eq(utils.parseEther('88.25'));
+      expect(await earned(users.userB)).to.eq(utils.parseEther('88.25'));
+      expect(await earned(users.userC)).to.eq(utils.parseEther('50.75'));
+      expect(await earned(users.userD)).to.eq(utils.parseEther('38.25'));
+      expect(await earned(users.userE)).to.eq(utils.parseEther('19.5'));
 
       await setTimestampTo(20);
 
-      await exitCampaign(userA);
-      await exitCampaign(userB);
-      await claimReward(userC);
-      await exitCampaign(userD);
-      await exitCampaign(userE);
+      await exitCampaign(users.userA);
+      await exitCampaign(users.userB);
+      await claimReward(users.userC);
+      await exitCampaign(users.userD);
+      await exitCampaign(users.userE);
 
-      expect(await rewardBalanceOf(userA)).to.be.eq(utils.parseEther('55.2'));
-      expect(await rewardBalanceOf(userB)).to.be.eq(utils.parseEther('55.2'));
-      expect(await rewardBalanceOf(userC)).to.be.eq(utils.parseEther('30.45'));
-      expect(await rewardBalanceOf(userD)).to.be.eq(utils.parseEther('25.2'));
-      expect(await rewardBalanceOf(userE)).to.be.eq(utils.parseEther('13.95'));
+      expect(await rewardBalanceOf(users.userA)).to.be.eq(
+        utils.parseEther('55.2'),
+      );
+      expect(await rewardBalanceOf(users.userB)).to.be.eq(
+        utils.parseEther('55.2'),
+      );
+      expect(await rewardBalanceOf(users.userC)).to.be.eq(
+        utils.parseEther('30.45'),
+      );
+      expect(await rewardBalanceOf(users.userD)).to.be.eq(
+        utils.parseEther('25.2'),
+      );
+      expect(await rewardBalanceOf(users.userE)).to.be.eq(
+        utils.parseEther('13.95'),
+      );
     });
 
     it('should distribute rewards correctly for 2 users', async () => {
-      await passportCampaignAdmin.setRewardsDuration(20);
-      await passportCampaignAdmin.setCurrentTimestamp(0);
+      await adminPassportCampaign.setRewardsDuration(20);
+      await adminPassportCampaign.setCurrentTimestamp(0);
 
-      const users = await ethers.getSigners();
-
-      const userA = users[1];
-      const userB = users[2];
-
-      await stake(userA, STAKE_AMOUNT);
+      await stake(users.userA, STAKE_AMOUNT, creditScoreProofs.userA);
 
       await rewardToken.mintShare(
-        passportCampaignAdmin.address,
+        adminPassportCampaign.address,
         utils.parseEther('200'),
       );
 
-      await passportCampaignAdmin.notifyRewardAmount(utils.parseEther('300')); // 0
+      await adminPassportCampaign.notifyRewardAmount(utils.parseEther('300')); // 0
 
-      expect(await earned(userA)).to.eq(utils.parseEther('0'));
-      expect(await earned(userB)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userA)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userB)).to.eq(utils.parseEther('0'));
 
       await setTimestampTo(1);
 
-      expect(await earned(userA)).to.eq(utils.parseEther('15'));
-      expect(await earned(userB)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userA)).to.eq(utils.parseEther('15'));
+      expect(await earned(users.userB)).to.eq(utils.parseEther('0'));
 
       await setTimestampTo(10);
 
-      await stake(userB, STAKE_AMOUNT);
+      await stake(users.userB, STAKE_AMOUNT, creditScoreProofs.userB);
 
-      expect(await earned(userA)).to.eq(utils.parseEther('150'));
-      expect(await earned(userB)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userA)).to.eq(utils.parseEther('150'));
+      expect(await earned(users.userB)).to.eq(utils.parseEther('0'));
 
       await setTimestampTo(11);
 
-      expect(await earned(userA)).to.eq(utils.parseEther('157.5'));
-      expect(await earned(userB)).to.eq(utils.parseEther('7.5'));
+      expect(await earned(users.userA)).to.eq(utils.parseEther('157.5'));
+      expect(await earned(users.userB)).to.eq(utils.parseEther('7.5'));
 
       await setTimestampTo(20);
 
-      expect(await earned(userA)).to.eq(utils.parseEther('225'));
-      expect(await earned(userB)).to.eq(utils.parseEther('75'));
+      expect(await earned(users.userA)).to.eq(utils.parseEther('225'));
+      expect(await earned(users.userB)).to.eq(utils.parseEther('75'));
     });
 
     it('should distribute rewards to 3 users correctly', async () => {
-      await passportCampaignAdmin.setRewardsDuration(20);
-      await passportCampaignAdmin.setCurrentTimestamp(0);
+      await adminPassportCampaign.setRewardsDuration(20);
+      await adminPassportCampaign.setCurrentTimestamp(0);
 
-      const users = await ethers.getSigners();
+      await stake(users.userA, STAKE_AMOUNT, creditScoreProofs.userA);
 
-      const userA = users[1];
-      const userB = users[2];
-      const userC = users[3];
+      await adminPassportCampaign.notifyRewardAmount(utils.parseEther('100')); // 0
 
-      await stake(userA, STAKE_AMOUNT);
+      expect(await earned(users.userA)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userB)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userC)).to.eq(utils.parseEther('0'));
 
-      await passportCampaignAdmin.notifyRewardAmount(utils.parseEther('100')); // 0
+      await adminPassportCampaign.setCurrentTimestamp(1);
 
-      expect(await earned(userA)).to.eq(utils.parseEther('0'));
-      expect(await earned(userB)).to.eq(utils.parseEther('0'));
-      expect(await earned(userC)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userA)).to.eq(utils.parseEther('5'));
+      expect(await earned(users.userB)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userC)).to.eq(utils.parseEther('0'));
 
-      await passportCampaignAdmin.setCurrentTimestamp(1);
+      await adminPassportCampaign.setCurrentTimestamp(3);
 
-      expect(await earned(userA)).to.eq(utils.parseEther('5'));
-      expect(await earned(userB)).to.eq(utils.parseEther('0'));
-      expect(await earned(userC)).to.eq(utils.parseEther('0'));
+      await stake(users.userB, STAKE_AMOUNT, creditScoreProofs.userB);
 
-      await passportCampaignAdmin.setCurrentTimestamp(3);
+      expect(await earned(users.userA)).to.eq(utils.parseEther('15'));
+      expect(await earned(users.userB)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userC)).to.eq(utils.parseEther('0'));
 
-      await stake(userB, STAKE_AMOUNT);
+      await adminPassportCampaign.setCurrentTimestamp(8);
 
-      expect(await earned(userA)).to.eq(utils.parseEther('15'));
-      expect(await earned(userB)).to.eq(utils.parseEther('0'));
-      expect(await earned(userC)).to.eq(utils.parseEther('0'));
+      await stake(users.userC, STAKE_AMOUNT.mul(2), creditScoreProofs.userC);
 
-      await passportCampaignAdmin.setCurrentTimestamp(8);
+      expect(await earned(users.userA)).to.eq(utils.parseEther('27.5'));
+      expect(await earned(users.userB)).to.eq(utils.parseEther('12.5'));
+      expect(await earned(users.userC)).to.eq(utils.parseEther('0'));
 
-      await stake(userC, STAKE_AMOUNT.mul(2));
+      await adminPassportCampaign.setCurrentTimestamp(10);
 
-      expect(await earned(userA)).to.eq(utils.parseEther('27.5'));
-      expect(await earned(userB)).to.eq(utils.parseEther('12.5'));
-      expect(await earned(userC)).to.eq(utils.parseEther('0'));
+      expect(await earned(users.userA)).to.eq(utils.parseEther('30'));
+      expect(await earned(users.userB)).to.eq(utils.parseEther('15'));
+      expect(await earned(users.userC)).to.eq(utils.parseEther('5'));
 
-      await passportCampaignAdmin.setCurrentTimestamp(10);
+      await adminPassportCampaign.setCurrentTimestamp(13);
 
-      expect(await earned(userA)).to.eq(utils.parseEther('30'));
-      expect(await earned(userB)).to.eq(utils.parseEther('15'));
-      expect(await earned(userC)).to.eq(utils.parseEther('5'));
+      await adminPassportCampaign.setTokensClaimable(true);
 
-      await passportCampaignAdmin.setCurrentTimestamp(13);
+      await exitCampaign(users.userB);
+      await withdraw(users.userC, STAKE_AMOUNT);
 
-      await passportCampaignAdmin.setTokensClaimable(true);
+      await adminPassportCampaign.setCurrentTimestamp(20);
 
-      await exitCampaign(userB);
-      await withdraw(userC, STAKE_AMOUNT);
+      expect(await earned(users.userA)).to.eq(utils.parseEther('51.25'));
 
-      await passportCampaignAdmin.setCurrentTimestamp(20);
-
-      expect(await earned(userA)).to.eq(utils.parseEther('51.25'));
-
-      expect(await earned(userB)).to.eq(utils.parseEther('18.75'));
+      expect(await earned(users.userB)).to.eq(utils.parseEther('18.75'));
       expect(
-        (await passportCampaignAdmin.stakers(userB.address)).rewardsReleased,
+        (await adminPassportCampaign.stakers(users.userB.address))
+          .rewardsReleased,
       ).to.eq(utils.parseEther('18.75'));
 
-      expect(await earned(userC)).to.eq(utils.parseEther('30'));
+      expect(await earned(users.userC)).to.eq(utils.parseEther('30'));
     });
 
     it('should distribute rewards correctly if new rewards are notified before the end of the period', async () => {
-      await passportCampaignAdmin.setRewardsDuration(10);
+      await adminPassportCampaign.setRewardsDuration(10);
       await setTimestampTo(0);
 
-      await passportCampaignAdmin.notifyRewardAmount(utils.parseEther('100'));
+      await adminPassportCampaign.notifyRewardAmount(utils.parseEther('100'));
 
       await setTimestampTo(1);
 
-      await stake(user1, STAKE_AMOUNT);
+      await stake(staker, STAKE_AMOUNT, stakerScoreProof);
 
       await setTimestampTo(2);
 
-      expect(await earned(user1)).to.eq(utils.parseEther('10'));
+      expect(await earned(staker)).to.eq(utils.parseEther('10'));
 
       await setTimestampTo(3);
 
-      await stake(user2, STAKE_AMOUNT);
+      await stake(unauthorized, STAKE_AMOUNT, stakerScoreProof);
 
       await setTimestampTo(4);
 
-      expect(await earned(user1)).to.eq(utils.parseEther('25'));
-      expect(await earned(user2)).to.eq(utils.parseEther('5'));
+      expect(await earned(staker)).to.eq(utils.parseEther('25'));
+      expect(await earned(unauthorized)).to.eq(utils.parseEther('5'));
 
       await rewardToken.mintShare(
-        passportCampaignAdmin.address,
+        adminPassportCampaign.address,
         utils.parseEther('100'),
       );
-      await passportCampaignAdmin.notifyRewardAmount(utils.parseEther('100'));
+      await adminPassportCampaign.notifyRewardAmount(utils.parseEther('100'));
 
       // New rewards: 60 + 100 = 160 distributed over 10 epochs
 
       await setTimestampTo(5);
 
-      expect(await earned(user1)).to.eq(utils.parseEther('33'));
-      expect(await earned(user2)).to.eq(utils.parseEther('13'));
+      expect(await earned(staker)).to.eq(utils.parseEther('33'));
+      expect(await earned(unauthorized)).to.eq(utils.parseEther('13'));
 
-      await withdraw(user1, STAKE_AMOUNT);
+      await withdraw(staker, STAKE_AMOUNT);
 
       await setTimestampTo(6);
 
-      expect(await earned(user1)).to.eq(utils.parseEther('33'));
-      expect(await earned(user2)).to.eq(utils.parseEther('29'));
+      expect(await earned(staker)).to.eq(utils.parseEther('33'));
+      expect(await earned(unauthorized)).to.eq(utils.parseEther('29'));
 
-      await passportCampaignAdmin.setTokensClaimable(true);
+      await adminPassportCampaign.setTokensClaimable(true);
 
-      await passportCampaignUser1.getReward(user1.address);
+      await stakerPassportCampaign.getReward(staker.address);
 
-      expect(await rewardToken.balanceOf(user1.address)).to.eq(
+      expect(await rewardToken.balanceOf(staker.address)).to.eq(
         utils.parseEther('19.8'),
       );
 
       await setTimestampTo(7);
 
-      expect(await earned(user2)).to.eq(utils.parseEther('45'));
+      expect(await earned(unauthorized)).to.eq(utils.parseEther('45'));
 
-      await passportCampaignUser1.getReward(user2.address);
+      await stakerPassportCampaign.getReward(unauthorized.address);
 
-      expect(await rewardToken.balanceOf(user2.address)).to.eq(
+      expect(await rewardToken.balanceOf(unauthorized.address)).to.eq(
         utils.parseEther('27'),
       );
     });
