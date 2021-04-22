@@ -690,9 +690,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
         // Ensure the vault is collateralized if the borrow action succeeds
         uint256 collateralRatio = calculateCollateralRatio(
-            vault.borrowedAmount
-                .mul(borrowIndex)
-                .div(BASE)
+            _denormalizeBorrowAmount(vault.borrowedAmount)
                 .add(_amount),
             vault.collateralAmount,
             _collateralPrice
