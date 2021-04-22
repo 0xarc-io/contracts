@@ -368,7 +368,6 @@ describe.only('borrowed index (integration)', () => {
 
       let borrowIndex = await arc.core().borrowIndex();
       let totalBorrowed = await arc.core().totalBorrowed();
-      let vault;
       const normalizedBorrowed = BORROW_AMOUNT.mul(BASE).div(borrowIndex);
       expect(totalBorrowed).to.eq(normalizedBorrowed);
       expect(await getVaultBorrowAmount(signers.scoredMinter)).to.eq(
@@ -437,7 +436,6 @@ describe.only('borrowed index (integration)', () => {
       );
 
       totalBorrowed = await arc.core().totalBorrowed();
-      vault = await arc.getVault(signers.scoredMinter.address);
       borrowIndex = await arc.core().borrowIndex();
       const normalizedRepayAmount = await convertPrincipal(repayAmount);
       const expectedNormalizedAmountInVault = normalizedBorrowed // initial normalized borrowed amount
