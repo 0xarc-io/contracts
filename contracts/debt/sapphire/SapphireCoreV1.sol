@@ -249,6 +249,13 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         emit LimitsUpdated(totalBorrowLimit, vaultBorrowMinimum, vaultBorrowMaximum);
     }
 
+    /**
+     * @dev Set the address which can set interest rate
+     *
+     * @notice Can only be called by the admin of the proxy
+     *
+     * @param _setter The address of the new interest rate setter
+     */
     function setInterestSetter(
         address _interestSetter
     )
