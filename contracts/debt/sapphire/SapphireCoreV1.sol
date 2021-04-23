@@ -369,6 +369,38 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     }
 
     /**
+     * @dev Repays the entire debt and withdraws the all the collateral
+     *
+     * @param _scoreProof The credit score proof - optional
+     */
+    function exit(
+        SapphireTypes.ScoreProof memory _scoreProof
+    )
+        public
+    {
+        SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](2);
+        SapphireTypes.Vault memory vault = vaults[msg.sender];
+
+        uint256 repayAmount = _denormalizeBorrowAmount(vault.borrowedAmount);
+
+        // Repay outstanding debt
+        actions[0] = SapphireTypes.Action(
+            repayAmount,
+            SapphireTypes.Operation.Repay,
+            address(0)
+        );
+
+        // Withdraw all collateral
+        actions[1] = SapphireTypes.Action(
+            vault.collateralAmount,
+            SapphireTypes.Operation.Withdraw,
+            address(0)
+        );
+
+        executeActions(actions, _scoreProof);
+    }
+
+    /**
      * @dev Liquidate a user's vault. When this process occurs you're essentially
      *      purchasing the user's debt at a discount in exchange for the collateral
      *      they have deposited inside their vault.
