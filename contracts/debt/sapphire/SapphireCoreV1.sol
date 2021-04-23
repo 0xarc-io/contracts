@@ -189,6 +189,15 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         emit CollateralRatiosUpdated(lowCollateralRatio, highCollateralRatio);
     }
 
+    /**
+     * @dev Set the fees in the system.
+     *
+     * @notice Can only be called by the admin of the proxy.
+     *
+     * @param _liquidationUserFee   Determines the penalty a user must pay by discounting
+     *                              their collateral price to provide a profit incentive for liquidators
+     * @param _liquidationArcFee    The percentage of the profit earned from the liquidation, which feeCollector earns.
+     */
     function setFees(
         uint256 _liquidationUserFee,
         uint256 _liquidationArcFee
