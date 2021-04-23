@@ -482,23 +482,6 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     }
 
     /**
-     * @notice Returns the vault with the normalized borrow amount, which includes
-     *         the accumulated interest.
-     */
-    function getVault(
-        address _user
-    )
-        public
-        view
-        returns (SapphireTypes.Vault memory)
-    {
-        SapphireTypes.Vault memory vault = vaults[_user];
-        vault.borrowedAmount = _denormalizeBorrowAmount(vault.borrowedAmount);
-
-        return vault;
-    }
-
-    /**
      * @dev Check if the vault is collateralised or not
      *
      * @param _owner The owner of the vault
