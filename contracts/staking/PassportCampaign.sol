@@ -9,10 +9,8 @@ import {Adminable} from "../lib/Adminable.sol";
 
 import {IERC20} from "../token/IERC20.sol";
 
-import {SapphireAssessor} from "../debt/sapphire/SapphireAssessor.sol";
+import {SapphireCreditScore} from "../debt/sapphire/SapphireCreditScore.sol";
 import {SapphireTypes} from "../debt/sapphire/SapphireTypes.sol";
-
-import "hardhat/console.sol";
 
 /**
  * @notice A farm that does not require minting debt to earn rewards,
@@ -38,7 +36,7 @@ contract PassportCampaign is Adminable {
 
     /* ========== Variables ========== */
 
-    SapphireAssessor public assessor;
+    SapphireCreditScore public creditScoreContract;
 
     IERC20 public rewardsToken;
     IERC20 public stakingToken;
@@ -53,6 +51,7 @@ contract PassportCampaign is Adminable {
     uint256 public rewardsDuration = 0;
     uint256 public lastUpdateTime;
     uint256 public rewardPerTokenStored;
+    uint256 public maxStakePerUser;
     uint16 public creditScoreThreshold;
 
     uint256 public daoAllocation;
@@ -82,17 +81,13 @@ contract PassportCampaign is Adminable {
     /* ========== Modifiers ========== */
 
     modifier updateReward(address _account) {
-        console.log("a");
         rewardPerTokenStored = _actualRewardPerToken();
-        console.log("a1");
         lastUpdateTime = lastTimeRewardApplicable();
 
-        console.log("a2");
         if (_account != address(0)) {
             stakers[_account].rewardsEarned = _actualEarned(_account);
             stakers[_account].rewardPerTokenPaid = rewardPerTokenStored;
         }
-        console.log("a3");
         _;
     }
 
@@ -101,6 +96,39 @@ contract PassportCampaign is Adminable {
             msg.sender == rewardsDistributor,
             "PassportCampaign: caller is not a rewards distributor"
         );
+        _;
+    }
+
+    /**
+     * @dev Verifies that the proof is passed if the score is required, and 
+     *      validates it.
+     */
+    modifier checkScoreProof(
+        SapphireTypes.ScoreProof memory _scoreProof,
+        bool _isScoreRequired
+    ) {
+        uint256 creditScore;
+        bool isProofPassed = _scoreProof.merkleProof.length > 0;
+
+        if (_isScoreRequired) {
+            require(
+                isProofPassed == true,
+                "PassportCampaign: proof is required but it is not passed"
+            );
+        }
+
+        (creditScore,,) = creditScoreContract.getLastScore(_scoreProof.account);
+
+        if (_isScoreRequired && creditScore > 0) {
+            require(
+                isProofPassed,
+                "PassportCampaign: proof should be provided for credit score"
+            );
+        }
+
+        if (isProofPassed) {
+            creditScoreContract.verifyAndUpdate(_scoreProof);
+        }
         _;
     }
 
@@ -209,13 +237,23 @@ contract PassportCampaign is Adminable {
         creditScoreThreshold = _newThreshold;
     }
 
+    function setMaxStakePerUser(
+        uint256 _maxStakePerUser
+    )
+        external
+        onlyAdmin
+    {
+        maxStakePerUser = _maxStakePerUser;
+    }
+
     function init(
         address _arcDAO,
         address _rewardsDistributor,
         address _rewardsToken,
         address _stakingToken,
-        address _sapphireAssessor,
+        address _creditScoreContract,
         uint256 _daoAllocation,
+        uint256 _maxStakePerUser,
         uint16 _creditScoreThreshold
     )
         public
@@ -233,7 +271,7 @@ contract PassportCampaign is Adminable {
             _rewardsDistributor != address(0) &&
             _rewardsToken != address(0) &&
             _stakingToken != address(0) &&
-            _sapphireAssessor != address(0) &&
+            _creditScoreContract != address(0) &&
             _daoAllocation > 0 &&
             _creditScoreThreshold > 0,
             "One or more parameters of init() cannot be null"
@@ -243,8 +281,9 @@ contract PassportCampaign is Adminable {
         rewardsDistributor      = _rewardsDistributor;
         rewardsToken            = IERC20(_rewardsToken);
         stakingToken            = IERC20(_stakingToken);
-        assessor                = SapphireAssessor(_sapphireAssessor);
+        creditScoreContract     = SapphireCreditScore(_creditScoreContract);
         daoAllocation           = _daoAllocation;
+        maxStakePerUser         = _maxStakePerUser;
         creditScoreThreshold    = _creditScoreThreshold;
     }
 
@@ -366,11 +405,6 @@ contract PassportCampaign is Adminable {
         view
         returns (uint256)
     {
-        console.log(
-            "base: %s, daoAlloc: %s",
-            BASE,
-            daoAllocation
-        );
         return BASE.sub(daoAllocation);
     }
 
@@ -378,15 +412,29 @@ contract PassportCampaign is Adminable {
 
     function stake(
         uint256 _amount,
-        SapphireTypes.ScoreProof calldata _scoreProof
+        SapphireTypes.ScoreProof memory _scoreProof
     )
-        external
+        public
+        checkScoreProof(_scoreProof, true)
         updateReward(msg.sender)
     {
+        // Do not allow user to stake if they do not meet the credit score requirements
+        require(
+            _scoreProof.score >= creditScoreThreshold,
+            "PassportCampaign: user does not meet the credit score requirement"
+        );
+        
         // Setting each variable invididually means we don't overwrite
         Staker storage staker = stakers[msg.sender];
 
         staker.balance = staker.balance.add(_amount);
+
+        if (maxStakePerUser > 0) {
+            require(
+                staker.balance <= maxStakePerUser,
+                "PassportCampaign: cannot stake more than the limit"
+            );
+        }
 
         totalSupply = totalSupply.add(_amount);
 
@@ -396,10 +444,47 @@ contract PassportCampaign is Adminable {
     }
 
     function getReward(
-        address _user
+        address _user,
+        SapphireTypes.ScoreProof memory _scoreProof
     )
         public
+        checkScoreProof(_scoreProof, false)
         updateReward(_user)
+    {
+        _getReward(_user);
+    }
+
+    function withdraw(
+        uint256 _amount,
+        SapphireTypes.ScoreProof memory _scoreProof
+    )
+        public
+        checkScoreProof(_scoreProof, false)
+        updateReward(msg.sender)
+    {
+        _withdraw(_amount);
+    }
+
+    /**
+     * @notice Claim reward and withdraw collateral
+     */
+    function exit(
+        SapphireTypes.ScoreProof memory _scoreProof
+    )
+        public
+        checkScoreProof(_scoreProof, false)
+        updateReward(msg.sender)
+    {
+        _getReward(msg.sender);
+        _withdraw(balanceOf(msg.sender));
+    }
+
+    /* ========== Private Functions ========== */
+
+    function _getReward(
+        address _user
+    )
+        private
     {
         require(
             tokensClaimable == true,
@@ -422,11 +507,10 @@ contract PassportCampaign is Adminable {
         emit RewardPaid(_user, payableAmount);
     }
 
-    function withdraw(
+    function _withdraw(
         uint256 _amount
     )
-        public
-        updateReward(msg.sender)
+        private
     {
         require(
             stakers[msg.sender].balance >= _amount,
@@ -439,16 +523,6 @@ contract PassportCampaign is Adminable {
         stakingToken.safeTransfer(msg.sender, _amount);
 
         emit Withdrawn(msg.sender, _amount);
-    }
-
-    /**
-     * @notice Claim reward and withdraw collateral
-     */
-    function exit()
-        external
-    {
-        getReward(msg.sender);
-        withdraw(balanceOf(msg.sender));
     }
 }
 
