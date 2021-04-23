@@ -454,7 +454,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         returns (uint256)
     {
         if (indexLastUpdate == currentTimestamp()) {
-            return;
+            return borrowIndex;
         }
 
         borrowIndex = currentBorrowIndex();
