@@ -100,7 +100,7 @@ contract PassportCampaign is Adminable {
     }
 
     /**
-     * @dev Verifies that the proof is passed if the score is required, and 
+     * @dev Verifies that the proof is passed if the score is required, and
      *      validates it.
      */
     modifier checkScoreProof(
@@ -354,7 +354,7 @@ contract PassportCampaign is Adminable {
         uint256 lastTimeRewardUserAllocation = fullRewardPerToken
             .mul(userAllocation())
             .div(BASE);
-        
+
         return rewardPerTokenStored.add(lastTimeRewardUserAllocation);
     }
 
@@ -423,7 +423,7 @@ contract PassportCampaign is Adminable {
             _scoreProof.score >= creditScoreThreshold,
             "PassportCampaign: user does not meet the credit score requirement"
         );
-        
+
         // Setting each variable invididually means we don't overwrite
         Staker storage staker = stakers[msg.sender];
 
