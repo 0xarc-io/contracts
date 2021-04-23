@@ -86,7 +86,8 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
      * @param _syntheticAddress     The address of the synthetic token proxy
      * @param _oracleAddress        The address of the IOracle conforming contract
      * @param _interestSetter       The address which can update interest rates
-     * @param _assessor,            The address of assessor contract, which provides credit score functionality
+     * @param _assessorAddress,     The address of assessor contract conforming ISapphireAssessor,
+     *                              which provides credit score functionality
      * @param _feeCollector         The address of the ARC fee collector when a liquidation occurs
      * @param _highCollateralRatio  High limit of how much collateral is needed to borrow
      * @param _lowCollateralRatio   Low limit of how much collateral is needed to borrow
@@ -98,7 +99,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         address _syntheticAddress,
         address _oracleAddress,
         address _interestSetter,
-        address _assessor,
+        address _assessorAddress,
         address _feeCollector,
         uint256 _highCollateralRatio,
         uint256 _lowCollateralRatio,
@@ -134,7 +135,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         BaseERC20 collateral = BaseERC20(collateralAsset);
         precisionScalar = 10 ** (18 - uint256(collateral.decimals()));
 
-        setAssessor(_assessor);
+        setAssessor(_assessorAddress);
         setOracle(_oracleAddress);
         setCollateralRatios(_lowCollateralRatio, _highCollateralRatio);
         setFees(_liquidationUserFee, _liquidationArcFee);
