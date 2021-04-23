@@ -215,6 +215,15 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         emit LiquidationFeesUpdated(liquidationUserFee, liquidationArcFee);
     }
 
+    /**
+     * @dev Set the limits of the system to ensure value can be capped.
+     *
+     * @notice Can only be called by the admin of the proxy
+     *
+     * @param _totalBorrowLimit   Maximum amount of borrowed amount that can be held in the system.
+     * @param _vaultBorrowMinimum The minimum allowed borrow amount for vault
+     * @param _vaultBorrowMaximum The maximum allowed borrow amount for vault
+     */
     function setLimits(
         uint256 _totalBorrowLimit,
         uint256 _vaultBorrowMinimum,
