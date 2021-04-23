@@ -141,14 +141,21 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         setFees(_liquidationUserFee, _liquidationArcFee);
     }
 
+    /**
+     * @dev Set the instance of the oracle to report prices from. Must conform to IOracle.sol
+     *
+     * @notice Can only be called by the admin of the proxy.
+     *
+     * @param _oracleAddress The address of the IOracle instance
+     */
     function setOracle(
-        address _oracle
+        address _oracleAddress
     )
         public
         onlyAdmin
     {
-        oracle = IOracle(_oracle);
-        emit OracleUpdated(_oracle);
+        oracle = IOracle(_oracleAddress);
+        emit OracleUpdated(_oracleAddress);
     }
 
     function setCollateralRatios(
