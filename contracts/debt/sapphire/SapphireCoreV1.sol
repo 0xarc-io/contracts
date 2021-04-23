@@ -158,6 +158,14 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         emit OracleUpdated(_oracleAddress);
     }
 
+    /**
+     * @dev Set low and high collateral ratios of collateral value to debt.
+     *
+     * @notice Can only be called by the admin of the proxy.
+     *
+     * @param _lowCollateralRatio The minimal allowed ratio expressed up to 18 decimal places
+     * @param _highCollateralRatio The maximum allowed ratio expressed up to 18 decimal places
+     */
     function setCollateralRatios(
         uint256 _lowCollateralRatio,
         uint256 _highCollateralRatio
