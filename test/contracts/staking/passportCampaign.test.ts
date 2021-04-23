@@ -2,7 +2,6 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import {
   ArcProxyFactory,
   MockSapphireCreditScore,
-  SapphireAssessor,
   SapphireCreditScore,
   // PassportCampaignFactory,
   TestToken,
@@ -29,12 +28,14 @@ import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 import _ from 'lodash';
+import { fail } from 'assert';
 
 chai.use(solidity);
 const expect = chai.expect;
 
 const REWARD_AMOUNT = utils.parseEther('100');
 const STAKE_AMOUNT = utils.parseEther('10');
+const MAX_STAKE_PER_USER = STAKE_AMOUNT.mul(2);
 const REWARD_DURATION = 10;
 
 const DAO_ALLOCATION = utils.parseEther('0.4');
@@ -47,7 +48,6 @@ describe('PassportCampaign', () => {
   let user1PassportCampaign: MockPassportCampaign;
   let unauthorizedPassportCampaign: MockPassportCampaign;
 
-  let assessor: SapphireAssessor;
   let creditScoreContract: MockSapphireCreditScore;
 
   let stakerCreditScore: CreditScore;
@@ -106,31 +106,47 @@ describe('PassportCampaign', () => {
     await tokenContract.approve(adminPassportCampaign.address, amount);
   }
 
-  async function withdraw(user: SignerWithAddress, amount?: BigNumber) {
+  async function withdraw(
+    user: SignerWithAddress,
+    amount: BigNumber = STAKE_AMOUNT,
+    scoreProof?: CreditScoreProof,
+  ) {
     const contract = MockPassportCampaignFactory.connect(
       adminPassportCampaign.address,
       user,
     );
 
-    await contract.withdraw(amount ?? STAKE_AMOUNT);
+    await contract.withdraw(
+      amount,
+      scoreProof ?? (await getEmptyScoreProof(user)),
+    );
   }
 
-  async function exitCampaign(user: SignerWithAddress) {
+  async function exitCampaign(
+    user: SignerWithAddress,
+    scoreProof?: CreditScoreProof,
+  ) {
     const contract = MockPassportCampaignFactory.connect(
       adminPassportCampaign.address,
       user,
     );
 
-    await contract.exit();
+    await contract.exit(scoreProof ?? (await getEmptyScoreProof(user)));
   }
 
-  async function claimReward(user: SignerWithAddress) {
+  async function claimReward(
+    user: SignerWithAddress,
+    scoreProof?: CreditScoreProof,
+  ) {
     const contract = MockPassportCampaignFactory.connect(
       adminPassportCampaign.address,
       user,
     );
 
-    await contract.getReward(user.address);
+    await contract.getReward(
+      user.address,
+      scoreProof ?? (await getEmptyScoreProof(user)),
+    );
   }
 
   async function rewardBalanceOf(user: SignerWithAddress) {
@@ -159,8 +175,9 @@ describe('PassportCampaign', () => {
       admin.address,
       rewardToken.address,
       stakingToken.address,
-      assessor.address,
+      creditScoreContract.address,
       DAO_ALLOCATION,
+      MAX_STAKE_PER_USER,
       CREDIT_SCORE_THRESHOLD,
     );
 
@@ -213,7 +230,6 @@ describe('PassportCampaign', () => {
       merkleRoot: creditScoreTree.getHexRoot(),
     });
 
-    assessor = ctx.contracts.sapphire.assessor;
     creditScoreContract = ctx.contracts.sapphire.creditScore;
 
     stakingToken = await deployTestToken(admin, '3Pool', 'CRV');
@@ -356,13 +372,13 @@ describe('PassportCampaign', () => {
         await setTimestampTo(2);
 
         // User B stakes
-        await stake(unauthorized, STAKE_AMOUNT, unauthorizedScoreProof);
+        await stake(user1, STAKE_AMOUNT, user1ScoreProof);
 
         await setTimestampTo(3);
 
         // Check amount earned
         expect(await earned(staker)).to.eq(utils.parseEther('15'));
-        expect(await earned(unauthorized)).to.eq(utils.parseEther('5'));
+        expect(await earned(user1)).to.eq(utils.parseEther('5'));
       });
     });
 
@@ -394,7 +410,7 @@ describe('PassportCampaign', () => {
             await getEmptyScoreProof(staker),
           ),
         ).to.be.revertedWith(
-          'SapphireAssessor: proof should be provided for credit score',
+          'PassportCampaign: proof is required but it is not passed',
         );
       });
 
@@ -406,9 +422,15 @@ describe('PassportCampaign', () => {
         );
       });
 
-      it('should not be able to stake more than balance', async () => {
-        await mintAndApprove(stakingToken, staker, utils.parseEther('10'));
+      it('reverts if user stakes more than the limit', async () => {
+        await expect(
+          stake(staker, STAKE_AMOUNT.mul(3), stakerScoreProof),
+        ).to.be.revertedWith(
+          'PassportCampaign: cannot stake more than the limit',
+        );
+      });
 
+      it('should not be able to stake more than balance', async () => {
         const balance = await stakingToken.balanceOf(staker.address);
 
         await expect(
@@ -440,6 +462,35 @@ describe('PassportCampaign', () => {
         expect(farmStakeBalance).to.eq(STAKE_AMOUNT);
       });
 
+      it('should be able to stake more than the intial limit if the limit has been set to 0', async () => {
+        // Set limit to STAKE_AMOUNT
+        await adminPassportCampaign.setMaxStakePerUser(STAKE_AMOUNT);
+
+        // User stakes
+        await stakerPassportCampaign.stake(STAKE_AMOUNT, stakerScoreProof);
+
+        // User tries to stake more but fails
+        await expect(
+          stake(staker, STAKE_AMOUNT, stakerScoreProof),
+        ).to.be.revertedWith(
+          'PassportCampaign: cannot stake more than the limit',
+        );
+
+        // Admin sets the limit to 0
+        await adminPassportCampaign.setMaxStakePerUser(0);
+
+        // User tries to stake more and succeeds
+        expect(await stakerPassportCampaign.balanceOf(staker.address)).to.eq(
+          STAKE_AMOUNT,
+        );
+
+        await stake(staker, STAKE_AMOUNT, stakerScoreProof);
+
+        expect(await stakerPassportCampaign.balanceOf(staker.address)).to.eq(
+          STAKE_AMOUNT.mul(2),
+        );
+      });
+
       it('should update reward correctly after staking', async () => {
         await stakerPassportCampaign.stake(STAKE_AMOUNT, stakerScoreProof);
 
@@ -468,7 +519,7 @@ describe('PassportCampaign', () => {
         await increaseTime(REWARD_DURATION / 2);
 
         await expect(
-          stakerPassportCampaign.getReward(staker.address),
+          stakerPassportCampaign.getReward(staker.address, stakerScoreProof),
         ).to.be.revertedWith('PassportCampaign: tokens cannot be claimed yet');
       });
 
@@ -478,7 +529,10 @@ describe('PassportCampaign', () => {
 
         await setTimestampTo(1);
 
-        await stakerPassportCampaign.getReward(staker.address);
+        await stakerPassportCampaign.getReward(
+          staker.address,
+          stakerScoreProof,
+        );
 
         let currentBalance = await rewardToken.balanceOf(staker.address);
 
@@ -486,7 +540,10 @@ describe('PassportCampaign', () => {
 
         await setTimestampTo(2);
 
-        await stakerPassportCampaign.getReward(staker.address);
+        await stakerPassportCampaign.getReward(
+          staker.address,
+          stakerScoreProof,
+        );
 
         currentBalance = await rewardToken.balanceOf(staker.address);
 
@@ -500,7 +557,10 @@ describe('PassportCampaign', () => {
 
         await setTimestampTo(1);
 
-        await stakerPassportCampaign.getReward(staker.address);
+        await stakerPassportCampaign.getReward(
+          staker.address,
+          stakerScoreProof,
+        );
 
         expect(await rewardToken.balanceOf(staker.address)).to.eq(
           utils.parseEther('6'),
@@ -510,8 +570,11 @@ describe('PassportCampaign', () => {
 
         await setTimestampTo(2);
 
-        await stakerPassportCampaign.getReward(staker.address);
-        await user1PassportCampaign.getReward(user1.address);
+        await stakerPassportCampaign.getReward(
+          staker.address,
+          stakerScoreProof,
+        );
+        await user1PassportCampaign.getReward(user1.address, user1ScoreProof);
 
         expect(await rewardToken.balanceOf(staker.address)).to.eq(
           utils.parseEther('9'),
@@ -519,6 +582,22 @@ describe('PassportCampaign', () => {
         expect(await rewardToken.balanceOf(user1.address)).to.eq(
           utils.parseEther('3'),
         );
+      });
+
+      it('should be able to claim rewards even if no proof was passed', async () => {
+        await adminPassportCampaign.setTokensClaimable(true);
+        await stakerPassportCampaign.stake(STAKE_AMOUNT, stakerScoreProof);
+
+        await setTimestampTo(1);
+
+        await stakerPassportCampaign.getReward(
+          staker.address,
+          await getEmptyScoreProof(staker),
+        );
+
+        const currentBalance = await rewardToken.balanceOf(staker.address);
+
+        expect(currentBalance).to.eq(utils.parseEther('6'));
       });
     });
 
@@ -531,7 +610,10 @@ describe('PassportCampaign', () => {
         await stakerPassportCampaign.stake(STAKE_AMOUNT, stakerScoreProof);
 
         await expect(
-          stakerPassportCampaign.withdraw(STAKE_AMOUNT.add(1)),
+          stakerPassportCampaign.withdraw(
+            STAKE_AMOUNT.add(1),
+            stakerScoreProof,
+          ),
         ).to.be.revertedWith(
           'PassportCampaign: cannot withdraw more than the balance',
         );
@@ -540,7 +622,20 @@ describe('PassportCampaign', () => {
       it('should withdraw the correct amount', async () => {
         await stakerPassportCampaign.stake(STAKE_AMOUNT, stakerScoreProof);
 
-        await stakerPassportCampaign.withdraw(STAKE_AMOUNT);
+        await stakerPassportCampaign.withdraw(STAKE_AMOUNT, stakerScoreProof);
+
+        const balance = await stakingToken.balanceOf(staker.address);
+
+        expect(balance).to.eq(STAKE_AMOUNT);
+      });
+
+      it('should withdraw the correct amount even if an empty proof was given', async () => {
+        await stakerPassportCampaign.stake(STAKE_AMOUNT, stakerScoreProof);
+
+        await stakerPassportCampaign.withdraw(
+          STAKE_AMOUNT,
+          await getEmptyScoreProof(staker),
+        );
 
         const balance = await stakingToken.balanceOf(staker.address);
 
@@ -560,7 +655,25 @@ describe('PassportCampaign', () => {
 
         await setTimestampTo(1);
 
-        await stakerPassportCampaign.exit();
+        expect(await stakingToken.balanceOf(staker.address), 'a').to.eq(0);
+        expect(await rewardToken.balanceOf(staker.address), 'b').to.eq(0);
+
+        await stakerPassportCampaign.exit(stakerScoreProof);
+
+        const stakingBalance = await stakingToken.balanceOf(staker.address);
+        const rewardBalance = await rewardToken.balanceOf(staker.address);
+
+        expect(stakingBalance, 'c').to.eq(STAKE_AMOUNT);
+        expect(rewardBalance, 'd').to.eq(utils.parseEther('6'));
+      });
+
+      it('should withdraw the correct amount even if an empty proof was given', async () => {
+        await adminPassportCampaign.setTokensClaimable(true);
+        await stakerPassportCampaign.stake(STAKE_AMOUNT, stakerScoreProof);
+
+        await setTimestampTo(1);
+
+        await stakerPassportCampaign.exit(await getEmptyScoreProof(staker));
 
         const stakingBalance = await stakingToken.balanceOf(staker.address);
         const rewardBalance = await rewardToken.balanceOf(staker.address);
@@ -580,8 +693,9 @@ describe('PassportCampaign', () => {
             staker.address,
             rewardToken.address,
             stakingToken.address,
-            assessor.address,
+            creditScoreContract.address,
             DAO_ALLOCATION,
+            MAX_STAKE_PER_USER,
             CREDIT_SCORE_THRESHOLD,
           ),
         ).to.be.revertedWith('Adminable: caller is not admin');
@@ -593,8 +707,9 @@ describe('PassportCampaign', () => {
           admin.address,
           rewardToken.address,
           stakingToken.address,
-          assessor.address,
+          creditScoreContract.address,
           DAO_ALLOCATION,
+          MAX_STAKE_PER_USER,
           CREDIT_SCORE_THRESHOLD,
         );
 
@@ -619,8 +734,9 @@ describe('PassportCampaign', () => {
           admin.address,
           rewardToken.address,
           stakingToken.address,
-          assessor.address,
+          creditScoreContract.address,
           DAO_ALLOCATION,
+          MAX_STAKE_PER_USER,
           CREDIT_SCORE_THRESHOLD,
         );
 
@@ -630,8 +746,9 @@ describe('PassportCampaign', () => {
             admin.address,
             rewardToken.address,
             stakingToken.address,
-            assessor.address,
+            creditScoreContract.address,
             DAO_ALLOCATION,
+            MAX_STAKE_PER_USER,
             CREDIT_SCORE_THRESHOLD,
           ),
         ).to.be.revertedWith(
@@ -655,8 +772,9 @@ describe('PassportCampaign', () => {
           admin.address,
           rewardToken.address,
           stakingToken.address,
-          assessor.address,
+          creditScoreContract.address,
           DAO_ALLOCATION,
+          MAX_STAKE_PER_USER,
           CREDIT_SCORE_THRESHOLD,
         );
 
@@ -675,8 +793,9 @@ describe('PassportCampaign', () => {
           admin.address,
           rewardToken.address,
           stakingToken.address,
-          assessor.address,
+          creditScoreContract.address,
           DAO_ALLOCATION,
+          MAX_STAKE_PER_USER,
           CREDIT_SCORE_THRESHOLD,
         );
 
@@ -815,6 +934,30 @@ describe('PassportCampaign', () => {
         );
       });
     });
+
+    describe('#setMaxStakePerUser', () => {
+      it('reverts if called by non-admin', async () => {
+        await expect(
+          unauthorizedPassportCampaign.setMaxStakePerUser(STAKE_AMOUNT),
+        ).to.be.revertedWith('Adminable: caller is not admin');
+      });
+
+      it('sets the max staked per user', async () => {
+        await setup();
+
+        const newMaxStake = MAX_STAKE_PER_USER.sub(MAX_STAKE_PER_USER.div(2));
+
+        expect(await adminPassportCampaign.maxStakePerUser()).to.eq(
+          MAX_STAKE_PER_USER,
+        );
+
+        await adminPassportCampaign.setMaxStakePerUser(newMaxStake);
+
+        expect(await adminPassportCampaign.maxStakePerUser()).to.eq(
+          newMaxStake,
+        );
+      });
+    });
   });
 
   xdescribe('Scenarios', () => {
@@ -829,8 +972,9 @@ describe('PassportCampaign', () => {
         admin.address,
         rewardToken.address,
         stakingToken.address,
-        assessor.address,
+        creditScoreContract.address,
         DAO_ALLOCATION,
+        MAX_STAKE_PER_USER,
         CREDIT_SCORE_THRESHOLD,
       );
 
@@ -1108,7 +1252,7 @@ describe('PassportCampaign', () => {
 
       await adminPassportCampaign.setTokensClaimable(true);
 
-      await exitCampaign(users.userB);
+      await exitCampaign(users.userB, creditScoreProofs.userB);
       await withdraw(users.userC, STAKE_AMOUNT);
 
       await adminPassportCampaign.setCurrentTimestamp(20);
@@ -1169,7 +1313,7 @@ describe('PassportCampaign', () => {
 
       await adminPassportCampaign.setTokensClaimable(true);
 
-      await stakerPassportCampaign.getReward(staker.address);
+      await stakerPassportCampaign.getReward(staker.address, stakerScoreProof);
 
       expect(await rewardToken.balanceOf(staker.address)).to.eq(
         utils.parseEther('19.8'),
@@ -1179,7 +1323,10 @@ describe('PassportCampaign', () => {
 
       expect(await earned(unauthorized)).to.eq(utils.parseEther('45'));
 
-      await stakerPassportCampaign.getReward(unauthorized.address);
+      await stakerPassportCampaign.getReward(
+        unauthorized.address,
+        unauthorizedScoreProof,
+      );
 
       expect(await rewardToken.balanceOf(unauthorized.address)).to.eq(
         utils.parseEther('27'),
