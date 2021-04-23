@@ -210,8 +210,7 @@ export class SapphireArc {
     synthName = this.getSynthNames()[0],
   ): Promise<Vault> {
     const synth = this.getSynth(synthName);
-
-    return synth.core.getVault(userAddress);
+    return synth.core.vaults(userAddress);
   }
 
   private _getCore(synthName: string, caller: Signer): SapphireCoreV1 {
