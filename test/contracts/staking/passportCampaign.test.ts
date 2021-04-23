@@ -28,7 +28,6 @@ import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 import _ from 'lodash';
-import { fail } from 'assert';
 
 chai.use(solidity);
 const expect = chai.expect;
@@ -43,6 +42,8 @@ const DAO_ALLOCATION = utils.parseEther('0.4');
 const CREDIT_SCORE_THRESHOLD = BigNumber.from(500);
 
 describe('PassportCampaign', () => {
+  let ctx: ITestContext;
+
   let adminPassportCampaign: MockPassportCampaign;
   let stakerPassportCampaign: MockPassportCampaign;
   let user1PassportCampaign: MockPassportCampaign;
@@ -224,7 +225,7 @@ describe('PassportCampaign', () => {
 
   before(async () => {
     // Setup sapphire context
-    const ctx = await generateContext(sapphireFixture, init);
+    ctx = await generateContext(sapphireFixture, init);
 
     await setupSapphire(ctx, {
       merkleRoot: creditScoreTree.getHexRoot(),
@@ -960,7 +961,7 @@ describe('PassportCampaign', () => {
     });
   });
 
-  xdescribe('Scenarios', () => {
+  describe('Scenarios', () => {
     let users: Record<string, SignerWithAddress>;
     let creditScoreProofs: Record<string, CreditScoreProof>;
 
@@ -980,7 +981,7 @@ describe('PassportCampaign', () => {
 
       const signers = await ethers.getSigners();
 
-      const users = {
+      users = {
         userA: signers[1],
         userB: signers[2],
         userC: signers[3],
@@ -991,7 +992,7 @@ describe('PassportCampaign', () => {
       // Set up credit scores for the users of this scenario
       const creditScores: Record<string, CreditScore> = {};
       Object.keys(users).forEach((userKey) => {
-        creditScoreTree[userKey] = {
+        creditScores[userKey] = {
           account: users[userKey].address,
           amount: CREDIT_SCORE_THRESHOLD,
         };
@@ -1001,7 +1002,7 @@ describe('PassportCampaign', () => {
         Object.values(creditScores),
       );
 
-      const creditScoreProofs: Record<string, CreditScoreProof> = {};
+      creditScoreProofs = {};
       Object.keys(users).forEach((userKey) => {
         creditScoreProofs[userKey] = getScoreProof(
           creditScores[userKey],
@@ -1010,7 +1011,7 @@ describe('PassportCampaign', () => {
       });
 
       await immediatelyUpdateMerkleRoot(
-        creditScoreContract,
+        creditScoreContract.connect(ctx.signers.interestSetter),
         newCreditScoreTree.getHexRoot(),
       );
     });
@@ -1019,17 +1020,17 @@ describe('PassportCampaign', () => {
       await adminPassportCampaign.setRewardsDuration(REWARD_DURATION);
       await setTimestampTo(0);
 
-      await stakerPassportCampaign.stake(STAKE_AMOUNT, stakerScoreProof);
+      await stake(users.userA, STAKE_AMOUNT, creditScoreProofs.userA);
 
       await setTimestampTo(4);
 
-      expect(await earned(staker)).to.eq(BigNumber.from(0));
+      expect(await earned(users.userA)).to.eq(BigNumber.from(0));
 
       await adminPassportCampaign.notifyRewardAmount(REWARD_AMOUNT);
 
       await setTimestampTo(6);
 
-      expect(await earned(staker)).to.eq(utils.parseEther('20'));
+      expect(await earned(users.userA)).to.eq(utils.parseEther('20'));
     });
 
     it('should distribute rewards to users correctly', async () => {
@@ -1276,20 +1277,20 @@ describe('PassportCampaign', () => {
 
       await setTimestampTo(1);
 
-      await stake(staker, STAKE_AMOUNT, stakerScoreProof);
+      await stake(users.userA, STAKE_AMOUNT, creditScoreProofs.userA);
 
       await setTimestampTo(2);
 
-      expect(await earned(staker)).to.eq(utils.parseEther('10'));
+      expect(await earned(users.userA)).to.eq(utils.parseEther('10'));
 
       await setTimestampTo(3);
 
-      await stake(unauthorized, STAKE_AMOUNT, stakerScoreProof);
+      await stake(users.userB, STAKE_AMOUNT, creditScoreProofs.userB);
 
       await setTimestampTo(4);
 
-      expect(await earned(staker)).to.eq(utils.parseEther('25'));
-      expect(await earned(unauthorized)).to.eq(utils.parseEther('5'));
+      expect(await earned(users.userA)).to.eq(utils.parseEther('25'));
+      expect(await earned(users.userB)).to.eq(utils.parseEther('5'));
 
       await rewardToken.mintShare(
         adminPassportCampaign.address,
@@ -1301,40 +1302,68 @@ describe('PassportCampaign', () => {
 
       await setTimestampTo(5);
 
-      expect(await earned(staker)).to.eq(utils.parseEther('33'));
-      expect(await earned(unauthorized)).to.eq(utils.parseEther('13'));
+      expect(await earned(users.userA)).to.eq(utils.parseEther('33'));
+      expect(await earned(users.userB)).to.eq(utils.parseEther('13'));
 
-      await withdraw(staker, STAKE_AMOUNT);
+      await withdraw(users.userA, STAKE_AMOUNT);
 
       await setTimestampTo(6);
 
-      expect(await earned(staker)).to.eq(utils.parseEther('33'));
-      expect(await earned(unauthorized)).to.eq(utils.parseEther('29'));
+      expect(await earned(users.userA)).to.eq(utils.parseEther('33'));
+      expect(await earned(users.userB)).to.eq(utils.parseEther('29'));
 
       await adminPassportCampaign.setTokensClaimable(true);
 
-      await stakerPassportCampaign.getReward(staker.address, stakerScoreProof);
+      await claimReward(users.userA, creditScoreProofs.userA);
 
-      expect(await rewardToken.balanceOf(staker.address)).to.eq(
+      expect(await rewardToken.balanceOf(users.userA.address)).to.eq(
         utils.parseEther('19.8'),
       );
 
       await setTimestampTo(7);
 
-      expect(await earned(unauthorized)).to.eq(utils.parseEther('45'));
+      expect(await earned(users.userB)).to.eq(utils.parseEther('45'));
 
-      await stakerPassportCampaign.getReward(
-        unauthorized.address,
-        unauthorizedScoreProof,
-      );
+      await claimReward(users.userB, creditScoreProofs.userB);
 
-      expect(await rewardToken.balanceOf(unauthorized.address)).to.eq(
+      expect(await rewardToken.balanceOf(users.userB.address)).to.eq(
         utils.parseEther('27'),
       );
     });
 
-    it(
-      'should allow user to stake, then credit score threshold is lowered and user should not be able to stake more',
-    );
+    it('should allow user to stake, then credit score threshold is raised and user should not be able to stake more', async () => {
+      const { userA } = users;
+      const scoreProof = creditScoreProofs.userA;
+
+      // User stakes
+      let userBalance = await adminPassportCampaign.balanceOf(userA.address);
+
+      expect(userBalance).to.eq(0);
+      await stake(userA, STAKE_AMOUNT, scoreProof);
+
+      userBalance = await adminPassportCampaign.balanceOf(userA.address);
+      expect(userBalance).to.eq(STAKE_AMOUNT);
+
+      // Credit score threshold is raised
+      await adminPassportCampaign.setCreditScoreThreshold(
+        CREDIT_SCORE_THRESHOLD.add(CREDIT_SCORE_THRESHOLD.div(2)),
+      );
+
+      // User tries to stake more but tx reverts
+      await expect(stake(userA, STAKE_AMOUNT, scoreProof)).to.be.revertedWith(
+        'PassportCampaign: user does not meet the credit score requirement',
+      );
+
+      // Credit score threshold is lowerd back
+      await adminPassportCampaign.setCreditScoreThreshold(
+        CREDIT_SCORE_THRESHOLD,
+      );
+
+      // User can stake more
+      await stake(userA, STAKE_AMOUNT, scoreProof);
+
+      userBalance = await adminPassportCampaign.balanceOf(userA.address);
+      expect(userBalance).to.eq(STAKE_AMOUNT.mul(2));
+    });
   });
 });
