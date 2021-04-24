@@ -310,7 +310,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             msg.sender == pauseOperator,
             "SapphireCoreV1: caller is not the pause operator"
         );
-        
+
         paused = _value;
         emit PauseStatusUpdated(paused);
     }
