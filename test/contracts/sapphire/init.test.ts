@@ -1,17 +1,42 @@
 import { MockProvider } from '@ethereum-waffle/provider';
 import { Wallet } from '@ethersproject/wallet';
-import { MockSapphireCoreV1, MockSapphireCoreV1Factory, TestToken } from '@src/typings';
+import {
+  MockSapphireCoreV1,
+  MockSapphireCoreV1Factory,
+  TestToken,
+} from '@src/typings';
 import { expect } from 'chai';
 import { createFixtureLoader } from 'ethereum-waffle';
 import { constants, utils } from 'ethers';
-import { deployArcProxy, deployMockSapphireCoreV1, deployTestToken } from '../deployers';
+import {
+  deployArcProxy,
+  deployMockSapphireCoreV1,
+  deployTestToken,
+} from '../deployers';
 
 export async function setup([deployer, unauthorized]: Wallet[]): Promise<any> {
   const coreImp = await deployMockSapphireCoreV1(deployer);
-  const coreProxy = await deployArcProxy(deployer, coreImp.address, deployer.address, []);
-  const sapphireCore = MockSapphireCoreV1Factory.connect(coreProxy.address, deployer);
-  const collateral = await deployTestToken(deployer, 'Collateral Token Name', 'CTKN6', 6);
-  const synthetic = await deployTestToken(deployer, 'Synthetic Token Name', 'STKN');
+  const coreProxy = await deployArcProxy(
+    deployer,
+    coreImp.address,
+    deployer.address,
+    [],
+  );
+  const sapphireCore = MockSapphireCoreV1Factory.connect(
+    coreProxy.address,
+    deployer,
+  );
+  const collateral = await deployTestToken(
+    deployer,
+    'Collateral Token Name',
+    'CTKN6',
+    6,
+  );
+  const synthetic = await deployTestToken(
+    deployer,
+    'Synthetic Token Name',
+    'STKN',
+  );
 
   return { sapphireCore, deployer, unauthorized, collateral, synthetic };
 }
@@ -27,9 +52,13 @@ describe('SapphireCore.init', () => {
   let defaultOptions;
   beforeEach(async () => {
     const provider = new MockProvider();
-    ({ sapphireCore, deployer, unauthorized, collateral, synthetic } = await createFixtureLoader(
-      provider.getWallets(),
-    )(setup));
+    ({
+      sapphireCore,
+      deployer,
+      unauthorized,
+      collateral,
+      synthetic,
+    } = await createFixtureLoader(provider.getWallets())(setup));
 
     defaultOptions = {
       collateralAddress: collateral.address,
@@ -37,6 +66,7 @@ describe('SapphireCore.init', () => {
       oracle: Wallet.createRandom().address,
       interestSetter: Wallet.createRandom().address,
       assessor: Wallet.createRandom().address,
+      pauseOperator: Wallet.createRandom().address,
       highCollateralRatio: constants.WeiPerEther.mul(2),
       lowCollateralRatio: constants.WeiPerEther,
       liquidationUserFee: utils.parseEther('0.1'),
@@ -57,6 +87,7 @@ describe('SapphireCore.init', () => {
           options.syntheticAddress,
           options.oracle,
           options.interestSetter,
+          options.pauseOperator,
           options.assessor,
           options.feeCollector,
           options.highCollateralRatio,
@@ -68,15 +99,15 @@ describe('SapphireCore.init', () => {
   });
 
   it('reverts if collateral address is 0', async () => {
-    await expect(init({ collateralAddress: constants.AddressZero })).to.be.revertedWith(
-      'SapphireCoreV1: collateral is required',
-    );
+    await expect(
+      init({ collateralAddress: constants.AddressZero }),
+    ).to.be.revertedWith('SapphireCoreV1: collateral is required');
   });
 
   it('reverts if synthetic address is 0', async () => {
-    await expect(init({ syntheticAddress: constants.AddressZero })).to.be.revertedWith(
-      'SapphireCoreV1: synthetic is required',
-    );
+    await expect(
+      init({ syntheticAddress: constants.AddressZero }),
+    ).to.be.revertedWith('SapphireCoreV1: synthetic is required');
   });
 
   it('reverts if low c-ratio is 0', async () => {
@@ -97,13 +128,15 @@ describe('SapphireCore.init', () => {
         highCollateralRatio: constants.WeiPerEther,
         lowCollateralRatio: constants.WeiPerEther.mul(2),
       }),
-    ).to.be.revertedWith('SapphireCoreV1: high c-ratio is lower than the low c-ratio');
+    ).to.be.revertedWith(
+      'SapphireCoreV1: high c-ratio is lower than the low c-ratio',
+    );
   });
 
   it('reverts if liquidation user fee is 0', async () => {
-    await expect(init({ liquidationUserFee: utils.parseEther('101') })).to.be.revertedWith(
-      'SapphireCoreV1: fee sum has to be no more than 100%',
-    );
+    await expect(
+      init({ liquidationUserFee: utils.parseEther('101') }),
+    ).to.be.revertedWith('SapphireCoreV1: fee sum has to be no more than 100%');
   });
 
   it('sets all the passed parameters', async () => {
@@ -116,7 +149,10 @@ describe('SapphireCore.init', () => {
       utils.parseUnits('1', 18 - decimals),
     );
     expect(await sapphireCore.paused()).to.be.true;
-    expect(await sapphireCore.feeCollector()).eq(defaultOptions.feeCollector, 'feeCollector');
+    expect(await sapphireCore.feeCollector()).eq(
+      defaultOptions.feeCollector,
+      'feeCollector',
+    );
     expect(await sapphireCore.oracle()).eq(defaultOptions.oracle, 'oracle');
     expect(await sapphireCore.collateralAsset()).eq(
       defaultOptions.collateralAddress,
@@ -150,12 +186,21 @@ describe('SapphireCore.init', () => {
       defaultOptions.interestSetter,
       'interest setter',
     );
-    expect(await sapphireCore.borrowIndex()).eq(constants.WeiPerEther, 'borrowIndex');
+    expect(await sapphireCore.pauseOperator()).eq(
+      defaultOptions.pauseOperator,
+      'pauseOperator',
+    );
+    expect(await sapphireCore.borrowIndex()).eq(
+      constants.WeiPerEther,
+      'borrowIndex',
+    );
   });
 
   it('revert if owner inits twice ', async () => {
     await init();
-    await expect(init()).to.be.revertedWith('SapphireCoreV1: cannot re-initialize contract');
+    await expect(init()).to.be.revertedWith(
+      'SapphireCoreV1: cannot re-initialize contract',
+    );
   });
 
   it('unauthorized cannot initialize', async () => {
