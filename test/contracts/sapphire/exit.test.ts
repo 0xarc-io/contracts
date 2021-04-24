@@ -145,7 +145,7 @@ describe('SapphireCore.exit()', () => {
     expect(synthBalance).to.eq(0);
   });
 
-  it.skip('repays all the debt + accrued interest and returns collateral to the user', async () => {
+  it('repays all the debt + accrued interest and returns collateral to the user', async () => {
     // set interest rate of 5%
     await arc.updateTime(1);
     await arc
@@ -193,6 +193,6 @@ describe('SapphireCore.exit()', () => {
 
     vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.collateralAmount).to.eq(0);
-    expect(vault.borrowedAmount).to.eq(0);
+    expect(vault.borrowedAmount).to.lte(1);
   });
 });

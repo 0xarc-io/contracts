@@ -614,7 +614,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         view
         returns (uint256)
     {
-        return _amount.mul(BASE).div(borrowIndex);
+        return _amount.mul(BASE).div(currentBorrowIndex());
     }
 
     /**
@@ -628,7 +628,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         view
         returns (uint256)
     {
-        return _amount.mul(borrowIndex).div(BASE);
+        return _amount.mul(currentBorrowIndex()).div(BASE);
     }
 
     /**
@@ -682,8 +682,13 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
         vault.collateralAmount = vault.collateralAmount.sub(_amount);
 
-        // if we don't have debt we can withdraw as much as we want
-        if (vault.borrowedAmount > 0) {
+        // if we don't have debt we can withdraw as much as we want.
+
+        // Because of normalization and denormalization, it is possible that
+        // vault.borrowedAmount == 1 in a scenario where the user calls exit().
+        // In that case, the c-ratio will be 0 and the require in the next block will fail.
+        // Hence why checking for borrowedAmount > 1 instead of 0.
+        if (vault.borrowedAmount > 1) {
 
             uint256 collateralRatio = calculateCollateralRatio(
                 _denormalizeBorrowAmount(vault.borrowedAmount),
@@ -695,7 +700,6 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
                 collateralRatio >= _assessedCRatio,
                 "SapphireCoreV1: the vault will become undercollateralized"
             );
-
         }
 
         // Change total collateral amount
