@@ -7,33 +7,37 @@
 
 import { CreditScore } from '@arc-types/sapphireCore';
 import { TestingSigners } from '@arc-types/testing';
-import { BASE } from '@src/constants';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
+import { approve } from '@src/utils/approve';
+import { BASE, ONE_YEAR_IN_SECONDS } from '@src/constants';
 import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
-import { TestTokenFactory } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
+import { DEFAULT_COLLATERAL_DECIMALS } from '@test/helpers/sapphireDefaults';
+import { setupBaseVault } from '@test/helpers/setupBaseVault';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
-import { BigNumber, BigNumberish, constants, utils } from 'ethers';
+import { BigNumber, BigNumberish, utils } from 'ethers';
 import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 
-const COLLATERAL_AMOUNT = utils.parseEther('1000');
+const COLLATERAL_AMOUNT = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS);
 const BORROW_AMOUNT = utils.parseEther('500');
 
 const SECONDS_PER_MONTH = BigNumber.from(30 * 24 * 60 * 60);
-const SECONDS_PER_YEAR = BigNumber.from(365 * 24 * 60 * 60);
 
 // Set interest rate for a 5% APY. Calculated using
 // https://www.wolframalpha.com/input/?i=31536000th+root+of+1.05
 const INTEREST_RATE = BigNumber.from(1547125957);
 
-describe.skip('borrowed index (integration)', () => {
+describe('borrowed index (integration)', () => {
   let arc: SapphireTestArc;
   let signers: TestingSigners;
   let minterCreditScore: CreditScore;
   let creditScoreTree: CreditScoreTree;
+  let minter1: SignerWithAddress;
+  let minter2: SignerWithAddress;
 
   async function init(ctx: ITestContext): Promise<void> {
     minterCreditScore = {
@@ -46,10 +50,7 @@ describe.skip('borrowed index (integration)', () => {
     };
     creditScoreTree = new CreditScoreTree([minterCreditScore, creditScore2]);
     await setupSapphire(ctx, {
-      limits: {
-        lowCollateralRatio: constants.WeiPerEther.mul(2),
-        highCollateralRatio: constants.WeiPerEther.mul(2),
-      },
+      interestRate: INTEREST_RATE,
       merkleRoot: creditScoreTree.getHexRoot(),
     });
   }
@@ -65,8 +66,13 @@ describe.skip('borrowed index (integration)', () => {
     interestRate = INTEREST_RATE,
   ) {
     const currentTimestamp = await arc.core().currentTimestamp();
-    const accumulatedInterest = interestRate.mul(currentTimestamp.sub(lastUpdateIndex)).div(BASE);
-    return prevBorrowIndex.mul(accumulatedInterest).div(BASE).add(prevBorrowIndex);
+    const accumulatedInterest = interestRate.mul(
+      currentTimestamp.sub(lastUpdateIndex),
+    );
+    return prevBorrowIndex
+      .mul(accumulatedInterest)
+      .div(BASE)
+      .add(prevBorrowIndex);
   }
 
   /**
@@ -84,7 +90,9 @@ describe.skip('borrowed index (integration)', () => {
    * @param years number of months to advance the time by
    */
   async function advanceNYears(years: BigNumberish) {
-    return arc.updateTime((await arc.core().currentTimestamp()).add(SECONDS_PER_YEAR.mul(years)));
+    return arc.updateTime(
+      (await arc.core().currentTimestamp()).add(ONE_YEAR_IN_SECONDS.mul(years)),
+    );
   }
 
   /**
@@ -92,75 +100,333 @@ describe.skip('borrowed index (integration)', () => {
    * @param months number of months to advance the time by
    */
   async function advanceNMonths(months: BigNumberish) {
-    return arc.updateTime((await arc.core().currentTimestamp()).add(SECONDS_PER_MONTH.mul(months)));
+    return arc.updateTime(
+      (await arc.core().currentTimestamp()).add(SECONDS_PER_MONTH.mul(months)),
+    );
   }
 
-  /**
-   * Sets up a basic vault using the `COLLATERAL_AMOUNT` amount at a price of `COLLATERAL_PRICE`
-   * and a debt of `DEBT_AMOUNT` as defaults amounts
-   */
-  async function setupBaseVault(
-    signer = signers.scoredMinter,
-    scoreProof = getScoreProof(minterCreditScore, creditScoreTree),
-  ) {
-    const collateralContract = TestTokenFactory.connect(arc.collateral().address, signer);
-
-    await collateralContract.mintShare(signer.address, COLLATERAL_AMOUNT);
-    await collateralContract.approve(arc.core().address, COLLATERAL_AMOUNT);
-
-    // Open vault and mint debt
-    await arc.open(COLLATERAL_AMOUNT, BORROW_AMOUNT, scoreProof, undefined, signer);
+  async function getVaultBorrowAmount(minter: SignerWithAddress) {
+    return (await arc.getVault(minter.address)).borrowedAmount;
   }
 
   before(async () => {
     const ctx = await generateContext(sapphireFixture, init);
     signers = ctx.signers;
     arc = ctx.sdks.sapphire;
+    minter1 = signers.minter;
+    minter2 = signers.scoredMinter;
   });
 
   addSnapshotBeforeRestoreAfterEach();
 
   describe('calculate the index for opening a position', () => {
-    it('for one year', () => {});
+    it('for one year', async () => {
+      await setupBaseVault(arc, minter1, COLLATERAL_AMOUNT, BORROW_AMOUNT);
+      await advanceNYears(1);
+      const currentBorrowIndex = await arc.core().currentBorrowIndex();
+      // 10^18 + 1547125957 * 365 * 24 * 60 * 60
+      expect(currentBorrowIndex).eq('1048790164179952000');
+      expect(currentBorrowIndex).eq(
+        ONE_YEAR_IN_SECONDS.mul(INTEREST_RATE).add(BASE),
+      );
+      await arc.core().updateIndex();
+      expect(await getVaultBorrowAmount(minter1)).eq(
+        currentBorrowIndex.mul(BORROW_AMOUNT).div(BASE),
+      );
+    });
 
-    it('for one and half years', () => {});
+    it('for one and half years', async () => {
+      await setupBaseVault(arc, minter1, COLLATERAL_AMOUNT, BORROW_AMOUNT);
+      await advanceNMonths(18);
+      const currentBorrowIndex = await arc.core().currentBorrowIndex();
+      expect(currentBorrowIndex).eq(
+        SECONDS_PER_MONTH.mul(18).mul(INTEREST_RATE).add(BASE),
+      );
+      await arc.core().updateIndex();
 
-    it('for two years', () => {});
+      expect(await getVaultBorrowAmount(minter1)).eq(
+        currentBorrowIndex.mul(BORROW_AMOUNT).div(BASE),
+      );
+    });
+
+    it('for two years', async () => {
+      await setupBaseVault(arc, minter1, COLLATERAL_AMOUNT, BORROW_AMOUNT);
+      await advanceNYears(2);
+      const currentBorrowIndex = await arc.core().currentBorrowIndex();
+      expect(currentBorrowIndex).eq(
+        ONE_YEAR_IN_SECONDS.mul(2).mul(INTEREST_RATE).add(BASE),
+      );
+      await arc.core().updateIndex();
+
+      expect(await getVaultBorrowAmount(minter1)).eq(
+        currentBorrowIndex.mul(BORROW_AMOUNT).div(BASE),
+      );
+    });
   });
 
   describe('calculate the index for opening two positions', () => {
-    it('the first for one year, the second for half a year', () => {});
+    it('the first for one year, the second for half a year', async () => {
+      await setupBaseVault(arc, minter1, COLLATERAL_AMOUNT, BORROW_AMOUNT);
+      await advanceNMonths(6);
+      await setupBaseVault(arc, minter2, COLLATERAL_AMOUNT, BORROW_AMOUNT);
 
-    it('the first for one and a half years, the second for 3 months', () => {});
+      const borrowIndex6 = await arc.core().currentBorrowIndex();
+      expect(borrowIndex6).eq(
+        SECONDS_PER_MONTH.mul(6).mul(INTEREST_RATE).add(BASE),
+      );
 
-    it('the first for two years, the second for one and half years', () => {});
+      expect(await getVaultBorrowAmount(minter1)).eq(
+        borrowIndex6.mul(BORROW_AMOUNT).div(BASE),
+      );
+      const actualBorrowedAmountByMinter2 = BORROW_AMOUNT.mul(BASE)
+        .div(borrowIndex6)
+        .mul(borrowIndex6)
+        .div(BASE);
+      expect(await getVaultBorrowAmount(minter2)).eq(
+        actualBorrowedAmountByMinter2,
+      );
+      await advanceNMonths(6);
+      const indexLastUpdate = await arc.core().indexLastUpdate();
+      await arc.core().updateIndex();
+
+      const borrowIndex12 = await arc.core().currentBorrowIndex();
+      expect(borrowIndex12).eq(
+        await getBorrowIndex(indexLastUpdate, borrowIndex6, INTEREST_RATE),
+      );
+      expect(await getVaultBorrowAmount(minter1)).eq(
+        borrowIndex12.mul(BORROW_AMOUNT).div(BASE),
+      );
+      expect(await getVaultBorrowAmount(minter2)).eq(
+        BORROW_AMOUNT.mul(borrowIndex12).div(borrowIndex6),
+      );
+    });
+
+    it('the first for one and a half years, the second for 3 months', async () => {
+      await setupBaseVault(arc, minter1, COLLATERAL_AMOUNT, BORROW_AMOUNT);
+      await advanceNMonths(18);
+      await setupBaseVault(arc, minter2, COLLATERAL_AMOUNT, BORROW_AMOUNT);
+
+      // check the borrow index
+      const borrowIndex = await arc.core().currentBorrowIndex();
+      expect(borrowIndex).eq(
+        SECONDS_PER_MONTH.mul(18).mul(INTEREST_RATE).add(BASE),
+      );
+
+      // check vault amounts
+      expect(await getVaultBorrowAmount(minter1)).eq(
+        borrowIndex.mul(BORROW_AMOUNT).div(BASE),
+      );
+      const normalizedBorrowAmount2 = BORROW_AMOUNT.mul(BASE).div(borrowIndex);
+      expect(await getVaultBorrowAmount(minter2)).eq(
+        normalizedBorrowAmount2.mul(borrowIndex).div(BASE),
+      );
+
+      await advanceNMonths(3);
+
+      await arc.core().updateIndex();
+
+      const borrowIndex21 = await arc.core().currentBorrowIndex();
+      expect(await getVaultBorrowAmount(minter1)).eq(
+        borrowIndex21.mul(BORROW_AMOUNT).div(BASE),
+      );
+
+      expect(await getVaultBorrowAmount(minter2)).eq(
+        normalizedBorrowAmount2.mul(borrowIndex21).div(BASE),
+      );
+    });
+
+    it('the first for two years, the second for one and half years', async () => {
+      await setupBaseVault(arc, minter1, COLLATERAL_AMOUNT, BORROW_AMOUNT);
+      await advanceNMonths(6);
+
+      await setupBaseVault(arc, minter2, COLLATERAL_AMOUNT, BORROW_AMOUNT);
+
+      const borrowIndex = await arc.core().currentBorrowIndex();
+      const normalizedBorrowAmount2 = BORROW_AMOUNT.mul(BASE).div(borrowIndex);
+
+      expect(borrowIndex).eq(
+        SECONDS_PER_MONTH.mul(6).mul(INTEREST_RATE).add(BASE),
+      );
+      expect(await getVaultBorrowAmount(minter1)).eq(
+        borrowIndex.mul(BORROW_AMOUNT).div(BASE),
+      );
+      expect(await getVaultBorrowAmount(minter2)).eq(
+        normalizedBorrowAmount2.mul(borrowIndex).div(BASE),
+      );
+
+      await advanceNMonths(18);
+      await arc.core().updateIndex();
+
+      const borrowIndex24 = await arc.core().currentBorrowIndex();
+      expect(await getVaultBorrowAmount(minter1)).eq(
+        BORROW_AMOUNT.mul(borrowIndex24).div(BASE),
+      );
+
+      expect(await getVaultBorrowAmount(minter2)).eq(
+        normalizedBorrowAmount2.mul(borrowIndex24).div(BASE),
+      );
+    });
   });
 
   describe('calculate the index for 2 years for opening and updating a position', () => {
-    it('open for 1 year and borrow more after this year', () => {});
+    it('open for 1 year and borrow more after this year', async () => {
+      await setupBaseVault(
+        arc,
+        signers.minter,
+        COLLATERAL_AMOUNT,
+        BORROW_AMOUNT,
+      );
 
-    it('open for 1 year and liquidate after this year', () => {});
+      await advanceNMonths(12);
+      const borrowIndexFor12Months = await arc.core().currentBorrowIndex();
 
-    it('open for 1 year and repay partially after this year', () => {});
+      await setupBaseVault(
+        arc,
+        signers.minter,
+        COLLATERAL_AMOUNT.mul(borrowIndexFor12Months),
+        BORROW_AMOUNT,
+      );
 
-    it('open for 1 year and repay fully after this year', () => {});
+      const indexLastUpdate = await arc.core().indexLastUpdate();
+
+      const normalizedBorrowedAmount = await convertPrincipal(BORROW_AMOUNT);
+      let expectedNormalizedAmountInVault = BORROW_AMOUNT.add(
+        normalizedBorrowedAmount,
+      );
+
+      expect(await getVaultBorrowAmount(minter1)).eq(
+        expectedNormalizedAmountInVault.mul(borrowIndexFor12Months).div(BASE),
+      );
+      expect(await arc.core().totalBorrowed()).to.eq(
+        expectedNormalizedAmountInVault,
+      );
+
+      await advanceNMonths(12);
+      await arc.core().updateIndex();
+
+      const currentBorrowIndex = await arc.core().currentBorrowIndex();
+
+      expect(currentBorrowIndex).eq(
+        await getBorrowIndex(
+          indexLastUpdate,
+          borrowIndexFor12Months,
+          INTEREST_RATE,
+        ),
+      );
+
+      expect(await getVaultBorrowAmount(minter1)).eq(
+        expectedNormalizedAmountInVault.mul(currentBorrowIndex).div(BASE),
+      );
+      expect(await arc.core().totalBorrowed()).eq(
+        expectedNormalizedAmountInVault,
+      );
+    });
+
+    it.skip('open for 1 year and liquidate after this year', () => {});
+
+    it('open for 1 year and repay partially after this year', async () => {
+      await setupBaseVault(arc, minter1, COLLATERAL_AMOUNT, BORROW_AMOUNT);
+      expect(await arc.core().totalBorrowed()).eq(BORROW_AMOUNT);
+
+      await advanceNMonths(12);
+      const borrowIndexFor12Months = await arc.core().currentBorrowIndex();
+
+      const repayAmount = BORROW_AMOUNT.div(2)
+        .mul(borrowIndexFor12Months)
+        .div(BASE);
+      await approve(
+        repayAmount,
+        arc.syntheticAddress(),
+        arc.coreAddress(),
+        minter1,
+      );
+      // repay a half accumulated debt
+      await arc.repay(repayAmount, undefined, undefined, minter1);
+
+      const indexLastUpdate = await arc.core().indexLastUpdate();
+      await advanceNMonths(12);
+      await arc.core().updateIndex();
+      const currentBorrowIndex = await arc.core().currentBorrowIndex();
+
+      expect(currentBorrowIndex).eq(
+        await getBorrowIndex(
+          indexLastUpdate,
+          borrowIndexFor12Months,
+          INTEREST_RATE,
+        ),
+      );
+
+      const accumulatedBorrowAmount = currentBorrowIndex
+        .mul(BORROW_AMOUNT.div(2))
+        .div(BASE);
+      expect(await getVaultBorrowAmount(minter1)).eq(accumulatedBorrowAmount);
+      expect(await arc.core().totalBorrowed()).eq(BORROW_AMOUNT.div(2));
+    });
+
+    it('open for 1 year and repay fully after this year', async () => {
+      await setupBaseVault(arc, minter1, COLLATERAL_AMOUNT, BORROW_AMOUNT);
+      expect(await arc.core().totalBorrowed()).eq(BORROW_AMOUNT);
+
+      await advanceNMonths(12);
+      await arc.core().updateIndex();
+      const borrowIndexFor12Months = await arc.core().currentBorrowIndex();
+
+      const borrowedAmount = BORROW_AMOUNT.mul(borrowIndexFor12Months).div(
+        BASE,
+      );
+      expect(await getVaultBorrowAmount(minter1)).eq(borrowedAmount);
+
+      // mint accrued interest rate
+      await arc
+        .synthetic()
+        .mint(minter1.address, borrowedAmount.sub(BORROW_AMOUNT));
+      await approve(
+        borrowedAmount,
+        arc.syntheticAddress(),
+        arc.coreAddress(),
+        minter1,
+      );
+
+      // repay a whole accumulated debt
+      await arc.repay(borrowedAmount, undefined, undefined, minter1);
+      expect(await arc.core().totalBorrowed()).eq(0);
+
+      await advanceNMonths(12);
+      await arc.core().updateIndex();
+
+      expect(await getVaultBorrowAmount(minter1)).eq(0);
+      expect(await arc.core().totalBorrowed()).eq(0);
+    });
   });
 
   describe('Scenarios', () => {
     // Scenario 1 in the Google SpreadSheet (see link at the top of this file)
     it('calculates the interest amount correctly for one user', async () => {
+      await arc.core().connect(signers.interestSetter).setInterestRate(0);
+
       await arc.updateTime(1);
 
-      await arc.core().setInterestRate(INTEREST_RATE);
+      await arc
+        .core()
+        .connect(signers.interestSetter)
+        .setInterestRate(INTEREST_RATE);
 
       // User A opens position of n tokens and $500 debt
       await arc.updateTime(2);
-      await setupBaseVault();
+      await setupBaseVault(
+        arc,
+        signers.scoredMinter,
+        COLLATERAL_AMOUNT,
+        BORROW_AMOUNT,
+      );
 
+      let borrowIndex = await arc.core().borrowIndex();
       let totalBorrowed = await arc.core().totalBorrowed();
-      let vault = await arc.getVault(signers.scoredMinter.address);
-      expect(totalBorrowed).to.eq(utils.parseEther('500'));
-      expect(vault.borrowedAmount).to.eq(utils.parseEther('500'));
+      const normalizedBorrowed = BORROW_AMOUNT.mul(BASE).div(borrowIndex);
+      expect(totalBorrowed).to.eq(normalizedBorrowed);
+      expect(await getVaultBorrowAmount(signers.scoredMinter)).to.eq(
+        normalizedBorrowed.mul(borrowIndex).div(BASE),
+      );
 
       // Update time to 6 months
       await advanceNMonths(6);
@@ -168,10 +434,14 @@ describe.skip('borrowed index (integration)', () => {
       let prevBorrowIndex = await arc.core().borrowIndex();
       await arc.core().updateIndex();
 
-      let borrowIndex = await arc.core().borrowIndex();
+      borrowIndex = await arc.core().borrowIndex();
       let newLastUpdateIndex = await arc.core().indexLastUpdate();
-      expect(borrowIndex).to.eq(await getBorrowIndex(lastUpdateIndex, prevBorrowIndex));
-      expect(newLastUpdateIndex).to.eq(lastUpdateIndex.add(SECONDS_PER_MONTH.mul(6)));
+      expect(borrowIndex).to.eq(
+        await getBorrowIndex(lastUpdateIndex, prevBorrowIndex),
+      );
+      expect(newLastUpdateIndex).to.eq(
+        lastUpdateIndex.add(SECONDS_PER_MONTH.mul(6)),
+      );
 
       // Borrow $100 more
       await arc.borrow(
@@ -182,11 +452,12 @@ describe.skip('borrowed index (integration)', () => {
       );
 
       totalBorrowed = await arc.core().totalBorrowed();
-      vault = await arc.getVault(signers.scoredMinter.address);
-      const convertedPrincipal100 = await convertPrincipal(utils.parseEther('100'));
-      let expectedAmtInVault = utils.parseEther('500').add(convertedPrincipal100);
+      const convertedPrincipal100 = await convertPrincipal(
+        utils.parseEther('100'),
+      );
+      let expectedAmountInVault = normalizedBorrowed.add(convertedPrincipal100);
 
-      expect(totalBorrowed).to.eq(expectedAmtInVault);
+      expect(totalBorrowed).to.eq(expectedAmountInVault);
 
       // Update time to 3 months
       await advanceNMonths(3);
@@ -196,27 +467,42 @@ describe.skip('borrowed index (integration)', () => {
 
       borrowIndex = await arc.core().borrowIndex();
       newLastUpdateIndex = await arc.core().indexLastUpdate();
-      expect(borrowIndex).to.eq(await getBorrowIndex(lastUpdateIndex, prevBorrowIndex));
-      expect(newLastUpdateIndex).to.eq(lastUpdateIndex.add(SECONDS_PER_MONTH.mul(3)));
+      expect(borrowIndex).to.eq(
+        await getBorrowIndex(lastUpdateIndex, prevBorrowIndex),
+      );
+      expect(newLastUpdateIndex).to.eq(
+        lastUpdateIndex.add(SECONDS_PER_MONTH.mul(3)),
+      );
 
       // Repay principal of $600
+      const repayAmount = utils.parseEther('600');
+      await approve(
+        repayAmount,
+        arc.synthetic().address,
+        arc.coreAddress(),
+        signers.scoredMinter,
+      );
       await arc.repay(
-        utils.parseEther('600'),
+        repayAmount,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.scoredMinter,
       );
 
       totalBorrowed = await arc.core().totalBorrowed();
-      vault = await arc.getVault(signers.scoredMinter.address);
-      expectedAmtInVault = await convertPrincipal(
-        utils
-          .parseEther('500') // initial amount - not converted because the borrow index was 1 at the time
-          .add(convertedPrincipal100) // newly added amount - converted
-          .mul((await arc.core().borrowIndex()).add(BASE)) // convert amount to real amount + interest
-          .sub(utils.parseEther('600')), // the amount repaid
-      ); // convert it back because we only store converted amounts in vaults
-      expect(totalBorrowed).to.eq(vault.borrowedAmount);
+      borrowIndex = await arc.core().borrowIndex();
+      const normalizedRepayAmount = await convertPrincipal(repayAmount);
+      const expectedNormalizedAmountInVault = normalizedBorrowed // initial normalized borrowed amount
+        .add(convertedPrincipal100) // newly added amount - normalized
+        .sub(normalizedRepayAmount); // remove repayed amount - normalized
+
+      // convert amount to real amount + interest
+      expectedAmountInVault = expectedNormalizedAmountInVault
+        .mul(borrowIndex)
+        .div(BASE);
+      const borrowedInVault = await getVaultBorrowAmount(signers.scoredMinter);
+      expect(borrowedInVault).eq(expectedAmountInVault);
+      expect(totalBorrowed).to.eq(expectedNormalizedAmountInVault);
 
       // Update time to 3 months
       await advanceNMonths(3);
@@ -226,26 +512,37 @@ describe.skip('borrowed index (integration)', () => {
 
       borrowIndex = await arc.core().borrowIndex();
       newLastUpdateIndex = await arc.core().indexLastUpdate();
-      expect(borrowIndex).to.eq(await getBorrowIndex(lastUpdateIndex, prevBorrowIndex));
-      expect(newLastUpdateIndex).to.eq(lastUpdateIndex.add(SECONDS_PER_MONTH.mul(3)));
-
-      // Repay remaining interest
-      vault = await arc.getVault(signers.scoredMinter.address);
-      const outstandingRepayAmt = vault.borrowedAmount.mul(
-        (await arc.core().borrowIndex()).add(BASE),
+      expect(borrowIndex).to.eq(
+        await getBorrowIndex(lastUpdateIndex, prevBorrowIndex),
+      );
+      expect(newLastUpdateIndex).to.eq(
+        lastUpdateIndex.add(SECONDS_PER_MONTH.mul(3)),
       );
 
+      // Repay remaining interest
+      // TODO: resolve rounding - that's why I added 1
+      const outstandingRepayAmt = (
+        await getVaultBorrowAmount(signers.scoredMinter)
+      ).add(1);
+
+      // Owner doesn't have enough money to repay all debt because of interest rate
+      await arc
+        .synthetic()
+        .mint(signers.scoredMinter.address, outstandingRepayAmt);
+      await approve(
+        outstandingRepayAmt,
+        arc.synthetic().address,
+        arc.coreAddress(),
+        signers.scoredMinter,
+      );
       await arc.repay(
         outstandingRepayAmt,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.scoredMinter,
       );
-
-      totalBorrowed = await arc.core().totalBorrowed();
-      vault = await arc.getVault(signers.scoredMinter.address);
-      expect(totalBorrowed).to.eq(0);
-      expect(vault.borrowedAmount).to.eq(0);
+      expect(await getVaultBorrowAmount(signers.scoredMinter)).to.eq(0);
+      expect(await arc.core().totalBorrowed()).to.eq(0);
     });
 
     it('calculates the interest amount correctly for two users when a repayment happens in between', async () => {
@@ -254,11 +551,23 @@ describe.skip('borrowed index (integration)', () => {
       // Set interest rate for a 5% APY. Calculated using
       // https://www.wolframalpha.com/input/?i=31536000th+root+of+1.05
       const interestRate = BigNumber.from(1547125957);
-      await arc.core().setInterestRate(interestRate);
+      await arc
+        .core()
+        .connect(signers.interestSetter)
+        .setInterestRate(interestRate);
 
       // User A opens position of 1000 tokens at $1 and $500 debt
       await arc.updateTime(2);
-      await setupBaseVault();
+      await setupBaseVault(
+        arc,
+        signers.scoredMinter,
+        COLLATERAL_AMOUNT,
+        BORROW_AMOUNT,
+      );
+      const borrowIndex2 = await arc.core().currentBorrowIndex();
+      const normalizedVaultABorrowedAmount = BORROW_AMOUNT.mul(BASE).div(
+        borrowIndex2,
+      );
 
       // Update time to 6 months and update index
       await advanceNMonths(6);
@@ -268,16 +577,35 @@ describe.skip('borrowed index (integration)', () => {
 
       let borrowIndex = await arc.core().borrowIndex();
       let newLastUpdateIndex = await arc.core().indexLastUpdate();
-      expect(borrowIndex).to.eq(await getBorrowIndex(lastUpdateIndex, prevBorrowIndex));
-      expect(newLastUpdateIndex).to.eq(lastUpdateIndex.add(SECONDS_PER_MONTH.mul(6)));
+      expect(borrowIndex).to.eq(
+        await getBorrowIndex(lastUpdateIndex, prevBorrowIndex),
+      );
+      expect(newLastUpdateIndex).to.eq(
+        lastUpdateIndex.add(SECONDS_PER_MONTH.mul(6)),
+      );
 
       // User B opens position at 1000 tokens at $1 and $500 debt
-      await setupBaseVault(signers.minter, null);
+      await setupBaseVault(
+        arc,
+        signers.minter,
+        COLLATERAL_AMOUNT,
+        BORROW_AMOUNT,
+      );
+      const normalizedVaultBBorrowedAmount = BORROW_AMOUNT.mul(BASE).div(
+        borrowIndex,
+      );
 
-      let vaultA = await arc.getVault(signers.scoredMinter.address);
-      let vaultB = await arc.getVault(signers.minter.address);
-      let totalBorrowed = await arc.core().totalBorrowed();
-      expect(totalBorrowed).to.eq(vaultA.borrowedAmount.add(vaultB.borrowedAmount));
+      expect(await getVaultBorrowAmount(signers.scoredMinter)).eq(
+        borrowIndex.mul(normalizedVaultABorrowedAmount).div(BASE),
+      );
+
+      expect(await getVaultBorrowAmount(signers.minter)).eq(
+        borrowIndex.mul(normalizedVaultBBorrowedAmount).div(BASE),
+      );
+
+      expect(await arc.core().totalBorrowed()).to.eq(
+        normalizedVaultABorrowedAmount.add(normalizedVaultBBorrowedAmount),
+      );
 
       // Update time to 3 months and update index
       await advanceNMonths(3);
@@ -287,21 +615,42 @@ describe.skip('borrowed index (integration)', () => {
 
       borrowIndex = await arc.core().borrowIndex();
       newLastUpdateIndex = await arc.core().indexLastUpdate();
-      expect(borrowIndex).to.eq(await getBorrowIndex(lastUpdateIndex, prevBorrowIndex));
-      expect(newLastUpdateIndex).to.eq(lastUpdateIndex.add(SECONDS_PER_MONTH.mul(3)));
+      expect(borrowIndex).to.eq(
+        await getBorrowIndex(lastUpdateIndex, prevBorrowIndex),
+      );
+      expect(newLastUpdateIndex).to.eq(
+        lastUpdateIndex.add(SECONDS_PER_MONTH.mul(3)),
+      );
 
       // User A repays his initial debt ($500). His vault should contain the accumulated interest
+      await approve(
+        BORROW_AMOUNT,
+        arc.syntheticAddress(),
+        arc.coreAddress(),
+        signers.scoredMinter,
+      );
       await arc.repay(
-        utils.parseEther('500'),
+        BORROW_AMOUNT,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.scoredMinter,
       );
 
-      vaultA = await arc.getVault(signers.scoredMinter.address);
-      vaultB = await arc.getVault(signers.minter.address);
-      totalBorrowed = await arc.core().totalBorrowed();
-      expect(totalBorrowed).to.eq(vaultA.borrowedAmount.add(vaultB.borrowedAmount));
+      const normalizedRepayAmount = await convertPrincipal(BORROW_AMOUNT);
+      const normalizedVaultABorrowedAfterRepay = normalizedVaultABorrowedAmount.sub(
+        normalizedRepayAmount,
+      );
+      expect(await getVaultBorrowAmount(signers.scoredMinter)).eq(
+        borrowIndex.mul(normalizedVaultABorrowedAfterRepay).div(BASE),
+      );
+
+      expect(await getVaultBorrowAmount(signers.minter)).eq(
+        borrowIndex.mul(normalizedVaultBBorrowedAmount).div(BASE),
+      );
+
+      expect(await arc.core().totalBorrowed()).to.eq(
+        normalizedVaultABorrowedAfterRepay.add(normalizedVaultBBorrowedAmount),
+      );
 
       // Update time to 3 months and update index
       await advanceNMonths(3);
@@ -311,23 +660,37 @@ describe.skip('borrowed index (integration)', () => {
 
       borrowIndex = await arc.core().borrowIndex();
       newLastUpdateIndex = await arc.core().indexLastUpdate();
-      expect(borrowIndex).to.eq(await getBorrowIndex(lastUpdateIndex, prevBorrowIndex));
-      expect(newLastUpdateIndex).to.eq(lastUpdateIndex.add(SECONDS_PER_MONTH.mul(3)));
-
-      // User B repays his entire debt and interest
-      vaultB = await arc.getVault(signers.minter.address);
-      const outstandingBalance = vaultB.borrowedAmount.mul(
-        (await arc.core().borrowIndex()).add(BASE),
+      expect(borrowIndex).to.eq(
+        await getBorrowIndex(lastUpdateIndex, prevBorrowIndex),
+      );
+      expect(newLastUpdateIndex).to.eq(
+        lastUpdateIndex.add(SECONDS_PER_MONTH.mul(3)),
       );
 
+      // User B repays his entire debt and interest
+      // TO DO: SHOULD BE FIXED!!! because of rounding add 1
+      const outstandingBalance = (await getVaultBorrowAmount(signers.minter)).add(1);
+
+      await arc
+        .synthetic()
+        .mint(signers.minter.address, outstandingBalance.sub(BORROW_AMOUNT));
+      await approve(
+        outstandingBalance,
+        arc.syntheticAddress(),
+        arc.coreAddress(),
+        signers.minter,
+      );
       await arc.repay(outstandingBalance, undefined, undefined, signers.minter);
 
-      vaultA = await arc.getVault(signers.scoredMinter.address);
-      vaultB = await arc.getVault(signers.minter.address);
-      totalBorrowed = await arc.core().totalBorrowed();
-      expect(totalBorrowed).to.eq(vaultA.borrowedAmount.add(vaultB.borrowedAmount));
-      expect(vaultB.borrowedAmount).to.eq(0);
+      expect(await getVaultBorrowAmount(signers.scoredMinter)).eq(
+        borrowIndex.mul(normalizedVaultABorrowedAfterRepay).div(BASE),
+      );
 
+      expect(await getVaultBorrowAmount(signers.minter)).eq(0);
+
+      expect(await arc.core().totalBorrowed()).to.eq(
+        normalizedVaultABorrowedAfterRepay,
+      );
       // Update time to 1 month and update index
       await advanceNMonths(1);
       lastUpdateIndex = await arc.core().indexLastUpdate();
@@ -336,7 +699,9 @@ describe.skip('borrowed index (integration)', () => {
 
       borrowIndex = await arc.core().borrowIndex();
       newLastUpdateIndex = await arc.core().indexLastUpdate();
-      expect(borrowIndex).to.eq(await getBorrowIndex(lastUpdateIndex, prevBorrowIndex));
+      expect(borrowIndex).to.eq(
+        await getBorrowIndex(lastUpdateIndex, prevBorrowIndex),
+      );
       expect(newLastUpdateIndex).to.eq(lastUpdateIndex.add(SECONDS_PER_MONTH));
 
       // User A should just have the accumulated interest,

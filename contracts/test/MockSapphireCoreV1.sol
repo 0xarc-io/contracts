@@ -8,7 +8,7 @@ import {IOracle} from "../oracle/IOracle.sol";
 import {SapphireCoreV1} from "../debt/sapphire/SapphireCoreV1.sol";
 import {MockTimestamp} from "./MockTimestamp.sol";
 
-contract MockSapphireCoreV1 is MockTimestamp, SapphireCoreV1 {
+contract MockSapphireCoreV1 is SapphireCoreV1, MockTimestamp {
     function updateBorrowIndex(
         uint256 _borrowIndex
     )

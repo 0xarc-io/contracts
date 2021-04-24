@@ -453,7 +453,14 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         public
         returns (uint256)
     {
+        if (indexLastUpdate == currentTimestamp()) {
+            return borrowIndex;
+        }
 
+        borrowIndex = currentBorrowIndex();
+        indexLastUpdate = currentTimestamp();
+
+        emit IndexUpdated(borrowIndex, indexLastUpdate);
     }
 
     /* ========== Public Getters ========== */
@@ -463,7 +470,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         view
         returns (uint256)
     {
-
+        return interestRate.mul(currentTimestamp().sub(indexLastUpdate));
     }
 
     function currentBorrowIndex()
@@ -471,7 +478,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         view
         returns (uint256)
     {
-
+        return borrowIndex.mul(accumulatedInterest()).div(BASE).add(borrowIndex);
     }
 
     /**
@@ -687,9 +694,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
         // Ensure the vault is collateralized if the borrow action succeeds
         uint256 collateralRatio = calculateCollateralRatio(
-            vault.borrowedAmount
-                .mul(borrowIndex)
-                .div(BASE)
+            _denormalizeBorrowAmount(vault.borrowedAmount)
                 .add(_amount),
             vault.collateralAmount,
             _collateralPrice
@@ -749,18 +754,18 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         SapphireTypes.Vault storage vault = vaults[_owner];
 
         // Update vault
-        uint256 convertedBorrowAmount = _normalizeBorrowAmount(_amount);
+        uint256 normalizedBorrowAmount = _normalizeBorrowAmount(_amount);
 
         require(
-            convertedBorrowAmount <= vault.borrowedAmount,
+            normalizedBorrowAmount <= vault.borrowedAmount,
             "SapphireCoreV1: there is not enough debt to repay"
         );
 
         // Update vault
-        vault.borrowedAmount = vault.borrowedAmount.sub(convertedBorrowAmount);
+        vault.borrowedAmount = vault.borrowedAmount.sub(normalizedBorrowAmount);
 
         // Update total borrow amount
-        totalBorrowed = totalBorrowed.sub(convertedBorrowAmount);
+        totalBorrowed = totalBorrowed.sub(normalizedBorrowAmount);
 
         // Transfer tokens to the core
         ISyntheticTokenV2(syntheticAsset).transferFrom(
