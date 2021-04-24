@@ -40,6 +40,7 @@ export interface TestingSigners {
   positionOperator: SignerWithAddress;
   unauthorised: SignerWithAddress;
   scoredMinter: SignerWithAddress;
+  pauseOperator: SignerWithAddress;
 }
 
 export interface SDKs {

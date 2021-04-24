@@ -106,6 +106,11 @@ contract SapphireCoreStorage {
     address public interestSetter;
 
     /**
+     * @dev The address that can call `setPause()`
+     */
+    address public pauseOperator;
+
+    /**
      * @dev The maximum amount which can be borrowed within a contract. This includes
      *      the amount of interest accrued.
      */
