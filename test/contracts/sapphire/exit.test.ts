@@ -9,7 +9,10 @@ import {
   DEFAULT_COLLATERAL_DECIMALS,
   DEFAULT_PRICE,
 } from '@test/helpers/sapphireDefaults';
-import { setupBaseVault } from '@test/helpers/setupBaseVault';
+import {
+  mintApprovedCollateral,
+  setupBaseVault,
+} from '@test/helpers/setupBaseVault';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { BigNumber, utils } from 'ethers';
@@ -19,6 +22,7 @@ import { setupSapphire } from '../setup';
 
 const COLLATERAL_AMOUNT = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS);
 const BORROW_AMOUNT = utils.parseEther('500');
+const INTEREST_RATE = BigNumber.from(1547125957);
 
 describe('SapphireCore.exit()', () => {
   let ctx: ITestContext;
@@ -69,7 +73,35 @@ describe('SapphireCore.exit()', () => {
 
   addSnapshotBeforeRestoreAfterEach();
 
-  it('reverts if user does not have enough balance to close his vault');
+  it('reverts if user does not have enough balance to close his vault', async () => {
+    await setupBaseVault(
+      arc,
+      signers.scoredMinter,
+      COLLATERAL_AMOUNT,
+      BORROW_AMOUNT,
+      getScoreProof(scoredMinterCreditScore, creditScoreTree),
+    );
+
+    // burn a bit of the borrow amount
+    await arc
+      .synthetic()
+      .connect(signers.scoredMinter)
+      .burn(BORROW_AMOUNT.sub(utils.parseEther('0.01')));
+
+    // Approve repay amount
+    await approve(
+      BORROW_AMOUNT,
+      arc.syntheticAddress(),
+      arc.coreAddress(),
+      signers.scoredMinter,
+    );
+
+    await expect(
+      arc.exit(undefined, undefined, signers.scoredMinter),
+    ).to.be.revertedWith(
+      'SyntheticTokenV2: sender does not have enough balance',
+    );
+  });
 
   it('repays all the debt and returns collateral to the user', async () => {
     await setupBaseVault(
@@ -113,7 +145,54 @@ describe('SapphireCore.exit()', () => {
     expect(synthBalance).to.eq(0);
   });
 
-  it(
-    'repays all the debt + accrued interest and returns collateral to the user',
-  );
+  it.skip('repays all the debt + accrued interest and returns collateral to the user', async () => {
+    // set interest rate of 5%
+    await arc.updateTime(1);
+    await arc
+      .core()
+      .connect(signers.interestSetter)
+      .setInterestRate(INTEREST_RATE);
+
+    await setupBaseVault(
+      arc,
+      signers.scoredMinter,
+      COLLATERAL_AMOUNT,
+      BORROW_AMOUNT,
+      getScoreProof(scoredMinterCreditScore, creditScoreTree),
+    );
+
+    // increase time by 1 second
+    await arc.updateTime(2);
+
+    let vault = await arc.getVault(signers.scoredMinter.address);
+    expect(vault.borrowedAmount).to.be.gt(BORROW_AMOUNT);
+
+    // Approve repay amount
+    await approve(
+      vault.borrowedAmount,
+      arc.syntheticAddress(),
+      arc.coreAddress(),
+      signers.scoredMinter,
+    );
+
+    // Try to exit but fail because user does not have enough balance due to
+    // the accrued interest
+    await expect(
+      arc.exit(undefined, undefined, signers.scoredMinter),
+    ).to.be.revertedWith(
+      'SyntheticTokenV2: sender does not have enough balance',
+    );
+
+    const accruedInterest = vault.borrowedAmount.sub(BORROW_AMOUNT);
+    await arc
+      .synthetic()
+      .connect(signers.admin)
+      .mint(signers.scoredMinter.address, accruedInterest);
+
+    await arc.exit(undefined, undefined, signers.scoredMinter);
+
+    vault = await arc.getVault(signers.scoredMinter.address);
+    expect(vault.collateralAmount).to.eq(0);
+    expect(vault.borrowedAmount).to.eq(0);
+  });
 });
