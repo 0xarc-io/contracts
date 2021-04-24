@@ -254,7 +254,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
      *
      * @notice Can only be called by the admin of the proxy
      *
-     * @param _setter The address of the new interest rate setter
+     * @param _interestSetter The address of the new interest rate setter
      */
     function setInterestSetter(
         address _interestSetter
