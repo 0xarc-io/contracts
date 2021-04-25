@@ -44,7 +44,7 @@ export async function immediatelyUpdateMerkleRoot(
   // advance time if merkle root was recently updated
   const lastUpdate = await creditScoreContract.lastMerkleRootUpdate();
   const delayDuration = await creditScoreContract.merkleRootDelayDuration();
-  const now = await creditScoreContract.getCurrentTimestamp();
+  const now = await creditScoreContract.currentTimestamp();
   if (now < lastUpdate.add(delayDuration)) {
     await advanceEpoch(creditScoreContract);
   }
@@ -57,7 +57,7 @@ export async function immediatelyUpdateMerkleRoot(
 }
 
 export async function advanceEpoch(creditScoreContract: MockSapphireCreditScore) {
-  const initTimestamp = await creditScoreContract.getCurrentTimestamp();
+  const initTimestamp = await creditScoreContract.currentTimestamp();
   const merkleRootDelay = await creditScoreContract.merkleRootDelayDuration();
 
   const changedTimestamp = initTimestamp.add(merkleRootDelay);
