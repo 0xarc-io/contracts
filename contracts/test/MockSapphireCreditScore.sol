@@ -4,26 +4,11 @@ pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
 import { SapphireCreditScore } from "../debt/sapphire/SapphireCreditScore.sol";
+import {MockTimestamp} from "./MockTimestamp.sol";
 
-contract MockSapphireCreditScore is SapphireCreditScore {
-    uint256 private currentTimestamp = block.timestamp;
-
-    constructor(bytes32 merkleRoot, address _merkleRootUpdater)
+contract MockSapphireCreditScore is SapphireCreditScore, MockTimestamp {
+    constructor(bytes32 merkleRoot, address _merkleRootUpdater, address _pauseOperator)
         public
-        SapphireCreditScore(merkleRoot, _merkleRootUpdater, 1000)
+        SapphireCreditScore(merkleRoot, _merkleRootUpdater, _pauseOperator, 1000)
     { }
-
-    function setCurrentTimestamp(uint256 _timestamp)
-        public
-    {
-        currentTimestamp = _timestamp;
-    }
-
-    function getCurrentTimestamp()
-        public
-        view
-        returns (uint256)
-    {
-        return currentTimestamp;
-    }
 }

@@ -228,9 +228,12 @@ export async function sapphireFixture(
     deployer,
     '0x1111111111111111111111111111111111111111111111111111111111111111',
     ctx.signers.interestSetter.address,
+    ctx.signers.pauseOperator.address,
   );
 
-  await ctx.contracts.sapphire.creditScore.setPause(false);
+  await ctx.contracts.sapphire.creditScore
+    .connect(ctx.signers.pauseOperator)
+    .setPause(false);
 
   ctx.contracts.sapphire.assessor = await new SapphireAssessorFactory(
     deployer,
