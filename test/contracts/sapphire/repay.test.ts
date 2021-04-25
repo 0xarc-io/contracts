@@ -272,7 +272,7 @@ describe('SapphireCore.repay()', () => {
   });
 
   it('should not repay if contract is paused', async () => {
-    await arc.core().connect(signers.admin).setPause(true);
+    await arc.core().connect(signers.pauseOperator).setPause(true);
 
     await expect(
       repay(BORROW_AMOUNT.add(constants.WeiPerEther), signers.scoredMinter),

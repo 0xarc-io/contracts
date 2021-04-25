@@ -715,7 +715,7 @@ describe('SapphireCore.liquidate()', () => {
       // Price drops, setting the c-ratio to 130%
       await arc.updatePrice(utils.parseEther('0.65'));
 
-      await arc.core().setPause(true);
+      await arc.core().connect(signers.pauseOperator).setPause(true);
 
       await expect(
         arc.liquidate(

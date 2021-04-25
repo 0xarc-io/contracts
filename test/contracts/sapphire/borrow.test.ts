@@ -309,7 +309,7 @@ describe('SapphireCore.borrow()', () => {
   });
 
   it('should not borrow if contract is paused', async () => {
-    await arc.core().setPause(true);
+    await arc.core().connect(ctx.signers.pauseOperator).setPause(true);
     await expect(
       arc.borrow(BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter),
     ).to.be.revertedWith('SapphireCoreV1: the contract is paused');
