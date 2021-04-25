@@ -61,7 +61,7 @@ describe('SapphireCore.deposit()', () => {
   addSnapshotBeforeRestoreAfterEach();
 
   it('reverts if the contract is paused', async () => {
-    await arc.core().setPause(true);
+    await arc.core().connect(ctx.signers.pauseOperator).setPause(true);
 
     await expect(arc.deposit(COLLATERAL_AMOUNT, undefined, undefined, minter)).revertedWith(
       'SapphireCoreV1: the contract is paused',

@@ -335,7 +335,7 @@ describe('SapphireCore.withdraw()', () => {
       getScoreProof(minterCreditScore, creditScoreTree),
     );
 
-    await arc.core().setPause(true);
+    await arc.core().connect(signers.pauseOperator).setPause(true);
 
     await expect(
       arc.withdraw(
