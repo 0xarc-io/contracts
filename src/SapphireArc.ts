@@ -101,6 +101,23 @@ export class SapphireArc {
     );
   }
 
+  /**
+   * Runs repay and withdraw with full amounts at the given core.
+   */
+  async exit(
+    creditScoreProof?: CreditScoreProof,
+    synthName = this.getSynthNames()[0],
+    caller = this.signer,
+    overrides: TransactionOverrides = {},
+  ) {
+    const core = this._getCore(synthName, caller);
+
+    return core.exit(
+      creditScoreProof ?? (await getEmptyScoreProof(caller)),
+      overrides,
+    );
+  }
+
   async liquidate(
     owner: string,
     creditScoreProof?: CreditScoreProof,
