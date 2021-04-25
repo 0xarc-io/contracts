@@ -211,6 +211,7 @@ export async function deploySapphireCreditScore(
   deployer: Signer,
   merkleRoot: string,
   merkleTreeUpdater: string,
+  pauseOperator: string,
   maxScore: number,
 ) {
   const sapphireCreditScoreFactory = await ethers.getContractFactory(
@@ -220,6 +221,7 @@ export async function deploySapphireCreditScore(
   const sapphireCreditScore = await sapphireCreditScoreFactory.deploy(
     merkleRoot,
     merkleTreeUpdater,
+    pauseOperator,
     maxScore,
   );
   return sapphireCreditScore as SapphireCreditScore;
@@ -229,6 +231,7 @@ export async function deployMockSapphireCreditScore(
   deployer: Signer,
   merkleRoot: string,
   merkleTreeUpdater: string,
+  pauseOperator: string,
 ) {
   const mockSapphireCreditScoreFactory = await ethers.getContractFactory(
     'MockSapphireCreditScore',
@@ -237,6 +240,7 @@ export async function deployMockSapphireCreditScore(
   const mockSapphireCreditScore = await mockSapphireCreditScoreFactory.deploy(
     merkleRoot,
     merkleTreeUpdater,
+    pauseOperator,
   );
   return mockSapphireCreditScore as MockSapphireCreditScore;
 }
