@@ -86,7 +86,8 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
      * @param _syntheticAddress     The address of the synthetic token proxy
      * @param _oracleAddress        The address of the IOracle conforming contract
      * @param _interestSetter       The address which can update interest rates
-     * @param _assessor,            The address of assessor contract, which provides credit score functionality
+     * @param _assessorAddress,     The address of assessor contract conforming ISapphireAssessor,
+     *                              which provides credit score functionality
      * @param _feeCollector         The address of the ARC fee collector when a liquidation occurs
      * @param _highCollateralRatio  High limit of how much collateral is needed to borrow
      * @param _lowCollateralRatio   Low limit of how much collateral is needed to borrow
@@ -98,7 +99,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         address _syntheticAddress,
         address _oracleAddress,
         address _interestSetter,
-        address _assessor,
+        address _assessorAddress,
         address _feeCollector,
         uint256 _highCollateralRatio,
         uint256 _lowCollateralRatio,
@@ -134,22 +135,37 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         BaseERC20 collateral = BaseERC20(collateralAsset);
         precisionScalar = 10 ** (18 - uint256(collateral.decimals()));
 
-        setAssessor(_assessor);
+        setAssessor(_assessorAddress);
         setOracle(_oracleAddress);
         setCollateralRatios(_lowCollateralRatio, _highCollateralRatio);
         setFees(_liquidationUserFee, _liquidationArcFee);
     }
 
+    /**
+     * @dev Set the instance of the oracle to report prices from. Must conform to IOracle.sol
+     *
+     * @notice Can only be called by the admin of the proxy.
+     *
+     * @param _oracleAddress The address of the IOracle instance
+     */
     function setOracle(
-        address _oracle
+        address _oracleAddress
     )
         public
         onlyAdmin
     {
-        oracle = IOracle(_oracle);
-        emit OracleUpdated(_oracle);
+        oracle = IOracle(_oracleAddress);
+        emit OracleUpdated(_oracleAddress);
     }
 
+    /**
+     * @dev Set low and high collateral ratios of collateral value to debt.
+     *
+     * @notice Can only be called by the admin of the proxy.
+     *
+     * @param _lowCollateralRatio The minimal allowed ratio expressed up to 18 decimal places
+     * @param _highCollateralRatio The maximum allowed ratio expressed up to 18 decimal places
+     */
     function setCollateralRatios(
         uint256 _lowCollateralRatio,
         uint256 _highCollateralRatio
@@ -173,6 +189,15 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         emit CollateralRatiosUpdated(lowCollateralRatio, highCollateralRatio);
     }
 
+    /**
+     * @dev Set the fees in the system.
+     *
+     * @notice Can only be called by the admin of the proxy.
+     *
+     * @param _liquidationUserFee   Determines the penalty a user must pay by discounting
+     *                              their collateral price to provide a profit incentive for liquidators
+     * @param _liquidationArcFee    The percentage of the profit earned from the liquidation, which feeCollector earns.
+     */
     function setFees(
         uint256 _liquidationUserFee,
         uint256 _liquidationArcFee
@@ -190,6 +215,15 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         emit LiquidationFeesUpdated(liquidationUserFee, liquidationArcFee);
     }
 
+    /**
+     * @dev Set the limits of the system to ensure value can be capped.
+     *
+     * @notice Can only be called by the admin of the proxy
+     *
+     * @param _totalBorrowLimit   Maximum amount of borrowed amount that can be held in the system.
+     * @param _vaultBorrowMinimum The minimum allowed borrow amount for vault
+     * @param _vaultBorrowMaximum The maximum allowed borrow amount for vault
+     */
     function setLimits(
         uint256 _totalBorrowLimit,
         uint256 _vaultBorrowMinimum,
@@ -215,6 +249,13 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         emit LimitsUpdated(totalBorrowLimit, vaultBorrowMinimum, vaultBorrowMaximum);
     }
 
+    /**
+     * @dev Set the address which can set interest rate
+     *
+     * @notice Can only be called by the admin of the proxy
+     *
+     * @param _interestSetter The address of the new interest rate setter
+     */
     function setInterestSetter(
         address _interestSetter
     )
