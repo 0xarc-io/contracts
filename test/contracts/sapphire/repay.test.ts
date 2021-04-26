@@ -248,7 +248,7 @@ describe('SapphireCore.repay()', () => {
     ).to.be.revertedWith('SapphireCoreV1: there is not enough debt to repay');
   });
 
-  it('should not repay with a score proof if no assesor is added', async () => {
+  it('should not repay with a score proof if no assessor is added', async () => {
     await arc.core().setAssessor(constants.AddressZero);
 
     await expect(

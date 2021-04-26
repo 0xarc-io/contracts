@@ -469,10 +469,13 @@ describe('borrowed index (integration)', () => {
 
       totalBorrowed = await arc.core().totalBorrowed();
       borrowIndex = await arc.core().borrowIndex();
-      const normalizedRepayAmount = await convertPrincipal(repayAmount);
-      const expectedNormalizedAmountInVault = normalizedBorrowed // initial normalized borrowed amount
-        .add(convertedPrincipal100) // newly added amount - normalized
-        .sub(normalizedRepayAmount); // remove repayed amount - normalized
+      const expectedNormalizedAmountInVault = await convertPrincipal(
+        normalizedBorrowed // initial normalized borrowed amount
+          .add(convertedPrincipal100) // newly added amount - normalized
+          .mul(borrowIndex) // convert to actual amount
+          .div(BASE)
+          .sub(repayAmount), // remove repayed amount - actual
+      );
 
       expect(await getVaultBorrowAmount(signers.scoredMinter)).eq(
         expectedNormalizedAmountInVault,
@@ -494,13 +497,11 @@ describe('borrowed index (integration)', () => {
       );
 
       // Repay remaining interest
-      // TODO: resolve rounding - that's why I added 1
       const outstandingRepayAmt = (
         await getVaultBorrowAmount(signers.scoredMinter)
       )
         .mul(borrowIndex)
-        .div(BASE)
-        .add(1);
+        .div(BASE);
 
       // Owner doesn't have enough money to repay all debt because of interest rate
       await arc
@@ -613,9 +614,11 @@ describe('borrowed index (integration)', () => {
         signers.scoredMinter,
       );
 
-      const normalizedRepayAmount = await convertPrincipal(BORROW_AMOUNT);
-      const normalizedVaultABorrowedAfterRepay = normalizedVaultABorrowedAmount.sub(
-        normalizedRepayAmount,
+      const normalizedVaultABorrowedAfterRepay = await convertPrincipal(
+        normalizedVaultABorrowedAmount
+          .mul(borrowIndex)
+          .div(BASE)
+          .sub(BORROW_AMOUNT),
       );
       expect(await getVaultBorrowAmount(signers.scoredMinter)).eq(
         normalizedVaultABorrowedAfterRepay,
@@ -645,11 +648,9 @@ describe('borrowed index (integration)', () => {
       );
 
       // User B repays his entire debt and interest
-      // TO DO: SHOULD BE FIXED!!! because of rounding add 1
       const outstandingBalance = (await getVaultBorrowAmount(signers.minter))
         .mul(borrowIndex)
-        .div(BASE)
-        .add(1);
+        .div(BASE);
 
       await arc
         .synthetic()

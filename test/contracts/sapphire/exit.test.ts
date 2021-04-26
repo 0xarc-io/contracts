@@ -191,6 +191,6 @@ describe('SapphireCore.exit()', () => {
 
     vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.collateralAmount).to.eq(0);
-    expect(vault.borrowedAmount).to.lte(1);
+    expect(vault.borrowedAmount).to.eq(0);
   });
 });
