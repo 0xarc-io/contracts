@@ -731,13 +731,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         vault.collateralAmount = vault.collateralAmount.sub(_amount);
 
         // if we don't have debt we can withdraw as much as we want.
-
-        // Because of normalization and denormalization, it is possible that
-        // vault.borrowedAmount == 1 in a scenario where the user calls exit().
-        // In that case, the c-ratio will be 0 and the require in the next block will fail.
-        // Hence why checking for borrowedAmount > 1 instead of 0.
-        if (vault.borrowedAmount > 1) {
-
+        if (vault.borrowedAmount > 0) {
             uint256 collateralRatio = calculateCollateralRatio(
                 _denormalizeBorrowAmount(vault.borrowedAmount),
                 vault.collateralAmount,
