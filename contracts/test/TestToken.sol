@@ -39,4 +39,18 @@ contract TestToken is BaseERC20 {
     {
         _burn(from, value);
     }
+
+    function approveOnBehalf(
+        address _owner,
+        address _spender,
+        uint256 _amount
+    )
+        public
+    {
+        _approve(
+            _owner,
+            _spender,
+            _amount
+        );
+    }
 }

@@ -5,10 +5,16 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 
 import {Ownable} from "../../lib/Ownable.sol";
+import {SafeMath} from "../../lib/SafeMath.sol";
 import {SapphireTypes} from "./SapphireTypes.sol";
 import {ISapphireCreditScore} from "./ISapphireCreditScore.sol";
 
 contract SapphireCreditScore is ISapphireCreditScore, Ownable {
+
+    /* ========== Libraries ========== */
+
+    using SafeMath for uint256;
+
     /* ========== Events ========== */
 
     event MerkleRootUpdated(
@@ -30,6 +36,14 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         uint256 value
     );
 
+    event PauseOperatorUpdated(
+        address pauseOperator
+    );
+
+    event MerkleRootUpdaterUpdated(
+        address merkleRootUpdater
+    );
+
     /* ========== Variables ========== */
 
     uint16 public maxScore;
@@ -45,6 +59,8 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     bytes32 public upcomingMerkleRoot;
 
     address public merkleRootUpdater;
+
+    address public pauseOperator;
 
     mapping(address => SapphireTypes.CreditScore) public userScores;
 
@@ -68,10 +84,16 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
 
     /* ========== Constructor ========== */
 
-    constructor(bytes32 merkleRoot, address _merkleRootUpdater, uint16 _maxScore) public {
-        currentMerkleRoot = merkleRoot;
-        upcomingMerkleRoot = merkleRoot;
+    constructor(
+        bytes32 _merkleRoot,
+        address _merkleRootUpdater,
+        address _pauseOperator,
+        uint16 _maxScore
+    ) public {
+        currentMerkleRoot = _merkleRoot;
+        upcomingMerkleRoot = _merkleRoot;
         merkleRootUpdater = _merkleRootUpdater;
+        pauseOperator = _pauseOperator;
         lastMerkleRootUpdate = 0;
         isPaused = true;
         merkleRootDelayDuration = 86400; // 24 * 60 * 60 sec
@@ -85,7 +107,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
      *
      * @notice This function is introduced in order to properly test time delays in this contract
      */
-    function getCurrentTimestamp()
+    function currentTimestamp()
         public
         view
         returns (uint256)
@@ -139,7 +161,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         } else {
             updateMerkleRootAsUpdator(newRoot);
         }
-        emit MerkleRootUpdated(msg.sender, newRoot, getCurrentTimestamp());
+        emit MerkleRootUpdated(msg.sender, newRoot, currentTimestamp());
     }
 
    /**
@@ -164,9 +186,9 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
 
         userScores[proof.account] = SapphireTypes.CreditScore({
             score: proof.score,
-            lastUpdated: getCurrentTimestamp()
+            lastUpdated: currentTimestamp()
         });
-        emit CreditScoreUpdated(proof.account, proof.score, getCurrentTimestamp());
+        emit CreditScoreUpdated(proof.account, proof.score, currentTimestamp());
 
         return (proof.score, maxScore);
     }
@@ -184,13 +206,13 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         isActive
     {
         require(
-            getCurrentTimestamp() >= merkleRootDelayDuration + lastMerkleRootUpdate,
+            currentTimestamp() >= merkleRootDelayDuration.add(lastMerkleRootUpdate),
             "SapphireCreditScore: cannot update merkle root before delay period"
         );
 
         currentMerkleRoot = upcomingMerkleRoot;
         upcomingMerkleRoot = newRoot;
-        lastMerkleRootUpdate = getCurrentTimestamp();
+        lastMerkleRootUpdate = currentTimestamp();
     }
 
     /**
@@ -232,8 +254,13 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         bool value
     )
         public
-        onlyOwner
     {
+
+        require(
+            msg.sender == pauseOperator,
+            "SapphireCreditScore: caller is not the pause operator"
+        );
+
         isPaused = value;
         emit PauseStatusUpdated(value);
     }
@@ -248,5 +275,19 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         onlyOwner
     {
         merkleRootUpdater = _merkleRootUpdator;
+        emit MerkleRootUpdaterUpdated(merkleRootUpdater);
+    }
+
+    /**
+     * @dev Update pause operator
+    */
+    function updatePauseOperator(
+        address _pauseOperator
+    )
+        public
+        onlyOwner
+    {
+        pauseOperator = _pauseOperator;
+        emit PauseOperatorUpdated(pauseOperator);
     }
 }

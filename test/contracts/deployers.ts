@@ -14,13 +14,17 @@ import { TokenStakingAccrual } from '@src/typings/TokenStakingAccrual';
 import { KYFV2 } from '@src/typings/KYFV2';
 import { MockOracle } from '@src/typings/MockOracle';
 import { MockMozartCoreV2 } from '@src/typings/MockMozartCoreV2';
-import { MockMozartSavingsV2 } from '@src/typings';
+import { MockMozartSavingsV2, MockSapphireCoreV1 } from '@src/typings';
 import { MerkleDistributor } from '@src/typings/MerkleDistributor';
 import { SapphireCreditScore } from '@src/typings/SapphireCreditScore';
 import { MockSapphireCreditScore } from '@src/typings/MockSapphireCreditScore';
+import { SyntheticTokenV2 } from '@src/typings/SyntheticTokenV2';
 
 export async function deployMockMozartCore(deployer: Signer) {
-  const Contract = await ethers.getContractFactory('MockMozartCoreV2', deployer);
+  const Contract = await ethers.getContractFactory(
+    'MockMozartCoreV2',
+    deployer,
+  );
   const mozartCore = await Contract.deploy();
   return mozartCore as MockMozartCoreV2;
 }
@@ -68,8 +72,24 @@ export async function deploySpritzStateV1(
   return coreV4 as StateV1;
 }
 
+export async function deploySyntheticTokenV2(
+  deployer: Signer,
+  name: string,
+  version: string,
+) {
+  const Contract = await ethers.getContractFactory(
+    'SyntheticTokenV2',
+    deployer,
+  );
+  const syntheticTokenV2 = await Contract.deploy(name, version);
+  return syntheticTokenV2 as SyntheticTokenV2;
+}
+
 export async function deploySyntheticTokenV1(deployer: Signer) {
-  const Contract = await ethers.getContractFactory('SyntheticTokenV1', deployer);
+  const Contract = await ethers.getContractFactory(
+    'SyntheticTokenV1',
+    deployer,
+  );
   const syntheticTokenV1 = await Contract.deploy();
   return syntheticTokenV1 as SyntheticTokenV1;
 }
@@ -86,28 +106,50 @@ export async function deployTestToken(
   symbol: string,
   decimals: BigNumberish = 18,
 ) {
-  const testToken = await new TestTokenFactory(deployer).deploy(name, symbol, decimals);
+  const testToken = await new TestTokenFactory(deployer).deploy(
+    name,
+    symbol,
+    decimals,
+  );
   return testToken;
 }
 
-export async function deployArcProxy(deployer: Signer, logic: string, admin: string, data: any[]) {
-  const arcProxy = await new ArcProxyFactory(deployer).deploy(logic, admin, data);
+export async function deployArcProxy(
+  deployer: Signer,
+  logic: string,
+  admin: string,
+  data: any[],
+) {
+  const arcProxy = await new ArcProxyFactory(deployer).deploy(
+    logic,
+    admin,
+    data,
+  );
   return arcProxy;
 }
 
 export async function deployMockSavings(deployer: Signer) {
-  const Contract = await ethers.getContractFactory('MockMozartSavingsV2', deployer);
+  const Contract = await ethers.getContractFactory(
+    'MockMozartSavingsV2',
+    deployer,
+  );
   const savings = await Contract.deploy();
   return savings as MockMozartSavingsV2;
 }
 
 export async function deployStaticSynthetic(deployer: Signer) {
-  const Contract = await ethers.getContractFactory('StaticSyntheticToken', deployer);
+  const Contract = await ethers.getContractFactory(
+    'StaticSyntheticToken',
+    deployer,
+  );
   const staticSyntheticToken = await Contract.deploy('Synth', 'SYNTHUS');
   return staticSyntheticToken as StaticSyntheticToken;
 }
 
-export async function deployAddressAccrual(deployer: Signer, rewardToken: string) {
+export async function deployAddressAccrual(
+  deployer: Signer,
+  rewardToken: string,
+) {
   const Contract = await ethers.getContractFactory('AddressAccrual', deployer);
   const addressAccrual = await Contract.deploy(rewardToken);
   return addressAccrual as AddressAccrual;
@@ -120,8 +162,16 @@ export async function deployMockRewardCampaign(
   rewardToken: string,
   stakingToken: string,
 ) {
-  const Contract = await ethers.getContractFactory('MockRewardCampaign', deployer);
-  const mockRewardCampaign = await Contract.deploy(dao, distributor, rewardToken, stakingToken);
+  const Contract = await ethers.getContractFactory(
+    'MockRewardCampaign',
+    deployer,
+  );
+  const mockRewardCampaign = await Contract.deploy(
+    dao,
+    distributor,
+    rewardToken,
+    stakingToken,
+  );
   return mockRewardCampaign as MockRewardCampaign;
 }
 
@@ -130,7 +180,10 @@ export async function deployTokenStakingAccrual(
   stakingToken: string,
   rewardToken: string,
 ) {
-  const Contract = await ethers.getContractFactory('TokenStakingAccrual', deployer);
+  const Contract = await ethers.getContractFactory(
+    'TokenStakingAccrual',
+    deployer,
+  );
   const tokenStakingAccrual = await Contract.deploy(stakingToken, rewardToken);
   return tokenStakingAccrual as TokenStakingAccrual;
 }
@@ -141,26 +194,62 @@ export async function deployKyfV2(deployer: Signer) {
   return kyfv2 as KYFV2;
 }
 
-export async function deployMerkleDistributor(deployer: Signer, token: string, merkleRoot: string) {
-  const merkleDistributorFactory = await ethers.getContractFactory('MerkleDistributor', deployer);
+export async function deployMerkleDistributor(
+  deployer: Signer,
+  token: string,
+  merkleRoot: string,
+) {
+  const merkleDistributorFactory = await ethers.getContractFactory(
+    'MerkleDistributor',
+    deployer,
+  );
   const distributor = await merkleDistributorFactory.deploy(token, merkleRoot);
   return distributor as MerkleDistributor;
 }
 
-export async function deploySapphireCreditScore(deployer: Signer, merkleRoot: string, merkleTreeUpdater: string, maxScore: number) {
+export async function deploySapphireCreditScore(
+  deployer: Signer,
+  merkleRoot: string,
+  merkleTreeUpdater: string,
+  pauseOperator: string,
+  maxScore: number,
+) {
   const sapphireCreditScoreFactory = await ethers.getContractFactory(
     'SapphireCreditScore',
     deployer,
   );
-  const sapphireCreditScore = await sapphireCreditScoreFactory.deploy(merkleRoot, merkleTreeUpdater, maxScore);
+  const sapphireCreditScore = await sapphireCreditScoreFactory.deploy(
+    merkleRoot,
+    merkleTreeUpdater,
+    pauseOperator,
+    maxScore,
+  );
   return sapphireCreditScore as SapphireCreditScore;
 }
 
-export async function deployMockSapphireCreditScore(deployer: Signer, merkleRoot: string, merkleTreeUpdater: string) {
+export async function deployMockSapphireCreditScore(
+  deployer: Signer,
+  merkleRoot: string,
+  merkleTreeUpdater: string,
+  pauseOperator: string,
+) {
   const mockSapphireCreditScoreFactory = await ethers.getContractFactory(
     'MockSapphireCreditScore',
     deployer,
   );
-  const mockSapphireCreditScore = await mockSapphireCreditScoreFactory.deploy(merkleRoot, merkleTreeUpdater);
+  const mockSapphireCreditScore = await mockSapphireCreditScoreFactory.deploy(
+    merkleRoot,
+    merkleTreeUpdater,
+    pauseOperator,
+  );
   return mockSapphireCreditScore as MockSapphireCreditScore;
+}
+
+export async function deployMockSapphireCoreV1(deployer: Signer) {
+  const factory = await ethers.getContractFactory(
+    'MockSapphireCoreV1',
+    deployer,
+  );
+  const contract = await factory.deploy();
+  return contract as MockSapphireCoreV1;
 }

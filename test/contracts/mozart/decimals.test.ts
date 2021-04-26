@@ -13,7 +13,7 @@ import { MozartTestArc } from '@src/MozartTestArc';
 import { BigNumber } from '@ethersproject/bignumber';
 
 // These tests do not reset and act more as integration tests for weird decimal tokens
-describe('Mozart.decimals', () => {
+xdescribe('Mozart.decimals', () => {
   let ctx: ITestContext;
   let arc: MozartTestArc;
 

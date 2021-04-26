@@ -3,8 +3,6 @@
 pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
-import {Amount} from "../../lib/Amount.sol";
-
 library SapphireTypes {
 
     struct ScoreProof {
@@ -16,6 +14,25 @@ library SapphireTypes {
     struct CreditScore {
         uint256 score;
         uint256 lastUpdated;
+    }
+
+    struct Vault {
+        uint256 collateralAmount;
+        uint256 borrowedAmount;
+    }
+
+    enum Operation {
+        Deposit,
+        Withdraw,
+        Borrow,
+        Repay,
+        Liquidate
+    }
+
+    struct Action {
+        uint256 amount;
+        Operation operation;
+        address userToLiquidate;
     }
 
 }

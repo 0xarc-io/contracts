@@ -14,6 +14,10 @@ import {IERC20} from "../token/IERC20.sol";
 import {IMozartCoreV2} from "../debt/mozart/IMozartCoreV2.sol";
 import {MozartTypes} from "../debt/mozart/MozartTypes.sol";
 
+/**
+ * @notice A farm with two reward tokens and supporting
+ *         multiple state contracts
+ */
 contract JointCampaignV2 is Ownable {
 
     using SafeMath for uint256;

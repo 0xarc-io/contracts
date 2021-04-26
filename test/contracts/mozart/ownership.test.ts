@@ -14,7 +14,7 @@ import { TEN_PERCENT } from '@src/constants';
 import { BigNumberish } from '@ethersproject/bignumber';
 import Token from '@src/utils/Token';
 
-describe('Mozart.ownership', () => {
+xdescribe('Mozart.ownership', () => {
   const COLLATERAL_AMOUNT = ArcNumber.new(100);
   const BORROW_AMOUNT = ArcNumber.new(50);
 

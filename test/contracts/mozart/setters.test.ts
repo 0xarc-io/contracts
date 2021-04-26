@@ -10,7 +10,7 @@ import { Signer } from '@ethersproject/abstract-signer';
 import { BigNumber } from '@ethersproject/bignumber';
 import { MockMozartCoreV2, MockMozartCoreV2Factory } from '@src/typings';
 
-describe('MozartCore.setters', () => {
+xdescribe('MozartCore.setters', () => {
   let ctx: ITestContext;
   let core: MockMozartCoreV2;
 
