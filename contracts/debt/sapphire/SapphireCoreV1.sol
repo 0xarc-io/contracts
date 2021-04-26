@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-// prettier-ignore
 
 pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
@@ -726,13 +725,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         vault.collateralAmount = vault.collateralAmount.sub(_amount);
 
         // if we don't have debt we can withdraw as much as we want.
-
-        // Because of normalization and denormalization, it is possible that
-        // vault.borrowedAmount == 1 in a scenario where the user calls exit().
-        // In that case, the c-ratio will be 0 and the require in the next block will fail.
-        // Hence why checking for borrowedAmount > 1 instead of 0.
-        if (vault.borrowedAmount > 1) {
-
+        if (vault.borrowedAmount > 0) {
             uint256 collateralRatio = calculateCollateralRatio(
                 _denormalizeBorrowAmount(vault.borrowedAmount),
                 vault.collateralAmount,
@@ -784,22 +777,28 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             "SapphireCoreV1: the vault will become undercollateralized"
         );
 
-        // Record borrow amount (update vault and total amount)
-        uint256 normalizedBorrowAmount = _normalizeBorrowAmount(_amount);
-        vault.borrowedAmount = vault.borrowedAmount.add(normalizedBorrowAmount);
-        totalBorrowed = totalBorrowed.add(normalizedBorrowAmount);
-
+        // Calculate actual vault borrow amount
         uint256 actualVaultBorrowAmount = _denormalizeBorrowAmount(vault.borrowedAmount);
+
+        // Calculate new actual vault borrow amount
+        uint256 _newActualVaultBorrowAmount = actualVaultBorrowAmount.add(_amount);
+
+        // Calculate new normalized vault borrow amount
+        uint256 _newNormalizedVaultBorrowAmount = _normalizeBorrowAmount(_newActualVaultBorrowAmount);
+
+        // Record borrow amount (update vault and total amount)
+        totalBorrowed = totalBorrowed.sub(vault.borrowedAmount).add(_newNormalizedVaultBorrowAmount);
+        vault.borrowedAmount = _newNormalizedVaultBorrowAmount;
 
         // Do not borrow more than the maximum vault borrow amount
         require(
-            actualVaultBorrowAmount <= vaultBorrowMaximum,
+            _newActualVaultBorrowAmount <= vaultBorrowMaximum,
             "SapphireCoreV1: borrowed amount cannot be greater than vault limit"
         );
 
         // Do not borrow if amount is smaller than limit
         require(
-            actualVaultBorrowAmount >= vaultBorrowMinimum,
+            _newActualVaultBorrowAmount >= vaultBorrowMinimum,
             "SapphireCoreV1: borrowed amount cannot be less than limit"
         );
 
@@ -832,19 +831,22 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         // Get the user's vault
         SapphireTypes.Vault storage vault = vaults[_owner];
 
-        // Update vault
-        uint256 normalizedBorrowAmount = _normalizeBorrowAmount(_amount);
+        // Calculate actual vault borrow amount
+        uint256 actualVaultBorrowAmount = _denormalizeBorrowAmount(vault.borrowedAmount);
 
         require(
-            normalizedBorrowAmount <= vault.borrowedAmount,
+            _amount <= actualVaultBorrowAmount,
             "SapphireCoreV1: there is not enough debt to repay"
         );
 
-        // Update vault
-        vault.borrowedAmount = vault.borrowedAmount.sub(normalizedBorrowAmount);
+        // Calculate new vault's borrowed amount
+        uint256 _newBorrowAmount = _normalizeBorrowAmount(actualVaultBorrowAmount.sub(_amount));
 
         // Update total borrow amount
-        totalBorrowed = totalBorrowed.sub(normalizedBorrowAmount);
+        totalBorrowed = totalBorrowed.sub(vault.borrowedAmount).add(_newBorrowAmount);
+
+        // Update vault
+        vault.borrowedAmount = _newBorrowAmount;
 
         // Transfer tokens to the core
         ISyntheticTokenV2(syntheticAsset).transferFrom(

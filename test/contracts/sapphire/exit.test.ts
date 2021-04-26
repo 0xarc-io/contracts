@@ -5,20 +5,15 @@ import { approve } from '@src/utils/approve';
 import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { getScoreProof } from '@src/utils/getScoreProof';
-import {
-  DEFAULT_COLLATERAL_DECIMALS,
-  DEFAULT_PRICE,
-} from '@test/helpers/sapphireDefaults';
-import {
-  mintApprovedCollateral,
-  setupBaseVault,
-} from '@test/helpers/setupBaseVault';
+import { DEFAULT_COLLATERAL_DECIMALS } from '@test/helpers/sapphireDefaults';
+import { setupBaseVault } from '@test/helpers/setupBaseVault';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { BigNumber, utils } from 'ethers';
 import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
+import { BASE } from '@src/constants';
 
 const COLLATERAL_AMOUNT = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS);
 const BORROW_AMOUNT = utils.parseEther('500');
@@ -65,10 +60,9 @@ describe('SapphireCore.exit()', () => {
 
     await setupSapphire(ctx, {
       merkleRoot: creditScoreTree.getHexRoot(),
+      // Set the price to $1
+      price: utils.parseEther('1'),
     });
-
-    // Set the price to $1
-    await ctx.sdks.sapphire.updatePrice(DEFAULT_PRICE);
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -164,17 +158,21 @@ describe('SapphireCore.exit()', () => {
     // increase time by 1 second
     await arc.updateTime(2);
 
+    // Vault contains principal borrow amount
     let vault = await arc.getVault(signers.scoredMinter.address);
-    expect(vault.borrowedAmount).to.be.gt(BORROW_AMOUNT);
+    // Get borrow index, which will be used to calculate actual borrow amount in the core contract
+    const borrowIndex = await arc.core().currentBorrowIndex();
+    const actualBorrowAmount = vault.borrowedAmount.mul(borrowIndex).div(BASE);
+    // Check actual borrowed amount, not principal one
+    expect(actualBorrowAmount).to.be.gt(BORROW_AMOUNT);
 
     // Approve repay amount
     await approve(
-      vault.borrowedAmount,
+      actualBorrowAmount,
       arc.syntheticAddress(),
       arc.coreAddress(),
       signers.scoredMinter,
     );
-
     // Try to exit but fail because user does not have enough balance due to
     // the accrued interest
     await expect(
@@ -183,7 +181,7 @@ describe('SapphireCore.exit()', () => {
       'SyntheticTokenV2: sender does not have enough balance',
     );
 
-    const accruedInterest = vault.borrowedAmount.sub(BORROW_AMOUNT);
+    const accruedInterest = actualBorrowAmount.sub(BORROW_AMOUNT);
     await arc
       .synthetic()
       .connect(signers.admin)
@@ -193,6 +191,6 @@ describe('SapphireCore.exit()', () => {
 
     vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.collateralAmount).to.eq(0);
-    expect(vault.borrowedAmount).to.lte(1);
+    expect(vault.borrowedAmount).to.eq(0);
   });
 });
