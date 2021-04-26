@@ -19,7 +19,7 @@
     {
       "files": "*.json",
       "options": {
-        "useTabs": true,
+        "useTabs": false,
         "singleQuote": false,
         "semi": false,
         "trailingComma": false
