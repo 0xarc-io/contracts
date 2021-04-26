@@ -1,4 +1,4 @@
-import { BigNumber, BigNumberish, constants } from 'ethers';
+import { BigNumber, BigNumberish, constants, utils } from 'ethers';
 import { BASE } from '@src/constants';
 import ArcNumber from '@src/utils/ArcNumber';
 import { ITestContext } from './context';
@@ -10,7 +10,6 @@ import _ from 'lodash';
 import {
   DEFAULT_HiGH_C_RATIO,
   DEFAULT_LOW_C_RATIO,
-  DEFAULT_PRICE,
   DEFAULT_TOTAL_BORROW_LIMIT,
   DEFAULT_VAULT_BORROW_MAXIMUM,
   DEFAULT_VAULT_BORROW_MIN,
@@ -90,14 +89,14 @@ export async function setupSapphire(
     merkleRoot,
     limits,
     fees,
-    price = DEFAULT_PRICE,
+    price,
     interestRate,
   }: SapphireSetupOptions,
 ) {
   const arc = ctx.sdks.sapphire;
 
   // Update the collateral ratio
-  const core = await arc.synth().core;
+  const core = arc.synth().core;
   await core.setCollateralRatios(
     limits?.lowCollateralRatio || DEFAULT_LOW_C_RATIO,
     limits?.highCollateralRatio || DEFAULT_HiGH_C_RATIO,

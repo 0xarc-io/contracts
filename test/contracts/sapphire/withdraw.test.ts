@@ -53,7 +53,6 @@ describe('SapphireCore.withdraw()', () => {
 
     await setupSapphire(ctx, {
       merkleRoot: creditScoreTree.getHexRoot(),
-      price: DEFAULT_PRICE,
     });
   }
 
