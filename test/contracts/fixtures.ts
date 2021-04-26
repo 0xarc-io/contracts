@@ -228,9 +228,12 @@ export async function sapphireFixture(
     deployer,
     '0x1111111111111111111111111111111111111111111111111111111111111111',
     ctx.signers.interestSetter.address,
+    ctx.signers.pauseOperator.address,
   );
 
-  await ctx.contracts.sapphire.creditScore.setPause(false);
+  await ctx.contracts.sapphire.creditScore
+    .connect(ctx.signers.pauseOperator)
+    .setPause(false);
 
   ctx.contracts.sapphire.assessor = await new SapphireAssessorFactory(
     deployer,
@@ -248,6 +251,7 @@ export async function sapphireFixture(
     ctx.contracts.synthetic.tokenV2.address,
     ctx.contracts.oracle.address,
     ctx.signers.interestSetter.address,
+    ctx.signers.pauseOperator.address,
     ctx.contracts.sapphire.assessor.address,
     ctx.signers.feeCollector.address,
     DEFAULT_HiGH_C_RATIO,
@@ -261,7 +265,9 @@ export async function sapphireFixture(
   // Add admin minter
   await tokenV2.addMinter(ctx.signers.admin.address, MAX_UINT256);
 
-  await ctx.contracts.sapphire.core.setPause(false);
+  await ctx.contracts.sapphire.core
+    .connect(ctx.signers.pauseOperator)
+    .setPause(false);
 
   ctx.sdks.sapphire = SapphireTestArc.new(deployer);
   await ctx.sdks.sapphire.addSynths({ sapphireSynth: coreProxy.address });

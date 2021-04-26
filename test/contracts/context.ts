@@ -48,6 +48,7 @@ export async function generateContext(
   signers.positionOperator = retrievedSigners[7];
   signers.unauthorised = retrievedSigners[8];
   signers.scoredMinter = retrievedSigners[9];
+  signers.pauseOperator = signers.positionOperator;
 
   const sdks = {} as SDKs;
   const contracts = {

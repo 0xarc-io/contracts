@@ -60,6 +60,8 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
     event InterestSetterUpdated(address _newInterestSetter);
 
+    event PauseOperatorUpdated(address _newPauseOperator);
+
     event AssessorUpdated(address _newAssessor);
 
     event CollateralRatiosUpdated(
@@ -86,6 +88,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
      * @param _syntheticAddress     The address of the synthetic token proxy
      * @param _oracleAddress        The address of the IOracle conforming contract
      * @param _interestSetter       The address which can update interest rates
+     * @param _pauseOperator        The address which can pause the contract
      * @param _assessorAddress,     The address of assessor contract conforming ISapphireAssessor,
      *                              which provides credit score functionality
      * @param _feeCollector         The address of the ARC fee collector when a liquidation occurs
@@ -99,6 +102,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         address _syntheticAddress,
         address _oracleAddress,
         address _interestSetter,
+        address _pauseOperator,
         address _assessorAddress,
         address _feeCollector,
         uint256 _highCollateralRatio,
@@ -130,6 +134,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         collateralAsset = _collateralAddress;
         syntheticAsset = _syntheticAddress;
         interestSetter = _interestSetter;
+        pauseOperator = _pauseOperator;
         feeCollector = _feeCollector;
 
         BaseERC20 collateral = BaseERC20(collateralAsset);
@@ -266,6 +271,16 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         emit InterestSetterUpdated(interestSetter);
     }
 
+    function setPauseOperator(
+        address _pauseOperator
+    )
+        public
+        onlyAdmin
+    {
+        pauseOperator = _pauseOperator;
+        emit PauseOperatorUpdated(pauseOperator);
+    }
+
     function setAssessor(
         address _assessor
     )
@@ -290,8 +305,12 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         bool _value
     )
         public
-        onlyAdmin
     {
+        require(
+            msg.sender == pauseOperator,
+            "SapphireCoreV1: caller is not the pause operator"
+        );
+
         paused = _value;
         emit PauseStatusUpdated(paused);
     }

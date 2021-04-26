@@ -2,7 +2,10 @@ import { BigNumber, BigNumberish, constants } from 'ethers';
 import { BASE } from '@src/constants';
 import ArcNumber from '@src/utils/ArcNumber';
 import { ITestContext } from './context';
-import { immediatelyUpdateMerkleRoot, setStartingBalances } from '../helpers/testingUtils';
+import {
+  immediatelyUpdateMerkleRoot,
+  setStartingBalances,
+} from '../helpers/testingUtils';
 import _ from 'lodash';
 import {
   DEFAULT_HiGH_C_RATIO,
@@ -42,7 +45,10 @@ export interface SapphireSetupOptions {
   price?: BigNumberish;
 }
 
-export async function setupMozart(ctx: ITestContext, options: MozartSetupOptions) {
+export async function setupMozart(
+  ctx: ITestContext,
+  options: MozartSetupOptions,
+) {
   const arc = ctx.sdks.mozart;
 
   // Set the starting timestamp
@@ -80,7 +86,13 @@ export async function setupMozart(ctx: ITestContext, options: MozartSetupOptions
  */
 export async function setupSapphire(
   ctx: ITestContext,
-  { merkleRoot, limits, fees, price = DEFAULT_PRICE, interestRate }: SapphireSetupOptions,
+  {
+    merkleRoot,
+    limits,
+    fees,
+    price = DEFAULT_PRICE,
+    interestRate,
+  }: SapphireSetupOptions,
 ) {
   const arc = ctx.sdks.sapphire;
 
@@ -99,7 +111,12 @@ export async function setupSapphire(
   );
 
   if (!_.isEmpty(fees)) {
-    await arc.synth().core.setFees(fees.liquidationUserFee || '0', fees.liquidationArcFee || '0');
+    await arc
+      .synth()
+      .core.setFees(
+        fees.liquidationUserFee || '0',
+        fees.liquidationArcFee || '0',
+      );
   }
 
   if (price) {
@@ -107,12 +124,13 @@ export async function setupSapphire(
   }
 
   if (interestRate) {
-    await core.connect(ctx.signers.interestSetter).setInterestRate(interestRate);
+    await core
+      .connect(ctx.signers.interestSetter)
+      .setInterestRate(interestRate);
   }
 
   // Set the merkle root
   if (merkleRoot) {
-    await ctx.contracts.sapphire.creditScore.setPause(false);
     await immediatelyUpdateMerkleRoot(
       ctx.contracts.sapphire.creditScore.connect(ctx.signers.interestSetter),
       merkleRoot,
