@@ -25,7 +25,6 @@ import { getScoreProof } from '@src/utils/getScoreProof';
 import * as helperSetupbaseVault from '../../helpers/setupBaseVault';
 import {
   DEFAULT_COLLATERAL_DECIMALS,
-  DEFAULT_PRICE,
 } from '@test/helpers/sapphireDefaults';
 
 chai.use(solidity);
@@ -36,7 +35,7 @@ const LIQUIDATION_USER_FEE = utils.parseEther('0.1');
 const LIQUIDATION_ARC_FEE = utils.parseEther('0.1');
 
 const COLLATERAL_AMOUNT = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS);
-const COLLATERAL_PRICE = DEFAULT_PRICE;
+const COLLATERAL_PRICE = utils.parseEther('1');
 const BORROW_AMOUNT = utils.parseEther('500');
 
 const PRECISION_SCALAR = BigNumber.from(10).pow(

@@ -2,7 +2,6 @@ import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
 import { TestingSigners } from '@arc-types/testing';
 import { BigNumber } from '@ethersproject/bignumber';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { BASE } from '@src/constants';
 import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { SyntheticTokenV2Factory } from '@src/typings';
@@ -94,7 +93,7 @@ describe('SapphireCore.repay()', () => {
     // Confirm c-ratio of 200%
     let cRatio = vault.collateralAmount
       .mul(PRECISION_SCALAR)
-      .mul(BASE)
+      .mul(DEFAULT_PRICE)
       .div(vault.borrowedAmount);
     expect(cRatio).to.eq(constants.WeiPerEther.mul(2));
 
@@ -123,7 +122,7 @@ describe('SapphireCore.repay()', () => {
      */
     cRatio = vault.collateralAmount
       .mul(PRECISION_SCALAR)
-      .mul(BASE)
+      .mul(DEFAULT_PRICE)
       .div(vault.borrowedAmount);
     expect(cRatio).to.eq(constants.WeiPerEther.mul(4));
   });
@@ -131,9 +130,9 @@ describe('SapphireCore.repay()', () => {
   it('repays to make the position collateralized', async () => {
     /**
      * Drop the price to make the position undercollateralized.
-     * The new c-ratio is 1000 * 0.45 / 500 = 90%
+     * The new c-ratio is 1000 * 4.5 / 5000 = 90%
      */
-    const newPrice = utils.parseEther('0.45');
+    const newPrice = utils.parseEther('4.5');
     await arc.updatePrice(newPrice);
 
     // Ensure position is undercollateralized
