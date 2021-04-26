@@ -31,7 +31,7 @@ const SECONDS_PER_MONTH = BigNumber.from(30 * 24 * 60 * 60);
 // https://www.wolframalpha.com/input/?i=31536000th+root+of+1.05
 const INTEREST_RATE = BigNumber.from(1547125957);
 
-describe.only('borrowed index (integration)', () => {
+describe('borrowed index (integration)', () => {
   let arc: SapphireTestArc;
   let signers: TestingSigners;
   let minterCreditScore: CreditScore;
