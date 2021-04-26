@@ -539,6 +539,11 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             _scoreProof,
             msg.sender
         );
+
+        // // Get rid of debt if rest is left because of normalization
+        // if ( vaults[msg.sender].borrowedAmount == 1) {
+        //     vaults[msg.sender].borrowedAmount = 0;
+        // }
     }
 
     function updateIndex()
@@ -784,22 +789,28 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             "SapphireCoreV1: the vault will become undercollateralized"
         );
 
-        // Record borrow amount (update vault and total amount)
-        uint256 normalizedBorrowAmount = _normalizeBorrowAmount(_amount);
-        vault.borrowedAmount = vault.borrowedAmount.add(normalizedBorrowAmount);
-        totalBorrowed = totalBorrowed.add(normalizedBorrowAmount);
-
+        // Calculate actual vault borrow amount
         uint256 actualVaultBorrowAmount = _denormalizeBorrowAmount(vault.borrowedAmount);
+
+        // Calculate new actual vault borrow amount
+        uint256 _newActualVaultBorrowAmount = actualVaultBorrowAmount.add(_amount);
+
+        // Calculate new normalized vault borrow amount
+        uint256 _newNormalizedVaultBorrowAmount = _normalizeBorrowAmount(_newActualVaultBorrowAmount);
+
+        // Record borrow amount (update vault and total amount)
+        totalBorrowed = totalBorrowed.sub(vault.borrowedAmount).add(_newNormalizedVaultBorrowAmount);
+        vault.borrowedAmount = _newNormalizedVaultBorrowAmount;
 
         // Do not borrow more than the maximum vault borrow amount
         require(
-            actualVaultBorrowAmount <= vaultBorrowMaximum,
+            _newActualVaultBorrowAmount <= vaultBorrowMaximum,
             "SapphireCoreV1: borrowed amount cannot be greater than vault limit"
         );
 
         // Do not borrow if amount is smaller than limit
         require(
-            actualVaultBorrowAmount >= vaultBorrowMinimum,
+            _newActualVaultBorrowAmount >= vaultBorrowMinimum,
             "SapphireCoreV1: borrowed amount cannot be less than limit"
         );
 
@@ -832,19 +843,22 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         // Get the user's vault
         SapphireTypes.Vault storage vault = vaults[_owner];
 
-        // Update vault
-        uint256 normalizedBorrowAmount = _normalizeBorrowAmount(_amount);
+        // Calculate actual vault borrow amount
+        uint256 actualVaultBorrowAmount = _denormalizeBorrowAmount(vault.borrowedAmount);
 
         require(
-            normalizedBorrowAmount <= vault.borrowedAmount,
+            _amount <= actualVaultBorrowAmount,
             "SapphireCoreV1: there is not enough debt to repay"
         );
 
-        // Update vault
-        vault.borrowedAmount = vault.borrowedAmount.sub(normalizedBorrowAmount);
+        // Calculate new vault's borrowed amount
+        uint256 _newBorrowAmount = _normalizeBorrowAmount(actualVaultBorrowAmount.sub(_amount));
 
         // Update total borrow amount
-        totalBorrowed = totalBorrowed.sub(normalizedBorrowAmount);
+        totalBorrowed = totalBorrowed.sub(vault.borrowedAmount).add(_newBorrowAmount);
+
+        // Update vault
+        vault.borrowedAmount = _newBorrowAmount;
 
         // Transfer tokens to the core
         ISyntheticTokenV2(syntheticAsset).transferFrom(
