@@ -12,7 +12,7 @@ import { SpritzTestArc } from '@src/SpritzTestArc';
 import { spritzFixture } from '../fixtures';
 import { AssetType } from '@arc-types/core';
 
-describe('Spritz.operatePosition(open)', () => {
+xdescribe('Spritz.operatePosition(open)', () => {
   let ctx: ITestContext;
   let arc: SpritzTestArc;
 

@@ -18,8 +18,16 @@ import { MockOracle } from '@src/typings/MockOracle';
 import { TestToken } from '@src/typings/TestToken';
 import { SpritzTestArc } from '@src/SpritzTestArc';
 import { MozartTestArc } from '@src/MozartTestArc';
-import { MockMozartCoreV2, MockMozartSavingsV2 } from '@src/typings';
-import { SapphireCreditScore } from '@src/typings/SapphireCreditScore';
+import {
+  MockMozartCoreV2,
+  MockMozartSavingsV2,
+  MockSapphireCoreV1,
+  MockSapphireCreditScore,
+  SapphireAssessor,
+  SapphireMapperLinear,
+  SyntheticTokenV2,
+} from '@src/typings';
+import { SapphireTestArc } from '@src/SapphireTestArc';
 
 export interface TestingSigners {
   admin: SignerWithAddress;
@@ -27,15 +35,18 @@ export interface TestingSigners {
   interestSetter: SignerWithAddress;
   liquidator: SignerWithAddress;
   staker: SignerWithAddress;
-  revenue: SignerWithAddress;
+  feeCollector: SignerWithAddress;
   globalOperator: SignerWithAddress;
   positionOperator: SignerWithAddress;
   unauthorised: SignerWithAddress;
+  scoredMinter: SignerWithAddress;
+  pauseOperator: SignerWithAddress;
 }
 
 export interface SDKs {
   spritz?: SpritzTestArc;
   mozart?: MozartTestArc;
+  sapphire?: SapphireTestArc;
 }
 
 export interface Contracts {
@@ -51,11 +62,15 @@ export interface Contracts {
     savings: MockMozartSavingsV2;
   };
   sapphire: {
-    creditScore: SapphireCreditScore;
-  }
+    core: MockSapphireCoreV1;
+    creditScore: MockSapphireCreditScore;
+    linearMapper: SapphireMapperLinear;
+    assessor: SapphireAssessor;
+  };
   synthetic: {
     static: StaticSyntheticToken;
     tokenV1: SyntheticTokenV1;
+    tokenV2: SyntheticTokenV2;
   };
   staking: {
     addressAccrual: AddressAccrual;

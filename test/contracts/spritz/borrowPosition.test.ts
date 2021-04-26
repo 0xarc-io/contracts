@@ -9,7 +9,7 @@ import { SpritzTestArc } from '@src/SpritzTestArc';
 import { spritzFixture } from '../fixtures';
 import { addSnapshotBeforeRestoreAfterEach } from '../../helpers/testingUtils';
 
-describe('Spritz.operateAction(Borrow)', () => {
+xdescribe('Spritz.operateAction(Borrow)', () => {
   let positionId: BigNumberish;
   let ctx: ITestContext;
   let arc: SpritzTestArc;

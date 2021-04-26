@@ -13,7 +13,7 @@ import { addSnapshotBeforeRestoreAfterEach } from '../../helpers/testingUtils';
 import { StateV1Factory } from '@src/typings/StateV1Factory';
 import { StateV1 } from '@src/typings/StateV1';
 
-describe('Spritz.StateV1', () => {
+xdescribe('Spritz.StateV1', () => {
   let ctx: ITestContext;
   let arc: SpritzTestArc;
 

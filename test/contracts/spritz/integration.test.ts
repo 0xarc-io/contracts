@@ -14,7 +14,7 @@ import { Operation } from '@arc-types/core';
 
 let currentPosition: BigNumberish;
 
-describe('Spritz.integration', () => {
+xdescribe('Spritz.integration', () => {
   let ctx: ITestContext;
   let arc: SpritzTestArc;
 
