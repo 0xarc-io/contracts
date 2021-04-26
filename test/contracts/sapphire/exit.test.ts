@@ -158,17 +158,21 @@ describe('SapphireCore.exit()', () => {
     // increase time by 1 second
     await arc.updateTime(2);
 
+    // Vault contains principal borrow amount
     let vault = await arc.getVault(signers.scoredMinter.address);
-    expect(vault.borrowedAmount).to.be.gt(BORROW_AMOUNT);
+    // Get borrow index, which will be used to calculate actual borrow amount in the core contract
+    const borrowIndex = await arc.core().currentBorrowIndex();
+    const actualBorrowAmount = vault.borrowedAmount.mul(borrowIndex).div(BASE);
+    // Check actual borrowed amount, not principal one
+    expect(actualBorrowAmount).to.be.gt(BORROW_AMOUNT);
 
     // Approve repay amount
     await approve(
-      vault.borrowedAmount,
+      actualBorrowAmount,
       arc.syntheticAddress(),
       arc.coreAddress(),
       signers.scoredMinter,
     );
-
     // Try to exit but fail because user does not have enough balance due to
     // the accrued interest
     await expect(
@@ -177,7 +181,7 @@ describe('SapphireCore.exit()', () => {
       'SyntheticTokenV2: sender does not have enough balance',
     );
 
-    const accruedInterest = vault.borrowedAmount.sub(BORROW_AMOUNT);
+    const accruedInterest = actualBorrowAmount.sub(BORROW_AMOUNT);
     await arc
       .synthetic()
       .connect(signers.admin)
