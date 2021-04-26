@@ -32,7 +32,7 @@ const THREE_BYTES32 =
  * be posted. The logic around this contract needs to be very sound since we anticipate
  * it to be a core DeFi primitive for other applications to build on.
  */
-describe.only('SapphireCreditScore', () => {
+describe('SapphireCreditScore', () => {
   let creditScoreContract: MockSapphireCreditScore;
   let merkleRootUpdater: SignerWithAddress;
   let unauthorised: SignerWithAddress;
