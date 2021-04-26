@@ -3,7 +3,11 @@ import { loadContract } from '../../deployments/src/loadContracts';
 import { DeploymentType } from '../../deployments/src/writeToDeployments';
 import { generatedWallets } from '../helpers/generatedWallets';
 import { expect } from 'chai';
-import { ArcxTokenFactory, SynthRegistryFactory, SynthRegistryV2Factory } from '@src/typings';
+import {
+  ArcxTokenFactory,
+  SynthRegistryFactory,
+  SynthRegistryV2Factory,
+} from '@src/typings';
 import { deploymentTestNetworks } from '../../deployments/config';
 
 /* eslint-disable @typescript-eslint/no-var-requires */
@@ -45,10 +49,15 @@ function testNetwork(network: string) {
       name: 'SynthRegistry',
     });
 
-    const synthRegistry = SynthRegistryFactory.connect(synthRegistryDetails.address, signer);
+    const synthRegistry = SynthRegistryFactory.connect(
+      synthRegistryDetails.address,
+      signer,
+    );
 
     it('should have the correct owner set for the synthetic registry', async () => {
-      expect(await (await synthRegistry.owner()).toLowerCase()).to.equal(eoaOwner);
+      expect(await (await synthRegistry.owner()).toLowerCase()).to.equal(
+        eoaOwner,
+      );
     });
   } catch {}
 
@@ -59,10 +68,15 @@ function testNetwork(network: string) {
       name: 'SynthRegistryV2',
     });
 
-    const synthRegistry = SynthRegistryV2Factory.connect(synthRegistryV2Details.address, signer);
+    const synthRegistry = SynthRegistryV2Factory.connect(
+      synthRegistryV2Details.address,
+      signer,
+    );
 
     it('should have the correct owner set for the synthetic registry v2', async () => {
-      expect(await (await synthRegistry.owner()).toLowerCase()).to.equal(eoaOwner);
+      expect(await (await synthRegistry.owner()).toLowerCase()).to.equal(
+        eoaOwner,
+      );
     });
   } catch {}
 }

@@ -4,73 +4,17 @@ import { ethers } from 'hardhat';
 import { TestTokenFactory } from '@src/typings/TestTokenFactory';
 import { ArcProxyFactory } from '@src/typings/ArcProxyFactory';
 import { SyntheticTokenV1 } from '@src/typings/SyntheticTokenV1';
-import { CoreV4 } from '@src/typings/CoreV4';
-import { StateV1 } from '@src/typings/StateV1';
 import { StaticSyntheticToken } from '@src/typings/StaticSyntheticToken';
-import { CoreV3 } from '@src/typings/CoreV3';
 import { AddressAccrual } from '@src/typings/AddressAccrual';
 import { MockRewardCampaign } from '@src/typings/MockRewardCampaign';
 import { TokenStakingAccrual } from '@src/typings/TokenStakingAccrual';
 import { KYFV2 } from '@src/typings/KYFV2';
 import { MockOracle } from '@src/typings/MockOracle';
-import { MockMozartCoreV2 } from '@src/typings/MockMozartCoreV2';
-import { MockMozartSavingsV2, MockSapphireCoreV1 } from '@src/typings';
 import { MerkleDistributor } from '@src/typings/MerkleDistributor';
 import { SapphireCreditScore } from '@src/typings/SapphireCreditScore';
 import { MockSapphireCreditScore } from '@src/typings/MockSapphireCreditScore';
 import { SyntheticTokenV2 } from '@src/typings/SyntheticTokenV2';
-
-export async function deployMockMozartCore(deployer: Signer) {
-  const Contract = await ethers.getContractFactory(
-    'MockMozartCoreV2',
-    deployer,
-  );
-  const mozartCore = await Contract.deploy();
-  return mozartCore as MockMozartCoreV2;
-}
-
-export async function deploySpritzCoreV3(deployer: Signer) {
-  const Contract = await ethers.getContractFactory('CoreV3', deployer);
-  const coreV3 = await Contract.deploy();
-  return coreV3 as CoreV3;
-}
-
-export async function deploySpritzCoreV4(deployer: Signer) {
-  const Contract = await ethers.getContractFactory('CoreV4', deployer);
-  const coreV4 = await Contract.deploy();
-  return coreV4 as CoreV4;
-}
-
-export async function deploySpritzStateV1(
-  deployer: Signer,
-  core: string,
-  collateral: string,
-  synthetic: string,
-  oracle: string,
-  collateralRatio: BigNumberish,
-  liquidationArcFee: BigNumberish,
-  liquidationUserFee: BigNumberish,
-) {
-  const Contract = await ethers.getContractFactory('StateV1', deployer);
-  // new StateV1Factory().deploy()
-  const coreV4 = await Contract.deploy(
-    core,
-    collateral,
-    synthetic,
-    oracle,
-    {
-      collateralRatio: { value: collateralRatio },
-      liquidationArcFee: { value: liquidationArcFee },
-      liquidationUserFee: { value: liquidationUserFee },
-    },
-    {
-      collateralLimit: 0,
-      syntheticLimit: 0,
-      positionCollateralMinimum: 0,
-    },
-  );
-  return coreV4 as StateV1;
-}
+import { MockSapphireCoreV1 } from '@src/typings';
 
 export async function deploySyntheticTokenV2(
   deployer: Signer,
@@ -126,15 +70,6 @@ export async function deployArcProxy(
     data,
   );
   return arcProxy;
-}
-
-export async function deployMockSavings(deployer: Signer) {
-  const Contract = await ethers.getContractFactory(
-    'MockMozartSavingsV2',
-    deployer,
-  );
-  const savings = await Contract.deploy();
-  return savings as MockMozartSavingsV2;
 }
 
 export async function deployStaticSynthetic(deployer: Signer) {
