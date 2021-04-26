@@ -539,11 +539,6 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             _scoreProof,
             msg.sender
         );
-
-        // // Get rid of debt if rest is left because of normalization
-        // if ( vaults[msg.sender].borrowedAmount == 1) {
-        //     vaults[msg.sender].borrowedAmount = 0;
-        // }
     }
 
     function updateIndex()
