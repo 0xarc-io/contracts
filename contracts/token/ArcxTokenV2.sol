@@ -22,7 +22,7 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
     /* ========== Events ========== */
 
     event Claimed(
-        address _owner, 
+        address _owner,
         uint256 _amount
     );
 
@@ -131,7 +131,7 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
         ownableContract.transferOwnership(_newOwner);
 
         emit OtherOwnershipTransfered(
-            _targetContract, 
+            _targetContract,
             _newOwner
         );
     }
