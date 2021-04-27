@@ -114,10 +114,10 @@ task('deploy-arcx-token-v2', 'Deploy the ArcxTokenV2')
 
     const arcxToken = await deployContract(
       {
-        name: 'ArcxTokenV2',
+        name: 'ArcxToken',
         source: 'ArcxTokenV2',
         data: new ArcxTokenV2Factory(signer).getDeployTransaction(oldArcxToken),
-        version: 1,
+        version: 2,
         type: DeploymentType.global,
       },
       networkConfig,
