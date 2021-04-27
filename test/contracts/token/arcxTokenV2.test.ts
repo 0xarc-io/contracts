@@ -1,5 +1,5 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { ArcxToken, ArcxTokenFactory } from '@src/typings';
+import { ArcxToken, ArcxTokenFactory, TestTokenFactory } from '@src/typings';
 import { ArcxTokenV2 } from '@src/typings/ArcxTokenV2';
 import { ArcxTokenV2Factory } from '@src/typings/ArcxTokenV2Factory';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
@@ -37,6 +37,10 @@ describe('ArcxTokenV2', () => {
 
     it('sets the address of the old arcx token', async () => {
       expect(await arcx.oldArcxToken()).to.eq(oldArcx.address);
+    });
+
+    it('sets version = 2', async () => {
+      expect(await arcx.version()).to.eq(2);
     });
   });
 
@@ -144,6 +148,43 @@ describe('ArcxTokenV2', () => {
 
       balance = await arcx.balanceOf(user.address);
       expect(balance).to.eq(0);
+    });
+  });
+
+  describe('#transferOtherOwnership', () => {
+    beforeEach(async () => {
+      // Transfer ownership of the orld arcx token to the new one
+      await oldArcx.transferOwnership(arcx.address);
+      expect(await oldArcx.owner()).to.eq(arcx.address);
+    });
+
+    it('reverts if called by non-owner', async () => {
+      await expect(
+        arcx
+          .connect(user)
+          .transferOtherOwnership(oldArcx.address, user.address),
+      ).to.be.revertedWith('Ownable: caller is not the owner');
+    });
+
+    it('reverts if called on a target that is not owned by the contract', async () => {
+      const otherToken = await new ArcxTokenFactory(owner).deploy();
+
+      await expect(
+        arcx.transferOtherOwnership(otherToken.address, owner.address),
+      ).to.be.revertedWith(
+        'ArcxTokenV2: this contract is not the owner of the target',
+      );
+    });
+
+    it('calls transferOwnership on the target if called by owner', async () => {
+      await arcx.transferOtherOwnership(oldArcx.address, user.address);
+      expect(await oldArcx.owner()).to.eq(user.address);
+    });
+
+    it('emits OtherOwnershipTransfered', async () => {
+      await expect(arcx.transferOtherOwnership(oldArcx.address, user.address))
+        .to.emit(arcx, 'OtherOwnershipTransfered')
+        .withArgs(oldArcx.address, user.address);
     });
   });
 });

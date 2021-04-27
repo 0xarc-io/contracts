@@ -8,8 +8,6 @@ import {SafeMath} from "../lib/SafeMath.sol";
 import {IMintableToken} from "../token/IMintableToken.sol";
 import {BaseERC20} from "./BaseERC20.sol";
 
-import "hardhat/console.sol";
-
 contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
 
     /* ========== Libraries ========== */
@@ -18,11 +16,20 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
 
     /* ========== Variables ========== */
 
+    uint8 public version;
     BaseERC20 public oldArcxToken;
 
     /* ========== Events ========== */
 
-    event Claimed(address _owner, uint256 _amount);
+    event Claimed(
+        address _owner, 
+        uint256 _amount
+    );
+
+    event OtherOwnershipTransfered(
+        address _targetContract,
+        address _newOwner
+    );
 
     // ============ Constructor ============
 
@@ -30,7 +37,7 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
         address _oldArcxToken
     )
         public
-        BaseERC20("ARC Governance Token V2", "ARCX-V2", 18)
+        BaseERC20("ARC Governance Token", "ARCX", 18)
     {
         require(
             _oldArcxToken != address(0),
@@ -38,6 +45,7 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
         );
 
         oldArcxToken = BaseERC20(_oldArcxToken);
+        version = 2;
     }
 
     // ============ Core Functions ============
@@ -82,10 +90,6 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
         );
 
         // Burn old balance
-        console.log(
-            "balance: %s",
-            balance
-        );
 
         // Transferring tokens to owner, because they can't be burned and can't
         // be sent to address 0;
@@ -105,6 +109,30 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
         emit Claimed(
             msg.sender,
             newBalance
+        );
+    }
+
+    // ============ Owner Function ============
+
+    function transferOtherOwnership(
+        address _targetContract,
+        address _newOwner
+    )
+        external
+        onlyOwner
+    {
+        Ownable ownableContract = Ownable(_targetContract);
+
+        require(
+            ownableContract.owner() == address(this),
+            "ArcxTokenV2: this contract is not the owner of the target"
+        );
+
+        ownableContract.transferOwnership(_newOwner);
+
+        emit OtherOwnershipTransfered(
+            _targetContract, 
+            _newOwner
         );
     }
 }
