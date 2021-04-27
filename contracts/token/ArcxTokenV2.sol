@@ -65,7 +65,7 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
     // ============ Migration Function ============
 
     /**
-     * @dev Transfers the old tokens to the owner and 
+     * @dev Transfers the old tokens to the owner and
      *      mints the new tokens, respecting a 1 : 10,000 ratio.
      *
      * @notice Convert the old tokens from the old ARCX token to the new (this one).
@@ -86,10 +86,15 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
             "balance: %s",
             balance
         );
-        
+
         // Transferring tokens to owner, because they can't be burned and can't
         // be sent to address 0;
-        SafeERC20.safeTransferFrom(oldArcxToken, msg.sender, owner(), balance);
+        SafeERC20.safeTransferFrom(
+            oldArcxToken,
+            msg.sender,
+            owner(),
+            balance
+        );
 
         // Mint new balance
         _mint(
