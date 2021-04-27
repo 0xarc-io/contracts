@@ -45,16 +45,19 @@ describe('ArcxTokenV2', () => {
   });
 
   describe('#claim', () => {
-    it('reverts if user did not approve token', async () => {
+    it('reverts if token is not the owner of the old token', async () => {
       // Mint old tokens
       await oldArcx.mint(user.address, TOKEN_AMOUNT);
 
       await expect(arcx.connect(user).claim()).to.be.revertedWith(
-        'SafeERC20: TRANSFER_FROM_FAILED',
+        'Ownable: caller is not the owner',
       );
     });
 
     it('reverts if user has a 0 balance of the old arcx token', async () => {
+      // Transfer ownership from the old to the new
+      await oldArcx.transferOwnership(arcx.address);
+
       let oldArcBalance = await oldArcx.balanceOf(user.address);
       let newArcBalance = await arcx.balanceOf(user.address);
 
@@ -72,9 +75,12 @@ describe('ArcxTokenV2', () => {
       expect(newArcBalance).to.eq(0);
     });
 
-    it('transfers the old tokens to the owner and mints the new tokens to the caller', async () => {
+    it('burns the old tokens and mints the new tokens to the caller', async () => {
       // Mint old tokens
       await oldArcx.mint(user.address, TOKEN_AMOUNT);
+
+      // Transfer ownership from the old to the new
+      await oldArcx.transferOwnership(arcx.address);
 
       let oldArcBalance = await oldArcx.balanceOf(user.address);
       let newArcBalance = await arcx.balanceOf(user.address);
@@ -95,12 +101,15 @@ describe('ArcxTokenV2', () => {
 
       expect(oldArcBalance).to.eq(0);
       expect(newArcBalance).to.eq(TOKEN_AMOUNT.mul(TOKEN_MULTIPLIER));
-      expect(ownerOldBalance).to.eq(TOKEN_AMOUNT);
+      expect(ownerOldBalance).to.eq(0);
     });
 
     it('emits the Claimed event', async () => {
       // Mint old tokens
       await oldArcx.mint(user.address, TOKEN_AMOUNT);
+
+      // Transfer ownership from the old to the new
+      await oldArcx.transferOwnership(arcx.address);
 
       const arcxContract = arcx.connect(user);
 
