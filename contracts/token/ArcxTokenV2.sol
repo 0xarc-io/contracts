@@ -90,13 +90,10 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
         );
 
         // Burn old balance
+        IMintableToken oldToken = IMintableToken(address(oldArcxToken));
 
-        // Transferring tokens to owner, because they can't be burned and can't
-        // be sent to address 0;
-        SafeERC20.safeTransferFrom(
-            oldArcxToken,
+        oldToken.burn(
             msg.sender,
-            owner(),
             balance
         );
 
