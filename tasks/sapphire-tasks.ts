@@ -337,11 +337,17 @@ task('deploy-sapphire', 'Depploy a Sapphire core')
           Synthetic Address: ${syntheticProxyAddress}\n
           Oracle Address: ${oracleAddress}\n
           Interest Rate Setter: ${
-            collatConfig.interestSetter || ultimateOwner
+            collatConfig.params.interestSetter || ultimateOwner
           }\n
-          Pause operator: ${collatConfig.pauseOperator || ultimateOwner}\n,
-          Fee collector: ${collatConfig.feeCollector || ultimateOwner}\n
-          Assessor address: ${assessorAddress}\n`,
+          Pause operator: ${
+            collatConfig.params.pauseOperator || ultimateOwner
+          }\n,
+          Assessor address: ${assessorAddress}\n,
+          Fee collector: ${collatConfig.params.feeCollector || ultimateOwner}\n
+          High c-ratio: ${collatConfig.params.highCRatio}\n
+          Low c-ratio: ${collatConfig.params.lowCRatio}\n
+          Liquidation user fee: ${collatConfig.params.liquidationUserFee}\n
+          Liquidation ARC fee: ${collatConfig.params.liquidationArcFee}\n`,
       ),
     );
 
@@ -351,14 +357,15 @@ task('deploy-sapphire', 'Depploy a Sapphire core')
       collateralAddress,
       syntheticProxyAddress,
       oracleAddress,
-      collatConfig.interestSetter || ultimateOwner,
-      collatConfig.pauseOperator || ultimateOwner,
+      collatConfig.params.interestSetter || ultimateOwner,
+      collatConfig.params.pauseOperator || ultimateOwner,
       assessorAddress,
-      collatConfig.feeCollector || ultimateOwner,
-      collatConfig.highCRatio,
-      collatConfig.lowCRatio,
-      collatConfig.liquidationUserFee,
-      collatConfig.liquidationArcRatio,
+      collatConfig.params.feeCollector || ultimateOwner,
+      collatConfig.params.highCRatio,
+      collatConfig.params.lowCRatio,
+      collatConfig.params.liquidationUserFee,
+      collatConfig.params.liquidationArcFee,
+      { gasLimit: 150000 },
     );
 
     console.log(green(`core.init() called successfully!\n`));
@@ -368,9 +375,9 @@ task('deploy-sapphire', 'Depploy a Sapphire core')
       console.log(yellow(`Calling core.setLimits() ...\n`));
 
       await core.setLimits(
-        collatConfig.totalBorrowLimit || 0,
-        collatConfig.vaultBorrowMin || 0,
-        collatConfig.vaultBorrowMax || 0,
+        collatConfig.limits.totalBorrowLimit || 0,
+        collatConfig.limits.vaultBorrowMin || 0,
+        collatConfig.limits.vaultBorrowMax || 0,
       );
 
       console.log(yellow(`Limits successfully set!\n`));
@@ -381,7 +388,7 @@ task('deploy-sapphire', 'Depploy a Sapphire core')
     // We already enforce limits at the synthetic level.
     await synthetic.addMinter(
       core.address,
-      collatConfig.totalBorrowLimit || MAX_UINT256,
+      collatConfig.limits.totalBorrowLimit || MAX_UINT256,
     );
     console.log(green(`Minter successfully added to synthetic\n`));
 
