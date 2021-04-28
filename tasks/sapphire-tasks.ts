@@ -1,6 +1,7 @@
 import {
   ArcProxyFactory,
   MockOracleFactory,
+  SapphireAssessorFactory,
   SapphireCoreV1Factory,
   SapphireCreditScoreFactory,
   SapphireMapperLinearFactory,
@@ -168,6 +169,53 @@ task('deploy-mapper', 'Deploy the Sapphire Mapper').setAction(
 
     console.log(
       green(`Sapphire Mapper Linear successfully deployed at ${mapperAddress}`),
+    );
+  },
+);
+
+task('deploy-assessor', 'Deploy the Sapphire Assessor').setAction(
+  async (taskArgs, hre) => {
+    const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
+
+    await pruneDeployments(network, signer.provider);
+
+    const creditScoreAddress = loadContract({
+      network,
+      type: DeploymentType.global,
+      name: 'SapphireCreditScore',
+    }).address;
+
+    if (!creditScoreAddress) {
+      throw red(`The Sapphire Credit Score must be deployed first`);
+    }
+
+    const mapperAddress = loadContract({
+      network,
+      type: DeploymentType.global,
+      name: 'SapphireMapperLinear',
+    }).address;
+
+    if (!mapperAddress) {
+      throw red(`The Sapphire Mapper must be deployed first`);
+    }
+
+    // Deploy the mapper
+    const assessorAddress = await deployContract(
+      {
+        name: 'SapphireAssessor',
+        source: 'SapphireAssessor',
+        data: new SapphireAssessorFactory(signer).getDeployTransaction(
+          mapperAddress,
+          creditScoreAddress,
+        ),
+        version: 1,
+        type: DeploymentType.global,
+      },
+      networkConfig,
+    );
+
+    console.log(
+      green(`Sapphire Assessor successfully deployed at ${assessorAddress}`),
     );
   },
 );
