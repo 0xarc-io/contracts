@@ -3,6 +3,7 @@ import {
   MockOracleFactory,
   SapphireCoreV1Factory,
   SapphireCreditScoreFactory,
+  SapphireMapperLinearFactory,
   SyntheticTokenV2Factory,
   SynthRegistryV2Factory,
   TestTokenFactory,
@@ -146,6 +147,30 @@ task(
       ),
     );
   });
+
+task('deploy-mapper', 'Deploy the Sapphire Mapper').setAction(
+  async (taskArgs, hre) => {
+    const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
+
+    await pruneDeployments(network, signer.provider);
+
+    // Deploy the mapper
+    const mapperAddress = await deployContract(
+      {
+        name: 'SapphireMapperLinear',
+        source: 'SapphireMapperLinear',
+        data: new SapphireMapperLinearFactory(signer).getDeployTransaction(),
+        version: 1,
+        type: DeploymentType.global,
+      },
+      networkConfig,
+    );
+
+    console.log(
+      green(`Sapphire Mapper Linear successfully deployed at ${mapperAddress}`),
+    );
+  },
+);
 
 task('deploy-sapphire', 'Depploy a Sapphire core')
   .addParam('collateral', 'The collateral name to register the core with')
@@ -311,22 +336,6 @@ task('deploy-sapphire', 'Depploy a Sapphire core')
       collatConfig.totalBorrowLimit || MAX_UINT256,
     );
     console.log(green(`Minter successfully added to synthetic\n`));
-
-    // Add to synth registry (?)
-    console.log(yellow(`Adding to synth registry v2...`));
-
-    const synthRegistryDetails = loadContract({
-      network,
-      type: DeploymentType.global,
-      name: 'SynthRegistryV2',
-    });
-    const synthRegistry = SynthRegistryV2Factory.connect(
-      synthRegistryDetails.address,
-      signer,
-    );
-    await synthRegistry.addSynth(coreProxyAddress, syntheticProxyAddress);
-
-    console.log(green(`Core successfully added to the synth registry\n`));
 
     // Change admin to ultimate owner
     if (network === 'mainnet') {
