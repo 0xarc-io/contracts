@@ -8,10 +8,11 @@ import {
   YUSDOracleFactory,
 } from '@src/typings';
 
-export default {
+const collateralConfig = {
   LINKUSD: {
     collateral_address: '0x514910771af9ca656af840dff83e8264ecf986ca',
-    oracle_link_aggregator_address: '0x2c1d072e956AFFC0D435Cb7AC38EF18d24d9127c',
+    oracle_link_aggregator_address:
+      '0x2c1d072e956AFFC0D435Cb7AC38EF18d24d9127c',
     synthetic_address: '0x0e2ec54fc0b509f445631bf4b91ab8168230c752',
     version: 1,
     params: {
@@ -74,7 +75,8 @@ export default {
         ),
     },
     oracle_source: 'CTokenOracle',
-    oracle_token_aggregator_address: '0x986b5E1e1755e3C2440e960477f25201B0a8bbD4',
+    oracle_token_aggregator_address:
+      '0x986b5E1e1755e3C2440e960477f25201B0a8bbD4',
     oracle_eth_aggregator_address: '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419',
     version: 1,
     params: {
@@ -137,4 +139,28 @@ export default {
       position_minimum_collateral: '',
     },
   },
+  'imUSD-STABLExV2': {
+    collateral_address: '0x30647a72Dc82d7Fbb1123EA74716aB8A317Eac19',
+    oracle: {
+      source: 'imUSDOracle',
+      getDeployTx: (signer: SignerWithAddress) =>
+        new ImUSDOracleFactory(signer).getDeployTransaction(),
+    },
+    params: {
+      interestSetter: '0xAF36712cb4ebD3BD706E898F5703ce3Ca96E8982',
+      pauseOperator: '0xAF36712cb4ebD3BD706E898F5703ce3Ca96E8982',
+      feeCollector: '0xAF36712cb4ebD3BD706E898F5703ce3Ca96E8982',
+      highCRatio0: '2000000000000000000',
+      lowCRatio: '1500000000000000000',
+      liquidationUserFee: '150000000000000000',
+      liquidationArcRatio: '100000000000000000',
+    },
+    limits: {
+      totalBorrowLimit: '1000000000000000000000',
+      vaultBorrowMin: '10000000000000000000',
+      vaultBorrowMax: '100000000000000000000',
+    },
+  },
 };
+
+export default collateralConfig;
