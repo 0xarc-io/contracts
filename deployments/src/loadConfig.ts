@@ -12,8 +12,12 @@ export interface LoadConfigParams {
   key: string;
 }
 
-export async function loadSynthConfig(params: LoadConfigParams) {
-  return await loadConfig(params, constants.SYNTH_CONFIG_FILENAME, 'synth');
+export async function loadCollateralConfig(params: LoadConfigParams) {
+  return await loadConfig(
+    params,
+    constants.COLLATERAL_CONFIG_FILENAME,
+    'synth',
+  );
 }
 
 export async function loadSavingsConfig(params: LoadConfigParams) {
@@ -24,8 +28,14 @@ export async function loadStakingConfig(params: LoadConfigParams) {
   return await loadConfig(params, constants.STAKING_CONFIG_FILENAME, 'staking');
 }
 
-async function loadConfig(params: LoadConfigParams, filename: string, type: string) {
-  console.log(gray(`Loading the ${type} config for ${params.network.toUpperCase()}...`));
+async function loadConfig(
+  params: LoadConfigParams,
+  filename: string,
+  type: string,
+) {
+  console.log(
+    gray(`Loading the ${type} config for ${params.network.toUpperCase()}...`),
+  );
 
   const configFile = getPathToNetwork(params.network, filename, path);
   const { default: config } = await import(configFile);
