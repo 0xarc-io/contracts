@@ -150,10 +150,10 @@ const collateralConfig = {
       interestSetter: '0xAF36712cb4ebD3BD706E898F5703ce3Ca96E8982',
       pauseOperator: '0xAF36712cb4ebD3BD706E898F5703ce3Ca96E8982',
       feeCollector: '0xAF36712cb4ebD3BD706E898F5703ce3Ca96E8982',
-      highCRatio0: '2000000000000000000',
+      highCRatio: '2000000000000000000',
       lowCRatio: '1500000000000000000',
       liquidationUserFee: '150000000000000000',
-      liquidationArcRatio: '100000000000000000',
+      liquidationArcFee: '100000000000000000',
     },
     limits: {
       totalBorrowLimit: '1000000000000000000000',
