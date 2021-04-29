@@ -308,5 +308,15 @@
     "version": 1,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "WaitlistBatch",
+    "source": "WaitlistBatch",
+    "address": "0x2278bdfD94eD4F97c3f13d5CB04ccA0d8cAae79a",
+    "txn": "0x6bba375c1a726112995d9aa2bd3e596186d24cd463438408a74ed80b19d2b9c1",
+    "network": "playnet",
+    "version": 1,
+    "type": "global",
+    "group": ""
   }
 ]
