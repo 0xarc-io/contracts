@@ -7,6 +7,7 @@ import {
 } from '@src/typings';
 import {
   deployContract,
+  loadContract,
   loadDetails,
   pruneDeployments,
 } from '../deployments/src';
@@ -259,3 +260,29 @@ task(
 //        - Deploy a new Skillset Token
 //        - Transfer ownership of any new token to the rightful owner
 //        - Getting verified on Etherscan
+
+task('mint-tokens').setAction(async (taskArgs, hre) => {
+  const { network, signer } = await loadDetails(taskArgs, hre);
+
+  // const arcAddress = await loadContract({
+  //   name: 'ArcxToken',
+  //   source: 'ArcxToken',
+  //   network,
+  // }).address;
+
+  const arcxToken = ArcxTokenFactory.connect(
+    '0x7D849e901095BEc7F5074f6C2ceE8DAF2C8B0c7e',
+    signer,
+  );
+
+  // mint to deployer
+  const tx = await arcxToken.mint(
+    '0xa8C01EfD74A206Bb2d769b6b3a5759508c83F20C',
+    utils.parseEther('10'),
+  );
+  console.log(yellow(`tx hash: ${tx.hash}`));
+
+  await tx.wait();
+
+  console.log(green(`tx completed`));
+});
