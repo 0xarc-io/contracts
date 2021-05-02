@@ -8,7 +8,7 @@ import { loadContract } from '../deployments/src/loadContracts';
 import {
   deployContract,
   DeploymentType,
-  loadSynthConfig,
+  loadCollateralConfig,
   pruneDeployments,
 } from '../deployments/src';
 
@@ -33,7 +33,7 @@ task('deploy-spritz', 'Deploy the Spritz contracts')
 
     await pruneDeployments(network, signer.provider);
 
-    const synthConfig = await loadSynthConfig({ network, key: synthName });
+    const synthConfig = await loadCollateralConfig({ network, key: synthName });
     const networkConfig = { network, signer } as NetworkParams;
 
     const coreAddress = await deployContract(
@@ -53,7 +53,11 @@ task('deploy-spritz', 'Deploy the Spritz contracts')
         {
           name: 'CollateralToken',
           source: 'TestToken',
-          data: new TestTokenFactory(signer).getDeployTransaction('TestCollateral', 'TEST', 18),
+          data: new TestTokenFactory(signer).getDeployTransaction(
+            'TestCollateral',
+            'TEST',
+            18,
+          ),
           version: 1,
           type: DeploymentType.synth,
           group: synthName,
@@ -65,7 +69,10 @@ task('deploy-spritz', 'Deploy the Spritz contracts')
       {
         name: 'SyntheticToken',
         source: 'StaticSyntheticToken',
-        data: new StaticSyntheticTokenFactory(signer).getDeployTransaction(synthName, synthName),
+        data: new StaticSyntheticTokenFactory(signer).getDeployTransaction(
+          synthName,
+          synthName,
+        ),
         version: 1,
         type: DeploymentType.synth,
         group: synthName,
@@ -132,13 +139,18 @@ task('deploy-spritz', 'Deploy the Spritz contracts')
           oracleAddress,
           {
             collateralRatio: { value: synthConfig.params.collateral_ratio },
-            liquidationUserFee: { value: synthConfig.params.liquidation_user_fee },
-            liquidationArcFee: { value: synthConfig.params.liquidation_arc_fee },
+            liquidationUserFee: {
+              value: synthConfig.params.liquidation_user_fee,
+            },
+            liquidationArcFee: {
+              value: synthConfig.params.liquidation_arc_fee,
+            },
           },
           {
             collateralLimit: synthConfig.params.collateral_limit || 0,
             syntheticLimit: synthConfig.params.synthetic_limit || 0,
-            positionCollateralMinimum: synthConfig.params.position_collateral_minimum || 0,
+            positionCollateralMinimum:
+              synthConfig.params.position_collateral_minimum || 0,
           },
         ),
         version: 1,
@@ -164,7 +176,10 @@ task('deploy-spritz', 'Deploy the Spritz contracts')
       name: 'SynthRegistry',
     });
     try {
-      const synthRegistry = SynthRegistryFactory.connect(synthRegistryDetails.address, signer);
+      const synthRegistry = SynthRegistryFactory.connect(
+        synthRegistryDetails.address,
+        signer,
+      );
       await synthRegistry.addSynth(proxyAddress, syntheticAddress);
       console.log(green(`Added to Synth Registry!\n`));
     } catch (error) {
