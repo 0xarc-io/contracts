@@ -9,12 +9,14 @@ import {
   deployContract,
   DeploymentType,
   loadDetails,
-  loadSynthConfig,
   pruneDeployments,
 } from '../deployments/src';
 
 import { MAX_UINT256, FIVE_PERCENT } from '../src/constants';
-import { loadSavingsConfig } from '../deployments/src/loadConfig';
+import {
+  loadCollateralConfig,
+  loadSavingsConfig,
+} from '../deployments/src/loadConfig';
 import { SavingsRegistryFactory } from '@src/typings/SavingsRegistryFactory';
 
 import {
@@ -70,11 +72,16 @@ task('deploy-mozart-synthetic', 'Deploy the Mozart synthetic token')
       networkConfig,
     );
 
-    const synthetic = SyntheticTokenV1Factory.connect(syntheticProxyAddress, signer);
+    const synthetic = SyntheticTokenV1Factory.connect(
+      syntheticProxyAddress,
+      signer,
+    );
 
     try {
       if ((await synthetic.name()).length > 0) {
-        console.log(magenta(`Synthetic init() function has already been called\n`));
+        console.log(
+          magenta(`Synthetic init() function has already been called\n`),
+        );
         return;
       }
     } catch {
@@ -95,13 +102,20 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
   .setAction(async (taskArgs, hre) => {
     const synthName = taskArgs.synth;
 
-    const { network, signer, networkConfig, networkDetails } = await loadDetails(taskArgs, hre);
+    const {
+      network,
+      signer,
+      networkConfig,
+      networkDetails,
+    } = await loadDetails(taskArgs, hre);
 
     await pruneDeployments(network, signer.provider);
 
-    const synthConfig = await loadSynthConfig({ network, key: synthName });
-    const globalGroup = synthName.split('-').length == 1 ? synthName : synthName.split('-')[1];
-    const collatName = synthName.split('-').length == 1 ? synthName : synthName.split('-')[0];
+    const synthConfig = await loadCollateralConfig({ network, key: synthName });
+    const globalGroup =
+      synthName.split('-').length == 1 ? synthName : synthName.split('-')[1];
+    const collatName =
+      synthName.split('-').length == 1 ? synthName : synthName.split('-')[0];
 
     if (!synthConfig) {
       throw red(`No configuration has been found for synth: ${synthName}`);
@@ -129,7 +143,11 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
         {
           name: 'CollateralToken',
           source: 'TestToken',
-          data: new TestTokenFactory(signer).getDeployTransaction(collatName, collatName, 18),
+          data: new TestTokenFactory(signer).getDeployTransaction(
+            collatName,
+            collatName,
+            18,
+          ),
           version: 1,
           type: DeploymentType.synth,
           group: synthName,
@@ -137,7 +155,10 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
         networkConfig,
       ));
 
-    await hre.run(`deploy-mozart-synthetic`, { name: globalGroup, symbol: globalGroup });
+    await hre.run(`deploy-mozart-synthetic`, {
+      name: globalGroup,
+      symbol: globalGroup,
+    });
 
     let oracleAddress = '';
 
@@ -202,7 +223,10 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
     }).address;
 
     const core = MozartCoreV2Factory.connect(coreProxyAddress, signer);
-    const synthetic = SyntheticTokenV1Factory.connect(syntheticProxyAddress, signer);
+    const synthetic = SyntheticTokenV1Factory.connect(
+      syntheticProxyAddress,
+      signer,
+    );
 
     let decimals: number;
 
@@ -212,7 +236,10 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
         throw Error(`Collateral address was null`);
       }
 
-      const collateralToken = BaseERC20Factory.connect(collateralAddress, signer);
+      const collateralToken = BaseERC20Factory.connect(
+        collateralAddress,
+        signer,
+      );
       decimals = await collateralToken.decimals();
 
       if (!decimals) {
@@ -252,7 +279,9 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
         { value: synthConfig.params.liquidation_arc_ratio },
       );
       console.log(green(`Called core init() successfully!\n`));
-      console.log(magenta(`The interest rate setter has been set to: ${ultimateOwner}`));
+      console.log(
+        magenta(`The interest rate setter has been set to: ${ultimateOwner}`),
+      );
     } catch (error) {
       console.log(red(`Failed to call core init().\nReason: ${error}\n`));
     }
@@ -260,9 +289,13 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
     console.log(yellow(`* Calling synthetic addMinter...`));
     try {
       // We already enforce limits at the synthetic level.
-      await synthetic.addMinter(core.address, synthConfig.params.synthetic_limit || MAX_UINT256, {
-        gasLimit: 1000000,
-      });
+      await synthetic.addMinter(
+        core.address,
+        synthConfig.params.synthetic_limit || MAX_UINT256,
+        {
+          gasLimit: 1000000,
+        },
+      );
       console.log(green(`Added synthetic minter!\n`));
     } catch (error) {
       console.log(red(`Failed to add synthetic minter!\nReason: ${error}\n`));
@@ -275,11 +308,16 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
       name: 'SynthRegistryV2',
     });
     try {
-      const synthRegistry = SynthRegistryV2Factory.connect(synthRegistryDetails.address, signer);
+      const synthRegistry = SynthRegistryV2Factory.connect(
+        synthRegistryDetails.address,
+        signer,
+      );
       await synthRegistry.addSynth(coreProxyAddress, syntheticProxyAddress);
       console.log(green(`Added to Synth Registry V2!\n`));
     } catch (error) {
-      console.log(red(`Failed to add to Synth Registry V2!\nReason: ${error}\n`));
+      console.log(
+        red(`Failed to add to Synth Registry V2!\nReason: ${error}\n`),
+      );
     }
 
     console.log(yellow(`* Calling setLimits...`));
@@ -315,7 +353,10 @@ task('deploy-mozart-savings', 'Deploy a Mozart Savings contract instance')
 
     await pruneDeployments(network, signer.provider);
 
-    const savingsConfig = await loadSavingsConfig({ network, key: savingsName });
+    const savingsConfig = await loadSavingsConfig({
+      network,
+      key: savingsName,
+    });
 
     const syntheticProxyAddress = loadContract({
       network,
@@ -363,15 +404,27 @@ task('deploy-mozart-savings', 'Deploy a Mozart Savings contract instance')
     );
 
     const savings = MozartSavingsV2Factory.connect(savingsProxyAddress, signer);
-    const synthetic = SyntheticTokenV1Factory.connect(syntheticProxyAddress, signer);
+    const synthetic = SyntheticTokenV1Factory.connect(
+      syntheticProxyAddress,
+      signer,
+    );
 
     console.log(yellow(`* Calling savings init()...`));
     try {
-      await savings.init(savingsConfig.name, savingsConfig.symbol, syntheticProxyAddress, {
-        value: savingsConfig.savings_rate,
-      });
+      await savings.init(
+        savingsConfig.name,
+        savingsConfig.symbol,
+        syntheticProxyAddress,
+        {
+          value: savingsConfig.savings_rate,
+        },
+      );
       console.log(green(`Called savings init() successfully!\n`));
-      console.log(magenta(`The savings rate has been set to: ${savingsConfig.savings_rate}`));
+      console.log(
+        magenta(
+          `The savings rate has been set to: ${savingsConfig.savings_rate}`,
+        ),
+      );
     } catch (error) {
       console.log(red(`Failed to call savings init().\nReason: ${error}\n`));
     }
@@ -402,7 +455,9 @@ task('deploy-mozart-savings', 'Deploy a Mozart Savings contract instance')
       await savingsRegistry.addSavings(syntheticProxyAddress, savings.address);
       console.log(green(`Added to Savings Registry!\n`));
     } catch (error) {
-      console.log(red(`Failed to add to Savings Registry!\nReason: ${error}\n`));
+      console.log(
+        red(`Failed to add to Savings Registry!\nReason: ${error}\n`),
+      );
     }
 
     // Do this to trigger an event on The Graph
