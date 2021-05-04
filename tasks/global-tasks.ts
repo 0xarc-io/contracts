@@ -25,6 +25,7 @@ import { BigNumber, ContractTransaction, utils } from 'ethers';
 import _ from 'lodash';
 import ArcDecimal from '@src/utils/ArcDecimal';
 import { ArcxTokenV2Factory } from '@src/typings/ArcxTokenV2Factory';
+import { IMintableTokenFactory } from '@src/typings/IMintableTokenFactory';
 
 task(
   'deploy-global',
@@ -261,28 +262,29 @@ task(
 //        - Transfer ownership of any new token to the rightful owner
 //        - Getting verified on Etherscan
 
-task('mint-tokens').setAction(async (taskArgs, hre) => {
-  const { network, signer } = await loadDetails(taskArgs, hre);
+task('mint-tokens')
+  .addParam('token', 'The address of the token to mint from')
+  .addParam('to', 'The receiver of the tokens')
+  .addParam('amount', 'The amount of tokens, in reduced format (10^18)')
+  .setAction(async (taskArgs, hre) => {
+    const tokenAddress = taskArgs['token'];
+    const receiver = taskArgs['to'];
+    const amount = taskArgs['amount'];
 
-  // const arcAddress = await loadContract({
-  //   name: 'ArcxToken',
-  //   source: 'ArcxToken',
-  //   network,
-  // }).address;
+    const { network, signer } = await loadDetails(taskArgs, hre);
 
-  const arcxToken = ArcxTokenFactory.connect(
-    '0x7D849e901095BEc7F5074f6C2ceE8DAF2C8B0c7e',
-    signer,
-  );
+    const token = IMintableTokenFactory.connect(tokenAddress, signer);
 
-  // mint to deployer
-  const tx = await arcxToken.mint(
-    '0xa8C01EfD74A206Bb2d769b6b3a5759508c83F20C',
-    utils.parseEther('10'),
-  );
-  console.log(yellow(`tx hash: ${tx.hash}`));
+    // mint to deployer
+    console.log(
+      yellow(
+        `Minting ${amount}*10^18 of ${tokenAddress} tokens to ${receiver}...`,
+      ),
+    );
+    const tx = await token.mint(receiver, utils.parseEther(amount));
+    console.log(yellow(`tx hash: ${tx.hash}`));
 
-  await tx.wait();
+    await tx.wait();
 
-  console.log(green(`tx completed`));
-});
+    console.log(green(`tx completed`));
+  });
