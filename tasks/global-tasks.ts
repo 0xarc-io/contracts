@@ -7,6 +7,7 @@ import {
 } from '@src/typings';
 import {
   deployContract,
+  loadContract,
   loadDetails,
   pruneDeployments,
 } from '../deployments/src';
@@ -24,6 +25,7 @@ import { BigNumber, ContractTransaction, utils } from 'ethers';
 import _ from 'lodash';
 import ArcDecimal from '@src/utils/ArcDecimal';
 import { ArcxTokenV2Factory } from '@src/typings/ArcxTokenV2Factory';
+import { IMintableTokenFactory } from '@src/typings/IMintableTokenFactory';
 
 task(
   'deploy-global',
@@ -259,3 +261,30 @@ task(
 //        - Deploy a new Skillset Token
 //        - Transfer ownership of any new token to the rightful owner
 //        - Getting verified on Etherscan
+
+task('mint-tokens')
+  .addParam('token', 'The address of the token to mint from')
+  .addParam('to', 'The receiver of the tokens')
+  .addParam('amount', 'The amount of tokens, in reduced format (10^18)')
+  .setAction(async (taskArgs, hre) => {
+    const tokenAddress = taskArgs['token'];
+    const receiver = taskArgs['to'];
+    const amount = taskArgs['amount'];
+
+    const { network, signer } = await loadDetails(taskArgs, hre);
+
+    const token = IMintableTokenFactory.connect(tokenAddress, signer);
+
+    // mint to deployer
+    console.log(
+      yellow(
+        `Minting ${amount}*10^18 of ${tokenAddress} tokens to ${receiver}...`,
+      ),
+    );
+    const tx = await token.mint(receiver, utils.parseEther(amount));
+    console.log(yellow(`tx hash: ${tx.hash}`));
+
+    await tx.wait();
+
+    console.log(green(`tx completed`));
+  });
