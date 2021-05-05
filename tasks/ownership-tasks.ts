@@ -4,7 +4,36 @@ import { task } from 'hardhat/config';
 import { red, yellow, green, magenta } from 'chalk';
 import { asyncForEach } from '@src/utils/asyncForEach';
 import { OwnableFactory } from '@src/typings/OwnableFactory';
-import { AdminableFactory, ArcProxyFactory } from '@src/typings';
+import { AdminableFactory, ArcProxyFactory, ArcxTokenV2Factory } from '@src/typings';
+import { loadDetails } from '../deployments/src';
+
+task('transfer-ownership-single', 'Transfer ownership of a single contract')
+  .addParam('contract', 'The address of the contract')
+  .addParam('to', 'The new owner')
+  .addOptionalParam('other', 'The target contract to call "transferOtherOwnership"')
+  .setAction(async (taskArgs, hre) => {
+    const contractAddy = taskArgs.contract
+    const newOwner = taskArgs.to
+    const targetContract = taskArgs.other
+
+    const { signer } = await loadDetails(taskArgs, hre);
+
+    let contract = OwnableFactory.connect(contractAddy, signer)
+
+    console.log(yellow(`Changing owner for ${contractAddy} to ${newOwner}...`))
+    
+    let tx: any
+
+    if (targetContract) {
+      contract = ArcxTokenV2Factory.connect(contractAddy, signer)
+      tx = await contract.transferOtherOwnership(targetContract, newOwner)
+    } else {
+      tx = await contract.transferOwnership(newOwner)
+    }
+    await tx.wait()
+
+    console.log(green(`Contract owner changed`))
+  })
 
 task('transfer-ownership', 'Transfer ownership of deployed contracts')
   .addParam('addresses', 'The addresses you would like to transfer ownership for')
