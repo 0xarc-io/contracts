@@ -17,6 +17,9 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
 
     /* ========== Variables ========== */
 
+    address public pauseOperator;
+    bool public isPaused;
+
     uint8 public version;
     BaseERC20 public oldArcxToken;
 
@@ -32,13 +35,29 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
         address _newOwner
     );
 
+    event PauseStatusUpdated(bool _status);
+
+    event PauseOperatorUpdated(
+        address _pauseOperator
+    );
+
+    // ============ Modifiers ============
+
+    modifier pausable() {
+        require (
+            isPaused == false,
+            "ArcxTokenV2: contract is paused"
+        );
+        _;
+    }
+
     // ============ Constructor ============
 
     constructor(
         address _oldArcxToken
     )
         public
-        BaseERC20("ARC Governance Token", "ARCX", 18)
+        BaseERC20("ARCX Governance Token", "ARCX", 18)
     {
         require(
             _oldArcxToken != address(0),
@@ -47,6 +66,9 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
 
         oldArcxToken = BaseERC20(_oldArcxToken);
         version = 2;
+
+        pauseOperator = msg.sender;
+        isPaused = false;
     }
 
     // ============ Core Functions ============
@@ -57,6 +79,7 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
     )
         external
         onlyOwner
+        pausable
     {
         _mint(to, value);
     }
@@ -67,6 +90,7 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
     )
         external
         onlyOwner
+        pausable
     {
         _burn(to, value);
     }
@@ -81,6 +105,7 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
      */
     function claim()
         external
+        pausable
     {
         uint256 balance = oldArcxToken.balanceOf(msg.sender);
         uint256 newBalance = balance.mul(10000);
@@ -110,7 +135,7 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
         );
     }
 
-    // ============ Owner Function ============
+    // ============ Restricted Functions ============
 
     function transferOtherOwnership(
         address _targetContract,
@@ -132,5 +157,31 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
             _targetContract,
             _newOwner
         );
+    }
+
+    function updatePauseOperator(
+        address _newPauseOperator
+    )
+        external
+        onlyOwner
+    {
+        pauseOperator = _newPauseOperator;
+
+        emit PauseOperatorUpdated(_newPauseOperator);
+    }
+
+    function setPause(
+        bool _pauseStatus
+    )
+        external
+    {
+        require(
+            msg.sender == pauseOperator,
+            "ArcxTokenV2: caller is not pause operator"
+        );
+
+        isPaused = _pauseStatus;
+
+        emit PauseStatusUpdated(_pauseStatus);
     }
 }

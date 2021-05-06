@@ -39,7 +39,7 @@ contract BaseERC20 is IERC20, Permittable {
         uint8         decimals
     )
         public
-        Permittable(name, symbol)
+        Permittable(name, "1")
     {
         _name = name;
         _symbol = symbol;
