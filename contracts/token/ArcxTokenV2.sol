@@ -19,7 +19,7 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
 
     address public pauseOperator;
     bool public isPaused;
-    
+
     uint8 public version;
     BaseERC20 public oldArcxToken;
 
@@ -74,7 +74,7 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
             isPaused == false,
             "ArcxTokenV2: contract is paused"
         );
-        
+
         _mint(to, value);
     }
 
@@ -89,7 +89,7 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
             isPaused == false,
             "ArcxTokenV2: contract is paused"
         );
-        
+
         _burn(to, value);
     }
 
@@ -108,7 +108,7 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
             isPaused == false,
             "ArcxTokenV2: contract is paused"
         );
-        
+
         uint256 balance = oldArcxToken.balanceOf(msg.sender);
         uint256 newBalance = balance.mul(10000);
 
