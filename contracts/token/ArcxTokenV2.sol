@@ -41,6 +41,16 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
         address _pauseOperator
     );
 
+    // ============ Modifiers ============
+
+    modifier pausable() {
+        require (
+            isPaused == false,
+            "ArcxTokenV2: contract is paused"
+        );
+        _;
+    }
+    
     // ============ Constructor ============
 
     constructor(
@@ -69,12 +79,8 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
     )
         external
         onlyOwner
+        pausable
     {
-        require(
-            isPaused == false,
-            "ArcxTokenV2: contract is paused"
-        );
-
         _mint(to, value);
     }
 
@@ -84,12 +90,8 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
     )
         external
         onlyOwner
+        pausable
     {
-        require(
-            isPaused == false,
-            "ArcxTokenV2: contract is paused"
-        );
-
         _burn(to, value);
     }
 
@@ -103,12 +105,8 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
      */
     function claim()
         external
+        pausable
     {
-        require(
-            isPaused == false,
-            "ArcxTokenV2: contract is paused"
-        );
-
         uint256 balance = oldArcxToken.balanceOf(msg.sender);
         uint256 newBalance = balance.mul(10000);
 
