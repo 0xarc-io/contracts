@@ -50,7 +50,7 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
         );
         _;
     }
-    
+
     // ============ Constructor ============
 
     constructor(
