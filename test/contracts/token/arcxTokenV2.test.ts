@@ -42,6 +42,10 @@ describe('ArcxTokenV2', () => {
     it('sets version = 2', async () => {
       expect(await arcx.version()).to.eq(2);
     });
+
+    it('sets pause operator to owner', async () => {
+      expect(await arcx.pauseOperator()).to.eq(owner.address);
+    });
   });
 
   describe('#claim', () => {
@@ -73,6 +77,31 @@ describe('ArcxTokenV2', () => {
 
       expect(oldArcBalance).to.eq(0);
       expect(newArcBalance).to.eq(0);
+    });
+
+    it('reverts if token is paused', async () => {
+      // Mint old tokens
+      await oldArcx.mint(user.address, TOKEN_AMOUNT);
+
+      // Transfer ownership from the old to the new
+      await oldArcx.transferOwnership(arcx.address);
+
+      let oldArcBalance = await oldArcx.balanceOf(user.address);
+      let newArcBalance = await arcx.balanceOf(user.address);
+      let ownerOldBalance = await oldArcx.balanceOf(owner.address);
+
+      expect(oldArcBalance).to.eq(TOKEN_AMOUNT);
+      expect(newArcBalance).to.eq(0);
+      expect(ownerOldBalance).to.eq(0);
+
+      // Approve token
+      await oldArcx.connect(user).approve(arcx.address, TOKEN_AMOUNT);
+
+      await arcx.setPause(true);
+
+      await expect(arcx.connect(user).claim()).to.be.revertedWith(
+        'ArcxTokenV2: contract is paused',
+      );
     });
 
     it('burns the old tokens and mints the new tokens to the caller', async () => {
@@ -129,6 +158,17 @@ describe('ArcxTokenV2', () => {
       ).to.be.revertedWith('Ownable: caller is not the owner');
     });
 
+    it('reverts if token is paused', async () => {
+      let balance = await arcx.balanceOf(user.address);
+      expect(balance).to.eq(0);
+
+      await arcx.setPause(true);
+
+      await expect(arcx.mint(user.address, TOKEN_AMOUNT)).to.be.revertedWith(
+        'ArcxTokenV2: contract is paused',
+      );
+    });
+
     it('mints tokens to user if called by owner', async () => {
       let balance = await arcx.balanceOf(user.address);
       expect(balance).to.eq(0);
@@ -145,6 +185,19 @@ describe('ArcxTokenV2', () => {
       await expect(
         arcx.connect(user).burn(owner.address, TOKEN_AMOUNT),
       ).to.be.revertedWith('Ownable: caller is not the owner');
+    });
+
+    it('reverts if token is paused', async () => {
+      await arcx.mint(user.address, TOKEN_AMOUNT);
+
+      let balance = await arcx.balanceOf(user.address);
+      expect(balance).to.eq(TOKEN_AMOUNT);
+
+      await arcx.setPause(true);
+
+      await expect(arcx.burn(user.address, TOKEN_AMOUNT)).to.be.revertedWith(
+        'ArcxTokenV2: contract is paused',
+      );
     });
 
     it('burns the amount of tokens if called by owner', async () => {
@@ -194,6 +247,49 @@ describe('ArcxTokenV2', () => {
       await expect(arcx.transferOtherOwnership(oldArcx.address, user.address))
         .to.emit(arcx, 'OtherOwnershipTransfered')
         .withArgs(oldArcx.address, user.address);
+    });
+  });
+
+  describe('#setPause', () => {
+    it('is initially not paused', async () => {
+      expect(await arcx.isPaused()).to.eq(false);
+    });
+
+    it('reverts if called by unauthorized user', async () => {
+      await expect(arcx.connect(user).setPause(true)).to.be.revertedWith(
+        'ArcxTokenV2: caller is not pause operator',
+      );
+    });
+
+    it('pauses the contract if called by pause operator', async () => {
+      expect(await arcx.isPaused()).to.be.false;
+
+      await expect(arcx.setPause(true))
+        .to.emit(arcx, 'PauseStatusUpdated')
+        .withArgs(true);
+
+      expect(await arcx.isPaused()).to.be.true;
+
+      await arcx.setPause(false);
+      expect(await arcx.isPaused()).to.be.false;
+    });
+  });
+
+  describe('#updatePauseOperator', () => {
+    it('reverts if called by non-owner', async () => {
+      await expect(
+        arcx.connect(user).updatePauseOperator(user.address),
+      ).to.be.revertedWith('Ownable: caller is not the owner');
+    });
+
+    it('updates the pause operator', async () => {
+      expect(await arcx.pauseOperator()).to.eq(owner.address);
+
+      await expect(arcx.updatePauseOperator(user.address))
+        .to.emit(arcx, 'PauseOperatorUpdated')
+        .withArgs(user.address);
+
+      expect(await arcx.pauseOperator()).to.eq(user.address);
     });
   });
 });
