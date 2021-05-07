@@ -37,7 +37,7 @@ contract Permittable {
         internal
         view
         returns (bytes32)
-    {        
+    {
         uint256 chainID;
         /* solium-disable-next-line */
         assembly {
