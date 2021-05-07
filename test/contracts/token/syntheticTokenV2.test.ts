@@ -6,10 +6,8 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expectRevert } from '../../helpers/expectRevert';
 import { SyntheticTokenV2 } from '@src/typings/SyntheticTokenV2';
-import { BigNumber, constants, Wallet } from 'ethers';
-import { SignatureResult, signPermit } from '@src/utils/signPermit';
+import { constants, Wallet } from 'ethers';
 import { SyntheticTokenV2Factory } from '@src/typings';
-import { EVM } from '@test/helpers/EVM';
 
 describe('SyntheticTokenV2', () => {
   let syntheticToken: SyntheticTokenV2;
