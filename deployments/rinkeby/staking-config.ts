@@ -2,6 +2,8 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import {
   LiquidityCampaign,
   LiquidityCampaignFactory,
+  LiquidityCampaignV2,
+  LiquidityCampaignV2Factory,
   RewardCampaign,
   RewardCampaignFactory,
 } from '@src/typings';
@@ -59,9 +61,43 @@ export default {
     ) => {
       const daoAllocation = '400000000000000000';
 
-      return contract.init(arcDao, rewardsDistributor, rewardsTokenAddress, stakingTokenAddress, {
-        value: daoAllocation,
-      });
+      return contract.init(
+        arcDao,
+        rewardsDistributor,
+        rewardsTokenAddress,
+        stakingTokenAddress,
+        {
+          value: daoAllocation,
+        },
+      );
+    },
+  },
+  PermittablePool: {
+    source: 'LiquidityCampaignV2',
+    stakingToken: '',
+    rewardsToken: 'ArcxTokenV2',
+    rewardsDurationSeconds: 60 * 60 * 24 * 31, // 31 days
+    contractFactory: LiquidityCampaignV2Factory,
+    getDeployTx: (signer: SignerWithAddress) =>
+      new LiquidityCampaignV2Factory(signer).getDeployTransaction(),
+    runInit: (
+      contract: LiquidityCampaignV2,
+      arcDao: string,
+      rewardsDistributor: string,
+      rewardsTokenAddress: string,
+      stakingTokenAddress: string,
+    ) => {
+      const daoAllocation = '400000000000000000';
+
+      return contract.init(
+        arcDao,
+        rewardsDistributor,
+        rewardsTokenAddress,
+        stakingTokenAddress,
+        {
+          value: daoAllocation,
+        },
+      );
     },
   },
 };
