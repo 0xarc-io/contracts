@@ -79,7 +79,6 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
     )
         external
         onlyOwner
-        pausable
     {
         _mint(to, value);
     }
@@ -90,7 +89,6 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
     )
         external
         onlyOwner
-        pausable
     {
         _burn(to, value);
     }
@@ -133,6 +131,37 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
             msg.sender,
             newBalance
         );
+    }
+
+    function transfer(
+        address recipient,
+        uint256 amount
+    )
+        public
+        pausable
+        returns (bool)
+    {
+        _transfer(msg.sender, recipient, amount);
+        return true;
+    }
+
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    )
+        public
+        pausable
+        returns (bool)
+    {
+        _transfer(sender, recipient, amount);
+        _approve(
+            sender,
+            msg.sender,
+            _allowances[sender][msg.sender].sub(amount)
+        );
+
+        return true;
     }
 
     // ============ Restricted Functions ============
