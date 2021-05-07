@@ -8,7 +8,7 @@ contract Permittable {
 
     bytes32 public DOMAIN_SEPARATOR;
 
-    mapping (address => uint256) public permitNonces;
+    mapping (address => uint256) public nonces;
 
     /* ============ Constants ============ */
 
@@ -37,7 +37,7 @@ contract Permittable {
         internal
         view
         returns (bytes32)
-    {
+    {        
         uint256 chainID;
         /* solium-disable-next-line */
         assembly {
@@ -73,7 +73,6 @@ contract Permittable {
     )
         internal
     {
-
         require(
             deadline == 0 || deadline >= block.timestamp,
             "Permittable: Permit expired"
@@ -99,7 +98,7 @@ contract Permittable {
                     owner,
                     spender,
                     value,
-                    permitNonces[owner]++,
+                    nonces[owner]++,
                     deadline
                 )
             )
