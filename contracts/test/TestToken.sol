@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity ^0.5.16;
+pragma experimental ABIEncoderV2;
 
 import {BaseERC20} from "../token/BaseERC20.sol";
 
