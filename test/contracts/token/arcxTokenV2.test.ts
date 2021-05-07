@@ -158,17 +158,6 @@ describe('ArcxTokenV2', () => {
       ).to.be.revertedWith('Ownable: caller is not the owner');
     });
 
-    it('reverts if token is paused', async () => {
-      let balance = await arcx.balanceOf(user.address);
-      expect(balance).to.eq(0);
-
-      await arcx.setPause(true);
-
-      await expect(arcx.mint(user.address, TOKEN_AMOUNT)).to.be.revertedWith(
-        'ArcxTokenV2: contract is paused',
-      );
-    });
-
     it('mints tokens to user if called by owner', async () => {
       let balance = await arcx.balanceOf(user.address);
       expect(balance).to.eq(0);
@@ -185,19 +174,6 @@ describe('ArcxTokenV2', () => {
       await expect(
         arcx.connect(user).burn(owner.address, TOKEN_AMOUNT),
       ).to.be.revertedWith('Ownable: caller is not the owner');
-    });
-
-    it('reverts if token is paused', async () => {
-      await arcx.mint(user.address, TOKEN_AMOUNT);
-
-      let balance = await arcx.balanceOf(user.address);
-      expect(balance).to.eq(TOKEN_AMOUNT);
-
-      await arcx.setPause(true);
-
-      await expect(arcx.burn(user.address, TOKEN_AMOUNT)).to.be.revertedWith(
-        'ArcxTokenV2: contract is paused',
-      );
     });
 
     it('burns the amount of tokens if called by owner', async () => {
@@ -290,6 +266,33 @@ describe('ArcxTokenV2', () => {
         .withArgs(user.address);
 
       expect(await arcx.pauseOperator()).to.eq(user.address);
+    });
+  });
+
+  describe('#transfer', () => {
+    it('reverts if contract is paused', async () => {
+      await arcx.mint(user.address, utils.parseEther('10'));
+
+      await arcx.setPause(true);
+
+      await expect(
+        arcx.connect(user).transfer(owner.address, utils.parseEther('5')),
+      ).to.be.revertedWith('ArcxTokenV2: contract is paused');
+    });
+  });
+
+  describe('#transferFrom', () => {
+    it('reverts if contract is paused', async () => {
+      await arcx.mint(user.address, utils.parseEther('10'));
+
+      await arcx.setPause(true);
+
+      await arcx.connect(user).approve(owner.address, utils.parseEther('10'));
+
+      await arcx.setPause(true);
+      await expect(
+        arcx.transferFrom(user.address, owner.address, utils.parseEther('10')),
+      ).to.be.revertedWith('ArcxTokenV2: contract is paused');
     });
   });
 });
