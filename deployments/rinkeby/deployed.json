@@ -337,5 +337,45 @@
     "version": 1,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "ArcxTokenV2",
+    "source": "ArcxTokenV2",
+    "address": "0x8A899FC87Dc8a4433c9bcA0b1b2eDDbEAaaC61A7",
+    "txn": "0xf870a95343a14842c995c34a2201b54c81244931ca36ccb5fda71bbe62608ac4",
+    "network": "rinkeby",
+    "version": 2,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "TestStakingToken",
+    "source": "TestToken",
+    "address": "0x969850e65A62532a4Dde8a20dB67f9E860AAA515",
+    "txn": "0x02be4be565fd142253aac77e57a620305762749591d4e30d3f87912c90c4669a",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "staking",
+    "group": "PermittablePool"
+  },
+  {
+    "name": "Implementation",
+    "source": "LiquidityCampaignV2",
+    "address": "0x98bE97A3BF2F66779f566E15c684255192F4102A",
+    "txn": "0xd18d7e4124926eb637686f257f369c409b2f5beecb4089b69720d333a980f183",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "staking",
+    "group": "PermittablePool"
+  },
+  {
+    "name": "Proxy",
+    "source": "ArcProxy",
+    "address": "0xF986894976A1A7b30687602c01bFDd081EE63d6b",
+    "txn": "0x10e8b7ae832feedcffd4803ac34d7ec77693bf88cbff4fad131efba30bab8091",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "staking",
+    "group": "PermittablePool"
   }
 ]
