@@ -8,7 +8,7 @@ import {IERC20} from "./IERC20.sol";
  */
 contract IPermittableERC20 is IERC20 {
 
-    /** 
+    /**
      * @notice Approve token with signature
      */
     function permit(

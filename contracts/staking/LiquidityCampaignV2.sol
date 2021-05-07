@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity 0.5.16;
-
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "../lib/SafeMath.sol";
@@ -377,12 +375,12 @@ contract LiquidityCampaignV2 is Adminable {
         external
     {
         stakingToken.permit(
-            msg.sender, 
-            _spender, 
-            _amount, 
-            _deadline, 
-            _v, 
-            _r, 
+            msg.sender,
+            _spender,
+            _amount,
+            _deadline,
+            _v,
+            _r,
             _s
         );
         stake(_amount);
