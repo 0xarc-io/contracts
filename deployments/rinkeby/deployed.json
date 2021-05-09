@@ -337,15 +337,5 @@
     "version": 1,
     "type": "global",
     "group": ""
-  },
-  {
-    "name": "ArcxToken",
-    "source": "ArcxTokenV2",
-    "address": "0x70c80776bDD2F20D1a5CDF457dD0ee44f142651B",
-    "txn": "0x51fa6dd490d1a499bcd21ae93755580947e449232857e130d54b81c5dc2d9f11",
-    "network": "rinkeby",
-    "version": 2,
-    "type": "global",
-    "group": ""
   }
 ]
