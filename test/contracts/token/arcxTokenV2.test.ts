@@ -23,7 +23,7 @@ describe('ArcxTokenV2', () => {
     user = signers[1];
 
     oldArcx = await new ArcxTokenFactory(owner).deploy();
-    arcx = await new ArcxTokenV2Factory(owner).deploy(oldArcx.address);
+    arcx = await new ArcxTokenV2Factory(owner).deploy('TEST arcx token', 'ARCHX', oldArcx.address);
   });
 
   addSnapshotBeforeRestoreAfterEach();

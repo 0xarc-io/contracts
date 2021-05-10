@@ -54,10 +54,12 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
     // ============ Constructor ============
 
     constructor(
+        string memory name,
+        string memory symbol,
         address _oldArcxToken
     )
         public
-        BaseERC20("ARCX Governance Token", "ARCX", 18)
+        BaseERC20(name, symbol, 18)
     {
         require(
             _oldArcxToken != address(0),
