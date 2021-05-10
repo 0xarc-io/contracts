@@ -43,7 +43,7 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
 
     // ============ Modifiers ============
 
-    modifier pausable() {
+    modifier isNotPaused() {
         require (
             isPaused == false,
             "ArcxTokenV2: contract is paused"
@@ -103,7 +103,7 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
      */
     function claim()
         external
-        pausable
+        isNotPaused
     {
         uint256 balance = oldArcxToken.balanceOf(msg.sender);
         uint256 newBalance = balance.mul(10000);
@@ -138,7 +138,7 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
         uint256 amount
     )
         public
-        pausable
+        isNotPaused
         returns (bool)
     {
         _transfer(msg.sender, recipient, amount);
@@ -151,7 +151,7 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
         uint256 amount
     )
         public
-        pausable
+        isNotPaused
         returns (bool)
     {
         _transfer(sender, recipient, amount);
