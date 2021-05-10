@@ -74,7 +74,7 @@ export default {
   },
   PermittablePool: {
     source: 'LiquidityCampaignV2',
-    stakingToken: '',
+    stakingToken: '0x969850e65A62532a4Dde8a20dB67f9E860AAA515',
     rewardsToken: 'ArcxTokenV2',
     rewardsDurationSeconds: 60 * 60 * 24 * 31, // 31 days
     contractFactory: LiquidityCampaignV2Factory,
