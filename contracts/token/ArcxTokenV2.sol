@@ -43,7 +43,7 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
 
     // ============ Modifiers ============
 
-    modifier pausable() {
+    modifier isNotPaused() {
         require (
             isPaused == false,
             "ArcxTokenV2: contract is paused"
@@ -54,10 +54,12 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
     // ============ Constructor ============
 
     constructor(
+        string memory name,
+        string memory symbol,
         address _oldArcxToken
     )
         public
-        BaseERC20("ARCX Governance Token", "ARCX", 18)
+        BaseERC20(name, symbol, 18)
     {
         require(
             _oldArcxToken != address(0),
@@ -79,7 +81,6 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
     )
         external
         onlyOwner
-        pausable
     {
         _mint(to, value);
     }
@@ -90,7 +91,6 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
     )
         external
         onlyOwner
-        pausable
     {
         _burn(to, value);
     }
@@ -105,7 +105,7 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
      */
     function claim()
         external
-        pausable
+        isNotPaused
     {
         uint256 balance = oldArcxToken.balanceOf(msg.sender);
         uint256 newBalance = balance.mul(10000);
@@ -133,6 +133,37 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
             msg.sender,
             newBalance
         );
+    }
+
+    function transfer(
+        address recipient,
+        uint256 amount
+    )
+        public
+        isNotPaused
+        returns (bool)
+    {
+        _transfer(msg.sender, recipient, amount);
+        return true;
+    }
+
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    )
+        public
+        isNotPaused
+        returns (bool)
+    {
+        _transfer(sender, recipient, amount);
+        _approve(
+            sender,
+            msg.sender,
+            _allowances[sender][msg.sender].sub(amount)
+        );
+
+        return true;
     }
 
     // ============ Restricted Functions ============
