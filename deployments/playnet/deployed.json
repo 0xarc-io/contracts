@@ -318,15 +318,5 @@
     "version": 1,
     "type": "global",
     "group": ""
-  },
-  {
-    "name": "ArcxToken",
-    "source": "ArcxTokenV2",
-    "address": "0x42682F95832c6ecB7a997AafC16A3754fdbcB91F",
-    "txn": "0x75ed670a47f4b7a18d31447984cd91536fc4160d270b061d0a804f8c9c8a97b7",
-    "network": "playnet",
-    "version": 2,
-    "type": "global",
-    "group": ""
   }
 ]
