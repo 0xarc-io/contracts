@@ -199,6 +199,11 @@ contract WaitlistBatch is Ownable {
     function reclaimTokens()
         public
     {
+        require(
+            blacklist[msg.sender] == false,
+            "WaitlistBatch: user is blacklisted"
+        );
+
         UserBatchInfo memory batchInfo = getBatchInfoForUser(msg.sender);
 
         require(
@@ -226,17 +231,7 @@ contract WaitlistBatch is Ownable {
             batchInfo.depositAmount
         );
 
-        if (blacklist[msg.sender] == true) {
-            emit TokensReclaimedBlacklist(
-                msg.sender,
-                batchInfo.depositAmount
-            );
-        } else {
-            emit TokensReclaimed(
-                msg.sender,
-                batchInfo.depositAmount
-            );
-        }
+        emit TokensReclaimed(msg.sender, batchInfo.depositAmount);
     }
 
     /* ========== Admin Functions ========== */
