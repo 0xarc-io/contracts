@@ -31,7 +31,7 @@ describe('ArcxTokenV2', () => {
   describe('#constructor', () => {
     it('reverts if old token is address 0', async () => {
       await expect(
-        new ArcxTokenV2Factory(owner).deploy(constants.AddressZero),
+        new ArcxTokenV2Factory(owner).deploy('test', 'test', constants.AddressZero),
       ).to.be.revertedWith('ArcxTokenV2: old ARCX token cannot be address 0');
     });
 
