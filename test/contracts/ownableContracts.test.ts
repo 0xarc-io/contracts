@@ -4,12 +4,16 @@ import { MockProvider } from 'ethereum-waffle';
 import deployments from '../../deployments/mainnet/deployed.json';
 import { OwnableFactory } from '@src/typings/OwnableFactory';
 import { AdminableFactory } from '@src/typings';
+import { loadContract } from '../../deployments/src';
 
 /* eslint-disable @typescript-eslint/no-var-requires */
 const hre = require('hardhat');
 
 describe('Ownable contracts', () => {
-  const expectedOwner = hre.config.networks.mainnet.users.eoaOwner;
+  const {
+    eoaOwner: expectedOwner,
+    multisigOwner,
+  } = hre.config.networks.mainnet.users;
 
   const provider = new MockProvider({
     ganacheOptions: {
@@ -17,7 +21,7 @@ describe('Ownable contracts', () => {
     },
   });
 
-  describe('contracts have owner', () => {
+  describe('contracts owned by the eoa owner', () => {
     for (const deployment of deployments) {
       const shouldBeOwnable = (source: string) => {
         return [
@@ -30,7 +34,6 @@ describe('Ownable contracts', () => {
           'AddressAccrual',
           'StakingRewardsAccrualCapped',
           'AdminRewards',
-          'ArcxToken',
           'KYFToken',
           'SkillsetToken',
           'StaticSyntheticToken',
@@ -40,11 +43,55 @@ describe('Ownable contracts', () => {
 
       if (shouldBeOwnable(deployment.source)) {
         it(`${deployment.group} ${deployment.name} ${deployment.address}`, async () => {
-          const owner = await OwnableFactory.connect(deployment.address, provider).owner();
-          expect(owner.toLowerCase()).eq(expectedOwner);
+          const owner = await OwnableFactory.connect(
+            deployment.address,
+            provider,
+          ).owner();
+          expect(owner.toLowerCase()).to.eq(expectedOwner);
         });
       }
     }
+  });
+
+  describe('contractes owned by the ARCx Protocol DAO', () => {
+    for (const deployment of deployments) {
+      const shouldBeOwnable = (source: string) => {
+        return ['ArcxTokenV2'].includes(source);
+      };
+
+      if (shouldBeOwnable(deployment.source)) {
+        it(`${deployment.group} ${deployment.name} ${deployment.address}`, async () => {
+          const owner = await OwnableFactory.connect(
+            deployment.address,
+            provider,
+          ).owner();
+          expect(owner.toLowerCase()).to.eq(multisigOwner);
+        });
+      }
+    }
+  });
+
+  it('ArcxToken is owned by ArcxTokenV2', async () => {
+    const arcx = loadContract({
+      network: 'mainnet',
+      name: 'ArcxToken',
+      source: 'ArcxToken',
+      type: 'global',
+    });
+
+    const arcxV2 = loadContract({
+      network: 'mainnet',
+      name: 'ArcxToken',
+      source: 'ArcxTokenV2',
+      type: 'global',
+    });
+
+    const arcxOwner = await OwnableFactory.connect(
+      arcx.address,
+      provider,
+    ).owner();
+
+    expect(arcxOwner).to.eq(arcxV2.address);
   });
 
   describe('contracts have admin', () => {
@@ -67,12 +114,18 @@ describe('Ownable contracts', () => {
     for (const deployment of deployments) {
       if (shouldBeAdminable(deployment.source)) {
         it(`${deployment.group} ${deployment.name} ${deployment.address}`, async () => {
-          const admin = await AdminableFactory.connect(deployment.address, provider).getAdmin();
+          const admin = await AdminableFactory.connect(
+            deployment.address,
+            provider,
+          ).getAdmin();
           expect(admin).eq('0x0000000000000000000000000000000000000000');
         });
       } else if (['ArcProxy'].includes(deployment.source)) {
         it(`${deployment.group} ${deployment.name} ${deployment.address}`, async () => {
-          const admin = await AdminableFactory.connect(deployment.address, provider).getAdmin();
+          const admin = await AdminableFactory.connect(
+            deployment.address,
+            provider,
+          ).getAdmin();
           expect(admin.toLowerCase()).eq(expectedOwner);
         });
       }
