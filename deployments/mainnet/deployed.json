@@ -577,5 +577,15 @@
     "version": 1,
     "type": "staking",
     "group": "Pool-8"
+  },
+  {
+    "name": "ArcxToken",
+    "source": "ArcxTokenV2",
+    "address": "0x1321f1f1aa541A56C31682c57b80ECfCCd9bB288",
+    "txn": "0x3f33ebb77c59705b557371f1e5cb677678b3e75c7c2ca1aa973b71a495114e0a",
+    "network": "mainnet",
+    "version": 2,
+    "type": "global",
+    "group": ""
   }
 ]

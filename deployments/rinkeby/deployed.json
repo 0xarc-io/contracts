@@ -371,8 +371,8 @@
   {
     "name": "ArcxToken",
     "source": "ArcxTokenV2",
-    "address": "0x87da9100F05A66ac2e5013Ca700A8233e715922d",
-    "txn": "0x4a22907af4606a1b0ca3a4e829f256f188926008d72b7df219ad0d87f201cafc",
+    "address": "0x5c9DbC786ed0b7dA9a4F1F5479794C1bc01F293e",
+    "txn": "0x5f96fafad8c459d4599b7dc1217cba248f64a14cb7ff064efa7cdead15c140f9",
     "network": "rinkeby",
     "version": 2,
     "type": "global",

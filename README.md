@@ -74,3 +74,13 @@ $ yarn clean
 ## Discussion
 
 For any concerns or feedback, open an issue or visit us on [Discord](https://discord.gg/skwz6je) to discuss.
+
+## Mainnet contract deployment checklist
+
+- [x] Run `yarn clean && yarn build`
+- [x] Ensure all tests pass
+- [x] Ensure there are no outstanding PRs in regards to the contract that is to be deployed
+- [x] The contract is successfully deployed on Rinkeby
+- [x] Is verified on Etherscan on Rinkeby
+- [x] Go to https://ethgasstation.info/ and set the **fast** gas price you see there in `hardhat.config.ts` under the `mainnet` key
+- [x] Send it
