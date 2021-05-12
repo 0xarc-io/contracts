@@ -4,6 +4,8 @@ import {
   JointCampaignFactory,
   LiquidityCampaign,
   LiquidityCampaignFactory,
+  LiquidityCampaignV2,
+  LiquidityCampaignV2Factory,
 } from '@src/typings';
 import ArcDecimal from '@src/utils/ArcDecimal';
 
@@ -85,6 +87,28 @@ export default {
         stakeToDebtRatio,
         arcStateContract,
       );
+    },
+  },
+  'Pool-8': {
+    source: 'LiquidityCampaignV2',
+    stakingToken: 'todo: add fake arcx token v2',
+    rewardsToken: 'ArcxTokenV2',
+    rewardsDurationSeconds: 60 * 60 * 24 * 31, // 31 days
+    contractFactory: LiquidityCampaignV2Factory,
+    getDeployTx: (signer: SignerWithAddress) =>
+      new LiquidityCampaignV2Factory(signer).getDeployTransaction(),
+    runInit: (
+      contract: LiquidityCampaignV2,
+      arcDao: string,
+      rewardsDistributor: string,
+      rewardsTokenAddress: string,
+      stakingTokenAddress: string,
+    ) => {
+      const daoAllocation = '400000000000000000';
+
+      return contract.init(arcDao, rewardsDistributor, rewardsTokenAddress, stakingTokenAddress, {
+        value: daoAllocation,
+      });
     },
   },
 };

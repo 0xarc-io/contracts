@@ -366,7 +366,6 @@ contract LiquidityCampaignV2 is Adminable {
 
     function stakeWithPermit(
         uint256 _amount,
-        address _spender,
         uint256 _deadline,
         uint8 _v,
         bytes32 _r,
@@ -376,7 +375,7 @@ contract LiquidityCampaignV2 is Adminable {
     {
         stakingToken.permit(
             msg.sender,
-            _spender,
+            address(this),
             _amount,
             _deadline,
             _v,

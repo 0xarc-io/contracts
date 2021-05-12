@@ -21,7 +21,12 @@ task('deploy-staking', 'Deploy a staking/reward pool')
   .setAction(async (taskArgs, hre) => {
     const name = taskArgs.name;
 
-    const { network, signer, networkConfig, networkDetails } = await loadDetails(taskArgs, hre);
+    const {
+      network,
+      signer,
+      networkConfig,
+      networkDetails,
+    } = await loadDetails(taskArgs, hre);
 
     let ultimateOwner =
       networkDetails['users']['multisigOwner'] ||
@@ -33,7 +38,9 @@ task('deploy-staking', 'Deploy a staking/reward pool')
     const stakingConfig = await loadStakingConfig({ network, key: name });
 
     if (!stakingConfig.rewardsDurationSeconds) {
-      throw Error('"rewardsDurationSeconds" is not set in the staking-config.json file');
+      throw Error(
+        '"rewardsDurationSeconds" is not set in the staking-config.json file',
+      );
     }
 
     await pruneDeployments(network, signer.provider);
@@ -51,7 +58,9 @@ task('deploy-staking', 'Deploy a staking/reward pool')
     });
 
     if (!arcDAO || !rewardToken) {
-      throw red(`There is no ArcDAO, RewardToken or Core Contract in this deployments file`);
+      throw red(
+        `There is no ArcDAO, RewardToken or Core Contract in this deployments file`,
+      );
     }
 
     const stakingTokenAddress =
@@ -60,7 +69,11 @@ task('deploy-staking', 'Deploy a staking/reward pool')
         {
           name: 'TestStakingToken',
           source: 'TestToken',
-          data: new TestTokenFactory(signer).getDeployTransaction(`${name}-TestToken`, name, 18),
+          data: new TestTokenFactory(signer).getDeployTransaction(
+            `${name}-TestToken`,
+            name,
+            18,
+          ),
           version: 1,
           type: DeploymentType.staking,
           group: name,
@@ -133,15 +146,21 @@ task('deploy-staking', 'Deploy a staking/reward pool')
       await implementation.setApprovedStateContracts(stateProxies);
       console.log(green('State contracts approved successfully!'));
     } catch (error) {
-      console.log(red(`Failed to set approved state contracts. Reason: ${error}\n`));
+      console.log(
+        red(`Failed to set approved state contracts. Reason: ${error}\n`),
+      );
     }
 
     try {
       console.log(yellow('Setting rewards duration...'));
-      await implementation.setRewardsDuration(stakingConfig.rewardsDurationSeconds);
+      await implementation.setRewardsDuration(
+        stakingConfig.rewardsDurationSeconds,
+      );
       console.log(green('Rewards duration successfully set'));
     } catch (error) {
-      console.log(red(`Failed to set the rewards duration. Reason: ${error}\n`));
+      console.log(
+        red(`Failed to set the rewards duration. Reason: ${error}\n`),
+      );
     }
   });
 
@@ -150,7 +169,12 @@ task('deploy-staking-liquidity', 'Deploy a LiquidityCampaign')
   .setAction(async (taskArgs, hre) => {
     const name = taskArgs.name;
 
-    const { network, signer, networkConfig, networkDetails } = await loadDetails(taskArgs, hre);
+    const {
+      network,
+      signer,
+      networkConfig,
+      networkDetails,
+    } = await loadDetails(taskArgs, hre);
 
     let ultimateOwner =
       networkDetails['users']['multisigOwner'] ||
@@ -162,7 +186,9 @@ task('deploy-staking-liquidity', 'Deploy a LiquidityCampaign')
     const stakingConfig = await loadStakingConfig({ network, key: name });
 
     if (!stakingConfig.rewardsDurationSeconds) {
-      throw red(`"rewardsDurationSeconds" is not set in the staking-config.ts file`);
+      throw red(
+        `"rewardsDurationSeconds" is not set in the staking-config.ts file`,
+      );
     }
 
     await pruneDeployments(network, signer.provider);
@@ -174,13 +200,15 @@ task('deploy-staking-liquidity', 'Deploy a LiquidityCampaign')
     });
 
     const rewardToken = await loadContract({
-      name: stakingConfig.rewardsToken,
+      source: stakingConfig.rewardsToken,
       type: DeploymentType.global,
       network,
     });
 
     if (!arcDAO || !rewardToken) {
-      throw red(`There is no ArcDAO, RewardToken or Core Contract in this deployments file`);
+      throw red(
+        `There is no ArcDAO, RewardToken or Core Contract in this deployments file`,
+      );
     }
 
     const stakingTokenAddress =
@@ -189,7 +217,11 @@ task('deploy-staking-liquidity', 'Deploy a LiquidityCampaign')
         {
           name: 'TestStakingToken',
           source: 'TestToken',
-          data: new TestTokenFactory(signer).getDeployTransaction(`${name}-TestToken`, name, 18),
+          data: new TestTokenFactory(signer).getDeployTransaction(
+            `${name}-TestToken`,
+            name,
+            18,
+          ),
           version: 1,
           type: DeploymentType.staking,
           group: name,
@@ -229,7 +261,10 @@ task('deploy-staking-liquidity', 'Deploy a LiquidityCampaign')
       throw red(`"contractFactory" missing from in the staking-config.ts file`);
     }
 
-    const implementation = stakingConfig.contractFactory.connect(proxyContract, signer);
+    const implementation = stakingConfig.contractFactory.connect(
+      proxyContract,
+      signer,
+    );
 
     console.log(yellow(`* Calling init()...`));
     try {
@@ -247,10 +282,14 @@ task('deploy-staking-liquidity', 'Deploy a LiquidityCampaign')
 
     try {
       console.log(yellow('Setting rewards duration...'));
-      await implementation.setRewardsDuration(stakingConfig.rewardsDurationSeconds);
+      await implementation.setRewardsDuration(
+        stakingConfig.rewardsDurationSeconds,
+      );
       console.log(green('Rewards duration successfully set'));
     } catch (error) {
-      console.log(red(`Failed to set the rewards duration. Reason: ${error}\n`));
+      console.log(
+        red(`Failed to set the rewards duration. Reason: ${error}\n`),
+      );
     }
   });
 
@@ -261,7 +300,12 @@ task('deploy-staking-joint', 'Deploy a JointCampaign')
     const name = taskArgs.name;
     const contractPath = taskArgs.verifyPath;
 
-    const { network, signer, networkConfig, networkDetails } = await loadDetails(taskArgs, hre);
+    const {
+      network,
+      signer,
+      networkConfig,
+      networkDetails,
+    } = await loadDetails(taskArgs, hre);
 
     let ultimateOwner =
       networkDetails['users']['multisigOwner'] ||
@@ -273,7 +317,9 @@ task('deploy-staking-joint', 'Deploy a JointCampaign')
     const stakingConfig = await loadStakingConfig({ network, key: name });
 
     if (!stakingConfig.rewardsDurationSeconds) {
-      throw red(`"rewardsDurationSeconds" is not set in the staking-config.ts file`);
+      throw red(
+        `"rewardsDurationSeconds" is not set in the staking-config.ts file`,
+      );
     }
 
     await pruneDeployments(network, signer.provider);
@@ -291,7 +337,9 @@ task('deploy-staking-joint', 'Deploy a JointCampaign')
     });
 
     if (!arcDAO || !rewardToken) {
-      throw red(`There is no ArcDAO, RewardToken or Core Contract in this deployments file`);
+      throw red(
+        `There is no ArcDAO, RewardToken or Core Contract in this deployments file`,
+      );
     }
 
     if (!stakingConfig.contractFactory) {
@@ -304,7 +352,11 @@ task('deploy-staking-joint', 'Deploy a JointCampaign')
         {
           name: 'TestStakingToken',
           source: 'TestToken',
-          data: new TestTokenFactory(signer).getDeployTransaction(`${name}-TestToken`, name, 18),
+          data: new TestTokenFactory(signer).getDeployTransaction(
+            `${name}-TestToken`,
+            name,
+            18,
+          ),
           version: 1,
           type: DeploymentType.staking,
           group: name,
@@ -345,14 +397,20 @@ task('deploy-staking-joint', 'Deploy a JointCampaign')
 
     try {
       console.log(yellow(`Setting rewards duration...`));
-      await jointCampaignContract.setRewardsDuration(stakingConfig.rewardsDurationSeconds);
+      await jointCampaignContract.setRewardsDuration(
+        stakingConfig.rewardsDurationSeconds,
+      );
       console.log(green(`Rewards duration successfully set`));
     } catch (error) {
-      console.log(red(`Failed to set the rewards duration. Reason: ${error}\n`));
+      console.log(
+        red(`Failed to set the rewards duration. Reason: ${error}\n`),
+      );
     }
 
     if (contractPath) {
-      console.log(green(`Verifying contract at address ${jointCampaignAddress}`));
+      console.log(
+        green(`Verifying contract at address ${jointCampaignAddress}`),
+      );
 
       // todo where to import this run function from?
       // await run('verify-contract', { path: contractPath, address: jointCampaignAddress });
