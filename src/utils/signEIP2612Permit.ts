@@ -22,6 +22,7 @@ export const signERC2612Permit = async (
   deadline: BigNumber,
   nonce: BigNumber,
   chainId: number,
+  version = '1'
 ): Promise<SignatureInfo> => {
   const message = {
     owner,
@@ -30,7 +31,7 @@ export const signERC2612Permit = async (
     nonce: nonce.toString(),
     deadline: deadline.toString(),
   };
-  const domain = await _getDomain(signer, token, chainId);
+  const domain = await _getDomain(signer, token, chainId, version);
   const types = {
     Permit: [
       { name: 'owner', type: 'address' },
@@ -54,6 +55,7 @@ const _getDomain = async (
   signer: JsonRpcSigner,
   token: string,
   chainId: number,
+  version: string,
 ) => {
   const tokenContract = BaseERC20Factory.connect(token, signer);
 
@@ -62,7 +64,7 @@ const _getDomain = async (
 
   const domain = {
     name,
-    version: '1', // CAUTION! The old arcx token and other BaseERC20 tokens we deployed use the symbol instead of '1' here
+    version, // CAUTION! The old arcx token and other BaseERC20 tokens we deployed use the symbol instead of '1' here
     chainId,
     verifyingContract: tokenAddress,
   };

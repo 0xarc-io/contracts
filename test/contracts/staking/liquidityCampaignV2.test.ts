@@ -106,7 +106,6 @@ describe('LiquidityCampaignV2', () => {
 
       await contract.stakeWithPermit(
         amount,
-        contract.address,
         deadline,
         v,
         r,
@@ -438,7 +437,6 @@ describe('LiquidityCampaignV2', () => {
         await expect(
           liquidityCampaignUser1.stakeWithPermit(
             balance.add(1),
-            liquidityCampaignUser1.address,
             deadline,
             v,
             r,
@@ -459,7 +457,6 @@ describe('LiquidityCampaignV2', () => {
         await expect(
           liquidityCampaignUser1.stakeWithPermit(
             amount,
-            liquidityCampaignUser1.address,
             deadline,
             v,
             r,
@@ -479,7 +476,6 @@ describe('LiquidityCampaignV2', () => {
 
         await liquidityCampaignUser1.stakeWithPermit(
           amount,
-          liquidityCampaignUser1.address,
           deadline,
           v,
           r,
