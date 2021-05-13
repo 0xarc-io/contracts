@@ -587,5 +587,25 @@
     "version": 2,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "Implementation",
+    "source": "LiquidityCampaignV2",
+    "address": "0x69b37541d1C00c949B530ccd3d23437188767160",
+    "txn": "0x305a4842501e9b2d2bf71f5c764735f249a933e4b426e2f5bfa232bee3147da6",
+    "network": "mainnet",
+    "version": 1,
+    "type": "staking",
+    "group": "Pool-9"
+  },
+  {
+    "name": "Proxy",
+    "source": "ArcProxy",
+    "address": "0xAb0BcA3ff56d891cC8b22A5d9705F7088cE3Bf3b",
+    "txn": "0x5e7b4bffcb884e52bde381f5810d59eaf4f6c0ca619d26735ebf0a8fe34cdf58",
+    "network": "mainnet",
+    "version": 1,
+    "type": "staking",
+    "group": "Pool-9"
   }
 ]
