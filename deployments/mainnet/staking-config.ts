@@ -4,6 +4,8 @@ import {
   JointCampaignFactory,
   LiquidityCampaign,
   LiquidityCampaignFactory,
+  LiquidityCampaignV2,
+  LiquidityCampaignV2Factory,
   RewardCampaign,
   RewardCampaignFactory,
 } from '@src/typings';
@@ -63,9 +65,15 @@ export default {
     ) => {
       const daoAllocation = '400000000000000000';
 
-      return contract.init(arcDao, rewardsDistributor, rewardsTokenAddress, stakingTokenAddress, {
-        value: daoAllocation,
-      });
+      return contract.init(
+        arcDao,
+        rewardsDistributor,
+        rewardsTokenAddress,
+        stakingTokenAddress,
+        {
+          value: daoAllocation,
+        },
+      );
     },
   },
   'Pool-6.1': {
@@ -85,9 +93,15 @@ export default {
     ) => {
       const daoAllocation = '400000000000000000';
 
-      return contract.init(arcDao, rewardsDistributor, rewardsTokenAddress, stakingTokenAddress, {
-        value: daoAllocation,
-      });
+      return contract.init(
+        arcDao,
+        rewardsDistributor,
+        rewardsTokenAddress,
+        stakingTokenAddress,
+        {
+          value: daoAllocation,
+        },
+      );
     },
   },
   'Pool-7': {
@@ -104,7 +118,8 @@ export default {
       arcRewardsDistributor: string,
       arcTokenAddress: string,
     ) {
-      const partnerRewardsDistributor = '0x6140182B2536AE7B6Cfcfb2d2bAB0f6Fe0D7b58E';
+      const partnerRewardsDistributor =
+        '0x6140182B2536AE7B6Cfcfb2d2bAB0f6Fe0D7b58E';
       const partnerTokenAddress = '0x5a98fcbea516cf06857215779fd812ca3bef1b32';
       const daoAllocation = ArcDecimal.new(0.4);
       const slashersCut = ArcDecimal.new(0.05);
@@ -141,9 +156,42 @@ export default {
       stakingTokenAddress: string,
     ) => {
       const daoAllocation = '400000000000000000';
-      return contract.init(arcDao, rewardsDistributor, rewardsTokenAddress, stakingTokenAddress, {
-        value: daoAllocation,
-      });
+      return contract.init(
+        arcDao,
+        rewardsDistributor,
+        rewardsTokenAddress,
+        stakingTokenAddress,
+        {
+          value: daoAllocation,
+        },
+      );
+    },
+  },
+  'Pool-9': {
+    source: 'LiquidityCampaignV2',
+    stakingToken: '0x87C33321E1755ab54b0A27D4969A72B953486E75',
+    rewardsToken: 'ArcxTokenV2',
+    rewardsDurationSeconds: 60 * 60 * 24 * 31, // 31 days
+    contractFactory: LiquidityCampaignV2Factory,
+    getDeployTx: (signer: SignerWithAddress) =>
+      new LiquidityCampaignV2Factory(signer).getDeployTransaction(),
+    runInit: (
+      contract: LiquidityCampaignV2,
+      arcDao: string,
+      rewardsDistributor: string,
+      rewardsTokenAddress: string,
+      stakingTokenAddress: string,
+    ) => {
+      const daoAllocation = '400000000000000000';
+      return contract.init(
+        arcDao,
+        rewardsDistributor,
+        rewardsTokenAddress,
+        stakingTokenAddress,
+        {
+          value: daoAllocation,
+        },
+      );
     },
   },
 };

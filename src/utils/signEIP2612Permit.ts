@@ -13,7 +13,7 @@ export interface SignatureInfo {
   deadline: string;
 }
 
-export const signERC2612Permit = async (
+export const signEIP2612Permit = async (
   signer: JsonRpcSigner,
   token: string,
   owner: string,

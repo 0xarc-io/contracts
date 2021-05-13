@@ -18,7 +18,7 @@ import { BASE } from '@src/constants';
 import { EVM } from '@test/helpers/EVM';
 import { solidity } from 'ethereum-waffle';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
-import { signERC2612Permit } from '@src/utils/signEIP2612Permit';
+import { signEIP2612Permit } from '@src/utils/signEIP2612Permit';
 
 chai.use(solidity);
 const expect = chai.expect;
@@ -68,7 +68,7 @@ describe('LiquidityCampaignV2', () => {
       owner: user.address,
     });
 
-    return await signERC2612Permit(
+    return await signEIP2612Permit(
       ethers.provider.getSigner(user.address),
       stakingToken.address,
       user.address,
