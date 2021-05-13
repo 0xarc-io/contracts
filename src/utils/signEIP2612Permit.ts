@@ -1,6 +1,6 @@
 import { JsonRpcSigner } from '@ethersproject/providers/lib';
 import { BigNumber } from '@ethersproject/bignumber';
-import { BaseERC20Factory } from '@src/typings';
+import { BaseERC20Factory } from '../typings';
 
 export interface SignatureInfo {
   v: number;

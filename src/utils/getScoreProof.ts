@@ -1,7 +1,7 @@
 import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
 import { Signer } from '@ethersproject/abstract-signer';
 import { BigNumber } from '@ethersproject/bignumber';
-import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
+import CreditScoreTree from '../MerkleTree/CreditScoreTree';
 
 export function getScoreProof(
   creditScore: CreditScore,
