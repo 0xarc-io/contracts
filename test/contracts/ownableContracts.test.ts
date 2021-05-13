@@ -126,7 +126,7 @@ describe('Ownable contracts', () => {
             deployment.address,
             provider,
           ).getAdmin();
-          expect(admin.toLowerCase()).eq(expectedOwner);
+          expect(admin.toLowerCase()).to.be.oneOf([expectedOwner, multisigOwner]);
         });
       }
     }
