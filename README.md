@@ -1,4 +1,5 @@
 [![npm version](https://badge.fury.io/js/%40arcxgame%2Fcontracts.svg)](https://badge.fury.io/js/%40arcxgame%2Fcontracts)
+[![arcxmoney](https://circleci.com/gh/arcxmoney/contracts.svg?style=svg&circle-token=9efd5821c24db49c53c74b3ebe7fe5db7bc1dfe2)](https://app.circleci.com/pipelines/github/arcxmoney/contracts)
 
 # ARCx Protocol Contracts
 
