@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {BaseERC20} from "../../token/BaseERC20.sol";
@@ -8,8 +8,7 @@ import {IERC20} from "../../token/IERC20.sol";
 import {SafeERC20} from "../../lib/SafeERC20.sol";
 import {SafeMath} from "../../lib/SafeMath.sol";
 import {Adminable} from "../../lib/Adminable.sol";
-import {IOracle} from "../../oracle/IOracle.sol";
-import {Decimal} from "../../lib/Decimal.sol";
+import {ISapphireOracle} from "../../oracle/ISapphireOracle.sol";
 import {ISyntheticTokenV2} from "../../token/ISyntheticTokenV2.sol";
 
 import {SapphireTypes} from "./SapphireTypes.sol";
@@ -158,7 +157,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         public
         onlyAdmin
     {
-        oracle = IOracle(_oracleAddress);
+        oracle = ISapphireOracle(_oracleAddress);
         emit OracleUpdated(_oracleAddress);
     }
 
@@ -996,7 +995,8 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         returns (uint256, uint256)
     {
         uint256 assessedCRatio;
-        Decimal.D256 memory collateralPrice;
+        uint256 collateralPrice;
+        uint256 collateralPriceTimestamp;
 
         bool mandatoryProof = false;
         bool needsCollateralPrice = false;
@@ -1027,10 +1027,15 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             );
 
             // Collateral price denominated in 18 decimals
-            collateralPrice = oracle.fetchCurrentPrice();
+            (collateralPrice, collateralPriceTimestamp) = oracle.fetchCurrentPrice();
 
             require(
-                collateralPrice.value > 0,
+                _isOracleNotOutdated(collateralPriceTimestamp),
+                "SapphireCoreV1: the oracle has stale prices"
+            );
+
+            require(
+                collateralPrice > 0,
                 "SapphireCoreV1: the oracle returned a price of 0"
             );
         }
@@ -1046,6 +1051,19 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             );
         }
 
-        return (assessedCRatio, collateralPrice.value);
+        return (assessedCRatio, collateralPrice);
+    }
+
+    /**
+     * @dev Returns true if oracle is not outdated
+     */
+    function _isOracleNotOutdated(
+        uint256 _oracleTimestamp
+    )
+        internal
+        view
+        returns (bool)
+    {
+        return _oracleTimestamp >= currentTimestamp().sub(60 * 60 * 12);
     }
 }

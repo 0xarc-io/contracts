@@ -25,6 +25,7 @@ import {
   deployMockSapphireCreditScore,
   deployMockSapphireCoreV1,
   deploySyntheticTokenV2,
+  deployMockSapphireOracle,
 } from './deployers';
 
 import { Signer } from 'ethers';
@@ -106,7 +107,7 @@ export async function mozartFixture(
   ctx.contracts.mozart.savings = savingsV2;
   ctx.contracts.collateral = collateral;
   ctx.contracts.synthetic.tokenV1 = synthetic;
-  ctx.contracts.oracle = oracle;
+  ctx.contracts.mozart.oracle = oracle;
 
   ctx.sdks.mozart = await MozartTestArc.init(deployer);
   await ctx.sdks.mozart.addSynths({ ETHX: coreV2.address });
@@ -158,7 +159,7 @@ export async function spritzFixture(
   ctx.contracts.spritz.state = state;
   ctx.contracts.collateral = collateral;
   ctx.contracts.synthetic.static = synth;
-  ctx.contracts.oracle = oracle;
+  ctx.contracts.spritz.oracle = oracle;
 
   ctx.sdks.spritz = await SpritzTestArc.init(deployer, {
     core,
@@ -195,7 +196,7 @@ export async function sapphireFixture(
     args?.decimals ?? DEFAULT_COLLATERAL_DECIMALS,
   );
 
-  ctx.contracts.oracle = await deployMockOracle(deployer);
+  ctx.contracts.sapphire.oracle = await deployMockSapphireOracle(deployer);
 
   const coreImp = await deployMockSapphireCoreV1(deployer);
   const coreProxy = await deployArcProxy(
@@ -249,7 +250,7 @@ export async function sapphireFixture(
   await ctx.contracts.sapphire.core.init(
     ctx.contracts.collateral.address,
     ctx.contracts.synthetic.tokenV2.address,
-    ctx.contracts.oracle.address,
+    ctx.contracts.sapphire.oracle.address,
     ctx.signers.interestSetter.address,
     ctx.signers.pauseOperator.address,
     ctx.contracts.sapphire.assessor.address,

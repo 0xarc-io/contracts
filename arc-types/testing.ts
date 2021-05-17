@@ -28,6 +28,7 @@ import {
   SyntheticTokenV2,
 } from '@src/typings';
 import { SapphireTestArc } from '@src/SapphireTestArc';
+import { MockSapphireOracle } from '@src/typings/MockSapphireOracle';
 
 export interface TestingSigners {
   admin: SignerWithAddress;
@@ -56,16 +57,19 @@ export interface Contracts {
     coreV3: CoreV3;
     coreV4: CoreV4;
     state: StateV1;
+    oracle: MockOracle
   };
   mozart: {
     core: MockMozartCoreV2;
     savings: MockMozartSavingsV2;
+    oracle: MockOracle
   };
   sapphire: {
     core: MockSapphireCoreV1;
     creditScore: MockSapphireCreditScore;
     linearMapper: SapphireMapperLinear;
     assessor: SapphireAssessor;
+    oracle: MockSapphireOracle
   };
   synthetic: {
     static: StaticSyntheticToken;
@@ -79,7 +83,6 @@ export interface Contracts {
     tokenStakingAccrual: TokenStakingAccrual;
   };
   collateral: TestToken;
-  oracle: MockOracle;
 }
 
 export interface Stubs {

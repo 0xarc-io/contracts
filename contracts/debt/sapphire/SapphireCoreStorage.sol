@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
-import {IOracle} from "../../oracle/IOracle.sol";
+import {ISapphireOracle} from "../../oracle/ISapphireOracle.sol";
 import {ISapphireAssessor} from "./ISapphireAssessor.sol";
 
 import {SapphireTypes} from "./SapphireTypes.sol";
@@ -52,7 +52,7 @@ contract SapphireCoreStorage {
     /**
      * @dev The instance of the oracle that reports prices for the collateral
      */
-    IOracle public oracle;
+    ISapphireOracle public oracle;
 
     /**
      * @dev If a collateral asset is used that has less than 18 decimal places

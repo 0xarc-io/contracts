@@ -85,13 +85,7 @@ export async function setupMozart(
  */
 export async function setupSapphire(
   ctx: ITestContext,
-  {
-    merkleRoot,
-    limits,
-    fees,
-    price,
-    interestRate,
-  }: SapphireSetupOptions,
+  { merkleRoot, limits, fees, price, interestRate }: SapphireSetupOptions,
 ) {
   const arc = ctx.sdks.sapphire;
 
@@ -119,7 +113,7 @@ export async function setupSapphire(
   }
 
   if (price) {
-    await ctx.contracts.oracle.setPrice({ value: price });
+    await ctx.contracts.sapphire.oracle.setPrice(price);
   }
 
   if (interestRate) {
