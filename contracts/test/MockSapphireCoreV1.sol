@@ -24,7 +24,7 @@ contract MockSapphireCoreV1 is SapphireCoreV1, MockTimestamp {
         internal
         view
         returns (bool)
-    {           
+    {
         uint256 halfDay = 60 * 60 * 12;
 
         if (currentTimestamp() < halfDay) {

@@ -25,7 +25,7 @@ contract MockSapphireOracle is ISapphireOracle {
     function setPrice(
         uint256 _price
     )
-        public 
+        public
     {
         currentPrice = _price;
     }
