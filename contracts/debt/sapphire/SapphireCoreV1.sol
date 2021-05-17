@@ -142,7 +142,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             collateralDecimals <= 18,
             "SapphireCoreV1: collateral has more than 18 decimals"
         );
-        
+
         precisionScalar = 10 ** (18 - uint256(collateralDecimals));
 
         setAssessor(_assessorAddress);
