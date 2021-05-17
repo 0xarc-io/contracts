@@ -136,7 +136,14 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         feeCollector = _feeCollector;
 
         BaseERC20 collateral = BaseERC20(collateralAsset);
-        precisionScalar = 10 ** (18 - uint256(collateral.decimals()));
+        uint8 collateralDecimals = collateral.decimals();
+
+        require(
+            collateralDecimals <= 18,
+            "SapphireCoreV1: collateral has more than 18 decimals"
+        );
+        
+        precisionScalar = 10 ** (18 - uint256(collateralDecimals));
 
         setAssessor(_assessorAddress);
         setOracle(_oracleAddress);

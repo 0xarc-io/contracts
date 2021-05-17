@@ -208,4 +208,6 @@ describe('SapphireCore.init', () => {
       'Adminable: caller is not admin',
     );
   });
+
+  it('reverts if collateral has more than 18 decimals');
 });
