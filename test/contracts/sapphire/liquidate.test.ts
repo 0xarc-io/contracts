@@ -23,9 +23,7 @@ import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
 import { BASE, ONE_YEAR_IN_SECONDS } from '@src/constants';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import * as helperSetupbaseVault from '../../helpers/setupBaseVault';
-import {
-  DEFAULT_COLLATERAL_DECIMALS,
-} from '@test/helpers/sapphireDefaults';
+import { DEFAULT_COLLATERAL_DECIMALS } from '@test/helpers/sapphireDefaults';
 
 chai.use(solidity);
 
@@ -724,6 +722,30 @@ describe('SapphireCore.liquidate()', () => {
           signers.liquidator,
         ),
       ).to.be.revertedWith('SapphireCoreV1: the contract is paused');
+    });
+
+    it('should not liquidate if the collateral price is stale', async () => {
+      await setupBaseVault();
+
+      const now = BigNumber.from(Date.now());
+
+      // Set the core timestamp to now
+      await arc.updateTime(now);
+
+      // Set the price to $0.75 so the c-ratio drops at 150%
+      await arc.updatePrice(COLLATERAL_PRICE.div(2));
+
+      // Set the oracle timestamp to > half a day
+      await arc.setOracleTimestamp(now.sub(60 * 60 * 12 + 1));
+
+      await expect(
+        arc.liquidate(
+          signers.scoredMinter.address,
+          getScoreProof(minterCreditScore, creditScoreTree),
+          undefined,
+          signers.liquidator,
+        ),
+      ).to.be.revertedWith('SapphireCoreV1: the oracle has stale prices');
     });
   });
 
