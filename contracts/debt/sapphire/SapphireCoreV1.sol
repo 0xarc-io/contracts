@@ -558,6 +558,8 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         indexLastUpdate = currentTimestamp();
 
         emit IndexUpdated(borrowIndex, indexLastUpdate);
+
+        return borrowIndex;
     }
 
     /* ========== Public Getters ========== */
