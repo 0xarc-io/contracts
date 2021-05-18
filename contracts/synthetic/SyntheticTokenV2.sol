@@ -264,6 +264,11 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
         external
         onlyMinter
     {
+        require(
+            _value > 0,
+            "SyntheticTokenV2: cannot mint zero"
+        );
+
         Amount.Principal memory issuedAmount = _minterIssued[msg.sender].add(
             Amount.Principal({ sign: true, value: _value })
         );
