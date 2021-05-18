@@ -179,6 +179,11 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             "SapphireCoreV1: oracle is not a contract"
         );
 
+        require(
+            _oracleAddress != address(oracle),
+            "SapphireCoreV1: the same oracle is already set"
+        );
+
         oracle = ISapphireOracle(_oracleAddress);
         emit OracleUpdated(_oracleAddress);
     }
@@ -208,6 +213,12 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             "SapphireCoreV1: high c-ratio is lower than the low c-ratio"
         );
 
+        require(
+            (_lowCollateralRatio != lowCollateralRatio) ||
+            (_highCollateralRatio != highCollateralRatio),
+            "SapphireCoreV1: the same ratios are already set"
+        );
+
         lowCollateralRatio = _lowCollateralRatio;
         highCollateralRatio = _highCollateralRatio;
 
@@ -233,6 +244,12 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         require(
             _liquidationUserFee.add(_liquidationArcFee) <= BASE,
             "SapphireCoreV1: fee sum has to be no more than 100%"
+        );
+
+        require(
+            (_liquidationUserFee != liquidationUserFee) ||
+            (_liquidationArcFee != liquidationArcFee),
+            "SapphireCoreV1: the same fees are already set"
         );
 
         liquidationUserFee = _liquidationUserFee;
@@ -267,6 +284,13 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             "SapphireCoreV1: required condition is vaultMin <= vaultMax <= totalLimit"
         );
 
+        require(
+            (_totalBorrowLimit != totalBorrowLimit) ||
+            (_vaultBorrowMinimum != vaultBorrowMinimum) ||
+            (_vaultBorrowMaximum != vaultBorrowMaximum),
+            "SapphireCoreV1: the same limits are already set"
+        );
+
         vaultBorrowMinimum = _vaultBorrowMinimum;
         vaultBorrowMaximum = _vaultBorrowMaximum;
         totalBorrowLimit = _totalBorrowLimit;
@@ -287,6 +311,11 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         public
         onlyAdmin
     {
+        require(
+            _interestSetter != interestSetter,
+            "SapphireCoreV1: cannot set the same interest setter"
+        );
+
         interestSetter = _interestSetter;
         emit InterestSetterUpdated(interestSetter);
     }
@@ -297,6 +326,11 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         public
         onlyAdmin
     {
+        require(
+            _pauseOperator != pauseOperator,
+            "SapphireCoreV1: the same pause operator is already set"
+        );
+
         pauseOperator = _pauseOperator;
         emit PauseOperatorUpdated(pauseOperator);
     }
@@ -312,6 +346,11 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             "SapphireCoreV1: the address is not a contract"
         );
 
+        require(
+            _assessor != address(assessor),
+            "SapphireCoreV1: the same assessor is already set"
+        );
+
         assessor = ISapphireAssessor(_assessor);
         emit AssessorUpdated(_assessor);
     }
@@ -322,6 +361,11 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         public
         onlyAdmin
     {
+        require(
+            _newFeeCollector != address(feeCollector),
+            "SapphireCoreV1: the same fee collector is already set"
+        );
+
         feeCollector = _newFeeCollector;
         emit FeeCollectorUpdated(feeCollector);
     }
@@ -334,6 +378,11 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         require(
             msg.sender == pauseOperator,
             "SapphireCoreV1: caller is not the pause operator"
+        );
+
+        require(
+            _value != paused,
+            "SapphireCoreV1: cannot set the same pause value"
         );
 
         paused = _value;
