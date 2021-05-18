@@ -253,6 +253,11 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
             "SapphireCreditScore: the delay must be greater than 0"
         );
 
+        require(
+            _delay != merkleRootDelayDuration,
+            "SapphireCreditScore: the same delay is already set"
+        );
+
         merkleRootDelayDuration = _delay;
         emit DelayDurationUpdated(msg.sender, _delay);
     }
@@ -265,10 +270,14 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     )
         public
     {
-
         require(
             msg.sender == pauseOperator,
             "SapphireCreditScore: caller is not the pause operator"
+        );
+
+        require(
+            _value != isPaused,
+            "SapphireCreditScore: cannot set the same pause value"
         );
 
         isPaused = _value;
@@ -284,6 +293,11 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         public
         onlyOwner
     {
+        require(
+            _merkleRootUpdater != merkleRootUpdater,
+            "SapphireCreditScore: cannot set the same merkle root updater"
+        );
+
         merkleRootUpdater = _merkleRootUpdater;
         emit MerkleRootUpdaterUpdated(merkleRootUpdater);
     }
@@ -297,6 +311,11 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         public
         onlyOwner
     {
+        require(
+            _pauseOperator != pauseOperator,
+            "SapphireCreditScore: cannot set the same pause operator"
+        );
+
         pauseOperator = _pauseOperator;
         emit PauseOperatorUpdated(pauseOperator);
     }

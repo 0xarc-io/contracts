@@ -242,6 +242,11 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
             "SyntheticTokenV2: minter does not exist"
         );
 
+        require(
+            _minterLimits[_minter] != _limit,
+            "SyntheticTokenV2: cannot set the same limit"
+        );
+
         _minterLimits[_minter] = _limit;
 
         emit MinterLimitUpdated(_minter, _limit);

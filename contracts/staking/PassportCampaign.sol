@@ -154,6 +154,11 @@ contract PassportCampaign is Adminable {
             "LiquidityCampaign:setRewardsDuration() Period not finished yet"
         );
 
+        require(
+            _rewardsDuration != rewardsDuration,
+            "PassportCampaign: cannot set the same rewards duration"
+        );
+
         rewardsDuration = _rewardsDuration;
         emit RewardsDurationUpdated(rewardsDuration);
     }
@@ -223,6 +228,11 @@ contract PassportCampaign is Adminable {
         external
         onlyAdmin
     {
+        require(
+            _enabled != tokensClaimable,
+            "PassportCampaign: cannot set the claim status to the same value"
+        );
+
         tokensClaimable = _enabled;
 
         emit ClaimableStatusUpdated(_enabled);
