@@ -300,4 +300,11 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         pauseOperator = _pauseOperator;
         emit PauseOperatorUpdated(pauseOperator);
     }
+
+    function renounceOwnership()
+        public
+        onlyOwner
+    {
+        revert("SapphireAssessor: cannot renounce ownership");
+    }
 }
