@@ -164,4 +164,11 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
 
         emit CreditScoreContractSet(_creditScore);
     }
+
+    function renounceOwnership()
+        public
+        onlyOwner
+    {
+        revert("SapphireAssessor: cannot renounce ownership");
+    }
 }
