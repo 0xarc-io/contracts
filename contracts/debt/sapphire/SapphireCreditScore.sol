@@ -90,6 +90,11 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         address _pauseOperator,
         uint16 _maxScore
     ) public {
+        require(
+            _maxScore > 0,
+            "SapphireCreditScore: max score cannot be zero"
+        );
+
         currentMerkleRoot = _merkleRoot;
         upcomingMerkleRoot = _merkleRoot;
         merkleRootUpdater = _merkleRootUpdater;
@@ -119,13 +124,13 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
      * @dev Return last verified user score
      */
     function getLastScore(
-        address user
+        address _user
     )
         public
         view
         returns (uint256, uint16, uint256)
     {
-        SapphireTypes.CreditScore memory userScore = userScores[user];
+        SapphireTypes.CreditScore memory userScore = userScores[_user];
         return (userScore.score, maxScore, userScore.lastUpdated);
     }
 
@@ -144,24 +149,24 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
      *          3. Update upcoming one with passed mekle root.
      *          4. Update the last merkle root update with the current timestamp
      *
-     * @param newRoot New upcoming merkle root
+     * @param _newRoot New upcoming merkle root
      */
     function updateMerkleRoot(
-        bytes32 newRoot
+        bytes32 _newRoot
     )
         public
     {
         require(
-            newRoot != 0x0000000000000000000000000000000000000000000000000000000000000000,
+            _newRoot != 0x0000000000000000000000000000000000000000000000000000000000000000,
             "SapphireCreditScore: root is empty"
         );
 
         if (msg.sender == owner()) {
-            updateMerkleRootAsOwner(newRoot);
+            updateMerkleRootAsOwner(_newRoot);
         } else {
-            updateMerkleRootAsUpdator(newRoot);
+            updateMerkleRootAsUpdator(_newRoot);
         }
-        emit MerkleRootUpdated(msg.sender, newRoot, currentTimestamp());
+        emit MerkleRootUpdated(msg.sender, _newRoot, currentTimestamp());
     }
 
    /**
@@ -169,28 +174,28 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
      *
      * @notice If credit score is verified, this function updated user credit scores with verified one and current timestmp
      *
-     * @param proof Data required to verify if score is correct for current merkle root
+     * @param _proof Data required to verify if score is correct for current merkle root
      */
     function verifyAndUpdate(
-        SapphireTypes.ScoreProof memory proof
+        SapphireTypes.ScoreProof memory _proof
     )
         public
         returns (uint256, uint16)
     {
-        bytes32 node = keccak256(abi.encodePacked(proof.account, proof.score));
+        bytes32 node = keccak256(abi.encodePacked(_proof.account, _proof.score));
 
         require(
-            MerkleProof.verify(proof.merkleProof, currentMerkleRoot, node),
+            MerkleProof.verify(_proof.merkleProof, currentMerkleRoot, node),
             "SapphireCreditScore: invalid proof"
         );
 
-        userScores[proof.account] = SapphireTypes.CreditScore({
-            score: proof.score,
+        userScores[_proof.account] = SapphireTypes.CreditScore({
+            score: _proof.score,
             lastUpdated: currentTimestamp()
         });
-        emit CreditScoreUpdated(proof.account, proof.score, currentTimestamp());
+        emit CreditScoreUpdated(_proof.account, _proof.score, currentTimestamp());
 
-        return (proof.score, maxScore);
+        return (_proof.score, maxScore);
     }
 
      /* ========== Private Functions ========== */
@@ -199,7 +204,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
      * @dev Merkle root updating strategy for merkle root updator
     **/
     function updateMerkleRootAsUpdator(
-        bytes32 newRoot
+        bytes32 _newRoot
     )
         private
         isMerkleRootUpdater
@@ -211,7 +216,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         );
 
         currentMerkleRoot = upcomingMerkleRoot;
-        upcomingMerkleRoot = newRoot;
+        upcomingMerkleRoot = _newRoot;
         lastMerkleRootUpdate = currentTimestamp();
     }
 
@@ -219,7 +224,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
      * @dev Merkle root updating strategy for the owner
     **/
     function updateMerkleRootAsOwner(
-        bytes32 newRoot
+        bytes32 _newRoot
     )
         private
         onlyOwner
@@ -229,29 +234,34 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
             "SapphireCreditScore: owner can only update merkle root if paused"
         );
 
-        upcomingMerkleRoot = newRoot;
+        upcomingMerkleRoot = _newRoot;
     }
 
     /* ========== Owner Functions ========== */
 
     /**
-     * @dev Update merkle root delay durration
+     * @dev Update merkle root delay duration
     */
     function setMerkleRootDelay(
-        uint256 delay
+        uint256 _delay
     )
         public
         onlyOwner
     {
-        merkleRootDelayDuration = delay;
-        emit DelayDurationUpdated(msg.sender, delay);
+        require(
+            _delay > 0,
+            "SapphireCreditScore: the delay must be greater than 0"
+        );
+
+        merkleRootDelayDuration = _delay;
+        emit DelayDurationUpdated(msg.sender, _delay);
     }
 
     /**
      * @dev Pause contract, which cause that merkle root updated is not able to update the merkle root
      */
     function setPause(
-        bool value
+        bool _value
     )
         public
     {
@@ -261,27 +271,27 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
             "SapphireCreditScore: caller is not the pause operator"
         );
 
-        isPaused = value;
-        emit PauseStatusUpdated(value);
+        isPaused = _value;
+        emit PauseStatusUpdated(_value);
     }
 
     /**
-     * @dev Update merkle root updater
+     * @dev Sets the merkle root updater
     */
-    function updateMerkleRootUpdater(
-        address _merkleRootUpdator
+    function setMerkleRootUpdater(
+        address _merkleRootUpdater
     )
         public
         onlyOwner
     {
-        merkleRootUpdater = _merkleRootUpdator;
+        merkleRootUpdater = _merkleRootUpdater;
         emit MerkleRootUpdaterUpdated(merkleRootUpdater);
     }
 
     /**
-     * @dev Update pause operator
+     * @dev Sets the pause operator
     */
-    function updatePauseOperator(
+    function setPauseOperator(
         address _pauseOperator
     )
         public
