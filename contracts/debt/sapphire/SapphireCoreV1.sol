@@ -8,6 +8,7 @@ import {IERC20} from "../../token/IERC20.sol";
 import {SafeERC20} from "../../lib/SafeERC20.sol";
 import {SafeMath} from "../../lib/SafeMath.sol";
 import {Adminable} from "../../lib/Adminable.sol";
+import {Address} from "../../lib/Address.sol";
 import {ISapphireOracle} from "../../oracle/ISapphireOracle.sol";
 import {ISyntheticTokenV2} from "../../token/ISyntheticTokenV2.sol";
 
@@ -21,6 +22,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     /* ========== Libraries ========== */
 
     using SafeMath for uint256;
+    using Address for address;
 
     /* ========== Constants ========== */
 
@@ -126,6 +128,14 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             "SapphireCoreV1: synthetic is required"
         );
 
+        require(
+            _collateralAddress.isContract() &&
+            _syntheticAddress.isContract() &&
+            _oracleAddress.isContract() &&
+            _assessorAddress.isContract(),
+            "SapphireCoreV1: collateral, synthetic, oracle or assessor are not contracts"
+        );
+
         paused = true;
         borrowIndex = BASE;
         indexLastUpdate = currentTimestamp();
@@ -164,6 +174,11 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         public
         onlyAdmin
     {
+        require(
+            _oracleAddress.isContract(),
+            "SapphireCoreV1: oracle is not a contract"
+        );
+
         oracle = ISapphireOracle(_oracleAddress);
         emit OracleUpdated(_oracleAddress);
     }
@@ -292,6 +307,11 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         public
         onlyAdmin
     {
+        require(
+            _assessor.isContract(),
+            "SapphireCoreV1: the address is not a contract"
+        );
+
         assessor = ISapphireAssessor(_assessor);
         emit AssessorUpdated(_assessor);
     }

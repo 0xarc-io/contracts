@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // prettier-ignore
 
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {SapphireTypes} from "./SapphireTypes.sol";
@@ -9,8 +9,13 @@ import {ISapphireMapper} from "./ISapphireMapper.sol";
 import {ISapphireCreditScore} from "./ISapphireCreditScore.sol";
 import {ISapphireAssessor} from "./ISapphireAssessor.sol";
 import {Ownable} from "../../lib/Ownable.sol";
+import {Address} from "../../lib/Address.sol";
 
 contract SapphireAssessor is Ownable, ISapphireAssessor {
+
+    /* ========== Libraries ========== */
+
+    using Address for address;
 
     /* ========== Variables ========== */
 
@@ -125,8 +130,8 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
         onlyOwner
     {
         require(
-            _mapper != address(0),
-            "SapphireAssessor: The new mapper cannot be null"
+            _mapper.isContract(),
+            "SapphireAssessor: _mapper is not a contract"
         );
 
         require(
@@ -146,8 +151,8 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
         onlyOwner
     {
         require(
-            _creditScore != address(0),
-            "SapphireAssessor: The new credit score contract address cannot be null"
+            _creditScore.isContract(),
+            "SapphireAssessor: _creditScore is not a contract"
         );
 
         require(
