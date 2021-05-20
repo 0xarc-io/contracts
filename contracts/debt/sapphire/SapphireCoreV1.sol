@@ -515,7 +515,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](2);
         SapphireTypes.Vault memory vault = vaults[msg.sender];
 
-        uint256 repayAmount = _denormalizeBorrowAmount(vault.borrowedAmount);
+        uint256 repayAmount = _denormalizeBorrowAmount(vault.borrowedAmount, false);
 
         // Repay outstanding debt
         actions[0] = SapphireTypes.Action(
@@ -727,12 +727,19 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
      *      in order to take in account current borrowIndex.
      */
     function _normalizeBorrowAmount(
-        uint256 _amount
+        uint256 _amount,
+        bool _roundUp
     )
         private
         view
         returns (uint256)
     {
+        uint256 currentbIndex = currentBorrowIndex();
+
+        if (_roundUp) {
+            return _roundUpDiv(_amount, currentbIndex);
+        }
+
         return _amount.mul(BASE).div(currentBorrowIndex());
     }
 
@@ -741,13 +748,20 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
      *      borrow amounts back to their real value.
      */
     function _denormalizeBorrowAmount(
-        uint256 _amount
+        uint256 _amount,
+        bool _roundUp
     )
         private
         view
         returns (uint256)
     {
-        return _amount.mul(currentBorrowIndex()).div(BASE);
+        uint256 unreduced = _amount.mul(currentBorrowIndex());
+
+        if (_roundUp) {
+            return unreduced.add(BASE).div(BASE);
+        }
+
+        return unreduced.div(BASE);
     }
 
     /**
@@ -804,7 +818,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         // if we don't have debt we can withdraw as much as we want.
         if (vault.borrowedAmount > 0) {
             uint256 collateralRatio = calculateCollateralRatio(
-                _denormalizeBorrowAmount(vault.borrowedAmount),
+                _denormalizeBorrowAmount(vault.borrowedAmount, true),
                 vault.collateralAmount,
                 _collateralPrice
             );
@@ -843,7 +857,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
         // Ensure the vault is collateralized if the borrow action succeeds
         uint256 collateralRatio = calculateCollateralRatio(
-            _denormalizeBorrowAmount(vault.borrowedAmount)
+            _denormalizeBorrowAmount(vault.borrowedAmount, true)
                 .add(_amount),
             vault.collateralAmount,
             _collateralPrice
@@ -855,13 +869,13 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         );
 
         // Calculate actual vault borrow amount
-        uint256 actualVaultBorrowAmount = _denormalizeBorrowAmount(vault.borrowedAmount);
+        uint256 actualVaultBorrowAmount = _denormalizeBorrowAmount(vault.borrowedAmount, true);
 
         // Calculate new actual vault borrow amount
         uint256 _newActualVaultBorrowAmount = actualVaultBorrowAmount.add(_amount);
 
         // Calculate new normalized vault borrow amount
-        uint256 _newNormalizedVaultBorrowAmount = _normalizeBorrowAmount(_newActualVaultBorrowAmount);
+        uint256 _newNormalizedVaultBorrowAmount = _normalizeBorrowAmount(_newActualVaultBorrowAmount, true);
 
         // Record borrow amount (update vault and total amount)
         totalBorrowed = totalBorrowed.sub(vault.borrowedAmount).add(_newNormalizedVaultBorrowAmount);
@@ -880,7 +894,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         );
 
         require(
-            _denormalizeBorrowAmount(totalBorrowed) <= totalBorrowLimit,
+            _denormalizeBorrowAmount(totalBorrowed, true) <= totalBorrowLimit,
             "SapphireCoreV1: borrowed amount cannot be greater than limit"
         );
 
@@ -909,7 +923,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         SapphireTypes.Vault storage vault = vaults[_owner];
 
         // Calculate actual vault borrow amount
-        uint256 actualVaultBorrowAmount = _denormalizeBorrowAmount(vault.borrowedAmount);
+        uint256 actualVaultBorrowAmount = _denormalizeBorrowAmount(vault.borrowedAmount, true);
 
         require(
             _amount <= actualVaultBorrowAmount,
@@ -917,7 +931,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         );
 
         // Calculate new vault's borrowed amount
-        uint256 _newBorrowAmount = _normalizeBorrowAmount(actualVaultBorrowAmount.sub(_amount));
+        uint256 _newBorrowAmount = _normalizeBorrowAmount(actualVaultBorrowAmount.sub(_amount), true);
 
         // Update total borrow amount
         totalBorrowed = totalBorrowed.sub(vault.borrowedAmount).add(_newBorrowAmount);
@@ -986,16 +1000,16 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
         // Get the liquidation price of the asset (discount for liquidator)
         uint256 liquidationPricePercent = BASE.sub(liquidationUserFee);
-        uint256 liquidationPrice = _currentPrice
-            .mul(liquidationPricePercent)
-            .div(BASE);
+        uint256 liquidationPrice = _roundUpMul(_currentPrice, liquidationPricePercent);
 
         // Calculate the amount of collateral to be sold based on the entire debt
         // in the vault
-        uint256 debtToRepay = _denormalizeBorrowAmount(vault.borrowedAmount);
-        uint256 collateralToSell = debtToRepay
-            .mul(BASE)
-            .div(liquidationPrice)
+        uint256 debtToRepay = _denormalizeBorrowAmount(vault.borrowedAmount, true);
+
+        // Do a rounded up operation of
+        // debtToRepay / LiquidationFee / precisionScalar
+        uint256 collateralToSell = _roundUpDiv(debtToRepay, liquidationPrice)
+            .add(precisionScalar)
             .div(precisionScalar);
 
         // If the discounted collateral is more than the amount in the vault, limit
@@ -1130,6 +1144,42 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         }
 
         return (assessedCRatio, collateralPrice);
+    }
+
+    /**
+     * @dev Performs _a * _b / BASE, but rounds up instead
+     */
+    function _roundUpMul(
+        uint256 _a,
+        uint256 _b
+    )
+        private
+        pure
+        returns (uint256)
+    {
+        return _a
+            .mul(_b)
+            .add(BASE)
+            .div(BASE);
+    }
+
+    /**
+     * @dev Performs _numerator / _denominator, but rounds up instead
+     */
+    function _roundUpDiv(
+        uint256 _numerator,
+        uint256 _denominator
+    )
+        private
+        pure
+        returns (uint256)
+    {
+        uint256 basedAmount = _numerator.mul(BASE.mul(10));
+
+        return basedAmount
+            .div(_denominator)
+            .add(5)
+            .div(10);
     }
 
     /**
