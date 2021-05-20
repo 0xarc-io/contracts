@@ -406,9 +406,7 @@ describe('SapphireCreditScore', () => {
       ]);
 
       const lastTimestamp = initTimestamp.add(merkleRootDelay);
-      await creditScoreContract.setCurrentTimestamp(
-        lastTimestamp,
-      );
+      await creditScoreContract.setCurrentTimestamp(lastTimestamp);
       await creditScoreContract
         .connect(merkleRootUpdater)
         .updateMerkleRoot(newTree.getHexRoot());
@@ -438,9 +436,11 @@ describe('SapphireCreditScore', () => {
     });
   });
 
-  describe('#updateMerkleRootUpdater', () => {
+  describe('#setMerkleRootUpdater', () => {
     it('should be able to update as the owner', async () => {
-      await expect(creditScoreContract.updateMerkleRootUpdater(unauthorised.address))
+      await expect(
+        creditScoreContract.setMerkleRootUpdater(unauthorised.address),
+      )
         .to.emit(creditScoreContract, 'MerkleRootUpdaterUpdated')
         .withArgs(unauthorised.address);
       expect(await creditScoreContract.merkleRootUpdater()).eq(
@@ -452,7 +452,7 @@ describe('SapphireCreditScore', () => {
       await expect(
         creditScoreContract
           .connect(merkleRootUpdater)
-          .updateMerkleRootUpdater(merkleRootUpdater.address),
+          .setMerkleRootUpdater(merkleRootUpdater.address),
       ).to.be.revertedWith('Ownable: caller is not the owner');
     });
   });
