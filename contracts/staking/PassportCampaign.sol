@@ -107,22 +107,12 @@ contract PassportCampaign is Adminable {
         SapphireTypes.ScoreProof memory _scoreProof,
         bool _isScoreRequired
     ) {
-        uint256 creditScore;
         bool isProofPassed = _scoreProof.merkleProof.length > 0;
 
         if (_isScoreRequired) {
             require(
                 isProofPassed == true,
                 "PassportCampaign: proof is required but it is not passed"
-            );
-        }
-
-        (creditScore,,) = creditScoreContract.getLastScore(_scoreProof.account);
-
-        if (creditScore > 0) {
-            require(
-                isProofPassed,
-                "PassportCampaign: proof should be provided for credit score"
             );
         }
 
