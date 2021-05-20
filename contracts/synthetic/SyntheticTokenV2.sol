@@ -334,6 +334,13 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
         return true;
     }
 
+    /**
+     * @dev Allows `spender` to withdraw from msg.sender multiple times, up to the
+     *      `amount`.
+     *      Warning: It is recommended to first set the allowance to 0 before
+     *      changing it, to prevent a double-spend exploit outlined below:
+     *      https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
+     */
     function approve(
         address spender,
         uint256 amount
@@ -374,6 +381,14 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
      *
      * IMPORTANT: The same issues Erc20 `approve` has related to transaction
      * ordering also apply here.
+     * In addition, please be aware that:
+     * - If an owner signs a permit with no deadline, the corresponding spender
+     *   can call permit at any time in the future to mess with the nonce,
+     *   invalidating signatures to other spenders, possibly making their transactions
+     *   fail.
+     * - Even if only permits with finite deadline are signed, to avoid the above
+     *   scenario, an owner would have to wait for the conclusion of the deadline
+     *   to sign a permit for another spender.
      *
      * Emits an {Approval} event.
      *
@@ -383,7 +398,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
      * - `spender` cannot be the zero address.
      * - `deadline` must be a timestamp in the future.
      * - `v`, `r` and `s` must be a valid `secp256k1` signature from `owner`
-     * over the Eip712-formatted function arguments.
+     *   over the Eip712-formatted function arguments.
      * - The signature must use `owner`'s current nonce.
      */
     function permit(
