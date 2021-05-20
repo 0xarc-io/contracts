@@ -83,6 +83,8 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
     /**
      * @dev Initialize the protocol with the appropriate parameters. Can only be called once.
+     *      IMPORTANT: the contract assumes the collateral contract is to be trusted.
+     *      Make sure this is true before calling this function.
      *
      * @param _collateralAddress    The address of the collateral to be used
      * @param _syntheticAddress     The address of the synthetic token proxy
