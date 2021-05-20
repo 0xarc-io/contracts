@@ -2,8 +2,6 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import {
   ArcProxyFactory,
   MockSapphireCreditScore,
-  SapphireCreditScore,
-  // PassportCampaignFactory,
   TestToken,
   TestTokenFactory,
 } from '@src/typings';

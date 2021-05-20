@@ -119,7 +119,7 @@ contract PassportCampaign is Adminable {
 
         (creditScore,,) = creditScoreContract.getLastScore(_scoreProof.account);
 
-        if (_isScoreRequired && creditScore > 0) {
+        if (creditScore > 0) {
             require(
                 isProofPassed,
                 "PassportCampaign: proof should be provided for credit score"

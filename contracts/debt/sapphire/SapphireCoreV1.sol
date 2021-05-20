@@ -160,7 +160,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         setAssessor(_assessorAddress);
         setOracle(_oracleAddress);
         setCollateralRatios(_lowCollateralRatio, _highCollateralRatio);
-        setFees(_liquidationUserFee, _liquidationArcFee);
+        _setFees(_liquidationUserFee, _liquidationArcFee);
     }
 
     /**
@@ -244,19 +244,12 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         onlyAdmin
     {
         require(
-            _liquidationUserFee.add(_liquidationArcFee) <= BASE,
-            "SapphireCoreV1: fee sum has to be no more than 100%"
-        );
-
-        require(
             (_liquidationUserFee != liquidationUserFee) ||
             (_liquidationArcFee != liquidationArcFee),
             "SapphireCoreV1: the same fees are already set"
         );
 
-        liquidationUserFee = _liquidationUserFee;
-        liquidationArcFee = _liquidationArcFee;
-        emit LiquidationFeesUpdated(liquidationUserFee, liquidationArcFee);
+        _setFees(_liquidationUserFee, _liquidationArcFee);
     }
 
     /**
@@ -1146,6 +1139,22 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         }
 
         return (assessedCRatio, collateralPrice);
+    }
+
+    function _setFees(
+        uint256 _liquidationUserFee,
+        uint256 _liquidationArcFee
+    )
+        private
+    {
+        require(
+            _liquidationUserFee.add(_liquidationArcFee) <= BASE,
+            "SapphireCoreV1: fee sum has to be no more than 100%"
+        );
+
+        liquidationUserFee = _liquidationUserFee;
+        liquidationArcFee = _liquidationArcFee;
+        emit LiquidationFeesUpdated(liquidationUserFee, liquidationArcFee);
     }
 
     /**

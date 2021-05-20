@@ -14,6 +14,7 @@ import {
   DEFAULT_VAULT_BORROW_MAXIMUM,
   DEFAULT_VAULT_BORROW_MIN,
 } from '@test/helpers/sapphireDefaults';
+import { SapphireCoreV1 } from '@src/typings';
 
 export interface MozartSetupOptions {
   oraclePrice: BigNumberish;
@@ -89,11 +90,12 @@ export async function setupSapphire(
 ) {
   const arc = ctx.sdks.sapphire;
 
-  // Update the collateral ratio
+  // Update the collateral ratio if needed
   const core = arc.synth().core;
-  await core.setCollateralRatios(
-    limits?.lowCollateralRatio || DEFAULT_LOW_C_RATIO,
-    limits?.highCollateralRatio || DEFAULT_HiGH_C_RATIO,
+  await _setCRatiosIfNeeded(
+    core,
+    limits?.lowCollateralRatio,
+    limits?.highCollateralRatio,
   );
 
   // Set limits
@@ -127,6 +129,26 @@ export async function setupSapphire(
     await immediatelyUpdateMerkleRoot(
       ctx.contracts.sapphire.creditScore.connect(ctx.signers.interestSetter),
       merkleRoot,
+    );
+  }
+}
+
+async function _setCRatiosIfNeeded(
+  core: SapphireCoreV1,
+  newLowCRatio?: BigNumberish,
+  newHighCRatio?: BigNumberish,
+) {
+  const existingRatios = {
+    lowCRatio: await core.lowCollateralRatio(),
+    highcRatio: await core.highCollateralRatio(),
+  };
+  if (
+    !existingRatios.lowCRatio.eq(newLowCRatio || DEFAULT_LOW_C_RATIO) ||
+    !existingRatios.highcRatio.eq(newHighCRatio || DEFAULT_HiGH_C_RATIO)
+  ) {
+    await core.setCollateralRatios(
+      newLowCRatio || DEFAULT_LOW_C_RATIO,
+      newHighCRatio || DEFAULT_HiGH_C_RATIO,
     );
   }
 }
