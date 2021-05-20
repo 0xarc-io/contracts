@@ -210,7 +210,6 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
 
         for (uint256 i = 0; i < _mintersArray.length; i++) {
             if (address(_mintersArray[i]) == _minter) {
-                delete _mintersArray[i];
                 _mintersArray[i] = _mintersArray[_mintersArray.length - 1];
                 _mintersArray.length--;
 
