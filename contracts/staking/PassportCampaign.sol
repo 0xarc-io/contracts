@@ -439,6 +439,8 @@ contract PassportCampaign is Adminable {
 
         staker.balance = staker.balance.add(_amount);
 
+        // Heads up: the the max stake amount is not set in stone. It can be changed
+        // by the admin by calling `setMaxStakePerUser()`
         if (maxStakePerUser > 0) {
             require(
                 staker.balance <= maxStakePerUser,
