@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {IERC20} from "../token/IERC20.sol";
