@@ -30,17 +30,17 @@ contract SapphireMapperLinear is ISapphireMapper {
         require(
             _scoreMax > 0 &&
             _upperBound > 0,
-            "The maximum score and upper bound cannot be 0"
+            "SapphireMapperLinear: the maximum score and upper bound cannot be 0"
         );
 
         require(
             _lowerBound < _upperBound,
-            "The upper bound cannot be equal or larger than the lower bound"
+            "SapphireMapperLinear: the lower bound must be less than the upper bound"
         );
 
         require(
             _score <= _scoreMax,
-            "The score cannot be larger than the maximum score"
+            "SapphireMapperLinear: the score cannot be larger than the maximum score"
         );
 
         uint256 boundsDifference = _upperBound.sub(_lowerBound);
