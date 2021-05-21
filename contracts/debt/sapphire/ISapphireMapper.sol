@@ -20,6 +20,6 @@ interface ISapphireMapper {
         uint256 _upperBound
     )
         external
-        pure
+        view
         returns (uint256);
 }

@@ -24,7 +24,7 @@ contract SapphireMapperLinear is ISapphireMapper {
         uint256 _upperBound
     )
         public
-        pure
+        view
         returns (uint256)
     {
         require(
