@@ -573,6 +573,11 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             "SapphireCoreV1: the contract is paused"
         );
 
+        require(
+            _actions.length > 0,
+            "SapphireCoreV1: there must be at least one action"
+        );
+
         // Update the index to calculate how much interest has accrued
         updateIndex();
 
