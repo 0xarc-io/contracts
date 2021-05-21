@@ -77,7 +77,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
         symbol = _symbol;
         version = _version;
 
-        DOMAIN_SEPARATOR = _initDomainSeparator(_name, _symbol);
+        DOMAIN_SEPARATOR = _initDomainSeparator(_name, "1");
 
         _initCalled = true;
 
