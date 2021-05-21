@@ -29,7 +29,10 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
 
     event CreditScoreContractSet(address _newCreditScoreContract);
 
-    event Assessed(uint256 _assessedValue);
+    event Assessed(
+        address _account,
+        uint256 _assessedValue
+    );
 
     /* ========== Constructor ========== */
 
@@ -118,7 +121,7 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
             "SapphireAssessor: The mapper returned a value out of bounds"
         );
 
-        emit Assessed(result);
+        emit Assessed(_scoreProof.account, result);
 
         return result;
     }
