@@ -1148,8 +1148,9 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         private
     {
         require(
-            _liquidationUserFee.add(_liquidationArcFee) <= BASE,
-            "SapphireCoreV1: fee sum has to be no more than 100%"
+            _liquidationUserFee <= BASE && 
+            _liquidationArcFee <= BASE,
+            "SapphireCoreV1: fees cannot be more than 100%"
         );
 
         liquidationUserFee = _liquidationUserFee;
