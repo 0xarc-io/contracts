@@ -43,7 +43,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
     event LimitsUpdated(
         uint256 _totalBorrowLimit,
-        uint256 _valutBorrowMinimum,
+        uint256 _vaultBorrowMinimum,
         uint256 _vaultBorrowMaximum
     );
 
@@ -555,11 +555,11 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
     /**
      * @dev All other user-called functions use this function to execute the
-     *      passed actions. This function first updates the indeces before
+     *      passed actions. This function first updates the indexes before
      *      actually executing the actions.
      *
      * @param _actions      An array of actions to execute
-     * @param _scoreProof   The credit score proof of the user that calles this
+     * @param _scoreProof   The credit score proof of the user that calls this
      *                      function
      */
     function executeActions(
@@ -645,7 +645,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     }
 
     /**
-     * @dev Check if the vault is collateralised or not
+     * @dev Check if the vault is collateralized or not
      *
      * @param _owner The owner of the vault
      * @param _currentPrice The current price of the collateral
@@ -729,10 +729,10 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         view
         returns (uint256)
     {
-        uint256 currentbIndex = currentBorrowIndex();
+        uint256 currentBIndex = currentBorrowIndex();
 
         if (_roundUp) {
-            return _roundUpDiv(_amount, currentbIndex);
+            return _roundUpDiv(_amount, currentBIndex);
         }
 
         return _amount.mul(BASE).div(currentBorrowIndex());
@@ -791,7 +791,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     /**
      * @dev Withdraw the collateral amount in the user's vault, then ensures
      *      the withdraw amount is not greater than the deposited collateral.
-     *      Afterwards ensure that collatteral limit is not smaller than returned
+     *      Afterwards ensure that collateral limit is not smaller than returned
      *      from assessor one.
      */
     function _withdraw(

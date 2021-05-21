@@ -142,11 +142,11 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
      * @notice Can be called by:
      *      - the owner:
                 1. Check if contract is paused
-                2. Replace uncoming merkle root
+                2. Replace upcoming merkle root
      *      - merkle root updater:
      *          1. Check if contract is active
      *          2. Replace current merkle root with upcoming merkle root
-     *          3. Update upcoming one with passed mekle root.
+     *          3. Update upcoming one with passed Merkle root.
      *          4. Update the last merkle root update with the current timestamp
      *
      * @param _newRoot New upcoming merkle root
@@ -164,7 +164,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         if (msg.sender == owner()) {
             updateMerkleRootAsOwner(_newRoot);
         } else {
-            updateMerkleRootAsUpdator(_newRoot);
+            updateMerkleRootAsUpdater(_newRoot);
         }
         emit MerkleRootUpdated(msg.sender, _newRoot, currentTimestamp());
     }
@@ -172,7 +172,8 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
    /**
      * @dev Request for verifying user's credit score
      *
-     * @notice If credit score is verified, this function updated user credit scores with verified one and current timestmp
+     * @notice If credit score is verified, this function updated user 
+     *         credit scores with verified one and current timestamp
      *
      * @param _proof Data required to verify if score is correct for current merkle root
      */
@@ -201,9 +202,9 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
      /* ========== Private Functions ========== */
 
     /**
-     * @dev Merkle root updating strategy for merkle root updator
+     * @dev Merkle root updating strategy for merkle root updater
     **/
-    function updateMerkleRootAsUpdator(
+    function updateMerkleRootAsUpdater(
         bytes32 _newRoot
     )
         private

@@ -424,7 +424,7 @@ contract PassportCampaign is Adminable {
             "PassportCampaign: user does not meet the credit score requirement"
         );
 
-        // Setting each variable invididually means we don't overwrite
+        // Setting each variable individually means we don't overwrite
         Staker storage staker = stakers[msg.sender];
 
         staker.balance = staker.balance.add(_amount);
