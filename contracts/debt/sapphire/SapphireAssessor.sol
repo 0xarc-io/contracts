@@ -61,7 +61,7 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
      * @param _lowerBound       The lower bound
      * @param _upperBound       The upper bound
      * @param _scoreProof       The score proof
-     * @param _isScoreRequired   The flag, which require the proof of score if the account already
+     * @param _isScoreRequired  The flag, which require the proof of score if the account already
                                 has a score
      * @return A value between the lower and upper bounds depending on the credit score
      */
@@ -76,17 +76,17 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
     {
         require(
             _upperBound > 0,
-            "SapphireAssessor: The upper bound cannot be empty"
+            "SapphireAssessor: The upper bound cannot be zero"
         );
 
         require(
             _scoreProof.account != address(0),
-            "SapphireAssessor: The account cannot be empty"
+            "SapphireAssessor: The account cannot be the zero address"
         );
 
         require(
             _lowerBound < _upperBound,
-            "SapphireAssessor: The lower bound exceeds the upper bound"
+            "SapphireAssessor: The lower bound must be smaller than the upper bound"
         );
 
         uint256 creditScore;

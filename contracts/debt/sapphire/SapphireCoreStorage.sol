@@ -15,7 +15,7 @@ contract SapphireCoreStorage {
     bool public paused;
 
     /**
-     * @dev The details about a vault, identified by a uint256
+     * @dev The details about a vault, identified by the address of the owner
      */
     mapping (address => SapphireTypes.Vault) public vaults;
 
@@ -30,7 +30,8 @@ contract SapphireCoreStorage {
     uint256 public lowCollateralRatio;
 
     /**
-     * @dev How much should the liquidation penalty be, expressed as a decimal.
+     * @dev How much should the liquidation penalty be, expressed as a percentage
+     *      with 18 decimals
      */
     uint256 public liquidationUserFee;
 

@@ -141,8 +141,8 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
      *
      * @notice Can be called by:
      *      - the owner:
-                1. Check if contract is paused
-                2. Replace upcoming merkle root
+     *          1. Check if contract is paused
+     *          2. Replace upcoming merkle root
      *      - merkle root updater:
      *          1. Check if contract is active
      *          2. Replace current merkle root with upcoming merkle root
@@ -172,8 +172,8 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
    /**
      * @dev Request for verifying user's credit score
      *
-     * @notice If credit score is verified, this function updated user
-     *         credit scores with verified one and current timestamp
+     * @notice If the credit score is verified, this function updates the
+     *         user's credit score with the verified one and current timestamp
      *
      * @param _proof Data required to verify if score is correct for current merkle root
      */
@@ -264,7 +264,8 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     }
 
     /**
-     * @dev Pause contract, which cause that merkle root updated is not able to update the merkle root
+     * @dev Pause or unpause contract, which cause the merkle root updater
+     *      to not be able to update the merkle root
      */
     function setPause(
         bool _value

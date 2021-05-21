@@ -392,10 +392,10 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
      *      r^N = 1.05
      *      since N = 365 * 24 * 60 * 60 (number of seconds in a year)
      *      r = 1.000000001547125957863212...
-     *      rate = 1000000021820606489 (18 decimal places solidity value)
+     *      rate = 1000000001547125957 (18 decimal places solidity value)
      *
      * @notice Can only be called by the interest setter of the protocol and the maximum
-     *         rate settable by the admin is 99% (21820606489)
+     *         rate settable is 99% (21820606489)
      *
      * @param _interestRate The interest rate expressed per second
      */
@@ -1089,8 +1089,8 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         bool needsCollateralPrice = false;
 
         /**
-         * Only the borrow action requires a mandatory score proof, so break
-         * the loop when that action is found.
+         * Only the borrow and liquidate actions require a score proof, so break
+         * the loop when any of these actions are found.
          */
         for (uint256 i = 0; i < _actions.length; i++) {
             SapphireTypes.Action memory action = _actions[i];
