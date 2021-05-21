@@ -35,7 +35,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
 
     modifier onlyMinter() {
         require(
-            _minters[msg.sender] == true,
+            _minters[msg.sender],
             "SyntheticTokenV2: only callable by minter"
         );
         _;
@@ -69,7 +69,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
         onlyAdmin
     {
         require(
-            _initCalled == false,
+            !_initCalled,
             "SyntheticTokenV2: cannot be initialized twice"
         );
 
@@ -204,12 +204,12 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
         onlyAdmin
     {
         require(
-            _minters[_minter] == true,
+            _minters[_minter],
             "SyntheticTokenV2: not a minter"
         );
 
         for (uint256 i = 0; i < _mintersArray.length; i++) {
-            if (address(_mintersArray[i]) == _minter) {
+            if (_mintersArray[i] == _minter) {
                 _mintersArray[i] = _mintersArray[_mintersArray.length - 1];
                 _mintersArray.length--;
 
@@ -237,7 +237,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
         onlyAdmin
     {
         require(
-            _minters[_minter] == true,
+            _minters[_minter],
             "SyntheticTokenV2: minter does not exist"
         );
 
