@@ -19,6 +19,7 @@
     "stakers",
     "struct",
     "undercollateralized",
+    "unpause",
     "untrusted"
   ]
 }

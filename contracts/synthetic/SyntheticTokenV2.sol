@@ -171,7 +171,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
      * @dev Add a new minter to the synthetic token.
      *
      * @param _minter The address of the minter to add
-     * @param _limit The starting limit for how much this synth can mint
+     * @param _limit The starting limit for how much the minter can mint
      */
     function addMinter(
         address _minter,
@@ -195,7 +195,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
     /**
      * @dev Remove a minter from the synthetic token
      *
-     * @param _minter Address to remove the minter
+     * @param _minter Address of the minter to remove
      */
     function removeMinter(
         address _minter
@@ -205,7 +205,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
     {
         require(
             _minters[_minter] == true,
-            "SyntheticTokenV2: minter does not exist"
+            "SyntheticTokenV2: not a minter"
         );
 
         for (uint256 i = 0; i < _mintersArray.length; i++) {
@@ -395,7 +395,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
      *
      * - `owner` cannot be the zero address.
      * - `spender` cannot be the zero address.
-     * - `deadline` must be a timestamp in the future.
+     * - `deadline` must be a timestamp in the future or zero.
      * - `v`, `r` and `s` must be a valid `secp256k1` signature from `owner`
      *   over the Eip712-formatted function arguments.
      * - The signature must use `owner`'s current nonce.
