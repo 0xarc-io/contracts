@@ -18,13 +18,13 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     /* ========== Events ========== */
 
     event MerkleRootUpdated(
-        address updater,
+        address indexed updater,
         bytes32 merkleRoot,
         uint256 updatedAt
     );
 
     event CreditScoreUpdated(
-        address account,
+        address indexed account,
         uint256 score,
         uint256 lastUpdated
     );
@@ -32,7 +32,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     event PauseStatusUpdated(bool value);
 
     event DelayDurationUpdated(
-        address account,
+        address indexed account,
         uint256 value
     );
 
@@ -66,7 +66,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
 
     /* ========== Modifiers ========== */
 
-    modifier isMerkleRootUpdater() {
+    modifier onlyMerkleRootUpdater() {
         require(
             merkleRootUpdater == msg.sender,
             "SapphireCreditScore: caller is not authorized to update merkle root"
@@ -74,9 +74,9 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         _;
     }
 
-    modifier isActive() {
+    modifier onlyWhenActive() {
         require(
-            isPaused == false,
+            !isPaused,
             "SapphireCreditScore: contract is not active"
         );
         _;
@@ -208,8 +208,8 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         bytes32 _newRoot
     )
         private
-        isMerkleRootUpdater
-        isActive
+        onlyMerkleRootUpdater
+        onlyWhenActive
     {
         require(
             currentTimestamp() >= merkleRootDelayDuration.add(lastMerkleRootUpdate),
@@ -231,7 +231,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         onlyOwner
     {
         require(
-            isPaused == true,
+            isPaused,
             "SapphireCreditScore: owner can only update merkle root if paused"
         );
 

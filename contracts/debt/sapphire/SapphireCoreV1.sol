@@ -33,7 +33,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     event ActionsOperated(
         SapphireTypes.Action[] _actions,
         SapphireTypes.ScoreProof _scoreProof,
-        address _user
+        address indexed _user
     );
 
     event LiquidationFeesUpdated(
@@ -74,7 +74,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     );
 
     event TokensWithdrawn(
-        address _token,
+        address indexed _token,
         address _destination,
         uint256 _amount
     );
@@ -206,13 +206,13 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         onlyAdmin
     {
         require(
-            _lowCollateralRatio >= BASE &&  _highCollateralRatio >= BASE,
-            "SapphireCoreV1: collateral ratio has to be at least 1"
+            _lowCollateralRatio <= _highCollateralRatio,
+            "SapphireCoreV1: high c-ratio is lower than the low c-ratio"
         );
 
         require(
-            _lowCollateralRatio <=  _highCollateralRatio,
-            "SapphireCoreV1: high c-ratio is lower than the low c-ratio"
+            _lowCollateralRatio >= BASE,
+            "SapphireCoreV1: collateral ratio has to be at least 1"
         );
 
         require(
@@ -270,11 +270,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         onlyAdmin
     {
         require(
-            _vaultBorrowMinimum <= _vaultBorrowMaximum,
-            "SapphireCoreV1: required condition is vaultMin <= vaultMax <= totalLimit"
-        );
-
-        require(
+            _vaultBorrowMinimum <= _vaultBorrowMaximum &&
             _vaultBorrowMaximum <= _totalBorrowLimit,
             "SapphireCoreV1: required condition is vaultMin <= vaultMax <= totalLimit"
         );
@@ -569,7 +565,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         public
     {
         require(
-            paused == false,
+            !paused,
             "SapphireCoreV1: the contract is paused"
         );
 
@@ -855,9 +851,11 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         // Get the user's vault
         SapphireTypes.Vault storage vault = vaults[msg.sender];
 
+        uint256 denormalizedBorrowAmount = _denormalizeBorrowAmount(vault.borrowedAmount, true);
+
         // Ensure the vault is collateralized if the borrow action succeeds
         uint256 collateralRatio = calculateCollateralRatio(
-            _denormalizeBorrowAmount(vault.borrowedAmount, true)
+            denormalizedBorrowAmount
                 .add(_amount),
             vault.collateralAmount,
             _collateralPrice
@@ -869,7 +867,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         );
 
         // Calculate actual vault borrow amount
-        uint256 actualVaultBorrowAmount = _denormalizeBorrowAmount(vault.borrowedAmount, true);
+        uint256 actualVaultBorrowAmount = denormalizedBorrowAmount;
 
         // Calculate new actual vault borrow amount
         uint256 _newActualVaultBorrowAmount = actualVaultBorrowAmount.add(_amount);
@@ -988,11 +986,11 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
         // Ensure that the vault is not collateralized
         require(
-            isCollateralized(
+            !isCollateralized(
                 _owner,
                 _currentPrice,
                 _assessedCRatio
-            ) == false,
+            ),
             "SapphireCoreV1: vault is collateralized"
         );
 

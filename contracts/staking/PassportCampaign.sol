@@ -18,6 +18,9 @@ import {SapphireTypes} from "../debt/sapphire/SapphireTypes.sol";
  *         Users can get slashed if their credit score go below a threshold.
  */
 contract PassportCampaign is Adminable {
+
+    /* ========== Libraries ========== */
+
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -78,6 +81,8 @@ contract PassportCampaign is Adminable {
 
     event ClaimableStatusUpdated(bool _status);
 
+    event RewardsDistributorUpdated(address _newRewardsDistributor);
+
     /* ========== Modifiers ========== */
 
     modifier updateReward(address _account) {
@@ -111,7 +116,7 @@ contract PassportCampaign is Adminable {
 
         if (_isScoreRequired) {
             require(
-                isProofPassed == true,
+                isProofPassed,
                 "PassportCampaign: proof is required but it is not passed"
             );
         }
@@ -131,6 +136,8 @@ contract PassportCampaign is Adminable {
         onlyAdmin
     {
         rewardsDistributor = _rewardsDistributor;
+
+        emit RewardsDistributorUpdated(rewardsDistributor);
     }
 
     function setRewardsDuration(
@@ -329,7 +336,7 @@ contract PassportCampaign is Adminable {
             lastTimeRewardApplicable()
                 .sub(lastUpdateTime)
                 .mul(rewardRate)
-                .mul(1e18)
+                .mul(BASE)
                 .div(totalSupply)
         );
     }
@@ -348,7 +355,7 @@ contract PassportCampaign is Adminable {
         uint256 fullRewardPerToken = lastTimeRewardApplicable()
             .sub(lastUpdateTime)
             .mul(rewardRate)
-            .mul(1e18)
+            .mul(BASE)
             .div(totalSupply);
 
         uint256 lastTimeRewardUserAllocation = fullRewardPerToken
@@ -368,7 +375,7 @@ contract PassportCampaign is Adminable {
         return stakers[_account]
             .balance
             .mul(_actualRewardPerToken().sub(stakers[_account].rewardPerTokenPaid))
-            .div(1e18)
+            .div(BASE)
             .add(stakers[_account].rewardsEarned);
     }
 
@@ -489,7 +496,7 @@ contract PassportCampaign is Adminable {
         private
     {
         require(
-            tokensClaimable == true,
+            tokensClaimable,
             "PassportCampaign: tokens cannot be claimed yet"
         );
 
@@ -497,7 +504,7 @@ contract PassportCampaign is Adminable {
 
         uint256 payableAmount = staker.rewardsEarned.sub(staker.rewardsReleased);
 
-        staker.rewardsReleased = staker.rewardsReleased.add(payableAmount);
+        staker.rewardsReleased = staker.rewardsEarned;
 
         uint256 daoPayable = payableAmount
             .mul(daoAllocation)

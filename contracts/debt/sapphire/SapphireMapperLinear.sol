@@ -24,13 +24,12 @@ contract SapphireMapperLinear is ISapphireMapper {
         uint256 _upperBound
     )
         public
-        view
+        pure
         returns (uint256)
     {
         require(
-            _scoreMax > 0 &&
-            _upperBound > 0,
-            "SapphireMapperLinear: the maximum score and upper bound cannot be 0"
+            _scoreMax > 0,
+            "SapphireMapperLinear: the maximum score cannot be 0"
         );
 
         require(

@@ -2,7 +2,7 @@
 
 pragma solidity 0.5.16;
 
-contract ISapphireMapper {
+interface ISapphireMapper {
 
     /**
      * @notice Maps the `_score` to a value situated between
@@ -20,6 +20,6 @@ contract ISapphireMapper {
         uint256 _upperBound
     )
         external
-        view
+        pure
         returns (uint256);
 }
