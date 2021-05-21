@@ -10,7 +10,7 @@ contract SapphireMapperLinear is ISapphireMapper {
 
     /**
      * @notice An inverse linear mapper.
-     * Returns `_upperBound - (_score/_scoreMax) * (upperBound - lowerBound)`
+     * Returns `_upperBound - (_score * (_upperBound - _lowerBound)) / _scoreMax`
      *
      * @param _score The score to check for
      * @param _scoreMax The maximum score
@@ -43,17 +43,13 @@ contract SapphireMapperLinear is ISapphireMapper {
             "The score cannot be larger than the maximum score"
         );
 
-        uint256 BASE = 10 ** 18;
-
         uint256 boundsDifference = _upperBound.sub(_lowerBound);
 
-        // "Precision" because this number is multiplied by BASE
-        uint256 scoreRatioPrecision = _score.mul(BASE).div(_scoreMax);
-
-        // scoreRatio * boundsDifference
-        uint256 scoreRatioProduct = scoreRatioPrecision.mul(boundsDifference).div(BASE);
-
-        return _upperBound.sub(scoreRatioProduct);
+        return _upperBound.sub(
+            _score
+                .mul(boundsDifference)
+                .div(_scoreMax)
+        );
     }
 
 }
