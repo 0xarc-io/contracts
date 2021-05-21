@@ -172,7 +172,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
    /**
      * @dev Request for verifying user's credit score
      *
-     * @notice If credit score is verified, this function updated user 
+     * @notice If credit score is verified, this function updated user
      *         credit scores with verified one and current timestamp
      *
      * @param _proof Data required to verify if score is correct for current merkle root
