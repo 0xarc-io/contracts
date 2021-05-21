@@ -54,7 +54,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
     /* ========== Init Function ========== */
 
 /**
-     * @dev Initialise the synthetic token
+     * @dev Initialize the synthetic token
      *
      * @param _name The name of the token
      * @param _symbol The symbol of the token
@@ -361,7 +361,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
     {
         require(
             _allowances[sender][msg.sender] >= amount,
-            "SyntheticTokenv2: the amount has not been approved for this spender"
+            "SyntheticTokenV2: the amount has not been approved for this spender"
         );
 
         _transfer(sender, recipient, amount);

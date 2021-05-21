@@ -8,7 +8,7 @@ import {SapphireTypes} from "./SapphireTypes.sol";
 interface ISapphireCreditScore {
     function updateMerkleRoot(bytes32 newRoot) external;
 
-    function setMerkleRootUpdater(address merkleRootUpdator) external;
+    function setMerkleRootUpdater(address merkleRootUpdater) external;
 
     function verifyAndUpdate(SapphireTypes.ScoreProof calldata proof) external returns (uint256, uint16);
 

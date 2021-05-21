@@ -61,7 +61,7 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
      * @param _lowerBound       The lower bound
      * @param _upperBound       The upper bound
      * @param _scoreProof       The score proof
-     * @param _isScoreRequred   The flag, which require the proof of score if the account already
+     * @param _isScoreRequired   The flag, which require the proof of score if the account already
                                 has a score
      * @return A value between the lower and upper bounds depending on the credit score
      */
@@ -69,7 +69,7 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
         uint256 _lowerBound,
         uint256 _upperBound,
         SapphireTypes.ScoreProof memory _scoreProof,
-        bool _isScoreRequred
+        bool _isScoreRequired
     )
         public
         returns (uint256)
@@ -96,7 +96,7 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
         bool isProofPassed = _scoreProof.merkleProof.length > 0;
 
         // If credit score is required and user has already verified the score than require proof of score
-        if (_isScoreRequred && creditScore > 0) {
+        if (_isScoreRequired && creditScore > 0) {
             require(
                 isProofPassed,
                 "SapphireAssessor: proof should be provided for credit score"
