@@ -83,11 +83,6 @@ contract Permittable {
             "Permittable: spender cannot be 0x0"
         );
 
-        require(
-            value > 0,
-            "Permittable: approval value must be greater than 0"
-        );
-
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
