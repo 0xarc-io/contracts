@@ -50,7 +50,7 @@ describe('SapphireCreditScore', () => {
         amount: BigNumber.from(12),
       };
       creditScore2 = {
-        account: ctx.signers.unauthorised.address,
+        account: ctx.signers.unauthorized.address,
         amount: BigNumber.from(20),
       };
       tree = new CreditScoreTree([creditScore1, creditScore2]);
@@ -58,7 +58,7 @@ describe('SapphireCreditScore', () => {
         merkleRoot: tree.getHexRoot(),
       });
     });
-    unauthorised = ctx.signers.unauthorised;
+    unauthorised = ctx.signers.unauthorized;
     owner = ctx.signers.admin;
     merkleRootUpdater = ctx.signers.interestSetter;
     creditScoreContract = ctx.contracts.sapphire.creditScore;

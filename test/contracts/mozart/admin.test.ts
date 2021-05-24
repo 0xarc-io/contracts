@@ -41,11 +41,11 @@ xdescribe('Mozart.admin', () => {
 
   describe('#withdrawTokens', () => {
     it('should not be callable by any user', async () => {
-      const contract = await getCore(ctx.signers.unauthorised);
+      const contract = await getCore(ctx.signers.unauthorized);
       await expect(
         contract.withdrawTokens(
           arc.synth().collateral.address,
-          ctx.signers.unauthorised.address,
+          ctx.signers.unauthorized.address,
           100,
         ),
       ).to.be.reverted;
@@ -53,13 +53,17 @@ xdescribe('Mozart.admin', () => {
 
     it('should only be callable by the admin', async () => {
       const contract = await getCore(ctx.signers.admin);
-      await contract.withdrawTokens(arc.synth().collateral.address, ctx.signers.admin.address, 100);
+      await contract.withdrawTokens(
+        arc.synth().collateral.address,
+        ctx.signers.admin.address,
+        100,
+      );
     });
   });
 
   describe('#setPause', () => {
     it('should not be callable by any user', async () => {
-      const contract = await getCore(ctx.signers.unauthorised);
+      const contract = await getCore(ctx.signers.unauthorized);
       expect(await contract.paused()).to.be.false;
       await expect(contract.setPause(true)).to.be.reverted;
     });
@@ -75,10 +79,15 @@ xdescribe('Mozart.admin', () => {
       const contract = await getCore(ctx.signers.admin);
       expect(await contract.paused()).to.be.false;
 
-      await arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, ctx.signers.minter);
+      await arc.openPosition(
+        COLLATERAL_AMOUNT,
+        BORROW_AMOUNT,
+        ctx.signers.minter,
+      );
       await contract.setPause(true);
-      await expect(arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, ctx.signers.minter)).to.be
-        .reverted;
+      await expect(
+        arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, ctx.signers.minter),
+      ).to.be.reverted;
     });
   });
 });

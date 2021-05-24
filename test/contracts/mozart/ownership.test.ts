@@ -42,18 +42,24 @@ xdescribe('Mozart.ownership', () => {
         arc.setGlobalOperatorStatus(
           ctx.signers.globalOperator.address,
           true,
-          ctx.signers.unauthorised,
+          ctx.signers.unauthorized,
         ),
       ).to.be.reverted;
     });
 
     it('should be able to set as an admin', async () => {
       await expect(
-        arc.setGlobalOperatorStatus(ctx.signers.globalOperator.address, true, ctx.signers.admin),
+        arc.setGlobalOperatorStatus(
+          ctx.signers.globalOperator.address,
+          true,
+          ctx.signers.admin,
+        ),
       )
         .to.be.emit(arc.core(), 'GlobalOperatorSet')
         .withArgs(ctx.signers.globalOperator.address, true);
-      expect(await arc.core().isGlobalOperator(ctx.signers.globalOperator.address)).to.be.true;
+      expect(
+        await arc.core().isGlobalOperator(ctx.signers.globalOperator.address),
+      ).to.be.true;
     });
 
     it('should be able to remove as an admin', async () => {
@@ -62,13 +68,21 @@ xdescribe('Mozart.ownership', () => {
         true,
         ctx.signers.admin,
       );
-      expect(await arc.core().isGlobalOperator(ctx.signers.globalOperator.address)).to.be.true;
+      expect(
+        await arc.core().isGlobalOperator(ctx.signers.globalOperator.address),
+      ).to.be.true;
       await expect(
-        arc.setGlobalOperatorStatus(ctx.signers.globalOperator.address, false, ctx.signers.admin),
+        arc.setGlobalOperatorStatus(
+          ctx.signers.globalOperator.address,
+          false,
+          ctx.signers.admin,
+        ),
       )
         .to.be.emit(arc.core(), 'GlobalOperatorSet')
         .withArgs(ctx.signers.globalOperator.address, false);
-      expect(await arc.core().isGlobalOperator(ctx.signers.globalOperator.address)).to.be.false;
+      expect(
+        await arc.core().isGlobalOperator(ctx.signers.globalOperator.address),
+      ).to.be.false;
     });
 
     it('should not be able to set as a global operator', async () => {
@@ -79,7 +93,7 @@ xdescribe('Mozart.ownership', () => {
       );
       await expect(
         arc.setGlobalOperatorStatus(
-          ctx.signers.unauthorised.address,
+          ctx.signers.unauthorized.address,
           true,
           ctx.signers.globalOperator,
         ),
@@ -90,24 +104,32 @@ xdescribe('Mozart.ownership', () => {
       const startingCollatBalance = await arc
         .synth()
         .collateral.balanceOf(ctx.signers.globalOperator.address);
-      await arc.openPosition(COLLATERAL_AMOUNT.mul(2), BORROW_AMOUNT, ctx.signers.minter);
+      await arc.openPosition(
+        COLLATERAL_AMOUNT.mul(2),
+        BORROW_AMOUNT,
+        ctx.signers.minter,
+      );
       await arc.setGlobalOperatorStatus(
         ctx.signers.globalOperator.address,
         true,
         ctx.signers.admin,
       );
 
-      expect(await arc.synthetic().balanceOf(ctx.signers.globalOperator.address)).to.equal(0);
+      expect(
+        await arc.synthetic().balanceOf(ctx.signers.globalOperator.address),
+      ).to.equal(0);
 
       await arc.borrow(0, 0, BORROW_AMOUNT, ctx.signers.globalOperator);
 
-      expect(await arc.synthetic().balanceOf(ctx.signers.globalOperator.address)).to.equal(
-        BORROW_AMOUNT,
-      );
+      expect(
+        await arc.synthetic().balanceOf(ctx.signers.globalOperator.address),
+      ).to.equal(BORROW_AMOUNT);
 
       await arc.repay(0, BORROW_AMOUNT, 0, ctx.signers.globalOperator);
 
-      expect(await arc.synthetic().balanceOf(ctx.signers.globalOperator.address)).to.equal(0);
+      expect(
+        await arc.synthetic().balanceOf(ctx.signers.globalOperator.address),
+      ).to.equal(0);
 
       await Token.transfer(
         arc.syntheticAddress(),
@@ -116,11 +138,18 @@ xdescribe('Mozart.ownership', () => {
         ctx.signers.minter,
       );
 
-      await arc.repay(0, BORROW_AMOUNT, COLLATERAL_AMOUNT.mul(2), ctx.signers.globalOperator);
-
-      expect(await arc.synth().collateral.balanceOf(ctx.signers.globalOperator.address)).to.equal(
-        startingCollatBalance.add(COLLATERAL_AMOUNT.mul(2)),
+      await arc.repay(
+        0,
+        BORROW_AMOUNT,
+        COLLATERAL_AMOUNT.mul(2),
+        ctx.signers.globalOperator,
       );
+
+      expect(
+        await arc
+          .synth()
+          .collateral.balanceOf(ctx.signers.globalOperator.address),
+      ).to.equal(startingCollatBalance.add(COLLATERAL_AMOUNT.mul(2)));
     });
   });
 
@@ -128,8 +157,15 @@ xdescribe('Mozart.ownership', () => {
     let currentPosition: BigNumberish;
 
     beforeEach(async () => {
-      await arc.setGlobalOperatorStatus(ctx.signers.globalOperator.address, true);
-      const result = await arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, ctx.signers.minter);
+      await arc.setGlobalOperatorStatus(
+        ctx.signers.globalOperator.address,
+        true,
+      );
+      const result = await arc.openPosition(
+        COLLATERAL_AMOUNT,
+        BORROW_AMOUNT,
+        ctx.signers.minter,
+      );
       currentPosition = result.params.id;
     });
 
@@ -137,8 +173,8 @@ xdescribe('Mozart.ownership', () => {
       await expect(
         arc.transferOwnership(
           currentPosition,
-          ctx.signers.unauthorised.address,
-          ctx.signers.unauthorised,
+          ctx.signers.unauthorized.address,
+          ctx.signers.unauthorized,
         ),
       ).to.be.reverted;
     });
@@ -147,7 +183,7 @@ xdescribe('Mozart.ownership', () => {
       await expect(
         arc.transferOwnership(
           currentPosition,
-          ctx.signers.unauthorised.address,
+          ctx.signers.unauthorized.address,
           ctx.signers.globalOperator,
         ),
       ).to.be.reverted;
@@ -156,11 +192,11 @@ xdescribe('Mozart.ownership', () => {
     it('should be able to transfer ownership as the owner', async () => {
       await arc.transferOwnership(
         currentPosition,
-        ctx.signers.unauthorised.address,
+        ctx.signers.unauthorized.address,
         ctx.signers.minter,
       );
       const position = await arc.getPosition(currentPosition);
-      expect(position.owner).to.equal(ctx.signers.unauthorised.address);
+      expect(position.owner).to.equal(ctx.signers.unauthorized.address);
 
       // ensure that the original owner can't do shiet
     });
@@ -170,16 +206,29 @@ xdescribe('Mozart.ownership', () => {
     let currentPosition: BigNumberish;
 
     beforeEach(async () => {
-      await arc.setGlobalOperatorStatus(ctx.signers.globalOperator.address, true);
+      await arc.setGlobalOperatorStatus(
+        ctx.signers.globalOperator.address,
+        true,
+      );
 
-      const result = await arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, ctx.signers.minter);
+      const result = await arc.openPosition(
+        COLLATERAL_AMOUNT,
+        BORROW_AMOUNT,
+        ctx.signers.minter,
+      );
       currentPosition = result.params.id;
     });
 
     it('should not be able to set authorized position operator as a non-owner', async () => {
-      const core = await ctx.contracts.mozart.core.connect(ctx.signers.unauthorised);
+      const core = await ctx.contracts.mozart.core.connect(
+        ctx.signers.unauthorized,
+      );
       await expect(
-        core.setPositionOperatorStatus(currentPosition, ctx.signers.unauthorised.address, true),
+        core.setPositionOperatorStatus(
+          currentPosition,
+          ctx.signers.unauthorized.address,
+          true,
+        ),
       ).to.be.reverted;
     });
 
@@ -275,17 +324,21 @@ xdescribe('Mozart.ownership', () => {
         ctx.signers.minter,
       );
 
-      expect(await arc.synthetic().balanceOf(ctx.signers.positionOperator.address)).to.equal(0);
+      expect(
+        await arc.synthetic().balanceOf(ctx.signers.positionOperator.address),
+      ).to.equal(0);
 
       await arc.borrow(0, 0, BORROW_AMOUNT, ctx.signers.positionOperator);
 
-      expect(await arc.synthetic().balanceOf(ctx.signers.positionOperator.address)).to.equal(
-        BORROW_AMOUNT,
-      );
+      expect(
+        await arc.synthetic().balanceOf(ctx.signers.positionOperator.address),
+      ).to.equal(BORROW_AMOUNT);
 
       await arc.repay(0, BORROW_AMOUNT, 0, ctx.signers.positionOperator);
 
-      expect(await arc.synthetic().balanceOf(ctx.signers.positionOperator.address)).to.equal(0);
+      expect(
+        await arc.synthetic().balanceOf(ctx.signers.positionOperator.address),
+      ).to.equal(0);
 
       await Token.transfer(
         arc.syntheticAddress(),
@@ -294,11 +347,18 @@ xdescribe('Mozart.ownership', () => {
         ctx.signers.minter,
       );
 
-      await arc.repay(0, BORROW_AMOUNT, COLLATERAL_AMOUNT.mul(2), ctx.signers.positionOperator);
-
-      expect(await arc.synth().collateral.balanceOf(ctx.signers.positionOperator.address)).to.equal(
-        startingOpereatorBalance.add(COLLATERAL_AMOUNT.mul(2)),
+      await arc.repay(
+        0,
+        BORROW_AMOUNT,
+        COLLATERAL_AMOUNT.mul(2),
+        ctx.signers.positionOperator,
       );
+
+      expect(
+        await arc
+          .synth()
+          .collateral.balanceOf(ctx.signers.positionOperator.address),
+      ).to.equal(startingOpereatorBalance.add(COLLATERAL_AMOUNT.mul(2)));
     });
   });
 });

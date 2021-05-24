@@ -53,7 +53,7 @@ xdescribe('Spritz.operateAction(Borrow)', () => {
       arc._borrowSynthetic(
         ArcNumber.new(199),
         ArcNumber.new(1),
-        ctx.signers.unauthorised,
+        ctx.signers.unauthorized,
         positionId,
       ),
     );
@@ -81,7 +81,12 @@ xdescribe('Spritz.operateAction(Borrow)', () => {
   it('should not be able to borrow more if the price decreases, more is borrowed and no extra collateral', async () => {
     await arc.oracle.setPrice(ArcDecimal.new(750));
     await expectRevert(
-      arc._borrowSynthetic(ArcNumber.new(76), ArcNumber.new(0), ctx.signers.minter, positionId),
+      arc._borrowSynthetic(
+        ArcNumber.new(76),
+        ArcNumber.new(0),
+        ctx.signers.minter,
+        positionId,
+      ),
     );
   });
 

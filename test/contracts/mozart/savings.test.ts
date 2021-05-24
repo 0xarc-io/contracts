@@ -39,7 +39,11 @@ xdescribe('MozartSavingsV1', () => {
     savings = ctx.contracts.mozart.savings;
 
     await savings.setPaused(false);
-    await arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, ctx.signers.minter);
+    await arc.openPosition(
+      COLLATERAL_AMOUNT,
+      BORROW_AMOUNT,
+      ctx.signers.minter,
+    );
 
     await Token.approve(
       arc.syntheticAddress(),
@@ -56,13 +60,23 @@ xdescribe('MozartSavingsV1', () => {
   }
 
   async function updateTime(time: BigNumberish) {
-    const mockContract = ctx.contracts.mozart.savings.connect(ctx.signers.minter);
+    const mockContract = ctx.contracts.mozart.savings.connect(
+      ctx.signers.minter,
+    );
     await mockContract.setCurrentTimestamp(BigNumber.from(time).add(0));
     await arc.updateTime(time);
   }
 
-  async function stake(amount: BigNumberish, signer: Signer = ctx.signers.minter) {
-    await Token.approve(arc.syntheticAddress(), signer, savings.address, amount);
+  async function stake(
+    amount: BigNumberish,
+    signer: Signer = ctx.signers.minter,
+  ) {
+    await Token.approve(
+      arc.syntheticAddress(),
+      signer,
+      savings.address,
+      amount,
+    );
 
     const contract = await getContract(signer);
     await contract.stake(amount);
@@ -72,7 +86,7 @@ xdescribe('MozartSavingsV1', () => {
     it('should not be callable by non admin', async () => {
       await expect(
         savings
-          .connect(ctx.signers.unauthorised)
+          .connect(ctx.signers.unauthorized)
           .init('TEST', 'TEST', await savings.synthetic(), { value: 0 }),
       ).to.reverted;
     });
@@ -86,7 +100,7 @@ xdescribe('MozartSavingsV1', () => {
 
   describe('#setSavingsRate', () => {
     it('should not be settable by anyone', async () => {
-      const contract = await getContract(ctx.signers.unauthorised);
+      const contract = await getContract(ctx.signers.unauthorized);
       await expect(contract.setSavingsRate(5)).to.be.reverted;
     });
 
@@ -99,7 +113,7 @@ xdescribe('MozartSavingsV1', () => {
 
   describe('#setArcFee', () => {
     it('should not be settable by anyone', async () => {
-      const contract = await getContract(ctx.signers.unauthorised);
+      const contract = await getContract(ctx.signers.unauthorized);
       await expect(contract.setArcFee({ value: 5 })).to.be.reverted;
     });
 
@@ -113,7 +127,7 @@ xdescribe('MozartSavingsV1', () => {
 
   describe('#setPaused', () => {
     it('should not be settable by anyone', async () => {
-      const contract = await getContract(ctx.signers.unauthorised);
+      const contract = await getContract(ctx.signers.unauthorized);
       await expect(contract.setPaused(true)).to.be.reverted;
     });
 
@@ -137,18 +151,23 @@ xdescribe('MozartSavingsV1', () => {
     });
 
     it('should not be able to stake more than their balance', async () => {
-      await expect(stake(BORROW_AMOUNT, ctx.signers.unauthorised)).to.be.reverted;
+      await expect(stake(BORROW_AMOUNT, ctx.signers.unauthorized)).to.be
+        .reverted;
     });
 
     it('should be able to stake', async () => {
       await stake(BORROW_AMOUNT, ctx.signers.minter);
-      expect(await savings.balanceOf(ctx.signers.minter.address)).to.equal(BORROW_AMOUNT);
+      expect(await savings.balanceOf(ctx.signers.minter.address)).to.equal(
+        BORROW_AMOUNT,
+      );
     });
 
     it('should be able to stake additional amounts', async () => {
       await stake(BORROW_AMOUNT.div(2), ctx.signers.minter);
       await stake(BORROW_AMOUNT.div(2), ctx.signers.minter);
-      expect(await savings.balanceOf(ctx.signers.minter.address)).to.equal(BORROW_AMOUNT);
+      expect(await savings.balanceOf(ctx.signers.minter.address)).to.equal(
+        BORROW_AMOUNT,
+      );
     });
   });
 
@@ -156,7 +175,11 @@ xdescribe('MozartSavingsV1', () => {
     beforeEach(async () => {
       await savings.updateIndex();
       // Create a second depositor
-      await arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, ctx.signers.staker);
+      await arc.openPosition(
+        COLLATERAL_AMOUNT,
+        BORROW_AMOUNT,
+        ctx.signers.staker,
+      );
       await stake(BORROW_AMOUNT, ctx.signers.staker);
     });
 
@@ -213,22 +236,32 @@ xdescribe('MozartSavingsV1', () => {
       const afterSupply = await arc.synthetic().totalSupply();
       const coreBorrowIndex = (await arc.core().getBorrowIndex())[0];
 
-      const oneYearAccumulatedInterest = savingsRate.mul(ONE_YEAR_IN_SECONDS).add(BASE);
+      const oneYearAccumulatedInterest = savingsRate
+        .mul(ONE_YEAR_IN_SECONDS)
+        .add(BASE);
       expect(savingsIndex1).to.equal(oneYearAccumulatedInterest);
 
       // The amount minted should have increased
-      expect(afterSupply).to.equal(ArcNumber.bigMul(savingsIndex1, beforeSupply));
+      expect(afterSupply).to.equal(
+        ArcNumber.bigMul(savingsIndex1, beforeSupply),
+      );
       expect(savingsIndex1).to.equal(coreBorrowIndex);
-      expect(afterSupply).to.equal(ArcNumber.bigMul(coreBorrowIndex, BORROW_AMOUNT));
+      expect(afterSupply).to.equal(
+        ArcNumber.bigMul(coreBorrowIndex, BORROW_AMOUNT),
+      );
 
       const accumulated1 = ArcNumber.bigMul(savingsIndex1, BORROW_AMOUNT);
       expect(await savings.totalSupplied()).to.equal(accumulated1);
 
       // The newly minted synth should go straight to this contract
       const savingsBalance = ArcNumber.bigMul(coreBorrowIndex, BORROW_AMOUNT);
-      expect(await arc.synthetic().balanceOf(savings.address)).to.equal(savingsBalance);
+      expect(await arc.synthetic().balanceOf(savings.address)).to.equal(
+        savingsBalance,
+      );
 
-      const issuedAmount = await arc.synthetic().getMinterIssued(savings.address);
+      const issuedAmount = await arc
+        .synthetic()
+        .getMinterIssued(savings.address);
       expect(issuedAmount.value).to.equal(
         ArcNumber.bigMul(BORROW_AMOUNT, coreBorrowIndex).sub(BORROW_AMOUNT),
       );
@@ -282,12 +315,20 @@ xdescribe('MozartSavingsV1', () => {
       const savingsIndex = await savings.savingsIndex();
 
       const contract = await getContract(ctx.signers.minter);
-      const preSynthBalance = await arc.synthetic().balanceOf(ctx.signers.minter.address);
-      const preSavingsBalance = await savings.balanceOf(ctx.signers.minter.address);
+      const preSynthBalance = await arc
+        .synthetic()
+        .balanceOf(ctx.signers.minter.address);
+      const preSavingsBalance = await savings.balanceOf(
+        ctx.signers.minter.address,
+      );
       await contract.unstake(BORROW_AMOUNT);
 
-      const postSynthBalance = await arc.synthetic().balanceOf(ctx.signers.minter.address);
-      const postSavingsBalance = await savings.balanceOf(ctx.signers.minter.address);
+      const postSynthBalance = await arc
+        .synthetic()
+        .balanceOf(ctx.signers.minter.address);
+      const postSavingsBalance = await savings.balanceOf(
+        ctx.signers.minter.address,
+      );
       expect(postSynthBalance).to.equal(preSynthBalance.add(BORROW_AMOUNT));
       expect(postSavingsBalance).to.equal(
         preSavingsBalance.sub(ArcNumber.bigDiv(BORROW_AMOUNT, savingsIndex)),

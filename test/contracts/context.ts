@@ -46,7 +46,7 @@ export async function generateContext(
   signers.feeCollector = retrievedSigners[5];
   signers.globalOperator = retrievedSigners[6];
   signers.positionOperator = retrievedSigners[7];
-  signers.unauthorised = retrievedSigners[8];
+  signers.unauthorized = retrievedSigners[8];
   signers.scoredMinter = retrievedSigners[9];
   signers.pauseOperator = signers.positionOperator;
 

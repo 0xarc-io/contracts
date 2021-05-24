@@ -39,7 +39,7 @@ export interface TestingSigners {
   feeCollector: SignerWithAddress;
   globalOperator: SignerWithAddress;
   positionOperator: SignerWithAddress;
-  unauthorised: SignerWithAddress;
+  unauthorized: SignerWithAddress;
   scoredMinter: SignerWithAddress;
   pauseOperator: SignerWithAddress;
 }
@@ -57,19 +57,19 @@ export interface Contracts {
     coreV3: CoreV3;
     coreV4: CoreV4;
     state: StateV1;
-    oracle: MockOracle
+    oracle: MockOracle;
   };
   mozart: {
     core: MockMozartCoreV2;
     savings: MockMozartSavingsV2;
-    oracle: MockOracle
+    oracle: MockOracle;
   };
   sapphire: {
     core: MockSapphireCoreV1;
     creditScore: MockSapphireCreditScore;
     linearMapper: SapphireMapperLinear;
     assessor: SapphireAssessor;
-    oracle: MockSapphireOracle
+    oracle: MockSapphireOracle;
   };
   synthetic: {
     static: StaticSyntheticToken;
