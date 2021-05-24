@@ -30,7 +30,9 @@ xdescribe('Spritz.StateV1', () => {
 
   describe('#setLimits', () => {
     it('should not be able to set limits as non-admin', async () => {
-      const contract = await new StateV1Factory(ctx.signers.unauthorised).attach(arc.state.address);
+      const contract = await new StateV1Factory(
+        ctx.signers.unauthorized,
+      ).attach(arc.state.address);
       await expectRevert(
         contract.setRiskParams({
           collateralLimit: 0,
@@ -41,7 +43,9 @@ xdescribe('Spritz.StateV1', () => {
     });
 
     it('should be able to set limits as the admin', async () => {
-      const contract = await new StateV1Factory(ctx.signers.admin).attach(arc.state.address);
+      const contract = await new StateV1Factory(ctx.signers.admin).attach(
+        arc.state.address,
+      );
       await contract.setRiskParams({
         collateralLimit: 0,
         syntheticLimit: 500,
@@ -58,7 +62,11 @@ xdescribe('Spritz.StateV1', () => {
         positionCollateralMinimum: ArcNumber.new(300),
       });
       await expectRevert(
-        arc._borrowSynthetic(ArcNumber.new(1), ArcNumber.new(200), ctx.signers.admin),
+        arc._borrowSynthetic(
+          ArcNumber.new(1),
+          ArcNumber.new(200),
+          ctx.signers.admin,
+        ),
       );
     });
 
@@ -70,7 +78,11 @@ xdescribe('Spritz.StateV1', () => {
       });
 
       await expectRevert(
-        arc._borrowSynthetic(ArcNumber.new(1), ArcNumber.new(200), ctx.signers.admin),
+        arc._borrowSynthetic(
+          ArcNumber.new(1),
+          ArcNumber.new(200),
+          ctx.signers.admin,
+        ),
       );
     });
 
@@ -82,14 +94,18 @@ xdescribe('Spritz.StateV1', () => {
       });
 
       await expectRevert(
-        arc._borrowSynthetic(ArcNumber.new(2), ArcNumber.new(500), ctx.signers.admin),
+        arc._borrowSynthetic(
+          ArcNumber.new(2),
+          ArcNumber.new(500),
+          ctx.signers.admin,
+        ),
       );
     });
   });
 
   describe('#onlyAdmin', () => {
     it('should not be able to set the market params as non-admin', async () => {
-      const state = await arc.getState(ctx.signers.unauthorised);
+      const state = await arc.getState(ctx.signers.unauthorized);
       await expectRevert(
         state.setMarketParams({
           collateralRatio: ArcDecimal.new(0),
@@ -115,7 +131,7 @@ xdescribe('Spritz.StateV1', () => {
     });
 
     it('should not be able to set the risk params as non-admin', async () => {
-      const state = await arc.getState(ctx.signers.unauthorised);
+      const state = await arc.getState(ctx.signers.unauthorized);
       await expectRevert(
         state.setRiskParams({
           syntheticLimit: ArcNumber.new(100),
@@ -136,12 +152,16 @@ xdescribe('Spritz.StateV1', () => {
       const currentRisk = await state.risk();
       expect(currentRisk.syntheticLimit).to.equal(ArcNumber.new(100));
       expect(currentRisk.collateralLimit).to.equal(ArcNumber.new(100));
-      expect(currentRisk.positionCollateralMinimum).to.equal(ArcNumber.new(100));
+      expect(currentRisk.positionCollateralMinimum).to.equal(
+        ArcNumber.new(100),
+      );
     });
 
     it('should not be able to set the oracle as non-admin', async () => {
-      const state = await arc.getState(ctx.signers.unauthorised);
-      await expectRevert(state.setOracle(await ctx.signers.unauthorised.address));
+      const state = await arc.getState(ctx.signers.unauthorized);
+      await expectRevert(
+        state.setOracle(await ctx.signers.unauthorized.address),
+      );
     });
 
     it('should be able to set the oracle as admin', async () => {
@@ -196,7 +216,7 @@ xdescribe('Spritz.StateV1', () => {
     }
 
     it('should not be able to save a new position as non-core', async () => {
-      const state = await getIsolatedState(ctx.signers.unauthorised);
+      const state = await getIsolatedState(ctx.signers.unauthorized);
       await expectRevert(saveNewPosition(state));
     });
 
@@ -204,7 +224,7 @@ xdescribe('Spritz.StateV1', () => {
       const ownerState = await getIsolatedState(ctx.signers.admin);
       await saveNewPosition(ownerState);
 
-      const otherState = await getIsolatedState(ctx.signers.unauthorised);
+      const otherState = await getIsolatedState(ctx.signers.unauthorized);
       await expectRevert(otherState.setAmount(0, 0, { sign: true, value: 0 }));
     });
 
@@ -212,12 +232,14 @@ xdescribe('Spritz.StateV1', () => {
       const ownerState = await getIsolatedState(ctx.signers.admin);
       await saveNewPosition(ownerState);
 
-      const otherState = await getIsolatedState(ctx.signers.unauthorised);
-      await expectRevert(otherState.updatePositionAmount(0, 0, { sign: true, value: 0 }));
+      const otherState = await getIsolatedState(ctx.signers.unauthorized);
+      await expectRevert(
+        otherState.updatePositionAmount(0, 0, { sign: true, value: 0 }),
+      );
     });
 
     it('should not be able to set the supply balance as non-core', async () => {
-      const state = await getIsolatedState(ctx.signers.unauthorised);
+      const state = await getIsolatedState(ctx.signers.unauthorized);
       await expectRevert(state.updateTotalSupplied(1));
     });
 

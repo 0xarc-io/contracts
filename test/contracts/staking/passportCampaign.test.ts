@@ -184,7 +184,7 @@ describe('PassportCampaign', () => {
     admin = signers.admin;
     staker = signers.staker;
     user1 = signers.scoredMinter;
-    unauthorized = signers.unauthorised;
+    unauthorized = signers.unauthorized;
 
     stakerCreditScore = {
       account: staker.address,

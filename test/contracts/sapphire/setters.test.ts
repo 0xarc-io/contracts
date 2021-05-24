@@ -1,8 +1,9 @@
-import { SapphireCoreV1 } from '@src/typings';
+import { SapphireAssessorFactory, SapphireCoreV1 } from '@src/typings';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { constants, utils, Wallet } from 'ethers';
 import { generateContext, ITestContext } from '../context';
+import { deployMockSapphireOracle } from '../deployers';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 
@@ -29,7 +30,7 @@ describe('SapphireCore.setters', () => {
     it('reverts if called by non-owner', async () => {
       await expect(
         sapphireCore
-          .connect(ctx.signers.unauthorised)
+          .connect(ctx.signers.unauthorized)
           .setCollateralRatios(lowRatio, highRatio),
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
@@ -57,7 +58,7 @@ describe('SapphireCore.setters', () => {
       await expect(
         sapphireCore.setCollateralRatios(lowRatio, 0),
       ).to.be.revertedWith(
-        'SapphireCoreV1: collateral ratio has to be at least 1',
+        'SapphireCoreV1: high c-ratio is lower than the low c-ratio',
       );
     });
 
@@ -83,19 +84,32 @@ describe('SapphireCore.setters', () => {
   });
 
   describe('#setAssessor', () => {
+    let newAssessorAddress: string;
+
+    before(async () => {
+      const newAssessor = await new SapphireAssessorFactory(
+        ctx.signers.admin,
+      ).deploy(
+        ctx.contracts.sapphire.linearMapper.address,
+        ctx.contracts.sapphire.creditScore.address,
+      );
+
+      newAssessorAddress = newAssessor.address;
+    });
+
     it('reverts if called by non-owner', async () => {
       await expect(
         sapphireCore
-          .connect(ctx.signers.unauthorised)
-          .setAssessor(randomAddress),
+          .connect(ctx.signers.unauthorized)
+          .setAssessor(newAssessorAddress),
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
     it('sets the assessor address', async () => {
-      await expect(sapphireCore.setAssessor(randomAddress))
+      await expect(sapphireCore.setAssessor(newAssessorAddress))
         .to.emit(sapphireCore, 'AssessorUpdated')
-        .withArgs(randomAddress);
-      expect(await sapphireCore.assessor()).eq(randomAddress);
+        .withArgs(newAssessorAddress);
+      expect(await sapphireCore.assessor()).eq(newAssessorAddress);
     });
   });
 
@@ -103,7 +117,7 @@ describe('SapphireCore.setters', () => {
     it('reverts if called by non-admin', async () => {
       await expect(
         sapphireCore
-          .connect(ctx.signers.unauthorised)
+          .connect(ctx.signers.unauthorized)
           .setFeeCollector(randomAddress),
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
@@ -120,8 +134,8 @@ describe('SapphireCore.setters', () => {
     it('reverts if called by non-admin', async () => {
       await expect(
         sapphireCore
-          .connect(ctx.signers.unauthorised)
-          .setPauseOperator(ctx.signers.unauthorised.address),
+          .connect(ctx.signers.unauthorized)
+          .setPauseOperator(ctx.signers.unauthorized.address),
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
@@ -141,7 +155,7 @@ describe('SapphireCore.setters', () => {
   describe('#setPause', () => {
     it('reverts if called by non-pauseOperator', async () => {
       await expect(
-        sapphireCore.connect(ctx.signers.unauthorised).setPause(true),
+        sapphireCore.connect(ctx.signers.unauthorized).setPause(true),
       ).to.be.revertedWith('SapphireCoreV1: caller is not the pause operator');
     });
 
@@ -164,17 +178,26 @@ describe('SapphireCore.setters', () => {
   });
 
   describe('#setOracle', () => {
+    let newOracleAddress: string;
+
+    before(async () => {
+      const newOracle = await deployMockSapphireOracle(ctx.signers.admin);
+      newOracleAddress = newOracle.address;
+    });
+
     it('reverts if called by non-owner', async () => {
       await expect(
-        sapphireCore.connect(ctx.signers.unauthorised).setOracle(randomAddress),
+        sapphireCore
+          .connect(ctx.signers.unauthorized)
+          .setOracle(newOracleAddress),
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
     it('sets the oracle', async () => {
-      await expect(sapphireCore.setOracle(randomAddress))
+      await expect(sapphireCore.setOracle(newOracleAddress))
         .to.emit(sapphireCore, 'OracleUpdated')
-        .withArgs(randomAddress);
-      expect(await sapphireCore.oracle()).eq(randomAddress);
+        .withArgs(newOracleAddress);
+      expect(await sapphireCore.oracle()).eq(newOracleAddress);
     });
   });
 
@@ -182,7 +205,7 @@ describe('SapphireCore.setters', () => {
     it('reverts if called by non-owner', async () => {
       await expect(
         sapphireCore
-          .connect(ctx.signers.unauthorised)
+          .connect(ctx.signers.unauthorized)
           .setInterestSetter(randomAddress),
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
@@ -200,7 +223,7 @@ describe('SapphireCore.setters', () => {
 
     it('reverts if called by unauthorized', async () => {
       await expect(
-        sapphireCore.connect(ctx.signers.unauthorised).setInterestRate(1),
+        sapphireCore.connect(ctx.signers.unauthorized).setInterestRate(1),
       ).to.be.revertedWith('SapphireCoreV1: caller is not interest setter');
     });
 
@@ -238,25 +261,8 @@ describe('SapphireCore.setters', () => {
 
     it('reverts if called by non-owner', async () => {
       await expect(
-        sapphireCore.connect(ctx.signers.unauthorised).setFees(userFee, arcFee),
+        sapphireCore.connect(ctx.signers.unauthorized).setFees(userFee, arcFee),
       ).to.be.revertedWith('Adminable: caller is not admin');
-    });
-
-    it('reverts if fee sum is over 100%', async () => {
-      await expect(
-        sapphireCore.setFees(
-          utils.parseEther('0.6'),
-          utils.parseEther('0.4').add(1),
-        ),
-      ).to.be.revertedWith(
-        'SapphireCoreV1: fee sum has to be no more than 100%',
-      );
-
-      await expect(
-        sapphireCore.setFees(utils.parseEther('1'), '1'),
-      ).to.be.revertedWith(
-        'SapphireCoreV1: fee sum has to be no more than 100%',
-      );
     });
 
     it('sets the liquidation fee and the arc ratio', async () => {
@@ -276,7 +282,7 @@ describe('SapphireCore.setters', () => {
     it('reverts if called by non-owner', async () => {
       await expect(
         sapphireCore
-          .connect(ctx.signers.unauthorised)
+          .connect(ctx.signers.unauthorized)
           .setLimits(totalBorrowLimit, vaultBorrowMinimum, vaultBorrowMaximum),
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
