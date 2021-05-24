@@ -26,7 +26,8 @@ const BORROW_AMOUNT = utils.parseEther('200');
 const COLLATERAL_LIMIT = BORROW_AMOUNT.mul(DEFAULT_HiGH_C_RATIO)
   .div(DEFAULT_PRICE)
   .div(BASE)
-  .mul(BigNumber.from(10).pow(DEFAULT_COLLATERAL_DECIMALS));
+  .mul(BigNumber.from(10).pow(DEFAULT_COLLATERAL_DECIMALS))
+  .add(1); // +1 due to rounding up
 
 /**
  * The withdraw function allows a user to withdraw collateral from a vault, partially or completely.
@@ -155,12 +156,13 @@ describe('SapphireCore.withdraw()', () => {
       true,
     );
     const event = await getEvent(assessmentTx, assessor, 'Assessed');
-    const scoredCRatio = event.args[0];
+    const scoredCRatio = event.args[1];
 
     const remainingAmount2 = BORROW_AMOUNT.mul(scoredCRatio)
       .mul(BigNumber.from(10).pow(DEFAULT_COLLATERAL_DECIMALS))
       .div(DEFAULT_PRICE)
-      .div(BASE);
+      .div(BASE)
+      .add(1); // +1 for rounding up
     const withdrawAmt2 = COLLATERAL_LIMIT.sub(remainingAmount2);
 
     // Withdraw more amount - to the limit permitted by the credit score
@@ -264,7 +266,7 @@ describe('SapphireCore.withdraw()', () => {
     const maxWithdrawAmt = COLLATERAL_AMOUNT.sub(COLLATERAL_LIMIT);
 
     await arc.withdraw(
-      maxWithdrawAmt,
+      maxWithdrawAmt, // -1 due to rounding down
       undefined,
       undefined,
       signers.scoredMinter,
