@@ -80,11 +80,6 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
         );
 
         require(
-            _scoreProof.account != address(0),
-            "SapphireAssessor: The account cannot be the zero address"
-        );
-
-        require(
             _lowerBound < _upperBound,
             "SapphireAssessor: The lower bound must be smaller than the upper bound"
         );
@@ -94,6 +89,14 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
 
         (creditScore, maxScore,) = creditScoreContract.getLastScore(_scoreProof.account);
         bool isProofPassed = _scoreProof.merkleProof.length > 0;
+
+        if (isProofPassed) {
+            require(
+                _scoreProof.account != address(0),
+                "SapphireAssessor: The account cannot be the zero address"
+            );
+        }
+
 
         // If credit score is required and user has already verified the score than require proof of score
         if (_isScoreRequired && creditScore > 0) {
