@@ -132,10 +132,8 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
         require(
             _collateralAddress.isContract() &&
-            _syntheticAddress.isContract() &&
-            _oracleAddress.isContract() &&
-            _assessorAddress.isContract(),
-            "SapphireCoreV1: collateral, synthetic, oracle or assessor are not contracts"
+            _syntheticAddress.isContract(),
+            "SapphireCoreV1: collateral or synthetic are not contracts"
         );
 
         paused = true;

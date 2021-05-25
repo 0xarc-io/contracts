@@ -3,6 +3,9 @@ import { Wallet } from '@ethersproject/wallet';
 import {
   MockSapphireCoreV1,
   MockSapphireCoreV1Factory,
+  MockSapphireOracleFactory,
+  SapphireAssessorFactory,
+  SapphireMapperLinearFactory,
   TestToken,
 } from '@src/typings';
 import { expect } from 'chai';
@@ -11,6 +14,8 @@ import { constants, utils } from 'ethers';
 import {
   deployArcProxy,
   deployMockSapphireCoreV1,
+  deployMockSapphireCreditScore,
+  deployMockSapphireOracle,
   deployTestToken,
 } from '../deployers';
 
@@ -60,12 +65,25 @@ describe('SapphireCore.init', () => {
       synthetic,
     } = await createFixtureLoader(provider.getWallets())(setup));
 
+    const oracle = await new MockSapphireOracleFactory(deployer).deploy();
+    const mapper = await new SapphireMapperLinearFactory(deployer).deploy();
+    const creditScore = await deployMockSapphireCreditScore(
+      deployer,
+      '0x1111111111111111111111111111111111111111111111111111111111111111',
+      Wallet.createRandom().address,
+      Wallet.createRandom().address,
+    );
+    const assessor = await new SapphireAssessorFactory(deployer).deploy(
+      mapper.address,
+      creditScore.address,
+    );
+
     defaultOptions = {
       collateralAddress: collateral.address,
       syntheticAddress: synthetic.address,
-      oracle: Wallet.createRandom().address,
+      oracle: oracle.address,
       interestSetter: Wallet.createRandom().address,
-      assessor: Wallet.createRandom().address,
+      assessor: assessor.address,
       pauseOperator: Wallet.createRandom().address,
       highCollateralRatio: constants.WeiPerEther.mul(2),
       lowCollateralRatio: constants.WeiPerEther,
@@ -80,6 +98,7 @@ describe('SapphireCore.init', () => {
         ...defaultOptions,
         ...overrides,
       };
+
       return sapphireCore
         .connect(options.executor)
         .init(
@@ -118,7 +137,7 @@ describe('SapphireCore.init', () => {
 
   it('reverts if high c-ratio is 0', async () => {
     await expect(init({ highCollateralRatio: 0 })).to.be.revertedWith(
-      'SapphireCoreV1: collateral ratio has to be at least 1',
+      'SapphireCoreV1: high c-ratio is lower than the low c-ratio',
     );
   });
 
@@ -136,7 +155,7 @@ describe('SapphireCore.init', () => {
   it('reverts if liquidation user fee is 0', async () => {
     await expect(
       init({ liquidationUserFee: utils.parseEther('101') }),
-    ).to.be.revertedWith('SapphireCoreV1: fee sum has to be no more than 100%');
+    ).to.be.revertedWith('SapphireCoreV1: fees cannot be more than 100%');
   });
 
   it('sets all the passed parameters', async () => {
