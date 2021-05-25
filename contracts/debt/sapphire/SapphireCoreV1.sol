@@ -1133,6 +1133,14 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         if (address(assessor) == address(0) || _actions.length == 0) {
             assessedCRatio = highCollateralRatio;
         } else {
+            // Check if the score proof has an address. If it's address zero,
+            // replace it with msg.sender. This is to prevent users from borrowing
+            // after having already registered a score on chain
+
+            if (_scoreProof.account == address(0)) {
+                _scoreProof.account = msg.sender;
+            }
+            
             assessedCRatio = assessor.assess(
                 lowCollateralRatio,
                 highCollateralRatio,

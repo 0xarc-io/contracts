@@ -76,7 +76,7 @@ describe('SapphireCore.open()', () => {
 
   addSnapshotBeforeRestoreAfterEach();
 
-  xdescribe('without score proof', () => {
+  describe('without score proof', () => {
     let minterAddress: string;
 
     before(() => {
@@ -93,19 +93,12 @@ describe('SapphireCore.open()', () => {
       );
 
       // Ensure the function returned correct information
-      expect(vault.borrowedAmount).eq(BORROW_AMOUNT);
+      expect(vault.borrowedAmount).eq(BORROW_AMOUNT.add(1)); // +1 bc of rounding
       expect(vault.collateralAmount).eq(COLLATERAL_AMOUNT);
-
-      // Check created vault
-      const { borrowedAmount, collateralAmount } = await arc.getVault(
-        minterAddress,
-      );
-      expect(borrowedAmount).eq(BORROW_AMOUNT);
-      expect(collateralAmount).eq(COLLATERAL_AMOUNT);
 
       // Check total collateral and borrowed values
       expect(await arc.core().totalCollateral()).eq(COLLATERAL_AMOUNT);
-      expect(await arc.core().totalBorrowed()).eq(BORROW_AMOUNT);
+      expect(await arc.core().totalBorrowed()).eq(BORROW_AMOUNT.add(1)); // +1 bc of rounding
 
       expect(await arc.synth().collateral.balanceOf(arc.coreAddress())).eq(
         COLLATERAL_AMOUNT,
@@ -113,7 +106,7 @@ describe('SapphireCore.open()', () => {
     });
 
     it('open above the c-ratio', async () => {
-      await arc.open(
+      const { borrowedAmount, collateralAmount } = await arc.open(
         COLLATERAL_AMOUNT.mul(2),
         BORROW_AMOUNT,
         undefined,
@@ -121,11 +114,8 @@ describe('SapphireCore.open()', () => {
         ctx.signers.minter,
       );
 
-      const { borrowedAmount, collateralAmount } = await arc.getVault(
-        minterAddress,
-      );
       expect(collateralAmount).eq(COLLATERAL_AMOUNT.mul(2));
-      expect(borrowedAmount).eq(BORROW_AMOUNT);
+      expect(borrowedAmount).eq(BORROW_AMOUNT.add(1)); // +1 for rounding
     });
 
     it('revert if opened below the c-ratio', async () => {
@@ -153,23 +143,6 @@ describe('SapphireCore.open()', () => {
       ).to.be.revertedWith(
         'SapphireCoreV1: the vault will become undercollateralized',
       );
-    });
-
-    it('open if no assessor is set', async () => {
-      await arc.core().setAssessor(constants.AddressZero);
-      await arc.open(
-        COLLATERAL_AMOUNT,
-        BORROW_AMOUNT,
-        undefined,
-        undefined,
-        ctx.signers.minter,
-      );
-
-      const { borrowedAmount, collateralAmount } = await arc.getVault(
-        minterAddress,
-      );
-      expect(borrowedAmount).eq(BORROW_AMOUNT);
-      expect(collateralAmount).eq(COLLATERAL_AMOUNT);
     });
 
     it('revert if proof is not provided', async () => {
