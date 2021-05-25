@@ -17,6 +17,8 @@ import {SapphireCoreStorage} from "./SapphireCoreStorage.sol";
 import {SapphireAssessor} from "./SapphireAssessor.sol";
 import {ISapphireAssessor} from "./ISapphireAssessor.sol";
 
+import "hardhat/console.sol";
+
 contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
     /* ========== Libraries ========== */
@@ -919,7 +921,13 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         SapphireTypes.Vault storage vault = vaults[_owner];
 
         // Calculate actual vault borrow amount
-        uint256 actualVaultBorrowAmount = _denormalizeBorrowAmount(vault.borrowedAmount, false);
+        uint256 actualVaultBorrowAmount = _denormalizeBorrowAmount(vault.borrowedAmount, true);
+
+        console.log(
+            "repay amount: %s, actual vault amount: %s",
+            _amount,
+            actualVaultBorrowAmount
+        );
 
         require(
             _amount <= actualVaultBorrowAmount,
