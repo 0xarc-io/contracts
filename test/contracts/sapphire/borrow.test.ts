@@ -33,13 +33,13 @@ import { getScoreProof } from '@src/utils/getScoreProof';
 
 const NORMALIZED_COLLATERAL_AMOUNT = utils.parseEther('100');
 const COLLATERAL_AMOUNT = utils.parseUnits('100', DEFAULT_COLLATERAL_DECIMALS);
-const BORROW_AMOUNT = NORMALIZED_COLLATERAL_AMOUNT.mul(DEFAULT_PRICE).div(
-  DEFAULT_HiGH_C_RATIO,
-);
+const BORROW_AMOUNT = NORMALIZED_COLLATERAL_AMOUNT.mul(DEFAULT_PRICE)
+  .div(DEFAULT_HiGH_C_RATIO)
+  .sub(1); // -1 bc of rounding
 // for credit score equals 500 what is the a half of max credit score
-const MAX_BORROW_AMOUNT = NORMALIZED_COLLATERAL_AMOUNT.mul(DEFAULT_PRICE).div(
-  DEFAULT_LOW_C_RATIO.add(DEFAULT_HiGH_C_RATIO).div(2),
-);
+const MAX_BORROW_AMOUNT = NORMALIZED_COLLATERAL_AMOUNT.mul(DEFAULT_PRICE)
+  .div(DEFAULT_LOW_C_RATIO.add(DEFAULT_HiGH_C_RATIO).div(2))
+  .sub(1); // -1 bc of rounding
 
 describe('SapphireCore.borrow()', () => {
   let ctx: ITestContext;
@@ -133,13 +133,13 @@ describe('SapphireCore.borrow()', () => {
     );
 
     expect(collateralAmount, 'collateral amt').eq(COLLATERAL_AMOUNT);
-    expect(borrowedAmount, 'borrow amt').eq(MAX_BORROW_AMOUNT);
+    expect(borrowedAmount, 'borrow amt').eq(MAX_BORROW_AMOUNT.add(1)); // +1 bc of rounding
   });
 
   it('borrows with exact c-ratio', async () => {
     await arc.borrow(BORROW_AMOUNT, undefined, undefined, minter);
     const { borrowedAmount } = await arc.getVault(minter.address);
-    expect(borrowedAmount).eq(BORROW_AMOUNT);
+    expect(borrowedAmount).eq(BORROW_AMOUNT.add(1)); // +1 bc of rounding
   });
 
   it('reverts if borrower cross the c-ratio', async () => {
@@ -161,7 +161,7 @@ describe('SapphireCore.borrow()', () => {
     await arc.borrow(BORROW_AMOUNT, undefined, undefined, minter);
     const { borrowedAmount } = await arc.getVault(minter.address);
 
-    expect(borrowedAmount).eq(BORROW_AMOUNT);
+    expect(borrowedAmount).eq(BORROW_AMOUNT.add(1)); // +1 bc of rounding
     await expect(arc.borrow(BORROW_AMOUNT, undefined, undefined, minter)).to.be
       .reverted;
 
@@ -173,7 +173,7 @@ describe('SapphireCore.borrow()', () => {
       minter.address,
     );
 
-    expect(updatedBorrowedAmount).eq(BORROW_AMOUNT.mul(2));
+    expect(updatedBorrowedAmount).eq(BORROW_AMOUNT.mul(2).add(2)); // +2 bc of rounding
   });
 
   it('borrows more if a valid score proof is provided', async () => {
@@ -187,7 +187,7 @@ describe('SapphireCore.borrow()', () => {
 
     const { borrowedAmount } = await arc.getVault(scoredMinter.address);
 
-    expect(borrowedAmount).eq(MAX_BORROW_AMOUNT);
+    expect(borrowedAmount).eq(MAX_BORROW_AMOUNT.add(1)); // +1 bc of rounding
   });
 
   it('borrows more if the credit score increases', async () => {
@@ -238,7 +238,9 @@ describe('SapphireCore.borrow()', () => {
     const { borrowedAmount: vaultBorrowAmount } = await arc.getVault(
       scoredMinter.address,
     );
-    expect(vaultBorrowAmount).eq(MAX_BORROW_AMOUNT.add(additionalBorrowAmount));
+    expect(vaultBorrowAmount).eq(
+      MAX_BORROW_AMOUNT.add(additionalBorrowAmount).add(2),
+    ); // +2 bc of rounding
   });
 
   it('borrows less if the credit score decreases', async () => {
@@ -278,9 +280,9 @@ describe('SapphireCore.borrow()', () => {
 
     const { borrowedAmount } = await arc.getVault(scoredMinter.address);
 
-    expect(borrowedAmount).eq(MAX_BORROW_AMOUNT);
+    expect(borrowedAmount).eq(MAX_BORROW_AMOUNT.add(1)); // +1 bc of rounding
     expect(await ctx.contracts.sapphire.core.totalBorrowed()).eq(
-      MAX_BORROW_AMOUNT,
+      MAX_BORROW_AMOUNT.add(1),
     );
 
     await arc.deposit(
@@ -292,7 +294,7 @@ describe('SapphireCore.borrow()', () => {
 
     await arc.borrow(BORROW_AMOUNT, undefined, undefined, ctx.signers.minter);
     expect(await ctx.contracts.sapphire.core.totalBorrowed()).eq(
-      MAX_BORROW_AMOUNT.add(BORROW_AMOUNT),
+      MAX_BORROW_AMOUNT.add(BORROW_AMOUNT).add(2), // +1 bc of rounding
     );
   });
 
@@ -301,16 +303,6 @@ describe('SapphireCore.borrow()', () => {
     await expect(
       arc.borrow(BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter),
     ).to.be.revertedWith('SapphireCoreV1: the oracle returned a price of 0');
-  });
-
-  it('should not borrow with a score proof if no assessor is set', async () => {
-    // You can't borrow with a credit score if no assessor is set in the Core
-    await arc.core().setAssessor(constants.AddressZero);
-    await expect(
-      arc.borrow(MAX_BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter),
-    ).to.be.revertedWith(
-      'SapphireCoreV1: the vault will become undercollateralized',
-    );
   });
 
   it('should not borrow without a credit proof if a score exists on-chain', async () => {
@@ -325,7 +317,7 @@ describe('SapphireCore.borrow()', () => {
   it('should not borrow more if the c-ratio is at the minimum', async () => {
     await arc.borrow(BORROW_AMOUNT, undefined, undefined, minter);
     const { borrowedAmount } = await arc.getVault(minter.address);
-    expect(borrowedAmount).eq(BORROW_AMOUNT);
+    expect(borrowedAmount).eq(BORROW_AMOUNT.add(1)); // +1 bc of rounding
     await expect(
       arc.borrow(utils.parseEther('0.01'), undefined, undefined, minter),
     ).to.be.revertedWith(
@@ -370,7 +362,7 @@ describe('SapphireCore.borrow()', () => {
       scoredMinter,
     );
     const { borrowedAmount } = await arc.getVault(scoredMinter.address);
-    expect(borrowedAmount).eq(firstBorrowAmount);
+    expect(borrowedAmount).eq(firstBorrowAmount.add(1)); // +1 bc of rounding
 
     const currentTimeStamp = await arc.core().currentTimestamp();
     await arc
@@ -394,7 +386,7 @@ describe('SapphireCore.borrow()', () => {
       .setLimits(totalBorrowLimit, BORROW_AMOUNT, vaultBorrowMaximum);
     await expect(
       arc.borrow(
-        BORROW_AMOUNT.sub(1),
+        BORROW_AMOUNT.sub(10),
         creditScoreProof,
         undefined,
         scoredMinter,
@@ -435,13 +427,6 @@ describe('SapphireCore.borrow()', () => {
     await expect(
       arc.borrow(BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter),
     ).to.be.revertedWith('SapphireCoreV1: the contract is paused');
-  });
-
-  it('should not borrow if oracle is not set', async () => {
-    await arc.core().setOracle(constants.AddressZero);
-    await expect(
-      arc.borrow(BORROW_AMOUNT, creditScoreProof, undefined, scoredMinter),
-    ).to.be.revertedWith('SapphireCoreV1: the oracle is not set');
   });
 
   it('should not borrow if the collateral price is stale', async () => {
