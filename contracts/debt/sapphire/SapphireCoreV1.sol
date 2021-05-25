@@ -921,7 +921,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         SapphireTypes.Vault storage vault = vaults[_owner];
 
         // Calculate actual vault borrow amount
-        uint256 actualVaultBorrowAmount = _denormalizeBorrowAmount(vault.borrowedAmount, true);
+        uint256 actualVaultBorrowAmount = _denormalizeBorrowAmount(vault.borrowedAmount, false);
 
         require(
             _amount <= actualVaultBorrowAmount,

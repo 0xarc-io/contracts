@@ -14,6 +14,7 @@ import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 import { BASE } from '@src/constants';
+import { roundUpMul } from '@test/helpers/roundUpOperations';
 
 const COLLATERAL_AMOUNT = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS);
 const BORROW_AMOUNT = utils.parseEther('500');
@@ -84,7 +85,7 @@ describe('SapphireCore.exit()', () => {
 
     // Approve repay amount
     await approve(
-      BORROW_AMOUNT,
+      BORROW_AMOUNT.add(1),
       arc.syntheticAddress(),
       arc.coreAddress(),
       signers.scoredMinter,
@@ -111,13 +112,18 @@ describe('SapphireCore.exit()', () => {
     let synthBalance = await getSynthBalance(signers.scoredMinter);
 
     expect(vault.collateralAmount).to.eq(COLLATERAL_AMOUNT);
-    expect(vault.borrowedAmount).to.eq(BORROW_AMOUNT);
+    expect(vault.borrowedAmount).to.eq(BORROW_AMOUNT.add(1));
     expect(collateralBalance).to.eq(0);
     expect(synthBalance).to.eq(BORROW_AMOUNT);
 
     // Approve repay amount
+    // Mint 1 wei to account for rounding margin
+    await arc
+      .synthetic()
+      .connect(signers.admin)
+      .mint(signers.scoredMinter.address, 1);
     await approve(
-      BORROW_AMOUNT,
+      BORROW_AMOUNT.add(1),
       arc.syntheticAddress(),
       arc.coreAddress(),
       signers.scoredMinter,
@@ -162,7 +168,7 @@ describe('SapphireCore.exit()', () => {
     let vault = await arc.getVault(signers.scoredMinter.address);
     // Get borrow index, which will be used to calculate actual borrow amount in the core contract
     const borrowIndex = await arc.core().currentBorrowIndex();
-    const actualBorrowAmount = vault.borrowedAmount.mul(borrowIndex).div(BASE);
+    const actualBorrowAmount = roundUpMul(vault.borrowedAmount, borrowIndex);
     // Check actual borrowed amount, not principal one
     expect(actualBorrowAmount).to.be.gt(BORROW_AMOUNT);
 
