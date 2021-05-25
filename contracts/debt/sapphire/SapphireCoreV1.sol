@@ -1140,7 +1140,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             if (_scoreProof.account == address(0)) {
                 _scoreProof.account = msg.sender;
             }
-            
+
             assessedCRatio = assessor.assess(
                 lowCollateralRatio,
                 highCollateralRatio,
