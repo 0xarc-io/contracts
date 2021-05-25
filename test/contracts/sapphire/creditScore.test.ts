@@ -457,12 +457,12 @@ describe('SapphireCreditScore', () => {
     });
   });
 
-  describe('#updatePauseOperator', () => {
+  describe('#setPauseOperator', () => {
     it('should be able to update as the owner', async () => {
       await expect(
         creditScoreContract
           .connect(owner)
-          .updatePauseOperator(unauthorised.address),
+          .setPauseOperator(unauthorised.address),
       )
         .to.emit(creditScoreContract, 'PauseOperatorUpdated')
         .withArgs(unauthorised.address);
@@ -475,7 +475,7 @@ describe('SapphireCreditScore', () => {
       await expect(
         creditScoreContract
           .connect(merkleRootUpdater)
-          .updatePauseOperator(merkleRootUpdater.address),
+          .setPauseOperator(merkleRootUpdater.address),
       ).to.be.revertedWith('Ownable: caller is not the owner');
     });
   });
