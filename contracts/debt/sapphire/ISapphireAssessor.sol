@@ -10,7 +10,7 @@ interface ISapphireAssessor {
         uint256 _lowerBound,
         uint256 _upperBound,
         SapphireTypes.ScoreProof calldata _scoreProof,
-        bool _isScoreRequire
+        bool _isScoreRequired
     )
         external
         returns (uint256);
