@@ -7,6 +7,7 @@ import {BaseERC20} from "../../token/BaseERC20.sol";
 import {IERC20} from "../../token/IERC20.sol";
 import {SafeERC20} from "../../lib/SafeERC20.sol";
 import {SafeMath} from "../../lib/SafeMath.sol";
+import {Math} from "../../lib/Math.sol";
 import {Adminable} from "../../lib/Adminable.sol";
 import {Address} from "../../lib/Address.sol";
 import {ISapphireOracle} from "../../oracle/ISapphireOracle.sol";
@@ -731,7 +732,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         uint256 currentBIndex = currentBorrowIndex();
 
         if (_roundUp) {
-            return _roundUpDiv(_amount, currentBIndex);
+            return Math.roundUpDiv(_amount, currentBIndex);
         }
 
         return _amount.mul(BASE).div(currentBorrowIndex());
@@ -996,7 +997,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
         // Get the liquidation price of the asset (discount for liquidator)
         uint256 liquidationPricePercent = BASE.sub(liquidationUserFee);
-        uint256 liquidationPrice = _roundUpMul(_currentPrice, liquidationPricePercent);
+        uint256 liquidationPrice = Math.roundUpMul(_currentPrice, liquidationPricePercent);
 
         // Calculate the amount of collateral to be sold based on the entire debt
         // in the vault
@@ -1004,7 +1005,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
         // Do a rounded up operation of
         // debtToRepay / LiquidationFee / precisionScalar
-        uint256 collateralToSell = _roundUpDiv(debtToRepay, liquidationPrice)
+        uint256 collateralToSell = Math.roundUpDiv(debtToRepay, liquidationPrice)
             .add(precisionScalar)
             .div(precisionScalar);
 
@@ -1165,42 +1166,6 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         liquidationUserFee = _liquidationUserFee;
         liquidationArcFee = _liquidationArcFee;
         emit LiquidationFeesUpdated(liquidationUserFee, liquidationArcFee);
-    }
-
-    /**
-     * @dev Performs _a * _b / BASE, but rounds up instead
-     */
-    function _roundUpMul(
-        uint256 _a,
-        uint256 _b
-    )
-        private
-        pure
-        returns (uint256)
-    {
-        return _a
-            .mul(_b)
-            .add(BASE)
-            .div(BASE);
-    }
-
-    /**
-     * @dev Performs _numerator / _denominator, but rounds up instead
-     */
-    function _roundUpDiv(
-        uint256 _numerator,
-        uint256 _denominator
-    )
-        private
-        pure
-        returns (uint256)
-    {
-        uint256 basedAmount = _numerator.mul(BASE.mul(10));
-
-        return basedAmount
-            .div(_denominator)
-            .add(5)
-            .div(10);
     }
 
     /**
