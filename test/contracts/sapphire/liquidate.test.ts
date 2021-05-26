@@ -22,10 +22,8 @@ import { solidity } from 'ethereum-waffle';
 import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
 import { BASE, ONE_YEAR_IN_SECONDS } from '@src/constants';
 import { getScoreProof } from '@src/utils/getScoreProof';
-import * as helperSetupbaseVault from '../../helpers/setupBaseVault';
-import {
-  DEFAULT_COLLATERAL_DECIMALS,
-} from '@test/helpers/sapphireDefaults';
+import * as helperSetupBaseVault from '../../helpers/setupBaseVault';
+import { DEFAULT_COLLATERAL_DECIMALS } from '@test/helpers/sapphireDefaults';
 
 chai.use(solidity);
 
@@ -93,7 +91,7 @@ describe('SapphireCore.liquidate()', () => {
     // Set collateral price
     await arc.updatePrice(collateralPrice);
 
-    return helperSetupbaseVault.setupBaseVault(
+    return helperSetupBaseVault.setupBaseVault(
       arc,
       signers.scoredMinter,
       collateralAmount,
@@ -148,11 +146,11 @@ describe('SapphireCore.liquidate()', () => {
     );
 
     // Mints enough STABLEx to the liquidator
-    await helperSetupbaseVault.setupBaseVault(
+    await helperSetupBaseVault.setupBaseVault(
       arc,
       signers.liquidator,
       COLLATERAL_AMOUNT.mul(2),
-      BORROW_AMOUNT.mul(2),
+      BORROW_AMOUNT.mul(3),
       getScoreProof(liquidatorCreditScore, creditScoreTree),
     );
 
@@ -161,7 +159,7 @@ describe('SapphireCore.liquidate()', () => {
       arc.syntheticAddress(),
       signers.liquidator,
     );
-    await synthContract.approve(arc.coreAddress(), BORROW_AMOUNT.mul(2));
+    await synthContract.approve(arc.coreAddress(), BORROW_AMOUNT.mul(3));
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -233,7 +231,7 @@ describe('SapphireCore.liquidate()', () => {
 
       // The debt has been taken from the liquidator (STABLEx)
       expect(postStablexBalance, '3').to.eq(
-        preStablexBalance.sub(ArcNumber.new(475)),
+        preStablexBalance.sub(ArcNumber.new(475)).sub(1000), // -1000 for rounding
       );
 
       // The collateral has been given to the liquidator
@@ -254,7 +252,7 @@ describe('SapphireCore.liquidate()', () => {
 
       // The total STABLEx supply has decreased
       expect(postStablexTotalSupply, '7').to.eq(
-        preStablexTotalSupply.sub(ArcNumber.new(475)),
+        preStablexTotalSupply.sub(ArcNumber.new(475)).sub(1000), // -1000 for rounding
       );
 
       // The vault collateral amount has decreased
@@ -265,7 +263,7 @@ describe('SapphireCore.liquidate()', () => {
 
       // The vault debt amount has decreased
       expect(postLiquidationVault.borrowedAmount, '9').to.eq(
-        BORROW_AMOUNT.sub(ArcNumber.new(475)),
+        BORROW_AMOUNT.sub(ArcNumber.new(475)).sub(998), // -998 for rounding margin of collateral value
       );
     });
 
@@ -324,13 +322,15 @@ describe('SapphireCore.liquidate()', () => {
       } = await getBalancesForLiquidation(signers.liquidator);
 
       // The debt has been taken from the liquidator (STABLEx)
-      expect(postStablexBalance).to.eq(preStablexBalance.sub(BORROW_AMOUNT));
+      expect(postStablexBalance).to.eq(
+        preStablexBalance.sub(BORROW_AMOUNT).sub(2), // -2 for rounding
+      );
 
       // The collateral has been given to the liquidator
       expect(postCollateralBalance).to.eq(
-        preCollateralBalance.add(
-          utils.parseUnits('769.920157', DEFAULT_COLLATERAL_DECIMALS),
-        ),
+        preCollateralBalance
+          .add(utils.parseUnits('769.920157', DEFAULT_COLLATERAL_DECIMALS))
+          .add(1), // +1 for rounding
       );
 
       // A portion of collateral is sent to the fee collector
@@ -342,7 +342,7 @@ describe('SapphireCore.liquidate()', () => {
 
       // The total STABLEx supply has decreased
       expect(postStablexTotalSupply).to.eq(
-        preStablexTotalSupply.sub(BORROW_AMOUNT),
+        preStablexTotalSupply.sub(BORROW_AMOUNT).sub(2), // -2 for rounding
       );
 
       // The vault collateral amount has decreased
@@ -350,7 +350,7 @@ describe('SapphireCore.liquidate()', () => {
         signers.scoredMinter.address,
       );
       expect(postLiquidationVault.collateralAmount).to.eq(
-        utils.parseUnits('226.006192', DEFAULT_COLLATERAL_DECIMALS),
+        utils.parseUnits('226.006192', DEFAULT_COLLATERAL_DECIMALS).sub(1), // -1 for rounding
       );
 
       // The vault debt amount has decreased
@@ -467,11 +467,13 @@ describe('SapphireCore.liquidate()', () => {
         stablexTotalSupply: postStablexTotalSupply,
       } = await getBalancesForLiquidation(signers.liquidator);
 
-      expect(postStablexBalance).to.eq(preStablexBalance.sub(BORROW_AMOUNT));
+      expect(postStablexBalance).to.eq(
+        preStablexBalance.sub(BORROW_AMOUNT).sub(2),
+      ); // -2 for rounding
       expect(postCollateralBalance).to.eq(
-        preCollateralBalance.add(
-          utils.parseUnits('805.454933', DEFAULT_COLLATERAL_DECIMALS),
-        ),
+        preCollateralBalance
+          .add(utils.parseUnits('805.454933', DEFAULT_COLLATERAL_DECIMALS))
+          .add(1), // +1 for rounding
       );
       expect(postArcCollateralAmt).to.eq(
         preArcCollateralAmt.add(
@@ -479,7 +481,7 @@ describe('SapphireCore.liquidate()', () => {
         ),
       );
       expect(postStablexTotalSupply).to.eq(
-        preStablexTotalSupply.sub(BORROW_AMOUNT),
+        preStablexTotalSupply.sub(BORROW_AMOUNT).sub(2), // -2 for rounding
       );
 
       // Borrow to the limit (up to 150% c-ratio)
@@ -524,7 +526,7 @@ describe('SapphireCore.liquidate()', () => {
 
       // check the numbers again
       expect(postStablexBalance, 'stablex').to.eq(
-        preStablexBalance.sub(maxBorrowAmount),
+        preStablexBalance.sub(maxBorrowAmount).sub(2), // -2 for rounding
       );
       expect(postCollateralBalance, 'collat').to.eq(
         preCollateralBalance.add(
@@ -537,7 +539,7 @@ describe('SapphireCore.liquidate()', () => {
         ),
       );
       expect(postStablexTotalSupply, 'supply').to.eq(
-        preStablexTotalSupply.sub(maxBorrowAmount),
+        preStablexTotalSupply.sub(maxBorrowAmount).sub(2), // -2 for rounding
       );
     });
 
@@ -633,8 +635,8 @@ describe('SapphireCore.liquidate()', () => {
 
       await arc.updatePrice(utils.parseEther('0.65'));
 
-      // Burn enough stablex from the liquidator so that only half the amount required remains
-      const burnAmount = BORROW_AMOUNT.mul(utils.parseEther('1.5')).div(BASE);
+      // Burn enough stablex from the liquidator so that less than the amount required remains
+      const burnAmount = BORROW_AMOUNT.mul(utils.parseEther('2')).div(BASE);
       const synthContract = arc.synthetic().connect(signers.liquidator);
       await synthContract.burn(burnAmount);
 
@@ -725,6 +727,30 @@ describe('SapphireCore.liquidate()', () => {
         ),
       ).to.be.revertedWith('SapphireCoreV1: the contract is paused');
     });
+
+    it('should not liquidate if the collateral price is stale', async () => {
+      await setupBaseVault();
+
+      const now = BigNumber.from(Date.now());
+
+      // Set the core timestamp to now
+      await arc.updateTime(now);
+
+      // Set the price to $0.75 so the c-ratio drops at 150%
+      await arc.updatePrice(COLLATERAL_PRICE.div(2));
+
+      // Set the oracle timestamp to > half a day
+      await arc.setOracleTimestamp(now.sub(60 * 60 * 12 + 1));
+
+      await expect(
+        arc.liquidate(
+          signers.scoredMinter.address,
+          getScoreProof(minterCreditScore, creditScoreTree),
+          undefined,
+          signers.liquidator,
+        ),
+      ).to.be.revertedWith('SapphireCoreV1: the oracle has stale prices');
+    });
   });
 
   // Accompanying sheet: https://docs.google.com/spreadsheets/d/1rmFbUxnM4gyi1xhcYKBwcdadvXrHBPKbeX7DLk8KQgE/edit#gid=387958619
@@ -778,13 +804,15 @@ describe('SapphireCore.liquidate()', () => {
 
       // The debt has been taken from the liquidator (STABLEx)
       const stableXPaid = utils.parseEther('1000');
-      expect(postStablexBalance).to.eq(preStablexBalance.sub(stableXPaid));
+      expect(postStablexBalance).to.eq(
+        preStablexBalance.sub(stableXPaid).sub(3),
+      ); // -3 for rounding
 
       // The collateral has been given to the liquidator
       expect(postCollateralBalance).to.eq(
-        preCollateralBalance.add(
-          utils.parseUnits('902.665011', DEFAULT_COLLATERAL_DECIMALS),
-        ),
+        preCollateralBalance
+          .add(utils.parseUnits('902.665011', DEFAULT_COLLATERAL_DECIMALS))
+          .add(1), // +1 for rounding
       );
 
       // A portion of collateral is sent to the fee collector
@@ -796,7 +824,7 @@ describe('SapphireCore.liquidate()', () => {
 
       // The total STABLEx supply has decreased
       expect(postStablexTotalSupply).to.eq(
-        preStablexTotalSupply.sub(stableXPaid),
+        preStablexTotalSupply.sub(stableXPaid).sub(3), // -3 bc of rounding
       );
 
       // The vault collateral amount has decreased
@@ -804,7 +832,7 @@ describe('SapphireCore.liquidate()', () => {
         signers.scoredMinter.address,
       );
       expect(postLiquidationVault.collateralAmount).to.eq(
-        utils.parseUnits('92.558984', DEFAULT_COLLATERAL_DECIMALS),
+        utils.parseUnits('92.558984', DEFAULT_COLLATERAL_DECIMALS).sub(1), // -1 bc of rounding
       );
 
       expect(postLiquidationVault.borrowedAmount).to.eq(0);
@@ -857,7 +885,9 @@ describe('SapphireCore.liquidate()', () => {
 
       // The debt has been taken from the liquidator (STABLEx)
       const stableXPaid = utils.parseEther('427.5');
-      expect(postStablexBalance).to.eq(preStablexBalance.sub(stableXPaid));
+      expect(postStablexBalance).to.eq(
+        preStablexBalance.sub(stableXPaid).sub(1000),
+      ); // -1000 because of rounding of the collateral value
 
       // The collateral has been given to the liquidator
       expect(postCollateralBalance).to.eq(
@@ -875,7 +905,7 @@ describe('SapphireCore.liquidate()', () => {
 
       // The total STABLEx supply has decreased
       expect(postStablexTotalSupply).to.eq(
-        preStablexTotalSupply.sub(stableXPaid),
+        preStablexTotalSupply.sub(stableXPaid).sub(1000), // -1000 for rounding
       );
 
       // The vault collateral amount is gone
@@ -884,8 +914,7 @@ describe('SapphireCore.liquidate()', () => {
       );
       expect(postLiquidationVault.collateralAmount).to.eq(0);
 
-      const outstandingDebt = utils.parseEther('72.5');
-      expect(postLiquidationVault.borrowedAmount).to.eq(outstandingDebt);
+      const outstandingDebt = postLiquidationVault.borrowedAmount;
 
       // User shouldn't be able borrow and withdraw when vault is under collateralized and borrow amount is 0
       await expect(
@@ -910,10 +939,10 @@ describe('SapphireCore.liquidate()', () => {
       );
 
       const synthContract = arc.synthetic().connect(signers.scoredMinter);
-      await synthContract.approve(arc.coreAddress(), outstandingDebt);
+      await synthContract.approve(arc.coreAddress(), outstandingDebt.add(1)); // +1 for rounding up
 
       await arc.repay(
-        outstandingDebt,
+        outstandingDebt.add(1), // +1 for rounding up
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.scoredMinter,
@@ -987,13 +1016,13 @@ describe('SapphireCore.liquidate()', () => {
       const debtPaid = ArcNumber.new(350);
 
       // The debt has been taken from the liquidator (STABLEx)
-      expect(postStablexBalance).to.eq(preStablexBalance.sub(debtPaid));
+      expect(postStablexBalance).to.eq(preStablexBalance.sub(debtPaid).sub(3)); // -3 bc of rounding
 
       // The collateral has been given to the liquidator
       expect(postCollateralBalance).to.eq(
-        preCollateralBalance.add(
-          utils.parseUnits('678.670360', DEFAULT_COLLATERAL_DECIMALS),
-        ),
+        preCollateralBalance
+          .add(utils.parseUnits('678.670360', DEFAULT_COLLATERAL_DECIMALS))
+          .add(1), // +1 for rounding up
       );
 
       // A portion of collateral is sent to the fee collector
@@ -1004,14 +1033,16 @@ describe('SapphireCore.liquidate()', () => {
       );
 
       // The total STABLEx supply has decreased
-      expect(postStablexTotalSupply).to.eq(preStablexTotalSupply.sub(debtPaid));
+      expect(postStablexTotalSupply).to.eq(
+        preStablexTotalSupply.sub(debtPaid).sub(3),
+      ); // -3 for rounding
 
       // The vault collateral amount has decreased
       const postLiquidationVault = await arc.getVault(
         signers.scoredMinter.address,
       );
       expect(postLiquidationVault.collateralAmount).to.eq(
-        utils.parseUnits('217.738792', DEFAULT_COLLATERAL_DECIMALS),
+        utils.parseUnits('217.738792', DEFAULT_COLLATERAL_DECIMALS).sub(1), // -1 for rounding
       );
 
       // The vault debt amount has been paid off
@@ -1091,14 +1122,14 @@ describe('SapphireCore.liquidate()', () => {
 
       // The debt has been taken from the liquidator (STABLEx)
       expect(postStablexBalance, 'stablex').to.eq(
-        preStablexBalance.sub(debtPaid),
+        preStablexBalance.sub(debtPaid).sub(3), // -3 for rounding
       );
 
       // The collateral has been given to the liquidator
       expect(postCollateralBalance, 'collateral').to.eq(
-        preCollateralBalance.add(
-          utils.parseUnits('951.320857', DEFAULT_COLLATERAL_DECIMALS),
-        ),
+        preCollateralBalance
+          .add(utils.parseUnits('951.320857', DEFAULT_COLLATERAL_DECIMALS))
+          .add(1), // +1 for rounding up
       );
 
       // A portion of collateral is sent to the fee collector
@@ -1110,7 +1141,7 @@ describe('SapphireCore.liquidate()', () => {
 
       // The total STABLEx supply has decreased
       expect(postStablexTotalSupply, 'stablex total supply').to.eq(
-        preStablexTotalSupply.sub(debtPaid),
+        preStablexTotalSupply.sub(debtPaid).sub(3), // -3 for rounding
       );
 
       // The vault collateral amount has decreased
@@ -1118,7 +1149,7 @@ describe('SapphireCore.liquidate()', () => {
         signers.scoredMinter.address,
       );
       expect(postLiquidationVault.collateralAmount, 'vault collateral').to.eq(
-        utils.parseUnits('43.645700', DEFAULT_COLLATERAL_DECIMALS),
+        utils.parseUnits('43.645700', DEFAULT_COLLATERAL_DECIMALS).sub(1), // -1 bc of rounding
       );
 
       // The vault debt amount has been paid off

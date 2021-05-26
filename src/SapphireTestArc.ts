@@ -1,7 +1,7 @@
 import { BigNumberish, Signer } from 'ethers';
 import { SapphireArc } from './SapphireArc';
-import { MockOracleFactory } from './typings';
 import { MockSapphireCoreV1Factory } from './typings/MockSapphireCoreV1Factory';
+import { MockSapphireOracleFactory } from './typings/MockSapphireOracleFactory';
 
 export class SapphireTestArc extends SapphireArc {
   static new(signer: Signer): SapphireTestArc {
@@ -13,13 +13,27 @@ export class SapphireTestArc extends SapphireArc {
   }
 
   public async updatePrice(price: BigNumberish) {
-    const mockOracle = new MockOracleFactory(this.signer).attach(this.synth().oracle.address);
-    await mockOracle.setPrice({ value: price });
+    const mockOracle = new MockSapphireOracleFactory(this.signer).attach(
+      this.synth().oracle.address,
+    );
+    await mockOracle.setPrice(price);
   }
 
   public async updateTime(value: BigNumberish) {
-    const mockArc = new MockSapphireCoreV1Factory(this.signer).attach(this.synth().core.address);
+    const mockArc = new MockSapphireCoreV1Factory(this.signer).attach(
+      this.synth().core.address,
+    );
     await mockArc.setCurrentTimestamp(value);
+
+    // Set the timestamp of the oracle
+    await this.setOracleTimestamp(value);
+  }
+
+  public async setOracleTimestamp(value: BigNumberish) {
+    const mockOracle = new MockSapphireOracleFactory(this.signer).attach(
+      await this.synth().core.oracle(),
+    );
+    await mockOracle.setTimestamp(value);
   }
 
   public getSynthTotals() {

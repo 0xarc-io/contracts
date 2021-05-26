@@ -47,7 +47,11 @@ xdescribe('Mozart.operateAction(Repay)', () => {
 
   it('should be able to repay to increase the c-ratio', async () => {
     // Create a 200% collateralised position
-    await arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, ctx.signers.minter);
+    await arc.openPosition(
+      COLLATERAL_AMOUNT,
+      BORROW_AMOUNT,
+      ctx.signers.minter,
+    );
 
     let position = await arc.synth().core.getPosition(0);
     expect(position.collateralAmount.value).to.equal(COLLATERAL_AMOUNT);
@@ -67,15 +71,24 @@ xdescribe('Mozart.operateAction(Repay)', () => {
 
   it('should not be able to repay from someone elses position', async () => {
     // Create a 400% collateralised position
-    await arc.openPosition(COLLATERAL_AMOUNT.mul(2), BORROW_AMOUNT, ctx.signers.minter);
+    await arc.openPosition(
+      COLLATERAL_AMOUNT.mul(2),
+      BORROW_AMOUNT,
+      ctx.signers.minter,
+    );
 
     // Withdraw the maximum amount to put it at the boundary (200%)
-    await expect(arc.repay(0, 0, COLLATERAL_AMOUNT, ctx.signers.unauthorised)).to.be.reverted;
+    await expect(arc.repay(0, 0, COLLATERAL_AMOUNT, ctx.signers.unauthorized))
+      .to.be.reverted;
   });
 
   it('should be able to repay (withdraw) to decrease the c-ratio', async () => {
     // Create a 400% collateralised position
-    await arc.openPosition(COLLATERAL_AMOUNT.mul(2), BORROW_AMOUNT, ctx.signers.minter);
+    await arc.openPosition(
+      COLLATERAL_AMOUNT.mul(2),
+      BORROW_AMOUNT,
+      ctx.signers.minter,
+    );
 
     const currentPrice = await arc.synth().oracle.fetchCurrentPrice();
 
@@ -113,7 +126,11 @@ xdescribe('Mozart.operateAction(Repay)', () => {
 
   it('should be able to repay to make the position collateralized ', async () => {
     // Create a 200% collateralised position
-    await arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, ctx.signers.minter);
+    await arc.openPosition(
+      COLLATERAL_AMOUNT,
+      BORROW_AMOUNT,
+      ctx.signers.minter,
+    );
 
     // Drop the price to $0.50 so the position is now 100% (should be 200%)
     const newPrice = ArcDecimal.new(0.5).value;
@@ -123,9 +140,13 @@ xdescribe('Mozart.operateAction(Repay)', () => {
 
     const collateralDelta = await arc
       .synth()
-      .core.calculateCollateralDelta(position.collateralAmount, position.borrowedAmount.value, {
-        value: newPrice,
-      });
+      .core.calculateCollateralDelta(
+        position.collateralAmount,
+        position.borrowedAmount.value,
+        {
+          value: newPrice,
+        },
+      );
 
     // Basically we're underwater by our initial collateral deposit
     expect(collateralDelta.value).to.equal(COLLATERAL_AMOUNT);
@@ -133,7 +154,8 @@ xdescribe('Mozart.operateAction(Repay)', () => {
 
     // Double check to make sure we're under-collateralized
     const price = await arc.core().getCurrentPrice();
-    expect(await arc.synth().core.isCollateralized(position, price)).to.be.false;
+    expect(await arc.synth().core.isCollateralized(position, price)).to.be
+      .false;
 
     await arc.repay(0, BORROW_AMOUNT.div(2), 0, ctx.signers.minter);
     position = await arc.synth().core.getPosition(0);
@@ -144,7 +166,11 @@ xdescribe('Mozart.operateAction(Repay)', () => {
 
   it('should not be able to withdraw if undercollateralized', async () => {
     // Create a 200% collateralised position
-    await arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, ctx.signers.minter);
+    await arc.openPosition(
+      COLLATERAL_AMOUNT,
+      BORROW_AMOUNT,
+      ctx.signers.minter,
+    );
 
     // Drop the price to $0.99999 so the position is just under 200%
     const newPrice = ArcDecimal.new(0.999999).value;
@@ -155,22 +181,35 @@ xdescribe('Mozart.operateAction(Repay)', () => {
   });
 
   it('should not be able to repay more than it owes (positive debt not allowed)', async () => {
-    await arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, ctx.signers.minter);
-    await arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, ctx.signers.unauthorised);
+    await arc.openPosition(
+      COLLATERAL_AMOUNT,
+      BORROW_AMOUNT,
+      ctx.signers.minter,
+    );
+    await arc.openPosition(
+      COLLATERAL_AMOUNT,
+      BORROW_AMOUNT,
+      ctx.signers.unauthorized,
+    );
 
     await Token.transfer(
       arc.syntheticAddress(),
       ctx.signers.minter.address,
       BORROW_AMOUNT,
-      ctx.signers.unauthorised,
+      ctx.signers.unauthorized,
     );
 
-    expect(arc.repay(0, BORROW_AMOUNT.mul(3), COLLATERAL_AMOUNT, ctx.signers.minter)).to.be
-      .reverted;
+    expect(
+      arc.repay(0, BORROW_AMOUNT.mul(3), COLLATERAL_AMOUNT, ctx.signers.minter),
+    ).to.be.reverted;
   });
 
   it('should be able to repay accumulated interest (12 months)', async () => {
-    await arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, ctx.signers.minter);
+    await arc.openPosition(
+      COLLATERAL_AMOUNT,
+      BORROW_AMOUNT,
+      ctx.signers.minter,
+    );
 
     // Set the time to one year from now in order for interest to accumulate
     await arc.updateTime(ONE_YEAR_IN_SECONDS);
@@ -185,14 +224,14 @@ xdescribe('Mozart.operateAction(Repay)', () => {
     await arc.openPosition(
       COLLATERAL_AMOUNT.mul(4),
       BORROW_AMOUNT.mul(4),
-      ctx.signers.unauthorised,
+      ctx.signers.unauthorized,
     );
 
     await Token.transfer(
       arc.syntheticAddress(),
       ctx.signers.minter.address,
       BORROW_AMOUNT.mul(4),
-      ctx.signers.unauthorised,
+      ctx.signers.unauthorized,
     );
 
     const originalCollateralBalance = await arc
@@ -202,16 +241,21 @@ xdescribe('Mozart.operateAction(Repay)', () => {
     // Repay the interest owed
     await arc.repay(0, interestOwed, 0, ctx.signers.minter);
 
-    expect(await arc.synth().collateral.balanceOf(ctx.signers.minter.address)).to.equal(
-      originalCollateralBalance,
-    );
+    expect(
+      await arc.synth().collateral.balanceOf(ctx.signers.minter.address),
+    ).to.equal(originalCollateralBalance);
 
     position = await arc.getPosition(0);
     borrowIndex = await arc.core().getBorrowIndex();
 
-    expect(ArcNumber.bigMul(position.borrowedAmount.value, borrowIndex[0])).to.equal(BORROW_AMOUNT);
+    expect(
+      ArcNumber.bigMul(position.borrowedAmount.value, borrowIndex[0]),
+    ).to.equal(BORROW_AMOUNT);
 
-    const outstandingBorrow = ArcNumber.bigMul(position.borrowedAmount.value, borrowIndex[0]);
+    const outstandingBorrow = ArcNumber.bigMul(
+      position.borrowedAmount.value,
+      borrowIndex[0],
+    );
     const availableCollateral = await arc
       .core()
       .calculateCollateralDelta(position.collateralAmount, 1, {
@@ -222,11 +266,16 @@ xdescribe('Mozart.operateAction(Repay)', () => {
     position = await arc.getPosition(0);
 
     // Repay the remaining amount to get back all of the collateral
-    await arc.repay(0, outstandingBorrow, availableCollateral.value, ctx.signers.minter);
+    await arc.repay(
+      0,
+      outstandingBorrow,
+      availableCollateral.value,
+      ctx.signers.minter,
+    );
 
     position = await arc.getPosition(0);
-    expect(await arc.synth().collateral.balanceOf(ctx.signers.minter.address)).to.equal(
-      originalCollateralBalance.add(availableCollateral.value),
-    );
+    expect(
+      await arc.synth().collateral.balanceOf(ctx.signers.minter.address),
+    ).to.equal(originalCollateralBalance.add(availableCollateral.value));
   });
 });

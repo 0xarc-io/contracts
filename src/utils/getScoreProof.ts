@@ -1,6 +1,7 @@
 import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
 import { Signer } from '@ethersproject/abstract-signer';
 import { BigNumber } from '@ethersproject/bignumber';
+import { constants } from 'ethers';
 import CreditScoreTree from '../MerkleTree/CreditScoreTree';
 
 export function getScoreProof(
@@ -17,9 +18,9 @@ export function getScoreProof(
   };
 }
 
-export async function getEmptyScoreProof(caller: Signer) {
+export function getEmptyScoreProof() {
   return {
-    account: await caller.getAddress(),
+    account: constants.AddressZero,
     score: BigNumber.from(0),
     merkleProof: [],
   };

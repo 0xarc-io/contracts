@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 
-contract ISapphireMapper {
+interface ISapphireMapper {
 
     /**
      * @notice Maps the `_score` to a value situated between
@@ -11,7 +11,7 @@ contract ISapphireMapper {
      * @param _score The user's credit score to use for the mapping
      * @param _scoreMax The maximum value the score can be
      * @param _lowerBound The lower bound
-     * @param _upperBound The uppber bound
+     * @param _upperBound The upper bound
      */
     function map(
         uint256 _score,
