@@ -14,7 +14,7 @@ import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 import { BASE } from '@src/constants';
-import { roundUpMul } from '@test/helpers/roundUpOperations';
+import { roundUpDiv, roundUpMul } from '@test/helpers/roundUpOperations';
 
 const COLLATERAL_AMOUNT = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS);
 const BORROW_AMOUNT = utils.parseEther('500');
@@ -77,15 +77,22 @@ describe('SapphireCore.exit()', () => {
       getScoreProof(scoredMinterCreditScore, creditScoreTree),
     );
 
-    // burn a bit of the borrow amount
-    await arc
+    const synthBalance = await arc
       .synthetic()
-      .connect(signers.scoredMinter)
-      .burn(BORROW_AMOUNT.sub(utils.parseEther('0.01')));
+      .balanceOf(signers.scoredMinter.address);
+
+    // burn the remaining amount
+    await arc.synthetic().connect(signers.scoredMinter).burn(synthBalance);
+
+    const vault = await arc.getVault(signers.scoredMinter.address);
+    const remainingDebt = roundUpMul(
+      vault.borrowedAmount,
+      await arc.core().currentBorrowIndex(),
+    );
 
     // Approve repay amount
     await approve(
-      BORROW_AMOUNT.add(1),
+      remainingDebt,
       arc.syntheticAddress(),
       arc.coreAddress(),
       signers.scoredMinter,
@@ -116,14 +123,18 @@ describe('SapphireCore.exit()', () => {
     expect(collateralBalance).to.eq(0);
     expect(synthBalance).to.eq(BORROW_AMOUNT);
 
-    // Approve repay amount
-    // Mint 1 wei to account for rounding margin
+    // Mint dust to account for rounding margin
+    const repayAmt = roundUpMul(
+      vault.borrowedAmount,
+      await arc.core().borrowIndex(),
+    );
     await arc
       .synthetic()
-      .connect(signers.admin)
-      .mint(signers.scoredMinter.address, 1);
+      .mint(signers.scoredMinter.address, repayAmt.sub(synthBalance));
+
+    // Approve repay amount
     await approve(
-      BORROW_AMOUNT.add(1),
+      repayAmt,
       arc.syntheticAddress(),
       arc.coreAddress(),
       signers.scoredMinter,
