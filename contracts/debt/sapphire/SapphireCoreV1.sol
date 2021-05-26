@@ -506,7 +506,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](2);
         SapphireTypes.Vault memory vault = vaults[msg.sender];
 
-        uint256 repayAmount = _denormalizeBorrowAmount(vault.borrowedAmount, false);
+        uint256 repayAmount = _denormalizeBorrowAmount(vault.borrowedAmount, true);
 
         // Repay outstanding debt
         actions[0] = SapphireTypes.Action(
