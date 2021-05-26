@@ -1,9 +1,14 @@
 import MerkleTree from './MerkleTree';
 import { BigNumber, utils } from 'ethers';
 
-export default class CreditScoreTree {
+export interface CreditScore {
+  account: string;
+  amount: BigNumber;
+}
+
+export class CreditScoreTree {
   private readonly tree: MerkleTree;
-  constructor(creditScores: { account: string; amount: BigNumber }[]) {
+  constructor(creditScores: CreditScore[]) {
     this.ensureUniqueAccounts(creditScores);
     this.tree = new MerkleTree(
       creditScores.map(({ account, amount }) => {
@@ -51,3 +56,5 @@ export default class CreditScoreTree {
     });
   }
 }
+
+export default CreditScoreTree;
