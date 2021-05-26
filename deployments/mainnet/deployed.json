@@ -617,5 +617,15 @@
     "version": 1,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "ArcDAO",
+    "source": "AddressAccrual",
+    "address": "0x7E32b84f3ED40787ACdaF91303317B78A6fAe470",
+    "txn": "0xee48bc14df14bce73d27735f33bbcafce76bc9531648599cb41984c0d10cbc4c",
+    "network": "mainnet",
+    "version": 2,
+    "type": "global",
+    "group": ""
   }
 ]

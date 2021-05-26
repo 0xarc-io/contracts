@@ -31,6 +31,7 @@ export async function deployContract(
     name: deployParams.name,
     type: deployParams.type,
     group: deployParams.group,
+    version: deployParams.version,
   });
 
   const tx = deployParams.data;
