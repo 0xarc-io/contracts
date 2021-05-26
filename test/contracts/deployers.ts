@@ -23,6 +23,7 @@ import { MerkleDistributor } from '@src/typings/MerkleDistributor';
 import { SapphireCreditScore } from '@src/typings/SapphireCreditScore';
 import { MockSapphireCreditScore } from '@src/typings/MockSapphireCreditScore';
 import { SyntheticTokenV2 } from '@src/typings/SyntheticTokenV2';
+import { MockSapphireOracle } from '@src/typings/MockSapphireOracle';
 
 export async function deployMockMozartCore(deployer: Signer) {
   const Contract = await await ethers.getContractFactory(
@@ -102,6 +103,12 @@ export async function deployMockOracle(deployer: Signer) {
   const Contract = await ethers.getContractFactory('MockOracle', deployer);
   const mockOracle = await Contract.deploy();
   return mockOracle as MockOracle;
+}
+
+export async function deployMockSapphireOracle(deployer: Signer) {
+  const Contract = await ethers.getContractFactory('MockSapphireOracle', deployer);
+  const mockOracle = await Contract.deploy();
+  return mockOracle as MockSapphireOracle;
 }
 
 export async function deployTestToken(

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 
 contract Permittable {
 
@@ -81,11 +81,6 @@ contract Permittable {
         require(
             spender != address(0),
             "Permittable: spender cannot be 0x0"
-        );
-
-        require(
-            value > 0,
-            "Permittable: approval value must be greater than 0"
         );
 
         bytes32 digest = keccak256(

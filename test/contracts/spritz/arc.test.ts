@@ -57,15 +57,23 @@ xdescribe('Spritz', () => {
       await arc.collateralAsset.mintShare(arc.core.address, 5, {});
     });
     it('cannot withdraw as a non-admin', async () => {
-      const core = await arc.getCore(ctx.signers.unauthorised);
+      const core = await arc.getCore(ctx.signers.unauthorized);
       await expectRevert(
-        core.withdrawTokens(arc.collateralAsset.address, ctx.signers.unauthorised.address, 1),
+        core.withdrawTokens(
+          arc.collateralAsset.address,
+          ctx.signers.unauthorized.address,
+          1,
+        ),
       );
     });
 
     it('can withdraw tokens as an admin', async () => {
       const core = await arc.getCore(ctx.signers.admin);
-      await core.withdrawTokens(arc.collateralAsset.address, ctx.signers.unauthorised.address, 1);
+      await core.withdrawTokens(
+        arc.collateralAsset.address,
+        ctx.signers.unauthorized.address,
+        1,
+      );
     });
   });
 });

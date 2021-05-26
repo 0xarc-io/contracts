@@ -66,4 +66,42 @@ library Math {
     {
         return a > b ? a : b;
     }
+
+    /**
+     * @dev Performs a / b, but rounds up instead
+     */
+    function roundUpDiv(
+        uint256 a,
+        uint256 b
+    )
+        internal
+        pure
+        returns (uint256)
+    {
+        uint256 BASE = 10**18;
+        uint256 basedAmount = a.mul(BASE.mul(10));
+
+        return basedAmount
+            .div(b)
+            .add(5)
+            .div(10);
+    }
+
+    /**
+     * @dev Performs _a * _b / BASE, but rounds up instead
+     */
+    function roundUpMul(
+        uint256 a,
+        uint256 b
+    )
+        internal
+        pure
+        returns (uint256)
+    {
+        uint256 BASE = 10**18;
+        return a
+            .mul(b)
+            .add(BASE)
+            .div(BASE);
+    }
 }

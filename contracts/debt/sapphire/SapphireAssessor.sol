@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // prettier-ignore
 
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {SapphireTypes} from "./SapphireTypes.sol";
@@ -9,8 +9,13 @@ import {ISapphireMapper} from "./ISapphireMapper.sol";
 import {ISapphireCreditScore} from "./ISapphireCreditScore.sol";
 import {ISapphireAssessor} from "./ISapphireAssessor.sol";
 import {Ownable} from "../../lib/Ownable.sol";
+import {Address} from "../../lib/Address.sol";
 
 contract SapphireAssessor is Ownable, ISapphireAssessor {
+
+    /* ========== Libraries ========== */
+
+    using Address for address;
 
     /* ========== Variables ========== */
 
@@ -24,7 +29,10 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
 
     event CreditScoreContractSet(address _newCreditScoreContract);
 
-    event Assessed(uint256 _assessedValue);
+    event Assessed(
+        address _account,
+        uint256 _assessedValue
+    );
 
     /* ========== Constructor ========== */
 
@@ -53,7 +61,7 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
      * @param _lowerBound       The lower bound
      * @param _upperBound       The upper bound
      * @param _scoreProof       The score proof
-     * @param _isScoreRequred   The flag, which require the proof of score if the account already
+     * @param _isScoreRequired  The flag, which require the proof of score if the account already
                                 has a score
      * @return A value between the lower and upper bounds depending on the credit score
      */
@@ -61,24 +69,19 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
         uint256 _lowerBound,
         uint256 _upperBound,
         SapphireTypes.ScoreProof memory _scoreProof,
-        bool _isScoreRequred
+        bool _isScoreRequired
     )
         public
         returns (uint256)
     {
         require(
             _upperBound > 0,
-            "SapphireAssessor: The upper bound cannot be empty"
-        );
-
-        require(
-            _scoreProof.account != address(0),
-            "SapphireAssessor: The account cannot be empty"
+            "SapphireAssessor: The upper bound cannot be zero"
         );
 
         require(
             _lowerBound < _upperBound,
-            "SapphireAssessor: The lower bound exceeds the upper bound"
+            "SapphireAssessor: The lower bound must be smaller than the upper bound"
         );
 
         uint256 creditScore;
@@ -87,8 +90,15 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
         (creditScore, maxScore,) = creditScoreContract.getLastScore(_scoreProof.account);
         bool isProofPassed = _scoreProof.merkleProof.length > 0;
 
+        if (isProofPassed) {
+            require(
+                _scoreProof.account != address(0),
+                "SapphireAssessor: The account cannot be the zero address"
+            );
+        }
+
         // If credit score is required and user has already verified the score than require proof of score
-        if (_isScoreRequred && creditScore > 0) {
+        if (_isScoreRequired && creditScore > 0) {
             require(
                 isProofPassed,
                 "SapphireAssessor: proof should be provided for credit score"
@@ -113,7 +123,7 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
             "SapphireAssessor: The mapper returned a value out of bounds"
         );
 
-        emit Assessed(result);
+        emit Assessed(_scoreProof.account, result);
 
         return result;
     }
@@ -125,8 +135,8 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
         onlyOwner
     {
         require(
-            _mapper != address(0),
-            "SapphireAssessor: The new mapper cannot be null"
+            _mapper.isContract(),
+            "SapphireAssessor: _mapper is not a contract"
         );
 
         require(
@@ -146,8 +156,8 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
         onlyOwner
     {
         require(
-            _creditScore != address(0),
-            "SapphireAssessor: The new credit score contract address cannot be null"
+            _creditScore.isContract(),
+            "SapphireAssessor: _creditScore is not a contract"
         );
 
         require(
@@ -158,5 +168,12 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
         creditScoreContract = ISapphireCreditScore(_creditScore);
 
         emit CreditScoreContractSet(_creditScore);
+    }
+
+    function renounceOwnership()
+        public
+        onlyOwner
+    {
+        revert("SapphireAssessor: cannot renounce ownership");
     }
 }

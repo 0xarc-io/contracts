@@ -18,6 +18,9 @@ import {SapphireTypes} from "../debt/sapphire/SapphireTypes.sol";
  *         Users can get slashed if their credit score go below a threshold.
  */
 contract PassportCampaign is Adminable {
+
+    /* ========== Libraries ========== */
+
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -78,6 +81,8 @@ contract PassportCampaign is Adminable {
 
     event ClaimableStatusUpdated(bool _status);
 
+    event RewardsDistributorUpdated(address _newRewardsDistributor);
+
     /* ========== Modifiers ========== */
 
     modifier updateReward(address _account) {
@@ -107,22 +112,12 @@ contract PassportCampaign is Adminable {
         SapphireTypes.ScoreProof memory _scoreProof,
         bool _isScoreRequired
     ) {
-        uint256 creditScore;
         bool isProofPassed = _scoreProof.merkleProof.length > 0;
 
         if (_isScoreRequired) {
             require(
-                isProofPassed == true,
-                "PassportCampaign: proof is required but it is not passed"
-            );
-        }
-
-        (creditScore,,) = creditScoreContract.getLastScore(_scoreProof.account);
-
-        if (_isScoreRequired && creditScore > 0) {
-            require(
                 isProofPassed,
-                "PassportCampaign: proof should be provided for credit score"
+                "PassportCampaign: proof is required but it is not passed"
             );
         }
 
@@ -141,6 +136,8 @@ contract PassportCampaign is Adminable {
         onlyAdmin
     {
         rewardsDistributor = _rewardsDistributor;
+
+        emit RewardsDistributorUpdated(rewardsDistributor);
     }
 
     function setRewardsDuration(
@@ -152,6 +149,11 @@ contract PassportCampaign is Adminable {
         require(
             periodFinish == 0 || currentTimestamp() > periodFinish,
             "LiquidityCampaign:setRewardsDuration() Period not finished yet"
+        );
+
+        require(
+            _rewardsDuration != rewardsDuration,
+            "PassportCampaign: cannot set the same rewards duration"
         );
 
         rewardsDuration = _rewardsDuration;
@@ -223,6 +225,11 @@ contract PassportCampaign is Adminable {
         external
         onlyAdmin
     {
+        require(
+            _enabled != tokensClaimable,
+            "PassportCampaign: cannot set the claim status to the same value"
+        );
+
         tokensClaimable = _enabled;
 
         emit ClaimableStatusUpdated(_enabled);
@@ -329,7 +336,7 @@ contract PassportCampaign is Adminable {
             lastTimeRewardApplicable()
                 .sub(lastUpdateTime)
                 .mul(rewardRate)
-                .mul(1e18)
+                .mul(BASE)
                 .div(totalSupply)
         );
     }
@@ -348,7 +355,7 @@ contract PassportCampaign is Adminable {
         uint256 fullRewardPerToken = lastTimeRewardApplicable()
             .sub(lastUpdateTime)
             .mul(rewardRate)
-            .mul(1e18)
+            .mul(BASE)
             .div(totalSupply);
 
         uint256 lastTimeRewardUserAllocation = fullRewardPerToken
@@ -368,7 +375,7 @@ contract PassportCampaign is Adminable {
         return stakers[_account]
             .balance
             .mul(_actualRewardPerToken().sub(stakers[_account].rewardPerTokenPaid))
-            .div(1e18)
+            .div(BASE)
             .add(stakers[_account].rewardsEarned);
     }
 
@@ -424,11 +431,13 @@ contract PassportCampaign is Adminable {
             "PassportCampaign: user does not meet the credit score requirement"
         );
 
-        // Setting each variable invididually means we don't overwrite
+        // Setting each variable individually means we don't overwrite
         Staker storage staker = stakers[msg.sender];
 
         staker.balance = staker.balance.add(_amount);
 
+        // Heads up: the the max stake amount is not set in stone. It can be changed
+        // by the admin by calling `setMaxStakePerUser()`
         if (maxStakePerUser > 0) {
             require(
                 staker.balance <= maxStakePerUser,
@@ -487,7 +496,7 @@ contract PassportCampaign is Adminable {
         private
     {
         require(
-            tokensClaimable == true,
+            tokensClaimable,
             "PassportCampaign: tokens cannot be claimed yet"
         );
 
@@ -495,7 +504,7 @@ contract PassportCampaign is Adminable {
 
         uint256 payableAmount = staker.rewardsEarned.sub(staker.rewardsReleased);
 
-        staker.rewardsReleased = staker.rewardsReleased.add(payableAmount);
+        staker.rewardsReleased = staker.rewardsEarned;
 
         uint256 daoPayable = payableAmount
             .mul(daoAllocation)

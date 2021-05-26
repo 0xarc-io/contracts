@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {SapphireTypes} from "./SapphireTypes.sol";
@@ -8,7 +8,7 @@ import {SapphireTypes} from "./SapphireTypes.sol";
 interface ISapphireCreditScore {
     function updateMerkleRoot(bytes32 newRoot) external;
 
-    function updateMerkleRootUpdater(address merkleRootUpdator) external;
+    function setMerkleRootUpdater(address merkleRootUpdater) external;
 
     function verifyAndUpdate(SapphireTypes.ScoreProof calldata proof) external returns (uint256, uint16);
 

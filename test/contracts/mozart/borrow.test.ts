@@ -30,7 +30,11 @@ xdescribe('Mozart.operateAction(Borrow)', () => {
   before(async () => {
     ctx = await generateContext(mozartFixture, init);
     arc = ctx.sdks.mozart;
-    await arc.openPosition(COLLATERAL_AMOUNT, BORROW_AMOUNT, ctx.signers.minter);
+    await arc.openPosition(
+      COLLATERAL_AMOUNT,
+      BORROW_AMOUNT,
+      ctx.signers.minter,
+    );
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -46,7 +50,8 @@ xdescribe('Mozart.operateAction(Borrow)', () => {
     const postPosition = await arc.getPosition(0);
     expect(postPosition.borrowedAmount.value).to.equal(BORROW_AMOUNT.mul(2));
     const price = await arc.synth().core.getCurrentPrice();
-    expect(await arc.synth().core.isCollateralized(postPosition, price)).to.be.true;
+    expect(await arc.synth().core.isCollateralized(postPosition, price)).to.be
+      .true;
   });
 
   it('should update the index', async () => {
@@ -67,7 +72,9 @@ xdescribe('Mozart.operateAction(Borrow)', () => {
 
     // Our calculated index should equal the newly set borrow index
     expect(borrowIndex1[0]).to.equal(calculatedIndex);
-    expect(totalBorrowed1).to.equal(ArcNumber.bigMul(totalBorrowed0, borrowIndex1[0]));
+    expect(totalBorrowed1).to.equal(
+      ArcNumber.bigMul(totalBorrowed0, borrowIndex1[0]),
+    );
 
     // Set the time to two years from now in order for interest to accumulate
     await arc.updateTime(ONE_YEAR_IN_SECONDS.mul(2));
@@ -77,12 +84,16 @@ xdescribe('Mozart.operateAction(Borrow)', () => {
 
     const borrowIndex2 = await arc.synth().core.getBorrowIndex();
 
-    const earnedInterest = (await arc.synth().core.getInterestRate()).mul(ONE_YEAR_IN_SECONDS);
+    const earnedInterest = (await arc.synth().core.getInterestRate()).mul(
+      ONE_YEAR_IN_SECONDS,
+    );
     calculatedIndex = calculatedIndex.add(earnedInterest);
 
     // Our calculated index should equal the newly set borrow index
     expect(borrowIndex2[0]).to.equal(calculatedIndex);
-    expect(totalBorrowed2).to.equal(ArcNumber.bigMul(totalBorrowed1, earnedInterest.add(BASE)));
+    expect(totalBorrowed2).to.equal(
+      ArcNumber.bigMul(totalBorrowed1, earnedInterest.add(BASE)),
+    );
   });
 
   it('should be able to borrow more if the c-ratio is not at the minimum', async () => {
@@ -91,7 +102,9 @@ xdescribe('Mozart.operateAction(Borrow)', () => {
 
     const afterPosition = await arc.getPosition(0);
 
-    expect(afterPosition.collateralAmount.value).to.equal(beforePosition.collateralAmount.value);
+    expect(afterPosition.collateralAmount.value).to.equal(
+      beforePosition.collateralAmount.value,
+    );
     expect(afterPosition.borrowedAmount.value).to.equal(
       beforePosition.borrowedAmount.value.add(BORROW_AMOUNT),
     );
@@ -99,28 +112,46 @@ xdescribe('Mozart.operateAction(Borrow)', () => {
   });
 
   it('should be able to borrow from someone elses account', async () => {
-    await expect(arc.borrow(0, 0, BORROW_AMOUNT, ctx.signers.unauthorised)).to.be.reverted;
+    await expect(arc.borrow(0, 0, BORROW_AMOUNT, ctx.signers.unauthorized)).to
+      .be.reverted;
   });
 
   it('should not be able to borrow without enough collateral', async () => {
-    await expect(arc.borrow(0, 0, BORROW_AMOUNT.add(1), ctx.signers.minter)).be.reverted;
-    await expect(arc.borrow(0, COLLATERAL_AMOUNT.sub(1), BORROW_AMOUNT.mul(3), ctx.signers.minter))
-      .be.reverted;
+    await expect(arc.borrow(0, 0, BORROW_AMOUNT.add(1), ctx.signers.minter)).be
+      .reverted;
+    await expect(
+      arc.borrow(
+        0,
+        COLLATERAL_AMOUNT.sub(1),
+        BORROW_AMOUNT.mul(3),
+        ctx.signers.minter,
+      ),
+    ).be.reverted;
   });
 
   it('should be able to borrow more if more collateral provided', async () => {
     await arc.borrow(0, 0, BORROW_AMOUNT, ctx.signers.minter);
-    await arc.borrow(0, COLLATERAL_AMOUNT, BORROW_AMOUNT.mul(2), ctx.signers.minter);
+    await arc.borrow(
+      0,
+      COLLATERAL_AMOUNT,
+      BORROW_AMOUNT.mul(2),
+      ctx.signers.minter,
+    );
 
     const position = await arc.getPosition(0);
     const price = await arc.synth().oracle.fetchCurrentPrice();
     const collateralDelta = await arc
       .core()
-      .calculateCollateralDelta(position.collateralAmount, position.borrowedAmount.value, price);
+      .calculateCollateralDelta(
+        position.collateralAmount,
+        position.borrowedAmount.value,
+        price,
+      );
 
     expect(collateralDelta.value).to.equal(0);
 
-    await expect(arc.borrow(0, 0, BORROW_AMOUNT, ctx.signers.minter)).to.be.reverted;
+    await expect(arc.borrow(0, 0, BORROW_AMOUNT, ctx.signers.minter)).to.be
+      .reverted;
   });
 
   it('should not be able to borrow more if the price decreases', async () => {

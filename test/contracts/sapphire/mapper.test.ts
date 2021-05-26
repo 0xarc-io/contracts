@@ -1,4 +1,7 @@
-import { SapphireMapperLinear, SapphireMapperLinearFactory } from '@src/typings';
+import {
+  SapphireMapperLinear,
+  SapphireMapperLinearFactory,
+} from '@src/typings';
 import ArcNumber from '@src/utils/ArcNumber';
 import { expectRevert } from '@test/helpers/expectRevert';
 import { expect } from 'chai';
@@ -47,8 +50,13 @@ describe('SapphireMapperLinear', () => {
 
     expect(await mapper.map(10, 10, 0, 100)).to.eq(BigNumber.from(0));
 
-    expect(await mapper.map(ArcNumber.new(65), ArcNumber.new(100), 0, ArcNumber.new(1000))).to.eq(
-      ArcNumber.new(350),
-    );
+    expect(
+      await mapper.map(
+        ArcNumber.new(65),
+        ArcNumber.new(100),
+        0,
+        ArcNumber.new(1000),
+      ),
+    ).to.eq(ArcNumber.new(350));
   });
 });

@@ -112,10 +112,7 @@ export class SapphireArc {
   ) {
     const core = this._getCore(synthName, caller);
 
-    return core.exit(
-      creditScoreProof ?? (await getEmptyScoreProof(caller)),
-      overrides,
-    );
+    return core.exit(creditScoreProof ?? getEmptyScoreProof(), overrides);
   }
 
   async liquidate(
@@ -129,7 +126,7 @@ export class SapphireArc {
 
     return core.liquidate(
       owner,
-      creditScoreProof ?? (await getEmptyScoreProof(caller)),
+      creditScoreProof ?? getEmptyScoreProof(),
       overrides,
     );
   }
@@ -145,7 +142,7 @@ export class SapphireArc {
 
     await core.executeActions(
       actions,
-      creditScoreProof ?? (await getEmptyScoreProof(caller)),
+      creditScoreProof ?? getEmptyScoreProof(),
       overrides,
     );
 
@@ -167,7 +164,7 @@ export class SapphireArc {
 
     return core.borrow(
       amount,
-      creditScoreProof ?? (await getEmptyScoreProof(caller)),
+      creditScoreProof ?? getEmptyScoreProof(),
       overrides,
     );
   }
@@ -183,7 +180,7 @@ export class SapphireArc {
 
     return core.repay(
       amount,
-      creditScoreProof ?? (await getEmptyScoreProof(caller)),
+      creditScoreProof ?? getEmptyScoreProof(),
       overrides,
     );
   }
@@ -201,7 +198,7 @@ export class SapphireArc {
 
     return core.deposit(
       amount,
-      creditScoreProof ?? (await getEmptyScoreProof(caller)),
+      creditScoreProof ?? getEmptyScoreProof(),
       overrides,
     );
   }
@@ -217,7 +214,7 @@ export class SapphireArc {
 
     return core.withdraw(
       amount,
-      creditScoreProof ?? (await getEmptyScoreProof(caller)),
+      creditScoreProof ?? getEmptyScoreProof(),
       overrides,
     );
   }

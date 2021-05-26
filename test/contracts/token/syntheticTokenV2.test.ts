@@ -553,7 +553,7 @@ describe('SyntheticTokenV2', () => {
         await expect(
           minter.transferFrom(userAccount.address, arcAccount.address, 10),
         ).to.be.revertedWith(
-          'SyntheticTokenv2: the amount has not been approved for this spender',
+          'SyntheticTokenV2: the amount has not been approved for this spender',
         );
       });
 
@@ -566,7 +566,7 @@ describe('SyntheticTokenV2', () => {
         await expect(
           minter.transferFrom(userAccount.address, arcAccount.address, 6),
         ).to.be.revertedWith(
-          'SyntheticTokenv2: the amount has not been approved for this spender',
+          'SyntheticTokenV2: the amount has not been approved for this spender',
         );
 
         expect(await syntheticToken.balanceOf(arcAccount.address)).to.eq(0);

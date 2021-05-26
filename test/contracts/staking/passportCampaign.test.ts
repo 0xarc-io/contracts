@@ -2,8 +2,6 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import {
   ArcProxyFactory,
   MockSapphireCreditScore,
-  SapphireCreditScore,
-  // PassportCampaignFactory,
   TestToken,
   TestTokenFactory,
 } from '@src/typings';
@@ -117,10 +115,7 @@ describe('PassportCampaign', () => {
       user,
     );
 
-    await contract.withdraw(
-      amount,
-      scoreProof ?? (await getEmptyScoreProof(user)),
-    );
+    await contract.withdraw(amount, scoreProof ?? getEmptyScoreProof());
   }
 
   async function exitCampaign(
@@ -132,7 +127,7 @@ describe('PassportCampaign', () => {
       user,
     );
 
-    await contract.exit(scoreProof ?? (await getEmptyScoreProof(user)));
+    await contract.exit(scoreProof ?? getEmptyScoreProof());
   }
 
   async function claimReward(
@@ -144,10 +139,7 @@ describe('PassportCampaign', () => {
       user,
     );
 
-    await contract.getReward(
-      user.address,
-      scoreProof ?? (await getEmptyScoreProof(user)),
-    );
+    await contract.getReward(user.address, scoreProof ?? getEmptyScoreProof());
   }
 
   async function rewardBalanceOf(user: SignerWithAddress) {
@@ -192,7 +184,7 @@ describe('PassportCampaign', () => {
     admin = signers.admin;
     staker = signers.staker;
     user1 = signers.scoredMinter;
-    unauthorized = signers.unauthorised;
+    unauthorized = signers.unauthorized;
 
     stakerCreditScore = {
       account: staker.address,
@@ -406,10 +398,7 @@ describe('PassportCampaign', () => {
 
       it('reverts if called without a valid credit score proof', async () => {
         await expect(
-          stakerPassportCampaign.stake(
-            STAKE_AMOUNT,
-            await getEmptyScoreProof(staker),
-          ),
+          stakerPassportCampaign.stake(STAKE_AMOUNT, getEmptyScoreProof()),
         ).to.be.revertedWith(
           'PassportCampaign: proof is required but it is not passed',
         );
@@ -593,7 +582,7 @@ describe('PassportCampaign', () => {
 
         await stakerPassportCampaign.getReward(
           staker.address,
-          await getEmptyScoreProof(staker),
+          getEmptyScoreProof(),
         );
 
         const currentBalance = await rewardToken.balanceOf(staker.address);
@@ -635,7 +624,7 @@ describe('PassportCampaign', () => {
 
         await stakerPassportCampaign.withdraw(
           STAKE_AMOUNT,
-          await getEmptyScoreProof(staker),
+          getEmptyScoreProof(),
         );
 
         const balance = await stakingToken.balanceOf(staker.address);
@@ -674,7 +663,7 @@ describe('PassportCampaign', () => {
 
         await setTimestampTo(1);
 
-        await stakerPassportCampaign.exit(await getEmptyScoreProof(staker));
+        await stakerPassportCampaign.exit(getEmptyScoreProof());
 
         const stakingBalance = await stakingToken.balanceOf(staker.address);
         const rewardBalance = await rewardToken.balanceOf(staker.address);

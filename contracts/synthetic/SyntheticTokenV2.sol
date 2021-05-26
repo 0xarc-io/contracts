@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {IERC20} from "../token/IERC20.sol";
@@ -35,7 +35,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
 
     modifier onlyMinter() {
         require(
-            _minters[msg.sender] == true,
+            _minters[msg.sender],
             "SyntheticTokenV2: only callable by minter"
         );
         _;
@@ -54,7 +54,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
     /* ========== Init Function ========== */
 
 /**
-     * @dev Initialise the synthetic token
+     * @dev Initialize the synthetic token
      *
      * @param _name The name of the token
      * @param _symbol The symbol of the token
@@ -69,7 +69,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
         onlyAdmin
     {
         require(
-            _initCalled == false,
+            !_initCalled,
             "SyntheticTokenV2: cannot be initialized twice"
         );
 
@@ -77,7 +77,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
         symbol = _symbol;
         version = _version;
 
-        DOMAIN_SEPARATOR = _initDomainSeparator(_name, _symbol);
+        DOMAIN_SEPARATOR = _initDomainSeparator(_name, "1");
 
         _initCalled = true;
 
@@ -171,7 +171,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
      * @dev Add a new minter to the synthetic token.
      *
      * @param _minter The address of the minter to add
-     * @param _limit The starting limit for how much this synth can mint
+     * @param _limit The starting limit for how much the minter can mint
      */
     function addMinter(
         address _minter,
@@ -195,7 +195,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
     /**
      * @dev Remove a minter from the synthetic token
      *
-     * @param _minter Address to remove the minter
+     * @param _minter Address of the minter to remove
      */
     function removeMinter(
         address _minter
@@ -204,13 +204,12 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
         onlyAdmin
     {
         require(
-            _minters[_minter] == true,
-            "SyntheticTokenV2: minter does not exist"
+            _minters[_minter],
+            "SyntheticTokenV2: not a minter"
         );
 
         for (uint256 i = 0; i < _mintersArray.length; i++) {
-            if (address(_mintersArray[i]) == _minter) {
-                delete _mintersArray[i];
+            if (_mintersArray[i] == _minter) {
                 _mintersArray[i] = _mintersArray[_mintersArray.length - 1];
                 _mintersArray.length--;
 
@@ -238,8 +237,13 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
         onlyAdmin
     {
         require(
-            _minters[_minter] == true,
+            _minters[_minter],
             "SyntheticTokenV2: minter does not exist"
+        );
+
+        require(
+            _minterLimits[_minter] != _limit,
+            "SyntheticTokenV2: cannot set the same limit"
         );
 
         _minterLimits[_minter] = _limit;
@@ -264,6 +268,11 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
         external
         onlyMinter
     {
+        require(
+            _value > 0,
+            "SyntheticTokenV2: cannot mint zero"
+        );
+
         Amount.Principal memory issuedAmount = _minterIssued[msg.sender].add(
             Amount.Principal({ sign: true, value: _value })
         );
@@ -324,6 +333,13 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
         return true;
     }
 
+    /**
+     * @dev Allows `spender` to withdraw from msg.sender multiple times, up to the
+     *      `amount`.
+     *      Warning: It is recommended to first set the allowance to 0 before
+     *      changing it, to prevent a double-spend exploit outlined below:
+     *      https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
+     */
     function approve(
         address spender,
         uint256 amount
@@ -345,7 +361,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
     {
         require(
             _allowances[sender][msg.sender] >= amount,
-            "SyntheticTokenv2: the amount has not been approved for this spender"
+            "SyntheticTokenV2: the amount has not been approved for this spender"
         );
 
         _transfer(sender, recipient, amount);
@@ -364,6 +380,14 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
      *
      * IMPORTANT: The same issues Erc20 `approve` has related to transaction
      * ordering also apply here.
+     * In addition, please be aware that:
+     * - If an owner signs a permit with no deadline, the corresponding spender
+     *   can call permit at any time in the future to mess with the nonce,
+     *   invalidating signatures to other spenders, possibly making their transactions
+     *   fail.
+     * - Even if only permits with finite deadline are signed, to avoid the above
+     *   scenario, an owner would have to wait for the conclusion of the deadline
+     *   to sign a permit for another spender.
      *
      * Emits an {Approval} event.
      *
@@ -371,9 +395,9 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
      *
      * - `owner` cannot be the zero address.
      * - `spender` cannot be the zero address.
-     * - `deadline` must be a timestamp in the future.
+     * - `deadline` must be a timestamp in the future or zero.
      * - `v`, `r` and `s` must be a valid `secp256k1` signature from `owner`
-     * over the Eip712-formatted function arguments.
+     *   over the Eip712-formatted function arguments.
      * - The signature must use `owner`'s current nonce.
      */
     function permit(

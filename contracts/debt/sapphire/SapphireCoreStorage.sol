@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
-import {IOracle} from "../../oracle/IOracle.sol";
+import {ISapphireOracle} from "../../oracle/ISapphireOracle.sol";
 import {ISapphireAssessor} from "./ISapphireAssessor.sol";
 
 import {SapphireTypes} from "./SapphireTypes.sol";
@@ -15,7 +15,7 @@ contract SapphireCoreStorage {
     bool public paused;
 
     /**
-     * @dev The details about a vault, identified by a unint256
+     * @dev The details about a vault, identified by the address of the owner
      */
     mapping (address => SapphireTypes.Vault) public vaults;
 
@@ -30,7 +30,8 @@ contract SapphireCoreStorage {
     uint256 public lowCollateralRatio;
 
     /**
-     * @dev How much should the liquidation penalty be, expressed as a decimal.
+     * @dev How much should the liquidation penalty be, expressed as a percentage
+     *      with 18 decimals
      */
     uint256 public liquidationUserFee;
 
@@ -40,7 +41,7 @@ contract SapphireCoreStorage {
     uint256 public liquidationArcFee;
 
     /**
-    * @dev The assesor that will determine the collateral-ratio.
+    * @dev The assessor that will determine the collateral-ratio.
     */
     ISapphireAssessor public assessor;
 
@@ -52,11 +53,11 @@ contract SapphireCoreStorage {
     /**
      * @dev The instance of the oracle that reports prices for the collateral
      */
-    IOracle public oracle;
+    ISapphireOracle public oracle;
 
     /**
      * @dev If a collateral asset is used that has less than 18 decimal places
-     *      a precision scalar is required to calcualte the corect values.
+     *      a precision scalar is required to calculate the correct values.
      */
     uint256 public precisionScalar;
 
@@ -71,7 +72,7 @@ contract SapphireCoreStorage {
     address public syntheticAsset;
 
     /**
-    * @dev The actual amount of collatteral provided to the protocol.
+    * @dev The actual amount of collateral provided to the protocol.
     *      This amount will be multiplied by the precision scalar if the token
     *      has less than 18 decimals precision.
     */
