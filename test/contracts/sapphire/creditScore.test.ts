@@ -39,7 +39,7 @@ describe('SapphireCreditScore', () => {
   let creditScoreContract: MockSapphireCreditScore;
   let merkleRootUpdater: SignerWithAddress;
   let unauthorized: SignerWithAddress;
-  let owner: SignerWithAddress;
+  let admin: SignerWithAddress;
   let pauseOperator: SignerWithAddress;
   let tree: CreditScoreTree;
   let creditScore1: CreditScore;
@@ -52,16 +52,16 @@ describe('SapphireCreditScore', () => {
     pauseOperator: string,
     maxScore: BigNumberish,
   ) {
-    const creditScoreImp = await deployMockSapphireCreditScore(owner);
+    const creditScoreImp = await deployMockSapphireCreditScore(admin);
     const creditScoreProxy = await deployArcProxy(
-      owner,
+      admin,
       creditScoreImp.address,
-      owner.address,
+      admin.address,
       [],
     );
     const creditScoreInstance = MockSapphireCreditScoreFactory.connect(
       creditScoreProxy.address,
-      owner,
+      admin,
     );
 
     await creditScoreInstance.init(
@@ -90,7 +90,7 @@ describe('SapphireCreditScore', () => {
       });
     });
     unauthorized = ctx.signers.unauthorized;
-    owner = ctx.signers.admin;
+    admin = ctx.signers.admin;
     merkleRootUpdater = ctx.signers.interestSetter;
     creditScoreContract = ctx.contracts.sapphire.creditScore;
     pauseOperator = ctx.signers.pauseOperator;
@@ -147,9 +147,9 @@ describe('SapphireCreditScore', () => {
   });
 
   describe('#updateMerkleRoot', () => {
-    it('should have merkle root updater not equal owner', async () => {
+    it('should have merkle root updater not equal admin', async () => {
       const merkleRootUpdaterAddress = await creditScoreContract.merkleRootUpdater();
-      expect(merkleRootUpdaterAddress).not.eq(owner.address);
+      expect(merkleRootUpdaterAddress).not.eq(admin.address);
       expect(merkleRootUpdaterAddress).eq(merkleRootUpdater.address);
     });
 
@@ -185,27 +185,27 @@ describe('SapphireCreditScore', () => {
       ).to.be.revertedWith('SapphireCreditScore: root is empty');
     });
 
-    it('should not be able to update as owner if the contract is not paused', async () => {
+    it('should not be able to update as admin if the contract is not paused', async () => {
       await expect(
         creditScoreContract.updateMerkleRoot(ONE_BYTES32),
       ).to.be.revertedWith(
-        'SapphireCreditScore: owner can only update merkle root if paused',
+        'SapphireCreditScore: only admin can update merkle root if paused',
       );
     });
 
-    it('instantly update merkle root as the owner', async () => {
+    it('instantly update merkle root as the admin', async () => {
       await creditScoreContract.connect(pauseOperator).setPause(true);
       const currentMerkleRoot = await creditScoreContract.currentMerkleRoot();
       const initialLastMerkleRootUpdate = await creditScoreContract.lastMerkleRootUpdate();
 
       const txn = creditScoreContract
-        .connect(owner)
+        .connect(admin)
         .updateMerkleRoot(TWO_BYTES32);
       const txnBlockTimestamp = await creditScoreContract.currentTimestamp();
 
       await expect(txn)
         .to.emit(creditScoreContract, 'MerkleRootUpdated')
-        .withArgs(owner.address, TWO_BYTES32, txnBlockTimestamp);
+        .withArgs(admin.address, TWO_BYTES32, txnBlockTimestamp);
       expect(await creditScoreContract.upcomingMerkleRoot()).eq(TWO_BYTES32);
       expect(await creditScoreContract.currentMerkleRoot()).eq(
         currentMerkleRoot,
@@ -215,7 +215,7 @@ describe('SapphireCreditScore', () => {
       );
     });
 
-    it('instantly update merkle root avoiding time delay as the owner', async () => {
+    it('instantly update merkle root avoiding time delay as the admin', async () => {
       const initialLastMerkleRootUpdate = await creditScoreContract.lastMerkleRootUpdate();
       const initialCurrentMerkleRoot = await creditScoreContract.currentMerkleRoot();
 
@@ -223,7 +223,7 @@ describe('SapphireCreditScore', () => {
         initialLastMerkleRootUpdate.add(1),
       );
       await creditScoreContract.connect(pauseOperator).setPause(true);
-      await creditScoreContract.connect(owner).updateMerkleRoot(THREE_BYTES32);
+      await creditScoreContract.connect(admin).updateMerkleRoot(THREE_BYTES32);
 
       expect(await creditScoreContract.lastMerkleRootUpdate()).eq(
         initialLastMerkleRootUpdate,
@@ -268,16 +268,16 @@ describe('SapphireCreditScore', () => {
         );
       expect(await creditScoreContract.upcomingMerkleRoot()).eq(maliciousRoot);
 
-      // owner prevent attack to not allow set malicious root as current one
+      // admin prevent attack to not allow set malicious root as current one
       await creditScoreContract.connect(pauseOperator).setPause(true);
       const timestamp = await advanceEpoch(creditScoreContract);
       const updateMerkleRootTxn = creditScoreContract
-        .connect(owner)
+        .connect(admin)
         .updateMerkleRoot(THREE_BYTES32);
 
       await expect(updateMerkleRootTxn)
         .to.emit(creditScoreContract, 'MerkleRootUpdated')
-        .withArgs(owner.address, THREE_BYTES32, timestamp);
+        .withArgs(admin.address, THREE_BYTES32, timestamp);
       expect(await creditScoreContract.upcomingMerkleRoot()).eq(THREE_BYTES32);
       expect(await creditScoreContract.currentMerkleRoot()).not.eq(
         maliciousRoot,
@@ -470,7 +470,7 @@ describe('SapphireCreditScore', () => {
   });
 
   describe('#setMerkleRootUpdater', () => {
-    it('should be able to update as the owner', async () => {
+    it('should be able to update as the admin', async () => {
       await expect(
         creditScoreContract.setMerkleRootUpdater(unauthorized.address),
       )
@@ -481,7 +481,7 @@ describe('SapphireCreditScore', () => {
       );
     });
 
-    it('should not be able to update as non-owner', async () => {
+    it('should not be able to update as non-admin', async () => {
       await expect(
         creditScoreContract
           .connect(merkleRootUpdater)
@@ -491,10 +491,10 @@ describe('SapphireCreditScore', () => {
   });
 
   describe('#setPauseOperator', () => {
-    it('should be able to update as the owner', async () => {
+    it('should be able to update as the admin', async () => {
       await expect(
         creditScoreContract
-          .connect(owner)
+          .connect(admin)
           .setPauseOperator(unauthorized.address),
       )
         .to.emit(creditScoreContract, 'PauseOperatorUpdated')
@@ -504,7 +504,7 @@ describe('SapphireCreditScore', () => {
       );
     });
 
-    it('should not be able to update as non-owner', async () => {
+    it('should not be able to update as non-admin', async () => {
       await expect(
         creditScoreContract
           .connect(merkleRootUpdater)
@@ -514,16 +514,32 @@ describe('SapphireCreditScore', () => {
   });
 
   describe('#setMerkleRootDelay', () => {
-    it('should be able to update as the owner', async () => {
+    it('should be able to update as the admin', async () => {
       await expect(creditScoreContract.setMerkleRootDelay(5))
         .to.emit(creditScoreContract, 'DelayDurationUpdated')
-        .withArgs(owner.address, 5);
+        .withArgs(admin.address, 5);
       expect(await creditScoreContract.merkleRootDelayDuration()).eq(5);
     });
 
-    it('should not be able to update as non-owner', async () => {
+    it('should not be able to update as non-admin', async () => {
       await expect(
         creditScoreContract.connect(merkleRootUpdater).setMerkleRootDelay(5),
+      ).to.be.revertedWith('Adminable: caller is not admin');
+    });
+  });
+
+  describe('#setDocumentId', () => {
+    it('should be able to update as the admin', async () => {
+      const documentId = 'test123';
+
+      await expect(creditScoreContract.setDocumentId(documentId))
+        .to.emit(creditScoreContract, 'DocumentIdUpdated')
+        .withArgs(documentId);
+    });
+
+    it('should not be able to update as non-admin', async () => {
+      await expect(
+        creditScoreContract.connect(merkleRootUpdater).setDocumentId('test123'),
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
   });

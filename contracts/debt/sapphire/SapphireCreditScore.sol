@@ -44,6 +44,10 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
         address merkleRootUpdater
     );
 
+    event DocumentIdUpdated(
+        string newDocumentId
+    );
+
     /* ========== Variables ========== */
 
     bool private _initialized;
@@ -63,6 +67,9 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
     address public merkleRootUpdater;
 
     address public pauseOperator;
+
+    // The document ID of the IPFS document containing the current Merkle Tree
+    string public documentId;
 
     mapping(address => SapphireTypes.CreditScore) public userScores;
 
@@ -132,7 +139,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
         return block.timestamp;
     }
 
-   /**
+    /**
      * @dev Return last verified user score
      */
     function getLastScore(
@@ -152,7 +159,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
      * @dev Update upcoming merkle root
      *
      * @notice Can be called by:
-     *      - the owner:
+     *      - the admin:
      *          1. Check if contract is paused
      *          2. Replace upcoming merkle root
      *      - merkle root updater:
@@ -174,14 +181,14 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
         );
 
         if (msg.sender == getAdmin()) {
-            updateMerkleRootAsOwner(_newRoot);
+            updateMerkleRootAsAdmin(_newRoot);
         } else {
             updateMerkleRootAsUpdater(_newRoot);
         }
         emit MerkleRootUpdated(msg.sender, _newRoot, currentTimestamp());
     }
 
-   /**
+    /**
      * @dev Request for verifying user's credit score
      *
      * @notice If the credit score is verified, this function updates the
@@ -234,9 +241,9 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
     }
 
     /**
-     * @dev Merkle root updating strategy for the owner
+     * @dev Merkle root updating strategy for the admin
     **/
-    function updateMerkleRootAsOwner(
+    function updateMerkleRootAsAdmin(
         bytes32 _newRoot
     )
         private
@@ -244,13 +251,13 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
     {
         require(
             isPaused,
-            "SapphireCreditScore: owner can only update merkle root if paused"
+            "SapphireCreditScore: only admin can update merkle root if paused"
         );
 
         upcomingMerkleRoot = _newRoot;
     }
 
-    /* ========== Owner Functions ========== */
+    /* ========== Admin Functions ========== */
 
     /**
      * @dev Update merkle root delay duration
@@ -332,6 +339,20 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
 
         pauseOperator = _pauseOperator;
         emit PauseOperatorUpdated(pauseOperator);
+    }
+
+    /**
+     * @dev Sets the document ID of the IPFS document containing the current Merkle Tree.
+     */
+    function setDocumentId(
+        string memory _documentId
+    )
+        public
+        onlyAdmin
+    {
+        documentId = _documentId;
+
+        emit DocumentIdUpdated(documentId);
     }
 
     function renounceOwnership()
