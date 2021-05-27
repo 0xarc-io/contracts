@@ -221,23 +221,12 @@ export async function deployMerkleDistributor(
   return distributor as MerkleDistributor;
 }
 
-export async function deploySapphireCreditScore(
-  deployer: Signer,
-  merkleRoot: string,
-  merkleTreeUpdater: string,
-  pauseOperator: string,
-  maxScore: number,
-) {
+export async function deploySapphireCreditScore(deployer: Signer) {
   const sapphireCreditScoreFactory = await ethers.getContractFactory(
     'SapphireCreditScore',
     deployer,
   );
-  const sapphireCreditScore = await sapphireCreditScoreFactory.deploy(
-    merkleRoot,
-    merkleTreeUpdater,
-    pauseOperator,
-    maxScore,
-  );
+  const sapphireCreditScore = await sapphireCreditScoreFactory.deploy();
   return sapphireCreditScore as SapphireCreditScore;
 }
 
