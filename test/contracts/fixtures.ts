@@ -226,15 +226,7 @@ export async function sapphireFixture(
     deployer,
   ).deploy();
 
-  const creditScoreImp = await deployMockSapphireCreditScore(deployer);
-  const creditScoreProxy = await deployArcProxy(
-    deployer,
-    creditScoreImp.address,
-    deployerAddress,
-    [],
-  );
-  ctx.contracts.sapphire.creditScore = MockSapphireCreditScoreFactory.connect(
-    creditScoreProxy.address,
+  ctx.contracts.sapphire.creditScore = await deployMockSapphireCreditScore(
     deployer,
   );
 
