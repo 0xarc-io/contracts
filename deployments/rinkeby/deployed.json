@@ -377,5 +377,25 @@
     "version": 2,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "SapphireCreditScore",
+    "source": "SapphireCreditScore",
+    "address": "0x6d0EbEca38b4b6AA196B34c3bE8daA05b2D721fa",
+    "txn": "0x706eec21c9c9faf05aa0925689331111a2a2a51ec5efc2b3849a26597f8056c9",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "SapphireCreditScoreProxy",
+    "source": "ArcProxy",
+    "address": "0x78e4177619dc5B49bE33a26D1032C85458186c35",
+    "txn": "0x712649754b018ef3dfbf99b7a95ec3834fd6630a110e322dd35a29ee3928a6af",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": ""
   }
 ]
