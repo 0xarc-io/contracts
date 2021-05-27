@@ -106,7 +106,10 @@ export async function deployMockOracle(deployer: Signer) {
 }
 
 export async function deployMockSapphireOracle(deployer: Signer) {
-  const Contract = await ethers.getContractFactory('MockSapphireOracle', deployer);
+  const Contract = await ethers.getContractFactory(
+    'MockSapphireOracle',
+    deployer,
+  );
   const mockOracle = await Contract.deploy();
   return mockOracle as MockSapphireOracle;
 }
@@ -238,21 +241,12 @@ export async function deploySapphireCreditScore(
   return sapphireCreditScore as SapphireCreditScore;
 }
 
-export async function deployMockSapphireCreditScore(
-  deployer: Signer,
-  merkleRoot: string,
-  merkleTreeUpdater: string,
-  pauseOperator: string,
-) {
+export async function deployMockSapphireCreditScore(deployer: Signer) {
   const mockSapphireCreditScoreFactory = await ethers.getContractFactory(
     'MockSapphireCreditScore',
     deployer,
   );
-  const mockSapphireCreditScore = await mockSapphireCreditScoreFactory.deploy(
-    merkleRoot,
-    merkleTreeUpdater,
-    pauseOperator,
-  );
+  const mockSapphireCreditScore = await mockSapphireCreditScoreFactory.deploy();
   return mockSapphireCreditScore as MockSapphireCreditScore;
 }
 
