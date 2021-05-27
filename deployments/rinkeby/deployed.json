@@ -467,5 +467,25 @@
     "version": 2,
     "type": "synth",
     "group": "STABLEx"
+  },
+  {
+    "name": "SapphireCore",
+    "source": "SapphireCoreV1",
+    "address": "0xF8C7039Eb95ba3a2de30bD63120EBD905A111474",
+    "txn": "0x1552e97d483c51221e5c60d6a190b3ce49ad93260ac8288b254d922c8c974366",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": ""
+  },
+  {
+    "name": "SapphireCoreProxy",
+    "source": "ArcProxy",
+    "address": "0xBC8636BD79CA9DD20fC373E1076Ad98b2F379E25",
+    "txn": "0xf30c6fb983212efaa1cd97c28e2391aed9926ecc336a5d8f182b95defcae9d9a",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": "cUSDC-STABLEx"
   }
 ]
