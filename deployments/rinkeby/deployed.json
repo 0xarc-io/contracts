@@ -397,5 +397,15 @@
     "version": 1,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "SapphireMapperLinear",
+    "source": "SapphireMapperLinear",
+    "address": "0x2dCF144A26595c8205fEE2A89a269d4ee98E8432",
+    "txn": "0x7abc2862c3eb2bf2cf37e7d348a240adb630209439857b978518ac158cc4c744",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": ""
   }
 ]

@@ -192,6 +192,13 @@ task('deploy-mapper', 'Deploy the Sapphire Mapper').setAction(
     console.log(
       green(`Sapphire Mapper Linear successfully deployed at ${mapperAddress}`),
     );
+
+    console.log(yellow(`Verifying contract...`));
+    await hre.run('verify:verify', {
+      address: mapperAddress,
+      constructorArguments: [],
+    });
+    console.log(green(`Contract verified successfully!`));
   },
 );
 
@@ -239,6 +246,13 @@ task('deploy-assessor', 'Deploy the Sapphire Assessor').setAction(
     console.log(
       green(`Sapphire Assessor successfully deployed at ${assessorAddress}`),
     );
+
+    console.log(yellow(`Verifying contract...`));
+    await hre.run('verify:verify', {
+      address: assessorAddress,
+      constructorArguments: [mapperAddress, creditScoreAddress],
+    });
+    console.log(green(`Contract verified successfully!`));
   },
 );
 
