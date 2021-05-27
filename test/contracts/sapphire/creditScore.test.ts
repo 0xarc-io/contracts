@@ -1,17 +1,21 @@
 import { CreditScore } from '@arc-types/sapphireCore';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
-import { MockSapphireCreditScore } from '@src/typings';
+import {
+  MockSapphireCreditScore,
+  MockSapphireCreditScoreFactory,
+} from '@src/typings';
 import {
   addSnapshotBeforeRestoreAfterEach,
   advanceEpoch,
 } from '@test/helpers/testingUtils';
 import chai, { expect } from 'chai';
 import { solidity } from 'ethereum-waffle';
-import { BigNumber } from 'ethers';
+import { BigNumber, BigNumberish } from 'ethers';
 import 'module-alias/register';
 import { generateContext, ITestContext } from '../context';
 import {
+  deployArcProxy,
   deployMockSapphireCreditScore,
   deploySapphireCreditScore,
 } from '../deployers';
@@ -19,6 +23,8 @@ import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 
 chai.use(solidity);
+
+const MAX_CREDIT_SCORE = 1000;
 
 const ONE_BYTES32 =
   '0x1111111111111111111111111111111111111111111111111111111111111111';
@@ -42,6 +48,34 @@ describe('SapphireCreditScore', () => {
   let creditScore1: CreditScore;
   let creditScore2: CreditScore;
   let ctx: ITestContext;
+
+  async function createNewCreditScoreInstance(
+    merkleRoot: string,
+    merkleRootUpdater: string,
+    pauseOperator: string,
+    maxScore: BigNumberish,
+  ) {
+    const creditScoreImp = await deployMockSapphireCreditScore(owner);
+    const creditScoreProxy = await deployArcProxy(
+      owner,
+      creditScoreImp.address,
+      owner.address,
+      [],
+    );
+    const creditScoreInstance = MockSapphireCreditScoreFactory.connect(
+      creditScoreProxy.address,
+      owner,
+    );
+
+    await creditScoreInstance.init(
+      '0x1111111111111111111111111111111111111111111111111111111111111111',
+      ctx.signers.interestSetter.address,
+      ctx.signers.pauseOperator.address,
+      1000,
+    );
+
+    return creditScoreInstance;
+  }
 
   before(async () => {
     ctx = await generateContext(sapphireFixture, async (ctx) => {
@@ -255,12 +289,13 @@ describe('SapphireCreditScore', () => {
     });
 
     it('should check if updater cannot update merklee root before thee delay duration passes', async () => {
-      const mockCreditScoreContract = await deployMockSapphireCreditScore(
-        owner,
+      const mockCreditScoreContract = await createNewCreditScoreInstance(
         ONE_BYTES32,
         merkleRootUpdater.address,
         pauseOperator.address,
+        MAX_CREDIT_SCORE,
       );
+
       await mockCreditScoreContract.connect(pauseOperator).setPause(false);
       await advanceEpoch(mockCreditScoreContract);
       await mockCreditScoreContract
@@ -351,12 +386,13 @@ describe('SapphireCreditScore', () => {
     });
 
     it('should reverify a score and change timestamp when score is the same', async () => {
-      const creditScoreContract = await deployMockSapphireCreditScore(
-        owner,
-        tree.getHexRoot(),
+      const creditScoreContract = await createNewCreditScoreInstance(
+        ONE_BYTES32,
         merkleRootUpdater.address,
         pauseOperator.address,
+        MAX_CREDIT_SCORE,
       );
+
       await expect(
         creditScoreContract.verifyAndUpdate(
           getVerifyRequest(creditScore1.account, creditScore1.amount, tree),
@@ -379,12 +415,13 @@ describe('SapphireCreditScore', () => {
     });
 
     it('should reverify a score and change timestamp after merkle root was changed', async () => {
-      const creditScoreContract = await deployMockSapphireCreditScore(
-        owner,
-        tree.getHexRoot(),
+      const creditScoreContract = await createNewCreditScoreInstance(
+        ONE_BYTES32,
         merkleRootUpdater.address,
         pauseOperator.address,
+        MAX_CREDIT_SCORE,
       );
+
       await creditScoreContract.connect(pauseOperator).setPause(false);
       const initTimestamp = await creditScoreContract.currentTimestamp();
       const merkleRootDelay = await creditScoreContract.merkleRootDelayDuration();

@@ -4,12 +4,12 @@ pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 
-import {Ownable} from "../../lib/Ownable.sol";
+import {Adminable} from "../../lib/Adminable.sol";
 import {SafeMath} from "../../lib/SafeMath.sol";
 import {SapphireTypes} from "./SapphireTypes.sol";
 import {ISapphireCreditScore} from "./ISapphireCreditScore.sol";
 
-contract SapphireCreditScore is ISapphireCreditScore, Ownable {
+contract SapphireCreditScore is ISapphireCreditScore, Adminable {
 
     /* ========== Libraries ========== */
 
@@ -45,6 +45,8 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     );
 
     /* ========== Variables ========== */
+
+    bool private _initialized;
 
     uint16 public maxScore;
 
@@ -82,14 +84,22 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         _;
     }
 
-    /* ========== Constructor ========== */
+    /* ========== Init ========== */
 
-    constructor(
+    function init(
         bytes32 _merkleRoot,
         address _merkleRootUpdater,
         address _pauseOperator,
         uint16 _maxScore
-    ) public {
+    )
+        public
+        onlyAdmin
+    {
+        require(
+            !_initialized,
+            "SapphireCreditScore: init already called"
+        );
+
         require(
             _maxScore > 0,
             "SapphireCreditScore: max score cannot be zero"
@@ -103,6 +113,8 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         isPaused = true;
         merkleRootDelayDuration = 86400; // 24 * 60 * 60 sec
         maxScore = _maxScore;
+
+        _initialized = true;
     }
 
     /* ========== View Functions ========== */
@@ -161,7 +173,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
             "SapphireCreditScore: root is empty"
         );
 
-        if (msg.sender == owner()) {
+        if (msg.sender == getAdmin()) {
             updateMerkleRootAsOwner(_newRoot);
         } else {
             updateMerkleRootAsUpdater(_newRoot);
@@ -228,7 +240,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         bytes32 _newRoot
     )
         private
-        onlyOwner
+        onlyAdmin
     {
         require(
             isPaused,
@@ -247,7 +259,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         uint256 _delay
     )
         public
-        onlyOwner
+        onlyAdmin
     {
         require(
             _delay > 0,
@@ -293,7 +305,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         address _merkleRootUpdater
     )
         public
-        onlyOwner
+        onlyAdmin
     {
         require(
             _merkleRootUpdater != merkleRootUpdater,
@@ -311,7 +323,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         address _pauseOperator
     )
         public
-        onlyOwner
+        onlyAdmin
     {
         require(
             _pauseOperator != pauseOperator,
@@ -324,7 +336,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
 
     function renounceOwnership()
         public
-        onlyOwner
+        onlyAdmin
     {
         revert("SapphireAssessor: cannot renounce ownership");
     }

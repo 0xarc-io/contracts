@@ -5,6 +5,7 @@ import {
   MockMozartCoreV2Factory,
   MockMozartSavingsV2Factory,
   MockSapphireCoreV1Factory,
+  MockSapphireCreditScoreFactory,
   SapphireAssessorFactory,
   SapphireMapperLinearFactory,
   SyntheticTokenV2Factory,
@@ -225,11 +226,23 @@ export async function sapphireFixture(
     deployer,
   ).deploy();
 
-  ctx.contracts.sapphire.creditScore = await deployMockSapphireCreditScore(
+  const creditScoreImp = await deployMockSapphireCreditScore(deployer);
+  const creditScoreProxy = await deployArcProxy(
     deployer,
+    creditScoreImp.address,
+    deployerAddress,
+    [],
+  );
+  ctx.contracts.sapphire.creditScore = MockSapphireCreditScoreFactory.connect(
+    creditScoreProxy.address,
+    deployer,
+  );
+
+  await ctx.contracts.sapphire.creditScore.init(
     '0x1111111111111111111111111111111111111111111111111111111111111111',
     ctx.signers.interestSetter.address,
     ctx.signers.pauseOperator.address,
+    1000,
   );
 
   await ctx.contracts.sapphire.creditScore
