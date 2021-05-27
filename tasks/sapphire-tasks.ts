@@ -99,6 +99,13 @@ task(
     } catch (e) {
       console.log(red(`Failed to call synthetic init().\nReason: ${e}\n`));
     }
+
+    console.log(yellow(`Verifying contract...`));
+    await hre.run('verify:verify', {
+      address: syntheticAddress,
+      constructorArguments: [name, '2'],
+    });
+    console.log(green(`Contract verified successfully!`));
   });
 
 task(

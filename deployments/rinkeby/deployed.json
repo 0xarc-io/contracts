@@ -447,5 +447,25 @@
     "version": 1,
     "type": "staking",
     "group": "SapphirePassportPool"
+  },
+  {
+    "name": "SyntheticToken",
+    "source": "SyntheticTokenV2",
+    "address": "0x2E933E666DfD5089AD70D5Ab25eBA1E3d5e52bA8",
+    "txn": "0xb135ea8c612894c4ddd45187fe0eada4c39258ba1bfd16546961e2a2fc36ec0d",
+    "network": "rinkeby",
+    "version": 2,
+    "type": "synth",
+    "group": ""
+  },
+  {
+    "name": "SyntheticV2Proxy",
+    "source": "ArcProxy",
+    "address": "0x3E9190F29ef08DFdE0550116A8919Cf89FD3F4Fe",
+    "txn": "0x99f7f33c7cee0535d8d917dbc3c239ef6ec9102e3dd2a9b7a0272bdd450236a1",
+    "network": "rinkeby",
+    "version": 2,
+    "type": "synth",
+    "group": "STABLEx"
   }
 ]
