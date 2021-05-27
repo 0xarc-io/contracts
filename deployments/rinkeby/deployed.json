@@ -407,5 +407,15 @@
     "version": 1,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "SapphireAssessor",
+    "source": "SapphireAssessor",
+    "address": "0xEAA47d55a17B59Dc0FC72AAceE1240875059E314",
+    "txn": "0x0947f61587a6b142b82f68362a64b2260b914e51b8aa130cff0da26c44f84634",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": ""
   }
 ]
