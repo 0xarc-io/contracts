@@ -54,9 +54,7 @@ describe('SapphireAssessor', () => {
       anotherCreditScore,
     ]);
 
-    const testCreditScoreContract = await new MockSapphireCreditScoreFactory(
-      owner,
-    ).deploy();
+    const testCreditScoreContract = await deployMockSapphireCreditScore(owner);
     await testCreditScoreContract.init(
       testCreditScoreTree.getHexRoot(),
       owner.address,
@@ -538,9 +536,9 @@ describe('SapphireAssessor', () => {
     it('sets the new credit score contract', async () => {
       const testCreditScoreTree = new CreditScoreTree([creditScore2]);
 
-      const testCreditScoreContract = await new MockSapphireCreditScoreFactory(
+      const testCreditScoreContract = await deployMockSapphireCreditScore(
         owner,
-      ).deploy();
+      );
       await testCreditScoreContract.init(
         testCreditScoreTree.getHexRoot(),
         owner.address,
@@ -550,7 +548,7 @@ describe('SapphireAssessor', () => {
 
       await assessor.setCreditScoreContract(testCreditScoreContract.address);
 
-      expect(await assessor.cretestCreditScoreContractditScoreContract()).to.eq(
+      expect(await assessor.creditScoreContract()).to.eq(
         testCreditScoreContract.address,
       );
     });
@@ -558,9 +556,9 @@ describe('SapphireAssessor', () => {
     it('emits the CreditScoreContractSet event', async () => {
       const testCreditScoreTree = new CreditScoreTree([creditScore2]);
 
-      const testCreditScoreContract = await new MockSapphireCreditScoreFactory(
+      const testCreditScoreContract = await deployMockSapphireCreditScore(
         owner,
-      ).deploy();
+      );
       await testCreditScoreContract.init(
         testCreditScoreTree.getHexRoot(),
         owner.address,
