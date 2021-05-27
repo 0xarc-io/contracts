@@ -14,6 +14,7 @@ import ArcNumber from '@src/utils/ArcNumber';
 import { expect } from 'chai';
 import { BigNumber, constants } from 'ethers';
 import { ethers } from 'hardhat';
+import { deployMockSapphireCreditScore } from '../deployers';
 
 describe('SapphireAssessor', () => {
   let owner: SignerWithAddress;
@@ -55,7 +56,13 @@ describe('SapphireAssessor', () => {
 
     const testCreditScoreContract = await new MockSapphireCreditScoreFactory(
       owner,
-    ).deploy(testCreditScoreTree.getHexRoot(), owner.address, owner.address);
+    ).deploy();
+    await testCreditScoreContract.init(
+      testCreditScoreTree.getHexRoot(),
+      owner.address,
+      owner.address,
+      1000,
+    );
 
     const testAssessor = await new SapphireAssessorFactory(owner).deploy(
       mapper.address,
@@ -98,12 +105,12 @@ describe('SapphireAssessor', () => {
       creditScore3,
     ]);
 
-    creditScoreContract = await new MockSapphireCreditScoreFactory(
-      owner,
-    ).deploy(
+    creditScoreContract = await deployMockSapphireCreditScore(owner);
+    await creditScoreContract.init(
       creditScoreTree.getHexRoot(),
       '0x0000000000000000000000000000000000000000',
       '0x0000000000000000000000000000000000000000',
+      1000,
     );
 
     assessor = await new SapphireAssessorFactory(owner).deploy(
@@ -533,11 +540,17 @@ describe('SapphireAssessor', () => {
 
       const testCreditScoreContract = await new MockSapphireCreditScoreFactory(
         owner,
-      ).deploy(testCreditScoreTree.getHexRoot(), owner.address, owner.address);
+      ).deploy();
+      await testCreditScoreContract.init(
+        testCreditScoreTree.getHexRoot(),
+        owner.address,
+        owner.address,
+        1000,
+      );
 
       await assessor.setCreditScoreContract(testCreditScoreContract.address);
 
-      expect(await assessor.creditScoreContract()).to.eq(
+      expect(await assessor.cretestCreditScoreContractditScoreContract()).to.eq(
         testCreditScoreContract.address,
       );
     });
@@ -547,7 +560,13 @@ describe('SapphireAssessor', () => {
 
       const testCreditScoreContract = await new MockSapphireCreditScoreFactory(
         owner,
-      ).deploy(testCreditScoreTree.getHexRoot(), owner.address, owner.address);
+      ).deploy();
+      await testCreditScoreContract.init(
+        testCreditScoreTree.getHexRoot(),
+        owner.address,
+        owner.address,
+        1000,
+      );
 
       await expect(
         assessor.setCreditScoreContract(testCreditScoreContract.address),

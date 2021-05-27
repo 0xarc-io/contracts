@@ -52,17 +52,7 @@ describe('SapphireCreditScore', () => {
     pauseOperator: string,
     maxScore: BigNumberish,
   ) {
-    const creditScoreImp = await deployMockSapphireCreditScore(admin);
-    const creditScoreProxy = await deployArcProxy(
-      admin,
-      creditScoreImp.address,
-      admin.address,
-      [],
-    );
-    const creditScoreInstance = MockSapphireCreditScoreFactory.connect(
-      creditScoreProxy.address,
-      admin,
-    );
+    const creditScoreInstance = await deployMockSapphireCreditScore(admin);
 
     await creditScoreInstance.init(
       merkleRoot,

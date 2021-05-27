@@ -16,8 +16,9 @@ import { MockOracle } from '@src/typings/MockOracle';
 import { MockMozartCoreV2 } from '@src/typings/MockMozartCoreV2';
 import {
   MockMozartSavingsV2,
-  MockSapphireCoreV1,
   MockSapphireCoreV1Factory,
+  MockSapphireCreditScoreFactory,
+  SapphireCreditScoreFactory,
 } from '@src/typings';
 import { MerkleDistributor } from '@src/typings/MerkleDistributor';
 import { SapphireCreditScore } from '@src/typings/SapphireCreditScore';
@@ -222,21 +223,29 @@ export async function deployMerkleDistributor(
 }
 
 export async function deploySapphireCreditScore(deployer: Signer) {
-  const sapphireCreditScoreFactory = await ethers.getContractFactory(
-    'SapphireCreditScore',
+  const creditScoreImp = await new SapphireCreditScoreFactory(
     deployer,
+  ).deploy();
+  const proxy = await deployArcProxy(
+    deployer,
+    creditScoreImp.address,
+    await deployer.getAddress(),
+    [],
   );
-  const sapphireCreditScore = await sapphireCreditScoreFactory.deploy();
-  return sapphireCreditScore as SapphireCreditScore;
+  return SapphireCreditScoreFactory.connect(proxy.address, deployer);
 }
 
 export async function deployMockSapphireCreditScore(deployer: Signer) {
-  const mockSapphireCreditScoreFactory = await ethers.getContractFactory(
-    'MockSapphireCreditScore',
+  const creditScoreImp = await new MockSapphireCreditScoreFactory(
     deployer,
+  ).deploy();
+  const proxy = await deployArcProxy(
+    deployer,
+    creditScoreImp.address,
+    await deployer.getAddress(),
+    [],
   );
-  const mockSapphireCreditScore = await mockSapphireCreditScoreFactory.deploy();
-  return mockSapphireCreditScore as MockSapphireCreditScore;
+  return MockSapphireCreditScoreFactory.connect(proxy.address, deployer);
 }
 
 export function deployMockSapphireCoreV1(deployer: Signer) {

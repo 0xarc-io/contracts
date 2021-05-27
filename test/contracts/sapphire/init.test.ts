@@ -67,11 +67,12 @@ describe('SapphireCore.init', () => {
 
     const oracle = await new MockSapphireOracleFactory(deployer).deploy();
     const mapper = await new SapphireMapperLinearFactory(deployer).deploy();
-    const creditScore = await deployMockSapphireCreditScore(
-      deployer,
+    const creditScore = await deployMockSapphireCreditScore(deployer);
+    await creditScore.init(
       '0x1111111111111111111111111111111111111111111111111111111111111111',
       Wallet.createRandom().address,
       Wallet.createRandom().address,
+      1000,
     );
     const assessor = await new SapphireAssessorFactory(deployer).deploy(
       mapper.address,
