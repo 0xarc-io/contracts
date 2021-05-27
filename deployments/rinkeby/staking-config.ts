@@ -1,12 +1,16 @@
+import { BigNumber } from '@ethersproject/bignumber';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import {
   LiquidityCampaign,
   LiquidityCampaignFactory,
   LiquidityCampaignV2,
   LiquidityCampaignV2Factory,
+  PassportCampaign,
+  PassportCampaignFactory,
   RewardCampaign,
   RewardCampaignFactory,
 } from '@src/typings';
+import { utils } from 'ethers';
 
 export default {
   'TestPool-1': {
@@ -97,6 +101,42 @@ export default {
         {
           value: daoAllocation,
         },
+      );
+    },
+  },
+  SapphirePassportPool: {
+    source: 'PassportCampaign',
+    stakingToken: '',
+    rewardsToken: 'ArcxTokenV2',
+    rewardsDurationSeconds: 60 * 60 * 24 * 31, // 31 days
+    contractFactory: PassportCampaignFactory,
+    getDeployTx: (signer: SignerWithAddress) =>
+      new PassportCampaignFactory(signer).getDeployTransaction(),
+    runInit: (
+      contract: PassportCampaign,
+      arcDao: string,
+      rewardsDistributor: string,
+      rewardsTokenAddress: string,
+      stakingTokenAddress: string,
+    ) => {
+      const daoAllocation = '400000000000000000';
+      const creditScoreContractAddress =
+        '0x78e4177619dc5B49bE33a26D1032C85458186c35';
+
+      // Max 1000 stake amount
+      const maxStakePerUser = utils.parseEther('1000');
+      // Needs a minimum of 500 credit score to participate
+      const creditScoreThreshold = 500;
+
+      return contract.init(
+        arcDao,
+        rewardsDistributor,
+        rewardsTokenAddress,
+        stakingTokenAddress,
+        creditScoreContractAddress,
+        daoAllocation,
+        maxStakePerUser,
+        creditScoreThreshold,
       );
     },
   },
