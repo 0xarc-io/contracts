@@ -6,7 +6,7 @@ pragma experimental ABIEncoderV2;
 import { SapphireCreditScore } from "../debt/sapphire/SapphireCreditScore.sol";
 import {MockTimestamp} from "./MockTimestamp.sol";
 
-// solium-disable-next-line
+// solium-disable-next-line no-empty-blocks
 contract MockSapphireCreditScore is SapphireCreditScore, MockTimestamp {
 
 }
