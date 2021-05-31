@@ -6,7 +6,6 @@ import {
   SapphireCreditScoreFactory,
   SapphireMapperLinearFactory,
   SyntheticTokenV2Factory,
-  SynthRegistryV2Factory,
   TestTokenFactory,
 } from '@src/typings';
 import { green, magenta, red, yellow } from 'chalk';
@@ -24,6 +23,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import _ from 'lodash';
 import { MAX_UINT256 } from '@src/constants';
 import { constants } from 'ethers';
+import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 task(
   'deploy-sapphire-synth',
@@ -99,6 +99,13 @@ task(
     } catch (e) {
       console.log(red(`Failed to call synthetic init().\nReason: ${e}\n`));
     }
+
+    console.log(yellow(`Verifying contract...`));
+    await hre.run('verify:verify', {
+      address: syntheticAddress,
+      constructorArguments: [name, '2'],
+    });
+    console.log(green(`Contract verified successfully!`));
   });
 
 task(
@@ -192,6 +199,13 @@ task('deploy-mapper', 'Deploy the Sapphire Mapper').setAction(
     console.log(
       green(`Sapphire Mapper Linear successfully deployed at ${mapperAddress}`),
     );
+
+    console.log(yellow(`Verifying contract...`));
+    await hre.run('verify:verify', {
+      address: mapperAddress,
+      constructorArguments: [],
+    });
+    console.log(green(`Contract verified successfully!`));
   },
 );
 
@@ -239,10 +253,17 @@ task('deploy-assessor', 'Deploy the Sapphire Assessor').setAction(
     console.log(
       green(`Sapphire Assessor successfully deployed at ${assessorAddress}`),
     );
+
+    console.log(yellow(`Verifying contract...`));
+    await hre.run('verify:verify', {
+      address: assessorAddress,
+      constructorArguments: [mapperAddress, creditScoreAddress],
+    });
+    console.log(green(`Contract verified successfully!`));
   },
 );
 
-task('deploy-sapphire', 'Depploy a Sapphire core')
+task('deploy-sapphire', 'Deploy a Sapphire core')
   .addParam('collateral', 'The collateral name to register the core with')
   .setAction(async (taskArgs, hre) => {
     const collatName = taskArgs.collateral;
@@ -291,6 +312,7 @@ task('deploy-sapphire', 'Depploy a Sapphire core')
       collatConfig,
       networkConfig,
       signer,
+      hre,
     );
 
     if (!oracleAddress) {
@@ -392,8 +414,13 @@ task('deploy-sapphire', 'Depploy a Sapphire core')
 
     console.log(green(`core.init() called successfully!\n`));
 
-    // Set borrow limits if needed
-    if (!_.isNil(collatConfig.limits)) {
+    // Set borrow limits if needed. Skip if all zeros
+    if (
+      !_.isNil(collatConfig.limits) &&
+      (collatConfig.limits.totalBorrowLimit ||
+        collatConfig.limits.vaultBorrowMin ||
+        collatConfig.limits.vaultBorrowMax)
+    ) {
       console.log(yellow(`Calling core.setLimits() ...\n`));
 
       await core.setLimits(
@@ -423,6 +450,13 @@ task('deploy-sapphire', 'Depploy a Sapphire core')
 
       console.log(green(`Admin successfully set to ${ultimateOwner}`));
     }
+
+    console.log(yellow(`Verifying contract...`));
+    await hre.run('verify:verify', {
+      address: coreAddress,
+      constructorArguments: [],
+    });
+    console.log(green(`Contract verified successfully!`));
   });
 
 function _deployTestCollateral(
@@ -463,10 +497,11 @@ async function _deployOracle(
   collatConfig: any,
   networkConfig: NetworkParams,
   signer: SignerWithAddress,
+  hre: HardhatRuntimeEnvironment,
 ): Promise<string> {
   const { network } = networkConfig;
 
-  if (_.isNil(collatConfig.oralce)) {
+  if (_.isNil(collatConfig.oracle)) {
     if (network === 'mainnet') {
       throw red(
         `The oracle was not set in the collateral config file. Please set it and try again.`,
@@ -474,7 +509,7 @@ async function _deployOracle(
     }
 
     console.log(yellow(`Deploying mock oracle...`));
-    return deployContract(
+    const mockOracleAddress = await deployContract(
       {
         name: 'Oracle',
         source: 'MockOracle',
@@ -485,9 +520,16 @@ async function _deployOracle(
       },
       networkConfig,
     );
+
+    console.log(yellow(`Verifying mock oracle...`));
+    await hre.run('verify:verify', {
+      address: mockOracleAddress,
+      constructorArguments: [],
+    });
+    console.log(green(`Mock Oracle verified successfully!`));
   } else {
     // Oracle is found, deploy it
-    const { source, getDeployTx } = collatConfig.oracle;
+    const { source, getDeployTx, constructorArguments } = collatConfig.oracle;
 
     if (!source || !getDeployTx) {
       throw red(
@@ -507,8 +549,24 @@ async function _deployOracle(
       },
       networkConfig,
     );
+    console.log(
+      green(`Oracle successfully deployed (or found) at ${oracleAddress}`),
+    );
 
-    console.log(green(`Oracle successfully deployed at ${oracleAddress}`));
+    try {
+      console.log(yellow(`Verifying oracle...`));
+      await hre.run('verify:verify', {
+        address: oracleAddress,
+        constructorArguments,
+      });
+      console.log(green(`Oracle verified successfully!`));
+    } catch (err) {
+      console.log(
+        red(
+          `Error verifying oracle. It could be because it was already deployed. ${err}`,
+        ),
+      );
+    }
 
     return oracleAddress;
   }

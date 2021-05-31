@@ -229,7 +229,7 @@ task('deploy-staking-liquidity', 'Deploy a LiquidityCampaign')
         networkConfig,
       ));
 
-    const implementationContract = await deployContract(
+    const implementationContractAddress = await deployContract(
       {
         name: 'Implementation',
         source: stakingConfig.source,
@@ -246,7 +246,7 @@ task('deploy-staking-liquidity', 'Deploy a LiquidityCampaign')
         name: 'Proxy',
         source: 'ArcProxy',
         data: new ArcProxyFactory(signer).getDeployTransaction(
-          implementationContract,
+          implementationContractAddress,
           await signer.getAddress(),
           [],
         ),
@@ -291,6 +291,13 @@ task('deploy-staking-liquidity', 'Deploy a LiquidityCampaign')
         red(`Failed to set the rewards duration. Reason: ${error}\n`),
       );
     }
+
+    console.log(yellow(`Verifying contract...`));
+    await hre.run('verify:verify', {
+      address: implementationContractAddress,
+      constructorArguments: [],
+    });
+    console.log(green(`Contract verified successfully!`));
   });
 
 task('deploy-staking-joint', 'Deploy a JointCampaign')
