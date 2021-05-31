@@ -13,6 +13,7 @@ import 'hardhat-watcher';
 import 'solidity-coverage';
 
 import '@nomiclabs/hardhat-waffle';
+import '@nomiclabs/hardhat-etherscan';
 
 import './tasks/type-extensions';
 
@@ -111,6 +112,9 @@ const config: HardhatUserConfig = {
   typechain: {
     outDir: './src/typings',
     target: 'ethers-v5',
+  },
+  etherscan: {
+    apiKey: params.etherscan_key,
   },
   // watcher: {
   //   compilation: {

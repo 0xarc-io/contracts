@@ -329,16 +329,6 @@
     "group": ""
   },
   {
-    "name": "WaitlistBatch",
-    "source": "WaitlistBatch",
-    "address": "0xF4C60De4B5f2c2E4f22d228A55710a6ec80308f6",
-    "txn": "0x36c993b2045cfc33befc7568790c8d7d2ec3b5821b2e6625ce8f14e33028730b",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "global",
-    "group": ""
-  },
-  {
     "name": "TestStakingToken",
     "source": "TestToken",
     "address": "0x969850e65A62532a4Dde8a20dB67f9E860AAA515",
@@ -375,6 +365,126 @@
     "txn": "0x5f96fafad8c459d4599b7dc1217cba248f64a14cb7ff064efa7cdead15c140f9",
     "network": "rinkeby",
     "version": 2,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "SapphireMapperLinear",
+    "source": "SapphireMapperLinear",
+    "address": "0x2dCF144A26595c8205fEE2A89a269d4ee98E8432",
+    "txn": "0x7abc2862c3eb2bf2cf37e7d348a240adb630209439857b978518ac158cc4c744",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "SapphireAssessor",
+    "source": "SapphireAssessor",
+    "address": "0xEAA47d55a17B59Dc0FC72AAceE1240875059E314",
+    "txn": "0x0947f61587a6b142b82f68362a64b2260b914e51b8aa130cff0da26c44f84634",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "TestStakingToken",
+    "source": "TestToken",
+    "address": "0x22b80E0BA47Add0fe11Bca798F24AE5e6A816e84",
+    "txn": "0x21ffbf242b7d7b2918bd41cae969eb9e0d043d3019ce712460ed1f8407e16156",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "staking",
+    "group": "SapphirePassportPool"
+  },
+  {
+    "name": "Implementation",
+    "source": "PassportCampaign",
+    "address": "0x785ab4716Cd90c2611988100537E8A82c810314b",
+    "txn": "0xf04c91f3d336e31cc78dddf149949a59f6f49e920ea1bb7954dbce518b52c1d0",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "staking",
+    "group": "SapphirePassportPool"
+  },
+  {
+    "name": "Proxy",
+    "source": "ArcProxy",
+    "address": "0x193ACB49FEEBE95df2911bBE93176f71B8eb609e",
+    "txn": "0xb167594f5a83b707be2c64c64cc8a1b9a95244bbc8e172fedad646403051d231",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "staking",
+    "group": "SapphirePassportPool"
+  },
+  {
+    "name": "SyntheticToken",
+    "source": "SyntheticTokenV2",
+    "address": "0x2E933E666DfD5089AD70D5Ab25eBA1E3d5e52bA8",
+    "txn": "0xb135ea8c612894c4ddd45187fe0eada4c39258ba1bfd16546961e2a2fc36ec0d",
+    "network": "rinkeby",
+    "version": 2,
+    "type": "synth",
+    "group": ""
+  },
+  {
+    "name": "SyntheticV2Proxy",
+    "source": "ArcProxy",
+    "address": "0x3E9190F29ef08DFdE0550116A8919Cf89FD3F4Fe",
+    "txn": "0x99f7f33c7cee0535d8d917dbc3c239ef6ec9102e3dd2a9b7a0272bdd450236a1",
+    "network": "rinkeby",
+    "version": 2,
+    "type": "synth",
+    "group": "STABLEx"
+  },
+  {
+    "name": "SapphireCore",
+    "source": "SapphireCoreV1",
+    "address": "0xF8C7039Eb95ba3a2de30bD63120EBD905A111474",
+    "txn": "0x1552e97d483c51221e5c60d6a190b3ce49ad93260ac8288b254d922c8c974366",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": ""
+  },
+  {
+    "name": "SapphireCoreProxy",
+    "source": "ArcProxy",
+    "address": "0xBC8636BD79CA9DD20fC373E1076Ad98b2F379E25",
+    "txn": "0xf30c6fb983212efaa1cd97c28e2391aed9926ecc336a5d8f182b95defcae9d9a",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": "cUSDC-STABLEx"
+  },
+  {
+    "name": "SapphireCreditScore",
+    "source": "SapphireCreditScore",
+    "address": "0x95FA4634BD74273a4898B49D56Dba985A2299eB5",
+    "txn": "0x6da76562aa81e1bd43825389b10df6e96bcfd392a76c62f56245d0baf5c517b7",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "SapphireCreditScoreProxy",
+    "source": "ArcProxy",
+    "address": "0x3c32AD12f14b563b05fF07C71587ebac65d948EC",
+    "txn": "0xc2f5dc1d142fa8519a22dd2a4c4889ff21c29621ff5262afba9ad24f9dc32329",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "WaitlistBatch",
+    "source": "WaitlistBatch",
+    "address": "0x7689213C6D56Cad49bdF518E95392B520E19E36a",
+    "txn": "0xd42697b09aaaf886b4738f3b00f02a41c3e704f306b7657b2cc1720d778e6fde",
+    "network": "rinkeby",
+    "version": 1,
     "type": "global",
     "group": ""
   }
