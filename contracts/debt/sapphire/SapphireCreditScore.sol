@@ -4,12 +4,12 @@ pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 
-import {Ownable} from "../../lib/Ownable.sol";
+import {Adminable} from "../../lib/Adminable.sol";
 import {SafeMath} from "../../lib/SafeMath.sol";
 import {SapphireTypes} from "./SapphireTypes.sol";
 import {ISapphireCreditScore} from "./ISapphireCreditScore.sol";
 
-contract SapphireCreditScore is ISapphireCreditScore, Ownable {
+contract SapphireCreditScore is ISapphireCreditScore, Adminable {
 
     /* ========== Libraries ========== */
 
@@ -44,7 +44,13 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         address merkleRootUpdater
     );
 
+    event DocumentIdUpdated(
+        string newDocumentId
+    );
+
     /* ========== Variables ========== */
+
+    bool private _initialized;
 
     uint16 public maxScore;
 
@@ -61,6 +67,9 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     address public merkleRootUpdater;
 
     address public pauseOperator;
+
+    // The document ID of the IPFS document containing the current Merkle Tree
+    string public documentId;
 
     mapping(address => SapphireTypes.CreditScore) public userScores;
 
@@ -82,14 +91,22 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         _;
     }
 
-    /* ========== Constructor ========== */
+    /* ========== Init ========== */
 
-    constructor(
+    function init(
         bytes32 _merkleRoot,
         address _merkleRootUpdater,
         address _pauseOperator,
         uint16 _maxScore
-    ) public {
+    )
+        public
+        onlyAdmin
+    {
+        require(
+            !_initialized,
+            "SapphireCreditScore: init already called"
+        );
+
         require(
             _maxScore > 0,
             "SapphireCreditScore: max score cannot be zero"
@@ -103,6 +120,8 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         isPaused = true;
         merkleRootDelayDuration = 86400; // 24 * 60 * 60 sec
         maxScore = _maxScore;
+
+        _initialized = true;
     }
 
     /* ========== View Functions ========== */
@@ -120,7 +139,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         return block.timestamp;
     }
 
-   /**
+    /**
      * @dev Return last verified user score
      */
     function getLastScore(
@@ -140,7 +159,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
      * @dev Update upcoming merkle root
      *
      * @notice Can be called by:
-     *      - the owner:
+     *      - the admin:
      *          1. Check if contract is paused
      *          2. Replace upcoming merkle root
      *      - merkle root updater:
@@ -161,15 +180,15 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
             "SapphireCreditScore: root is empty"
         );
 
-        if (msg.sender == owner()) {
-            updateMerkleRootAsOwner(_newRoot);
+        if (msg.sender == getAdmin()) {
+            updateMerkleRootAsAdmin(_newRoot);
         } else {
             updateMerkleRootAsUpdater(_newRoot);
         }
         emit MerkleRootUpdated(msg.sender, _newRoot, currentTimestamp());
     }
 
-   /**
+    /**
      * @dev Request for verifying user's credit score
      *
      * @notice If the credit score is verified, this function updates the
@@ -222,23 +241,23 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
     }
 
     /**
-     * @dev Merkle root updating strategy for the owner
+     * @dev Merkle root updating strategy for the admin
     **/
-    function updateMerkleRootAsOwner(
+    function updateMerkleRootAsAdmin(
         bytes32 _newRoot
     )
         private
-        onlyOwner
+        onlyAdmin
     {
         require(
             isPaused,
-            "SapphireCreditScore: owner can only update merkle root if paused"
+            "SapphireCreditScore: only admin can update merkle root if paused"
         );
 
         upcomingMerkleRoot = _newRoot;
     }
 
-    /* ========== Owner Functions ========== */
+    /* ========== Admin Functions ========== */
 
     /**
      * @dev Update merkle root delay duration
@@ -247,7 +266,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         uint256 _delay
     )
         public
-        onlyOwner
+        onlyAdmin
     {
         require(
             _delay > 0,
@@ -293,7 +312,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         address _merkleRootUpdater
     )
         public
-        onlyOwner
+        onlyAdmin
     {
         require(
             _merkleRootUpdater != merkleRootUpdater,
@@ -311,7 +330,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         address _pauseOperator
     )
         public
-        onlyOwner
+        onlyAdmin
     {
         require(
             _pauseOperator != pauseOperator,
@@ -322,10 +341,17 @@ contract SapphireCreditScore is ISapphireCreditScore, Ownable {
         emit PauseOperatorUpdated(pauseOperator);
     }
 
-    function renounceOwnership()
+    /**
+     * @dev Sets the document ID of the IPFS document containing the current Merkle Tree.
+     */
+    function setDocumentId(
+        string memory _documentId
+    )
         public
-        onlyOwner
+        onlyAdmin
     {
-        revert("SapphireAssessor: cannot renounce ownership");
+        documentId = _documentId;
+
+        emit DocumentIdUpdated(documentId);
     }
 }
