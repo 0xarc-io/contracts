@@ -354,11 +354,4 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
 
         emit DocumentIdUpdated(documentId);
     }
-
-    function renounceOwnership()
-        public
-        onlyAdmin
-    {
-        revert("SapphireAssessor: cannot renounce ownership");
-    }
 }
