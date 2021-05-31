@@ -122,31 +122,53 @@ task(
       networkDetails['users']['eoaOwner'] ||
       signer.address;
 
-    const creditScoreAddress = await deployContract(
+    const creditScoreImpAddress = await deployContract(
       {
         name: 'SapphireCreditScore',
         source: 'SapphireCreditScore',
-        data: new SapphireCreditScoreFactory(signer).getDeployTransaction(
-          constants.HashZero,
-          taskArgs.rootupdater || ultimateOwner,
-          taskArgs.pauseOperator || ultimateOwner,
-          1000,
+        data: new SapphireCreditScoreFactory(signer).getDeployTransaction(),
+        version: 1,
+        type: DeploymentType.global,
+      },
+      networkConfig,
+    );
+    const creditScoreProxyAddress = await deployContract(
+      {
+        name: 'SapphireCreditScoreProxy',
+        source: 'ArcProxy',
+        data: new ArcProxyFactory(signer).getDeployTransaction(
+          creditScoreImpAddress,
+          await signer.getAddress(),
+          [],
         ),
         version: 1,
         type: DeploymentType.global,
       },
       networkConfig,
     );
+    const creditScoreContract = SapphireCreditScoreFactory.connect(
+      creditScoreProxyAddress,
+      signer,
+    );
 
-    if (!creditScoreAddress) {
+    if (!creditScoreProxyAddress) {
       throw red(`Sapphire Credit Score could not be deployed :(`);
     }
 
     console.log(
       green(
-        `Sapphire Credit Score was successfully deployed at ${creditScoreAddress}`,
+        `Sapphire Credit Score was successfully deployed at ${creditScoreProxyAddress}`,
       ),
     );
+
+    console.log(yellow(`Calling init()...`));
+    await creditScoreContract.init(
+      constants.HashZero,
+      taskArgs.rootupdater || ultimateOwner,
+      taskArgs.pauseoperator || ultimateOwner,
+      1000,
+    );
+    console.log(green(`init() called successfully!`));
   });
 
 task('deploy-mapper', 'Deploy the Sapphire Mapper').setAction(
