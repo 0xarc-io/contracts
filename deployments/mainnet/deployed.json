@@ -607,5 +607,15 @@
     "version": 1,
     "type": "staking",
     "group": "Pool-9"
+  },
+  {
+    "name": "WaitlistBatch",
+    "source": "WaitlistBatch",
+    "address": "0xbd3222d94d077279A875699a8057C1F58D8a3894",
+    "txn": "0xb206749970453320cc2e4968fe74c408d311007ef7d8b70b23f5c996b1deee9a",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global",
+    "group": ""
   }
 ]
