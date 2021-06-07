@@ -1,7 +1,7 @@
 import { IERC20Factory } from '@src/typings/IERC20Factory';
 import { IMintableTokenFactory } from '@src/typings/IMintableTokenFactory';
 import { green, yellow } from 'chalk';
-import { loadDetails } from 'deployments/src';
+import { loadDetails } from '../deployments/src';
 import { utils } from 'ethers';
 import { task } from 'hardhat/config';
 
