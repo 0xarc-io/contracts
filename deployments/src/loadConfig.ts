@@ -28,7 +28,7 @@ export async function loadStakingConfig(params: LoadConfigParams) {
   return await loadConfig(params, constants.STAKING_CONFIG_FILENAME, 'staking');
 }
 
-async function loadConfig(
+export async function loadConfig(
   params: LoadConfigParams,
   filename: string,
   type: string,
