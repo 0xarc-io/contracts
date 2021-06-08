@@ -487,5 +487,15 @@
     "version": 1,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "ArcDAO",
+    "source": "AddressAccrual",
+    "address": "0xcD12866Ef3F06436FA25EF2Ef79B66AC376351fA",
+    "txn": "0x86a2d10b47c6969e39e054b22cb06fe3938547e4d9c201ebf7c36c6b5b577f6e",
+    "network": "rinkeby",
+    "version": 2,
+    "type": "global",
+    "group": ""
   }
 ]

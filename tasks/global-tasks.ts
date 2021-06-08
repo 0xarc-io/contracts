@@ -104,6 +104,35 @@ task(
   );
 });
 
+task(
+  'deploy-accrual',
+  'Deploy the address accrual contract for the given token',
+)
+  .addParam('token', 'The address of the token')
+  .setAction(async (taskArgs, hre) => {
+    const { token } = taskArgs;
+    const network = hre.network.name;
+    const signer = (await hre.ethers.getSigners())[0];
+
+    await pruneDeployments(network, signer.provider);
+
+    const networkConfig = { network, signer } as NetworkParams;
+
+    const arcDAO = await deployContract(
+      {
+        name: 'ArcDAO',
+        source: 'AddressAccrual',
+        data: new AddressAccrualFactory(signer).getDeployTransaction(token),
+        version: 2,
+        type: DeploymentType.global,
+      },
+      networkConfig,
+    );
+    console.log(
+      green(`AddressAccrual contract successfully deployed at ${arcDAO}`),
+    );
+  });
+
 task('deploy-arcx-token-v2', 'Deploy the ArcxTokenV2')
   .addParam('name', 'Then name of the token')
   .addParam('symbol', 'The symbol of the token')
