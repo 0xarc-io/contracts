@@ -31,7 +31,6 @@ describe('Ownable contracts', () => {
           'SavingsRegistry',
           'SynthRegistry',
           'SynthRegistryV2',
-          'AddressAccrual',
           'StakingRewardsAccrualCapped',
           'AdminRewards',
           'KYFToken',
@@ -53,10 +52,10 @@ describe('Ownable contracts', () => {
     }
   });
 
-  describe('contractes owned by the ARCx Protocol DAO', () => {
+  describe('contracts owned by the ARCx Protocol DAO', () => {
     for (const deployment of deployments) {
       const shouldBeOwnable = (source: string) => {
-        return ['ArcxTokenV2'].includes(source);
+        return ['ArcxTokenV2', 'AddressAccrual'].includes(source);
       };
 
       if (shouldBeOwnable(deployment.source)) {
@@ -126,7 +125,10 @@ describe('Ownable contracts', () => {
             deployment.address,
             provider,
           ).getAdmin();
-          expect(admin.toLowerCase()).to.be.oneOf([expectedOwner, multisigOwner]);
+          expect(admin.toLowerCase()).to.be.oneOf([
+            expectedOwner,
+            multisigOwner,
+          ]);
         });
       }
     }
