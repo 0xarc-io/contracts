@@ -10,6 +10,7 @@ export * from './staking-tasks';
 export * from './oracle-tasks';
 export * from './waitlistBatch-tasks';
 export * from './sapphire-tasks';
+export * from './utility-tasks';
 
 import { task } from 'hardhat/config';
 
