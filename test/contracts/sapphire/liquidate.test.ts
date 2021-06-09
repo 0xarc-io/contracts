@@ -571,6 +571,45 @@ describe('SapphireCore.liquidate()', () => {
       ).to.be.revertedWith('SapphireCoreV1: vault is collateralized');
     });
 
+    it(`should not liquidate if liquidator provides a score proof that is not the owner's`, async () => {
+      await setupBaseVault();
+
+      // A new user with credit score 0 is added to the tree
+      const zeroCreditScore = {
+        account: signers.staker.address,
+        amount: BigNumber.from(0),
+      };
+      const newCreditTree = new CreditScoreTree([
+        zeroCreditScore,
+        liquidatorCreditScore,
+        minterCreditScore,
+      ]);
+
+      await immediatelyUpdateMerkleRoot(
+        creditScoreContract.connect(signers.interestSetter),
+        newCreditTree.getHexRoot(),
+      );
+
+      /**
+       * Drop the price to $0.70 to bring the c-ratio down to 140%.
+       * The scored minter should be protected from liquidations since
+       * he has a credit score of 500, which makes him immune until a
+       * c-ratio of 132.5%.
+       */
+      await arc.updatePrice(utils.parseEther('0.7'));
+
+      await expect(
+        arc.liquidate(
+          signers.scoredMinter.address,
+          getScoreProof(zeroCreditScore, newCreditTree),
+          undefined,
+          signers.liquidator,
+        ),
+      ).to.be.revertedWith(
+        'SapphireCoreV1: credit score proof does not match the owner',
+      );
+    });
+
     // Test 4 in https://docs.google.com/spreadsheets/d/1rmFbUxnM4gyi1xhcYKBwcdadvXrHBPKbeX7DLk8KQgE/edit?usp=sharing
     it('should not liquidate if the credit score improved such that vault is immune to liquidations', async () => {
       /**

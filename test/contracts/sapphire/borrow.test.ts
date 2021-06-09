@@ -373,7 +373,7 @@ describe('SapphireCore.borrow()', () => {
         scoredMinter,
       ),
     ).to.be.revertedWith(
-      'SapphireCoreV1: the vault will become undercollateralized',
+      'SapphireCoreV1: the score proof does not match the caller',
     );
   });
 
