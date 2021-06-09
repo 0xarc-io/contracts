@@ -14,7 +14,10 @@ import {
   DEFAULT_PRICE,
 } from '@test/helpers/sapphireDefaults';
 import { setupBaseVault } from '@test/helpers/setupBaseVault';
-import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
+import {
+  addSnapshotBeforeRestoreAfterEach,
+  immediatelyUpdateMerkleRoot,
+} from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { utils } from 'ethers';
 import { generateContext, ITestContext } from '../context';
@@ -35,6 +38,7 @@ const COLLATERAL_LIMIT = BORROW_AMOUNT.mul(DEFAULT_HiGH_C_RATIO)
  * more, depending on the amount of debt they have.
  */
 describe('SapphireCore.withdraw()', () => {
+  let ctx: ITestContext;
   let arc: SapphireTestArc;
   let signers: TestingSigners;
   let minterCreditScore: CreditScore;
@@ -58,7 +62,7 @@ describe('SapphireCore.withdraw()', () => {
   }
 
   before(async () => {
-    const ctx = await generateContext(sapphireFixture, init);
+    ctx = await generateContext(sapphireFixture, init);
     signers = ctx.signers;
     arc = ctx.sdks.sapphire;
     assessor = ctx.contracts.sapphire.assessor;
@@ -266,7 +270,7 @@ describe('SapphireCore.withdraw()', () => {
     const maxWithdrawAmt = COLLATERAL_AMOUNT.sub(COLLATERAL_LIMIT);
 
     await arc.withdraw(
-      maxWithdrawAmt, // -1 due to rounding down
+      maxWithdrawAmt,
       undefined,
       undefined,
       signers.scoredMinter,
@@ -281,6 +285,50 @@ describe('SapphireCore.withdraw()', () => {
       ),
     ).to.be.revertedWith(
       'SapphireCoreV1: the vault will become undercollateralized',
+    );
+  });
+
+  it(`reverts if the score proof is not the caller's`, async () => {
+    await setupBaseVault(
+      arc,
+      signers.scoredMinter,
+      COLLATERAL_AMOUNT,
+      BORROW_AMOUNT,
+    );
+
+    const maxWithdrawAmt = COLLATERAL_AMOUNT.sub(COLLATERAL_LIMIT);
+
+    await arc.withdraw(
+      maxWithdrawAmt,
+      undefined,
+      undefined,
+      signers.scoredMinter,
+    );
+
+    // A new user with credit score 1000 is added to the tree
+    const maxCreditScore = {
+      account: signers.staker.address,
+      amount: BigNumber.from(1000),
+    };
+    const newCreditTree = new CreditScoreTree([
+      minterCreditScore,
+      maxCreditScore,
+    ]);
+
+    await immediatelyUpdateMerkleRoot(
+      ctx.contracts.sapphire.creditScore.connect(signers.interestSetter),
+      newCreditTree.getHexRoot(),
+    );
+
+    await expect(
+      arc.withdraw(
+        BigNumber.from(1),
+        getScoreProof(maxCreditScore, newCreditTree),
+        undefined,
+        signers.scoredMinter,
+      ),
+    ).to.be.revertedWith(
+      `SapphireCoreV1: the credit score proof does not match the caller's address`,
     );
   });
 
