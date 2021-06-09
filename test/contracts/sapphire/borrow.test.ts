@@ -372,9 +372,7 @@ describe('SapphireCore.borrow()', () => {
         undefined,
         scoredMinter,
       ),
-    ).to.be.revertedWith(
-      'SapphireCoreV1: the score proof does not match the caller',
-    );
+    ).to.be.revertedWith('SapphireCoreV1: proof.account must match msg.sender');
   });
 
   it('should not borrow more if more interest has accrued', async () => {

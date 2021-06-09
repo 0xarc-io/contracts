@@ -1090,9 +1090,20 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         bool mandatoryProof = false;
         bool needsCollateralPrice = false;
 
+        // Check if the score proof has an address. If it's address zero,
+        // replace it with msg.sender. This is to prevent users from borrowing
+        // after having already registered a score on chain
+
+        if (_scoreProof.account == address(0)) {
+            _scoreProof.account = msg.sender;
+        }
+
         /**
          * Only the borrow and liquidate actions require a score proof, so break
          * the loop when any of these actions are found.
+         *
+         * Also ensure the credit score proof refers to the correct account given
+         * the action.
          */
         for (uint256 i = 0; i < _actions.length; i++) {
             SapphireTypes.Action memory action = _actions[i];
@@ -1102,10 +1113,24 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             ) {
                 mandatoryProof = true;
                 needsCollateralPrice = true;
-                break;
 
             } else if (action.operation == SapphireTypes.Operation.Withdraw) {
                 needsCollateralPrice = true;
+            }
+
+            // Verify account of credit score proof
+            if (action.operation == SapphireTypes.Operation.Borrow ||
+                action.operation == SapphireTypes.Operation.Withdraw
+            ) {
+                require(
+                    _scoreProof.account == msg.sender,
+                    "SapphireCoreV1: proof.account must match msg.sender"
+                );
+            } else if (action.operation == SapphireTypes.Operation.Liquidate) {
+                require(
+                    _scoreProof.account == action.userToLiquidate,
+                    "SapphireCoreV1: proof.account does not match the user to liquidate"
+                );
             }
         }
 
@@ -1132,14 +1157,6 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         if (address(assessor) == address(0) || _actions.length == 0) {
             assessedCRatio = highCollateralRatio;
         } else {
-            // Check if the score proof has an address. If it's address zero,
-            // replace it with msg.sender. This is to prevent users from borrowing
-            // after having already registered a score on chain
-
-            if (_scoreProof.account == address(0)) {
-                _scoreProof.account = msg.sender;
-            }
-
             assessedCRatio = assessor.assess(
                 lowCollateralRatio,
                 highCollateralRatio,

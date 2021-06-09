@@ -554,7 +554,7 @@ describe('SapphireCore.liquidate()', () => {
           signers.liquidator,
         ),
       ).to.be.revertedWith(
-        'SapphireAssessor: proof should be provided for credit score',
+        'SapphireCoreV1: proof.account does not match the user to liquidate',
       );
     });
 
@@ -606,7 +606,7 @@ describe('SapphireCore.liquidate()', () => {
           signers.liquidator,
         ),
       ).to.be.revertedWith(
-        'SapphireCoreV1: credit score proof does not match the owner',
+        'SapphireCoreV1: proof.account does not match the user to liquidate',
       );
     });
 
