@@ -327,9 +327,7 @@ describe('SapphireCore.withdraw()', () => {
         undefined,
         signers.scoredMinter,
       ),
-    ).to.be.revertedWith(
-      `SapphireCoreV1: the credit score proof does not match the caller's address`,
-    );
+    ).to.be.revertedWith(`SapphireCoreV1: proof.account must match msg.sender`);
   });
 
   it('reverts if vault is undercollateralized', async () => {
