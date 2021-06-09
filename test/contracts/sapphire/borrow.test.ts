@@ -74,7 +74,7 @@ describe('SapphireCore.borrow()', () => {
     };
     creditScore2 = {
       account: ctx.signers.interestSetter.address,
-      amount: BigNumber.from(20),
+      amount: BigNumber.from(1000),
     };
     creditScoreTree = new CreditScoreTree([creditScore1, creditScore2]);
     creditScoreProof = {
@@ -343,6 +343,32 @@ describe('SapphireCore.borrow()', () => {
       arc.borrow(
         MAX_BORROW_AMOUNT.div(4),
         creditScoreProof,
+        undefined,
+        scoredMinter,
+      ),
+    ).to.be.revertedWith(
+      'SapphireCoreV1: the vault will become undercollateralized',
+    );
+  });
+
+  it(`should not borrow if using someone else's score proof`, async () => {
+    await arc.borrow(
+      MAX_BORROW_AMOUNT,
+      creditScoreProof,
+      undefined,
+      scoredMinter,
+    );
+
+    const interestSetterScoreProof = getScoreProof(
+      creditScore2,
+      creditScoreTree,
+    );
+    expect(interestSetterScoreProof.score).to.eq(1000);
+
+    await expect(
+      arc.borrow(
+        utils.parseEther('1'),
+        interestSetterScoreProof,
         undefined,
         scoredMinter,
       ),
