@@ -202,6 +202,11 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
         public
         returns (uint256, uint16)
     {
+        require(
+            _proof.account != address(0),
+            "SapphireCreditScore: account cannot be address 0"
+        );
+        
         bytes32 node = keccak256(abi.encodePacked(_proof.account, _proof.score));
 
         require(
