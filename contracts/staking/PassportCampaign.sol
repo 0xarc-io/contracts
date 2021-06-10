@@ -215,8 +215,11 @@ contract PassportCampaign is Adminable {
             "PassportCampaign: cannot withdraw staking or rewards tokens"
         );
 
-        IERC20(_tokenAddress).safeTransfer(getAdmin(), _tokenAmount);
+        // Since the token might not be trusted, it's better to emit 
+        // the event before the external call
         emit Recovered(_tokenAddress, _tokenAmount);
+        
+        IERC20(_tokenAddress).safeTransfer(getAdmin(), _tokenAmount);
     }
 
     function setTokensClaimable(
