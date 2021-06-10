@@ -139,7 +139,7 @@ contract PassportCampaign is Adminable {
             rewardsDistributor != _rewardsDistributor,
             "PassportCampaign: the same rewards distributor is already set"
         );
-        
+
         rewardsDistributor = _rewardsDistributor;
 
         emit RewardsDistributorUpdated(rewardsDistributor);
