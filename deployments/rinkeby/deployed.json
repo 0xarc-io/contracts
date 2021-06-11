@@ -461,7 +461,7 @@
   {
     "name": "SapphireCreditScore",
     "source": "SapphireCreditScore",
-    "address": "0x95FA4634BD74273a4898B49D56Dba985A2299eB5",
+    "address": "0x6d0EbEca38b4b6AA196B34c3bE8daA05b2D721fa",
     "txn": "0x6da76562aa81e1bd43825389b10df6e96bcfd392a76c62f56245d0baf5c517b7",
     "network": "rinkeby",
     "version": 1,
@@ -471,7 +471,7 @@
   {
     "name": "SapphireCreditScoreProxy",
     "source": "ArcProxy",
-    "address": "0x3c32AD12f14b563b05fF07C71587ebac65d948EC",
+    "address": "0x78e4177619dc5B49bE33a26D1032C85458186c35",
     "txn": "0xc2f5dc1d142fa8519a22dd2a4c4889ff21c29621ff5262afba9ad24f9dc32329",
     "network": "rinkeby",
     "version": 1,
