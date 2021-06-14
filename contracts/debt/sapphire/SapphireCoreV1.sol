@@ -1006,7 +1006,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         // Do a rounded up operation of
         // debtToRepay / LiquidationFee / precisionScalar
         uint256 collateralToSell = Math.roundUpDiv(debtToRepay, liquidationPrice)
-            .add(precisionScalar)
+            .add(precisionScalar.sub(1))
             .div(precisionScalar);
 
         // If the discounted collateral is more than the amount in the vault, limit
