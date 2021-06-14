@@ -68,10 +68,10 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
     function assess(
         uint256 _lowerBound,
         uint256 _upperBound,
-        SapphireTypes.ScoreProof memory _scoreProof,
+        SapphireTypes.ScoreProof calldata _scoreProof,
         bool _isScoreRequired
     )
-        public
+        external
         returns (uint256)
     {
         require(
@@ -131,7 +131,7 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
     function setMapper(
         address _mapper
     )
-        public
+        external
         onlyOwner
     {
         require(
@@ -152,7 +152,7 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
     function setCreditScoreContract(
         address _creditScore
     )
-        public
+        external
         onlyOwner
     {
         require(

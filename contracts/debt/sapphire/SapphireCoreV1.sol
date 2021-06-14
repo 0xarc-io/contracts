@@ -113,7 +113,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         uint256 _liquidationUserFee,
         uint256 _liquidationArcFee
     )
-        public
+        external
         onlyAdmin
     {
         require(
@@ -298,7 +298,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     function setInterestSetter(
         address _interestSetter
     )
-        public
+        external
         onlyAdmin
     {
         require(
@@ -313,7 +313,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     function setPauseOperator(
         address _pauseOperator
     )
-        public
+        external
         onlyAdmin
     {
         require(
@@ -348,7 +348,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     function setFeeCollector(
         address _newFeeCollector
     )
-        public
+        external
         onlyAdmin
     {
         require(
@@ -363,7 +363,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     function setPause(
         bool _value
     )
-        public
+        external
     {
         require(
             msg.sender == pauseOperator,
@@ -397,7 +397,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     function setInterestRate(
         uint256 _interestRate
     )
-        public
+        external
     {
 
         require(
@@ -424,9 +424,9 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
      */
     function deposit(
         uint256 _amount,
-        SapphireTypes.ScoreProof memory _scoreProof
+        SapphireTypes.ScoreProof calldata _scoreProof
     )
-        public
+        external
     {
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
         actions[0] = SapphireTypes.Action(
@@ -440,9 +440,9 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
     function withdraw(
         uint256 _amount,
-        SapphireTypes.ScoreProof memory _scoreProof
+        SapphireTypes.ScoreProof calldata _scoreProof
     )
-        public
+        external
     {
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
         actions[0] = SapphireTypes.Action(
@@ -462,9 +462,9 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
      */
     function borrow(
         uint256 _amount,
-        SapphireTypes.ScoreProof memory _scoreProof
+        SapphireTypes.ScoreProof calldata _scoreProof
     )
-        public
+        external
     {
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
         actions[0] = SapphireTypes.Action(
@@ -478,9 +478,9 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
     function repay(
         uint256 _amount,
-        SapphireTypes.ScoreProof memory _scoreProof
+        SapphireTypes.ScoreProof calldata _scoreProof
     )
-        public
+        external
     {
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
         actions[0] = SapphireTypes.Action(
@@ -498,9 +498,9 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
      * @param _scoreProof The credit score proof - optional
      */
     function exit(
-        SapphireTypes.ScoreProof memory _scoreProof
+        SapphireTypes.ScoreProof calldata _scoreProof
     )
-        public
+        external
     {
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](2);
         SapphireTypes.Vault memory vault = vaults[msg.sender];
@@ -534,9 +534,9 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
      */
     function liquidate(
         address _owner,
-        SapphireTypes.ScoreProof memory _scoreProof
+        SapphireTypes.ScoreProof calldata _scoreProof
     )
-        public
+        external
     {
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
         actions[0] = SapphireTypes.Action(

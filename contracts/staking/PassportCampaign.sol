@@ -266,7 +266,7 @@ contract PassportCampaign is Adminable {
         uint256 _maxStakePerUser,
         uint16 _creditScoreThreshold
     )
-        public
+        external
         onlyAdmin
     {
         require(
@@ -385,7 +385,7 @@ contract PassportCampaign is Adminable {
     function earned(
         address _account
     )
-        public
+        external
         view
         returns (uint256)
     {
@@ -422,9 +422,9 @@ contract PassportCampaign is Adminable {
 
     function stake(
         uint256 _amount,
-        SapphireTypes.ScoreProof memory _scoreProof
+        SapphireTypes.ScoreProof calldata _scoreProof
     )
-        public
+        external
         checkScoreProof(_scoreProof, true)
         updateReward(msg.sender)
     {
@@ -457,9 +457,9 @@ contract PassportCampaign is Adminable {
 
     function getReward(
         address _user,
-        SapphireTypes.ScoreProof memory _scoreProof
+        SapphireTypes.ScoreProof calldata _scoreProof
     )
-        public
+        external
         checkScoreProof(_scoreProof, false)
         updateReward(_user)
     {
@@ -468,9 +468,9 @@ contract PassportCampaign is Adminable {
 
     function withdraw(
         uint256 _amount,
-        SapphireTypes.ScoreProof memory _scoreProof
+        SapphireTypes.ScoreProof calldata _scoreProof
     )
-        public
+        external
         checkScoreProof(_scoreProof, false)
         updateReward(msg.sender)
     {
@@ -481,9 +481,9 @@ contract PassportCampaign is Adminable {
      * @notice Claim reward and withdraw collateral
      */
     function exit(
-        SapphireTypes.ScoreProof memory _scoreProof
+        SapphireTypes.ScoreProof calldata _scoreProof
     )
-        public
+        external
         checkScoreProof(_scoreProof, false)
         updateReward(msg.sender)
     {

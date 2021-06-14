@@ -145,7 +145,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
     function getLastScore(
         address _user
     )
-        public
+        external
         view
         returns (uint256, uint16, uint256)
     {
@@ -173,7 +173,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
     function updateMerkleRoot(
         bytes32 _newRoot
     )
-        public
+        external
     {
         require(
             _newRoot != 0x0000000000000000000000000000000000000000000000000000000000000000,
@@ -197,9 +197,9 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
      * @param _proof Data required to verify if score is correct for current merkle root
      */
     function verifyAndUpdate(
-        SapphireTypes.ScoreProof memory _proof
+        SapphireTypes.ScoreProof calldata _proof
     )
-        public
+        external
         returns (uint256, uint16)
     {
         bytes32 node = keccak256(abi.encodePacked(_proof.account, _proof.score));
@@ -265,7 +265,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
     function setMerkleRootDelay(
         uint256 _delay
     )
-        public
+        external
         onlyAdmin
     {
         require(
@@ -289,7 +289,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
     function setPause(
         bool _value
     )
-        public
+        external
     {
         require(
             msg.sender == pauseOperator,
@@ -311,7 +311,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
     function setMerkleRootUpdater(
         address _merkleRootUpdater
     )
-        public
+        external
         onlyAdmin
     {
         require(
@@ -329,7 +329,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
     function setPauseOperator(
         address _pauseOperator
     )
-        public
+        external
         onlyAdmin
     {
         require(
