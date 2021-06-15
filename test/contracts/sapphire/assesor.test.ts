@@ -6,7 +6,6 @@ import {
   SapphireMapperLinearFactory,
 } from '@src/typings';
 import { MockSapphireCreditScore } from '@src/typings/MockSapphireCreditScore';
-import { MockSapphireCreditScoreFactory } from '@src/typings/MockSapphireCreditScoreFactory';
 import { MockSapphireMapperLinearFactory } from '@src/typings/MockSapphireMapperLinearFactory';
 import { SapphireAssessor } from '@src/typings/SapphireAssessor';
 import { SapphireAssessorFactory } from '@src/typings/SapphireAssessorFactory';
