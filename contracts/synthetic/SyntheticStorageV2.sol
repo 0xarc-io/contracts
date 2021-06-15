@@ -17,7 +17,7 @@ contract SyntheticStorageV2 {
     uint256 internal    _totalSupply;
 
     /**
-     * @dev _balances records the amounts minted to each user by each minter
+     * @dev _balances records the users' balances
      */
     mapping (address => uint256)                        internal _balances;
     mapping (address => mapping (address => uint256))   internal _allowances;
