@@ -387,7 +387,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
      *      r^N = 1.05
      *      since N = 365 * 24 * 60 * 60 (number of seconds in a year)
      *      r = 1.000000001547125957863212...
-     *      rate = 1000000001547125957 (18 decimal places solidity value)
+     *      rate = 1547125957 (r - 1e18 decimal places solidity value)
      *
      * @notice Can only be called by the interest setter of the protocol and the maximum
      *         rate settable is 99% (21820606489)
@@ -407,7 +407,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
         require(
             _interestRate < 21820606489,
-            "SapphireCoreV1: APY cannot be more than 99%, interest rate - 21820606489"
+            "SapphireCoreV1: interest rate cannot be more than 99% - 21820606489"
         );
 
         interestRate = _interestRate;
