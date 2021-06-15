@@ -15,7 +15,6 @@ import {
   deployArcProxy,
   deployMockSapphireCoreV1,
   deployMockSapphireCreditScore,
-  deployMockSapphireOracle,
   deployTestToken,
 } from '../deployers';
 
