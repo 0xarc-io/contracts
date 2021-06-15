@@ -165,7 +165,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     /**
      * @dev Set the instance of the oracle to report prices from. Must conform to IOracle.sol
      *
-     * @notice Can only be called by the admin of the proxy.
+     * @notice Can only be called by the admin
      *
      * @param _oracleAddress The address of the IOracle instance
      */
@@ -192,7 +192,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     /**
      * @dev Set low and high collateral ratios of collateral value to debt.
      *
-     * @notice Can only be called by the admin of the proxy.
+     * @notice Can only be called by the admin.
      *
      * @param _lowCollateralRatio The minimal allowed ratio expressed up to 18 decimal places
      * @param _highCollateralRatio The maximum allowed ratio expressed up to 18 decimal places
@@ -229,7 +229,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     /**
      * @dev Set the fees in the system.
      *
-     * @notice Can only be called by the admin of the proxy.
+     * @notice Can only be called by the admin.
      *
      * @param _liquidationUserFee   Determines the penalty a user must pay by discounting
      *                              their collateral price to provide a profit incentive for liquidators
@@ -254,7 +254,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     /**
      * @dev Set the limits of the system to ensure value can be capped.
      *
-     * @notice Can only be called by the admin of the proxy
+     * @notice Can only be called by the admin
      *
      * @param _totalBorrowLimit   Maximum amount of borrowed amount that can be held in the system.
      * @param _vaultBorrowMinimum The minimum allowed borrow amount for vault
@@ -291,7 +291,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     /**
      * @dev Set the address which can set interest rate
      *
-     * @notice Can only be called by the admin of the proxy
+     * @notice Can only be called by the admin
      *
      * @param _interestSetter The address of the new interest rate setter
      */
