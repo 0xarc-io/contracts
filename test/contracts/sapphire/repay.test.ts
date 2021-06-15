@@ -96,7 +96,7 @@ describe('SapphireCore.repay()', () => {
       .mul(PRECISION_SCALAR)
       .mul(COLLATERAL_PRICE)
       .div(vault.borrowedAmount);
-    expect(cRatio).to.eq(constants.WeiPerEther.mul(2).sub(1)); // -1 bc of rounding
+    expect(cRatio).to.eq(constants.WeiPerEther.mul(2));
 
     const preStablexBalance = await arc
       .synthetic()
@@ -125,7 +125,6 @@ describe('SapphireCore.repay()', () => {
       .mul(PRECISION_SCALAR)
       .mul(COLLATERAL_PRICE)
       .div(vault.borrowedAmount)
-      .add(1); // +1 for rounding up
     expect(cRatio).to.eq(constants.WeiPerEther.mul(4));
   });
 
@@ -157,19 +156,19 @@ describe('SapphireCore.repay()', () => {
       .mul(newPrice)
       .div(borrowedAmount);
 
-    expect(cRatio).to.eq(utils.parseEther('1.8').sub(1)); // -1 because of rounding
+    expect(cRatio).to.eq(utils.parseEther('1.8'));
   });
 
   it('repays without a score proof even if one exists on-chain', async () => {
     // Do two repays. One with credit score and one without. Both should pass
     let vault = await arc.getVault(signers.scoredMinter.address);
-    expect(vault.borrowedAmount).to.eq(BORROW_AMOUNT.add(1)); // +1 bc of rounding up
+    expect(vault.borrowedAmount).to.eq(BORROW_AMOUNT); 
 
     await repay(constants.WeiPerEther, signers.scoredMinter);
 
     vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.borrowedAmount).to.eq(
-      BORROW_AMOUNT.sub(constants.WeiPerEther).add(2), // +2 because of rounding up
+      BORROW_AMOUNT.sub(constants.WeiPerEther),
     );
 
     await repay(
@@ -180,28 +179,28 @@ describe('SapphireCore.repay()', () => {
 
     vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.borrowedAmount).to.eq(
-      BORROW_AMOUNT.sub(constants.WeiPerEther.mul(2)).add(3), // +3 bc of rounding up
+      BORROW_AMOUNT.sub(constants.WeiPerEther.mul(2)),
     );
   });
 
   it('updates the totalBorrowed after a repay', async () => {
-    expect(await arc.core().totalBorrowed()).to.eq(BORROW_AMOUNT.add(1)); // +1 because of rounding up
+    expect(await arc.core().totalBorrowed()).to.eq(BORROW_AMOUNT);
 
     await repay(BORROW_AMOUNT.div(2), signers.scoredMinter);
 
-    expect(await arc.core().totalBorrowed()).to.eq(BORROW_AMOUNT.div(2).add(2)); // +2 because of rounding up
+    expect(await arc.core().totalBorrowed()).to.eq(BORROW_AMOUNT.div(2));
   });
 
   it('updates the vault borrow amount', async () => {
     let vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.collateralAmount).to.eq(COLLATERAL_AMOUNT);
-    expect(vault.borrowedAmount).to.eq(BORROW_AMOUNT.add(1)); // +1 for rounding up
+    expect(vault.borrowedAmount).to.eq(BORROW_AMOUNT);
 
     await repay(BORROW_AMOUNT.div(2), signers.scoredMinter);
 
     vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.collateralAmount).to.eq(COLLATERAL_AMOUNT);
-    expect(vault.borrowedAmount).to.eq(BORROW_AMOUNT.div(2).add(2)); // +2 because of rounding up from last time
+    expect(vault.borrowedAmount).to.eq(BORROW_AMOUNT.div(2));
   });
 
   it('emits ActionsOperated event when a repay happens', async () => {

@@ -119,22 +119,13 @@ describe('SapphireCore.exit()', () => {
     let synthBalance = await getSynthBalance(signers.scoredMinter);
 
     expect(vault.collateralAmount).to.eq(COLLATERAL_AMOUNT);
-    expect(vault.borrowedAmount).to.eq(BORROW_AMOUNT.add(1));
+    expect(vault.borrowedAmount).to.eq(BORROW_AMOUNT);
     expect(collateralBalance).to.eq(0);
     expect(synthBalance).to.eq(BORROW_AMOUNT);
 
-    // Mint dust to account for rounding margin
-    const repayAmt = roundUpMul(
-      vault.borrowedAmount,
-      await arc.core().borrowIndex(),
-    );
-    await arc
-      .synthetic()
-      .mint(signers.scoredMinter.address, repayAmt.sub(synthBalance));
-
     // Approve repay amount
     await approve(
-      repayAmt,
+      BORROW_AMOUNT,
       arc.syntheticAddress(),
       arc.coreAddress(),
       signers.scoredMinter,

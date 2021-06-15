@@ -753,7 +753,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         uint256 unreduced = _amount.mul(currentBorrowIndex());
 
         if (_roundUp) {
-            return unreduced.add(BASE).div(BASE);
+            return unreduced.add(BASE.sub(1)).div(BASE);
         }
 
         return unreduced.div(BASE);

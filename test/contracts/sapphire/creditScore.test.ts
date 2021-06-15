@@ -15,7 +15,7 @@ import { solidity } from 'ethereum-waffle';
 import { BigNumber, BigNumberish } from 'ethers';
 import 'module-alias/register';
 import { generateContext, ITestContext } from '../context';
-import { deployArcProxy, deployMockSapphireCreditScore } from '../deployers';
+import { deployMockSapphireCreditScore } from '../deployers';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 
