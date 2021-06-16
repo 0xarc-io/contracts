@@ -238,7 +238,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
     {
         require(
             _minters[_minter],
-            "SyntheticTokenV2: minter does not exist"
+            "SyntheticTokenV2: not a minter"
         );
 
         require(
