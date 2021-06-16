@@ -6,6 +6,7 @@ import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { SyntheticTokenV2Factory } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
+import { roundUpDiv, roundUpMul } from '@test/helpers/roundUpOperations';
 import {
   DEFAULT_COLLATERAL_DECIMALS,
   DEFAULT_HiGH_C_RATIO,
@@ -40,6 +41,24 @@ describe('SapphireCore.repay()', () => {
   let signers: TestingSigners;
   let minterCreditScore: CreditScore;
   let creditScoreTree: CreditScoreTree;
+
+  /**
+   * Returns the converted principal, as calculated by the smart contract:
+   * `principal * BASE / borrowIndex`
+   * @param principal principal amount to convert
+   */
+  async function convertPrincipal(principal: BigNumber) {
+    const borrowIndex = await arc.core().borrowIndex();
+    return roundUpDiv(principal, borrowIndex);
+  }
+
+  /**
+   * Returns `amount * borrowIndex`, as calculated by the contract
+   */
+  async function denormalizeBorrowAmount(amount: BigNumber) {
+    const borrowIndex = await arc.core().borrowIndex();
+    return roundUpMul(amount, borrowIndex);
+  }
 
   async function repay(
     amount: BigNumber,
@@ -124,8 +143,8 @@ describe('SapphireCore.repay()', () => {
     cRatio = vault.collateralAmount
       .mul(PRECISION_SCALAR)
       .mul(COLLATERAL_PRICE)
-      .div(vault.borrowedAmount)
-    expect(cRatio).to.eq(constants.WeiPerEther.mul(4));
+      .div(vault.borrowedAmount);
+    expect(cRatio).to.eq(constants.WeiPerEther.mul(4).sub(1)); // -1 for rounding
   });
 
   it('repays to make the position collateralized', async () => {
@@ -156,19 +175,19 @@ describe('SapphireCore.repay()', () => {
       .mul(newPrice)
       .div(borrowedAmount);
 
-    expect(cRatio).to.eq(utils.parseEther('1.8'));
+    expect(cRatio).to.eq(utils.parseEther('1.8').sub(1)); // -1 for rounding
   });
 
   it('repays without a score proof even if one exists on-chain', async () => {
     // Do two repays. One with credit score and one without. Both should pass
     let vault = await arc.getVault(signers.scoredMinter.address);
-    expect(vault.borrowedAmount).to.eq(BORROW_AMOUNT); 
+    expect(vault.borrowedAmount).to.eq(BORROW_AMOUNT);
 
     await repay(constants.WeiPerEther, signers.scoredMinter);
 
     vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.borrowedAmount).to.eq(
-      BORROW_AMOUNT.sub(constants.WeiPerEther),
+      BORROW_AMOUNT.sub(constants.WeiPerEther).add(1), // +1 for rounding
     );
 
     await repay(
@@ -179,7 +198,7 @@ describe('SapphireCore.repay()', () => {
 
     vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.borrowedAmount).to.eq(
-      BORROW_AMOUNT.sub(constants.WeiPerEther.mul(2)),
+      BORROW_AMOUNT.sub(constants.WeiPerEther.mul(2)).add(2), // +2 for rounding
     );
   });
 
@@ -188,7 +207,7 @@ describe('SapphireCore.repay()', () => {
 
     await repay(BORROW_AMOUNT.div(2), signers.scoredMinter);
 
-    expect(await arc.core().totalBorrowed()).to.eq(BORROW_AMOUNT.div(2));
+    expect(await arc.core().totalBorrowed()).to.eq(BORROW_AMOUNT.div(2).add(1));
   });
 
   it('updates the vault borrow amount', async () => {
@@ -200,7 +219,7 @@ describe('SapphireCore.repay()', () => {
 
     vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.collateralAmount).to.eq(COLLATERAL_AMOUNT);
-    expect(vault.borrowedAmount).to.eq(BORROW_AMOUNT.div(2));
+    expect(vault.borrowedAmount).to.eq(BORROW_AMOUNT.div(2).add(1)); // +1 for rounding
   });
 
   it('emits ActionsOperated event when a repay happens', async () => {
