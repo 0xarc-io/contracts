@@ -25,6 +25,7 @@ import { SapphireCreditScore } from '@src/typings/SapphireCreditScore';
 import { MockSapphireCreditScore } from '@src/typings/MockSapphireCreditScore';
 import { SyntheticTokenV2 } from '@src/typings/SyntheticTokenV2';
 import { MockSapphireOracle } from '@src/typings/MockSapphireOracle';
+import { DefiPassportFactory } from '@src/typings/DefiPassportFactory';
 
 export async function deployMockMozartCore(deployer: Signer) {
   const Contract = await await ethers.getContractFactory(
@@ -250,4 +251,17 @@ export async function deployMockSapphireCreditScore(deployer: Signer) {
 
 export function deployMockSapphireCoreV1(deployer: Signer) {
   return new MockSapphireCoreV1Factory(deployer).deploy();
+}
+
+export async function deployDefiPassport(deployer: Signer) {
+  const defiPassportImpl = await new DefiPassportFactory(deployer).deploy();
+
+  const proxy = await deployArcProxy(
+    deployer,
+    defiPassportImpl.address,
+    await deployer.getAddress(),
+    [],
+  );
+
+  return DefiPassportFactory.connect(proxy.address, deployer);
 }
