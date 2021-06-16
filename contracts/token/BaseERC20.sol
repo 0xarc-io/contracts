@@ -4,7 +4,7 @@ pragma solidity ^0.5.16;
 
 import {SafeMath} from "../lib/SafeMath.sol";
 
-import {IERC20} from "./IERC20.sol";
+import {IERC20Metadata} from "./IERC20Metadata.sol";
 import {Permittable} from "./Permittable.sol";
 
 /**
@@ -12,7 +12,7 @@ import {Permittable} from "./Permittable.sol";
  *
  * Basic ERC20 Implementation
  */
-contract BaseERC20 is IERC20, Permittable {
+contract BaseERC20 is IERC20Metadata, Permittable {
 
     using SafeMath for uint256;
 
