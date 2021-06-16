@@ -197,9 +197,9 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
      * @param _proof Data required to verify if score is correct for current merkle root
      */
     function verifyAndUpdate(
-        SapphireTypes.ScoreProof calldata _proof
+        SapphireTypes.ScoreProof memory _proof
     )
-        external
+        public
         returns (uint256, uint16)
     {
         bytes32 node = keccak256(abi.encodePacked(_proof.account, _proof.score));

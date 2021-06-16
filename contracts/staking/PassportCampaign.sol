@@ -422,9 +422,9 @@ contract PassportCampaign is Adminable {
 
     function stake(
         uint256 _amount,
-        SapphireTypes.ScoreProof calldata _scoreProof
+        SapphireTypes.ScoreProof memory _scoreProof
     )
-        external
+        public
         checkScoreProof(_scoreProof, true)
         updateReward(msg.sender)
     {
@@ -457,9 +457,9 @@ contract PassportCampaign is Adminable {
 
     function getReward(
         address _user,
-        SapphireTypes.ScoreProof calldata _scoreProof
+        SapphireTypes.ScoreProof memory _scoreProof
     )
-        external
+        public
         checkScoreProof(_scoreProof, false)
         updateReward(_user)
     {
@@ -468,9 +468,9 @@ contract PassportCampaign is Adminable {
 
     function withdraw(
         uint256 _amount,
-        SapphireTypes.ScoreProof calldata _scoreProof
+        SapphireTypes.ScoreProof memory _scoreProof
     )
-        external
+        public
         checkScoreProof(_scoreProof, false)
         updateReward(msg.sender)
     {
@@ -481,9 +481,9 @@ contract PassportCampaign is Adminable {
      * @notice Claim reward and withdraw collateral
      */
     function exit(
-        SapphireTypes.ScoreProof calldata _scoreProof
+        SapphireTypes.ScoreProof memory _scoreProof
     )
-        external
+        public
         checkScoreProof(_scoreProof, false)
         updateReward(msg.sender)
     {

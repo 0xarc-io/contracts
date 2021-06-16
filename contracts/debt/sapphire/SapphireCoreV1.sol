@@ -424,9 +424,9 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
      */
     function deposit(
         uint256 _amount,
-        SapphireTypes.ScoreProof calldata _scoreProof
+        SapphireTypes.ScoreProof memory _scoreProof
     )
-        external
+        public
     {
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
         actions[0] = SapphireTypes.Action(
@@ -440,9 +440,9 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
     function withdraw(
         uint256 _amount,
-        SapphireTypes.ScoreProof calldata _scoreProof
+        SapphireTypes.ScoreProof memory _scoreProof
     )
-        external
+        public
     {
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
         actions[0] = SapphireTypes.Action(
@@ -462,9 +462,9 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
      */
     function borrow(
         uint256 _amount,
-        SapphireTypes.ScoreProof calldata _scoreProof
+        SapphireTypes.ScoreProof memory _scoreProof
     )
-        external
+        public
     {
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
         actions[0] = SapphireTypes.Action(
@@ -478,9 +478,9 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
     function repay(
         uint256 _amount,
-        SapphireTypes.ScoreProof calldata _scoreProof
+        SapphireTypes.ScoreProof memory _scoreProof
     )
-        external
+        public
     {
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
         actions[0] = SapphireTypes.Action(
@@ -498,9 +498,9 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
      * @param _scoreProof The credit score proof - optional
      */
     function exit(
-        SapphireTypes.ScoreProof calldata _scoreProof
+        SapphireTypes.ScoreProof memory _scoreProof
     )
-        external
+        public
     {
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](2);
         SapphireTypes.Vault memory vault = vaults[msg.sender];
@@ -534,9 +534,9 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
      */
     function liquidate(
         address _owner,
-        SapphireTypes.ScoreProof calldata _scoreProof
+        SapphireTypes.ScoreProof memory _scoreProof
     )
-        external
+        public
     {
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
         actions[0] = SapphireTypes.Action(
