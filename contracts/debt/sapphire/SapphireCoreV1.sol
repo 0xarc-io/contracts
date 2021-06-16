@@ -1001,8 +1001,8 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         // --- EFFECTS ---
 
         // Get the liquidation price of the asset (discount for liquidator)
-        uint256 liquidationPricePercent = BASE.sub(liquidationUserFee);
-        uint256 liquidationPrice = Math.roundUpMul(_currentPrice, liquidationPricePercent);
+        uint256 liquidationPriceRatio = BASE.sub(liquidationUserFee);
+        uint256 liquidationPrice = Math.roundUpMul(_currentPrice, liquidationPriceRatio);
 
         // Calculate the amount of collateral to be sold based on the entire debt
         // in the vault
