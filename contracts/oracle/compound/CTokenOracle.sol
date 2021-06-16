@@ -6,7 +6,7 @@ pragma experimental ABIEncoderV2;
 import {Decimal} from "../../lib/Decimal.sol";
 import {SafeMath} from "../../lib/SafeMath.sol";
 
-import {IChainLinkAggregator} from "../IChainLinkAggregator.sol";
+import {IChainLinkAggregator} from "../chainlink/IChainLinkAggregator.sol";
 import {IOracle} from "../IOracle.sol";
 
 import {ICToken} from "./ICToken.sol";

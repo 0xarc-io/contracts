@@ -7,7 +7,7 @@ import {Decimal} from "../../lib/Decimal.sol";
 import {SafeMath} from "../../lib/SafeMath.sol";
 
 import {IOracle} from "../IOracle.sol";
-import {IChainLinkAggregator} from "../IChainLinkAggregator.sol";
+import {IChainLinkAggregator} from "../chainlink/IChainLinkAggregator.sol";
 
 import {IRiskOracle} from "./IRiskOracle.sol";
 import {IYToken} from "./IYToken.sol";
