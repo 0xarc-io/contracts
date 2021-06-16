@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "./SafeMath.sol";
@@ -12,6 +12,8 @@ import {SafeMath} from "./SafeMath.sol";
  */
 library Math {
     using SafeMath for uint256;
+
+    uint256 constant BASE = 10**18;
 
     // ============ Library Functions ============
 
@@ -78,13 +80,10 @@ library Math {
         pure
         returns (uint256)
     {
-        uint256 BASE = 10**18;
-        uint256 basedAmount = a.mul(BASE.mul(10));
-
-        return basedAmount
-            .div(b)
-            .add(5)
-            .div(10);
+        return a
+            .mul(BASE)
+            .add(b.sub(1))
+            .div(b);
     }
 
     /**
@@ -98,10 +97,9 @@ library Math {
         pure
         returns (uint256)
     {
-        uint256 BASE = 10**18;
         return a
             .mul(b)
-            .add(BASE)
+            .add(BASE.add(1))
             .div(BASE);
     }
 }
