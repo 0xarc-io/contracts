@@ -368,7 +368,7 @@ describe('SyntheticTokenV2', () => {
         const contract = await getContract(ownerAccount);
         await expect(
           contract.updateMinterLimit(arcAccount1.address, 200),
-        ).to.be.revertedWith('SyntheticTokenV2: minter does not exist');
+        ).to.be.revertedWith('SyntheticTokenV2: not a minter');
       });
 
       it('should be able to update the limit as the owner', async () => {
