@@ -68,10 +68,10 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
     function assess(
         uint256 _lowerBound,
         uint256 _upperBound,
-        SapphireTypes.ScoreProof calldata _scoreProof,
+        SapphireTypes.ScoreProof memory _scoreProof,
         bool _isScoreRequired
     )
-        external
+        public
         returns (uint256)
     {
         require(
