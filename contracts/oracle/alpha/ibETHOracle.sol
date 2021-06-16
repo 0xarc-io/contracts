@@ -8,7 +8,7 @@ import {SafeMath} from "../../lib/SafeMath.sol";
 import {IERC20} from "../../token/IERC20.sol";
 
 import {IOracle} from "../IOracle.sol";
-import {IChainLinkAggregator} from "../IChainLinkAggregator.sol";
+import {IChainLinkAggregator} from "../chainlink/IChainLinkAggregator.sol";
 
 import {IibETH} from "./IibETH.sol";
 
