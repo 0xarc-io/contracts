@@ -57,6 +57,9 @@ contract Permittable {
 
     /**
     * @dev Approve by signature.
+    *      Caution: If an owner signs a permit with no deadline, the corresponding spender
+    *      can call permit at any time in the future to mess with the nonce, invalidating
+    *      signatures to other spenders, possibly making their transactions fail.
     *
     * Adapted from Uniswap's UniswapV2ERC20 and MakerDAO's Dai contracts:
     * https://github.com/Uniswap/uniswap-v2-core/blob/master/contracts/UniswapV2ERC20.sol
