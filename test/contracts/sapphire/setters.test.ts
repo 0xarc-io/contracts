@@ -239,7 +239,7 @@ describe('SapphireCore.setters', () => {
           .connect(ctx.signers.interestSetter)
           .setInterestRate(maxInterestRate + 1),
       ).to.be.revertedWith(
-        'SapphireCoreV1: APY cannot be more than 99%, interest rate - 21820606489',
+        'SapphireCoreV1: interest rate cannot be more than 99% - 21820606489',
       );
     });
 
