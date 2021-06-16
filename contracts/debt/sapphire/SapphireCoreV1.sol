@@ -730,13 +730,15 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         view
         returns (uint256)
     {
-        uint256 currentBIndex = currentBorrowIndex();
+        if (_amount == 0) return _amount;
 
         if (_roundUp) {
-            return Math.roundUpDiv(_amount, currentBIndex);
+            return Math.roundUpDiv(_amount, currentBorrowIndex());
         }
 
-        return _amount.mul(BASE).div(currentBorrowIndex());
+        return _amount
+            .mul(BASE)
+            .div(currentBorrowIndex());
     }
 
     /**
@@ -751,13 +753,15 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         view
         returns (uint256)
     {
-        uint256 unreduced = _amount.mul(currentBorrowIndex());
+        if (_amount == 0) return _amount;
 
         if (_roundUp) {
-            return unreduced.add(BASE).div(BASE);
+            return Math.roundUpMul(_amount, currentBorrowIndex());
         }
 
-        return unreduced.div(BASE);
+        return _amount
+            .mul(currentBorrowIndex())
+            .div(BASE);
     }
 
     /**

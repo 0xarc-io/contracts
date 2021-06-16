@@ -35,7 +35,6 @@ describe('SapphireCore.open()', () => {
     .parseEther('50')
     .mul(DEFAULT_PRICE)
     .div(BASE)
-    .sub(1); // -1 for rounding margin
 
   let ctx: ITestContext;
   let arc: SapphireTestArc;
@@ -77,12 +76,6 @@ describe('SapphireCore.open()', () => {
   addSnapshotBeforeRestoreAfterEach();
 
   describe('without score proof', () => {
-    let minterAddress: string;
-
-    before(() => {
-      minterAddress = ctx.signers.minter.address;
-    });
-
     it('open at the exact c-ratio', async () => {
       const vault = await arc.open(
         COLLATERAL_AMOUNT,
@@ -93,12 +86,12 @@ describe('SapphireCore.open()', () => {
       );
 
       // Ensure the function returned correct information
-      expect(vault.borrowedAmount).eq(BORROW_AMOUNT.add(1)); // +1 bc of rounding
+      expect(vault.borrowedAmount).eq(BORROW_AMOUNT);
       expect(vault.collateralAmount).eq(COLLATERAL_AMOUNT);
 
       // Check total collateral and borrowed values
       expect(await arc.core().totalCollateral()).eq(COLLATERAL_AMOUNT);
-      expect(await arc.core().totalBorrowed()).eq(BORROW_AMOUNT.add(1)); // +1 bc of rounding
+      expect(await arc.core().totalBorrowed()).eq(BORROW_AMOUNT);
 
       expect(await arc.synth().collateral.balanceOf(arc.coreAddress())).eq(
         COLLATERAL_AMOUNT,
@@ -115,7 +108,7 @@ describe('SapphireCore.open()', () => {
       );
 
       expect(collateralAmount).eq(COLLATERAL_AMOUNT.mul(2));
-      expect(borrowedAmount).eq(BORROW_AMOUNT.add(1)); // +1 for rounding
+      expect(borrowedAmount).eq(BORROW_AMOUNT);
     });
 
     it('revert if opened below the c-ratio', async () => {
@@ -224,12 +217,12 @@ describe('SapphireCore.open()', () => {
       );
 
       // Check created vault
-      expect(borrowedAmount).eq(BORROW_AMOUNT.add(1)); // +1 bc of rounding
+      expect(borrowedAmount).eq(BORROW_AMOUNT);
       expect(collateralAmount).eq(COLLATERAL_AMOUNT);
 
       // Check total collateral and borrowed values
       expect(await arc.core().totalCollateral()).eq(COLLATERAL_AMOUNT);
-      expect(await arc.core().totalBorrowed()).eq(BORROW_AMOUNT.add(1)); // +1 bc of rounding
+      expect(await arc.core().totalBorrowed()).eq(BORROW_AMOUNT);
 
       expect(await arc.synth().collateral.balanceOf(arc.coreAddress())).eq(
         COLLATERAL_AMOUNT,
@@ -249,7 +242,7 @@ describe('SapphireCore.open()', () => {
         scoredMinter.address,
       );
       expect(collateralAmount).eq(COLLATERAL_AMOUNT.mul(2));
-      expect(borrowedAmount).eq(BORROW_AMOUNT.add(1)); // +1 bc of rounding
+      expect(borrowedAmount).eq(BORROW_AMOUNT);
     });
 
     it('open below the default c-ratio, but above c-ratio based on credit score', async () => {
@@ -265,7 +258,7 @@ describe('SapphireCore.open()', () => {
         scoredMinter.address,
       );
       expect(collateralAmount).eq(COLLATERAL_AMOUNT.sub(1));
-      expect(borrowedAmount).eq(BORROW_AMOUNT.add(1)); // +1 bc of rounding
+      expect(borrowedAmount).eq(BORROW_AMOUNT);
     });
 
     it('open at the c-ratio based on credit score', async () => {
@@ -288,7 +281,7 @@ describe('SapphireCore.open()', () => {
         scoredMinter.address,
       );
       expect(collateralAmount).eq(COLLATERAL_AMOUNT);
-      expect(borrowedAmount).eq(MAX_BORROW_AMOUNT.add(1)); // +1 bc of rounding
+      expect(borrowedAmount).eq(MAX_BORROW_AMOUNT);
     });
 
     it('revert if opened below c-ratio based on credit score', async () => {
@@ -321,7 +314,7 @@ describe('SapphireCore.open()', () => {
         scoredMinter.address,
       );
       expect(collateralAmount).eq(COLLATERAL_AMOUNT);
-      expect(borrowedAmount).eq(BORROW_AMOUNT.add(1)); // +1 bc of rounding
+      expect(borrowedAmount).eq(BORROW_AMOUNT);
     });
 
     it('revert if opened below the minimum position amount', async () => {
@@ -383,7 +376,7 @@ describe('SapphireCore.open()', () => {
       await expect(
         arc.open(
           COLLATERAL_AMOUNT,
-          BORROW_AMOUNT.div(2),
+          BORROW_AMOUNT.div(2).add(1),
           creditScoreProof,
           undefined,
           scoredMinter,
