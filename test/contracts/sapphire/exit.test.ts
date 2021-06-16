@@ -13,8 +13,7 @@ import { BigNumber, utils } from 'ethers';
 import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
-import { BASE } from '@src/constants';
-import { roundUpDiv, roundUpMul } from '@test/helpers/roundUpOperations';
+import { roundUpMul } from '@test/helpers/roundUpOperations';
 
 const COLLATERAL_AMOUNT = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS);
 const BORROW_AMOUNT = utils.parseEther('500');
@@ -110,7 +109,7 @@ describe('SapphireCore.exit()', () => {
       arc,
       signers.scoredMinter,
       COLLATERAL_AMOUNT,
-      BORROW_AMOUNT,
+      BORROW_AMOUNT, // -1 for rounding
       getScoreProof(scoredMinterCreditScore, creditScoreTree),
     );
 
@@ -125,11 +124,12 @@ describe('SapphireCore.exit()', () => {
 
     // Approve repay amount
     await approve(
-      BORROW_AMOUNT,
+      BORROW_AMOUNT.add(1),
       arc.syntheticAddress(),
       arc.coreAddress(),
       signers.scoredMinter,
     );
+    await ctx.contracts.synthetic.tokenV2.mint(signers.scoredMinter.address, 1); // Mint 1, to account for rounding
 
     await arc.exit(
       getScoreProof(scoredMinterCreditScore, creditScoreTree),

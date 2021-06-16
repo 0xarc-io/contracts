@@ -23,10 +23,16 @@ import { setupSapphire } from '../setup';
 
 const COLLATERAL_AMOUNT = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS);
 const BORROW_AMOUNT = utils.parseEther('200');
+/**
+ * Add +1 at the end to account for rounding.
+ * When the contract computes the c-ratio, it will be slightly smaller to be on the
+ * safe side.
+ */
 const COLLATERAL_LIMIT = BORROW_AMOUNT.mul(DEFAULT_HiGH_C_RATIO)
   .div(DEFAULT_PRICE)
   .div(BASE)
   .mul(BigNumber.from(10).pow(DEFAULT_COLLATERAL_DECIMALS))
+  .add(1);
 
 /**
  * The withdraw function allows a user to withdraw collateral from a vault, partially or completely.
@@ -161,10 +167,10 @@ describe('SapphireCore.withdraw()', () => {
       .mul(BigNumber.from(10).pow(DEFAULT_COLLATERAL_DECIMALS))
       .div(DEFAULT_PRICE)
       .div(BASE)
-      // .add(1); // +1 for rounding up
+      .add(1); // Account for rounding up
     const withdrawAmt2 = COLLATERAL_LIMIT.sub(remainingAmount2);
 
-    // Withdraw more amount - to the limit permitted by the credit score
+    // Withdraw more - to the limit permitted by the credit score
     await arc.withdraw(
       withdrawAmt2,
       getScoreProof(minterCreditScore, creditScoreTree),
@@ -265,7 +271,7 @@ describe('SapphireCore.withdraw()', () => {
     const maxWithdrawAmt = COLLATERAL_AMOUNT.sub(COLLATERAL_LIMIT);
 
     await arc.withdraw(
-      maxWithdrawAmt, // -1 due to rounding down
+      maxWithdrawAmt,
       undefined,
       undefined,
       signers.scoredMinter,
