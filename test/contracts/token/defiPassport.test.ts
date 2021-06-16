@@ -76,7 +76,7 @@ describe('DefiPassport', () => {
     ).deploy();
     defaultSkinAddress = defaultPassportSkinContract.address;
 
-    await defaultPassportSkinContract.mint(owner.address);
+    await defaultPassportSkinContract.mint(owner.address, '');
     defaultSkinTokenId = await defaultPassportSkinContract.tokenOfOwnerByIndex(
       owner.address,
       0,
