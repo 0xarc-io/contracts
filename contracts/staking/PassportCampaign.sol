@@ -220,8 +220,11 @@ contract PassportCampaign is Adminable {
             "PassportCampaign: cannot withdraw staking or rewards tokens"
         );
 
-        IERC20(_tokenAddress).safeTransfer(getAdmin(), _tokenAmount);
+        // Since the token might not be trusted, it's better to emit
+        // the event before the external call
         emit Recovered(_tokenAddress, _tokenAmount);
+
+        IERC20(_tokenAddress).safeTransfer(getAdmin(), _tokenAmount);
     }
 
     function setTokensClaimable(
@@ -268,7 +271,7 @@ contract PassportCampaign is Adminable {
         uint256 _maxStakePerUser,
         uint16 _creditScoreThreshold
     )
-        public
+        external
         onlyAdmin
     {
         require(
@@ -387,7 +390,7 @@ contract PassportCampaign is Adminable {
     function earned(
         address _account
     )
-        public
+        external
         view
         returns (uint256)
     {
@@ -452,9 +455,9 @@ contract PassportCampaign is Adminable {
 
         totalSupply = totalSupply.add(_amount);
 
-        stakingToken.safeTransferFrom(msg.sender, address(this), _amount);
-
         emit Staked(msg.sender, _amount);
+
+        stakingToken.safeTransferFrom(msg.sender, address(this), _amount);
     }
 
     function getReward(
@@ -515,10 +518,10 @@ contract PassportCampaign is Adminable {
             .mul(daoAllocation)
             .div(BASE);
 
-        rewardsToken.safeTransfer(arcDAO, daoPayable);
-        rewardsToken.safeTransfer(_user, payableAmount.sub(daoPayable));
-
         emit RewardPaid(_user, payableAmount);
+
+        rewardsToken.safeTransfer(_user, payableAmount.sub(daoPayable));
+        rewardsToken.safeTransfer(arcDAO, daoPayable);
     }
 
     function _withdraw(
@@ -534,9 +537,9 @@ contract PassportCampaign is Adminable {
         totalSupply = totalSupply.sub(_amount);
         stakers[msg.sender].balance = stakers[msg.sender].balance.sub(_amount);
 
-        stakingToken.safeTransfer(msg.sender, _amount);
-
         emit Withdrawn(msg.sender, _amount);
+
+        stakingToken.safeTransfer(msg.sender, _amount);
     }
 }
 

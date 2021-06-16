@@ -113,7 +113,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         uint256 _liquidationUserFee,
         uint256 _liquidationArcFee
     )
-        public
+        external
         onlyAdmin
     {
         require(
@@ -298,7 +298,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     function setInterestSetter(
         address _interestSetter
     )
-        public
+        external
         onlyAdmin
     {
         require(
@@ -313,7 +313,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     function setPauseOperator(
         address _pauseOperator
     )
-        public
+        external
         onlyAdmin
     {
         require(
@@ -348,7 +348,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     function setFeeCollector(
         address _newFeeCollector
     )
-        public
+        external
         onlyAdmin
     {
         require(
@@ -363,7 +363,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     function setPause(
         bool _value
     )
-        public
+        external
     {
         require(
             msg.sender == pauseOperator,
@@ -397,7 +397,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     function setInterestRate(
         uint256 _interestRate
     )
-        public
+        external
     {
 
         require(

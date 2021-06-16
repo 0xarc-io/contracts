@@ -131,7 +131,7 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
     function setMapper(
         address _mapper
     )
-        public
+        external
         onlyOwner
     {
         require(
@@ -152,7 +152,7 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
     function setCreditScoreContract(
         address _creditScore
     )
-        public
+        external
         onlyOwner
     {
         require(
