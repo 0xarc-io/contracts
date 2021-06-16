@@ -5,6 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import {BaseERC20} from "../../token/BaseERC20.sol";
 import {IERC20} from "../../token/IERC20.sol";
+import {IERC20Metadata} from "../../token/IERC20Metadata.sol";
 import {SafeERC20} from "../../lib/SafeERC20.sol";
 import {SafeMath} from "../../lib/SafeMath.sol";
 import {Math} from "../../lib/Math.sol";
@@ -146,7 +147,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         pauseOperator = _pauseOperator;
         feeCollector = _feeCollector;
 
-        BaseERC20 collateral = BaseERC20(collateralAsset);
+        IERC20Metadata collateral = IERC20Metadata(collateralAsset);
         uint8 collateralDecimals = collateral.decimals();
 
         require(
