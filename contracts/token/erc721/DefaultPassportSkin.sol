@@ -34,7 +34,8 @@ contract DefaultPassportSkin is ERC721Full, Ownable {
      * @param _to The receiver of the skin
      */
     function mint(
-        address _to
+        address _to,
+        string calldata _tokenURI
     )
         external
         onlyOwner
@@ -44,8 +45,8 @@ contract DefaultPassportSkin is ERC721Full, Ownable {
 
         uint256 newTokenId = _tokenIds.current();
         _mint(_to, newTokenId);
-        _setTokenURI(newTokenId, _toAsciiString(_to));
-
+        _setTokenURI(newTokenId, _tokenURI);
+        
         return newTokenId;
     }
 
@@ -63,38 +64,4 @@ contract DefaultPassportSkin is ERC721Full, Ownable {
         emit BaseURISet(_baseURI);
     }
 
-    /* ========== Private Functions ========== */
-
-    /**
-     * @dev Converts the given address to string. Used when minting new
-     *      passports.
-     */
-    function _toAsciiString(
-        address _address
-    )
-        private
-        pure
-        returns (string memory)
-    {
-        bytes memory s = new bytes(40);
-        for (uint i = 0; i < 20; i++) {
-            bytes1 b = bytes1(uint8(uint(uint160(_address)) / (2**(8*(19 - i)))));
-            bytes1 hi = bytes1(uint8(b) / 16);
-            bytes1 lo = bytes1(uint8(b) - 16 * uint8(hi));
-            s[2*i] = _char(hi);
-            s[2*i+1] = _char(lo);
-        }
-        return string(s);
-    }
-
-    function _char(
-        bytes1 b
-    )
-        private
-        pure
-        returns (bytes1 c)
-    {
-        if (uint8(b) < 10) return bytes1(uint8(b) + 0x30);
-        else return bytes1(uint8(b) + 0x57);
-    }
 }
