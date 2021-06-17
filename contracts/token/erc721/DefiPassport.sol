@@ -3,8 +3,11 @@ pragma solidity 0.5.16;
 import {ERC721Full} from "@openzeppelin/contracts/token/ERC721/ERC721Full.sol";
 import {Counters} from "@openzeppelin/contracts/drafts/Counters.sol";
 import {Adminable} from "../../lib/Adminable.sol";
+import {Initializable} from "../../Initializable.sol";
 
-contract DefiPassport is ERC721Full, Adminable {
+// TODO add defi passport storage
+
+contract DefiPassport is ERC721Full, Adminable, Initializable {
 
     /* ========== Libraries ========== */
 
@@ -34,6 +37,7 @@ contract DefiPassport is ERC721Full, Adminable {
     )
         external
         onlyAdmin
+        initializer
     {
         name = _name;
         symbol = _symbol;
