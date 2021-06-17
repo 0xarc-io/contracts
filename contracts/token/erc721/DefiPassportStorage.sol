@@ -1,11 +1,19 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity 0.5.16;
+pragma experimental ABIEncoderV2;
 
 import {Counters} from "@openzeppelin/contracts/drafts/Counters.sol";
 import {ISapphireCreditScore} from "../../debt/sapphire/ISapphireCreditScore.sol";
 
 contract DefiPassportStorage {
+
+    /* ========== Structs ========== */
+
+    struct SkinRecord {
+        address skin;
+        uint256 skinTokenId;
+    }
 
     /* ========== Public Variables ========== */
 
@@ -21,7 +29,18 @@ contract DefiPassportStorage {
      * @notice Records the approved skins of the passport
      */
     mapping (address => bool) public approvedSkins;
-    
+
+    /**
+     * @notice The skin manager appointed by the admin, who can
+     *         approve and revoke passport skins
+     */
+    address public skinManager;
+
+    /**
+     * @notice Maps a passport (tokenId) to its active skin NFT
+     */
+    mapping (uint256 => SkinRecord) public activeSkins;
+
     /* ========== Private Variables ========== */
 
     Counters.Counter internal _tokenIds;
