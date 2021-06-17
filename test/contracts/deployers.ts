@@ -227,6 +227,7 @@ export async function deploySapphireCreditScore(deployer: Signer) {
   const creditScoreImp = await new SapphireCreditScoreFactory(
     deployer,
   ).deploy();
+
   const proxy = await deployArcProxy(
     deployer,
     creditScoreImp.address,
@@ -240,6 +241,7 @@ export async function deployMockSapphireCreditScore(deployer: Signer) {
   const creditScoreImp = await new MockSapphireCreditScoreFactory(
     deployer,
   ).deploy();
+
   const proxy = await deployArcProxy(
     deployer,
     creditScoreImp.address,
