@@ -123,7 +123,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
             msg.sender == skinManager,
             "DefiPassport: caller is not skin manager"
         );
-        
+
         require(
             approvedSkins[_skin] != _status,
             "DefiPassport: skin already has the same status"
@@ -232,6 +232,55 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         uint256 tokenId = tokenOfOwnerByIndex(msg.sender, 0);
 
         _setActiveSkin(tokenId, SkinRecord(_skin, _skinTokenId));
+    }
+
+    function approve(
+        address to,
+        uint256 tokenId
+    )
+        public
+    {
+        revert("DefiPassport: defi passports are not transferrable");
+    }
+
+    function setApprovalForAll(
+        address to,
+        bool approved
+    )
+        public
+    {
+        revert("DefiPassport: defi passports are not transferrable");
+    }
+
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    )
+        public
+    {
+        revert("DefiPassport: defi passports are not transferrable");
+    }
+
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory _data
+    )
+        public
+    {
+        revert("DefiPassport: defi passports are not transferrable");
+    }
+
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    )
+        public
+    {
+        revert("DefiPassport: defi passports are not transferrable");
     }
 
     /* ========== Private Functions ========== */

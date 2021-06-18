@@ -314,28 +314,66 @@ describe('DefiPassport', () => {
   });
 
   describe('#approve', () => {
-    it('reverts - defi passports are not transferrable');
+    it('reverts - defi passports are not transferrable', async () => {
+      const tokenId = await mintUserPassport();
+
+      await expect(
+        defiPassport.connect(user).approve(owner.address, tokenId),
+      ).to.be.revertedWith(
+        'DefiPassport: defi passports are not transferrable',
+      );
+    });
   });
 
   describe('#transferFrom', () => {
-    it('reverts - defi passports are not transferrable');
+    it('reverts - defi passports are not transferrable', async () => {
+      const tokenId = await mintUserPassport();
+
+      await expect(
+        defiPassport
+          .connect(user)
+          .transferFrom(user.address, owner.address, tokenId),
+      ).to.be.revertedWith(
+        'DefiPassport: defi passports are not transferrable',
+      );
+    });
   });
 
   describe('#safeTransferFrom(from, to, tokenId)', () => {
-    it('reverts - defi passports are not transferrable');
+    it.only('reverts - defi passports are not transferrable', async () => {
+      const tokenId = await mintUserPassport();
+
+      await expect(
+        defiPassport
+          .connect(user)
+          .safeTransferFrom(user.address, owner.address, tokenId),
+      ).to.be.revertedWith(
+        'DefiPassport: defi passports are not transferrable',
+      );
+    });
   });
 
   describe('#safeTransferFrom(from, to, tokenId, _data)', () => {
-    it('reverts - defi passports are not transferrable');
+    it('reverts - defi passports are not transferrable', async () => {
+      const tokenId = await mintUserPassport();
+
+      await expect(
+        defiPassport
+          .connect(user)
+          .safeTransferFrom(user.address, owner.address, tokenId, ''),
+      ).to.be.revertedWith(
+        'DefiPassport: defi passports are not transferrable',
+      );
+    });
   });
 
-  describe('#setApprovedForAll', () => {
-    it('reverts - defi passports are not transferrable');
+  describe('#setApprovalForAll', () => {
+    it('reverts - defi passports are not transferrable', async () => {
+      await expect(
+        defiPassport.connect(user).setApprovalForAll(owner.address, true),
+      ).to.be.revertedWith(
+        'DefiPassport: defi passports are not transferrable',
+      );
+    });
   });
-
-  /**
-   * TODO: add setSkin function.
-   *
-   * For this we most likely need a DefiPassportSkin NFT
-   */
 });
