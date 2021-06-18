@@ -340,13 +340,17 @@ describe('DefiPassport', () => {
   });
 
   describe('#safeTransferFrom(from, to, tokenId)', () => {
-    it.only('reverts - defi passports are not transferrable', async () => {
+    it('reverts - defi passports are not transferrable', async () => {
       const tokenId = await mintUserPassport();
 
       await expect(
         defiPassport
           .connect(user)
-          .safeTransferFrom(user.address, owner.address, tokenId),
+          ['safeTransferFrom(address,address,uint256)'](
+            user.address,
+            owner.address,
+            tokenId,
+          ),
       ).to.be.revertedWith(
         'DefiPassport: defi passports are not transferrable',
       );
@@ -360,7 +364,12 @@ describe('DefiPassport', () => {
       await expect(
         defiPassport
           .connect(user)
-          .safeTransferFrom(user.address, owner.address, tokenId, ''),
+          ['safeTransferFrom(address,address,uint256,bytes)'](
+            user.address,
+            owner.address,
+            tokenId,
+            [],
+          ),
       ).to.be.revertedWith(
         'DefiPassport: defi passports are not transferrable',
       );
