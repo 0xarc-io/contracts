@@ -8,6 +8,7 @@ import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import {
+  deployDefiPassport,
   deployMockDefiPassport,
   deployMockSapphireCreditScore,
 } from '../deployers';
@@ -49,6 +50,18 @@ describe('DefiPassport', () => {
     await creditScoreContract.verifyAndUpdate(
       getScoreProof(userCreditScore, creditScoreTree),
     );
+  }
+
+  /**
+   * Helper function that mints a passport to the `user`
+   */
+  async function mintUserPassport() {
+    await defiPassport.connect(skinManager).approveSkin(skinAddress);
+    await defiPassport.setSkinOwner(skinAddress, skinTokenId, user.address);
+
+    await defiPassport.mint(user.address, skinAddress, skinTokenId);
+
+    return await defiPassport.tokenOfOwnerByIndex(user.address, 0);
   }
 
   before(async () => {
@@ -188,12 +201,51 @@ describe('DefiPassport', () => {
   });
 
   // setSkin(address skin)
-  describe('#setSkin', () => {
-    it('reverts if caller has no passport');
+  describe('#setActiveSkin', () => {
+    let otherSkinAddy: string;
+    let otherSkinTokenId: number;
 
-    it('reverts if caller does not have the specified skin');
+    before(async () => {
+      otherSkinAddy = await ethers.Wallet.createRandom().getAddress();
+      otherSkinTokenId = 42;
+    });
 
-    it('sets the skin');
+    it('reverts if caller has no passport', async () => {
+      await expect(
+        defiPassport.setActiveSkin(skinAddress, skinTokenId),
+      ).to.be.revertedWith('DefiPassport: caller has no passport');
+    });
+
+    it('reverts if caller does not have the specified skin', async () => {
+      await mintUserPassport();
+
+      await expect(
+        defiPassport
+          .connect(user)
+          .setActiveSkin(otherSkinAddy, otherSkinTokenId),
+      ).to.be.revertedWith('DefiPassport: the user does not own the skin');
+    });
+
+    it('sets the skin', async () => {
+      const tokenId = await mintUserPassport();
+      await defiPassport.setSkinOwner(
+        otherSkinAddy,
+        otherSkinTokenId,
+        user.address,
+      );
+
+      let activeSkin = await defiPassport.activeSkins(tokenId);
+      expect(activeSkin.skin).to.eq(skinAddress);
+      expect(activeSkin.skinTokenId).to.eq(skinTokenId);
+
+      await defiPassport
+        .connect(user)
+        .setActiveSkin(otherSkinAddy, otherSkinTokenId);
+
+      activeSkin = await defiPassport.activeSkins(tokenId);
+      expect(activeSkin.skin).to.eq(otherSkinAddy);
+      expect(activeSkin.skinTokenId).to.eq(otherSkinTokenId);
+    });
   });
 
   describe('#getCurrentSkin', () => {

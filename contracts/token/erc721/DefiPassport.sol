@@ -161,6 +161,32 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         return newTokenId;
     }
 
+    /**
+     * @notice Changes the passport skin of the caller's passport
+     * @param _skin The contract address to the skin NFT
+     * @param _skinTokenId The ID of the kin NFT
+     */
+    function setActiveSkin(
+        address _skin,
+        uint256 _skinTokenId
+    )
+        external
+    {
+        require(
+            balanceOf(msg.sender) > 0,
+            "DefiPassport: caller has no passport"
+        );
+
+        require(
+            _isSkinOwner(msg.sender, _skin, _skinTokenId),
+            "DefiPassport: the user does not own the skin"
+        );
+
+        uint256 tokenId = tokenOfOwnerByIndex(msg.sender, 0);
+
+        _setActiveSkin(tokenId, SkinRecord(_skin, _skinTokenId));
+    }
+
     /* ========== Private Functions ========== */
 
     /**
