@@ -31,6 +31,11 @@ contract DefiPassportStorage {
     mapping (address => bool) public approvedSkins;
 
     /**
+     * @notice Records the default skins
+     */
+    mapping (address => bool) public defaultSkins;
+
+    /**
      * @notice The skin manager appointed by the admin, who can
      *         approve and revoke passport skins
      */

@@ -355,14 +355,20 @@ describe('DefiPassport', () => {
       ).to.be.revertedWith('DefiPassport: caller is not skin manager');
     });
 
-    it(`marks a skin as default`, async () => {
+    it('toggles skins as default', async () => {
       expect(await defiPassport.defaultSkins(defaultSkinAddress)).to.be.false;
 
       await defiPassport
         .connect(skinManager)
-        .setDefaultSkin(defaultSkinAddress);
+        .setDefaultSkin(defaultSkinAddress, true);
 
       expect(await defiPassport.defaultSkins(defaultSkinAddress)).to.be.true;
+
+      await defiPassport
+        .connect(skinManager)
+        .setDefaultSkin(defaultSkinAddress, false);
+
+      expect(await defiPassport.defaultSkins(defaultSkinAddress)).to.be.false;
     });
   });
 
