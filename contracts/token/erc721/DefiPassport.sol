@@ -20,22 +20,19 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
 
     event BaseURISet(string _baseURI);
 
-    event ApprovedSkin(address _skin);
+    event ApprovedSkinStatusChanged(
+        address _skin,
+        bool _status
+    );
 
     event ActiveSkinSet(
         uint256 _tokenId,
         SkinRecord _skinRecord
     );
 
-    /* ========== Modifiers ========== */
+    event SkinManagerSet(address _skinManager);
 
-    modifier onlySkinManager() {
-        require(
-            msg.sender == skinManager,
-            "DefiPassport: caller is not skin manager"
-        );
-        _;
-    }
+    event CreditScoreContractSet(address _creditScoreContract);
 
     /* ========== Constructor ========== */
 
@@ -78,6 +75,10 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         _registerInterface(0x5b5e139f);
     }
 
+    /**
+     * @dev Sets the base URI that is appended as a prefix to the
+     *      token URI.
+     */
     function setBaseURI(
         string calldata _baseURI
     )
@@ -89,23 +90,69 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
     }
 
     /**
+     * @dev Sets the address of the skin manager role
+     * @param _skinManager The new skin manager
+     */
+    function setSkinManager(
+        address _skinManager
+    )
+        external
+        onlyAdmin
+    {
+        require (
+            _skinManager != skinManager,
+            "DefiPassport: the same skin manager is already set"
+        );
+
+        skinManager = _skinManager;
+
+        emit SkinManagerSet(skinManager);
+    }
+
+    /**
      * @notice Approves a passport skin.
      *         Only callable by the skin manager
      */
-    function approveSkin(
-        address _skin
+    function setApproveSkin(
+        address _skin,
+        bool _status
     )
         external
-        onlySkinManager
     {
         require(
-            !approvedSkins[_skin],
-            "DefiPassport: skin is already approved"
+            msg.sender == skinManager,
+            "DefiPassport: caller is not skin manager"
+        );
+        
+        require(
+            approvedSkins[_skin] != _status,
+            "DefiPassport: skin already has the same status"
         );
 
-        approvedSkins[_skin] = true;
+        approvedSkins[_skin] = _status;
 
-        emit ApprovedSkin(_skin);
+        emit ApprovedSkinStatusChanged(_skin, _status);
+    }
+
+    function setCreditScoreContract(
+        address _creditScoreAddress
+    )
+        external
+        onlyAdmin
+    {
+        require(
+            address(creditScoreContract) != _creditScoreAddress,
+            "DefiPassport: the same credit score address is already set"
+        );
+
+        require(
+            _creditScoreAddress.isContract(),
+            "DefiPassport: the given address is not a contract"
+        );
+
+        creditScoreContract = ISapphireCreditScore(_creditScoreAddress);
+
+        emit CreditScoreContractSet(_creditScoreAddress);
     }
 
     /* ========== Public Functions ========== */
