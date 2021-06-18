@@ -21,12 +21,9 @@ import {
   SapphireCreditScoreFactory,
 } from '@src/typings';
 import { MerkleDistributor } from '@src/typings/MerkleDistributor';
-import { SapphireCreditScore } from '@src/typings/SapphireCreditScore';
-import { MockSapphireCreditScore } from '@src/typings/MockSapphireCreditScore';
 import { SyntheticTokenV2 } from '@src/typings/SyntheticTokenV2';
 import { MockSapphireOracle } from '@src/typings/MockSapphireOracle';
 import { DefiPassportFactory } from '@src/typings/DefiPassportFactory';
-import { MockDefiPassportFactory } from '@src/typings/MockDefiPassportFactory';
 
 export async function deployMockMozartCore(deployer: Signer) {
   const Contract = await await ethers.getContractFactory(
@@ -267,17 +264,4 @@ export async function deployDefiPassport(deployer: Signer) {
   );
 
   return DefiPassportFactory.connect(proxy.address, deployer);
-}
-
-export async function deployMockDefiPassport(deployer: Signer) {
-  const defiPassportImpl = await new MockDefiPassportFactory(deployer).deploy();
-
-  const proxy = await deployArcProxy(
-    deployer,
-    defiPassportImpl.address,
-    await deployer.getAddress(),
-    [],
-  );
-
-  return MockDefiPassportFactory.connect(proxy.address, deployer);
 }
