@@ -88,6 +88,7 @@ describe('DefiPassport', () => {
    */
   async function mintUserPassport() {
     await defiPassport.connect(skinManager).setApproveSkin(skinAddress, true);
+    await skinsContract.transferFrom(owner.address, user.address, skinTokenId);
 
     await defiPassport.mint(user.address, skinAddress, skinTokenId);
 
