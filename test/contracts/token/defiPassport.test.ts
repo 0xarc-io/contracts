@@ -1,7 +1,7 @@
 import { BigNumber } from '@ethersproject/bignumber';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { CreditScoreTree } from '@src/MerkleTree';
-import { SapphireCreditScore } from '@src/typings';
+import { MockSapphireCreditScore, SapphireCreditScore } from '@src/typings';
 import { MockDefiPassport } from '@src/typings/MockDefiPassport';
 import { getScoreProof } from '@src/utils';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
@@ -56,7 +56,7 @@ describe('DefiPassport', () => {
    * Helper function that mints a passport to the `user`
    */
   async function mintUserPassport() {
-    await defiPassport.connect(skinManager).approveSkin(skinAddress);
+    await defiPassport.connect(skinManager).setApproveSkin(skinAddress, true);
     await defiPassport.setSkinOwner(skinAddress, skinTokenId, user.address);
 
     await defiPassport.mint(user.address, skinAddress, skinTokenId);
@@ -126,7 +126,7 @@ describe('DefiPassport', () => {
   // mint(address to, address skin)
   describe('#mint', () => {
     it('reverts if the receiver has no credit score', async () => {
-      await defiPassport.connect(skinManager).approveSkin(skinAddress);
+      await defiPassport.connect(skinManager).setApproveSkin(skinAddress, true);
 
       await expect(
         defiPassport.mint(userNoCreditScore.address, skinAddress, skinTokenId),
@@ -140,7 +140,7 @@ describe('DefiPassport', () => {
     });
 
     it('reverts if the receiver is not the skin owner', async () => {
-      await defiPassport.connect(skinManager).approveSkin(skinAddress);
+      await defiPassport.connect(skinManager).setApproveSkin(skinAddress, true);
 
       await expect(
         defiPassport.mint(user.address, skinAddress, skinTokenId),
@@ -148,7 +148,7 @@ describe('DefiPassport', () => {
     });
 
     it('mints the passport to the receiver', async () => {
-      await defiPassport.connect(skinManager).approveSkin(skinAddress);
+      await defiPassport.connect(skinManager).setApproveSkin(skinAddress, true);
       await defiPassport.setSkinOwner(skinAddress, skinTokenId, user.address);
 
       await defiPassport.mint(user.address, skinAddress, skinTokenId);
@@ -173,7 +173,7 @@ describe('DefiPassport', () => {
     });
 
     it('reverts if the receiver already has a passport', async () => {
-      await defiPassport.connect(skinManager).approveSkin(skinAddress);
+      await defiPassport.connect(skinManager).setApproveSkin(skinAddress, true);
       await defiPassport.setSkinOwner(skinAddress, skinTokenId, user.address);
 
       await defiPassport.mint(user.address, skinAddress, skinTokenId);
@@ -200,7 +200,6 @@ describe('DefiPassport', () => {
     });
   });
 
-  // setSkin(address skin)
   describe('#setActiveSkin', () => {
     let otherSkinAddy: string;
     let otherSkinTokenId: number;
@@ -248,42 +247,70 @@ describe('DefiPassport', () => {
     });
   });
 
-  describe('#getCurrentSkin', () => {
-    it('returns the current skin of the specified passport');
-  });
-
   describe('#setSkinManager', () => {
-    it('reverts if called by non-admin');
+    it('reverts if called by non-admin', async () => {
+      await expect(
+        defiPassport.connect(user).setSkinManager(user.address),
+      ).to.be.revertedWith('Adminable: caller is not admin');
+    });
 
-    it('sets the skin manager');
-  });
-
-  describe('#revokeSkin', () => {
-    it('reverts if called by non-skin-manager');
-
-    it('adds a skin to the blacklist');
-  });
-
-  describe('#approveSkin', () => {
-    it('reverts if called by non-skin-manager', async () => {
-      await expect(defiPassport.approveSkin(skinAddress)).to.be.revertedWith(
-        'DefiPassport: caller is not skin manager',
+    it('reverts if sets the same skin manager', async () => {
+      await expect(
+        defiPassport.setSkinManager(skinManager.address),
+      ).to.be.revertedWith(
+        'DefiPassport: the same skin manager is already set',
       );
     });
 
-    it('adds the skin to the list of approved skins', async () => {
+    it('sets the skin manager if called by admin', async () => {
+      expect(await defiPassport.skinManager()).to.eq(skinManager.address);
+
+      await defiPassport.setSkinManager(owner.address);
+
+      expect(await defiPassport.skinManager()).to.eq(owner.address);
+    });
+  });
+
+  describe('#setApproveSkin', () => {
+    it('reverts if called by non-skin-manager', async () => {
+      await expect(
+        defiPassport.setApproveSkin(skinAddress, false),
+      ).to.be.revertedWith('DefiPassport: caller is not skin manager');
+    });
+
+    it('approves the skin', async () => {
       expect(await defiPassport.approvedSkins(skinAddress)).to.be.false;
 
-      await defiPassport.connect(skinManager).approveSkin(skinAddress);
+      await defiPassport.connect(skinManager).setApproveSkin(skinAddress, true);
 
       expect(await defiPassport.approvedSkins(skinAddress)).to.be.true;
     });
   });
 
   describe('#setCreditScoreContract', () => {
-    it('reverts if called by non-admin');
+    let otherCreditScoreContract: MockSapphireCreditScore;
 
-    it('sets the credit score contract if called by admin');
+    before(async () => {
+      otherCreditScoreContract = await deployMockSapphireCreditScore(owner);
+    });
+
+    it('reverts if called by non-admin', async () => {
+      await expect(
+        defiPassport
+          .connect(user)
+          .setCreditScoreContract(otherCreditScoreContract.address),
+      ).to.be.revertedWith('Adminable: caller is not admin');
+    });
+
+    it('sets the credit score contract if called by admin', async () => {
+      expect(await defiPassport.creditScoreContract()).to.eq(
+        creditScoreContract.address,
+      );
+
+      await defiPassport.setCreditScoreContract(
+        otherCreditScoreContract.address,
+      );
+    });
   });
 
   describe('#approve', () => {
