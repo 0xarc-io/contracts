@@ -200,7 +200,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
 
     /**
      * @notice Mints a DeFi passport to the address specified by `_to`. Note:
-     *         - The `_passportSkin` must be an approved skin.
+     *         - The `_passportSkin` must be an approved or default skin.
      *         - The token URI will be composed by <baseURI> + `_to`,
      *           without the "0x" in front
      *
@@ -223,20 +223,28 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
             "DefiPassport: the user has no credit score"
         );
 
-        require(
-            approvedSkins[_passportSkin],
-            "DefiPassport: the skin is not approved"
-        );
+        if (defaultSkins[_passportSkin]) {
+            // If the skin is a default skin, ensure the token exists
+            require (
+                IERC721(_passportSkin).ownerOf(_skinTokenId) != address(0),
+                "DefiPassport: DefiPassport: the specified skin token id does not exist"
+            );
+        } else {
+            require(
+                approvedSkins[_passportSkin],
+                "DefiPassport: the skin is not approved"
+            );
+
+            require(
+                _isSkinOwner(_to, _passportSkin, _skinTokenId),
+                "DefiPassport: the receiver does not own the skin"
+            );
+        }
 
         // A user cannot have two passports
         require(
             balanceOf(_to) == 0,
             "DefiPassport: user already has a defi passport"
-        );
-
-        require(
-            _isSkinOwner(_to, _passportSkin, _skinTokenId),
-            "DefiPassport: the receiver does not own the skin"
         );
 
         _tokenIds.increment();
@@ -251,7 +259,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
 
     /**
      * @notice Changes the passport skin of the caller's passport
-     * 
+     *
      * @param _skin The contract address to the skin NFT
      * @param _skinTokenId The ID of the kin NFT
      */

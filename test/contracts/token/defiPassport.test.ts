@@ -29,6 +29,7 @@ describe('DefiPassport', () => {
   let skinManager: SignerWithAddress;
   let defaultSkinAddress: string;
   let defaultSkinTokenId: BigNumber;
+  let skinsContract: MintableNFT;
   let skinAddress: string;
   let skinTokenId: BigNumber;
 
@@ -61,14 +62,14 @@ describe('DefiPassport', () => {
   }
 
   async function _setupSkins() {
-    const skinsContract = await new MintableNFTFactory(owner).deploy(
+    skinsContract = await new MintableNFTFactory(owner).deploy(
       'Passport Skins',
       'PS',
     );
     skinAddress = skinsContract.address;
 
     skinTokenId = BigNumber.from(1);
-    await skinsContract.mint(user.address, skinTokenId);
+    await skinsContract.mint(owner.address, skinTokenId);
 
     const defaultPassportSkinContract = await new DefaultPassportSkinFactory(
       owner,
@@ -179,18 +180,24 @@ describe('DefiPassport', () => {
 
     // skin addy is valid but token id is not
     it('reverts if minting with a default skin that does not exist', async () => {
+      await defiPassport
+        .connect(skinManager)
+        .setDefaultSkin(defaultSkinAddress, true);
+
       await expect(
         defiPassport.mint(
           user.address,
           defaultSkinAddress,
           BigNumber.from(420),
         ),
-      ).to.be.revertedWith(
-        'DefiPassport: the specified skin token id does not exist',
-      );
+      ).to.be.revertedWith('ERC721: owner query for nonexistent token');
     });
 
     it('mints the passport to the receiver with a default skin', async () => {
+      await defiPassport
+        .connect(skinManager)
+        .setDefaultSkin(defaultSkinAddress, true);
+
       await defiPassport.mint(
         user.address,
         defaultSkinAddress,
@@ -207,6 +214,11 @@ describe('DefiPassport', () => {
 
     it('mints the passport to the receiver with an owned skin', async () => {
       await defiPassport.connect(skinManager).setApproveSkin(skinAddress, true);
+      await skinsContract.transferFrom(
+        owner.address,
+        user.address,
+        skinTokenId,
+      );
 
       await defiPassport.mint(user.address, skinAddress, skinTokenId);
 
@@ -230,6 +242,11 @@ describe('DefiPassport', () => {
 
     it('reverts if the receiver already has a passport', async () => {
       await defiPassport.connect(skinManager).setApproveSkin(skinAddress, true);
+      await skinsContract.transferFrom(
+        owner.address,
+        user.address,
+        skinTokenId,
+      );
 
       await defiPassport.mint(user.address, skinAddress, skinTokenId);
 
