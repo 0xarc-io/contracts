@@ -256,15 +256,14 @@ describe('DefiPassport', () => {
   });
 
   describe('#setActiveSkin', () => {
-    let otherSkinAddy: string;
+    let otherSkinContract: MintableNFT;
     let otherSkinTokenId: BigNumber;
 
     before(async () => {
-      const otherSkinContract = await new MintableNFTFactory(owner).deploy(
+      otherSkinContract = await new MintableNFTFactory(owner).deploy(
         'Other Passport Skins',
         'OPS',
       );
-      otherSkinAddy = otherSkinContract.address;
 
       otherSkinTokenId = skinTokenId.add(1);
       await otherSkinContract.mint(owner.address, otherSkinTokenId);
@@ -282,7 +281,7 @@ describe('DefiPassport', () => {
       await expect(
         defiPassport
           .connect(user)
-          .setActiveSkin(otherSkinAddy, otherSkinTokenId),
+          .setActiveSkin(otherSkinContract.address, otherSkinTokenId),
       ).to.be.revertedWith('DefiPassport: the user does not own the skin');
     });
 
@@ -293,12 +292,18 @@ describe('DefiPassport', () => {
       expect(activeSkinRecord.skin).to.eq(skinAddress);
       expect(activeSkinRecord.skinTokenId).to.eq(skinTokenId);
 
+      await otherSkinContract.transferFrom(
+        owner.address,
+        user.address,
+        otherSkinTokenId,
+      );
+
       await defiPassport
         .connect(user)
-        .setActiveSkin(otherSkinAddy, otherSkinTokenId);
+        .setActiveSkin(otherSkinContract.address, otherSkinTokenId);
 
       activeSkinRecord = await defiPassport.activeSkins(tokenId);
-      expect(activeSkinRecord.skin).to.eq(otherSkinAddy);
+      expect(activeSkinRecord.skin).to.eq(otherSkinContract.address);
       expect(activeSkinRecord.skinTokenId).to.eq(otherSkinTokenId);
     });
   });

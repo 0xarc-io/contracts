@@ -6,7 +6,7 @@ import {Counters} from "@openzeppelin/contracts/drafts/Counters.sol";
 import {Ownable} from "../../lib/Ownable.sol";
 
 contract DefaultPassportSkin is ERC721Full, Ownable {
-    
+
     /* ========== Libraries ========== */
 
     using Counters for Counters.Counter;
@@ -25,7 +25,7 @@ contract DefaultPassportSkin is ERC721Full, Ownable {
         ERC721Full("Default Defi Passport Skin", "DefaultPassportSkin")
         public
     {}
-    
+
     /* ========== Restricted Functions ========== */
 
     /**
