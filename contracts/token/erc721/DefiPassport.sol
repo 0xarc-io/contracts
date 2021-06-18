@@ -25,6 +25,11 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         bool _status
     );
 
+    event DefaultSkinStatusChanged(
+        address _skin,
+        bool _status
+    );
+
     event ActiveSkinSet(
         uint256 _tokenId,
         SkinRecord _skinRecord
@@ -40,6 +45,16 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         ERC721Full("", "")
         public
     {}
+
+    /* ========== Modifier ========== */
+
+    modifier onlySkinManager () {
+        require(
+            msg.sender == skinManager,
+            "DefiPassport: caller is not skin manager"
+        );
+        _;
+    }
 
     /* ========== Restricted Functions ========== */
 
@@ -91,6 +106,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
 
     /**
      * @dev Sets the address of the skin manager role
+     *
      * @param _skinManager The new skin manager
      */
     function setSkinManager(
@@ -110,6 +126,35 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
     }
 
     /**
+     * @notice Registers/unregisters a default skin
+     *
+     * @param _skin Address of the skin NFT
+     * @param _status Wether or not it should be considered as a default
+     *                skin or not
+     */
+    function setDefaultSkin(
+        address _skin,
+        bool _status
+    )
+        external
+        onlySkinManager
+    {
+        require(
+            defaultSkins[_skin] != _status,
+            "DefiPassport: skin already has the same status"
+        );
+
+        require(
+            _skin.isContract(),
+            "DefiPassport: the given skin is not a contract"
+        );
+
+        defaultSkins[_skin] = _status;
+
+        emit DefaultSkinStatusChanged(_skin, _status);
+    }
+
+    /**
      * @notice Approves a passport skin.
      *         Only callable by the skin manager
      */
@@ -118,12 +163,8 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         bool _status
     )
         external
+        onlySkinManager
     {
-        require(
-            msg.sender == skinManager,
-            "DefiPassport: caller is not skin manager"
-        );
-
         require(
             approvedSkins[_skin] != _status,
             "DefiPassport: skin already has the same status"
@@ -210,6 +251,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
 
     /**
      * @notice Changes the passport skin of the caller's passport
+     * 
      * @param _skin The contract address to the skin NFT
      * @param _skinTokenId The ID of the kin NFT
      */
