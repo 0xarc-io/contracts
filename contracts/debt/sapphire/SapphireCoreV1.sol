@@ -1103,13 +1103,6 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             _scoreProof.account = msg.sender;
         }
 
-        /**
-         * Only the borrow and liquidate actions require a score proof, so break
-         * the loop when any of these actions are found.
-         *
-         * Also ensure the credit score proof refers to the correct account given
-         * the action.
-         */
         for (uint256 i = 0; i < _actions.length; i++) {
             SapphireTypes.Action memory action = _actions[i];
 
@@ -1123,7 +1116,10 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
                 needsCollateralPrice = true;
             }
 
-            // Verify account of credit score proof
+            /**
+            * Ensure the credit score proof refers to the correct account given
+            * the action.
+            */
             if (action.operation == SapphireTypes.Operation.Borrow ||
                 action.operation == SapphireTypes.Operation.Withdraw
             ) {
