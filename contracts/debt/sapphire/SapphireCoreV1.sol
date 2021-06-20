@@ -39,8 +39,8 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     );
 
     event LiquidationFeesUpdated(
-        uint256 _liquidationUserFee,
-        uint256 _liquidationArcFee
+        uint256 _liquidationUserRatio,
+        uint256 _liquidationArcRatio
     );
 
     event LimitsUpdated(
@@ -98,8 +98,8 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
      * @param _feeCollector         The address of the ARC fee collector when a liquidation occurs
      * @param _highCollateralRatio  High limit of how much collateral is needed to borrow
      * @param _lowCollateralRatio   Low limit of how much collateral is needed to borrow
-     * @param _liquidationUserFee   How much is a user penalized if they go below their c-ratio
-     * @param _liquidationArcFee    How much of the liquidation profit should ARC take
+     * @param _liquidationUserRatio   How much is a user penalized if they go below their c-ratio
+     * @param _liquidationArcRatio    How much of the liquidation profit should ARC take
      */
     function init(
         address _collateralAddress,
@@ -111,8 +111,8 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         address _feeCollector,
         uint256 _highCollateralRatio,
         uint256 _lowCollateralRatio,
-        uint256 _liquidationUserFee,
-        uint256 _liquidationArcFee
+        uint256 _liquidationUserRatio,
+        uint256 _liquidationArcRatio
     )
         external
         onlyAdmin
@@ -160,7 +160,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         setAssessor(_assessorAddress);
         setOracle(_oracleAddress);
         setCollateralRatios(_lowCollateralRatio, _highCollateralRatio);
-        _setFees(_liquidationUserFee, _liquidationArcFee);
+        _setFees(_liquidationUserRatio, _liquidationArcRatio);
     }
 
     /**
@@ -232,24 +232,24 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
      *
      * @notice Can only be called by the admin.
      *
-     * @param _liquidationUserFee   Determines the penalty a user must pay by discounting
+     * @param _liquidationUserRatio   Determines the penalty a user must pay by discounting
      *                              their collateral price to provide a profit incentive for liquidators
-     * @param _liquidationArcFee    The percentage of the profit earned from the liquidation, which feeCollector earns.
+     * @param _liquidationArcRatio    The percentage of the profit earned from the liquidation, which feeCollector earns.
      */
     function setFees(
-        uint256 _liquidationUserFee,
-        uint256 _liquidationArcFee
+        uint256 _liquidationUserRatio,
+        uint256 _liquidationArcRatio
     )
         public
         onlyAdmin
     {
         require(
-            (_liquidationUserFee != liquidationUserFee) ||
-            (_liquidationArcFee != liquidationArcFee),
+            (_liquidationUserRatio != liquidationUserRatio) ||
+            (_liquidationArcRatio != liquidationArcRatio),
             "SapphireCoreV1: the same fees are already set"
         );
 
-        _setFees(_liquidationUserFee, _liquidationArcFee);
+        _setFees(_liquidationUserRatio, _liquidationArcRatio);
     }
 
     /**
@@ -1001,7 +1001,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         // --- EFFECTS ---
 
         // Get the liquidation price of the asset (discount for liquidator)
-        uint256 liquidationPriceRatio = BASE.sub(liquidationUserFee);
+        uint256 liquidationPriceRatio = BASE.sub(liquidationUserRatio);
         uint256 liquidationPrice = Math.roundUpMul(_currentPrice, liquidationPriceRatio);
 
         // Calculate the amount of collateral to be sold based on the entire debt
@@ -1036,7 +1036,7 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
 
         // Calculate the ARC share
         uint256 arcShare = profit
-            .mul(liquidationArcFee)
+            .mul(liquidationArcRatio)
             .div(liquidationPrice)
             .div(precisionScalar);
 
@@ -1170,20 +1170,20 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
     }
 
     function _setFees(
-        uint256 _liquidationUserFee,
-        uint256 _liquidationArcFee
+        uint256 _liquidationUserRatio,
+        uint256 _liquidationArcRatio
     )
         private
     {
         require(
-            _liquidationUserFee <= BASE &&
-            _liquidationArcFee <= BASE,
+            _liquidationUserRatio <= BASE &&
+            _liquidationArcRatio <= BASE,
             "SapphireCoreV1: fees cannot be more than 100%"
         );
 
-        liquidationUserFee = _liquidationUserFee;
-        liquidationArcFee = _liquidationArcFee;
-        emit LiquidationFeesUpdated(liquidationUserFee, liquidationArcFee);
+        liquidationUserRatio = _liquidationUserRatio;
+        liquidationArcRatio = _liquidationArcRatio;
+        emit LiquidationFeesUpdated(liquidationUserRatio, liquidationArcRatio);
     }
 
     /**
