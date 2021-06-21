@@ -497,5 +497,25 @@
     "version": 2,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "DefiPassport",
+    "source": "DefiPassport",
+    "address": "0x31d5a9e89F321bcFB57E064fdc886233eE25CC5B",
+    "txn": "0xa2c6492e91cae8eec58f569cdff3bd147593c90c08d3efd4400fb196ee5dfa4b",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": "DefiPassport"
+  },
+  {
+    "name": "DefiPassportProxy",
+    "source": "ArcProxy",
+    "address": "0xb4817C52dF0A856fBb041971FB0f1F7D2BE7D14c",
+    "txn": "0xca8cc8cce2084ccc0125a3325b30e24f857359b48008ba1e474ed1c2d0f95c54",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": "DefiPassport"
   }
 ]
