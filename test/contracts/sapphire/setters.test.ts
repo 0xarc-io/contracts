@@ -269,8 +269,8 @@ describe('SapphireCore.setters', () => {
       await expect(sapphireCore.setFees(userFee, arcFee))
         .to.emit(sapphireCore, 'LiquidationFeesUpdated')
         .withArgs(userFee, arcFee);
-      expect(await sapphireCore.liquidationUserFee()).eq(userFee);
-      expect(await sapphireCore.liquidationArcFee()).eq(arcFee);
+      expect(await sapphireCore.liquidationUserRatio()).eq(userFee);
+      expect(await sapphireCore.liquidationArcRatio()).eq(arcFee);
     });
   });
 
