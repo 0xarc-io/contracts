@@ -1,4 +1,4 @@
-import { BigNumberish, Signer } from 'ethers';
+import { BigNumberish, Contract, Signer } from 'ethers';
 import { ethers } from 'hardhat';
 
 import { TestTokenFactory } from '@src/typings/TestTokenFactory';
@@ -21,10 +21,9 @@ import {
   SapphireCreditScoreFactory,
 } from '@src/typings';
 import { MerkleDistributor } from '@src/typings/MerkleDistributor';
-import { SapphireCreditScore } from '@src/typings/SapphireCreditScore';
-import { MockSapphireCreditScore } from '@src/typings/MockSapphireCreditScore';
 import { SyntheticTokenV2 } from '@src/typings/SyntheticTokenV2';
 import { MockSapphireOracle } from '@src/typings/MockSapphireOracle';
+import { DefiPassportFactory } from '@src/typings/DefiPassportFactory';
 
 export async function deployMockMozartCore(deployer: Signer) {
   const Contract = await await ethers.getContractFactory(
@@ -226,6 +225,7 @@ export async function deploySapphireCreditScore(deployer: Signer) {
   const creditScoreImp = await new SapphireCreditScoreFactory(
     deployer,
   ).deploy();
+
   const proxy = await deployArcProxy(
     deployer,
     creditScoreImp.address,
@@ -239,6 +239,7 @@ export async function deployMockSapphireCreditScore(deployer: Signer) {
   const creditScoreImp = await new MockSapphireCreditScoreFactory(
     deployer,
   ).deploy();
+
   const proxy = await deployArcProxy(
     deployer,
     creditScoreImp.address,
@@ -250,4 +251,17 @@ export async function deployMockSapphireCreditScore(deployer: Signer) {
 
 export function deployMockSapphireCoreV1(deployer: Signer) {
   return new MockSapphireCoreV1Factory(deployer).deploy();
+}
+
+export async function deployDefiPassport(deployer: Signer) {
+  const defiPassportImpl = await new DefiPassportFactory(deployer).deploy();
+
+  const proxy = await deployArcProxy(
+    deployer,
+    defiPassportImpl.address,
+    await deployer.getAddress(),
+    [],
+  );
+
+  return DefiPassportFactory.connect(proxy.address, deployer);
 }
