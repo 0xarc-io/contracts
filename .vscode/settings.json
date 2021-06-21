@@ -5,6 +5,7 @@
     "DAO's",
     "IERC",
     "IPFS",
+    "Initializable",
     "Merkle",
     "Numberish",
     "Permittable",
