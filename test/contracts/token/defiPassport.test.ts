@@ -73,7 +73,7 @@ describe('DefiPassport', () => {
 
     const defaultPassportSkinContract = await new DefaultPassportSkinFactory(
       owner,
-    ).deploy();
+    ).deploy('Default passport skin nft', 'DPS');
     defaultSkinAddress = defaultPassportSkinContract.address;
 
     await defaultPassportSkinContract.mint(owner.address, '');
