@@ -527,5 +527,15 @@
     "version": 1,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "DefaultPassportSkin",
+    "source": "DefaultPassportSkin",
+    "address": "0x7610704A079B6116DB44c2301914c50325d753Bd",
+    "txn": "0xa248057ddcb56cdce7576a46d92f6ab71594f6656c4397535fb0921efeed6538",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": ""
   }
 ]

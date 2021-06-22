@@ -1,5 +1,6 @@
 import {
   ArcProxyFactory,
+  DefaultPassportSkinFactory,
   DefiPassportClaimerFactory,
   DefiPassportFactory,
 } from '@src/typings';
@@ -151,5 +152,46 @@ task(
     await hre.run('verify:verify', {
       address: defiPassportClaimer,
       constructorArguments: [creditscore, defipassport],
+    });
+  });
+
+task(
+  'deploy-default-passport-skin',
+  'Deploy the Default Passport skin NFT contract',
+)
+  .addParam('name', 'The name of the NFT')
+  .addParam('symbol', 'The symbol of the NFT')
+  .setAction(async (taskArgs, hre) => {
+    const { name, symbol } = taskArgs;
+    const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
+
+    await pruneDeployments(network, signer.provider);
+
+    const defaultPassportSkinNft = await deployContract(
+      {
+        name: 'DefaultPassportSkin',
+        source: 'DefaultPassportSkin',
+        data: new DefaultPassportSkinFactory(signer).getDeployTransaction(
+          name,
+          symbol,
+        ),
+        version: 1,
+        type: DeploymentType.global,
+      },
+      networkConfig,
+    );
+
+    if (!defaultPassportSkinNft) {
+      throw red(`Default passport skin NFT not deployed!`);
+    }
+
+    console.log(
+      green(`Default passport skin NFT deployed at ${defaultPassportSkinNft}`),
+    );
+
+    console.log(yellow(`Verifying contract...`));
+    await hre.run('verify:verify', {
+      address: defaultPassportSkinNft,
+      constructorArguments: [name, symbol],
     });
   });
