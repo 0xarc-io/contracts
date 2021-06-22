@@ -517,5 +517,15 @@
     "version": 1,
     "type": "global",
     "group": "DefiPassport"
+  },
+  {
+    "name": "DefiPassportClaimer",
+    "source": "DefiPassportClaimer",
+    "address": "0x19E6C94dBd7D000832efCd4F966f53A854470439",
+    "txn": "0x44df322c30a4bd6c2587fccde84f09fdcee6a794b13d63a5f1e9cb64959ba18c",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": ""
   }
 ]
