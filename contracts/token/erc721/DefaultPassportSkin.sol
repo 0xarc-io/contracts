@@ -21,8 +21,11 @@ contract DefaultPassportSkin is ERC721Full, Ownable {
 
     /* ========== Constructor ========== */
 
-    constructor()
-        ERC721Full("Default Defi Passport Skin", "DefaultPassportSkin")
+    constructor(
+        string memory _name,
+        string memory _symbol
+    )
+        ERC721Full(_name, _symbol)
         public
     {}
 
@@ -46,7 +49,7 @@ contract DefaultPassportSkin is ERC721Full, Ownable {
         uint256 newTokenId = _tokenIds.current();
         _mint(_to, newTokenId);
         _setTokenURI(newTokenId, _tokenURI);
-        
+
         return newTokenId;
     }
 
