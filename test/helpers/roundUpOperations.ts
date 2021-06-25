@@ -9,5 +9,5 @@ export function roundUpDiv(a: BigNumber, b: BigNumberish) {
 }
 
 export function roundUpMul(a: BigNumber, b: BigNumber) {
-  return a.mul(b).add(BASE.add(1)).div(BASE);
+  return a.mul(b).add(BASE.sub(1)).div(BASE);
 }
