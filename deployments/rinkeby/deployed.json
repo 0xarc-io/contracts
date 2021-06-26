@@ -567,5 +567,14 @@
     "version": 2,
     "type": "global",
     "group": ""
+  },{
+    "name": "JointPassportCampaign",
+    "source": "JointPassportCampaign",
+    "address": "0xA98e455B4C53cA01050EEF6CDdb82911E8E6fd37",
+    "txn": "0x39b3340bc334a90a2973ea20f52accfb8c8cd7c5424f9872b8dc6973abf4ed26",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "staking",
+    "group": "JointPassportPool"
   }
 ]

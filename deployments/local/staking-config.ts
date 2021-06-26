@@ -9,6 +9,7 @@ import {
 } from '@src/typings';
 
 import ArcDecimal from '@src/utils/ArcDecimal';
+import { utils } from 'ethers';
 
 export default {
   'Pool-5': {
@@ -63,9 +64,15 @@ export default {
     ) => {
       const daoAllocation = '400000000000000000';
 
-      return contract.init(arcDao, rewardsDistributor, rewardsTokenAddress, stakingTokenAddress, {
-        value: daoAllocation,
-      });
+      return contract.init(
+        arcDao,
+        rewardsDistributor,
+        rewardsTokenAddress,
+        stakingTokenAddress,
+        {
+          value: daoAllocation,
+        },
+      );
     },
   },
   'Pool-6.1': {
@@ -85,9 +92,15 @@ export default {
     ) => {
       const daoAllocation = '400000000000000000';
 
-      return contract.init(arcDao, rewardsDistributor, rewardsTokenAddress, stakingTokenAddress, {
-        value: daoAllocation,
-      });
+      return contract.init(
+        arcDao,
+        rewardsDistributor,
+        rewardsTokenAddress,
+        stakingTokenAddress,
+        {
+          value: daoAllocation,
+        },
+      );
     },
   },
   'Pool-7': {
@@ -104,7 +117,8 @@ export default {
       arcRewardsDistributor: string,
       arcTokenAddress: string,
     ) {
-      const partnerRewardsDistributor = '0x6140182B2536AE7B6Cfcfb2d2bAB0f6Fe0D7b58E';
+      const partnerRewardsDistributor =
+        '0x6140182B2536AE7B6Cfcfb2d2bAB0f6Fe0D7b58E';
       const partnerTokenAddress = '0x5a98fcbea516cf06857215779fd812ca3bef1b32';
       const daoAllocation = ArcDecimal.new(0.4);
       const slashersCut = ArcDecimal.new(0.05);
@@ -124,5 +138,17 @@ export default {
         arcStateContract,
       );
     },
+  },
+  JointPassportPool: {
+    source: 'JointPassportCampaign',
+    arcRewardsDistributor: '',
+    collabRewardsDistributor: '',
+    stakingToken: '0x1dC4c1cEFEF38a777b15aA20260a54E584b16C48',
+    rewardsToken: 'ArcxTokenV2',
+    collabRewardsToken: '0x1dC4c1cEFEF38a777b15aA20260a54E584b16C48',
+    daoAllocation: utils.parseEther('0.4'),
+    maxStakePerUser: 0,
+    creditScoreThreshold: 500,
+    rewardsDurationSeconds: 30 * 24 * 60 * 60,
   },
 };

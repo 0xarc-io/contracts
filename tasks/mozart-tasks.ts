@@ -29,6 +29,7 @@ import {
   TestTokenFactory,
   BaseERC20Factory,
 } from '@src/typings';
+import getUltimateOwner from './task-utils/getUltimateOwner';
 
 task('deploy-mozart-synthetic', 'Deploy the Mozart synthetic token')
   .addParam('name', 'The name of the synthetic token')
@@ -251,10 +252,7 @@ task('deploy-mozart', 'Deploy the Mozart contracts')
 
     console.log(yellow(`* Calling core init()...`));
 
-    const ultimateOwner =
-      networkDetails['users']['multisigOwner'] ||
-      networkDetails['users']['eoaOwner'] ||
-      signer.address;
+    const ultimateOwner = getUltimateOwner(signer, networkDetails);
 
     try {
       console.log(
