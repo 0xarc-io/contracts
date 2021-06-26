@@ -1,6 +1,6 @@
 import {
   ArcProxyFactory,
-  ArcxTokenFactory,
+  JointPassportCampaignFactory,
   RewardCampaignFactory,
   TestTokenFactory,
 } from '@src/typings';
@@ -15,6 +15,7 @@ import {
   pruneDeployments,
 } from '../deployments/src';
 import { task } from 'hardhat/config';
+import getUltimateOwner from './task-utils/getUltimateOwner';
 
 task('deploy-staking', 'Deploy a staking/reward pool')
   .addParam('name', 'The name of the pool you would like to deploy')
@@ -28,12 +29,7 @@ task('deploy-staking', 'Deploy a staking/reward pool')
       networkDetails,
     } = await loadDetails(taskArgs, hre);
 
-    let ultimateOwner =
-      networkDetails['users']['multisigOwner'] ||
-      networkDetails['users']['eoaOwner'] ||
-      signer.address;
-
-    ultimateOwner = ultimateOwner.toLowerCase();
+    const ultimateOwner = getUltimateOwner(signer, networkDetails);
 
     const stakingConfig = await loadStakingConfig({ network, key: name });
 
@@ -176,12 +172,7 @@ task('deploy-staking-liquidity', 'Deploy a LiquidityCampaign')
       networkDetails,
     } = await loadDetails(taskArgs, hre);
 
-    let ultimateOwner =
-      networkDetails['users']['multisigOwner'] ||
-      networkDetails['users']['eoaOwner'] ||
-      signer.address;
-
-    ultimateOwner = ultimateOwner.toLowerCase();
+    const ultimateOwner = getUltimateOwner(signer, networkDetails);
 
     const stakingConfig = await loadStakingConfig({ network, key: name });
 
@@ -303,10 +294,8 @@ task('deploy-staking-liquidity', 'Deploy a LiquidityCampaign')
 
 task('deploy-staking-joint', 'Deploy a JointCampaign')
   .addParam('name', 'The name of the pool you would like to deploy')
-  .addOptionalParam('verifyPath', 'Path to the contract to verify on etherscan')
   .setAction(async (taskArgs, hre) => {
     const name = taskArgs.name;
-    const contractPath = taskArgs.verifyPath;
 
     const {
       network,
@@ -315,12 +304,7 @@ task('deploy-staking-joint', 'Deploy a JointCampaign')
       networkDetails,
     } = await loadDetails(taskArgs, hre);
 
-    let ultimateOwner =
-      networkDetails['users']['multisigOwner'] ||
-      networkDetails['users']['eoaOwner'] ||
-      signer.address;
-
-    ultimateOwner = ultimateOwner.toLowerCase();
+    const ultimateOwner = getUltimateOwner(signer, networkDetails);
 
     const stakingConfig = await loadStakingConfig({ network, key: name });
 
@@ -345,9 +329,7 @@ task('deploy-staking-joint', 'Deploy a JointCampaign')
     });
 
     if (!arcDAO || !rewardToken) {
-      throw red(
-        `There is no ArcDAO, RewardToken or Core Contract in this deployments file`,
-      );
+      throw red(`There is no ArcDAO or RewardToken in this deployments file`);
     }
 
     if (!stakingConfig.contractFactory) {
@@ -414,13 +396,115 @@ task('deploy-staking-joint', 'Deploy a JointCampaign')
         red(`Failed to set the rewards duration. Reason: ${error}\n`),
       );
     }
+  });
 
-    if (contractPath) {
-      console.log(
-        green(`Verifying contract at address ${jointCampaignAddress}`),
-      );
+task('deploy-staking-joint-passport', 'Deploy a JointPassportCampaign')
+  .addParam('name', 'The name of the pool you would like to deploy')
+  .setAction(async (taskArgs, hre) => {
+    const { name } = taskArgs;
 
-      // todo where to import this run function from?
-      // await run('verify-contract', { path: contractPath, address: jointCampaignAddress });
+    const {
+      network,
+      signer,
+      networkConfig,
+      networkDetails,
+    } = await loadDetails(taskArgs, hre);
+
+    await pruneDeployments(network, signer.provider);
+
+    const stakingConfig = await loadStakingConfig({ network, key: name });
+
+    const mandatoryFields = [
+      'collabRewardsToken',
+      'rewardsDurationSeconds',
+      'daoAllocation',
+    ];
+
+    for (const field of mandatoryFields) {
+      if (!stakingConfig[field]) {
+        throw red(`"${field}" is missing from the config file`);
+      }
+    }
+
+    const {
+      arcRewardsDistributor,
+      collabRewardsDistributor,
+      collabRewardsToken,
+      stakingToken,
+      daoAllocation,
+      maxStakePerUser,
+      creditScoreThreshold,
+      rewardsDurationSeconds,
+    } = stakingConfig;
+
+    const arcDAO = loadContract({
+      name: 'ArcDAO',
+      type: DeploymentType.global,
+      version: 2,
+      network,
+    });
+
+    const rewardToken = loadContract({
+      name: 'ArcxToken',
+      type: DeploymentType.global,
+      version: 2,
+      network,
+    });
+
+    const creditScoreDetails = loadContract({
+      name: 'SapphireCreditScoreProxy',
+      network,
+    });
+
+    // Joint campaign doesn't use a proxy
+    const jointPassportCampaignAddy = await deployContract(
+      {
+        name: 'JointPassportCampaign',
+        source: stakingConfig.source,
+        data: new JointPassportCampaignFactory(signer).getDeployTransaction(
+          arcDAO.address,
+          arcRewardsDistributor || signer.address,
+          collabRewardsDistributor || signer.address,
+          rewardToken.address,
+          collabRewardsToken,
+          stakingToken,
+          creditScoreDetails.address,
+          daoAllocation,
+          maxStakePerUser,
+          creditScoreThreshold,
+        ),
+        type: DeploymentType.staking,
+        group: name,
+        version: 1,
+      },
+      networkConfig,
+    );
+    const jointPassportCampaign = JointPassportCampaignFactory.connect(
+      jointPassportCampaignAddy,
+      signer,
+    );
+
+    console.log(yellow(`Setting rewards duration...`));
+    await jointPassportCampaign.setRewardsDuration(rewardsDurationSeconds);
+    console.log(green(`Rewards duration was set successfully`));
+
+    if (['mainnet', 'rinkeby'].includes(network)) {
+      console.log(yellow(`Verifying contract...`));
+      await hre.run('verify:verify', {
+        address: jointPassportCampaignAddy,
+        constructorArguments: [
+          arcDAO.address,
+          arcRewardsDistributor || signer.address,
+          collabRewardsDistributor || signer.address,
+          rewardToken.address,
+          collabRewardsToken,
+          stakingToken,
+          creditScoreDetails.address,
+          daoAllocation,
+          maxStakePerUser,
+          creditScoreThreshold,
+        ],
+      });
+      console.log(green(`Contract verified successfully!`));
     }
   });
