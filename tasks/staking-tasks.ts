@@ -196,6 +196,7 @@ task('deploy-staking-liquidity', 'Deploy a LiquidityCampaign')
     const arcDAO = await loadContract({
       name: 'ArcDAO',
       type: DeploymentType.global,
+      version: 2,
       network,
     });
 

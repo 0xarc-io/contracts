@@ -140,4 +140,40 @@ export default {
       );
     },
   },
+  ARCxPassportPool: {
+    source: 'PassportCampaign',
+    stakingToken: '0x5c9DbC786ed0b7dA9a4F1F5479794C1bc01F293e',
+    rewardsToken: 'ArcxTokenV2',
+    rewardsDurationSeconds: 60 * 60 * 24 * 31, // 31 days
+    contractFactory: PassportCampaignFactory,
+    getDeployTx: (signer: SignerWithAddress) =>
+      new PassportCampaignFactory(signer).getDeployTransaction(),
+    runInit: (
+      contract: PassportCampaign,
+      arcDao: string,
+      rewardsDistributor: string,
+      rewardsTokenAddress: string,
+      stakingTokenAddress: string,
+    ) => {
+      const daoAllocation = '400000000000000000';
+      const creditScoreContractAddress =
+        '0x78e4177619dc5B49bE33a26D1032C85458186c35';
+
+      // Max 1000 stake amount
+      const maxStakePerUser = utils.parseEther('1000');
+      // Needs a minimum of 500 credit score to participate
+      const creditScoreThreshold = 500;
+
+      return contract.init(
+        arcDao,
+        rewardsDistributor,
+        rewardsTokenAddress,
+        stakingTokenAddress,
+        creditScoreContractAddress,
+        daoAllocation,
+        maxStakePerUser,
+        creditScoreThreshold,
+      );
+    },
+  },
 };
