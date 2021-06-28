@@ -537,5 +537,25 @@
     "version": 1,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "Implementation",
+    "source": "PassportCampaign",
+    "address": "0x785723d4cD1705CE5Ecf13d9C2d7668E0e475260",
+    "txn": "0x90f91eaac87a9dfcd58290d5df0cfeb61dcc9f74c7520389198a8ef89de65829",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "staking",
+    "group": "ARCxPassportPool"
+  },
+  {
+    "name": "Proxy",
+    "source": "ArcProxy",
+    "address": "0xCb8b1A39CfcceAdD69121Ba3f2c6B005dCdFAb9f",
+    "txn": "0xd2072a892a4f1993e9337ee21b2f276844377dd0cad5cfdaa0a06b4587d63eb5",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "staking",
+    "group": "ARCxPassportPool"
   }
 ]
