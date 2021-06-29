@@ -87,7 +87,7 @@ library Math {
     }
 
     /**
-     * @dev Performs _a * _b / BASE, but rounds up instead
+     * @dev Performs a * b / BASE, but rounds up instead
      */
     function roundUpMul(
         uint256 a,
@@ -99,7 +99,7 @@ library Math {
     {
         return a
             .mul(b)
-            .add(BASE.add(1))
+            .add(BASE.sub(1))
             .div(BASE);
     }
 }

@@ -192,7 +192,7 @@ describe('SapphireCore.borrow()', () => {
      * The contract will calculate the c-ratio to 199.99..% otherwise and the tx will
      * be reverted
      */
-    await arc.borrow(BORROW_AMOUNT.sub(1), undefined, undefined, minter);
+    await arc.borrow(BORROW_AMOUNT, undefined, undefined, minter);
     const { borrowedAmount: updatedBorrowedAmount } = await arc.getVault(
       minter.address,
     );
@@ -462,7 +462,7 @@ describe('SapphireCore.borrow()', () => {
     );
     await expect(
       arc.borrow(
-        BORROW_AMOUNT.div(2),
+        BORROW_AMOUNT.div(2).add(1),
         creditScoreProof,
         undefined,
         scoredMinter,

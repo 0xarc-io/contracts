@@ -124,12 +124,12 @@ describe('SapphireCore.exit()', () => {
 
     // Approve repay amount
     await approve(
-      BORROW_AMOUNT.add(1),
+      BORROW_AMOUNT,
       arc.syntheticAddress(),
       arc.coreAddress(),
       signers.scoredMinter,
     );
-    await ctx.contracts.synthetic.tokenV2.mint(signers.scoredMinter.address, 1); // Mint 1, to account for rounding
+    // await ctx.contracts.synthetic.tokenV2.mint(signers.scoredMinter.address, 1); // Mint 1, to account for rounding
 
     await arc.exit(
       getScoreProof(scoredMinterCreditScore, creditScoreTree),
