@@ -35,7 +35,6 @@ const COLLATERAL_LIMIT = BORROW_AMOUNT.mul(DEFAULT_HiGH_C_RATIO)
   .div(DEFAULT_PRICE)
   .div(BASE)
   .mul(BigNumber.from(10).pow(DEFAULT_COLLATERAL_DECIMALS))
-  .add(1);
 
 /**
  * The withdraw function allows a user to withdraw collateral from a vault, partially or completely.
