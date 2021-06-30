@@ -8,9 +8,12 @@ import {WaitlistBatch} from "../global/WaitlistBatch.sol";
 contract MockWaitlistBatch is WaitlistBatch {
     uint256 private _currentTimestamp = 0;
 
-    constructor(address _depositCurrency)
+    constructor(
+        address _depositCurrency,
+        uint256 _depositLockupDuration
+    )
         public
-        WaitlistBatch(_depositCurrency)
+        WaitlistBatch(_depositCurrency, _depositLockupDuration)
     {}
 
     function setCurrentTimestamp(uint256 _timestamp)
