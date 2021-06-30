@@ -12,7 +12,7 @@ import {IERC20} from "../token/IERC20.sol";
 contract WaitlistBatch is Ownable {
 
     /* ========== Libraries ========== */
-    
+
     using SafeMath for uint256;
 
     /* ========== Types ========== */
@@ -169,11 +169,11 @@ contract WaitlistBatch is Ownable {
         returns (uint256)
     {
         uint256 participatingBatch = userBatchMapping[_account];
-        
+
         Batch memory batch = batchMapping[participatingBatch];
-        
-        return batch.approvedAt == 0 
-            ? 0 
+
+        return batch.approvedAt == 0
+            ? 0
             : batch.approvedAt.add(depositLockupDuration);
     }
 

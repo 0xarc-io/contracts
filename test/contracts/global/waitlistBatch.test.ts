@@ -746,9 +746,23 @@ describe('WhitelistBatch', () => {
     });
 
     describe('setDepositLockupDuration', () => {
-      it('reverts if called by non-owner');
+      it('reverts if called by non-owner', async () => {
+        await expect(
+          userWaitlist.setDepositLockupDuration(5),
+        ).to.be.revertedWith('Ownable: caller is not the owner');
+      });
 
-      it('sets the deposit lockup duration');
+      it('sets the deposit lockup duration', async () => {
+        const newDuration = DEPOSIT_LOCKUP_DURATION + 21;
+
+        expect(await waitlist.depositLockupDuration()).to.eq(
+          DEPOSIT_LOCKUP_DURATION,
+        );
+
+        await waitlist.setDepositLockupDuration(newDuration);
+
+        expect(await waitlist.depositLockupDuration()).to.eq(newDuration);
+      });
     });
   });
 
