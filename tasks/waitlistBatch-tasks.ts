@@ -1,13 +1,22 @@
 import { WaitlistBatchFactory } from '@src/typings';
 import { green, yellow } from 'chalk';
 import { task } from 'hardhat/config';
-import { deployContract, DeploymentType, loadDetails, pruneDeployments } from '../deployments/src';
+import {
+  deployContract,
+  DeploymentType,
+  loadDetails,
+  pruneDeployments,
+} from '../deployments/src';
 
 task('deploy-waitlist-batch', 'Deploy the WaitlistBatch contract')
   .addParam('currency', 'The address of the deposit currency')
+  .addParam(
+    'depositduration',
+    'Duration in seconds that has to be elapsed after a batch is approved, for users to recover their funds',
+  )
   .setAction(async (taskArgs, hre) => {
     const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
-    const { currency } = taskArgs;
+    const { currency, depositduration } = taskArgs;
 
     await pruneDeployments(network, signer.provider);
 
@@ -15,7 +24,10 @@ task('deploy-waitlist-batch', 'Deploy the WaitlistBatch contract')
       {
         name: 'WaitlistBatch',
         source: 'WaitlistBatch',
-        data: new WaitlistBatchFactory(signer).getDeployTransaction(currency),
+        data: new WaitlistBatchFactory(signer).getDeployTransaction(
+          currency,
+          depositduration,
+        ),
         version: 1,
         type: DeploymentType.global,
       },

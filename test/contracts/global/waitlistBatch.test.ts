@@ -18,7 +18,7 @@ import { MockWaitlistBatchFactory } from '@src/typings/MockWaitlistBatchFactory'
 chai.use(solidity);
 const expect = chai.expect;
 
-const CURRENT_TIMESTAMP = 100;
+const BASE_TIMESTAMP = 100;
 const DEPOSIT_LOCKUP_DURATION = 10;
 
 describe('WhitelistBatch', () => {
@@ -32,9 +32,13 @@ describe('WhitelistBatch', () => {
 
   const batch = {
     totalSpots: BigNumber.from(5),
-    startTimestamp: BigNumber.from(CURRENT_TIMESTAMP + 10),
+    startTimestamp: BigNumber.from(BASE_TIMESTAMP + 10),
     depositAmount: BigNumber.from(10),
   };
+
+  function currentTimestamp() {
+    return waitlist.currentTimestamp();
+  }
 
   async function setupBatch() {
     await waitlist.addNewBatch(
@@ -70,8 +74,9 @@ describe('WhitelistBatch', () => {
 
     waitlist = await new MockWaitlistBatchFactory(ownerAccount).deploy(
       depositToken.address,
+      DEPOSIT_LOCKUP_DURATION,
     );
-    waitlist.setCurrentTimestamp(CURRENT_TIMESTAMP);
+    waitlist.setCurrentTimestamp(BASE_TIMESTAMP);
 
     userWaitlist = MockWaitlistBatchFactory.connect(
       waitlist.address,
@@ -95,8 +100,11 @@ describe('WhitelistBatch', () => {
   addSnapshotBeforeRestoreAfterEach();
 
   describe('#constructor', () => {
-    it('sets the deposit currency', async () => {
+    it('sets the deposit currency and the deposit lockup duration', async () => {
       expect(await waitlist.depositCurrency()).to.eq(depositToken.address);
+      expect(await waitlist.depositLockupDuration()).to.eq(
+        DEPOSIT_LOCKUP_DURATION,
+      );
     });
   });
 
@@ -130,8 +138,11 @@ describe('WhitelistBatch', () => {
         expect(batchInfo.batchNumber).to.eq(1);
         expect(batchInfo.depositAmount).to.eq(batch.depositAmount);
 
-        // Set claimable and reclaim amount
-        await waitlist.enableClaims([1]);
+        // Approve and reclaim amount
+        await waitlist.approveBatch(1);
+        await waitlist.setCurrentTimestamp(
+          (await currentTimestamp()).add(DEPOSIT_LOCKUP_DURATION),
+        );
         await userWaitlist.reclaimTokens();
 
         batchInfo = await userWaitlist.getBatchInfoForUser(userAccount.address);
@@ -139,7 +150,7 @@ describe('WhitelistBatch', () => {
       });
     });
 
-    describe('#getDepositRetrievalDate', () => {
+    describe('#getDepositRetrievalTimestamp', () => {
       beforeEach(async () => {
         await setupBatch();
         await waitlist.setCurrentTimestamp(batch.startTimestamp);
@@ -147,7 +158,7 @@ describe('WhitelistBatch', () => {
 
       it('returns 0 if the user did not participate in a batch', async () => {
         expect(
-          await userWaitlist.getDepositRetrievalDate(userAccount.address),
+          await userWaitlist.getDepositRetrievalTimestamp(userAccount.address),
         ).to.eq(0);
       });
 
@@ -161,7 +172,7 @@ describe('WhitelistBatch', () => {
         expect((await waitlist.batchMapping(1)).approvedAt).to.eq(0);
 
         expect(
-          await userWaitlist.getDepositRetrievalDate(userAccount.address),
+          await userWaitlist.getDepositRetrievalTimestamp(userAccount.address),
         ).to.eq(0);
       });
 
@@ -170,8 +181,8 @@ describe('WhitelistBatch', () => {
         await waitlist.approveBatch(1);
 
         expect(
-          await userWaitlist.getDepositRetrievalDate(userAccount.address),
-        ).to.eq(CURRENT_TIMESTAMP + DEPOSIT_LOCKUP_DURATION);
+          await userWaitlist.getDepositRetrievalTimestamp(userAccount.address),
+        ).to.eq((await currentTimestamp()).add(DEPOSIT_LOCKUP_DURATION));
       });
     });
   });
@@ -196,7 +207,7 @@ describe('WhitelistBatch', () => {
 
       it('cannot apply to a filled up batch', async () => {
         // Add a batch with only 1 spot
-        await waitlist.addNewBatch(1, CURRENT_TIMESTAMP, batch.depositAmount);
+        await waitlist.addNewBatch(1, BASE_TIMESTAMP, batch.depositAmount);
 
         await waitlist.setCurrentTimestamp(batch.startTimestamp);
 
@@ -223,8 +234,12 @@ describe('WhitelistBatch', () => {
 
       it('cannot apply again after having reclaimed', async () => {
         await waitlist.setCurrentTimestamp(batch.startTimestamp);
-        await waitlist.enableClaims([1]);
         await userWaitlist.applyToBatch(1);
+        await waitlist.approveBatch(1);
+        await waitlist.setCurrentTimestamp(
+          (await currentTimestamp()).add(DEPOSIT_LOCKUP_DURATION),
+        );
+
         await userWaitlist.reclaimTokens();
 
         await expect(userWaitlist.applyToBatch(1)).to.be.revertedWith(
@@ -236,7 +251,7 @@ describe('WhitelistBatch', () => {
         // Add new batch to increment the batch number
         await waitlist.addNewBatch(
           batch.totalSpots.sub(1),
-          CURRENT_TIMESTAMP,
+          BASE_TIMESTAMP,
           batch.depositAmount,
         );
 
@@ -283,7 +298,7 @@ describe('WhitelistBatch', () => {
       it('cannot apply if already applied to a previous batch', async () => {
         await waitlist.addNewBatch(
           batch.totalSpots,
-          CURRENT_TIMESTAMP,
+          BASE_TIMESTAMP,
           batch.depositAmount,
         );
 
@@ -304,29 +319,31 @@ describe('WhitelistBatch', () => {
           batch.startTimestamp,
           batch.depositAmount,
         );
+
+        await waitlist.setCurrentTimestamp(batch.startTimestamp);
       });
 
       it('cannot reclaim tokens if caller did not participate in a batch', async () => {
-        await waitlist.enableClaims([1]);
+        await waitlist.approveBatch(1);
+
+        const batch = await waitlist.batchMapping(1);
+        await waitlist.setCurrentTimestamp(
+          batch.approvedAt.add(DEPOSIT_LOCKUP_DURATION),
+        );
 
         await expect(userWaitlist.reclaimTokens()).to.be.revertedWith(
           'WaitlistBatch: user did not participate in a batch',
         );
       });
 
-      it('cannot reclaim tokens if the batch the user participated to does not have the tokens claimable', async () => {
-        await waitlist.setCurrentTimestamp(batch.startTimestamp);
-        await userWaitlist.applyToBatch(1);
-
-        await expect(userWaitlist.reclaimTokens()).to.be.revertedWith(
-          'WaitlistBatch: the tokens are not yet claimable',
-        );
-      });
-
       it('cannot reclaim tokens twice', async () => {
-        await waitlist.enableClaims([1]);
-        await waitlist.setCurrentTimestamp(batch.startTimestamp);
         await userWaitlist.applyToBatch(1);
+        await waitlist.approveBatch(1);
+
+        const batch = await waitlist.batchMapping(1);
+        await waitlist.setCurrentTimestamp(
+          batch.approvedAt.add(DEPOSIT_LOCKUP_DURATION),
+        );
 
         await userWaitlist.reclaimTokens();
 
@@ -336,9 +353,13 @@ describe('WhitelistBatch', () => {
       });
 
       it('cannot reclaim if user is blacklisted', async () => {
-        await waitlist.enableClaims([1]);
-        await waitlist.setCurrentTimestamp(batch.startTimestamp);
         await userWaitlist.applyToBatch(1);
+        await waitlist.approveBatch(1);
+
+        const batch = await waitlist.batchMapping(1);
+        await waitlist.setCurrentTimestamp(
+          batch.approvedAt.add(DEPOSIT_LOCKUP_DURATION),
+        );
 
         await waitlist.setModerator(moderator.address);
         const moderatorWaitlist = waitlist.connect(moderator);
@@ -349,18 +370,38 @@ describe('WhitelistBatch', () => {
         );
       });
 
-      it('reverts if the batch is not approved');
+      it('reverts if the batch is not approved', async () => {
+        await userWaitlist.applyToBatch(1);
+        await waitlist.setCurrentTimestamp(
+          (await currentTimestamp()).add(DEPOSIT_LOCKUP_DURATION),
+        );
 
-      it('reverts if the batch is approved but the time limit has not passed');
+        await expect(userWaitlist.reclaimTokens()).to.be.revertedWith(
+          'WaitlistBatch: the batch is not approved yet',
+        );
+      });
+
+      it('reverts if the batch is approved but the time limit has not passed', async () => {
+        await userWaitlist.applyToBatch(1);
+        await waitlist.approveBatch(1);
+
+        const batch = await waitlist.batchMapping(1);
+        await waitlist.setCurrentTimestamp(
+          batch.approvedAt.add(DEPOSIT_LOCKUP_DURATION - 1),
+        );
+
+        await expect(userWaitlist.reclaimTokens()).to.be.revertedWith(
+          'WaitlistBatch: the deposit lockup duration has not passed yet',
+        );
+      });
 
       it('reclaims the tokens to the user after the batch is approved and the time limit was passed', async () => {
-        await waitlist.setCurrentTimestamp(batch.startTimestamp);
-
         await userWaitlist.applyToBatch(1);
-
         await waitlist.approveBatch(1);
+
+        const batch = await waitlist.batchMapping(1);
         await waitlist.setCurrentTimestamp(
-          batch.startTimestamp.add(DEPOSIT_LOCKUP_DURATION),
+          batch.approvedAt.add(DEPOSIT_LOCKUP_DURATION),
         );
 
         const preBalance = await depositToken.balanceOf(userAccount.address);
@@ -371,9 +412,13 @@ describe('WhitelistBatch', () => {
       });
 
       it('emits the TokensReclaimed event', async () => {
-        await waitlist.enableClaims([1]);
-        await waitlist.setCurrentTimestamp(batch.startTimestamp);
         await userWaitlist.applyToBatch(1);
+        await waitlist.approveBatch(1);
+
+        const batch = await waitlist.batchMapping(1);
+        await waitlist.setCurrentTimestamp(
+          batch.approvedAt.add(DEPOSIT_LOCKUP_DURATION),
+        );
 
         await expect(userWaitlist.reclaimTokens())
           .to.emit(userWaitlist, 'TokensReclaimed')
@@ -386,7 +431,7 @@ describe('WhitelistBatch', () => {
     describe('#addNewBatch', () => {
       it('cannot start a batch with the start date before now', async () => {
         await expect(
-          waitlist.addNewBatch(5, CURRENT_TIMESTAMP - 1, 10),
+          waitlist.addNewBatch(5, BASE_TIMESTAMP - 1, 10),
         ).to.be.revertedWith(
           'WaitlistBatch: batch start time cannot be in the past',
         );
@@ -394,13 +439,13 @@ describe('WhitelistBatch', () => {
 
       it('cannot start a batch with the deposit amount as 0', async () => {
         await expect(
-          waitlist.addNewBatch(5, CURRENT_TIMESTAMP, 0),
+          waitlist.addNewBatch(5, BASE_TIMESTAMP, 0),
         ).to.be.revertedWith('WaitlistBatch: deposit amount cannot be 0');
       });
 
       it('cannot start a batch with 0 spots', async () => {
         await expect(
-          waitlist.addNewBatch(0, CURRENT_TIMESTAMP, 10),
+          waitlist.addNewBatch(0, BASE_TIMESTAMP, 10),
         ).to.be.revertedWith('WaitlistBatch: batch cannot have 0 spots');
       });
 
@@ -411,20 +456,20 @@ describe('WhitelistBatch', () => {
         );
 
         await expect(
-          unauthorizedWaitlist.addNewBatch(5, CURRENT_TIMESTAMP, 10),
+          unauthorizedWaitlist.addNewBatch(5, BASE_TIMESTAMP, 10),
         ).to.be.revertedWith('Ownable: caller is not the owner');
       });
 
       it('can start a valid new batch as the owner', async () => {
         const batch1 = {
           totalSpots: BigNumber.from(5),
-          startTime: BigNumber.from(CURRENT_TIMESTAMP),
+          startTime: BigNumber.from(BASE_TIMESTAMP),
           depositAmount: BigNumber.from(10),
         };
 
         const batch2 = {
           totalSpots: BigNumber.from(3),
-          startTime: BigNumber.from(CURRENT_TIMESTAMP + 10),
+          startTime: BigNumber.from(BASE_TIMESTAMP + 10),
           depositAmount: BigNumber.from(15),
         };
 
@@ -459,19 +504,19 @@ describe('WhitelistBatch', () => {
       });
 
       it('emits the NewBatchAdded event', async () => {
-        await expect(waitlist.addNewBatch(5, CURRENT_TIMESTAMP, 10))
+        await expect(waitlist.addNewBatch(5, BASE_TIMESTAMP, 10))
           .to.emit(waitlist, 'NewBatchAdded')
-          .withArgs(5, CURRENT_TIMESTAMP, 10, 1);
+          .withArgs(5, BASE_TIMESTAMP, 10, 1);
 
-        await expect(waitlist.addNewBatch(5, CURRENT_TIMESTAMP + 1, 10))
+        await expect(waitlist.addNewBatch(5, BASE_TIMESTAMP + 1, 10))
           .to.emit(waitlist, 'NewBatchAdded')
-          .withArgs(5, CURRENT_TIMESTAMP + 1, 10, 2);
+          .withArgs(5, BASE_TIMESTAMP + 1, 10, 2);
       });
     });
 
     describe('#approveBatch', () => {
       beforeEach(async () => {
-        await waitlist.addNewBatch(5, CURRENT_TIMESTAMP, 10);
+        await waitlist.addNewBatch(5, BASE_TIMESTAMP, 10);
       });
 
       it('reverts if called by non-admin', async () => {
@@ -507,7 +552,7 @@ describe('WhitelistBatch', () => {
 
     describe('#changeBatchStartTimestamp', () => {
       beforeEach(async () => {
-        await waitlist.addNewBatch(5, CURRENT_TIMESTAMP, 10);
+        await waitlist.addNewBatch(5, BASE_TIMESTAMP, 10);
       });
 
       it('cannot change the batch start timestamp as a non-owner', async () => {
@@ -516,30 +561,30 @@ describe('WhitelistBatch', () => {
           userAccount,
         );
         await expect(
-          unauthorizedWaitlist.changeBatchStartTimestamp(0, CURRENT_TIMESTAMP),
+          unauthorizedWaitlist.changeBatchStartTimestamp(0, BASE_TIMESTAMP),
         ).to.be.revertedWith('Ownable: caller is not the owner');
       });
 
       it('cannot change the batch start timestamp for a non-existent batch', async () => {
         await expect(
-          waitlist.changeBatchStartTimestamp(0, CURRENT_TIMESTAMP),
+          waitlist.changeBatchStartTimestamp(0, BASE_TIMESTAMP),
         ).to.be.revertedWith('WaitlistBatch: batch does not exit');
 
         await expect(
-          waitlist.changeBatchStartTimestamp(2, CURRENT_TIMESTAMP),
+          waitlist.changeBatchStartTimestamp(2, BASE_TIMESTAMP),
         ).to.be.revertedWith('WaitlistBatch: batch does not exit');
       });
 
       it('cannot change the batch start timestamp to the past', async () => {
         await expect(
-          waitlist.changeBatchStartTimestamp(1, CURRENT_TIMESTAMP - 10),
+          waitlist.changeBatchStartTimestamp(1, BASE_TIMESTAMP - 10),
         ).to.be.revertedWith(
           'WaitlistBatch: batch start time cannot be in the past',
         );
       });
 
       it('can change the batch start timestamp as the owner', async () => {
-        const newTime = CURRENT_TIMESTAMP + 21;
+        const newTime = BASE_TIMESTAMP + 21;
         await waitlist.changeBatchStartTimestamp(1, newTime);
 
         const updatedBatch = await waitlist.batchMapping(1);
@@ -547,7 +592,7 @@ describe('WhitelistBatch', () => {
       });
 
       it('emits the BatchTimestampChanged event', async () => {
-        const newTime = CURRENT_TIMESTAMP + 21;
+        const newTime = BASE_TIMESTAMP + 21;
         await expect(waitlist.changeBatchStartTimestamp(1, newTime))
           .to.emit(waitlist, 'BatchTimestampChanged')
           .withArgs(1, newTime);

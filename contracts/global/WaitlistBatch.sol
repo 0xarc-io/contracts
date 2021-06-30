@@ -29,6 +29,7 @@ contract WaitlistBatch is Ownable {
         bool hasParticipated;
         uint256 batchNumber;
         uint256 depositAmount;
+        uint256 depositRetrievalTimestamp;
     }
 
     /* ========== Variables ========== */
@@ -118,8 +119,12 @@ contract WaitlistBatch is Ownable {
 
     /* ========== Constructor ========== */
 
-    constructor(address _depositCurrency) public {
+    constructor(
+        address _depositCurrency,
+        uint256 _depositLockupDuration
+    ) public {
         depositCurrency = IERC20(_depositCurrency);
+        depositLockupDuration = _depositLockupDuration;
 
         // Set the next batch number to 1 to avoid some complications
         // caused by batch number 0
@@ -140,7 +145,8 @@ contract WaitlistBatch is Ownable {
         return UserBatchInfo({
             hasParticipated: participatingBatch > 0,
             batchNumber: participatingBatch,
-            depositAmount: userDepositMapping[participatingBatch][_user]
+            depositAmount: userDepositMapping[participatingBatch][_user],
+            depositRetrievalTimestamp: getDepositRetrievalTimestamp(_user)
         });
     }
 
@@ -155,10 +161,10 @@ contract WaitlistBatch is Ownable {
     /**
      * @notice Returns the epoch when the user can withdraw their deposit
      */
-    function getDepositRetrievalDate(
+    function getDepositRetrievalTimestamp(
         address _account
     )
-        external
+        public
         view
         returns (uint256)
     {
@@ -166,7 +172,9 @@ contract WaitlistBatch is Ownable {
         
         Batch memory batch = batchMapping[participatingBatch];
         
-        return batch.approvedAt.add(depositLockupDuration);
+        return batch.approvedAt == 0 
+            ? 0 
+            : batch.approvedAt.add(depositLockupDuration);
     }
 
     /* ========== Public Functions ========== */
@@ -237,6 +245,16 @@ contract WaitlistBatch is Ownable {
         require(
             batchInfo.depositAmount > 0,
             "WaitlistBatch: there are no tokens to reclaim"
+        );
+
+        require(
+            batchInfo.depositRetrievalTimestamp > 0,
+            "WaitlistBatch: the batch is not approved yet"
+        );
+
+        require(
+            batchInfo.depositRetrievalTimestamp <= currentTimestamp(),
+            "WaitlistBatch: the deposit lockup duration has not passed yet"
         );
 
         userDepositMapping[batchInfo.batchNumber][msg.sender] -= batchInfo.depositAmount;
