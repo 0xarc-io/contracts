@@ -140,11 +140,39 @@ describe('WhitelistBatch', () => {
     });
 
     describe('#getDepositRetrievalDate', () => {
-      it('returns 0 if the user did not participate in a batch');
+      beforeEach(async () => {
+        await setupBatch();
+        await waitlist.setCurrentTimestamp(batch.startTimestamp);
+      });
 
-      it(`returns 0 if the user's batch was not yet approved`);
+      it('returns 0 if the user did not participate in a batch', async () => {
+        expect(
+          await userWaitlist.getDepositRetrievalDate(userAccount.address),
+        ).to.eq(0);
+      });
 
-      it('returns the epoch when the user can withdraw their funds');
+      it(`returns 0 if the user's batch was not yet approved`, async () => {
+        await userWaitlist.applyToBatch(1);
+
+        const batchInfo = await userWaitlist.getBatchInfoForUser(
+          userAccount.address,
+        );
+        expect(batchInfo.batchNumber).to.eq(1);
+        expect((await waitlist.batchMapping(1)).approvedAt).to.eq(0);
+
+        expect(
+          await userWaitlist.getDepositRetrievalDate(userAccount.address),
+        ).to.eq(0);
+      });
+
+      it('returns the epoch when the user can withdraw their funds', async () => {
+        await userWaitlist.applyToBatch(1);
+        await waitlist.approveBatch(1);
+
+        expect(
+          await userWaitlist.getDepositRetrievalDate(userAccount.address),
+        ).to.eq(CURRENT_TIMESTAMP + DEPOSIT_LOCKUP_DURATION);
+      });
     });
   });
 
@@ -670,6 +698,12 @@ describe('WhitelistBatch', () => {
           .to.emit(waitlist, 'ModeratorSet')
           .withArgs(moderator.address);
       });
+    });
+
+    describe('setDepositLockupDuration', () => {
+      it('reverts if called by non-owner');
+
+      it('sets the deposit lockup duration');
     });
   });
 
