@@ -18,7 +18,7 @@ contract WaitlistBatch is Ownable {
         uint256 filledSpots;
         uint256 batchStartTimestamp;
         uint256 depositAmount;
-        bool claimable;
+        uint256 approvedAt;
     }
 
     struct UserBatchInfo {
@@ -58,6 +58,8 @@ contract WaitlistBatch is Ownable {
         uint256 batchNumber
     );
 
+    event BatchApproved(uint256 _batchNumber);
+
     event BatchTimestampChanged(
         uint256 batchNumber,
         uint256 batchStartTimstamp
@@ -66,10 +68,6 @@ contract WaitlistBatch is Ownable {
     event BatchTotalSpotsUpdated(
         uint256 batchNumber,
         uint256 newTotalSpots
-    );
-
-    event BatchClaimsEnabled(
-        uint256[] batchNumbers
     );
 
     event TokensReclaimed(
@@ -82,7 +80,7 @@ contract WaitlistBatch is Ownable {
         uint256 amount
     );
 
-    event TokensTransfered(
+    event TokensTransferred(
         address tokenAddress,
         uint256 amount,
         address destination
@@ -216,13 +214,6 @@ contract WaitlistBatch is Ownable {
             "WaitlistBatch: there are no tokens to reclaim"
         );
 
-        Batch memory batch = batchMapping[batchInfo.batchNumber];
-
-        require(
-            batch.claimable,
-            "WaitlistBatch: the tokens are not yet claimable"
-        );
-
         userDepositMapping[batchInfo.batchNumber][msg.sender] -= batchInfo.depositAmount;
 
         SafeERC20.safeTransfer(
@@ -268,7 +259,7 @@ contract WaitlistBatch is Ownable {
             0,
             _batchStartTimestamp,
             _depositAmount,
-            false
+            0
         );
 
         batchMapping[nextBatchNumber] = batch;
@@ -280,6 +271,33 @@ contract WaitlistBatch is Ownable {
             _depositAmount,
             nextBatchNumber - 1
         );
+    }
+
+    /**
+     * @dev Approves a batch. Users can then start reclaiming their deposit
+     *      after the retrieval date delay.
+     */
+    function approveBatch(
+        uint256 _batchNumber
+    )
+        external
+        onlyOwner
+    {
+        require(
+            _batchNumber > 0 && _batchNumber < nextBatchNumber,
+            "WaitlistBatch: the batch does not exist"
+        );
+
+        Batch storage batch = batchMapping[_batchNumber];
+
+        require(
+            batch.approvedAt == 0,
+            "WaitlistBatch: the batch is already approved"
+        );
+
+        batch.approvedAt = currentTimestamp();
+
+        emit BatchApproved(_batchNumber);
     }
 
     function changeBatchStartTimestamp(
@@ -340,33 +358,6 @@ contract WaitlistBatch is Ownable {
         );
     }
 
-    function enableClaims(
-        uint256[] memory _batchNumbers
-    )
-        public
-        onlyOwner
-    {
-        for (uint256 i = 0; i < _batchNumbers.length; i++) {
-            uint256 batchNumber = _batchNumbers[i];
-
-            require(
-                batchNumber > 0 && batchNumber < nextBatchNumber,
-                "WaitlistBatch: the batch does not exist"
-            );
-
-            Batch storage batch = batchMapping[batchNumber];
-
-            require(
-                batch.claimable == false,
-                "WaitlistBatch: batch has already claimable tokens"
-            );
-
-            batch.claimable = true;
-        }
-
-        emit BatchClaimsEnabled(_batchNumbers);
-    }
-
     function transferTokens(
         address _tokenAddress,
         uint256 _amount,
@@ -381,7 +372,7 @@ contract WaitlistBatch is Ownable {
             _amount
         );
 
-        emit TokensTransfered(
+        emit TokensTransferred(
             _tokenAddress,
             _amount,
             _destination
