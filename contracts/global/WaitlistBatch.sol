@@ -11,6 +11,10 @@ import {IERC20} from "../token/IERC20.sol";
 
 contract WaitlistBatch is Ownable {
 
+    /* ========== Libraries ========== */
+    
+    using SafeMath for uint256;
+
     /* ========== Types ========== */
 
     struct Batch {
@@ -34,6 +38,8 @@ contract WaitlistBatch is Ownable {
     IERC20 public depositCurrency;
 
     uint256 public nextBatchNumber;
+
+    uint256 public depositLockupDuration;
 
     mapping (uint256 => mapping (address => uint256)) public userDepositMapping;
 
@@ -98,6 +104,8 @@ contract WaitlistBatch is Ownable {
         address user
     );
 
+    event DepositLockupDurationSet(uint256 _depositLockupDuration);
+
     /* ========== Modifiers ========== */
 
     modifier onlyModerator() {
@@ -142,6 +150,23 @@ contract WaitlistBatch is Ownable {
         returns (uint256)
     {
         return nextBatchNumber - 1;
+    }
+
+    /**
+     * @notice Returns the epoch when the user can withdraw their deposit
+     */
+    function getDepositRetrievalDate(
+        address _account
+    )
+        external
+        view
+        returns (uint256)
+    {
+        uint256 participatingBatch = userBatchMapping[_account];
+        
+        Batch memory batch = batchMapping[participatingBatch];
+        
+        return batch.approvedAt.add(depositLockupDuration);
     }
 
     /* ========== Public Functions ========== */
@@ -388,6 +413,17 @@ contract WaitlistBatch is Ownable {
         moderator = _user;
 
         emit ModeratorSet(_user);
+    }
+
+    function setDepositLockupDuration(
+        uint256 _duration
+    )
+        external
+        onlyOwner
+    {
+        depositLockupDuration = _duration;
+
+        emit DepositLockupDurationSet(depositLockupDuration);
     }
 
     /* ========== Moderator Functions ========== */
