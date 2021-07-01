@@ -336,10 +336,10 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
             IERC721(_skinContract).ownerOf(_skinTokenId) != address(0),
             "DefiPassport: the specified skin token id does not exist"
         );
-        
+
         return defaultSkins[_skinContract] ||
             (
-                approvedSkins[_skinContract] && 
+                approvedSkins[_skinContract] &&
                 _isSkinOwner(_user, _skinContract, _skinTokenId)
             );
     }
