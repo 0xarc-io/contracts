@@ -158,7 +158,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
      * @notice Approves a passport skin.
      *         Only callable by the skin manager
      */
-    function setApproveSkin(
+    function setApprovedSkin(
         address _skin,
         bool _status
     )
@@ -223,23 +223,10 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
             "DefiPassport: the user has no credit score"
         );
 
-        if (defaultSkins[_passportSkin]) {
-            // If the skin is a default skin, ensure the token exists
-            require (
-                IERC721(_passportSkin).ownerOf(_skinTokenId) != address(0),
-                "DefiPassport: DefiPassport: the specified skin token id does not exist"
-            );
-        } else {
-            require(
-                approvedSkins[_passportSkin],
-                "DefiPassport: the skin is not approved"
-            );
-
-            require(
-                _isSkinOwner(_to, _passportSkin, _skinTokenId),
-                "DefiPassport: the receiver does not own the skin"
-            );
-        }
+        require (
+            isValidSkin(_to, _passportSkin, _skinTokenId),
+            "DefiPassport: invalid skin"
+        );
 
         // A user cannot have two passports
         require(
@@ -275,8 +262,8 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         );
 
         require(
-            _isSkinOwner(msg.sender, _skin, _skinTokenId),
-            "DefiPassport: the user does not own the skin"
+            isValidSkin(msg.sender, _skin, _skinTokenId),
+            "DefiPassport: invalid skin"
         );
 
         uint256 tokenId = tokenOfOwnerByIndex(msg.sender, 0);
@@ -331,6 +318,30 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         public
     {
         revert("DefiPassport: defi passports are not transferrable");
+    }
+
+    /* ========== Public View Functions ========== */
+
+    function isValidSkin(
+        address _user,
+        address _skinContract,
+        uint256 _skinTokenId
+    )
+        public
+        view
+        returns (bool)
+    {
+        // Ensure the token exists
+        require (
+            IERC721(_skinContract).ownerOf(_skinTokenId) != address(0),
+            "DefiPassport: the specified skin token id does not exist"
+        );
+        
+        return defaultSkins[_skinContract] ||
+            (
+                approvedSkins[_skinContract] && 
+                _isSkinOwner(_user, _skinContract, _skinTokenId)
+            );
     }
 
     /* ========== Private Functions ========== */
