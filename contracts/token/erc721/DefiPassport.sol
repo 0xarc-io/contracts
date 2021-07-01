@@ -224,7 +224,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         );
 
         require (
-            isValidSkin(_to, _passportSkin, _skinTokenId),
+            isSkinAvailable(_to, _passportSkin, _skinTokenId),
             "DefiPassport: invalid skin"
         );
 
@@ -262,7 +262,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         );
 
         require(
-            isValidSkin(msg.sender, _skin, _skinTokenId),
+            isSkinAvailable(msg.sender, _skin, _skinTokenId),
             "DefiPassport: invalid skin"
         );
 
@@ -330,7 +330,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
      * @param _skinContract The address of the skin NFT
      * @param _skinTokenId The NFT token ID
      */
-    function isValidSkin(
+    function isSkinAvailable(
         address _user,
         address _skinContract,
         uint256 _skinTokenId
