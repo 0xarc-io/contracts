@@ -2,8 +2,8 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { CreditScoreTree } from '@src/MerkleTree';
 import {
+  DefaultPassportSkin,
   DefiPassport,
-  ERC721FullFactory,
   MintableNFT,
   MintableNFTFactory,
   MockSapphireCreditScore,
@@ -27,6 +27,7 @@ describe('DefiPassport', () => {
   let user: SignerWithAddress;
   let userNoCreditScore: SignerWithAddress;
   let skinManager: SignerWithAddress;
+  let defaultPassportSkinContract: DefaultPassportSkin;
   let defaultSkinAddress: string;
   let defaultSkinTokenId: BigNumber;
   let skinsContract: MintableNFT;
@@ -71,7 +72,7 @@ describe('DefiPassport', () => {
     skinTokenId = BigNumber.from(1);
     await skinsContract.mint(owner.address, skinTokenId);
 
-    const defaultPassportSkinContract = await new DefaultPassportSkinFactory(
+    defaultPassportSkinContract = await new DefaultPassportSkinFactory(
       owner,
     ).deploy('Default passport skin nft', 'DPS');
     defaultSkinAddress = defaultPassportSkinContract.address;
@@ -87,12 +88,12 @@ describe('DefiPassport', () => {
    * Helper function that mints a passport to the `user`
    */
   async function mintUserPassport() {
-    await defiPassport.connect(skinManager).setApproveSkin(skinAddress, true);
+    await defiPassport.connect(skinManager).setApprovedSkin(skinAddress, true);
     await skinsContract.transferFrom(owner.address, user.address, skinTokenId);
 
     await defiPassport.mint(user.address, skinAddress, skinTokenId);
 
-    return await defiPassport.tokenOfOwnerByIndex(user.address, 0);
+    return defiPassport.tokenOfOwnerByIndex(user.address, 0);
   }
 
   before(async () => {
@@ -158,7 +159,9 @@ describe('DefiPassport', () => {
   // mint(address to, address skin)
   describe('#mint', () => {
     it('reverts if the receiver has no credit score', async () => {
-      await defiPassport.connect(skinManager).setApproveSkin(skinAddress, true);
+      await defiPassport
+        .connect(skinManager)
+        .setApprovedSkin(skinAddress, true);
 
       await expect(
         defiPassport.mint(userNoCreditScore.address, skinAddress, skinTokenId),
@@ -168,15 +171,17 @@ describe('DefiPassport', () => {
     it('reverts if the skin is not approved', async () => {
       await expect(
         defiPassport.mint(user.address, skinAddress, skinTokenId),
-      ).to.be.revertedWith('DefiPassport: the skin is not approved');
+      ).to.be.revertedWith('DefiPassport: invalid skin');
     });
 
     it('reverts if the receiver is not the skin owner', async () => {
-      await defiPassport.connect(skinManager).setApproveSkin(skinAddress, true);
+      await defiPassport
+        .connect(skinManager)
+        .setApprovedSkin(skinAddress, true);
 
       await expect(
         defiPassport.mint(user.address, skinAddress, skinTokenId),
-      ).to.be.revertedWith('DefiPassport: the receiver does not own the skin');
+      ).to.be.revertedWith('DefiPassport: invalid skin');
     });
 
     // skin addy is valid but token id is not
@@ -214,7 +219,9 @@ describe('DefiPassport', () => {
     });
 
     it('mints the passport to the receiver with an owned skin', async () => {
-      await defiPassport.connect(skinManager).setApproveSkin(skinAddress, true);
+      await defiPassport
+        .connect(skinManager)
+        .setApprovedSkin(skinAddress, true);
       await skinsContract.transferFrom(
         owner.address,
         user.address,
@@ -242,7 +249,9 @@ describe('DefiPassport', () => {
     });
 
     it('reverts if the receiver already has a passport', async () => {
-      await defiPassport.connect(skinManager).setApproveSkin(skinAddress, true);
+      await defiPassport
+        .connect(skinManager)
+        .setApprovedSkin(skinAddress, true);
       await skinsContract.transferFrom(
         owner.address,
         user.address,
@@ -274,10 +283,13 @@ describe('DefiPassport', () => {
   });
 
   describe('#setActiveSkin', () => {
+    let passportId: BigNumber;
     let otherSkinContract: MintableNFT;
     let otherSkinTokenId: BigNumber;
 
-    before(async () => {
+    beforeEach(async () => {
+      passportId = await mintUserPassport();
+
       otherSkinContract = await new MintableNFTFactory(owner).deploy(
         'Other Passport Skins',
         'OPS',
@@ -294,21 +306,38 @@ describe('DefiPassport', () => {
     });
 
     it('reverts if caller does not own the specified skin', async () => {
-      await mintUserPassport();
+      await expect(
+        defiPassport
+          .connect(user)
+          .setActiveSkin(otherSkinContract.address, otherSkinTokenId),
+      ).to.be.revertedWith('DefiPassport: invalid skin');
+    });
+
+    it('reverts if the skin is not approved nor default', async () => {
+      await otherSkinContract.transferFrom(
+        owner.address,
+        user.address,
+        otherSkinTokenId,
+      );
 
       await expect(
         defiPassport
           .connect(user)
           .setActiveSkin(otherSkinContract.address, otherSkinTokenId),
-      ).to.be.revertedWith('DefiPassport: the user does not own the skin');
+      ).to.be.revertedWith('DefiPassport: invalid skin');
     });
 
-    it('sets the skin if it is owned', async () => {
-      const tokenId = await mintUserPassport();
-
-      let activeSkinRecord = await defiPassport.activeSkins(tokenId);
+    it('sets the skin if it is owned and approved', async () => {
+      let activeSkinRecord = await defiPassport.activeSkins(passportId);
       expect(activeSkinRecord.skin).to.eq(skinAddress);
       expect(activeSkinRecord.skinTokenId).to.eq(skinTokenId);
+
+      await defiPassport
+        .connect(skinManager)
+        .setApprovedSkin(otherSkinContract.address, true);
+
+      expect(await defiPassport.approvedSkins(otherSkinContract.address)).to.be
+        .true;
 
       await otherSkinContract.transferFrom(
         owner.address,
@@ -320,9 +349,83 @@ describe('DefiPassport', () => {
         .connect(user)
         .setActiveSkin(otherSkinContract.address, otherSkinTokenId);
 
-      activeSkinRecord = await defiPassport.activeSkins(tokenId);
+      activeSkinRecord = await defiPassport.activeSkins(passportId);
       expect(activeSkinRecord.skin).to.eq(otherSkinContract.address);
       expect(activeSkinRecord.skinTokenId).to.eq(otherSkinTokenId);
+    });
+
+    it('sets the same skin but different skin token ID', async () => {
+      let activeSkinRecord = await defiPassport.activeSkins(passportId);
+      expect(activeSkinRecord.skin).to.eq(skinAddress);
+      expect(activeSkinRecord.skinTokenId).to.eq(skinTokenId);
+
+      await skinsContract.mint(user.address, 2);
+
+      await defiPassport.connect(user).setActiveSkin(skinsContract.address, 2);
+
+      activeSkinRecord = await defiPassport.activeSkins(passportId);
+      expect(activeSkinRecord.skin).to.eq(skinsContract.address);
+      expect(activeSkinRecord.skinTokenId).to.eq(2);
+    });
+
+    it('sets a default skin even if it is not owned by the user', async () => {
+      let activeSkinRecord = await defiPassport.activeSkins(passportId);
+      expect(activeSkinRecord.skin).to.eq(skinAddress);
+      expect(activeSkinRecord.skinTokenId).to.eq(skinTokenId);
+
+      await defiPassport
+        .connect(skinManager)
+        .setDefaultSkin(defaultPassportSkinContract.address, true);
+      await defiPassport
+        .connect(user)
+        .setActiveSkin(defaultPassportSkinContract.address, defaultSkinTokenId);
+
+      activeSkinRecord = await defiPassport.activeSkins(passportId);
+      expect(activeSkinRecord.skin).to.eq(defaultPassportSkinContract.address);
+      expect(activeSkinRecord.skinTokenId).to.eq(defaultSkinTokenId);
+    });
+  });
+
+  describe('#isSkinAvailable', () => {
+    it('reverts if the skin does not exist', async () => {
+      await expect(
+        defiPassport.isSkinAvailable(user.address, skinAddress, 21),
+      ).to.be.revertedWith('ERC721: owner query for nonexistent token');
+    });
+
+    it('returns false if the skin is not a default skin', async () => {
+      expect(await defiPassport.isSkinAvailable(owner.address, skinAddress, 1))
+        .to.be.false;
+    });
+
+    it('returns true if the skin is registered as a default skin', async () => {
+      await defiPassport
+        .connect(skinManager)
+        .setDefaultSkin(defaultSkinAddress, true);
+
+      expect(
+        await defiPassport.isSkinAvailable(
+          owner.address,
+          defaultSkinAddress,
+          1,
+        ),
+      ).to.be.true;
+    });
+
+    it('returns false if the skin is approved but not owned by the user', async () => {
+      await defiPassport
+        .connect(skinManager)
+        .setApprovedSkin(skinAddress, true);
+
+      expect(await defiPassport.isSkinAvailable(user.address, skinAddress, 1))
+        .to.be.false;
+    });
+
+    it('returns true if the skin is approved and owned by the user', async () => {
+      await defiPassport.connect(skinManager).setDefaultSkin(skinAddress, true);
+
+      expect(await defiPassport.isSkinAvailable(owner.address, skinAddress, 1))
+        .to.be.true;
     });
   });
 
@@ -350,17 +453,19 @@ describe('DefiPassport', () => {
     });
   });
 
-  describe('#setApproveSkin', () => {
+  describe('#setApprovedSkin', () => {
     it('reverts if called by non-skin-manager', async () => {
       await expect(
-        defiPassport.setApproveSkin(skinAddress, false),
+        defiPassport.setApprovedSkin(skinAddress, false),
       ).to.be.revertedWith('DefiPassport: caller is not skin manager');
     });
 
     it('approves the skin', async () => {
       expect(await defiPassport.approvedSkins(skinAddress)).to.be.false;
 
-      await defiPassport.connect(skinManager).setApproveSkin(skinAddress, true);
+      await defiPassport
+        .connect(skinManager)
+        .setApprovedSkin(skinAddress, true);
 
       expect(await defiPassport.approvedSkins(skinAddress)).to.be.true;
     });
@@ -393,7 +498,7 @@ describe('DefiPassport', () => {
   describe('#setCreditScoreContract', () => {
     let otherCreditScoreContract: MockSapphireCreditScore;
 
-    before(async () => {
+    beforeEach(async () => {
       otherCreditScoreContract = await deployMockSapphireCreditScore(owner);
     });
 
