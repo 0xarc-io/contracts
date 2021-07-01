@@ -11,6 +11,10 @@ import {IERC20} from "../token/IERC20.sol";
 
 contract WaitlistBatch is Ownable {
 
+    /* ========== Libraries ========== */
+
+    using SafeMath for uint256;
+
     /* ========== Types ========== */
 
     struct Batch {
@@ -18,13 +22,14 @@ contract WaitlistBatch is Ownable {
         uint256 filledSpots;
         uint256 batchStartTimestamp;
         uint256 depositAmount;
-        bool claimable;
+        uint256 approvedAt;
     }
 
     struct UserBatchInfo {
         bool hasParticipated;
         uint256 batchNumber;
         uint256 depositAmount;
+        uint256 depositRetrievalTimestamp;
     }
 
     /* ========== Variables ========== */
@@ -34,6 +39,8 @@ contract WaitlistBatch is Ownable {
     IERC20 public depositCurrency;
 
     uint256 public nextBatchNumber;
+
+    uint256 public depositLockupDuration;
 
     mapping (uint256 => mapping (address => uint256)) public userDepositMapping;
 
@@ -58,6 +65,8 @@ contract WaitlistBatch is Ownable {
         uint256 batchNumber
     );
 
+    event BatchApproved(uint256 _batchNumber);
+
     event BatchTimestampChanged(
         uint256 batchNumber,
         uint256 batchStartTimstamp
@@ -66,10 +75,6 @@ contract WaitlistBatch is Ownable {
     event BatchTotalSpotsUpdated(
         uint256 batchNumber,
         uint256 newTotalSpots
-    );
-
-    event BatchClaimsEnabled(
-        uint256[] batchNumbers
     );
 
     event TokensReclaimed(
@@ -82,7 +87,7 @@ contract WaitlistBatch is Ownable {
         uint256 amount
     );
 
-    event TokensTransfered(
+    event TokensTransferred(
         address tokenAddress,
         uint256 amount,
         address destination
@@ -100,6 +105,8 @@ contract WaitlistBatch is Ownable {
         address user
     );
 
+    event DepositLockupDurationSet(uint256 _depositLockupDuration);
+
     /* ========== Modifiers ========== */
 
     modifier onlyModerator() {
@@ -112,8 +119,12 @@ contract WaitlistBatch is Ownable {
 
     /* ========== Constructor ========== */
 
-    constructor(address _depositCurrency) public {
+    constructor(
+        address _depositCurrency,
+        uint256 _depositLockupDuration
+    ) public {
         depositCurrency = IERC20(_depositCurrency);
+        depositLockupDuration = _depositLockupDuration;
 
         // Set the next batch number to 1 to avoid some complications
         // caused by batch number 0
@@ -134,7 +145,8 @@ contract WaitlistBatch is Ownable {
         return UserBatchInfo({
             hasParticipated: participatingBatch > 0,
             batchNumber: participatingBatch,
-            depositAmount: userDepositMapping[participatingBatch][_user]
+            depositAmount: userDepositMapping[participatingBatch][_user],
+            depositRetrievalTimestamp: getDepositRetrievalTimestamp(_user)
         });
     }
 
@@ -144,6 +156,25 @@ contract WaitlistBatch is Ownable {
         returns (uint256)
     {
         return nextBatchNumber - 1;
+    }
+
+    /**
+     * @notice Returns the epoch when the user can withdraw their deposit
+     */
+    function getDepositRetrievalTimestamp(
+        address _account
+    )
+        public
+        view
+        returns (uint256)
+    {
+        uint256 participatingBatch = userBatchMapping[_account];
+
+        Batch memory batch = batchMapping[participatingBatch];
+
+        return batch.approvedAt == 0
+            ? 0
+            : batch.approvedAt.add(depositLockupDuration);
     }
 
     /* ========== Public Functions ========== */
@@ -216,11 +247,14 @@ contract WaitlistBatch is Ownable {
             "WaitlistBatch: there are no tokens to reclaim"
         );
 
-        Batch memory batch = batchMapping[batchInfo.batchNumber];
+        require(
+            batchInfo.depositRetrievalTimestamp > 0,
+            "WaitlistBatch: the batch is not approved yet"
+        );
 
         require(
-            batch.claimable,
-            "WaitlistBatch: the tokens are not yet claimable"
+            batchInfo.depositRetrievalTimestamp <= currentTimestamp(),
+            "WaitlistBatch: the deposit lockup duration has not passed yet"
         );
 
         userDepositMapping[batchInfo.batchNumber][msg.sender] -= batchInfo.depositAmount;
@@ -268,7 +302,7 @@ contract WaitlistBatch is Ownable {
             0,
             _batchStartTimestamp,
             _depositAmount,
-            false
+            0
         );
 
         batchMapping[nextBatchNumber] = batch;
@@ -280,6 +314,33 @@ contract WaitlistBatch is Ownable {
             _depositAmount,
             nextBatchNumber - 1
         );
+    }
+
+    /**
+     * @dev Approves a batch. Users can then start reclaiming their deposit
+     *      after the retrieval date delay.
+     */
+    function approveBatch(
+        uint256 _batchNumber
+    )
+        external
+        onlyOwner
+    {
+        require(
+            _batchNumber > 0 && _batchNumber < nextBatchNumber,
+            "WaitlistBatch: the batch does not exist"
+        );
+
+        Batch storage batch = batchMapping[_batchNumber];
+
+        require(
+            batch.approvedAt == 0,
+            "WaitlistBatch: the batch is already approved"
+        );
+
+        batch.approvedAt = currentTimestamp();
+
+        emit BatchApproved(_batchNumber);
     }
 
     function changeBatchStartTimestamp(
@@ -340,33 +401,6 @@ contract WaitlistBatch is Ownable {
         );
     }
 
-    function enableClaims(
-        uint256[] memory _batchNumbers
-    )
-        public
-        onlyOwner
-    {
-        for (uint256 i = 0; i < _batchNumbers.length; i++) {
-            uint256 batchNumber = _batchNumbers[i];
-
-            require(
-                batchNumber > 0 && batchNumber < nextBatchNumber,
-                "WaitlistBatch: the batch does not exist"
-            );
-
-            Batch storage batch = batchMapping[batchNumber];
-
-            require(
-                batch.claimable == false,
-                "WaitlistBatch: batch has already claimable tokens"
-            );
-
-            batch.claimable = true;
-        }
-
-        emit BatchClaimsEnabled(_batchNumbers);
-    }
-
     function transferTokens(
         address _tokenAddress,
         uint256 _amount,
@@ -381,7 +415,7 @@ contract WaitlistBatch is Ownable {
             _amount
         );
 
-        emit TokensTransfered(
+        emit TokensTransferred(
             _tokenAddress,
             _amount,
             _destination
@@ -397,6 +431,17 @@ contract WaitlistBatch is Ownable {
         moderator = _user;
 
         emit ModeratorSet(_user);
+    }
+
+    function setDepositLockupDuration(
+        uint256 _duration
+    )
+        external
+        onlyOwner
+    {
+        depositLockupDuration = _duration;
+
+        emit DepositLockupDurationSet(depositLockupDuration);
     }
 
     /* ========== Moderator Functions ========== */
