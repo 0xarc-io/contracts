@@ -324,6 +324,22 @@ describe('DefiPassport', () => {
       expect(activeSkinRecord.skin).to.eq(otherSkinContract.address);
       expect(activeSkinRecord.skinTokenId).to.eq(otherSkinTokenId);
     });
+
+    it('sets the same skin but different skin token ID', async () => {
+      const tokenId = await mintUserPassport();
+
+      let activeSkinRecord = await defiPassport.activeSkins(tokenId);
+      expect(activeSkinRecord.skin).to.eq(skinAddress);
+      expect(activeSkinRecord.skinTokenId).to.eq(skinTokenId);
+
+      await skinsContract.mint(user.address, 2);
+
+      await defiPassport.connect(user).setActiveSkin(skinsContract.address, 2);
+
+      activeSkinRecord = await defiPassport.activeSkins(tokenId);
+      expect(activeSkinRecord.skin).to.eq(skinsContract.address);
+      expect(activeSkinRecord.skinTokenId).to.eq(2);
+    });
   });
 
   describe('#setSkinManager', () => {
