@@ -479,16 +479,6 @@
     "group": ""
   },
   {
-    "name": "WaitlistBatch",
-    "source": "WaitlistBatch",
-    "address": "0x7689213C6D56Cad49bdF518E95392B520E19E36a",
-    "txn": "0xd42697b09aaaf886b4738f3b00f02a41c3e704f306b7657b2cc1720d778e6fde",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "global",
-    "group": ""
-  },
-  {
     "name": "ArcDAO",
     "source": "AddressAccrual",
     "address": "0xcD12866Ef3F06436FA25EF2Ef79B66AC376351fA",
@@ -557,5 +547,15 @@
     "version": 1,
     "type": "staking",
     "group": "ARCxPassportPool"
+  },
+  {
+    "name": "WaitlistBatch",
+    "source": "WaitlistBatch",
+    "address": "0x4B7Ef08111B501a09DF9c31cA213190158150391",
+    "txn": "0xfcf45935a7ff8cdb8d3b1280781649735a37d210545f2dbe9cb6a46d6e6cdd4f",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": ""
   }
 ]

@@ -39,7 +39,7 @@ task('deploy-waitlist-batch', 'Deploy the WaitlistBatch contract')
     console.log(yellow(`Verifying contract...`));
     await hre.run('verify:verify', {
       address: waitlistAddress,
-      constructorArguments: [currency],
+      constructorArguments: [currency, depositduration],
     });
     console.log(green(`Contract verified successfully!`));
   });
