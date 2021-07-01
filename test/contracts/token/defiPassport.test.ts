@@ -4,7 +4,6 @@ import { CreditScoreTree } from '@src/MerkleTree';
 import {
   DefaultPassportSkin,
   DefiPassport,
-  ERC721FullFactory,
   MintableNFT,
   MintableNFTFactory,
   MockSapphireCreditScore,
@@ -388,15 +387,42 @@ describe('DefiPassport', () => {
   });
 
   describe('#isValidSkin', () => {
-    it('reverts if the skin does not exist');
+    it('reverts if the skin does not exist', async () => {
+      await expect(
+        defiPassport.isValidSkin(user.address, skinAddress, 21),
+      ).to.be.revertedWith('ERC721: owner query for nonexistent token');
+    });
 
-    it('returns false if the skin is not a default skin');
+    it('returns false if the skin is not a default skin', async () => {
+      expect(await defiPassport.isValidSkin(owner.address, skinAddress, 1)).to
+        .be.false;
+    });
 
-    it('returns true if the skin is registered as a default skin');
+    it('returns true if the skin is registered as a default skin', async () => {
+      await defiPassport
+        .connect(skinManager)
+        .setDefaultSkin(defaultSkinAddress, true);
 
-    it('returns false if the skin is approved but not owned by the user');
+      expect(
+        await defiPassport.isValidSkin(owner.address, defaultSkinAddress, 1),
+      ).to.be.true;
+    });
 
-    it('returns true if the skin is approved and owned by the user');
+    it('returns false if the skin is approved but not owned by the user', async () => {
+      await defiPassport
+        .connect(skinManager)
+        .setApprovedSkin(skinAddress, true);
+
+      expect(await defiPassport.isValidSkin(user.address, skinAddress, 1)).to.be
+        .false;
+    });
+
+    it('returns true if the skin is approved and owned by the user', async () => {
+      await defiPassport.connect(skinManager).setDefaultSkin(skinAddress, true);
+
+      expect(await defiPassport.isValidSkin(owner.address, skinAddress, 1)).to
+        .be.true;
+    });
   });
 
   describe('#setSkinManager', () => {
