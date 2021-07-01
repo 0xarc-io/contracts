@@ -386,16 +386,16 @@ describe('DefiPassport', () => {
     });
   });
 
-  describe('#isValidSkin', () => {
+  describe('#isSkinAvailable', () => {
     it('reverts if the skin does not exist', async () => {
       await expect(
-        defiPassport.isValidSkin(user.address, skinAddress, 21),
+        defiPassport.isSkinAvailable(user.address, skinAddress, 21),
       ).to.be.revertedWith('ERC721: owner query for nonexistent token');
     });
 
     it('returns false if the skin is not a default skin', async () => {
-      expect(await defiPassport.isValidSkin(owner.address, skinAddress, 1)).to
-        .be.false;
+      expect(await defiPassport.isSkinAvailable(owner.address, skinAddress, 1))
+        .to.be.false;
     });
 
     it('returns true if the skin is registered as a default skin', async () => {
@@ -404,7 +404,11 @@ describe('DefiPassport', () => {
         .setDefaultSkin(defaultSkinAddress, true);
 
       expect(
-        await defiPassport.isValidSkin(owner.address, defaultSkinAddress, 1),
+        await defiPassport.isSkinAvailable(
+          owner.address,
+          defaultSkinAddress,
+          1,
+        ),
       ).to.be.true;
     });
 
@@ -413,15 +417,15 @@ describe('DefiPassport', () => {
         .connect(skinManager)
         .setApprovedSkin(skinAddress, true);
 
-      expect(await defiPassport.isValidSkin(user.address, skinAddress, 1)).to.be
-        .false;
+      expect(await defiPassport.isSkinAvailable(user.address, skinAddress, 1))
+        .to.be.false;
     });
 
     it('returns true if the skin is approved and owned by the user', async () => {
       await defiPassport.connect(skinManager).setDefaultSkin(skinAddress, true);
 
-      expect(await defiPassport.isValidSkin(owner.address, skinAddress, 1)).to
-        .be.true;
+      expect(await defiPassport.isSkinAvailable(owner.address, skinAddress, 1))
+        .to.be.true;
     });
   });
 
