@@ -322,6 +322,14 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
 
     /* ========== Public View Functions ========== */
 
+    /**
+     * @notice Returns whether a certain skin can be applied to the specified
+     *         user's passport.
+     *
+     * @param _user The user for whom to check
+     * @param _skinContract The address of the skin NFT
+     * @param _skinTokenId The NFT token ID
+     */
     function isValidSkin(
         address _user,
         address _skinContract,
