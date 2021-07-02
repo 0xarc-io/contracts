@@ -114,7 +114,15 @@ task(
 )
   .addOptionalParam('rootupdater', 'The merkle root updater')
   .addOptionalParam('pauseoperator', 'The pause operator')
+  .addOptionalParam('v', 'The version of the contract')
+  .addFlag('implementationonly', 'Deploy only the implementation contract')
   .setAction(async (taskArgs, hre) => {
+    const {
+      rootupdater: rootUpdater,
+      pauseoperator: pauseOperator,
+      implementationonly: implementationOnly,
+      v: version,
+    } = taskArgs;
     const {
       network,
       signer,
@@ -134,11 +142,22 @@ task(
         name: 'SapphireCreditScore',
         source: 'SapphireCreditScore',
         data: new SapphireCreditScoreFactory(signer).getDeployTransaction(),
-        version: 1,
+        version: parseInt(version) || 1,
         type: DeploymentType.global,
       },
       networkConfig,
     );
+
+    if (implementationOnly) {
+      console.log(yellow(`Verifying contract...`));
+      await hre.run('verify:verify', {
+        address: creditScoreImpAddress,
+        constructorArguments: [],
+      });
+      console.log(green(`Contract verified successfully!`));
+      return;
+    }
+
     const creditScoreProxyAddress = await deployContract(
       {
         name: 'SapphireCreditScoreProxy',
@@ -171,8 +190,8 @@ task(
     console.log(yellow(`Calling init()...`));
     await creditScoreContract.init(
       constants.HashZero,
-      taskArgs.rootupdater || ultimateOwner,
-      taskArgs.pauseoperator || ultimateOwner,
+      rootUpdater || ultimateOwner,
+      pauseOperator || ultimateOwner,
       1000,
     );
     console.log(green(`init() called successfully!`));
