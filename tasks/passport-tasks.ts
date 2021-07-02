@@ -21,12 +21,14 @@ task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
     'skinmanager',
     'Address of the skin manager. Default is deployer',
   )
+  .addFlag('implementationonly', 'Only deploy implementation')
   .setAction(async (taskArgs, hre) => {
     const {
       name,
       symbol,
       creditscore: creditScoreContractAddress,
       skinManager,
+      implementationonly: implementationOnly,
     } = taskArgs;
 
     const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
@@ -51,6 +53,14 @@ task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
       );
     } else {
       throw red(`DefiPassport implementation was not deployed!`);
+    }
+
+    if (implementationOnly) {
+      await hre.run('verify:verify', {
+        address: defiPassportImpl,
+        constructorArguments: [],
+      });
+      return;
     }
 
     const defiPassportProxy = await deployContract(
