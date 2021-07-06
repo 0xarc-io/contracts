@@ -628,11 +628,9 @@ contract JointPassportCampaign is CampaignStorage, CreditScoreVerifiable, Ownabl
     }
 
     function withdraw(
-        uint256 _amount,
-        SapphireTypes.ScoreProof memory _scoreProof
+        uint256 _amount
     )
         public
-        checkScoreProof(_scoreProof, false)
         updateReward(msg.sender, address(0))
     {
         Staker storage staker = stakers[msg.sender];
@@ -658,13 +656,11 @@ contract JointPassportCampaign is CampaignStorage, CreditScoreVerifiable, Ownabl
     /**
      * @notice Claim reward and withdraw collateral
      */
-    function exit(
-        SapphireTypes.ScoreProof memory _scoreProof
-    )
+    function exit()
         public
     {
         getReward(msg.sender);
-        withdraw(balanceOf(msg.sender), _scoreProof);
+        withdraw(balanceOf(msg.sender));
     }
 
     /* ========== Private Functions ========== */
