@@ -113,26 +113,18 @@ describe('JointPassportCampaign', () => {
   async function withdraw(
     user: SignerWithAddress,
     amount: BigNumber = STAKE_AMOUNT,
-    scoreProof?: CreditScoreProof,
   ) {
-    await arcPassportCampaign
-      .connect(user)
-      .withdraw(amount, scoreProof ?? getEmptyScoreProof());
+    await arcPassportCampaign.connect(user).withdraw(amount);
   }
 
   async function exitCampaign(
     user: SignerWithAddress,
     scoreProof?: CreditScoreProof,
   ) {
-    await arcPassportCampaign
-      .connect(user)
-      .exit(scoreProof ?? getEmptyScoreProof());
+    await arcPassportCampaign.connect(user).exit();
   }
 
-  async function claimReward(
-    user: SignerWithAddress,
-    scoreProof?: CreditScoreProof,
-  ) {
+  async function claimReward(user: SignerWithAddress) {
     await arcPassportCampaign.connect(user).getReward(user.address);
   }
 
@@ -978,7 +970,7 @@ describe('JointPassportCampaign', () => {
 
         await setTimestampTo(3);
 
-        await user1PassportCampaign.exit(user1ScoreProof);
+        await user1PassportCampaign.exit();
 
         expect(await arcToken.balanceOf(user1.address)).to.eq(
           utils.parseEther('18'),
@@ -1020,7 +1012,7 @@ describe('JointPassportCampaign', () => {
       it('reverts if trying to withdraw more than the staked balance', async () => {
         await stake(user1, STAKE_AMOUNT, user1ScoreProof);
         await expect(
-          user1PassportCampaign.withdraw(STAKE_AMOUNT.add(1), user1ScoreProof),
+          user1PassportCampaign.withdraw(STAKE_AMOUNT.add(1)),
         ).to.be.revertedWith(
           'JointPassportCampaign: cannot withdraw more than the balance',
         );
@@ -1029,7 +1021,7 @@ describe('JointPassportCampaign', () => {
       it('withdraws the correct amount', async () => {
         await user1PassportCampaign.stake(STAKE_AMOUNT, user1ScoreProof);
 
-        await user1PassportCampaign.withdraw(STAKE_AMOUNT, user1ScoreProof);
+        await user1PassportCampaign.withdraw(STAKE_AMOUNT);
 
         const balance = await stakingToken.balanceOf(user1.address);
 
@@ -1039,10 +1031,7 @@ describe('JointPassportCampaign', () => {
       it('should withdraw the correct amount even if an empty proof was given', async () => {
         await user1PassportCampaign.stake(STAKE_AMOUNT, user1ScoreProof);
 
-        await user1PassportCampaign.withdraw(
-          STAKE_AMOUNT,
-          getEmptyScoreProof(),
-        );
+        await user1PassportCampaign.withdraw(STAKE_AMOUNT);
 
         const balance = await stakingToken.balanceOf(user1.address);
 
@@ -1058,9 +1047,7 @@ describe('JointPassportCampaign', () => {
 
         await setTimestampTo(1);
 
-        await expect(
-          user1PassportCampaign.exit(user1ScoreProof),
-        ).to.be.revertedWith(
+        await expect(user1PassportCampaign.exit()).to.be.revertedWith(
           'JointPassportCampaign: at least one reward token must be claimable',
         );
       });
@@ -1073,7 +1060,7 @@ describe('JointPassportCampaign', () => {
 
         await setTimestampTo(1);
 
-        await user1PassportCampaign.exit(user1ScoreProof);
+        await user1PassportCampaign.exit();
 
         const stakingBalance = await stakingToken.balanceOf(user1.address);
         const arcBalance = await arcToken.balanceOf(user1.address);
@@ -1090,7 +1077,7 @@ describe('JointPassportCampaign', () => {
 
         await setTimestampTo(1);
 
-        await user1PassportCampaign.exit(getEmptyScoreProof());
+        await user1PassportCampaign.exit();
 
         const stakingBalance = await stakingToken.balanceOf(user1.address);
         const rewardBalance = await arcToken.balanceOf(user1.address);
@@ -1720,7 +1707,7 @@ describe('JointPassportCampaign', () => {
 
       await setTimestampTo(22);
 
-      await jointCampaignUserB.exit(creditScoreProofs.userB);
+      await jointCampaignUserB.exit();
 
       expect(await stakingToken.balanceOf(users.userB.address)).to.eq(
         STAKE_AMOUNT,
@@ -1749,7 +1736,7 @@ describe('JointPassportCampaign', () => {
 
       await setTimestampTo(24);
 
-      await jointCampaignUserC.exit(creditScoreProofs.userC);
+      await jointCampaignUserC.exit();
 
       expect(await stakingToken.balanceOf(users.userC.address)).to.eq(
         STAKE_AMOUNT,
@@ -1825,8 +1812,8 @@ describe('JointPassportCampaign', () => {
 
       await setTimestampTo(40);
 
-      await jointCampaignUserC.exit(creditScoreProofs.userC);
-      await jointCampaignUserA.exit(creditScoreProofs.userA);
+      await jointCampaignUserC.exit();
+      await jointCampaignUserA.exit();
 
       expect(await stakingToken.balanceOf(users.userA.address)).to.eq(
         STAKE_AMOUNT,
@@ -2241,7 +2228,7 @@ describe('JointPassportCampaign', () => {
 
       await arcPassportCampaign.setTokensClaimable(true);
 
-      await claimReward(users.userA, creditScoreProofs.userA);
+      await claimReward(users.userA);
 
       expect(await arcToken.balanceOf(users.userA.address)).to.eq(
         utils.parseEther('19.8'),
@@ -2251,7 +2238,7 @@ describe('JointPassportCampaign', () => {
 
       expect(await earned(users.userB, arcToken)).to.eq(utils.parseEther('45'));
 
-      await claimReward(users.userB, creditScoreProofs.userB);
+      await claimReward(users.userB);
 
       expect(await arcToken.balanceOf(users.userB.address)).to.eq(
         utils.parseEther('27'),
