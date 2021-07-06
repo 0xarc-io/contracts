@@ -114,7 +114,13 @@ task(
 )
   .addOptionalParam('rootupdater', 'The merkle root updater')
   .addOptionalParam('pauseoperator', 'The pause operator')
+  .addFlag('implementationonly', 'Deploy only the implementation contract')
   .setAction(async (taskArgs, hre) => {
+    const {
+      rootupdater: rootUpdater,
+      pauseoperator: pauseOperator,
+      implementationonly: implementationOnly,
+    } = taskArgs;
     const {
       network,
       signer,
@@ -129,16 +135,42 @@ task(
       networkDetails['users']['eoaOwner'] ||
       signer.address;
 
+    let version = 1;
+    try {
+      const existingCreditScoreImpl = loadContract({
+        name: 'SapphireCreditScore',
+        source: 'SapphireCreditScore',
+        network: network,
+      });
+      version = existingCreditScoreImpl.version + 1;
+      console.log(
+        yellow(
+          `SapphireCreditScore implementation found. Deploying a new version ${version}`,
+        ),
+      );
+    } catch (err) {}
+
     const creditScoreImpAddress = await deployContract(
       {
         name: 'SapphireCreditScore',
         source: 'SapphireCreditScore',
         data: new SapphireCreditScoreFactory(signer).getDeployTransaction(),
-        version: 1,
+        version,
         type: DeploymentType.global,
       },
       networkConfig,
     );
+
+    if (implementationOnly) {
+      console.log(yellow(`Verifying contract...`));
+      await hre.run('verify:verify', {
+        address: creditScoreImpAddress,
+        constructorArguments: [],
+      });
+      console.log(green(`Contract verified successfully!`));
+      return;
+    }
+
     const creditScoreProxyAddress = await deployContract(
       {
         name: 'SapphireCreditScoreProxy',
@@ -171,8 +203,8 @@ task(
     console.log(yellow(`Calling init()...`));
     await creditScoreContract.init(
       constants.HashZero,
-      taskArgs.rootupdater || ultimateOwner,
-      taskArgs.pauseoperator || ultimateOwner,
+      rootUpdater || ultimateOwner,
+      pauseOperator || ultimateOwner,
       1000,
     );
     console.log(green(`init() called successfully!`));

@@ -241,6 +241,20 @@ describe('SapphireCreditScore', () => {
       expect(await creditScoreContract.upcomingMerkleRoot()).eq(TWO_BYTES32);
     });
 
+    it('should increment the current epoch when updating as the root updater', async () => {
+      const initialEpoch = await creditScoreContract.currentEpoch();
+
+      await advanceEpoch(creditScoreContract);
+
+      await creditScoreContract
+        .connect(merkleRootUpdater)
+        .updateMerkleRoot(TWO_BYTES32);
+
+      expect(await creditScoreContract.currentEpoch()).to.eq(
+        initialEpoch.add(1),
+      );
+    });
+
     it('should ensure that malicious merkle root does not became a current one', async () => {
       // malicious update merkle root
       const maliciousRoot = TWO_BYTES32;

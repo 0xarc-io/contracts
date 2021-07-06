@@ -547,7 +547,8 @@
     "version": 1,
     "type": "global",
     "group": ""
-  }, {
+  }, 
+  {
     "name": "DefiPassport",
     "source": "DefiPassport",
     "address": "0xd9B3cA1edbF2DA171c10957E38fdBD33033c253a",
@@ -556,5 +557,15 @@
     "version": 1,
     "type": "global",
     "group": "DefiPassport"
+  },
+  {
+    "name": "SapphireCreditScore",
+    "source": "SapphireCreditScore",
+    "address": "0x69D09d571e1819e55551638b3A273687455c537B",
+    "txn": "0xde2c8095db5790aeb80698b7d94e1759112421af1ba8d620a2618247f9e58546",
+    "network": "rinkeby",
+    "version": 2,
+    "type": "global",
+    "group": ""
   }
 ]

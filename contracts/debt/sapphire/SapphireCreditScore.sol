@@ -73,6 +73,8 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
 
     mapping(address => SapphireTypes.CreditScore) public userScores;
 
+    uint256 public currentEpoch;
+
     /* ========== Modifiers ========== */
 
     modifier onlyMerkleRootUpdater() {
@@ -167,6 +169,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
      *          2. Replace current merkle root with upcoming merkle root
      *          3. Update upcoming one with passed Merkle root.
      *          4. Update the last merkle root update with the current timestamp
+     *          5. Increment the `currentEpoch`
      *
      * @param _newRoot New upcoming merkle root
      */
@@ -242,6 +245,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
 
         currentMerkleRoot = upcomingMerkleRoot;
         upcomingMerkleRoot = _newRoot;
+        currentEpoch++;
         lastMerkleRootUpdate = currentTimestamp();
     }
 
