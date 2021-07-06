@@ -7,10 +7,10 @@ import {CreditScoreVerifiable} from "../lib/CreditScoreVerifiable.sol";
 import {SapphireTypes} from "../debt/sapphire/SapphireTypes.sol";
 
 contract CreditScoreVerifiableTest is CreditScoreVerifiable {
-    
+
     event DidSomethingAndProofPassed();
     event DidSomethingOptionalProof();
-    
+
     constructor(
         address _creditScoreContract
     )
@@ -26,7 +26,7 @@ contract CreditScoreVerifiableTest is CreditScoreVerifiable {
     {
         emit DidSomethingAndProofPassed();
     }
-    
+
     function proofOptionalDoSomething(
         SapphireTypes.ScoreProof memory _scoreProof
     )

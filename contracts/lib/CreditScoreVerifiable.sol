@@ -44,7 +44,7 @@ contract CreditScoreVerifiable {
                 "CreditScoreVerifiable: proof does not belong to the caller"
             );
         }
-        
+
         bool isProofPassed = _scoreProof.merkleProof.length > 0;
 
         if (_isScoreRequired) {
