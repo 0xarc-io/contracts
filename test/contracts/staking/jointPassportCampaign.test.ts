@@ -334,7 +334,7 @@ describe('JointPassportCampaign', () => {
 
         expect(await arcPassportCampaign.totalSupply()).to.eq(STAKE_AMOUNT);
 
-        await stake(user2, STAKE_AMOUNT, user1ScoreProof);
+        await stake(user2, STAKE_AMOUNT, user2ScoreProof);
 
         expect(await arcPassportCampaign.totalSupply()).to.eq(
           STAKE_AMOUNT.mul(2),
@@ -632,7 +632,7 @@ describe('JointPassportCampaign', () => {
     describe('#stake', () => {
       it('reverts if called without a valid credit score proof', async () => {
         await expect(stake(user1, STAKE_AMOUNT)).to.be.revertedWith(
-          'PassportCampaign: proof is required but it is not passed',
+          'CreditScoreVerifiable: proof is required but it is not passed',
         );
       });
 
@@ -658,6 +658,14 @@ describe('JointPassportCampaign', () => {
         await expect(
           user1PassportCampaign.stake(STAKE_AMOUNT.add(1), user1ScoreProof),
         ).to.be.revertedWith('TRANSFER_FROM_FAILED');
+      });
+
+      it(`reverts if trying to stake with a proof other than the user's`, async () => {
+        await expect(
+          stake(user1, STAKE_AMOUNT, user2ScoreProof),
+        ).to.be.revertedWith(
+          'CreditScoreVerifiable: proof does not belong to the caller',
+        );
       });
 
       it('should be able to stake', async () => {
@@ -788,7 +796,7 @@ describe('JointPassportCampaign', () => {
 
         await setTimestampTo(2);
 
-        await stake(user2, STAKE_AMOUNT, user1ScoreProof);
+        await stake(user2, STAKE_AMOUNT, user2ScoreProof);
 
         await setTimestampTo(3);
 
