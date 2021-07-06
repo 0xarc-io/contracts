@@ -592,11 +592,9 @@ contract JointPassportCampaign is CampaignStorage, CreditScoreVerifiable, Ownabl
     }
 
     function getReward(
-        address _user,
-        SapphireTypes.ScoreProof memory _scoreProof
+        address _user
     )
         public
-        checkScoreProof(_scoreProof, false)
         updateReward(_user, address(0))
     {
         Staker storage staker = stakers[_user];
@@ -665,7 +663,7 @@ contract JointPassportCampaign is CampaignStorage, CreditScoreVerifiable, Ownabl
     )
         public
     {
-        getReward(msg.sender, _scoreProof);
+        getReward(msg.sender);
         withdraw(balanceOf(msg.sender), _scoreProof);
     }
 

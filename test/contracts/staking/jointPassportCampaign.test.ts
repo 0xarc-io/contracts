@@ -4,13 +4,13 @@ import {
   MockSapphireCreditScore,
   TestToken,
   TestTokenFactory,
+  MockJointPassportCampaign,
+  MockJointPassportCampaignFactory,
 } from '@src/typings';
 import { deployTestToken } from '../deployers';
-import { BigNumber, BigNumberish, utils } from 'ethers';
+import { BigNumber, utils } from 'ethers';
 import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
-import { MockJointPassportCampaign } from '@src/typings/MockJointPassportCampaign';
-import { MockJointPassportCampaignFactory } from '@src/typings/MockJointPassportCampaignFactory';
 import {
   addSnapshotBeforeRestoreAfterEach,
   immediatelyUpdateMerkleRoot,
@@ -133,9 +133,7 @@ describe('JointPassportCampaign', () => {
     user: SignerWithAddress,
     scoreProof?: CreditScoreProof,
   ) {
-    await arcPassportCampaign
-      .connect(user)
-      .getReward(user.address, scoreProof ?? getEmptyScoreProof());
+    await arcPassportCampaign.connect(user).getReward(user.address);
   }
 
   function rewardBalanceOf(
@@ -742,7 +740,7 @@ describe('JointPassportCampaign', () => {
         await setTimestampTo(1);
 
         await expect(
-          user1PassportCampaign.getReward(user1.address, user1ScoreProof),
+          user1PassportCampaign.getReward(user1.address),
         ).to.be.revertedWith(
           'JointPassportCampaign: at least one reward token must be claimable',
         );
@@ -756,7 +754,7 @@ describe('JointPassportCampaign', () => {
 
         await setTimestampTo(1);
 
-        await user1PassportCampaign.getReward(user1.address, user1ScoreProof);
+        await user1PassportCampaign.getReward(user1.address);
 
         expect(await arcToken.balanceOf(user1.address)).to.eq(
           utils.parseEther('6'),
@@ -767,7 +765,7 @@ describe('JointPassportCampaign', () => {
 
         await setTimestampTo(2);
 
-        await user1PassportCampaign.getReward(user1.address, user1ScoreProof);
+        await user1PassportCampaign.getReward(user1.address);
 
         expect(await arcToken.balanceOf(user1.address)).to.eq(
           utils.parseEther('12'),
@@ -785,7 +783,7 @@ describe('JointPassportCampaign', () => {
 
         await setTimestampTo(1);
 
-        await user1PassportCampaign.getReward(user1.address, user1ScoreProof);
+        await user1PassportCampaign.getReward(user1.address);
 
         expect(await arcToken.balanceOf(user1.address)).to.eq(
           utils.parseEther('6'),
@@ -800,8 +798,8 @@ describe('JointPassportCampaign', () => {
 
         await setTimestampTo(3);
 
-        await user1PassportCampaign.getReward(user1.address, user1ScoreProof);
-        await user2PassportCampaign.getReward(user2.address, user2ScoreProof);
+        await user1PassportCampaign.getReward(user1.address);
+        await user2PassportCampaign.getReward(user2.address);
 
         expect(await arcToken.balanceOf(user1.address)).to.eq(
           utils.parseEther('15'),
@@ -826,7 +824,7 @@ describe('JointPassportCampaign', () => {
 
         await setTimestampTo(5);
 
-        await user1PassportCampaign.getReward(user1.address, user1ScoreProof);
+        await user1PassportCampaign.getReward(user1.address);
 
         expect(await arcToken.balanceOf(user1.address)).to.eq(
           utils.parseEther('30'),
@@ -855,7 +853,7 @@ describe('JointPassportCampaign', () => {
 
         await setTimestampTo(6);
 
-        await user1PassportCampaign.getReward(user1.address, user1ScoreProof);
+        await user1PassportCampaign.getReward(user1.address);
 
         expect(await arcToken.balanceOf(user1.address)).to.eq(
           utils.parseEther('39'),
@@ -872,7 +870,7 @@ describe('JointPassportCampaign', () => {
 
         // No rewards are claimable, expect revert
         await expect(
-          user1PassportCampaign.getReward(user1.address, user1ScoreProof),
+          user1PassportCampaign.getReward(user1.address),
         ).to.be.revertedWith(
           'JointPassportCampaign: at least one reward token must be claimable',
         );
@@ -887,7 +885,7 @@ describe('JointPassportCampaign', () => {
         await setTimestampTo(2);
 
         await expect(
-          user1PassportCampaign.getReward(user1.address, user1ScoreProof),
+          user1PassportCampaign.getReward(user1.address),
         ).to.be.revertedWith(
           'JointPassportCampaign: at least one reward token must be claimable',
         );
@@ -903,7 +901,7 @@ describe('JointPassportCampaign', () => {
 
         await setTimestampTo(3);
 
-        await user1PassportCampaign.getReward(user1.address, user1ScoreProof);
+        await user1PassportCampaign.getReward(user1.address);
 
         expect(await arcToken.balanceOf(user1.address)).to.eq(
           utils.parseEther('0'),
@@ -914,7 +912,7 @@ describe('JointPassportCampaign', () => {
 
         await setTimestampTo(4);
 
-        await user1PassportCampaign.getReward(user1.address, user1ScoreProof);
+        await user1PassportCampaign.getReward(user1.address);
 
         expect(await arcToken.balanceOf(user1.address)).to.eq(
           utils.parseEther('0'),
@@ -927,7 +925,7 @@ describe('JointPassportCampaign', () => {
 
         await setTimestampTo(5);
 
-        await user1PassportCampaign.getReward(user1.address, user1ScoreProof);
+        await user1PassportCampaign.getReward(user1.address);
 
         expect(await arcToken.balanceOf(user1.address)).to.eq(
           utils.parseEther('30'),
@@ -943,10 +941,7 @@ describe('JointPassportCampaign', () => {
 
         await setTimestampTo(1);
 
-        await user1PassportCampaign.getReward(
-          user1.address,
-          getEmptyScoreProof(),
-        );
+        await user1PassportCampaign.getReward(user1.address);
 
         const currentBalance = await arcToken.balanceOf(user1.address);
 
@@ -961,7 +956,7 @@ describe('JointPassportCampaign', () => {
 
         await setTimestampTo(1);
 
-        await user1PassportCampaign.getReward(user1.address, user1ScoreProof);
+        await user1PassportCampaign.getReward(user1.address);
 
         expect(await arcToken.balanceOf(user1.address)).to.eq(
           utils.parseEther('6'),
@@ -972,7 +967,7 @@ describe('JointPassportCampaign', () => {
 
         await setTimestampTo(2);
 
-        await user1PassportCampaign.getReward(user1.address, user1ScoreProof);
+        await user1PassportCampaign.getReward(user1.address);
 
         expect(await arcToken.balanceOf(user1.address)).to.eq(
           utils.parseEther('12'),
@@ -994,7 +989,7 @@ describe('JointPassportCampaign', () => {
 
         await setTimestampTo(4);
 
-        await user1PassportCampaign.getReward(user1.address, user1ScoreProof);
+        await user1PassportCampaign.getReward(user1.address);
 
         expect(await arcToken.balanceOf(user1.address)).to.eq(
           utils.parseEther('18'),
@@ -1010,7 +1005,7 @@ describe('JointPassportCampaign', () => {
 
         await setTimestampTo(6);
 
-        await user1PassportCampaign.getReward(user1.address, user1ScoreProof);
+        await user1PassportCampaign.getReward(user1.address);
 
         expect(await arcToken.balanceOf(user1.address)).to.eq(
           utils.parseEther('24'),
@@ -1564,10 +1559,7 @@ describe('JointPassportCampaign', () => {
 
       // no rewards are claimable -> revert
       await expect(
-        jointCampaignUserA.getReward(
-          users.userA.address,
-          creditScoreProofs.userA,
-        ),
+        jointCampaignUserA.getReward(users.userA.address),
       ).to.be.revertedWith(
         'JointPassportCampaign: at least one reward token must be claimable',
       );
@@ -1612,10 +1604,7 @@ describe('JointPassportCampaign', () => {
 
       await setTimestampTo(11);
 
-      await jointCampaignUserB.getReward(
-        users.userB.address,
-        creditScoreProofs.userB,
-      );
+      await jointCampaignUserB.getReward(users.userB.address);
 
       expect(await arcToken.balanceOf(users.userB.address)).to.eq(
         BigNumber.from(0),
@@ -1678,10 +1667,7 @@ describe('JointPassportCampaign', () => {
 
       // reverts because no rewards are claimable
       await expect(
-        jointCampaignUserA.getReward(
-          users.userA.address,
-          creditScoreProofs.userA,
-        ),
+        jointCampaignUserA.getReward(users.userA.address),
       ).to.be.revertedWith(
         'JointPassportCampaign: at least one reward token must be claimable',
       );
