@@ -38,12 +38,19 @@ contract CreditScoreVerifiable {
         SapphireTypes.ScoreProof memory _scoreProof,
         bool _isScoreRequired
     ) {
+        if (_scoreProof.account != address(0)) {
+            require (
+                msg.sender == _scoreProof.account,
+                "CreditScoreVerifiable: proof does not belong to the caller"
+            );
+        }
+        
         bool isProofPassed = _scoreProof.merkleProof.length > 0;
 
         if (_isScoreRequired) {
             require(
                 isProofPassed,
-                "JointPassportCampaign: proof is required but it is not passed"
+                "CreditScoreVerifiable: proof is required but it is not passed"
             );
         }
 
