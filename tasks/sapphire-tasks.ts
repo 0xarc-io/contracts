@@ -114,14 +114,12 @@ task(
 )
   .addOptionalParam('rootupdater', 'The merkle root updater')
   .addOptionalParam('pauseoperator', 'The pause operator')
-  .addOptionalParam('v', 'The version of the contract')
   .addFlag('implementationonly', 'Deploy only the implementation contract')
   .setAction(async (taskArgs, hre) => {
     const {
       rootupdater: rootUpdater,
       pauseoperator: pauseOperator,
       implementationonly: implementationOnly,
-      v: version,
     } = taskArgs;
     const {
       network,
@@ -137,12 +135,27 @@ task(
       networkDetails['users']['eoaOwner'] ||
       signer.address;
 
+    let version = 1;
+    try {
+      const existingCreditScoreImpl = loadContract({
+        name: 'SapphireCreditScore',
+        source: 'SapphireCreditScore',
+        network: network,
+      });
+      version = existingCreditScoreImpl.version + 1;
+      console.log(
+        yellow(
+          `SapphireCreditScore implementation found. Deploying a new version ${version}`,
+        ),
+      );
+    } catch (err) {}
+
     const creditScoreImpAddress = await deployContract(
       {
         name: 'SapphireCreditScore',
         source: 'SapphireCreditScore',
         data: new SapphireCreditScoreFactory(signer).getDeployTransaction(),
-        version: parseInt(version) || 1,
+        version,
         type: DeploymentType.global,
       },
       networkConfig,
