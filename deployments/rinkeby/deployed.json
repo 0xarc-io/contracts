@@ -547,7 +547,7 @@
     "version": 1,
     "type": "global",
     "group": ""
-  }, 
+  },
   {
     "name": "DefiPassport",
     "source": "DefiPassport",
@@ -567,11 +567,12 @@
     "version": 2,
     "type": "global",
     "group": ""
-  },{
+  },
+  {
     "name": "JointPassportCampaign",
     "source": "JointPassportCampaign",
-    "address": "0xA98e455B4C53cA01050EEF6CDdb82911E8E6fd37",
-    "txn": "0x39b3340bc334a90a2973ea20f52accfb8c8cd7c5424f9872b8dc6973abf4ed26",
+    "address": "0xeFadB9174C86bE1b97893f04f6a52659B63E9fDf",
+    "txn": "0xd7f57b25ed4427a785a8d7d26b3778dbc307e485bbd0b7025c1f7b12c5c4af61",
     "network": "rinkeby",
     "version": 1,
     "type": "staking",
