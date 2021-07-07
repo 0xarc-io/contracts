@@ -403,12 +403,7 @@ task('deploy-staking-joint-passport', 'Deploy a JointPassportCampaign')
   .setAction(async (taskArgs, hre) => {
     const { name } = taskArgs;
 
-    const {
-      network,
-      signer,
-      networkConfig,
-      networkDetails,
-    } = await loadDetails(taskArgs, hre);
+    const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
 
     await pruneDeployments(network, signer.provider);
 
