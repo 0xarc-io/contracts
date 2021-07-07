@@ -176,4 +176,15 @@ export default {
       );
     },
   },
+  JointPassportPool: {
+    source: 'JointPassportCampaign',
+    arcRewardsDistributor: '',
+    collabRewardsDistributor: '',
+    stakingToken: '0x4239228CC7DEB4dFdc8273bFF5C421af0B92DC8A',
+    collabRewardsToken: '0x1Cb19E2C7a2EFB90D4A2f9b370Fc691DBA873782',
+    daoAllocation: utils.parseEther('0.4'),
+    maxStakePerUser: 0,
+    creditScoreThreshold: 500,
+    rewardsDurationSeconds: 30 * 24 * 60 * 60,
+  },
 };

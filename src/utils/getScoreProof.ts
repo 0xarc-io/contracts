@@ -18,9 +18,9 @@ export function getScoreProof(
   };
 }
 
-export function getEmptyScoreProof() {
+export function getEmptyScoreProof(account?: string) {
   return {
-    account: constants.AddressZero,
+    account: account || constants.AddressZero,
     score: BigNumber.from(0),
     merkleProof: [],
   };

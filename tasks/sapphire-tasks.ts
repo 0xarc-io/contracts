@@ -24,6 +24,7 @@ import _ from 'lodash';
 import { MAX_UINT256 } from '@src/constants';
 import { constants } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import getUltimateOwner from './task-utils/getUltimateOwner';
 
 task(
   'deploy-sapphire-synth',
@@ -130,10 +131,7 @@ task(
 
     await pruneDeployments(network, signer.provider);
 
-    const ultimateOwner =
-      networkDetails['users']['multisigOwner'] ||
-      networkDetails['users']['eoaOwner'] ||
-      signer.address;
+    const ultimateOwner = getUltimateOwner(signer, networkDetails);
 
     let version = 1;
     try {
@@ -401,10 +399,7 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
       signer,
     );
 
-    const ultimateOwner =
-      networkDetails['users']['multisigOwner'] ||
-      networkDetails['users']['eoaOwner'] ||
-      signer.address;
+    const ultimateOwner = getUltimateOwner(signer, networkDetails);
 
     console.log(
       red(
