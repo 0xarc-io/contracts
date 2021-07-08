@@ -17,6 +17,7 @@
     "admin's",
     "chainlink",
     "collateralized",
+    "cooldown",
     "defi",
     "denormalize",
     "denormalized",
@@ -30,6 +31,9 @@
     "struct",
     "undercollateralized",
     "unpause",
+    "unstake",
+    "unstakes",
+    "unstaking",
     "untrusted"
   ]
 }
