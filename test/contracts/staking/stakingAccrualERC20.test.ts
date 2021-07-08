@@ -21,11 +21,19 @@ describe('StakingAccrualERC20', () => {
 
   describe('Admin functions', () => {
     describe('#init', () => {
+      it('reverts if called by non-admin')
+      
       it('reverts if called twice')
 
       it('reverts if the staking token is address 0')
 
       it('sets the staking token and the staking cooldown')
+    })
+    
+    describe('#setCooldownDuration', () => {
+      it('reverts if called by non-admin')
+
+      it('sets the cooldown duration')
     })
     
   })
@@ -44,37 +52,30 @@ describe('StakingAccrualERC20', () => {
     describe('#stake', () => {
       it('reverts if staking more than balance')
 
+      it(`reverts if the user's cooldown timestamp is > 0`)
+      
       it('stakes the staking token and mints an equal amount of stARCx')
     })
 
-    describe('#notifyUnstakeIntent', () => {
-      it('reverts if the unstaking cooldown is not elapsed')
-
+    describe('#startExitCooldown', () => {
       it('starts the unstaking cooldown')
-
-      it('starts the unstaking cooldown again if the previous one had elapsed')
+      
+      it('reverts if the unstaking cooldown is > 0')
     })
     
 
-    describe('#unstake', () => {
-      it('reverts if the unstaking cooldown is not elapsed')
-      
-      it('reverts if trying to unstake more than the balance of stARCx')
-
-      it('unstakes their deposit amount')
-
-      it('unstakes more if more fees were added by the admin')
-
-      it('unstakes less than original deposit if admin removed some tokens')
+    describe('#exit', () => {
+      it('reverts if the cooldown timestamp is not passed')
       
       /**
-       * TODO: what happens if:
-       * 1. user stakes
-       * 2. user notifies unstake intent
-       * 3. user unstakes after the cooldown
-       * 4. User stakes again
-       * 5. Can they now unstake at will?
+       * It reduces the user's balance to 0, burns the respective stARCx amount 
+       * from the user and returns the original ARCx balance
        */
+      it(`exits from the fund`)
+
+      it('exits with MORE ARCx than initially if the contract has accumulated more tokens')
+
+      it('exits with LESS ARCx than initially if the admnin had removed tokens')
     })
 
     describe('#claimFees', () => {
@@ -82,7 +83,7 @@ describe('StakingAccrualERC20', () => {
     })
     
     describe('#claimFor', () => {
-      it('reverts if the amount to claim is 0 or negative')
+      it('does not claim anything if the amount to claim is 0 or negative')
 
       it('claims the extra fees to the user')
 
