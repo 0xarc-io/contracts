@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity 0.5.16;
+pragma experimental ABIEncoderV2;
+
+import {Adminable} from "../lib/Adminable.sol";
+import {Initializable} from "../lib/Initializable.sol";
+import {Address} from "../lib/Address.sol";
 
 import {BaseERC20} from "../token/BaseERC20.sol";
 
@@ -13,15 +18,42 @@ import {BaseERC20} from "../token/BaseERC20.sol";
  *         intent, which will trigger a cooldown after which they will be able
  *         to reclaim their share.
  */
-contract StakingAccrualERC20 is BaseERC20 {
+contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
 
-    constructor (
-        string memory name,
-        string memory symbol,
-        uint8 decimals
-    )
+    /* ========== Libraries ========== */
+
+    using Address for address;
+
+    /* ========== Variables ========== */
+
+    uint8 private _decimals;
+
+    /* ========== Constructor (ignore) ========== */
+
+    constructor ()
         public
-        BaseERC20(name, symbol, decimals)
+        BaseERC20("", "", 18)
     {}
 
+    /* ========== Restricted Functions ========== */
+
+    function init(
+        string calldata __name,
+        string calldata __symbol,
+        uint8 __decimals,
+        address _stakingToken
+    )
+        external
+        onlyAdmin
+        initializer
+    {
+        _name = __name;
+        _symbol = __symbol;
+        _decimals = __decimals;
+
+        require (
+            _stakingToken.isContract(),
+            "StakingAccrualERC20: staking token is not a contract"
+        );
+    }
 }
