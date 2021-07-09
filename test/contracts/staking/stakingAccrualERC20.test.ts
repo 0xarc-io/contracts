@@ -1,44 +1,45 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { BASE } from '@src/constants';
-import {
-  ArcProxyFactory,
-  StakingAccrualERC20,
-  StakingAccrualERC20Factory,
-  TestToken,
-  TestTokenFactory,
-} from '@src/typings';
+import { ArcProxyFactory, TestToken, TestTokenFactory } from '@src/typings';
+import { MockStakingAccrualERC20 } from '@src/typings/MockStakingAccrualERC20';
+import { MockStakingAccrualERC20Factory } from '@src/typings/MockStakingAccrualERC20Factory';
+import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
-import { BigNumber, constants, utils } from 'ethers';
+import { constants, utils } from 'ethers';
 import { ethers } from 'hardhat';
-import { constant } from 'lodash';
 
 const STAKE_AMOUNT = utils.parseEther('100');
 const COOLDOWN_DURATION = 60;
 
-describe('StakingAccrualERC20', () => {
-  let starcx: StakingAccrualERC20;
+describe('MockStakingAccrualERC20', () => {
+  let starcx: MockStakingAccrualERC20;
   let stakingToken: TestToken;
 
   let admin: SignerWithAddress;
   let user1: SignerWithAddress;
   let user2: SignerWithAddress;
 
-  let user1starcx: StakingAccrualERC20;
-  let user2starcx: StakingAccrualERC20;
+  let user1starcx: MockStakingAccrualERC20;
+  let user2starcx: MockStakingAccrualERC20;
+
+  async function waitCooldown() {
+    const currentTimestamp = await starcx.currentTimestamp();
+    await starcx.setCurrentTimestamp(currentTimestamp.add(COOLDOWN_DURATION));
+  }
 
   async function _deployContract() {
     if (starcx) {
       throw Error('Contract already set up');
     }
 
-    const starcxImpl = await new StakingAccrualERC20Factory(admin).deploy();
+    const starcxImpl = await new MockStakingAccrualERC20Factory(admin).deploy();
     const proxy = await new ArcProxyFactory(admin).deploy(
       starcxImpl.address,
       admin.address,
       [],
     );
 
-    starcx = StakingAccrualERC20Factory.connect(proxy.address, admin);
+    starcx = MockStakingAccrualERC20Factory.connect(proxy.address, admin);
     await starcx.init(
       'stARCx',
       'stARCx',
@@ -68,6 +69,8 @@ describe('StakingAccrualERC20', () => {
     await stakingToken.connect(user2).approve(starcx.address, STAKE_AMOUNT);
   });
 
+  addSnapshotBeforeRestoreAfterEach();
+
   describe('Admin functions', () => {
     describe('#init', () => {
       it('reverts if called by non-admin', async () => {
@@ -95,14 +98,16 @@ describe('StakingAccrualERC20', () => {
       });
 
       it('reverts if the staking token is address 0', async () => {
-        const starcxImpl = await new StakingAccrualERC20Factory(admin).deploy();
+        const starcxImpl = await new MockStakingAccrualERC20Factory(
+          admin,
+        ).deploy();
         const proxy = await new ArcProxyFactory(admin).deploy(
           starcxImpl.address,
           admin.address,
           [],
         );
 
-        const starcxProxy = StakingAccrualERC20Factory.connect(
+        const starcxProxy = MockStakingAccrualERC20Factory.connect(
           proxy.address,
           admin,
         );
@@ -136,28 +141,52 @@ describe('StakingAccrualERC20', () => {
       });
     });
 
-    describe('#setCooldownDuration', () => {
+    describe('#setExitCooldownDuration', () => {
       it('reverts if called by non-admin', async () => {
-        await expect(user1starcx.setCooldownDuration(21)).to.be.revertedWith(
-          'Adminable: caller is not admin',
-        );
+        await expect(
+          user1starcx.setExitCooldownDuration(21),
+        ).to.be.revertedWith('Adminable: caller is not admin');
       });
 
       it('sets the cooldown duration', async () => {
-        expect(await starcx.cooldownDuration()).to.eq(0);
+        expect(await starcx.exitCooldownDuration()).to.eq(COOLDOWN_DURATION);
 
-        await starcx.setCooldownDuration(21);
+        await starcx.setExitCooldownDuration(21);
 
-        expect(await starcx.cooldownDuration()).to.eq(21);
+        expect(await starcx.exitCooldownDuration()).to.eq(21);
       });
     });
 
     describe('#recoverTokens', () => {
-      it('reverts if called by non-admin');
+      beforeEach(async () => {
+        await user1starcx.stake(STAKE_AMOUNT);
+      });
 
-      it('reverts if trying to recover more tokens than the supply');
+      it('reverts if called by non-admin', async () => {
+        await expect(
+          user1starcx.recoverTokens(STAKE_AMOUNT.div(2)),
+        ).to.be.revertedWith('Adminable: caller is not admin');
+      });
 
-      it('recovers the staked tokens');
+      it('reverts if trying to recover more tokens than the supply', async () => {
+        await expect(
+          starcx.recoverTokens(STAKE_AMOUNT.add(1)),
+        ).to.be.revertedWith(
+          'StakingAccrualERC20: cannot recover more than the balance',
+        );
+      });
+
+      it('recovers the staked tokens and reduces the supply', async () => {
+        expect(await stakingToken.balanceOf(admin.address)).to.eq(0);
+
+        await starcx.recoverTokens(STAKE_AMOUNT.div(2));
+        expect(await stakingToken.balanceOf(admin.address)).to.eq(
+          STAKE_AMOUNT.div(2),
+        );
+
+        await starcx.recoverTokens(STAKE_AMOUNT.div(2));
+        expect(await stakingToken.balanceOf(admin.address)).to.eq(STAKE_AMOUNT);
+      });
     });
   });
 
@@ -165,11 +194,13 @@ describe('StakingAccrualERC20', () => {
     describe('#stake', () => {
       it('reverts if staking more than balance', async () => {
         await expect(user1starcx.stake(STAKE_AMOUNT.add(1))).to.be.revertedWith(
-          'StakingAccrualERC20: cannot stake more than balance',
+          'SafeERC20: TRANSFER_FROM_FAILED',
         );
       });
 
       it(`reverts if the user's cooldown timestamp is > 0`, async () => {
+        await user1starcx.stake(STAKE_AMOUNT);
+
         await user1starcx.startExitCooldown();
 
         await expect(user1starcx.stake(STAKE_AMOUNT)).to.be.revertedWith(
@@ -197,14 +228,16 @@ describe('StakingAccrualERC20', () => {
       });
 
       it('starts the exit cooldown', async () => {
-        expect(await starcx.exitCooldowns(user1.address)).to.eq(0);
+        let staker = await starcx.stakers(user1.address);
+        expect(staker.cooldownTimestamp).to.eq(0);
 
         await starcx.setCurrentTimestamp(10);
         await user1starcx.stake(STAKE_AMOUNT);
 
         await user1starcx.startExitCooldown();
 
-        expect(await starcx.exitCooldowns(user1.address)).to.eq(10);
+        staker = await starcx.stakers(user1.address);
+        expect(staker.cooldownTimestamp).to.eq(COOLDOWN_DURATION + 10);
       });
 
       it('reverts if the exit cooldown is > 0', async () => {
@@ -242,17 +275,17 @@ describe('StakingAccrualERC20', () => {
         await user1starcx.stake(STAKE_AMOUNT);
         await user1starcx.startExitCooldown();
 
-        await user1starcx.setTimestamp(COOLDOWN_DURATION);
+        await waitCooldown();
 
-        expect(await starcx.exitCooldowns(user1.address)).to.eq(
-          COOLDOWN_DURATION,
-        );
+        let staker = await starcx.stakers(user1.address);
+        expect(staker.cooldownTimestamp).to.eq(COOLDOWN_DURATION);
         expect(await starcx.balanceOf(user1.address)).to.eq(STAKE_AMOUNT);
         expect(await stakingToken.balanceOf(user1.address)).to.eq(0);
 
         await user1starcx.exit();
 
-        expect(await starcx.exitCooldowns(user1.address)).to.eq(0);
+        staker = await starcx.stakers(user1.address);
+        expect(staker.cooldownTimestamp).to.eq(0);
         expect(await starcx.balanceOf(user1.address)).to.eq(0);
         expect(await stakingToken.balanceOf(user1.address)).to.eq(STAKE_AMOUNT);
       });
@@ -262,6 +295,7 @@ describe('StakingAccrualERC20', () => {
         await user2starcx.stake(STAKE_AMOUNT);
 
         await user1starcx.startExitCooldown();
+        await waitCooldown();
 
         await stakingToken.mintShare(starcx.address, STAKE_AMOUNT);
 
@@ -269,7 +303,7 @@ describe('StakingAccrualERC20', () => {
 
         expect(await starcx.balanceOf(user1.address)).to.eq(0);
         expect(await stakingToken.balanceOf(user1.address)).to.eq(
-          STAKE_AMOUNT.mul(1.5),
+          STAKE_AMOUNT.mul(utils.parseEther('1.5')).div(BASE),
         );
       });
 
@@ -278,12 +312,63 @@ describe('StakingAccrualERC20', () => {
         await user2starcx.stake(STAKE_AMOUNT);
 
         await user1starcx.startExitCooldown();
+        await waitCooldown();
 
         await starcx.recoverTokens(STAKE_AMOUNT);
 
         await user1starcx.exit();
 
         expect(await starcx.balanceOf(user1.address)).to.eq(0);
+        expect(await stakingToken.balanceOf(user1.address)).to.eq(
+          STAKE_AMOUNT.div(2),
+        );
+      });
+    });
+
+    describe('#claimFor', () => {
+      it('does not claim anything if the amount to claim is 0 or negative', async () => {
+        await user1starcx.stake(STAKE_AMOUNT);
+
+        expect(await stakingToken.balanceOf(user1.address)).to.eq(0);
+        await expect(user1starcx.claimFor(user1.address)).to.be.revertedWith(
+          'StakingAccrualERC20: no tokens available to claim',
+        );
+
+        await starcx.recoverTokens(STAKE_AMOUNT);
+        await expect(user1starcx.claimFor(user1.address)).to.be.revertedWith(
+          'StakingAccrualERC20: no tokens available to claim',
+        );
+      });
+
+      it('calls updateFees()', async () => {
+        await user1starcx.stake(STAKE_AMOUNT);
+
+        expect(await starcx.supplyIndex(user1.address)).to.eq(
+          utils.parseEther('1'),
+        );
+        expect(await starcx.accruedIndex()).to.eq(utils.parseEther('1'));
+        expect(await starcx.accruedBalance()).to.eq(STAKE_AMOUNT);
+
+        await stakingToken.mintShare(starcx.address, STAKE_AMOUNT);
+        await user2starcx.claimFor(user1.address);
+
+        expect(await starcx.supplyIndex(user1.address)).to.eq(
+          utils.parseEther('2'),
+        );
+        expect(await starcx.accruedIndex()).to.eq(utils.parseEther('2'));
+        expect(await starcx.accruedBalance()).to.eq(STAKE_AMOUNT);
+      });
+
+      it('claims fees for the user', async () => {
+        await user1starcx.stake(STAKE_AMOUNT);
+        await user2starcx.stake(STAKE_AMOUNT);
+
+        await stakingToken.mintShare(starcx.address, STAKE_AMOUNT);
+
+        expect(await stakingToken.balanceOf(user1.address)).to.eq(0);
+
+        await user1starcx.claimFor(user1.address);
+
         expect(await stakingToken.balanceOf(user1.address)).to.eq(
           STAKE_AMOUNT.div(2),
         );
@@ -304,61 +389,6 @@ describe('StakingAccrualERC20', () => {
         expect(await stakingToken.balanceOf(user1.address)).to.eq(
           STAKE_AMOUNT.div(2),
         );
-      });
-    });
-
-    describe('#claimFor', () => {
-      it('does not claim anything if the amount to claim is 0 or negative', async () => {
-        await user1starcx.stake(STAKE_AMOUNT);
-
-        expect(await stakingToken.balanceOf(user1.address)).to.eq(0);
-
-        await user1starcx.claimFor(user1.address);
-
-        expect(await stakingToken.balanceOf(user1.address)).to.eq(0);
-
-        await starcx.recoverTokens(STAKE_AMOUNT);
-
-        await user1starcx.claimFor(user1.address);
-
-        expect(await stakingToken.balanceOf(user1.address)).to.eq(0);
-      });
-
-      it('claims fees for the caller', async () => {
-        await user1starcx.stake(STAKE_AMOUNT);
-        await user2starcx.stake(STAKE_AMOUNT);
-
-        await stakingToken.mintShare(starcx.address, STAKE_AMOUNT);
-
-        expect(await stakingToken.balanceOf(user1.address)).to.eq(0);
-
-        await user1starcx.claimFees();
-
-        expect(await stakingToken.balanceOf(user1.address)).to.eq(
-          STAKE_AMOUNT.div(2),
-        );
-      });
-
-      it('calls updateFees()', async () => {
-        await user1starcx.stake(STAKE_AMOUNT);
-
-        await starcx.updateFees();
-
-        await stakingToken.mintShare(starcx.address, STAKE_AMOUNT);
-
-        expect(await starcx.supplyIndex(user1.address)).to.eq(0);
-        expect(await starcx.accruedIndex()).to.eq(utils.parseEther('1'));
-        expect(await starcx.accruedBalance(user1.address)).to.eq(STAKE_AMOUNT);
-
-        await user2starcx.claimFor(user1.address);
-
-        expect(await starcx.supplyIndex(user1.address)).to.eq(
-          utils.parseEther('2'),
-        );
-        expect(await starcx.accruedIndex(user1.address)).to.eq(
-          utils.parseEther('2'),
-        );
-        expect(await starcx.accruedBalance()).to.eq(STAKE_AMOUNT);
       });
     });
 
@@ -386,43 +416,30 @@ describe('StakingAccrualERC20', () => {
         await starcx.updateFees();
 
         expect(await starcx.accruedIndex()).to.eq(utils.parseEther('2'));
-        expect(await starcx.accruedBalance()).to.eq(STAKE_AMOUNT.mul(2));
+        expect(await starcx.accruedBalance()).to.eq(STAKE_AMOUNT.mul(3));
       });
     });
   });
 
   describe('View functions', () => {
-    describe('#getUserBalance', () => {
-      it("returns the user's staked balance", async () => {
-        expect(await starcx.getUserBalance()).to.eq(0);
-
-        await user1starcx.stake(STAKE_AMOUNT);
-
-        expect(await starcx.getUserBalance()).to.eq(STAKE_AMOUNT);
-      });
-    });
-
-    describe('#getTotalBalance', () => {
+    describe('#supply()', () => {
       it('returns the total amount staked', async () => {
-        expect(await starcx.getTotalBalance()).to.eq(0);
+        expect(await starcx.supply()).to.eq(0);
 
         await user1starcx.stake(STAKE_AMOUNT);
-        expect(await starcx.getTotalBalance()).to.eq(STAKE_AMOUNT);
+        expect(await starcx.supply()).to.eq(STAKE_AMOUNT);
 
         await user2starcx.stake(STAKE_AMOUNT);
-        expect(await starcx.getTotalBalance()).to.eq(STAKE_AMOUNT.mul(2));
+        expect(await starcx.supply()).to.eq(STAKE_AMOUNT.mul(2));
 
         await stakingToken.mintShare(starcx.address, STAKE_AMOUNT);
-        expect(await starcx.getTotalBalance()).to.eq(STAKE_AMOUNT.mul(2));
+        expect(await starcx.supply()).to.eq(STAKE_AMOUNT.mul(2));
 
         await user1starcx.startExitCooldown();
         await starcx.setCurrentTimestamp(COOLDOWN_DURATION);
         await user1starcx.exit();
 
-        expect(await starcx.getTotalBalance()).to.eq(STAKE_AMOUNT);
-
-        await user2starcx.claimFees();
-        expect(await starcx.getTotalBalance()).to.eq(STAKE_AMOUNT);
+        expect(await starcx.supply()).to.eq(STAKE_AMOUNT);
       });
     });
   });
