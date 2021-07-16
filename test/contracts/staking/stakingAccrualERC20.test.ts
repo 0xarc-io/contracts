@@ -11,7 +11,7 @@ import { ethers } from 'hardhat';
 const STAKE_AMOUNT = utils.parseEther('100');
 const COOLDOWN_DURATION = 60;
 
-describe('MockStakingAccrualERC20', () => {
+describe.only('MockStakingAccrualERC20', () => {
   let starcx: MockStakingAccrualERC20;
   let stakingToken: TestToken;
 
@@ -343,20 +343,14 @@ describe('MockStakingAccrualERC20', () => {
       it('calls updateFees()', async () => {
         await user1starcx.stake(STAKE_AMOUNT);
 
-        expect(await starcx.supplyIndex(user1.address)).to.eq(
-          utils.parseEther('1'),
-        );
-        expect(await starcx.accruedIndex()).to.eq(utils.parseEther('1'));
+        expect(await starcx.getExchangeRate()).to.eq(utils.parseEther('1'));
         expect(await starcx.accruedBalance()).to.eq(STAKE_AMOUNT);
 
         await stakingToken.mintShare(starcx.address, STAKE_AMOUNT);
         await user2starcx.claimFor(user1.address);
 
-        expect(await starcx.supplyIndex(user1.address)).to.eq(
-          utils.parseEther('2'),
-        );
-        expect(await starcx.accruedIndex()).to.eq(utils.parseEther('2'));
-        expect(await starcx.accruedBalance()).to.eq(STAKE_AMOUNT);
+        expect(await starcx.getExchangeRate()).to.eq(utils.parseEther('2'));
+        expect(await starcx.totalSupply()).to.eq(STAKE_AMOUNT);
       });
 
       it('claims fees for the user', async () => {
@@ -392,54 +386,54 @@ describe('MockStakingAccrualERC20', () => {
       });
     });
 
-    describe('#updateFees', () => {
+    describe('#exchangeRate', () => {
       it('updates the accrued index and accrued balance', async () => {
-        await starcx.updateFees();
+        await starcx.getExchangeRate();
 
-        expect(await starcx.accruedIndex()).to.eq(0);
-        expect(await starcx.accruedBalance()).to.eq(0);
+        expect(await starcx.exchangeRate()).to.eq(0);
+        expect(await starcx.totalSupply()).to.eq(0);
 
         await user1starcx.stake(STAKE_AMOUNT);
 
-        await starcx.updateFees();
+        await starcx.getExchangeRate();
 
-        expect(await starcx.accruedIndex()).to.eq(utils.parseEther('1'));
-        expect(await starcx.accruedBalance()).to.eq(STAKE_AMOUNT);
+        expect(await starcx.exchangeRate()).to.eq(utils.parseEther('1'));
+        expect(await starcx.totalSupply()).to.eq(STAKE_AMOUNT);
 
         await user2starcx.stake(STAKE_AMOUNT);
-        await starcx.updateFees();
+        await starcx.getExchangeRate();
 
-        expect(await starcx.accruedIndex()).to.eq(utils.parseEther('1.5'));
-        expect(await starcx.accruedBalance()).to.eq(STAKE_AMOUNT.mul(2));
+        expect(await starcx.exchangeRate()).to.eq(utils.parseEther('1'));
+        expect(await starcx.totalSupply()).to.eq(STAKE_AMOUNT.mul(2));
 
         await stakingToken.mintShare(starcx.address, STAKE_AMOUNT);
-        await starcx.updateFees();
+        await starcx.getExchangeRate();
 
-        expect(await starcx.accruedIndex()).to.eq(utils.parseEther('2'));
+        expect(await starcx.exchangeRate()).to.eq(utils.parseEther('2'));
         expect(await starcx.accruedBalance()).to.eq(STAKE_AMOUNT.mul(3));
       });
     });
   });
 
   describe('View functions', () => {
-    describe('#supply()', () => {
+    describe('#totalSupply()', () => {
       it('returns the total amount staked', async () => {
-        expect(await starcx.supply()).to.eq(0);
+        expect(await starcx.totalSupply()).to.eq(0);
 
         await user1starcx.stake(STAKE_AMOUNT);
-        expect(await starcx.supply()).to.eq(STAKE_AMOUNT);
+        expect(await starcx.totalSupply()).to.eq(STAKE_AMOUNT);
 
         await user2starcx.stake(STAKE_AMOUNT);
-        expect(await starcx.supply()).to.eq(STAKE_AMOUNT.mul(2));
+        expect(await starcx.totalSupply()).to.eq(STAKE_AMOUNT.mul(2));
 
         await stakingToken.mintShare(starcx.address, STAKE_AMOUNT);
-        expect(await starcx.supply()).to.eq(STAKE_AMOUNT.mul(2));
+        expect(await starcx.totalSupply()).to.eq(STAKE_AMOUNT.mul(2));
 
         await user1starcx.startExitCooldown();
         await starcx.setCurrentTimestamp(COOLDOWN_DURATION);
         await user1starcx.exit();
 
-        expect(await starcx.supply()).to.eq(STAKE_AMOUNT);
+        expect(await starcx.totalSupply()).to.eq(STAKE_AMOUNT);
       });
     });
   });

@@ -52,13 +52,6 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
 
     mapping (address => Staker) public stakers;
 
-    uint256 public supply;
-
-    mapping(address => uint256) public supplyIndex;
-
-    uint256 public accruedIndex = 0; // previously accumulated index
-    uint256 public accruedBalance = 0; // previous calculated balance
-
     /* ========== Events ========== */
 
     event ExitCooldownDurationSet(uint256 _duration);
@@ -126,7 +119,8 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
     }
 
     /**
-     * @notice Recovers tokens from the supply
+     * @notice Recovers tokens from the totalShares
+
      */
     function recoverTokens(
         uint256 _amount
@@ -161,57 +155,6 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
 
     /* ========== Mutative Functions ========== */
 
-    function updateFees() public
-    {
-        if (supply == 0) {
-            return;
-        }
-
-        uint256 contractBalance = stakingToken.balanceOf(address(this)); // 100
-        console.log(
-            "contractBalance: %s",
-            contractBalance
-        );
-
-        if (contractBalance == 0) {
-            return;
-        }
-
-        bool isNegativeDifference = accruedBalance > contractBalance; //false
-        console.log(
-            "isNegativeDifference: %s",
-            isNegativeDifference
-        );
-        uint256 difference;
-
-        if (isNegativeDifference) {
-            difference = accruedBalance.sub(contractBalance);
-        } else {
-            difference = contractBalance.sub(accruedBalance); // 100
-        }
-
-        if (difference == 0) {
-            return;
-        }
-
-        // Use the difference to calculate a ratio
-        uint256 ratio = difference.mul(1e18).div(supply); // 1
-
-        if (ratio == 0) {
-            return;
-        }
-
-        // Update the index with the ratio index
-        if (isNegativeDifference) {
-            accruedIndex = accruedIndex.sub(ratio);
-        } else {
-            accruedIndex = accruedIndex.add(ratio); // 1
-        }
-
-        // Update the accrued balance
-        accruedBalance = contractBalance; // 100
-    }
-
     function stake(
         uint256 _amount
     )
@@ -225,15 +168,9 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
         );
 
         staker.balance = staker.balance.add(_amount);
-        supply = supply.add(_amount);
         _mint(msg.sender, _amount);
 
         stakingToken.safeTransferFrom(msg.sender, address(this), _amount);
-
-        updateFees();
-
-        // Update the user's index to the current one
-        supplyIndex[msg.sender] = accruedIndex;
 
         emit Staked(msg.sender, _amount);
     }
@@ -289,66 +226,6 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
      */
     function exit() external
     {
-        Staker storage staker = stakers[msg.sender];
-
-        require (
-            staker.balance > 0,
-            "StakingAccrualERC20: user has 0 balance"
-        );
-
-        require (
-            staker.cooldownTimestamp <= currentTimestamp(),
-            "StakingAccrualERC20: exit cooldown not elapsed"
-        );
-
-        updateFees();
-
-        // Store the existing user's index before updating it
-        uint256 existingIndex = supplyIndex[msg.sender];
-
-        // Update the user's index to the current one
-        supplyIndex[msg.sender] = accruedIndex;
-
-        /**
-         * Calculate the difference between the current index and the old one.
-         * The difference here is what the user will be able to claim against.
-         *
-         * Note: the difference can be negative so the user can get less funds
-         * than what they initially deposited
-         */
-        uint256 delta;
-        uint256 share;
-        bool negativeDelta = existingIndex > accruedIndex;
-
-        if (negativeDelta) {
-            delta = existingIndex.sub(accruedIndex);
-            share = BASE
-                .sub(delta)
-                .mul(staker.balance)
-                .div(BASE);
-        } else {
-            delta = accruedIndex.sub(existingIndex);
-            share = BASE
-                .add(delta)
-                .mul(staker.balance)
-                .div(BASE);
-        }
-
-        _burn(
-            msg.sender,
-            staker.balance
-        );
-
-        supply = supply.sub(staker.balance);
-        staker.balance = 0;
-        staker.cooldownTimestamp = 0;
-
-        emit Exited(msg.sender, share);
-
-        stakingToken.safeTransfer(
-            msg.sender,
-            share
-        );
     }
 
     function claimFees() external
@@ -361,40 +238,18 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
     )
         public
     {
-        updateFees();
+    }
 
-        Staker memory staker = stakers[_user];
+    function getExchangeRate() public view returns (uint256) 
+    {
+        return (stakingToken.balanceOf(address(this)) * 1e18) / totalSupply();
+    }
 
-        if (staker.balance == 0) {
-            supplyIndex[_user] = accruedIndex;
-            return;
-        }
+    function toARCX(uint256 stArcxAmount) public view returns (uint256 arcxAmount) {
+        arcxAmount = (stArcxAmount * stakingToken.balanceOf(address(this))) / totalSupply();
+    }
 
-        // Store the existing user's index before updating it
-        uint256 existingIndex = supplyIndex[_user];
-
-        require (
-            accruedIndex > existingIndex,
-            "StakingAccrualERC20: no tokens available to claim"
-        );
-
-        // Update the user's index to the current one
-        supplyIndex[_user] = accruedIndex;
-
-        // Calculate the difference between the current index and the old one
-        // The difference here is what the user will be able to claim against
-        uint256 delta = accruedIndex.sub(existingIndex);
-
-        // Get the user's current balance and multiply with their index delta
-        uint256 share = staker.balance.mul(delta).div(1e18);
-
-        // Update the accrued balance
-        accruedBalance = stakingToken.balanceOf(address(this))
-            .sub(share);
-
-        emit TokensClaimed(_user, share);
-
-        // Transfer the tokens to the user
-        stakingToken.safeTransfer(_user, share);
+    function toSTARCX(uint256 arcxAmount) public view returns (uint256 stArcxAmount) {
+        stArcxAmount = (arcxAmount * totalSupply()) / stakingToken.balanceOf(address(this));
     }
 }
