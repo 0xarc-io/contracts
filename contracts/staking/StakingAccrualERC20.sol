@@ -167,9 +167,20 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
             "StakingAccrualERC20: cannot stake during cooldown period"
         );
 
-        staker.balance = staker.balance.add(_amount);
-        _mint(msg.sender, _amount);
-
+        // Gets the amount of the staking token locked in the contract
+        uint256 totalStakingToken = stakingToken.balanceOf(address(this));
+        // Gets the amount of the staked token in existence
+        uint256 totalShares = totalSupply();
+        // If no the staked token exists, mint it 1:1 to the amount put in
+        if (totalShares == 0 || totalStakingToken == 0) {
+            _mint(msg.sender, _amount);
+        } 
+        // Calculate and mint the amount of stToken the Token is worth. The ratio will change overtime, as stToken is burned/minted and Token deposited + gained from fees / withdrawn.
+        else {
+            uint256 what = _amount.mul(totalShares).div(totalStakingToken);
+            _mint(msg.sender, what);
+        }
+        // Lock the staking token in the contract
         stakingToken.safeTransferFrom(msg.sender, address(this), _amount);
 
         emit Staked(msg.sender, _amount);
@@ -205,7 +216,7 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
         Staker storage staker = stakers[msg.sender];
 
         require (
-            staker.balance > 0,
+            balanceOf(msg.sender) > 0,
             "StakingAccrualERC20: user has 0 balance"
         );
 
@@ -240,16 +251,15 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
     {
     }
 
-    function getExchangeRate() public view returns (uint256) 
-    {
-        return (stakingToken.balanceOf(address(this)) * 1e18) / totalSupply();
+    function getExchangeRate() public view returns (uint256) {
+        return stakingToken.balanceOf(address(this)).mul(1e18).div(totalSupply());
     }
 
-    function toARCX(uint256 stArcxAmount) public view returns (uint256 arcxAmount) {
-        arcxAmount = (stArcxAmount * stakingToken.balanceOf(address(this))) / totalSupply();
+    function toStakingToken(uint256 stTokenAmount) public view returns (uint256 tokenAmount) {
+        tokenAmount = stTokenAmount.mul(stakingToken.balanceOf(address(this))).div(totalSupply());
     }
 
-    function toSTARCX(uint256 arcxAmount) public view returns (uint256 stArcxAmount) {
-        stArcxAmount = (arcxAmount * totalSupply()) / stakingToken.balanceOf(address(this));
+    function toStakedToken(uint256 token) public view returns (uint256 stToken) {
+        stToken = token.mul(totalSupply()).div(stakingToken.balanceOf(address(this)));
     }
 }
