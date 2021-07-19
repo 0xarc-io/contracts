@@ -57,8 +57,6 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
 
     event Exited(address indexed _user, uint256 _amount);
 
-    event TokensClaimed(address indexed _user, uint256 _amount);
-
     /* ========== Constructor (ignore) ========== */
 
     constructor ()
@@ -250,18 +248,6 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
         cooldowns[msg.sender] = 0;
         emit Exited(msg.sender, what);
         stakingToken.safeTransfer(msg.sender, what);
-    }
-
-    function claimFees() external
-    {
-        claimFor(msg.sender);
-    }
-
-    function claimFor(
-        address _user
-    )
-        public
-    {
     }
 
     function getExchangeRate() public view returns (uint256) {

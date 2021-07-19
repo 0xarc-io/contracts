@@ -325,67 +325,6 @@ describe.only('MockStakingAccrualERC20', () => {
       });
     });
 
-    describe('#claimFor', () => {
-      it('does not claim anything if the amount to claim is 0 or negative', async () => {
-        await user1starcx.stake(STAKE_AMOUNT);
-
-        expect(await stakingToken.balanceOf(user1.address)).to.eq(0);
-        await expect(user1starcx.claimFor(user1.address)).to.be.revertedWith(
-          'StakingAccrualERC20: no tokens available to claim',
-        );
-
-        await starcx.recoverTokens(STAKE_AMOUNT);
-        await expect(user1starcx.claimFor(user1.address)).to.be.revertedWith(
-          'StakingAccrualERC20: no tokens available to claim',
-        );
-      });
-
-      it('updates exchange rate', async () => {
-        await user1starcx.stake(STAKE_AMOUNT);
-
-        expect(await starcx.getExchangeRate()).to.eq(utils.parseEther('1'));
-        expect(await starcx.totalSupply()).to.eq(STAKE_AMOUNT);
-
-        await stakingToken.mintShare(starcx.address, STAKE_AMOUNT);
-        await user2starcx.claimFor(user1.address);
-
-        expect(await starcx.getExchangeRate()).to.eq(utils.parseEther('2'));
-        expect(await starcx.totalSupply()).to.eq(STAKE_AMOUNT);
-      });
-
-      it('claims fees for the user', async () => {
-        await user1starcx.stake(STAKE_AMOUNT);
-        await user2starcx.stake(STAKE_AMOUNT);
-
-        await stakingToken.mintShare(starcx.address, STAKE_AMOUNT);
-
-        expect(await stakingToken.balanceOf(user1.address)).to.eq(0);
-
-        await user1starcx.claimFor(user1.address);
-
-        expect(await stakingToken.balanceOf(user1.address)).to.eq(
-          STAKE_AMOUNT.div(2),
-        );
-      });
-    });
-
-    describe('#claimFees', () => {
-      it('claims fees for the caller', async () => {
-        await user1starcx.stake(STAKE_AMOUNT);
-        await user2starcx.stake(STAKE_AMOUNT);
-
-        await stakingToken.mintShare(starcx.address, STAKE_AMOUNT);
-
-        expect(await stakingToken.balanceOf(user1.address)).to.eq(0);
-
-        await user1starcx.claimFees();
-
-        expect(await stakingToken.balanceOf(user1.address)).to.eq(
-          STAKE_AMOUNT.div(2),
-        );
-      });
-    });
-
     describe('#getExchangeRate', () => {
       it('updates total supply and exchange rate depends on staking and minting shares', async () => {
         expect(await starcx.getExchangeRate()).to.eq(0);
@@ -429,6 +368,21 @@ describe.only('MockStakingAccrualERC20', () => {
 
         expect(await starcx.totalSupply()).to.eq(STAKE_AMOUNT);
       });
+    });
+  });
+
+  describe('Scenarios', () => {
+    it('Two players with admin', async () => {
+        await user1starcx.stake(STAKE_AMOUNT);
+
+        expect(await starcx.getExchangeRate()).to.eq(utils.parseEther('1'));
+        expect(await starcx.totalSupply()).to.eq(STAKE_AMOUNT);
+
+        await stakingToken.mintShare(starcx.address, STAKE_AMOUNT);
+        await user2starcx.claimFor(user1.address);
+
+        expect(await starcx.getExchangeRate()).to.eq(utils.parseEther('2'));
+        expect(await starcx.totalSupply()).to.eq(STAKE_AMOUNT);
     });
   });
 });
