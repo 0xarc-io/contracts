@@ -265,6 +265,9 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
     }
 
     function getExchangeRate() public view returns (uint256) {
+        if (totalSupply() == 0) {
+            return 0;
+        }
         return stakingToken.balanceOf(address(this)).mul(1e18).div(totalSupply());
     }
 

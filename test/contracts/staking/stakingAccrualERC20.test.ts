@@ -386,31 +386,25 @@ describe.only('MockStakingAccrualERC20', () => {
       });
     });
 
-    describe('#exchangeRate', () => {
-      it('updates the accrued index and accrued balance', async () => {
-        await starcx.getExchangeRate();
-
-        expect(await starcx.exchangeRate()).to.eq(0);
+    describe('#getExchangeRate', () => {
+      it('updates total supply and exchange rate depends on staking and minting shares', async () => {
+        expect(await starcx.getExchangeRate()).to.eq(0);
         expect(await starcx.totalSupply()).to.eq(0);
 
         await user1starcx.stake(STAKE_AMOUNT);
 
-        await starcx.getExchangeRate();
-
-        expect(await starcx.exchangeRate()).to.eq(utils.parseEther('1'));
+        expect(await starcx.getExchangeRate()).to.eq(utils.parseEther('1'));
         expect(await starcx.totalSupply()).to.eq(STAKE_AMOUNT);
 
         await user2starcx.stake(STAKE_AMOUNT);
-        await starcx.getExchangeRate();
 
-        expect(await starcx.exchangeRate()).to.eq(utils.parseEther('1'));
+        expect(await starcx.getExchangeRate()).to.eq(utils.parseEther('1'));
         expect(await starcx.totalSupply()).to.eq(STAKE_AMOUNT.mul(2));
 
         await stakingToken.mintShare(starcx.address, STAKE_AMOUNT);
-        await starcx.getExchangeRate();
 
-        expect(await starcx.exchangeRate()).to.eq(utils.parseEther('2'));
-        expect(await starcx.accruedBalance()).to.eq(STAKE_AMOUNT.mul(3));
+        expect(await starcx.getExchangeRate()).to.eq(utils.parseEther('1.5'));
+        expect(await starcx.totalSupply()).to.eq(STAKE_AMOUNT.mul(2));
       });
     });
   });
