@@ -29,13 +29,6 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
     using SafeERC20 for IPermittableERC20;
     using SafeMath for uint256;
 
-    /* ========== Structs ========== */
-
-    struct Staker {
-        uint256 balance;
-        uint256 cooldownTimestamp;
-    }
-
     /* ========== Variables ========== */
 
     uint256 constant BASE = 1e18;
@@ -50,7 +43,7 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
      * @notice Cooldown duration to be elapsed for users to exit
      */
 
-    mapping (address => Staker) public stakers;
+    mapping (address => uint256) public cooldowns;
 
     /* ========== Events ========== */
 
@@ -160,10 +153,10 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
     )
         public
     {
-        Staker storage staker = stakers[msg.sender];
+        uint256 cooldownTimestamp = cooldowns[msg.sender];
 
         require (
-            staker.cooldownTimestamp == 0,
+            cooldownTimestamp == 0,
             "StakingAccrualERC20: cannot stake during cooldown period"
         );
 
@@ -213,21 +206,19 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
      */
     function startExitCooldown() public
     {
-        Staker storage staker = stakers[msg.sender];
-
         require (
             balanceOf(msg.sender) > 0,
             "StakingAccrualERC20: user has 0 balance"
         );
 
         require (
-            staker.cooldownTimestamp == 0,
+            cooldowns[msg.sender] == 0,
             "StakingAccrualERC20: exit cooldown already started"
         );
 
-        staker.cooldownTimestamp = currentTimestamp().add(exitCooldownDuration);
+        cooldowns[msg.sender] = currentTimestamp().add(exitCooldownDuration);
 
-        emit ExitCooldownStarted(msg.sender, staker.cooldownTimestamp);
+        emit ExitCooldownStarted(msg.sender, cooldowns[msg.sender]);
     }
 
     /**
@@ -237,7 +228,7 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
      */
     function exit() external
     {
-        Staker storage staker = stakers[msg.sender];
+        uint256 cooldownTimestamp = cooldowns[msg.sender];
          // Gets the amount of stakedToken in existence
         uint256 totalShares = totalSupply();
         // Amount of shares to exit
@@ -249,14 +240,14 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
         );
 
         require(
-            currentTimestamp() >= staker.cooldownTimestamp,
+            currentTimestamp() >= cooldownTimestamp,
             "StakingAccrualERC20: exit cooldown not elapsed"
         );
 
         // Calculates the amount of staking token the staked token is worth
         uint256 what = _share.mul(stakingToken.balanceOf(address(this))).div(totalShares);
         _burn(msg.sender, _share);
-        staker.cooldownTimestamp = 0;
+        cooldowns[msg.sender] = 0;
         emit Exited(msg.sender, what);
         stakingToken.safeTransfer(msg.sender, what);
     }

@@ -228,16 +228,16 @@ describe.only('MockStakingAccrualERC20', () => {
       });
 
       it('starts the exit cooldown', async () => {
-        let staker = await starcx.stakers(user1.address);
-        expect(staker.cooldownTimestamp).to.eq(0);
+        let cooldownTimestamp = await starcx.cooldowns(user1.address);
+        expect(cooldownTimestamp).to.eq(0);
 
         await starcx.setCurrentTimestamp(10);
         await user1starcx.stake(STAKE_AMOUNT);
 
         await user1starcx.startExitCooldown();
 
-        staker = await starcx.stakers(user1.address);
-        expect(staker.cooldownTimestamp).to.eq(COOLDOWN_DURATION + 10);
+        cooldownTimestamp = await starcx.cooldowns(user1.address);
+        expect(cooldownTimestamp).to.eq(COOLDOWN_DURATION + 10);
       });
 
       it('reverts if the exit cooldown is > 0', async () => {
@@ -278,14 +278,14 @@ describe.only('MockStakingAccrualERC20', () => {
 
         await waitCooldown();
 
-        let staker = await starcx.stakers(user1.address);
-        expect(staker.cooldownTimestamp).to.eq(COOLDOWN_DURATION);
+        let cooldownTimestamp = await starcx.cooldowns(user1.address);
+        expect(cooldownTimestamp).to.eq(COOLDOWN_DURATION);
         expect(await starcx.balanceOf(user1.address)).to.eq(STAKE_AMOUNT);
         expect(await stakingToken.balanceOf(user1.address)).to.eq(0);
         await user1starcx.exit();
 
-        staker = await starcx.stakers(user1.address);
-        expect(staker.cooldownTimestamp).to.eq(0);
+        cooldownTimestamp = await starcx.cooldowns(user1.address);
+        expect(cooldownTimestamp).to.eq(0);
         expect(await starcx.balanceOf(user1.address)).to.eq(0);
         expect(await stakingToken.balanceOf(user1.address)).to.eq(STAKE_AMOUNT);
       });
@@ -340,11 +340,11 @@ describe.only('MockStakingAccrualERC20', () => {
         );
       });
 
-      it('calls updateFees()', async () => {
+      it('updates exchange rate', async () => {
         await user1starcx.stake(STAKE_AMOUNT);
 
         expect(await starcx.getExchangeRate()).to.eq(utils.parseEther('1'));
-        expect(await starcx.accruedBalance()).to.eq(STAKE_AMOUNT);
+        expect(await starcx.totalSupply()).to.eq(STAKE_AMOUNT);
 
         await stakingToken.mintShare(starcx.address, STAKE_AMOUNT);
         await user2starcx.claimFor(user1.address);
