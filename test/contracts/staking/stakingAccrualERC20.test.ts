@@ -10,6 +10,7 @@ import { ethers } from 'hardhat';
 
 const STAKE_AMOUNT = utils.parseEther('100');
 const COOLDOWN_DURATION = 60;
+const INITIAL_BALANCE = STAKE_AMOUNT.mul('10')
 
 describe.only('MockStakingAccrualERC20', () => {
   let starcx: MockStakingAccrualERC20;
@@ -62,11 +63,11 @@ describe.only('MockStakingAccrualERC20', () => {
     user1starcx = starcx.connect(user1);
     user2starcx = starcx.connect(user2);
 
-    await stakingToken.mintShare(user1.address, STAKE_AMOUNT);
-    await stakingToken.mintShare(user2.address, STAKE_AMOUNT);
+    await stakingToken.mintShare(user1.address, INITIAL_BALANCE);
+    await stakingToken.mintShare(user2.address, INITIAL_BALANCE);
 
-    await stakingToken.connect(user1).approve(starcx.address, STAKE_AMOUNT);
-    await stakingToken.connect(user2).approve(starcx.address, STAKE_AMOUNT);
+    await stakingToken.connect(user1).approve(starcx.address, INITIAL_BALANCE);
+    await stakingToken.connect(user2).approve(starcx.address, INITIAL_BALANCE);
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -193,7 +194,8 @@ describe.only('MockStakingAccrualERC20', () => {
   describe('Mutating functions', () => {
     describe('#stake', () => {
       it('reverts if staking more than balance', async () => {
-        await expect(user1starcx.stake(STAKE_AMOUNT.add(1))).to.be.revertedWith(
+        const balance = await stakingToken.balanceOf(user1.address);
+        await expect(user1starcx.stake(balance.add(1))).to.be.revertedWith(
           'SafeERC20: TRANSFER_FROM_FAILED',
         );
       });
@@ -281,13 +283,13 @@ describe.only('MockStakingAccrualERC20', () => {
         let cooldownTimestamp = await starcx.cooldowns(user1.address);
         expect(cooldownTimestamp).to.eq(COOLDOWN_DURATION);
         expect(await starcx.balanceOf(user1.address)).to.eq(STAKE_AMOUNT);
-        expect(await stakingToken.balanceOf(user1.address)).to.eq(0);
+        expect(await stakingToken.balanceOf(user1.address)).to.eq(INITIAL_BALANCE.sub(STAKE_AMOUNT));
         await user1starcx.exit();
 
         cooldownTimestamp = await starcx.cooldowns(user1.address);
         expect(cooldownTimestamp).to.eq(0);
         expect(await starcx.balanceOf(user1.address)).to.eq(0);
-        expect(await stakingToken.balanceOf(user1.address)).to.eq(STAKE_AMOUNT);
+        expect(await stakingToken.balanceOf(user1.address)).to.eq(INITIAL_BALANCE);
       });
 
       it('exits with MORE ARCx than initially if the contract has accumulated more tokens', async () => {
@@ -303,7 +305,7 @@ describe.only('MockStakingAccrualERC20', () => {
 
         expect(await starcx.balanceOf(user1.address)).to.eq(0);
         expect(await stakingToken.balanceOf(user1.address)).to.eq(
-          STAKE_AMOUNT.mul(utils.parseEther('1.5')).div(BASE),
+          INITIAL_BALANCE.add(STAKE_AMOUNT.div('2')),
         );
       });
 
@@ -320,7 +322,7 @@ describe.only('MockStakingAccrualERC20', () => {
 
         expect(await starcx.balanceOf(user1.address)).to.eq(0);
         expect(await stakingToken.balanceOf(user1.address)).to.eq(
-          STAKE_AMOUNT.div(2),
+          INITIAL_BALANCE.sub(STAKE_AMOUNT.div(2)),
         );
       });
     });
@@ -345,44 +347,144 @@ describe.only('MockStakingAccrualERC20', () => {
         expect(await starcx.getExchangeRate()).to.eq(utils.parseEther('1.5'));
         expect(await starcx.totalSupply()).to.eq(STAKE_AMOUNT.mul(2));
       });
+      
     });
   });
 
-  describe('View functions', () => {
-    describe('#totalSupply()', () => {
-      it('returns the total amount staked', async () => {
-        expect(await starcx.totalSupply()).to.eq(0);
-
-        await user1starcx.stake(STAKE_AMOUNT);
-        expect(await starcx.totalSupply()).to.eq(STAKE_AMOUNT);
-
-        await user2starcx.stake(STAKE_AMOUNT);
-        expect(await starcx.totalSupply()).to.eq(STAKE_AMOUNT.mul(2));
-
-        await stakingToken.mintShare(starcx.address, STAKE_AMOUNT);
-        expect(await starcx.totalSupply()).to.eq(STAKE_AMOUNT.mul(2));
-
-        await user1starcx.startExitCooldown();
-        await starcx.setCurrentTimestamp(COOLDOWN_DURATION);
-        await user1starcx.exit();
-
-        expect(await starcx.totalSupply()).to.eq(STAKE_AMOUNT);
-      });
-    });
-  });
-
+  // https://docs.google.com/spreadsheets/d/1rmFbUxnM4gyi1xhcYKBwcdadvXrHBPKbeX7DLk8KQgE/edit#gid=1898004693
   describe('Scenarios', () => {
+    async function checkState(
+      exchangeRate: string,
+      shareTotalSupply: string,
+      balanceOfStarcx: string,
+    ) {
+      expect(await starcx.getExchangeRate()).to.eq(utils.parseEther(exchangeRate), 'getExchangeRate');
+      expect(await starcx.totalSupply()).to.eq(utils.parseEther(shareTotalSupply), 'totalSupply');
+      expect(await stakingToken.balanceOf(starcx.address)).to.eq(utils.parseEther(balanceOfStarcx), 'balance of starcx contract');
+    }
+
     it('Two players with admin', async () => {
-        await user1starcx.stake(STAKE_AMOUNT);
+      await checkState('0', '0', '0');
 
-        expect(await starcx.getExchangeRate()).to.eq(utils.parseEther('1'));
-        expect(await starcx.totalSupply()).to.eq(STAKE_AMOUNT);
+      await user1starcx.stake(utils.parseEther('100'));
 
-        await stakingToken.mintShare(starcx.address, STAKE_AMOUNT);
-        await user2starcx.claimFor(user1.address);
+      await checkState('1', '100', '100');
 
-        expect(await starcx.getExchangeRate()).to.eq(utils.parseEther('2'));
-        expect(await starcx.totalSupply()).to.eq(STAKE_AMOUNT);
+      await user2starcx.stake(utils.parseEther('200'));
+
+      await checkState('1', '300', '300');
+
+      await stakingToken.mintShare(starcx.address, utils.parseEther('300'));
+
+      await checkState('2', '300', '600');
+
+      await stakingToken.mintShare(starcx.address, utils.parseEther('300'));
+
+      await checkState('3', '300', '900');
+
+      await starcx.recoverTokens(utils.parseEther('450'));
+
+      await checkState('1.5', '300', '450');
+    });
+
+    it('Two players without admin', async () => {
+      await checkState('0', '0', '0');
+
+      await user1starcx.stake(utils.parseEther('100'));
+
+      await checkState('1', '100', '100');
+
+      await user2starcx.stake(utils.parseEther('200'));
+ 
+      await checkState('1', '300', '300');
+
+      await user1starcx.stake(utils.parseEther('200'));
+
+      await checkState('1', '500', '500');
+
+      await user1starcx.startExitCooldown();
+      await waitCooldown();
+      await user1starcx.exit();
+
+      await checkState('1', '200', '200');
+
+      await user2starcx.startExitCooldown();
+      await waitCooldown();
+      await user2starcx.exit();
+
+      await checkState('0', '0', '0');
+    });
+
+    it('Complex scenario', async () => {
+      await checkState('0', '0', '0');
+
+      await user1starcx.stake(utils.parseEther('100'));
+
+      await checkState('1', '100', '100');
+
+      await user2starcx.stake(utils.parseEther('200'));
+
+      await checkState('1', '300', '300');
+      
+      await user2starcx.stake(utils.parseEther('50'));
+
+      await checkState('1', '350', '350');
+
+      await stakingToken.mintShare(starcx.address, utils.parseEther('350'));
+
+      await checkState('2', '350', '700');
+
+      await user2starcx.startExitCooldown();
+      await waitCooldown();
+      await user2starcx.exit();
+
+      await checkState('2', '100', '200');
+
+      await stakingToken.mintShare(starcx.address, utils.parseEther('50'));
+
+      await checkState('2.5', '100', '250');
+
+      await user1starcx.startExitCooldown();
+      await waitCooldown();
+      await user1starcx.exit();
+
+      await checkState('0', '0', '0');
+
+      await stakingToken.mintShare(starcx.address, utils.parseEther('200'));
+
+      await checkState('0', '0', '200');
+
+      await user1starcx.stake(utils.parseEther('50'));
+
+      await checkState('1', '250', '250');
+
+      await stakingToken.mintShare(starcx.address, utils.parseEther('125'));
+
+      await checkState('1.5', '250', '375');
+
+      await user2starcx.stake(utils.parseEther('150'));
+
+      await checkState('1.5', '350', '525');
+
+      await stakingToken.mintShare(starcx.address, utils.parseEther('175'));
+
+      await checkState('2', '350', '700');
+
+      await user1starcx.startExitCooldown();
+      await waitCooldown();
+      await user1starcx.exit();
+
+      await checkState('2', '100', '200');
+
+      await starcx.recoverTokens(utils.parseEther('50'));
+      
+      await checkState('1.5', '100', '150');
+
+      await user2starcx.startExitCooldown();
+      await waitCooldown();
+      await user2starcx.exit();
+
+      await checkState('0', '0', '0');
     });
   });
 });
