@@ -164,7 +164,7 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
         uint256 totalShares = totalSupply();
         // If no the staked token exists, mint it 1:1 to the amount put in
         if (totalShares == 0 || totalStakingToken == 0) {
-            _mint(msg.sender, _amount);
+            _mint(msg.sender, totalStakingToken.add(_amount));
         }
         // Calculate and mint the amount of stToken the Token is worth. The ratio will change overtime, as stToken is burned/minted and Token deposited + gained from fees / withdrawn.
         else {
