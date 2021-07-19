@@ -174,7 +174,7 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
         // If no the staked token exists, mint it 1:1 to the amount put in
         if (totalShares == 0 || totalStakingToken == 0) {
             _mint(msg.sender, _amount);
-        } 
+        }
         // Calculate and mint the amount of stToken the Token is worth. The ratio will change overtime, as stToken is burned/minted and Token deposited + gained from fees / withdrawn.
         else {
             uint256 what = _amount.mul(totalShares).div(totalStakingToken);
@@ -237,6 +237,28 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
      */
     function exit() external
     {
+        Staker storage staker = stakers[msg.sender];
+         // Gets the amount of stakedToken in existence
+        uint256 totalShares = totalSupply();
+        // Amount of shares to exit
+        uint256 _share = balanceOf(msg.sender);
+
+        require(
+            _share > 0,
+            "StakingAccrualERC20: user has 0 balance"
+        );
+
+        require(
+            currentTimestamp() >= staker.cooldownTimestamp,
+            "StakingAccrualERC20: exit cooldown not elapsed"
+        );
+
+        // Calculates the amount of staking token the staked token is worth
+        uint256 what = _share.mul(stakingToken.balanceOf(address(this))).div(totalShares);
+        _burn(msg.sender, _share);
+        staker.cooldownTimestamp = 0;
+        emit Exited(msg.sender, what);
+        stakingToken.safeTransfer(msg.sender, what);
     }
 
     function claimFees() external
