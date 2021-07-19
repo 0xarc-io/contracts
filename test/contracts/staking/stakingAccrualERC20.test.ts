@@ -253,6 +253,7 @@ describe.only('MockStakingAccrualERC20', () => {
 
     describe('#exit', () => {
       it('reverts if user has 0 balance', async () => {
+        expect(await user1starcx.balanceOf(user1.address)).eq(0);
         await expect(user1starcx.exit()).to.be.revertedWith(
           'StakingAccrualERC20: user has 0 balance',
         );
@@ -281,7 +282,6 @@ describe.only('MockStakingAccrualERC20', () => {
         expect(staker.cooldownTimestamp).to.eq(COOLDOWN_DURATION);
         expect(await starcx.balanceOf(user1.address)).to.eq(STAKE_AMOUNT);
         expect(await stakingToken.balanceOf(user1.address)).to.eq(0);
-
         await user1starcx.exit();
 
         staker = await starcx.stakers(user1.address);
