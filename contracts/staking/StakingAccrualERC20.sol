@@ -257,11 +257,11 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
         return stakingToken.balanceOf(address(this)).mul(1e18).div(totalSupply());
     }
 
-    function toStakingToken(uint256 stTokenAmount) public view returns (uint256 tokenAmount) {
-        tokenAmount = stTokenAmount.mul(stakingToken.balanceOf(address(this))).div(totalSupply());
+    function toStakingToken(uint256 stTokenAmount) public view returns (uint256) {
+        return stTokenAmount.mul(stakingToken.balanceOf(address(this))).div(totalSupply());
     }
 
-    function toStakedToken(uint256 token) public view returns (uint256 stToken) {
-        stToken = token.mul(totalSupply()).div(stakingToken.balanceOf(address(this)));
+    function toStakedToken(uint256 token) public view returns (uint256) {
+        return token.mul(totalSupply()).div(stakingToken.balanceOf(address(this)));
     }
 }

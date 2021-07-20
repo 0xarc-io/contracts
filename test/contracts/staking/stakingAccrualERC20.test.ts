@@ -1,4 +1,5 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
+import { BASE } from '@src/constants';
 import { ArcProxyFactory, TestToken, TestTokenFactory } from '@src/typings';
 import { MockStakingAccrualERC20 } from '@src/typings/MockStakingAccrualERC20';
 import { MockStakingAccrualERC20Factory } from '@src/typings/MockStakingAccrualERC20Factory';
@@ -11,7 +12,7 @@ const STAKE_AMOUNT = utils.parseEther('100');
 const COOLDOWN_DURATION = 60;
 const INITIAL_BALANCE = STAKE_AMOUNT.mul('10')
 
-describe.only('MockStakingAccrualERC20', () => {
+describe('MockStakingAccrualERC20', () => {
   let starcx: MockStakingAccrualERC20;
   let stakingToken: TestToken;
 
@@ -384,6 +385,8 @@ describe.only('MockStakingAccrualERC20', () => {
       await starcx.recoverTokens(utils.parseEther('450'));
 
       await checkState('1.5', '300', '450');
+
+      await checkUser(starcx, user1);
     });
 
     it('Two players without admin', async () => {
@@ -400,6 +403,8 @@ describe.only('MockStakingAccrualERC20', () => {
       await user1starcx.stake(utils.parseEther('200'));
 
       await checkState('1', '500', '500');
+
+      await checkUser(starcx, user1);
 
       await user1starcx.startExitCooldown();
       await waitCooldown();
@@ -424,6 +429,8 @@ describe.only('MockStakingAccrualERC20', () => {
       await user2starcx.stake(utils.parseEther('200'));
 
       await checkState('1', '300', '300');
+      await checkUser(starcx, user1);
+      await checkUser(starcx, user2);
       
       await user2starcx.stake(utils.parseEther('50'));
 
@@ -432,6 +439,8 @@ describe.only('MockStakingAccrualERC20', () => {
       await stakingToken.mintShare(starcx.address, utils.parseEther('350'));
 
       await checkState('2', '350', '700');
+      await checkUser(starcx, user1);
+      await checkUser(starcx, user2);
 
       await user2starcx.startExitCooldown();
       await waitCooldown();
@@ -487,3 +496,10 @@ describe.only('MockStakingAccrualERC20', () => {
     });
   });
 });
+
+async function checkUser(starcx: MockStakingAccrualERC20, user: SignerWithAddress) {
+  const stArcxBalance = await starcx.balanceOf(user.address);
+  const arcAmount = await starcx.toStakingToken(stArcxBalance);
+  expect(arcAmount).eq(stArcxBalance.mul(await starcx.getExchangeRate()).div(BASE));
+  expect(await starcx.toStakedToken(arcAmount)).eq(stArcxBalance);
+}
