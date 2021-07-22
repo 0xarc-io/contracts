@@ -577,5 +577,25 @@
     "version": 1,
     "type": "staking",
     "group": "JointPassportPool"
+  },
+  {
+    "name": "StakingAccrualERC20",
+    "source": "StakingAccrualERC20",
+    "address": "0xC96c34e4ab7b472566998f619acf49984CEad75E",
+    "txn": "0x58d604ebf74d43d9c951b6c44798d4c5a9d422c842a4f3be5d8de04a2ca4d07f",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": "StakingAccrualERC20"
+  },
+  {
+    "name": "StakingAccrualERC20Proxy",
+    "source": "ArcProxy",
+    "address": "0x1bEB3c27a09422e3AFcDd3C93db1c049839B30dE",
+    "txn": "0xe78ee0d3a9205a57ad40e3121cc9324a7b3c50baeb14405bc5a4d1f468153419",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": "StakingAccrualERC20"
   }
 ]
