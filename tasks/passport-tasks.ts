@@ -1,5 +1,6 @@
 import {
   ArcProxyFactory,
+  BaseERC20Factory,
   DefaultPassportSkinFactory,
   DefiPassportClaimerFactory,
   DefiPassportFactory,
@@ -12,6 +13,7 @@ import {
   deployContract,
 } from '../deployments/src';
 import { task } from 'hardhat/config';
+import { StakingAccrualERC20Factory } from '@src/typings/StakingAccrualERC20Factory';
 
 task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
   .addParam('name', 'Name of the defi passport NFT')
@@ -205,3 +207,117 @@ task(
       constructorArguments: [name, symbol],
     });
   });
+
+
+task('deploy-staking-accrual', 'Deploy the Defi Passport NFT contract')
+.addParam('name', 'Name of the defi passport NFT')
+.addParam('symbol', 'Symbol of the defi passport NFT')
+.addParam('stakingtoken', 'Address of the Token which will be staked')
+.addParam(
+  'exitcooldownduration',
+  'Minimal duration of withdrawing staking token from staking accrual contract',
+)
+.addFlag('implementationonly', 'Only deploy implementation')
+.setAction(async (taskArgs, hre) => {
+  const {
+    name,
+    symbol,
+    stakingtoken: stakingToken,
+    exitcooldownduration: exitCoolDownDuration,
+    implementationonly: implementationOnly,
+  } = taskArgs;
+
+  const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
+
+  await pruneDeployments(network, signer.provider);
+
+  const contractImplementation = await deployContract(
+    {
+      name: 'StakingAccrualERC20',
+      source: 'StakingAccrualERC20',
+      data: new StakingAccrualERC20Factory(signer).getDeployTransaction(),
+      version: 1,
+      type: DeploymentType.global,
+      group: 'StakingAccrualERC20',
+    },
+    networkConfig,
+  );
+
+  if (contractImplementation) {
+    console.log(
+      green(`StakingAccrualERC20 implementation deployed at ${contractImplementation}`),
+    );
+  } else {
+    throw red(`StakingAccrualERC20 implementation was not deployed!`);
+  }
+
+  if (implementationOnly) {
+    await hre.run('verify:verify', {
+      address: contractImplementation,
+      constructorArguments: [],
+    });
+    return;
+  }
+
+  const proxyAddress = await deployContract(
+    {
+      name: 'StakingAccrualERC20Proxy',
+      source: 'ArcProxy',
+      data: new ArcProxyFactory(signer).getDeployTransaction(
+        contractImplementation,
+        await signer.getAddress(),
+        [],
+      ),
+      version: 1,
+      type: DeploymentType.global,
+      group: 'StakingAccrualERC20',
+    },
+    networkConfig,
+  );
+
+  if (proxyAddress) {
+    console.log(
+      green(
+        `StakingAccrualERC20Proxy successfully deployed at ${proxyAddress}`,
+      ),
+    );
+  } else {
+    throw red(`StakingAccrualERC20Proxy was not deployed!`);
+  }
+
+  const stakingAccrualProxyContract = StakingAccrualERC20Factory.connect(
+    proxyAddress,
+    signer,
+  );
+
+  const stakingTokenContract = BaseERC20Factory.connect(stakingToken, signer)
+  const decimals = await stakingTokenContract.decimals();
+
+  console.log(
+    yellow(`Calling init({
+    name: ${name},
+    symbol: ${symbol},
+    decimals: ${decimals},
+    stakingToken: ${stakingToken},
+    exitCoolDownDuration: ${exitCoolDownDuration}
+  })...`),
+  );
+  await stakingAccrualProxyContract.init(
+    name,
+    symbol,
+    decimals,
+    stakingToken,
+    exitCoolDownDuration,
+  );
+  console.log(green(`Init successfully called`));
+
+  console.log(yellow('Verifying contracts...'));
+  await hre.run('verify:verify', {
+    address: contractImplementation,
+    constructorArguments: [],
+  });
+  await hre.run('verify:verify', {
+    address: proxyAddress,
+    constructorArguments: [contractImplementation, await signer.getAddress(), []],
+  });
+});
