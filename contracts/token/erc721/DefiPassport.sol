@@ -6,7 +6,7 @@ import {Counters} from "@openzeppelin/contracts/drafts/Counters.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import {Adminable} from "../../lib/Adminable.sol";
-import {Initializable} from "../../Initializable.sol";
+import {Initializable} from "../../lib/Initializable.sol";
 import {DefiPassportStorage} from "./DefiPassportStorage.sol";
 import {ISapphireCreditScore} from "../../debt/sapphire/ISapphireCreditScore.sol";
 
