@@ -270,6 +270,14 @@ describe('MockStakingAccrualERC20', () => {
         );
       });
 
+      it('reverts if the startExitCooldown was not initiated', async () => {
+        await user1starcx.stake(STAKE_AMOUNT);
+
+        await expect(user1starcx.exit()).to.be.revertedWith(
+          'StakingAccrualERC20: exit cooldown was not initiated',
+        );
+      });
+
       /**
        * It reduces the user's balance to 0, burns the respective stARCx amount
        * from the user and returns the original ARCx balance
@@ -329,6 +337,8 @@ describe('MockStakingAccrualERC20', () => {
 
     describe('#getExchangeRate', () => {
       it('updates total supply and exchange rate depends on staking and minting shares', async () => {
+        expect(await starcx.toStakingToken(200)).to.eq(0);
+        expect(await starcx.toStakedToken(100)).to.eq(0);
         expect(await starcx.getExchangeRate()).to.eq(0);
         expect(await starcx.totalSupply()).to.eq(0);
 
