@@ -581,8 +581,8 @@
   {
     "name": "StakingAccrualERC20",
     "source": "StakingAccrualERC20",
-    "address": "0x0C395fBE731ced1c7f879746d2FA7C9E75De8Da0",
-    "txn": "0x5e97e593e3ef62db3f173633cdcd8bc9a16a8cd2fefb2aaac0d09c32a6b544ea",
+    "address": "0x1999af0deE684C3E582d1F74FA35724Ee8c6F7e0",
+    "txn": "0x0823f815b2d158eb8f5315999b7f10cabfbbfbc3ac7abc7bb63cc9b3cd72388c",
     "network": "rinkeby",
     "version": 1,
     "type": "global",
@@ -591,8 +591,8 @@
   {
     "name": "StakingAccrualERC20Proxy",
     "source": "ArcProxy",
-    "address": "0x059c4Bf5E5D72ED567a2bC5C336a8eAFa7F7E6F3",
-    "txn": "0x083e80dd5079b0c42866a5b4f7fcc4346ab1e1c8cb70000308e4edbbbd1283ca",
+    "address": "0x214E117f757e704CbA58E0fe376e753c5fCa9932",
+    "txn": "0x90fe8e88793e1279b57d602760908ff0b17cc1bd7fae0afd9fb06bae99d0af70",
     "network": "rinkeby",
     "version": 1,
     "type": "global",
