@@ -241,6 +241,10 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
             currentTimestamp() >= cooldownTimestamp,
             "StakingAccrualERC20: exit cooldown not elapsed"
         );
+        require(
+            cooldownTimestamp != 0,
+            "StakingAccrualERC20: exit cooldown was not initiated"
+        );
 
         // Calculates the amount of staking token the staked token is worth
         uint256 what = _share.mul(stakingToken.balanceOf(address(this))).div(totalShares);
@@ -258,10 +262,17 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
     }
 
     function toStakingToken(uint256 stTokenAmount) public view returns (uint256) {
+        if (totalSupply() == 0) {
+            return 0;
+        }
         return stTokenAmount.mul(stakingToken.balanceOf(address(this))).div(totalSupply());
     }
 
     function toStakedToken(uint256 token) public view returns (uint256) {
-        return token.mul(totalSupply()).div(stakingToken.balanceOf(address(this)));
+        uint256 stakingBalance = stakingToken.balanceOf(address(this));
+        if (stakingBalance == 0) {
+            return 0;
+        }
+        return token.mul(totalSupply()).div(stakingBalance);
     }
 }
