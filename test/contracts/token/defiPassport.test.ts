@@ -19,7 +19,7 @@ import {
   deployMockSapphireCreditScore,
 } from '../deployers';
 
-describe.only('DefiPassport', () => {
+describe('DefiPassport', () => {
   let defiPassport: DefiPassport;
 
   let creditScoreContract: SapphireCreditScore;
