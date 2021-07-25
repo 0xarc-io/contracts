@@ -22,6 +22,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
 
     event ApprovedSkinStatusChanged(
         address _skin,
+        uint256 _skinTokenId,
         bool _status
     );
 
@@ -160,19 +161,20 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
      */
     function setApprovedSkin(
         address _skin,
+        uint256 _skinTokenId,
         bool _status
     )
         external
         onlySkinManager
     {
         require(
-            approvedSkins[_skin] != _status,
+            approvedSkins[_skin][_skinTokenId] != _status,
             "DefiPassport: skin already has the same status"
         );
 
-        approvedSkins[_skin] = _status;
+        approvedSkins[_skin][_skinTokenId] = _status;
 
-        emit ApprovedSkinStatusChanged(_skin, _status);
+        emit ApprovedSkinStatusChanged(_skin, _skinTokenId, _status);
     }
 
     function setCreditScoreContract(
@@ -347,7 +349,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
 
         return defaultSkins[_skinContract] ||
             (
-                approvedSkins[_skinContract] &&
+                approvedSkins[_skinContract][_skinTokenId] &&
                 _isSkinOwner(_user, _skinContract, _skinTokenId)
             );
     }
