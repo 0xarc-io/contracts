@@ -28,7 +28,7 @@ contract DefiPassportStorage {
     /**
      * @notice Records the approved skins of the passport
      */
-    mapping (address => bool) public approvedSkins;
+    mapping (address => mapping (uint256 => bool)) public approvedSkins;
 
     /**
      * @notice Records the default skins
