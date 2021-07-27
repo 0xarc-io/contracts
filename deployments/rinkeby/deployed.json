@@ -489,30 +489,10 @@
     "group": ""
   },
   {
-    "name": "DefiPassportProxy",
-    "source": "ArcProxy",
-    "address": "0xb4817C52dF0A856fBb041971FB0f1F7D2BE7D14c",
-    "txn": "0xca8cc8cce2084ccc0125a3325b30e24f857359b48008ba1e474ed1c2d0f95c54",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "global",
-    "group": "DefiPassport"
-  },
-  {
     "name": "DefiPassportClaimer",
     "source": "DefiPassportClaimer",
     "address": "0x19E6C94dBd7D000832efCd4F966f53A854470439",
     "txn": "0x44df322c30a4bd6c2587fccde84f09fdcee6a794b13d63a5f1e9cb64959ba18c",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "global",
-    "group": ""
-  },
-  {
-    "name": "DefaultPassportSkin",
-    "source": "DefaultPassportSkin",
-    "address": "0x7610704A079B6116DB44c2301914c50325d753Bd",
-    "txn": "0xa248057ddcb56cdce7576a46d92f6ab71594f6656c4397535fb0921efeed6538",
     "network": "rinkeby",
     "version": 1,
     "type": "global",
@@ -547,16 +527,6 @@
     "version": 1,
     "type": "global",
     "group": ""
-  },
-  {
-    "name": "DefiPassport",
-    "source": "DefiPassport",
-    "address": "0xd9B3cA1edbF2DA171c10957E38fdBD33033c253a",
-    "txn": "0xd3aafc34a10617e2af6d012de6d09e7b580480dc2fdcb98510a639aedbc1be26",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "global",
-    "group": "DefiPassport"
   },
   {
     "name": "SapphireCreditScore",
@@ -597,5 +567,35 @@
     "version": 1,
     "type": "global",
     "group": "StakingAccrualERC20"
+  },
+  {
+    "name": "DefaultPassportSkin",
+    "source": "DefaultPassportSkin",
+    "address": "0xE3B5EA2E513FD883bF9bC82FE6c18A1e944c067a",
+    "txn": "0xd64b59ba34be28fb44e6639808cafc5e49ac487308fc8045593402389ef26a1a",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "DefiPassport",
+    "source": "DefiPassport",
+    "address": "0x83f9bD111EA152aD6D6042F35706461d5aDE6f61",
+    "txn": "0x45ecf24ccb80b4017041bb94b6ff1a24f1910d1b06cde82f0ec1065a0a07acc5",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": "DefiPassport"
+  },
+  {
+    "name": "DefiPassportProxy",
+    "source": "ArcProxy",
+    "address": "0x2Afbbcc62d0d6dCCDE2A5BFc57aa41524A387a3C",
+    "txn": "0xb2cf7676c109b79cc093716b81c63497385ec125f8c4d580f9beb411231baec4",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": "DefiPassport"
   }
 ]
