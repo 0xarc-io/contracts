@@ -7,9 +7,7 @@ import {
   DefiPassport,
   DefiPassportClaimer,
   DefiPassportClaimerFactory,
-  MintableNFTFactory,
   MockSapphireCreditScore,
-  SapphireCreditScore,
 } from '@src/typings';
 import { getEmptyScoreProof, getScoreProof } from '@src/utils';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';

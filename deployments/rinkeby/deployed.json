@@ -489,16 +489,6 @@
     "group": ""
   },
   {
-    "name": "DefiPassportClaimer",
-    "source": "DefiPassportClaimer",
-    "address": "0x19E6C94dBd7D000832efCd4F966f53A854470439",
-    "txn": "0x44df322c30a4bd6c2587fccde84f09fdcee6a794b13d63a5f1e9cb64959ba18c",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "global",
-    "group": ""
-  },
-  {
     "name": "Implementation",
     "source": "PassportCampaign",
     "address": "0x785723d4cD1705CE5Ecf13d9C2d7668E0e475260",
@@ -597,5 +587,15 @@
     "version": 1,
     "type": "global",
     "group": "DefiPassport"
+  },
+  {
+    "name": "DefiPassportClaimer",
+    "source": "DefiPassportClaimer",
+    "address": "0x8e8cEC23c1a6b50262A22A975CE5a89D1C24A8F8",
+    "txn": "0x60a407f9a0b3d8438591f34435979a273da165baed46d8bcdbc5cbe4e4f7d7e4",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": ""
   }
 ]
