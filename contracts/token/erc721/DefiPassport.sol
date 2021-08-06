@@ -140,6 +140,11 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         external
         onlySkinManager
     {
+        require (
+            IERC721(_skin).ownerOf(1) != address(0),
+            "DefiPassport: default skin must at least have tokenId eq 1"
+        );
+
         require(
             defaultSkins[_skin] != _status,
             "DefiPassport: skin already has the same status"
@@ -149,6 +154,10 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
             _skin.isContract(),
             "DefiPassport: the given skin is not a contract"
         );
+
+        if (defaultActiveSkin == address(0)) {
+            defaultActiveSkin = _skin;
+        }
 
         defaultSkins[_skin] = _status;
 
@@ -241,7 +250,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         uint256 newTokenId = _tokenIds.current();
         _mint(_to, newTokenId);
         _setTokenURI(newTokenId, _toAsciiString(_to));
-        _setActiveSkin(newTokenId, SkinRecord(_passportSkin, _skinTokenId));
+        _setActiveSkin(newTokenId, SkinRecord(_to, _passportSkin, _skinTokenId));
 
         return newTokenId;
     }
@@ -270,7 +279,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
 
         uint256 tokenId = tokenOfOwnerByIndex(msg.sender, 0);
 
-        _setActiveSkin(tokenId, SkinRecord(_skin, _skinTokenId));
+        _setActiveSkin(tokenId, SkinRecord(msg.sender, _skin, _skinTokenId));
     }
 
     function approve(
@@ -354,6 +363,27 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
             );
     }
 
+    /**
+     * @notice Passport id to its active skin NFT
+     *
+     * @param _tokenId Passport id
+     */
+    function activeSkins(
+        uint256 _tokenId
+    )
+        public
+        view
+        returns (SkinRecord memory)
+    {
+        SkinRecord memory _activeSkin = _activeSkins[_tokenId];
+        
+        if (isSkinAvailable(_activeSkin.owner, _activeSkin.skin, _activeSkin.skinTokenId)) {
+            return _activeSkin;
+        } else {
+            return SkinRecord(msg.sender, defaultActiveSkin, 1);
+        }
+    }
+
     /* ========== Private Functions ========== */
 
     /**
@@ -410,7 +440,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
     )
         private
     {
-        SkinRecord memory currentSkin = activeSkins[_tokenId];
+        SkinRecord memory currentSkin = _activeSkins[_tokenId];
 
         require(
             currentSkin.skin != _skinRecord.skin ||
@@ -418,7 +448,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
             "DefiPassport: the same skin is already active"
         );
 
-        activeSkins[_tokenId] = _skinRecord;
+        _activeSkins[_tokenId] = _skinRecord;
 
         emit ActiveSkinSet(_tokenId, _skinRecord);
     }

@@ -11,6 +11,7 @@ contract DefiPassportStorage {
     /* ========== Structs ========== */
 
     struct SkinRecord {
+        address owner;
         address skin;
         uint256 skinTokenId;
     }
@@ -36,17 +37,22 @@ contract DefiPassportStorage {
     mapping (address => bool) public defaultSkins;
 
     /**
+     * @notice Records the default skins
+     */
+    address public defaultActiveSkin;
+
+    /**
      * @notice The skin manager appointed by the admin, who can
      *         approve and revoke passport skins
      */
     address public skinManager;
 
+    /* ========== Private Variables ========== */
+
     /**
      * @notice Maps a passport (tokenId) to its active skin NFT
      */
-    mapping (uint256 => SkinRecord) public activeSkins;
-
-    /* ========== Private Variables ========== */
+    mapping (uint256 => SkinRecord) internal _activeSkins;
 
     Counters.Counter internal _tokenIds;
 
