@@ -349,8 +349,8 @@ describe('DefiPassport', () => {
         .connect(skinManager)
         .setApprovedSkin(otherSkinContract.address, otherSkinTokenId, true);
 
-      expect(await defiPassport.approvedSkins(otherSkinContract.address, otherSkinTokenId)).to.be
-        .true;
+      expect(await defiPassport.approvedSkins(otherSkinContract.address, otherSkinTokenId))
+        .to.be.true;
 
       await otherSkinContract.transferFrom(
         owner.address,
@@ -380,8 +380,8 @@ describe('DefiPassport', () => {
         .connect(skinManager)
         .setApprovedSkin(otherSkinContract.address, otherSkinTokenId, true);
 
-      expect(await defiPassport.approvedSkins(otherSkinContract.address, otherSkinTokenId)).to.be
-        .true;
+      expect(await defiPassport.approvedSkins(otherSkinContract.address, otherSkinTokenId))
+        .to.be.true;
 
       await otherSkinContract.transferFrom(
         owner.address,
@@ -600,13 +600,15 @@ describe('DefiPassport', () => {
 
       await expect(defiPassport
         .connect(skinManager)
-        .setDefaultSkin(defaultSkinAddress, false)).revertedWith('Defi Passport: the skin is used as default active one');
+        .setDefaultSkin(defaultSkinAddress, false))
+        .revertedWith('Defi Passport: the skin is used as default active one');
     });
   });
 
   describe('#setActiveDefaultSkin', () => {
     it('perform call as not-skin-manager', async () => {
-      await expect(defiPassport.setDefaultActiveSkin(defaultSkinAddress)).revertedWith('DefiPassport: caller is not skin manager');
+      await expect(defiPassport.setDefaultActiveSkin(defaultSkinAddress))
+        .revertedWith('DefiPassport: caller is not skin manager');
     });
 
     it('set skin which is not set as default skin', async () => {
