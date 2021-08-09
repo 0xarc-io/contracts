@@ -140,10 +140,12 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         external
         onlySkinManager
     {
-        require (
-            IERC721(_skin).ownerOf(1) != address(0),
-            "DefiPassport: default skin must at least have tokenId eq 1"
-        );
+        if (!_status) {
+            require(
+                defaultActiveSkin != _skin,
+                "Defi Passport: the skin is used as default active one"
+            );
+        }
 
         require(
             defaultSkins[_skin] != _status,
@@ -155,6 +157,11 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
             "DefiPassport: the given skin is not a contract"
         );
 
+        require (
+            IERC721(_skin).ownerOf(1) != address(0),
+            "DefiPassport: default skin must at least have tokenId eq 1"
+        );
+
         if (defaultActiveSkin == address(0)) {
             defaultActiveSkin = _skin;
         }
@@ -162,6 +169,32 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         defaultSkins[_skin] = _status;
 
         emit DefaultSkinStatusChanged(_skin, _status);
+    }
+
+    /**
+     * @dev     Set the default active skin, which will be used instead of
+     *          unavailable user's active one
+     * @notice Skin should be used as default one (with setDefaultSkin function)
+     *
+     * @param _skin Address of the skin NFT
+     */
+    function setDefaultActiveSkin(
+        address _skin
+    )
+        external
+        onlySkinManager
+    {
+        require(
+            defaultSkins[_skin],
+            "DefiPassport: the skin is not default one"
+        );
+
+        require(
+            defaultActiveSkin != _skin,
+            "DefiPassport: the skin is already set"
+        );
+
+        defaultActiveSkin = _skin;
     }
 
     /**
@@ -376,7 +409,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         returns (SkinRecord memory)
     {
         SkinRecord memory _activeSkin = _activeSkins[_tokenId];
-        
+
         if (isSkinAvailable(_activeSkin.owner, _activeSkin.skin, _activeSkin.skinTokenId)) {
             return _activeSkin;
         } else {

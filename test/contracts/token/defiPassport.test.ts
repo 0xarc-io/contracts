@@ -576,11 +576,85 @@ describe('DefiPassport', () => {
       expect(await defiPassport.defaultActiveSkin()).eq(defaultSkinAddress);
       expect(await defiPassport.defaultSkins(defaultSkinAddress)).to.be.true;
 
+      const otherNFT = await new MintableNFTFactory(owner).deploy(
+        'Some Default token',
+        'PS',
+      );
+      await otherNFT.mint(owner.address, 1);
+
+      await defiPassport
+        .connect(skinManager)
+        .setDefaultSkin(otherNFT.address, true);
+
+      await defiPassport
+        .connect(skinManager)
+        .setDefaultActiveSkin(otherNFT.address)
+
       await defiPassport
         .connect(skinManager)
         .setDefaultSkin(defaultSkinAddress, false);
 
       expect(await defiPassport.defaultSkins(defaultSkinAddress)).to.be.false;
+    });
+
+    it('cannot toggle if active default skin was not updated', async () => {
+      expect(await defiPassport.defaultSkins(defaultSkinAddress)).to.be.false;
+
+      await defiPassport
+        .connect(skinManager)
+        .setDefaultSkin(defaultSkinAddress, true);
+
+      expect(await defiPassport.defaultActiveSkin()).eq(defaultSkinAddress);
+      expect(await defiPassport.defaultSkins(defaultSkinAddress)).to.be.true;
+
+      await expect(defiPassport
+        .connect(skinManager)
+        .setDefaultSkin(defaultSkinAddress, false)).revertedWith('Defi Passport: the skin is used as default active one');
+    });
+  });
+
+  describe('#setActiveDefaultSkin', () => {
+    it('perform call as not-skin-manager', async () => {
+      await expect(defiPassport.setDefaultActiveSkin(defaultSkinAddress)).revertedWith('DefiPassport: caller is not skin manager');
+    });
+
+    it('set skin which is not set as default skin', async () => {
+      await expect(defiPassport.connect(skinManager).setDefaultActiveSkin(defaultSkinAddress))
+        .revertedWith('DefiPassport: the skin is not default one');
+    })
+
+    it('cannot set the same skin address', async () => {
+      await defiPassport
+        .connect(skinManager)
+        .setDefaultSkin(defaultSkinAddress, true);
+      
+      await expect(defiPassport.connect(skinManager).setDefaultActiveSkin(defaultSkinAddress))
+        .revertedWith('DefiPassport: the skin is already set');
+    });
+
+    it('change default active skin', async () => {
+      const otherNFT = await new MintableNFTFactory(owner).deploy(
+        'Some Default token',
+        'PS',
+      );
+
+      await otherNFT.mint(owner.address, 1);
+
+      await defiPassport
+        .connect(skinManager)
+        .setDefaultSkin(defaultSkinAddress, true);
+
+      await defiPassport
+        .connect(skinManager)
+        .setDefaultSkin(otherNFT.address, true);
+
+      expect(await defiPassport.defaultActiveSkin()).eq(defaultSkinAddress)
+
+      await defiPassport
+        .connect(skinManager)
+        .setDefaultActiveSkin(otherNFT.address);
+      
+      expect(await defiPassport.defaultActiveSkin()).eq(otherNFT.address)
     });
   });
 
