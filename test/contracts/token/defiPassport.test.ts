@@ -88,7 +88,8 @@ describe('DefiPassport', () => {
       'Other Passport Skins',
       'OPS',
     );
-    await otherSkinContract.mint(owner.address, BigNumber.from(1));
+    otherSkinTokenId = BigNumber.from(1);
+    await otherSkinContract.mint(owner.address, otherSkinTokenId);
   }
 
   /**
