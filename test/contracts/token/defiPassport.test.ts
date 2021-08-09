@@ -88,9 +88,7 @@ describe('DefiPassport', () => {
       'Other Passport Skins',
       'OPS',
     );
-
-    otherSkinTokenId = skinTokenId.add(1);
-    await otherSkinContract.mint(owner.address, otherSkinTokenId);
+    await otherSkinContract.mint(owner.address, BigNumber.from(1));
   }
 
   /**
@@ -544,7 +542,6 @@ describe('DefiPassport', () => {
         'Some Default token',
         'PS',
       );
-  
       await otherNFT.mint(owner.address, 2);
 
       await expect(
@@ -576,19 +573,13 @@ describe('DefiPassport', () => {
       expect(await defiPassport.defaultActiveSkin()).eq(defaultSkinAddress);
       expect(await defiPassport.defaultSkins(defaultSkinAddress)).to.be.true;
 
-      const otherNFT = await new MintableNFTFactory(owner).deploy(
-        'Some Default token',
-        'PS',
-      );
-      await otherNFT.mint(owner.address, 1);
+      await defiPassport
+        .connect(skinManager)
+        .setDefaultSkin(otherSkinContract.address, true);
 
       await defiPassport
         .connect(skinManager)
-        .setDefaultSkin(otherNFT.address, true);
-
-      await defiPassport
-        .connect(skinManager)
-        .setDefaultActiveSkin(otherNFT.address)
+        .setDefaultActiveSkin(otherSkinContract.address)
 
       await defiPassport
         .connect(skinManager)
@@ -633,28 +624,21 @@ describe('DefiPassport', () => {
     });
 
     it('change default active skin', async () => {
-      const otherNFT = await new MintableNFTFactory(owner).deploy(
-        'Some Default token',
-        'PS',
-      );
-
-      await otherNFT.mint(owner.address, 1);
-
       await defiPassport
         .connect(skinManager)
         .setDefaultSkin(defaultSkinAddress, true);
 
       await defiPassport
         .connect(skinManager)
-        .setDefaultSkin(otherNFT.address, true);
+        .setDefaultSkin(otherSkinContract.address, true);
 
       expect(await defiPassport.defaultActiveSkin()).eq(defaultSkinAddress)
 
       await defiPassport
         .connect(skinManager)
-        .setDefaultActiveSkin(otherNFT.address);
+        .setDefaultActiveSkin(otherSkinContract.address);
       
-      expect(await defiPassport.defaultActiveSkin()).eq(otherNFT.address)
+      expect(await defiPassport.defaultActiveSkin()).eq(otherSkinContract.address)
     });
   });
 
