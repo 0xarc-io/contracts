@@ -1,16 +1,27 @@
+import { CreditScoreProof } from '@arc-types/sapphireCore';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { BASE } from '@src/constants';
-import { ArcProxyFactory, TestToken, TestTokenFactory } from '@src/typings';
+import { CreditScoreTree } from '@src/MerkleTree';
+import {
+  ArcProxyFactory,
+  MockSapphireCreditScore,
+  TestToken,
+  TestTokenFactory,
+} from '@src/typings';
 import { MockStakingAccrualERC20 } from '@src/typings/MockStakingAccrualERC20';
 import { MockStakingAccrualERC20Factory } from '@src/typings/MockStakingAccrualERC20Factory';
+import { getEmptyScoreProof, getScoreProof } from '@src/utils';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
+import { fail } from 'assert';
 import { expect } from 'chai';
-import { constants, utils } from 'ethers';
+import { BigNumber, constants, utils } from 'ethers';
 import { ethers } from 'hardhat';
+import { generateContext, ITestContext } from '../context';
+import { sapphireFixture } from '../fixtures';
 
 const STAKE_AMOUNT = utils.parseEther('100');
 const COOLDOWN_DURATION = 60;
-const INITIAL_BALANCE = STAKE_AMOUNT.mul('10')
+const INITIAL_BALANCE = STAKE_AMOUNT.mul('10');
 
 describe('MockStakingAccrualERC20', () => {
   let starcx: MockStakingAccrualERC20;
@@ -22,6 +33,12 @@ describe('MockStakingAccrualERC20', () => {
 
   let user1starcx: MockStakingAccrualERC20;
   let user2starcx: MockStakingAccrualERC20;
+
+  let creditScoreTree: CreditScoreTree;
+  let user1ScoreProof: CreditScoreProof;
+  let user2ScoreProof: CreditScoreProof;
+
+  let creditScoreContract: MockSapphireCreditScore;
 
   async function waitCooldown() {
     const currentTimestamp = await starcx.currentTimestamp();
@@ -47,10 +64,28 @@ describe('MockStakingAccrualERC20', () => {
       18,
       stakingToken.address,
       COOLDOWN_DURATION,
+      creditScoreContract.address,
     );
   }
 
+  async function init(ctx: ITestContext) {
+    const user1CreditScore = {
+      account: user1.address,
+      amount: BigNumber.from(1),
+    };
+    const user2CreditScore = {
+      account: user1.address,
+      amount: BigNumber.from(1),
+    };
+
+    creditScoreTree = new CreditScoreTree([user1CreditScore, user2CreditScore]);
+
+    user1ScoreProof = getScoreProof(user1CreditScore, creditScoreTree);
+    user1ScoreProof = getScoreProof(user2CreditScore, creditScoreTree);
+  }
+
   before(async () => {
+    const ctx = await generateContext(sapphireFixture, init);
     const signers = await ethers.getSigners();
     admin = signers[0];
     user1 = signers[1];
@@ -68,6 +103,8 @@ describe('MockStakingAccrualERC20', () => {
 
     await stakingToken.connect(user1).approve(starcx.address, INITIAL_BALANCE);
     await stakingToken.connect(user2).approve(starcx.address, INITIAL_BALANCE);
+
+    creditScoreContract = ctx.contracts.sapphire.creditScore;
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -82,6 +119,7 @@ describe('MockStakingAccrualERC20', () => {
             18,
             stakingToken.address,
             COOLDOWN_DURATION,
+            creditScoreContract.address,
           ),
         ).to.be.revertedWith('Adminable: caller is not admin');
       });
@@ -94,6 +132,7 @@ describe('MockStakingAccrualERC20', () => {
             18,
             stakingToken.address,
             COOLDOWN_DURATION,
+            creditScoreContract.address,
           ),
         ).to.be.revertedWith('Initializable: contract is already initialized');
       });
@@ -120,6 +159,7 @@ describe('MockStakingAccrualERC20', () => {
             18,
             constants.AddressZero,
             COOLDOWN_DURATION,
+            creditScoreContract.address,
           ),
         ).to.be.revertedWith(
           'StakingAccrualERC20: staking token is not a contract',
@@ -131,6 +171,7 @@ describe('MockStakingAccrualERC20', () => {
             18,
             user1.address,
             COOLDOWN_DURATION,
+            creditScoreContract.address,
           ),
         ).to.be.revertedWith(
           'StakingAccrualERC20: staking token is not a contract',
@@ -160,7 +201,7 @@ describe('MockStakingAccrualERC20', () => {
 
     describe('#recoverTokens', () => {
       beforeEach(async () => {
-        await user1starcx.stake(STAKE_AMOUNT);
+        await user1starcx.stake(STAKE_AMOUNT, user1ScoreProof);
       });
 
       it('reverts if called by non-admin', async () => {
@@ -193,27 +234,44 @@ describe('MockStakingAccrualERC20', () => {
 
   describe('Mutating functions', () => {
     describe('#stake', () => {
-      it('reverts if staking more than balance', async () => {
-        const balance = await stakingToken.balanceOf(user1.address);
-        await expect(user1starcx.stake(balance.add(1))).to.be.revertedWith(
-          'SafeERC20: TRANSFER_FROM_FAILED',
+      it('reverts if staking with an invalid proof', async () => {
+        await expect(
+          user1starcx.stake(STAKE_AMOUNT, getEmptyScoreProof()),
+        ).to.be.revertedWith(
+          'PassportCampaign: proof is required but is not passed',
         );
       });
 
+      it('reverts if staking with no proof', async () => {
+        // Try to stake with a proof other than the user's
+        await expect(
+          user1starcx.stake(STAKE_AMOUNT, user2ScoreProof),
+        ).to.be.revertedWith('SapphireCreditScore: invalid proof');
+      });
+
+      it('reverts if staking more than balance', async () => {
+        const balance = await stakingToken.balanceOf(user1.address);
+        await expect(
+          user1starcx.stake(balance.add(1), user1ScoreProof),
+        ).to.be.revertedWith('SafeERC20: TRANSFER_FROM_FAILED');
+      });
+
       it(`reverts if the user's cooldown timestamp is > 0`, async () => {
-        await user1starcx.stake(STAKE_AMOUNT);
+        await user1starcx.stake(STAKE_AMOUNT, user1ScoreProof);
 
         await user1starcx.startExitCooldown();
 
-        await expect(user1starcx.stake(STAKE_AMOUNT)).to.be.revertedWith(
+        await expect(
+          user1starcx.stake(STAKE_AMOUNT, user1ScoreProof),
+        ).to.be.revertedWith(
           'StakingAccrualERC20: cannot stake during cooldown period',
         );
       });
 
-      it('stakes the staking token and mints an equal amount of stARCx', async () => {
+      it('stakes the staking token and mints an equal amount of stARCx, with a proof', async () => {
         expect(await starcx.balanceOf(user1.address)).to.eq(0);
 
-        await user1starcx.stake(STAKE_AMOUNT);
+        await user1starcx.stake(STAKE_AMOUNT, user1ScoreProof);
 
         expect(await starcx.balanceOf(user1.address)).to.eq(STAKE_AMOUNT);
       });
@@ -234,7 +292,7 @@ describe('MockStakingAccrualERC20', () => {
         expect(cooldownTimestamp).to.eq(0);
 
         await starcx.setCurrentTimestamp(10);
-        await user1starcx.stake(STAKE_AMOUNT);
+        await user1starcx.stake(STAKE_AMOUNT, user1ScoreProof);
 
         await user1starcx.startExitCooldown();
 
@@ -244,7 +302,7 @@ describe('MockStakingAccrualERC20', () => {
 
       it('reverts if the exit cooldown is > 0', async () => {
         await starcx.setCurrentTimestamp(10);
-        await user1starcx.stake(STAKE_AMOUNT);
+        await user1starcx.stake(STAKE_AMOUNT, user1ScoreProof);
         await user1starcx.startExitCooldown();
 
         await expect(user1starcx.startExitCooldown()).to.be.revertedWith(
@@ -262,7 +320,7 @@ describe('MockStakingAccrualERC20', () => {
       });
 
       it('reverts if the cooldown timestamp is not passed', async () => {
-        await user1starcx.stake(STAKE_AMOUNT);
+        await user1starcx.stake(STAKE_AMOUNT, user1ScoreProof);
         await user1starcx.startExitCooldown();
 
         await expect(user1starcx.exit()).to.be.revertedWith(
@@ -271,7 +329,7 @@ describe('MockStakingAccrualERC20', () => {
       });
 
       it('reverts if the startExitCooldown was not initiated', async () => {
-        await user1starcx.stake(STAKE_AMOUNT);
+        await user1starcx.stake(STAKE_AMOUNT, user1ScoreProof);
 
         await expect(user1starcx.exit()).to.be.revertedWith(
           'StakingAccrualERC20: exit cooldown was not initiated',
@@ -283,7 +341,7 @@ describe('MockStakingAccrualERC20', () => {
        * from the user and returns the original ARCx balance
        */
       it(`exits from the fund`, async () => {
-        await user1starcx.stake(STAKE_AMOUNT);
+        await user1starcx.stake(STAKE_AMOUNT, user1ScoreProof);
         await user1starcx.startExitCooldown();
 
         await waitCooldown();
@@ -291,18 +349,22 @@ describe('MockStakingAccrualERC20', () => {
         let cooldownTimestamp = await starcx.cooldowns(user1.address);
         expect(cooldownTimestamp).to.eq(COOLDOWN_DURATION);
         expect(await starcx.balanceOf(user1.address)).to.eq(STAKE_AMOUNT);
-        expect(await stakingToken.balanceOf(user1.address)).to.eq(INITIAL_BALANCE.sub(STAKE_AMOUNT));
+        expect(await stakingToken.balanceOf(user1.address)).to.eq(
+          INITIAL_BALANCE.sub(STAKE_AMOUNT),
+        );
         await user1starcx.exit();
 
         cooldownTimestamp = await starcx.cooldowns(user1.address);
         expect(cooldownTimestamp).to.eq(0);
         expect(await starcx.balanceOf(user1.address)).to.eq(0);
-        expect(await stakingToken.balanceOf(user1.address)).to.eq(INITIAL_BALANCE);
+        expect(await stakingToken.balanceOf(user1.address)).to.eq(
+          INITIAL_BALANCE,
+        );
       });
 
       it('exits with MORE ARCx than initially if the contract has accumulated more tokens', async () => {
-        await user1starcx.stake(STAKE_AMOUNT);
-        await user2starcx.stake(STAKE_AMOUNT);
+        await user1starcx.stake(STAKE_AMOUNT, user1ScoreProof);
+        await user2starcx.stake(STAKE_AMOUNT, user2ScoreProof);
 
         await user1starcx.startExitCooldown();
         await waitCooldown();
@@ -318,8 +380,8 @@ describe('MockStakingAccrualERC20', () => {
       });
 
       it('exits with LESS ARCx than initially if the admin had removed tokens', async () => {
-        await user1starcx.stake(STAKE_AMOUNT);
-        await user2starcx.stake(STAKE_AMOUNT);
+        await user1starcx.stake(STAKE_AMOUNT, user1ScoreProof);
+        await user2starcx.stake(STAKE_AMOUNT, user2ScoreProof);
 
         await user1starcx.startExitCooldown();
         await waitCooldown();
@@ -342,12 +404,12 @@ describe('MockStakingAccrualERC20', () => {
         expect(await starcx.getExchangeRate()).to.eq(0);
         expect(await starcx.totalSupply()).to.eq(0);
 
-        await user1starcx.stake(STAKE_AMOUNT);
+        await user1starcx.stake(STAKE_AMOUNT, user1ScoreProof);
 
         expect(await starcx.getExchangeRate()).to.eq(utils.parseEther('1'));
         expect(await starcx.totalSupply()).to.eq(STAKE_AMOUNT);
 
-        await user2starcx.stake(STAKE_AMOUNT);
+        await user2starcx.stake(STAKE_AMOUNT, user2ScoreProof);
 
         expect(await starcx.getExchangeRate()).to.eq(utils.parseEther('1'));
         expect(await starcx.totalSupply()).to.eq(STAKE_AMOUNT.mul(2));
@@ -357,7 +419,6 @@ describe('MockStakingAccrualERC20', () => {
         expect(await starcx.getExchangeRate()).to.eq(utils.parseEther('1.5'));
         expect(await starcx.totalSupply()).to.eq(STAKE_AMOUNT.mul(2));
       });
-      
     });
   });
 
@@ -368,19 +429,28 @@ describe('MockStakingAccrualERC20', () => {
       shareTotalSupply: string,
       balanceOfStarcx: string,
     ) {
-      expect(await starcx.getExchangeRate()).to.eq(utils.parseEther(exchangeRate), 'getExchangeRate');
-      expect(await starcx.totalSupply()).to.eq(utils.parseEther(shareTotalSupply), 'totalSupply');
-      expect(await stakingToken.balanceOf(starcx.address)).to.eq(utils.parseEther(balanceOfStarcx), 'balance of starcx contract');
+      expect(await starcx.getExchangeRate()).to.eq(
+        utils.parseEther(exchangeRate),
+        'getExchangeRate',
+      );
+      expect(await starcx.totalSupply()).to.eq(
+        utils.parseEther(shareTotalSupply),
+        'totalSupply',
+      );
+      expect(await stakingToken.balanceOf(starcx.address)).to.eq(
+        utils.parseEther(balanceOfStarcx),
+        'balance of starcx contract',
+      );
     }
 
     it('Two players with admin', async () => {
       await checkState('0', '0', '0');
 
-      await user1starcx.stake(utils.parseEther('100'));
+      await user1starcx.stake(utils.parseEther('100'), user1ScoreProof);
 
       await checkState('1', '100', '100');
 
-      await user2starcx.stake(utils.parseEther('200'));
+      await user2starcx.stake(utils.parseEther('200'), user2ScoreProof);
 
       await checkState('1', '300', '300');
 
@@ -402,15 +472,15 @@ describe('MockStakingAccrualERC20', () => {
     it('Two players without admin', async () => {
       await checkState('0', '0', '0');
 
-      await user1starcx.stake(utils.parseEther('100'));
+      await user1starcx.stake(utils.parseEther('100'), user1ScoreProof);
 
       await checkState('1', '100', '100');
 
-      await user2starcx.stake(utils.parseEther('200'));
- 
+      await user2starcx.stake(utils.parseEther('200'), user2ScoreProof);
+
       await checkState('1', '300', '300');
 
-      await user1starcx.stake(utils.parseEther('200'));
+      await user1starcx.stake(utils.parseEther('200'), user1ScoreProof);
 
       await checkState('1', '500', '500');
 
@@ -432,17 +502,17 @@ describe('MockStakingAccrualERC20', () => {
     it('Complex scenario', async () => {
       await checkState('0', '0', '0');
 
-      await user1starcx.stake(utils.parseEther('100'));
+      await user1starcx.stake(utils.parseEther('100'), user1ScoreProof);
 
       await checkState('1', '100', '100');
 
-      await user2starcx.stake(utils.parseEther('200'));
+      await user2starcx.stake(utils.parseEther('200'), user2ScoreProof);
 
       await checkState('1', '300', '300');
       await checkUser(starcx, user1);
       await checkUser(starcx, user2);
-      
-      await user2starcx.stake(utils.parseEther('50'));
+
+      await user2starcx.stake(utils.parseEther('50'), user2ScoreProof);
 
       await checkState('1', '350', '350');
 
@@ -472,7 +542,7 @@ describe('MockStakingAccrualERC20', () => {
 
       await checkState('0', '0', '200');
 
-      await user1starcx.stake(utils.parseEther('50'));
+      await user1starcx.stake(utils.parseEther('50'), user1ScoreProof);
 
       await checkState('1', '250', '250');
 
@@ -480,7 +550,7 @@ describe('MockStakingAccrualERC20', () => {
 
       await checkState('1.5', '250', '375');
 
-      await user2starcx.stake(utils.parseEther('150'));
+      await user2starcx.stake(utils.parseEther('150'), user2ScoreProof);
 
       await checkState('1.5', '350', '525');
 
@@ -495,7 +565,7 @@ describe('MockStakingAccrualERC20', () => {
       await checkState('2', '100', '200');
 
       await starcx.recoverTokens(utils.parseEther('50'));
-      
+
       await checkState('1.5', '100', '150');
 
       await user2starcx.startExitCooldown();
@@ -507,9 +577,14 @@ describe('MockStakingAccrualERC20', () => {
   });
 });
 
-async function checkUser(starcx: MockStakingAccrualERC20, user: SignerWithAddress) {
+async function checkUser(
+  starcx: MockStakingAccrualERC20,
+  user: SignerWithAddress,
+) {
   const stArcxBalance = await starcx.balanceOf(user.address);
   const arcAmount = await starcx.toStakingToken(stArcxBalance);
-  expect(arcAmount).eq(stArcxBalance.mul(await starcx.getExchangeRate()).div(BASE));
+  expect(arcAmount).eq(
+    stArcxBalance.mul(await starcx.getExchangeRate()).div(BASE),
+  );
   expect(await starcx.toStakedToken(arcAmount)).eq(stArcxBalance);
 }
