@@ -524,10 +524,10 @@ describe('DefiPassport', () => {
 
       await defiPassport
         .connect(skinManager)
-        .setApprovedSkin(skinAddress,skinTokenId,  true);
+        .setApprovedSkin(skinAddress, skinTokenId, true);
 
       expect(await defiPassport.approvedSkins(skinAddress, skinTokenId)).to.be.true;
-      expect(await defiPassport.approvedSkins(skinAddress, otherSkinTokenId)).to.be.false;
+      expect(await defiPassport.approvedSkins(skinAddress, skinTokenId.add(1))).to.be.false;
     });
   });
 
