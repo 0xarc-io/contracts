@@ -31,6 +31,10 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         bool _status
     );
 
+    event DefaultActiveSkinChanged(
+        address _skin
+    );
+
     event ActiveSkinSet(
         uint256 _tokenId,
         SkinRecord _skinRecord
@@ -195,6 +199,8 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         );
 
         defaultActiveSkin = _skin;
+
+        emit DefaultActiveSkinChanged(_skin);
     }
 
     /**
