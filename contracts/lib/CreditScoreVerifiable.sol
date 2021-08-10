@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import {Address} from "./Address.sol";
 
-import {ISapphireCreditScore} from "../debt/sapphire/SapphireCreditScore.sol";
+import {ISapphireCreditScore} from "../debt/sapphire/ISapphireCreditScore.sol";
 import {SapphireTypes} from "../debt/sapphire/SapphireTypes.sol";
 
 /**

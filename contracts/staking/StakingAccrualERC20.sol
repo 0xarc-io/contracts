@@ -8,9 +8,12 @@ import {Initializable} from "../lib/Initializable.sol";
 import {Address} from "../lib/Address.sol";
 import {SafeERC20} from "../lib/SafeERC20.sol";
 import {SafeMath} from "../lib/SafeMath.sol";
+import {CreditScoreVerifiable} from "../lib/CreditScoreVerifiable.sol";
 
 import {BaseERC20} from "../token/BaseERC20.sol";
 import {IPermittableERC20} from "../token/IPermittableERC20.sol";
+import {SapphireTypes} from "../debt/sapphire/SapphireTypes.sol";
+import {ISapphireCreditScore} from "../debt/sapphire/ISapphireCreditScore.sol";
 
 /**
  * @notice An ERC20 that allows users to deposit a given token, where their
@@ -21,7 +24,7 @@ import {IPermittableERC20} from "../token/IPermittableERC20.sol";
  *         intent, which will trigger a cooldown after which they will be able
  *         to reclaim their share.
  */
-contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
+contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Initializable {
 
     /* ========== Libraries ========== */
 
@@ -62,6 +65,7 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
     constructor ()
         public
         BaseERC20("", "", 18)
+        CreditScoreVerifiable(address(0))
     {}
 
     /* ========== Restricted Functions ========== */
@@ -71,7 +75,8 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
         string calldata __symbol,
         uint8 __decimals,
         address _stakingToken,
-        uint256 _exitCooldownDuration
+        uint256 _exitCooldownDuration,
+        address _creditScoreContract
     )
         external
         onlyAdmin
@@ -87,7 +92,14 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
             "StakingAccrualERC20: staking token is not a contract"
         );
 
+        require (
+            _creditScoreContract.isContract(),
+            "StakingAccrualERC20: the credit score contract is invalid"
+        );
+
         stakingToken = IPermittableERC20(_stakingToken);
+
+        creditScoreContract = ISapphireCreditScore(_creditScoreContract);
     }
 
     /**
@@ -147,9 +159,11 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
     /* ========== Mutative Functions ========== */
 
     function stake(
-        uint256 _amount
+        uint256 _amount,
+        SapphireTypes.ScoreProof memory _scoreProof
     )
         public
+        checkScoreProof(_scoreProof, true)
     {
         uint256 cooldownTimestamp = cooldowns[msg.sender];
 
@@ -182,9 +196,10 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
         uint256 _deadline,
         uint8 _v,
         bytes32 _r,
-        bytes32 _s
+        bytes32 _s,
+        SapphireTypes.ScoreProof memory _scoreProof
     )
-        external
+        public
     {
         stakingToken.permit(
             msg.sender,
@@ -195,7 +210,7 @@ contract StakingAccrualERC20 is BaseERC20, Adminable, Initializable {
             _r,
             _s
         );
-        stake(_amount);
+        stake(_amount, _scoreProof);
     }
 
     /**
