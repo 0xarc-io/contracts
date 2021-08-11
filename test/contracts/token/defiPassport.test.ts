@@ -654,7 +654,7 @@ describe('DefiPassport', () => {
       expect(defaultActiveSkin.skinTokenId).eq(otherSkinTokenId)
     });
 
-    it('change default active skin id', async () => {
+    it('changes the default active skin id', async () => {
       await skinsContract.mint(owner.address, skinTokenId.add(1));
       await defiPassport
         .connect(skinManager)
