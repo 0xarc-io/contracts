@@ -65,7 +65,6 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
     constructor ()
         public
         BaseERC20("", "", 18)
-        CreditScoreVerifiable(address(0))
     {}
 
     /* ========== Restricted Functions ========== */
