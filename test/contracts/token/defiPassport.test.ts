@@ -623,7 +623,7 @@ describe('DefiPassport', () => {
         .revertedWith('DefiPassport: the skin is not default one');
     })
 
-    it('cannot set the same skin address', async () => {
+    it('reverts if setting the same skin twice', async () => {
       await defiPassport
         .connect(skinManager)
         .setDefaultSkin(defaultSkinAddress, true);
