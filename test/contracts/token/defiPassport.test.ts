@@ -632,7 +632,7 @@ describe('DefiPassport', () => {
         .revertedWith('DefiPassport: the skin is already set');
     });
 
-    it('change default active skin address', async () => {
+    it('sets the default active skin as the skin manager', async () => {
       await defiPassport
         .connect(skinManager)
         .setDefaultSkin(defaultSkinAddress, true);
