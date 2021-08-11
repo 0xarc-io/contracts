@@ -17,19 +17,6 @@ contract CreditScoreVerifiable {
 
     ISapphireCreditScore public creditScoreContract;
 
-    constructor(
-        address _creditScoreContract
-    )
-        public
-    {
-        require (
-            _creditScoreContract.isContract(),
-            "CreditScoreVerifiable: the credit score passed is not a contract"
-        );
-
-        creditScoreContract = ISapphireCreditScore(_creditScoreContract);
-    }
-
     /**
      * @dev Verifies that the proof is passed if the score is required, and
      *      validates it.
