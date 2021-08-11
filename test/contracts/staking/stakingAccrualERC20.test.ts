@@ -11,7 +11,10 @@ import {
 import { MockStakingAccrualERC20 } from '@src/typings/MockStakingAccrualERC20';
 import { MockStakingAccrualERC20Factory } from '@src/typings/MockStakingAccrualERC20Factory';
 import { getEmptyScoreProof, getScoreProof } from '@src/utils';
-import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
+import {
+  addSnapshotBeforeRestoreAfterEach,
+  immediatelyUpdateMerkleRoot,
+} from '@test/helpers/testingUtils';
 import { fail } from 'assert';
 import { expect } from 'chai';
 import { BigNumber, constants, utils } from 'ethers';
@@ -23,7 +26,7 @@ const STAKE_AMOUNT = utils.parseEther('100');
 const COOLDOWN_DURATION = 60;
 const INITIAL_BALANCE = STAKE_AMOUNT.mul('10');
 
-describe('MockStakingAccrualERC20', () => {
+describe('StakingAccrualERC20', () => {
   let starcx: MockStakingAccrualERC20;
   let stakingToken: TestToken;
 
@@ -69,27 +72,35 @@ describe('MockStakingAccrualERC20', () => {
   }
 
   async function init(ctx: ITestContext) {
+    const signers = await ethers.getSigners();
+    admin = signers[0];
+    user1 = signers[1];
+    user2 = signers[2];
+
     const user1CreditScore = {
       account: user1.address,
       amount: BigNumber.from(1),
     };
     const user2CreditScore = {
-      account: user1.address,
+      account: user2.address,
       amount: BigNumber.from(1),
     };
 
     creditScoreTree = new CreditScoreTree([user1CreditScore, user2CreditScore]);
 
     user1ScoreProof = getScoreProof(user1CreditScore, creditScoreTree);
-    user1ScoreProof = getScoreProof(user2CreditScore, creditScoreTree);
+    user2ScoreProof = getScoreProof(user2CreditScore, creditScoreTree);
+
+    creditScoreContract = ctx.contracts.sapphire.creditScore;
+
+    await immediatelyUpdateMerkleRoot(
+      creditScoreContract.connect(ctx.signers.interestSetter),
+      creditScoreTree.getHexRoot(),
+    );
   }
 
   before(async () => {
     const ctx = await generateContext(sapphireFixture, init);
-    const signers = await ethers.getSigners();
-    admin = signers[0];
-    user1 = signers[1];
-    user2 = signers[2];
 
     stakingToken = await new TestTokenFactory(admin).deploy('ARCx', 'ARCx', 18);
 
@@ -103,8 +114,6 @@ describe('MockStakingAccrualERC20', () => {
 
     await stakingToken.connect(user1).approve(starcx.address, INITIAL_BALANCE);
     await stakingToken.connect(user2).approve(starcx.address, INITIAL_BALANCE);
-
-    creditScoreContract = ctx.contracts.sapphire.creditScore;
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -234,19 +243,21 @@ describe('MockStakingAccrualERC20', () => {
 
   describe('Mutating functions', () => {
     describe('#stake', () => {
-      it('reverts if staking with an invalid proof', async () => {
+      it(`reverts if staking with someone else's proof`, async () => {
+        // Also try to stake with a proof other than the user's
         await expect(
-          user1starcx.stake(STAKE_AMOUNT, getEmptyScoreProof()),
+          user1starcx.stake(STAKE_AMOUNT, user2ScoreProof),
         ).to.be.revertedWith(
-          'PassportCampaign: proof is required but is not passed',
+          'CreditScoreVerifiable: proof does not belong to the caller',
         );
       });
 
       it('reverts if staking with no proof', async () => {
-        // Try to stake with a proof other than the user's
         await expect(
-          user1starcx.stake(STAKE_AMOUNT, user2ScoreProof),
-        ).to.be.revertedWith('SapphireCreditScore: invalid proof');
+          user1starcx.stake(STAKE_AMOUNT, getEmptyScoreProof()),
+        ).to.be.revertedWith(
+          'CreditScoreVerifiable: proof is required but it is not passed',
+        );
       });
 
       it('reverts if staking more than balance', async () => {
