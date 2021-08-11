@@ -409,7 +409,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
     /**
      * @notice Passport id to its active skin NFT
      *
-     * @param _tokenId Passport id
+     * @param _tokenId Passport ID
      */
     function activeSkins(
         uint256 _tokenId
