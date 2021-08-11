@@ -49,24 +49,6 @@ describe('CreditScoreVerifiable', () => {
 
   addSnapshotBeforeRestoreAfterEach();
 
-  describe('#constructor', () => {
-    it('reverts if the credit score contract passed is not an address', async () => {
-      await expect(
-        new CreditScoreVerifiableTestFactory(owner).deploy(
-          ethers.Wallet.createRandom().address,
-        ),
-      ).to.be.revertedWith(
-        'CreditScoreVerifiable: the credit score passed is not a contract',
-      );
-    });
-
-    it('sets the credit score contract', async () => {
-      expect(await contract.creditScoreContract()).to.eq(
-        creditScoreContract.address,
-      );
-    });
-  });
-
   describe('#checkScoreProof', () => {
     it('reverts if the score proof is required but not passed', async () => {
       await expect(
