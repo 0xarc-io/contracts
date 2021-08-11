@@ -39,7 +39,7 @@ contract DefiPassportStorage {
     /**
      * @notice Records the default skins
      */
-    address public defaultActiveSkin;
+    SkinRecord public defaultActiveSkin;
 
     /**
      * @notice The skin manager appointed by the admin, who can
