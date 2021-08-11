@@ -613,7 +613,7 @@ describe('DefiPassport', () => {
   });
 
   describe('#setActiveDefaultSkin', () => {
-    it('perform call as not-skin-manager', async () => {
+    it('reverts if called by non-skin-manager', async () => {
       await expect(defiPassport.setDefaultActiveSkin(defaultSkinAddress, defaultSkinTokenId))
         .revertedWith('DefiPassport: caller is not skin manager');
     });
