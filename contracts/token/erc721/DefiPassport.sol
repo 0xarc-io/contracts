@@ -181,8 +181,8 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
      *         unavailable user's active one
      * @notice Skin should be used as default one (with setDefaultSkin function)
      *
-     * @param _skin         Address of the skin NFT
-     * @param _skinTokenId  The NFT token ID
+     * @param _skin        Address of the skin NFT
+     * @param _skinTokenId The NFT token ID
      */
     function setDefaultActiveSkin(
         address _skin,
