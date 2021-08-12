@@ -47,7 +47,7 @@ contract DefiPassportStorage {
      */
     address public skinManager;
 
-    /* ========== Private Variables ========== */
+    /* ========== Internal Variables ========== */
 
     /**
      * @notice Maps a passport (tokenId) to its active skin NFT
