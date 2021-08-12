@@ -547,8 +547,8 @@ describe('DefiPassport', () => {
       await otherNFT.mint(owner.address, 2);
 
       await expect(
-        defiPassport.setDefaultSkin(otherNFT.address, true),
-      ).to.be.revertedWith('DefiPassport: caller is not skin manager');
+        defiPassport.connect(skinManager).setDefaultSkin(otherNFT.address, true),
+      ).to.be.revertedWith('ERC721: owner query for nonexistent token');
     });
 
     it('reverts if default skin is repeated', async () => {
