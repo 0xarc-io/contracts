@@ -487,7 +487,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
 
         require(
             currentSkin.skin != _skinRecord.skin ||
-            currentSkin.skinTokenId != _skinRecord.skinTokenId,
+                currentSkin.skinTokenId != _skinRecord.skinTokenId,
             "DefiPassport: the same skin is already active"
         );
 
