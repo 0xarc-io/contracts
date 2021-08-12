@@ -618,7 +618,7 @@ describe('DefiPassport', () => {
         .revertedWith('DefiPassport: caller is not skin manager');
     });
 
-    it('set skin which is not set as default skin', async () => {
+    it('reverts if setting a skin that is not registered as a default skin', async () => {
       await expect(defiPassport.connect(skinManager).setDefaultActiveSkin(defaultSkinAddress, defaultSkinTokenId))
         .revertedWith('DefiPassport: the skin is not default one');
     })
