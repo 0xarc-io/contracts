@@ -148,7 +148,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         if (!_status) {
             require(
                 defaultActiveSkin.skin != _skin,
-                "Defi Passport: the skin is used as default active one"
+                "Defi Passport: cannot unregister the default active skin"
             );
         }
 
