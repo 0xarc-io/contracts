@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import {Address} from "./Address.sol";
 
-import {ISapphireCreditScore} from "../debt/sapphire/SapphireCreditScore.sol";
+import {ISapphireCreditScore} from "../debt/sapphire/ISapphireCreditScore.sol";
 import {SapphireTypes} from "../debt/sapphire/SapphireTypes.sol";
 
 /**
@@ -16,19 +16,6 @@ contract CreditScoreVerifiable {
     using Address for address;
 
     ISapphireCreditScore public creditScoreContract;
-
-    constructor(
-        address _creditScoreContract
-    )
-        public
-    {
-        require (
-            _creditScoreContract.isContract(),
-            "CreditScoreVerifiable: the credit score passed is not a contract"
-        );
-
-        creditScoreContract = ISapphireCreditScore(_creditScoreContract);
-    }
 
     /**
      * @dev Verifies that the proof is passed if the score is required, and

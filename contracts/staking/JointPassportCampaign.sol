@@ -9,6 +9,7 @@ import {IERC20} from "../token/IERC20.sol";
 import {IPermittableERC20} from "../token/IPermittableERC20.sol";
 
 import {CampaignStorage} from "./CampaignStorage.sol";
+import {ISapphireCreditScore} from "../debt/sapphire/ISapphireCreditScore.sol";
 import {SapphireTypes} from "../debt/sapphire/SapphireTypes.sol";
 
 /**
@@ -146,7 +147,6 @@ contract JointPassportCampaign is CampaignStorage, CreditScoreVerifiable, Ownabl
         uint16 _creditScoreThreshold
     )
         public
-        CreditScoreVerifiable(_creditScoreContract)
     {
         require(
             _arcDAO != address(0) &&
@@ -156,6 +156,7 @@ contract JointPassportCampaign is CampaignStorage, CreditScoreVerifiable, Ownabl
             _collabRewardToken.isContract() &&
             _stakingToken.isContract() &&
             _daoAllocation > 0 &&
+            _creditScoreContract.isContract() &&
             _creditScoreThreshold > 0,
             "JointPassportCampaign: one or more values is empty"
         );
@@ -169,6 +170,7 @@ contract JointPassportCampaign is CampaignStorage, CreditScoreVerifiable, Ownabl
         creditScoreThreshold        = _creditScoreThreshold;
         maxStakePerUser             = _maxStakePerUser;
         daoAllocation               = _daoAllocation;
+        creditScoreContract         = ISapphireCreditScore(_creditScoreContract);
     }
 
     /* ========== Admin Functions ========== */
