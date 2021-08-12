@@ -608,7 +608,7 @@ describe('DefiPassport', () => {
       await expect(defiPassport
         .connect(skinManager)
         .setDefaultSkin(defaultSkinAddress, false))
-        .revertedWith('Defi Passport: the skin is used as default active one');
+        .revertedWith('Defi Passport: cannot unregister the default active skin');
     });
   });
 
@@ -620,7 +620,7 @@ describe('DefiPassport', () => {
 
     it('reverts if setting a skin that is not registered as a default skin', async () => {
       await expect(defiPassport.connect(skinManager).setDefaultActiveSkin(defaultSkinAddress, defaultSkinTokenId))
-        .revertedWith('DefiPassport: the skin is not default one');
+        .revertedWith('DefiPassport: the given skin is not registered as a default');
     })
 
     it('reverts if setting the same skin twice', async () => {
