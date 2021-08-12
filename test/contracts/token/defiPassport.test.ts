@@ -629,7 +629,7 @@ describe('DefiPassport', () => {
         .setDefaultSkin(defaultSkinAddress, true);
       
       await expect(defiPassport.connect(skinManager).setDefaultActiveSkin(defaultSkinAddress, defaultSkinTokenId))
-        .revertedWith('DefiPassport: the skin is already set');
+        .revertedWith('DefiPassport: the skin is already set as default active');
     });
 
     it('sets the default active skin as the skin manager', async () => {
