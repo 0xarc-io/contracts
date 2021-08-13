@@ -539,26 +539,6 @@
     "group": "JointPassportPool"
   },
   {
-    "name": "StakingAccrualERC20",
-    "source": "StakingAccrualERC20",
-    "address": "0x1999af0deE684C3E582d1F74FA35724Ee8c6F7e0",
-    "txn": "0x0823f815b2d158eb8f5315999b7f10cabfbbfbc3ac7abc7bb63cc9b3cd72388c",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "global",
-    "group": "StakingAccrualERC20"
-  },
-  {
-    "name": "StakingAccrualERC20Proxy",
-    "source": "ArcProxy",
-    "address": "0x214E117f757e704CbA58E0fe376e753c5fCa9932",
-    "txn": "0x90fe8e88793e1279b57d602760908ff0b17cc1bd7fae0afd9fb06bae99d0af70",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "global",
-    "group": "StakingAccrualERC20"
-  },
-  {
     "name": "DefaultPassportSkin",
     "source": "DefaultPassportSkin",
     "address": "0xE3B5EA2E513FD883bF9bC82FE6c18A1e944c067a",
@@ -597,5 +577,35 @@
     "version": 1,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "ARCx Test Token",
+    "source": "TestToken",
+    "address": "0x2d64415053671890256bB84C7961C950725E0d5f",
+    "txn": "0xb666d5b4564480c9c0cb4afcedd46412a96c8dfde309fdbc093222aae98daa2e",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "StakingAccrualERC20",
+    "source": "StakingAccrualERC20",
+    "address": "0x0c6363932F7Ed955756fBb83639327D57E5893C8",
+    "txn": "0xd2eb08ec22eee895fdf55a4a6c0bff05b1ea84fd83c7cf7efde8f75c92a85ebc",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": "StakingAccrualERC20"
+  },
+  {
+    "name": "StakingAccrualERC20Proxy",
+    "source": "ArcProxy",
+    "address": "0xDDE0c8BE32F2809bba23414f849b5D7d0C6c081F",
+    "txn": "0x232467272faf5a8f1c932e6973d21db1aae986241bd3d3da0a38a3dea2856eaf",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": "StakingAccrualERC20"
   }
 ]
