@@ -75,6 +75,8 @@ describe('StakingAccrualERC20', () => {
       creditScoreContract.address,
       sablierContract.address,
     );
+
+    await starcx.setSablierStreamId(await sablierContract.nextStreamId());
   }
 
   async function init(ctx: ITestContext) {
@@ -282,26 +284,30 @@ describe('StakingAccrualERC20', () => {
       });
 
       it('sets the sablier stream ID', async () => {
-        expect(await starcx.sablierStreamId()).to.eq(0);
+        // We first initialize the starcx contract with the next stream id in the tests.
+        // In reality it will not be like that, since we will first create the stream, then set the stream ID
+        expect(await starcx.sablierStreamId()).to.eq(
+          await sablierContract.nextStreamId(),
+        );
 
-        await starcx.setSablierContract(21);
+        await starcx.setSablierStreamId(21);
 
-        expect(await starcx.sablierContract()).to.eq(21);
+        expect(await starcx.sablierStreamId()).to.eq(21);
       });
     });
 
     describe('#claimStreamFunds', () => {
       it('claims the funds from the sablier stream', async () => {
-        await stakingToken.mintShare(admin.address, INITIAL_BALANCE);
+        await stakingToken.mintShare(admin.address, STAKE_AMOUNT);
 
         expect(await stakingToken.balanceOf(starcx.address)).to.eq(0);
 
         // Setup sablier stream by the admin to the starcx contract
         await sablierContract.setCurrentTimestamp(0);
-        await stakingToken.approve(starcx.address, INITIAL_BALANCE);
+        await stakingToken.approve(sablierContract.address, STAKE_AMOUNT);
         await sablierContract.createStream(
           starcx.address,
-          INITIAL_BALANCE,
+          STAKE_AMOUNT,
           stakingToken.address,
           0,
           10,
@@ -310,13 +316,13 @@ describe('StakingAccrualERC20', () => {
         await sablierContract.setCurrentTimestamp(1);
         await starcx.claimStreamFunds();
         expect(await stakingToken.balanceOf(starcx.address)).to.eq(
-          INITIAL_BALANCE.div(10),
+          STAKE_AMOUNT.div(10),
         );
 
         await sablierContract.setCurrentTimestamp(2);
         await starcx.claimStreamFunds();
         expect(await stakingToken.balanceOf(starcx.address)).to.eq(
-          INITIAL_BALANCE.div(10).mul(2),
+          STAKE_AMOUNT.div(10).mul(2),
         );
       });
     });
