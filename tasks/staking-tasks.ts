@@ -518,6 +518,7 @@ task(
     'Minimal duration of withdrawing staking token from staking accrual contract',
   )
   .addParam('creditscore', 'Address of the credit score contract')
+  .addParam('sablier', 'Address of the Sablier contract to use')
   .addFlag('implementationonly', 'Only deploy implementation')
   .setAction(async (taskArgs, hre) => {
     const {
@@ -527,6 +528,7 @@ task(
       exitcooldownduration: exitCoolDownDuration,
       implementationonly: implementationOnly,
       creditscore: creditScoreContract,
+      sablier
     } = taskArgs;
 
     const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
@@ -612,6 +614,7 @@ task(
       stakingToken,
       exitCoolDownDuration,
       creditScoreContract,
+      sablier.address
     );
     console.log(green(`Init successfully called`));
 
