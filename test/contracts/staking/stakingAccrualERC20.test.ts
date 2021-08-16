@@ -189,6 +189,7 @@ describe('StakingAccrualERC20', () => {
 
       it('sets the staking token and the staking cooldown', async () => {
         expect(await starcx.stakingToken()).to.eq(stakingToken.address);
+        expect(await starcx.exitCooldownDuration()).to.eq(COOLDOWN_DURATION)
       });
     });
 
@@ -239,6 +240,23 @@ describe('StakingAccrualERC20', () => {
         expect(await stakingToken.balanceOf(admin.address)).to.eq(STAKE_AMOUNT);
       });
     });
+
+    describe('#setSablierContract', () => {
+      it('reverts if called by non-admin')
+
+      it('sets the sablier contract if called the admin')
+    })
+
+    describe('#setSablierStreamId', () => {
+      it('reverts if called by non-admin')
+
+      it('sets the sablier stream ID')
+    })
+    
+    describe('#claimStreamFunds', () => {
+      it('claims the funds from the sablier stream')
+    })
+    
   });
 
   describe('Mutating functions', () => {
@@ -286,6 +304,8 @@ describe('StakingAccrualERC20', () => {
 
         expect(await starcx.balanceOf(user1.address)).to.eq(STAKE_AMOUNT);
       });
+
+      it('withdraws from sablier stream')
     });
 
     // describe('#stakeWithPermit', () => {
@@ -372,6 +392,8 @@ describe('StakingAccrualERC20', () => {
           INITIAL_BALANCE,
         );
       });
+
+      it('withdraws from the sablier stream')
 
       it('exits with MORE ARCx than initially if the contract has accumulated more tokens', async () => {
         await user1starcx.stake(STAKE_AMOUNT, user1ScoreProof);
