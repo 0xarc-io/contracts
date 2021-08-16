@@ -2,7 +2,7 @@ import { MockProvider } from '@ethereum-waffle/provider';
 import { ImUSDOracle, ImUSDOracleFactory } from '@src/typings';
 import { expect } from 'chai';
 
-describe('imUSDOracle', () => {
+xdescribe('imUSDOracle', () => {
   let oracle: ImUSDOracle;
 
   before(async () => {

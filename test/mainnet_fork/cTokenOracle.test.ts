@@ -3,7 +3,7 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { CTokenOracle, CTokenOracleFactory } from '@src/typings';
 import { expect } from 'chai';
 
-describe('CTokenOracle', () => {
+xdescribe('CTokenOracle', () => {
   let cUSDCOracle: CTokenOracle;
 
   before(async () => {

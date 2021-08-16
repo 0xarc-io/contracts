@@ -3,7 +3,7 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { BBadgerOracle, BBadgerOracleFactory } from '@src/typings';
 import { expect } from 'chai';
 
-describe('bBadgerOracle', () => {
+xdescribe('bBadgerOracle', () => {
   let oracle: BBadgerOracle;
 
   before(async () => {

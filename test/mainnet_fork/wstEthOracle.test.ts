@@ -4,7 +4,7 @@ import { WstEthOracle } from '@src/typings/WstEthOracle';
 import { WstEthOracleFactory } from '@src/typings/WstEthOracleFactory';
 import { expect } from 'chai';
 
-describe('WstEthOracle', () => {
+xdescribe('WstEthOracle', () => {
   let oracle: WstEthOracle;
 
   before(async () => {
