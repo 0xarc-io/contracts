@@ -38,7 +38,7 @@ describe('StakingAccrualERC20', () => {
   let user1starcx: MockStakingAccrualERC20;
   let user2starcx: MockStakingAccrualERC20;
 
-  let sablierContract: MockSablier
+  let sablierContract: MockSablier;
 
   let creditScoreTree: CreditScoreTree;
   let user1ScoreProof: CreditScoreProof;
@@ -56,7 +56,7 @@ describe('StakingAccrualERC20', () => {
       throw Error('Contract already set up');
     }
 
-    sablierContract = await new MockSablierFactory(admin).deploy()
+    sablierContract = await new MockSablierFactory(admin).deploy();
 
     const starcxImpl = await new MockStakingAccrualERC20Factory(admin).deploy();
     const proxy = await new ArcProxyFactory(admin).deploy(
@@ -73,7 +73,7 @@ describe('StakingAccrualERC20', () => {
       stakingToken.address,
       COOLDOWN_DURATION,
       creditScoreContract.address,
-      sablierContract.address
+      sablierContract.address,
     );
   }
 
@@ -135,7 +135,7 @@ describe('StakingAccrualERC20', () => {
             stakingToken.address,
             COOLDOWN_DURATION,
             creditScoreContract.address,
-            sablierContract.address
+            sablierContract.address,
           ),
         ).to.be.revertedWith('Adminable: caller is not admin');
       });
@@ -149,7 +149,7 @@ describe('StakingAccrualERC20', () => {
             stakingToken.address,
             COOLDOWN_DURATION,
             creditScoreContract.address,
-            sablierContract.address
+            sablierContract.address,
           ),
         ).to.be.revertedWith('Initializable: contract is already initialized');
       });
@@ -177,7 +177,7 @@ describe('StakingAccrualERC20', () => {
             constants.AddressZero,
             COOLDOWN_DURATION,
             creditScoreContract.address,
-            sablierContract.address
+            sablierContract.address,
           ),
         ).to.be.revertedWith(
           'StakingAccrualERC20: staking token is not a contract',
@@ -190,7 +190,7 @@ describe('StakingAccrualERC20', () => {
             user1.address,
             COOLDOWN_DURATION,
             creditScoreContract.address,
-            sablierContract.address
+            sablierContract.address,
           ),
         ).to.be.revertedWith(
           'StakingAccrualERC20: staking token is not a contract',
@@ -199,8 +199,8 @@ describe('StakingAccrualERC20', () => {
 
       it('sets the staking token, the staking cooldown and the sablier contract', async () => {
         expect(await starcx.stakingToken()).to.eq(stakingToken.address);
-        expect(await starcx.exitCooldownDuration()).to.eq(COOLDOWN_DURATION)
-        expect(await starcx.sablierContract()).to.eq(sablierContract.address)
+        expect(await starcx.exitCooldownDuration()).to.eq(COOLDOWN_DURATION);
+        expect(await starcx.sablierContract()).to.eq(sablierContract.address);
       });
     });
 
@@ -253,60 +253,73 @@ describe('StakingAccrualERC20', () => {
     });
 
     describe('#setSablierContract', () => {
-      let otherSablier: MockSablier
+      let otherSablier: MockSablier;
 
       beforeEach(async () => {
-        otherSablier = await new MockSablierFactory(user1).deploy()
-      })
-      
+        otherSablier = await new MockSablierFactory(user1).deploy();
+      });
+
       it('reverts if called by non-admin', async () => {
-        await expect(user1starcx.setSablierContract(otherSablier.address)).to.be.revertedWith('Adminable: caller is not admin')
-      })
+        await expect(
+          user1starcx.setSablierContract(otherSablier.address),
+        ).to.be.revertedWith('Adminable: caller is not admin');
+      });
 
       it('sets the sablier contract if called the admin', async () => {
-        expect(await starcx.sablierContract()).to.eq(sablierContract.address)
+        expect(await starcx.sablierContract()).to.eq(sablierContract.address);
 
-        await starcx.setSablierContract(otherSablier.address)
+        await starcx.setSablierContract(otherSablier.address);
 
-        expect(await starcx.sablierContract()).to.eq(otherSablier.address)
-      })
-    })
+        expect(await starcx.sablierContract()).to.eq(otherSablier.address);
+      });
+    });
 
     describe('#setSablierStreamId', () => {
       it('reverts if called by non-admin', async () => {
-        await expect(user1starcx.setSablierStreamId(21)).to.be.revertedWith('Adminable: caller is not admin')
-      })
+        await expect(user1starcx.setSablierStreamId(21)).to.be.revertedWith(
+          'Adminable: caller is not admin',
+        );
+      });
 
       it('sets the sablier stream ID', async () => {
-        expect(await starcx.sablierStreamId()).to.eq(0)
+        expect(await starcx.sablierStreamId()).to.eq(0);
 
-        await starcx.setSablierContract(21)
+        await starcx.setSablierContract(21);
 
-        expect(await starcx.sablierContract()).to.eq(21)
-      })
-    })
-    
+        expect(await starcx.sablierContract()).to.eq(21);
+      });
+    });
+
     describe('#claimStreamFunds', () => {
       it('claims the funds from the sablier stream', async () => {
-        await stakingToken.mintShare(admin.address, INITIAL_BALANCE)
+        await stakingToken.mintShare(admin.address, INITIAL_BALANCE);
 
-        expect(await stakingToken.balanceOf(starcx.address)).to.eq(0)
+        expect(await stakingToken.balanceOf(starcx.address)).to.eq(0);
 
         // Setup sablier stream by the admin to the starcx contract
-        await sablierContract.setCurrentTimestamp(0)
-        await stakingToken.approve(starcx.address, INITIAL_BALANCE)
-        await sablierContract.createStream(starcx.address, INITIAL_BALANCE, stakingToken.address, 0, 10)
+        await sablierContract.setCurrentTimestamp(0);
+        await stakingToken.approve(starcx.address, INITIAL_BALANCE);
+        await sablierContract.createStream(
+          starcx.address,
+          INITIAL_BALANCE,
+          stakingToken.address,
+          0,
+          10,
+        );
 
-        await sablierContract.setCurrentTimestamp(1)
-        await starcx.claimStreamFunds()
-        expect(await stakingToken.balanceOf(starcx.address)).to.eq(INITIAL_BALANCE.div(10))
+        await sablierContract.setCurrentTimestamp(1);
+        await starcx.claimStreamFunds();
+        expect(await stakingToken.balanceOf(starcx.address)).to.eq(
+          INITIAL_BALANCE.div(10),
+        );
 
-        await sablierContract.setCurrentTimestamp(2)
-        await starcx.claimStreamFunds()
-        expect(await stakingToken.balanceOf(starcx.address)).to.eq(INITIAL_BALANCE.div(10).mul(2))
-      })
-    })
-    
+        await sablierContract.setCurrentTimestamp(2);
+        await starcx.claimStreamFunds();
+        expect(await stakingToken.balanceOf(starcx.address)).to.eq(
+          INITIAL_BALANCE.div(10).mul(2),
+        );
+      });
+    });
   });
 
   describe('Mutating functions', () => {
@@ -356,19 +369,27 @@ describe('StakingAccrualERC20', () => {
       });
 
       it('withdraws from the sablier stream', async () => {
-        await stakingToken.mintShare(admin.address, INITIAL_BALANCE)
-        expect(await stakingToken.balanceOf(starcx.address)).to.eq(0)
+        await stakingToken.mintShare(admin.address, INITIAL_BALANCE);
+        expect(await stakingToken.balanceOf(starcx.address)).to.eq(0);
 
         // Setup sablier stream by the admin to the starcx contract
-        await sablierContract.setCurrentTimestamp(0)
-        await stakingToken.approve(starcx.address, INITIAL_BALANCE)
-        await sablierContract.createStream(starcx.address, INITIAL_BALANCE, stakingToken.address, 0, 10)        
+        await sablierContract.setCurrentTimestamp(0);
+        await stakingToken.approve(starcx.address, INITIAL_BALANCE);
+        await sablierContract.createStream(
+          starcx.address,
+          INITIAL_BALANCE,
+          stakingToken.address,
+          0,
+          10,
+        );
 
-        await sablierContract.setCurrentTimestamp(1)
+        await sablierContract.setCurrentTimestamp(1);
         await user1starcx.stake(STAKE_AMOUNT, user1ScoreProof);
 
-        expect(await stakingToken.balanceOf(starcx.address)).to.eq(INITIAL_BALANCE.div(10))
-      })
+        expect(await stakingToken.balanceOf(starcx.address)).to.eq(
+          INITIAL_BALANCE.div(10),
+        );
+      });
     });
 
     // describe('#stakeWithPermit', () => {
@@ -462,19 +483,29 @@ describe('StakingAccrualERC20', () => {
 
         await waitCooldown();
 
-        await stakingToken.mintShare(admin.address, INITIAL_BALANCE)
-        expect(await stakingToken.balanceOf(starcx.address)).to.eq(0)
+        await stakingToken.mintShare(admin.address, INITIAL_BALANCE);
+        expect(await stakingToken.balanceOf(user1.address)).to.eq(
+          INITIAL_BALANCE.sub(STAKE_AMOUNT),
+        );
 
         // Setup sablier stream by the admin to the starcx contract
-        await sablierContract.setCurrentTimestamp(0)
-        await stakingToken.approve(starcx.address, INITIAL_BALANCE)
-        await sablierContract.createStream(starcx.address, INITIAL_BALANCE, stakingToken.address, 0, 10)
+        await sablierContract.setCurrentTimestamp(0);
+        await stakingToken.approve(sablierContract.address, INITIAL_BALANCE);
+        await sablierContract.createStream(
+          starcx.address,
+          INITIAL_BALANCE,
+          stakingToken.address,
+          0,
+          10,
+        );
 
-        await sablierContract.setCurrentTimestamp(1)
+        await sablierContract.setCurrentTimestamp(1);
         await user1starcx.exit();
 
-        expect(await stakingToken.balanceOf(starcx.address)).to.eq(INITIAL_BALANCE.div(10))
-      })
+        expect(await stakingToken.balanceOf(user1.address)).to.eq(
+          INITIAL_BALANCE.add(INITIAL_BALANCE.div(10)),
+        );
+      });
 
       it('exits with MORE ARCx than initially if the contract has accumulated more tokens', async () => {
         await user1starcx.stake(STAKE_AMOUNT, user1ScoreProof);
