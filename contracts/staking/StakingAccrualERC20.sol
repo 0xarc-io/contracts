@@ -64,6 +64,8 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
 
     event Exited(address indexed _user, uint256 _amount);
 
+    event SablierContractSet(address _sablierContract);
+
     event SablierStreamIdSet(uint256 _newStreamId);
 
     event FundsWithdrawnFromSablier(uint256 _streamId, uint256 _amount);
@@ -160,7 +162,26 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
     }
 
     /**
-     * @notice Sets the sablier stream ID
+     * @notice Sets the Sablier contract address
+     */
+    function setSablierContract (
+        address _sablierContract
+    )
+        external
+        onlyAdmin
+    {
+        require (
+            _sablierContract.isContract(),
+            "StakingAccrualERC20: address is not a contract"
+        );
+
+        sablierContract = ISablier(_sablierContract);
+
+        emit SablierContractSet(_sablierContract);
+    }
+
+    /**
+     * @notice Sets the Sablier stream ID
      */
     function setSablierStreamId(
         uint256 _sablierStreamId
@@ -173,19 +194,16 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
             "StakingAccrualERC20: the same stream ID is already set"
         );
 
+        (, address recipient,,,,,,) = sablierContract.getStream(_sablierStreamId);
+
+        require (
+            recipient == address(this),
+            "StakingAccrualERC20: incorrect stream ID"
+        );
+
         sablierStreamId = _sablierStreamId;
 
         emit SablierStreamIdSet(sablierStreamId);
-    }
-
-    /* ========== Restricted Functions ========== */
-
-    function currentTimestamp()
-        public
-        view
-        returns (uint256)
-    {
-        return block.timestamp;
     }
 
     /* ========== Mutative Functions ========== */
@@ -197,6 +215,8 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
         public
         checkScoreProof(_scoreProof, true)
     {
+        claimStreamFunds();
+
         uint256 cooldownTimestamp = cooldowns[msg.sender];
 
         require (
@@ -275,6 +295,8 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
     function exit()
         external
     {
+        claimStreamFunds();
+
         uint256 cooldownTimestamp = cooldowns[msg.sender];
          // Gets the amount of stakedToken in existence
         uint256 totalShares = totalSupply();
@@ -346,5 +368,13 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
             return 0;
         }
         return token.mul(totalSupply()).div(stakingBalance);
+    }
+
+    function currentTimestamp()
+        public
+        view
+        returns (uint256)
+    {
+        return block.timestamp;
     }
 }
