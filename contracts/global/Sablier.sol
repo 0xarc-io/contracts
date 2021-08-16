@@ -110,8 +110,8 @@ contract Sablier is ISablier, ReentrancyGuard, CarefulMath {
      */
     function deltaOf(uint256 streamId) public view streamExists(streamId) returns (uint256 delta) {
         Stream memory stream = streams[streamId];
-        if (block.timestamp <= stream.startTime) return 0;
-        if (block.timestamp < stream.stopTime) return block.timestamp - stream.startTime;
+        if (currentTimestamp() <= stream.startTime) return 0;
+        if (currentTimestamp() < stream.stopTime) return currentTimestamp() - stream.startTime;
         return stream.stopTime - stream.startTime;
     }
 
@@ -202,7 +202,7 @@ contract Sablier is ISablier, ReentrancyGuard, CarefulMath {
         require(recipient != address(this), "stream to the contract itself");
         require(recipient != msg.sender, "stream to the caller");
         require(deposit > 0, "deposit is zero");
-        require(startTime >= block.timestamp, "start time before block.timestamp");
+        require(startTime >= currentTimestamp(), "start time before block.timestamp");
         require(stopTime > startTime, "stop time before the start time");
 
         CreateStreamLocalVars memory vars;
@@ -321,5 +321,13 @@ contract Sablier is ISablier, ReentrancyGuard, CarefulMath {
             recipientBalance
         );
         return true;
+    }
+
+    function currentTimestamp()
+        public
+        view
+        returns (uint256)
+    {
+        return block.timestamp;
     }
 }
