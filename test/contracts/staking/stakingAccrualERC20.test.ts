@@ -5,6 +5,8 @@ import { CreditScoreTree } from '@src/MerkleTree';
 import {
   ArcProxyFactory,
   MockSapphireCreditScore,
+  Sablier,
+  SablierFactory,
   TestToken,
   TestTokenFactory,
 } from '@src/typings';
@@ -37,6 +39,8 @@ describe('StakingAccrualERC20', () => {
   let user1starcx: MockStakingAccrualERC20;
   let user2starcx: MockStakingAccrualERC20;
 
+  let sablierContract: Sablier
+
   let creditScoreTree: CreditScoreTree;
   let user1ScoreProof: CreditScoreProof;
   let user2ScoreProof: CreditScoreProof;
@@ -53,6 +57,8 @@ describe('StakingAccrualERC20', () => {
       throw Error('Contract already set up');
     }
 
+    sablierContract = await new SablierFactory(admin).deploy()
+
     const starcxImpl = await new MockStakingAccrualERC20Factory(admin).deploy();
     const proxy = await new ArcProxyFactory(admin).deploy(
       starcxImpl.address,
@@ -68,6 +74,7 @@ describe('StakingAccrualERC20', () => {
       stakingToken.address,
       COOLDOWN_DURATION,
       creditScoreContract.address,
+      sablierContract.address
     );
   }
 
@@ -100,7 +107,7 @@ describe('StakingAccrualERC20', () => {
   }
 
   before(async () => {
-    const ctx = await generateContext(sapphireFixture, init);
+    await generateContext(sapphireFixture, init);
 
     stakingToken = await new TestTokenFactory(admin).deploy('ARCx', 'ARCx', 18);
 
@@ -129,6 +136,7 @@ describe('StakingAccrualERC20', () => {
             stakingToken.address,
             COOLDOWN_DURATION,
             creditScoreContract.address,
+            sablierContract.address
           ),
         ).to.be.revertedWith('Adminable: caller is not admin');
       });
@@ -142,6 +150,7 @@ describe('StakingAccrualERC20', () => {
             stakingToken.address,
             COOLDOWN_DURATION,
             creditScoreContract.address,
+            sablierContract.address
           ),
         ).to.be.revertedWith('Initializable: contract is already initialized');
       });
@@ -169,6 +178,7 @@ describe('StakingAccrualERC20', () => {
             constants.AddressZero,
             COOLDOWN_DURATION,
             creditScoreContract.address,
+            sablierContract.address
           ),
         ).to.be.revertedWith(
           'StakingAccrualERC20: staking token is not a contract',
@@ -181,15 +191,17 @@ describe('StakingAccrualERC20', () => {
             user1.address,
             COOLDOWN_DURATION,
             creditScoreContract.address,
+            sablierContract.address
           ),
         ).to.be.revertedWith(
           'StakingAccrualERC20: staking token is not a contract',
         );
       });
 
-      it('sets the staking token and the staking cooldown', async () => {
+      it('sets the staking token, the staking cooldown and the sablier contract', async () => {
         expect(await starcx.stakingToken()).to.eq(stakingToken.address);
         expect(await starcx.exitCooldownDuration()).to.eq(COOLDOWN_DURATION)
+        expect(await starcx.sablierContract()).to.eq(sablierContract.address)
       });
     });
 

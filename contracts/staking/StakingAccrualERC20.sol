@@ -10,6 +10,7 @@ import {SafeERC20} from "../lib/SafeERC20.sol";
 import {SafeMath} from "../lib/SafeMath.sol";
 import {CreditScoreVerifiable} from "../lib/CreditScoreVerifiable.sol";
 
+import {ISablier} from "../global/ISablier.sol";
 import {BaseERC20} from "../token/BaseERC20.sol";
 import {IPermittableERC20} from "../token/IPermittableERC20.sol";
 import {SapphireTypes} from "../debt/sapphire/SapphireTypes.sol";
@@ -41,6 +42,8 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
     uint8 private _decimals;
 
     IPermittableERC20 public stakingToken;
+
+    ISablier public sablierContract;
 
     /**
      * @notice Cooldown duration to be elapsed for users to exit
@@ -75,7 +78,8 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
         uint8 __decimals,
         address _stakingToken,
         uint256 _exitCooldownDuration,
-        address _creditScoreContract
+        address _creditScoreContract,
+        address _sablierContract
     )
         external
         onlyAdmin
@@ -96,9 +100,14 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
             "StakingAccrualERC20: the credit score contract is invalid"
         );
 
-        stakingToken = IPermittableERC20(_stakingToken);
+        require (
+            _sablierContract.isContract(),
+            "StakingAccrualERC20: the sablier contract is invalid"
+        );
 
+        stakingToken = IPermittableERC20(_stakingToken);
         creditScoreContract = ISapphireCreditScore(_creditScoreContract);
+        sablierContract = ISablier(_sablierContract);
     }
 
     /**
