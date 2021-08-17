@@ -236,7 +236,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
      *         The Defi Passport considers all skins minted by whitelisted contracts
      *         to be valid skins for applying them on to the passport.
      *         The user applying the skins must still be their owner though.
-     */ 
+     */
     function setWhitelistedSkin(
         address _skinContract,
         bool _status
@@ -432,7 +432,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         if (defaultSkins[_skinContract]) {
             return true;
         } else if (
-            whitelistedSkins[_skinContract] || 
+            whitelistedSkins[_skinContract] ||
             approvedSkins[_skinContract][_skinTokenId]
         ) {
             return _isSkinOwner(_user, _skinContract, _skinTokenId);

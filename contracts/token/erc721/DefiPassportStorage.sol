@@ -28,7 +28,7 @@ contract DefiPassportStorage {
 
     /**
      * @notice Records the whitelisted skins. All tokens minted by these contracts
-     *         will be considered valid to apply on the passport, given they are 
+     *         will be considered valid to apply on the passport, given they are
      *         owned by the caller.
      */
     mapping (address => bool) public whitelistedSkins;
