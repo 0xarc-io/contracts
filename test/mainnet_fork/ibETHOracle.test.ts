@@ -4,7 +4,7 @@ import { IbETHOracle } from '@src/typings/IbETHOracle';
 import { IbETHOracleFactory } from '@src/typings/IbETHOracleFactory';
 import { expect } from 'chai';
 
-describe('ibETHOracle', () => {
+xdescribe('ibETHOracle', () => {
   let oracle: IbETHOracle;
 
   before(async () => {

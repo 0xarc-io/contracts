@@ -4,7 +4,7 @@ import { XSushiOracle } from '@src/typings/XSushiOracle';
 import { XSushiOracleFactory } from '@src/typings/XSushiOracleFactory';
 import { expect } from 'chai';
 
-describe('XSushiOracle', () => {
+xdescribe('XSushiOracle', () => {
   let xSushiOracle: XSushiOracle;
 
   before(async () => {
