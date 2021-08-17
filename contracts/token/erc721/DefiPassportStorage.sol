@@ -27,6 +27,13 @@ contract DefiPassportStorage {
     ISapphireCreditScore public creditScoreContract;
 
     /**
+     * @notice Records the whitelisted skins. All tokens minted by these contracts
+     *         will be considered valid to apply on the passport, given they are 
+     *         owned by the caller.
+     */
+    mapping (address => bool) public whitelistedSkins;
+
+    /**
      * @notice Records the approved skins of the passport
      */
     mapping (address => mapping (uint256 => bool)) public approvedSkins;

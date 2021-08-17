@@ -45,6 +45,8 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
 
     event CreditScoreContractSet(address _creditScoreContract);
 
+    event WhitelistSkinSet(address _skin, bool _status);
+
     /* ========== Constructor ========== */
 
     constructor()
@@ -229,6 +231,34 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         emit ApprovedSkinStatusChanged(_skin, _skinTokenId, _status);
     }
 
+    /**
+     * @notice Adds or removes a skin contract to the whitelist.
+     *         The Defi Passport considers all skins minted by whitelisted contracts
+     *         to be valid skins for applying them on to the passport.
+     *         The user applying the skins must still be their owner though.
+     */ 
+    function setWhitelistedSkin(
+        address _skinContract,
+        bool _status
+    )
+        external
+        onlySkinManager
+    {
+        require (
+            _skinContract.isContract(),
+            "DefiPassport: address is not a contract"
+        );
+
+        require (
+            whitelistedSkins[_skinContract] != _status,
+            "DefiPassport: the skin already has the same whitelist status"
+        );
+
+        whitelistedSkins[_skinContract] = _status;
+
+        emit WhitelistSkinSet(_skinContract, _status);
+    }
+
     function setCreditScoreContract(
         address _creditScoreAddress
     )
@@ -399,11 +429,22 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
             "DefiPassport: the specified skin token id does not exist"
         );
 
-        return defaultSkins[_skinContract] ||
-            (
-                approvedSkins[_skinContract][_skinTokenId] &&
-                _isSkinOwner(_user, _skinContract, _skinTokenId)
-            );
+        if (defaultSkins[_skinContract]) {
+            return true;
+        } else if (
+            whitelistedSkins[_skinContract] || 
+            approvedSkins[_skinContract][_skinTokenId]
+        ) {
+            return _isSkinOwner(_user, _skinContract, _skinTokenId);
+        }
+
+        return false;
+
+        // return defaultSkins[_skinContract] ||
+        //     (
+        //         approvedSkins[_skinContract][_skinTokenId] &&
+        //         _isSkinOwner(_user, _skinContract, _skinTokenId)
+        //     );
     }
 
     /**
