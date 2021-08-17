@@ -10,6 +10,7 @@ import {SafeERC20} from "../lib/SafeERC20.sol";
 import {SafeMath} from "../lib/SafeMath.sol";
 import {CreditScoreVerifiable} from "../lib/CreditScoreVerifiable.sol";
 
+import {ISablier} from "../global/ISablier.sol";
 import {BaseERC20} from "../token/BaseERC20.sol";
 import {IPermittableERC20} from "../token/IPermittableERC20.sol";
 import {SapphireTypes} from "../debt/sapphire/SapphireTypes.sol";
@@ -42,6 +43,9 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
 
     IPermittableERC20 public stakingToken;
 
+    ISablier public sablierContract;
+    uint256 public sablierStreamId;
+
     /**
      * @notice Cooldown duration to be elapsed for users to exit
      */
@@ -60,6 +64,12 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
 
     event Exited(address indexed _user, uint256 _amount);
 
+    event SablierContractSet(address _sablierContract);
+
+    event SablierStreamIdSet(uint256 _newStreamId);
+
+    event FundsWithdrawnFromSablier(uint256 _streamId, uint256 _amount);
+
     /* ========== Constructor (ignore) ========== */
 
     constructor ()
@@ -75,7 +85,8 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
         uint8 __decimals,
         address _stakingToken,
         uint256 _exitCooldownDuration,
-        address _creditScoreContract
+        address _creditScoreContract,
+        address _sablierContract
     )
         external
         onlyAdmin
@@ -96,9 +107,14 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
             "StakingAccrualERC20: the credit score contract is invalid"
         );
 
-        stakingToken = IPermittableERC20(_stakingToken);
+        require (
+            _sablierContract.isContract(),
+            "StakingAccrualERC20: the sablier contract is invalid"
+        );
 
+        stakingToken = IPermittableERC20(_stakingToken);
         creditScoreContract = ISapphireCreditScore(_creditScoreContract);
+        sablierContract = ISablier(_sablierContract);
     }
 
     /**
@@ -145,14 +161,49 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
         );
     }
 
-    /* ========== Restricted Functions ========== */
-
-    function currentTimestamp()
-        public
-        view
-        returns (uint256)
+    /**
+     * @notice Sets the Sablier contract address
+     */
+    function setSablierContract (
+        address _sablierContract
+    )
+        external
+        onlyAdmin
     {
-        return block.timestamp;
+        require (
+            _sablierContract.isContract(),
+            "StakingAccrualERC20: address is not a contract"
+        );
+
+        sablierContract = ISablier(_sablierContract);
+
+        emit SablierContractSet(_sablierContract);
+    }
+
+    /**
+     * @notice Sets the Sablier stream ID
+     */
+    function setSablierStreamId(
+        uint256 _sablierStreamId
+    )
+        external
+        onlyAdmin
+    {
+        require (
+            sablierStreamId != _sablierStreamId,
+            "StakingAccrualERC20: the same stream ID is already set"
+        );
+
+        (, address recipient,,,,,,) = sablierContract.getStream(_sablierStreamId);
+
+        require (
+            recipient == address(this),
+            "StakingAccrualERC20: incorrect stream ID"
+        );
+
+        sablierStreamId = _sablierStreamId;
+
+        emit SablierStreamIdSet(sablierStreamId);
     }
 
     /* ========== Mutative Functions ========== */
@@ -164,6 +215,8 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
         public
         checkScoreProof(_scoreProof, true)
     {
+        claimStreamFunds();
+
         uint256 cooldownTimestamp = cooldowns[msg.sender];
 
         require (
@@ -216,7 +269,8 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
      * @notice Starts the exit cooldown. After this call the user won't be able to
      *         stake until they exit.
      */
-    function startExitCooldown() public
+    function startExitCooldown()
+        public
     {
         require (
             balanceOf(msg.sender) > 0,
@@ -238,8 +292,11 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
      *         the caller's cooldown time has elapsed. Exiting resets
      *         the cooldown so the user can start staking again.
      */
-    function exit() external
+    function exit()
+        external
     {
+        claimStreamFunds();
+
         uint256 cooldownTimestamp = cooldowns[msg.sender];
          // Gets the amount of stakedToken in existence
         uint256 totalShares = totalSupply();
@@ -268,6 +325,29 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
         stakingToken.safeTransfer(msg.sender, what);
     }
 
+    /**
+     * @notice Withdraws from the sablier stream if possible
+     */
+    function claimStreamFunds()
+        public
+    {
+        if (address(sablierContract) == address(0) || sablierStreamId == 0) {
+            return;
+        }
+
+        uint256 availableBalance = sablierContract.balanceOf(sablierStreamId, address(this));
+
+        if (availableBalance == 0) {
+            return;
+        }
+
+        sablierContract.withdrawFromStream(sablierStreamId, availableBalance);
+
+        emit FundsWithdrawnFromSablier(sablierStreamId, availableBalance);
+    }
+
+    /* ========== View Functions ========== */
+
     function getExchangeRate() public view returns (uint256) {
         if (totalSupply() == 0) {
             return 0;
@@ -288,5 +368,13 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
             return 0;
         }
         return token.mul(totalSupply()).div(stakingBalance);
+    }
+
+    function currentTimestamp()
+        public
+        view
+        returns (uint256)
+    {
+        return block.timestamp;
     }
 }
