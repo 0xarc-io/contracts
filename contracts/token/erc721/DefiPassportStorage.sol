@@ -16,6 +16,16 @@ contract DefiPassportStorage {
         uint256 skinTokenId;
     }
 
+    struct TokenIdStatus {
+        uint256 tokenId;
+        bool status;
+    }
+
+    struct SkinAndTokenIdStatusRecord {
+        address skin;
+        TokenIdStatus[] skinTokenIdStatuses;
+    }
+
     /* ========== Public Variables ========== */
 
     string public name;
