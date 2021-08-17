@@ -461,12 +461,6 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         }
 
         return false;
-
-        // return defaultSkins[_skinContract] ||
-        //     (
-        //         approvedSkins[_skinContract][_skinTokenId] &&
-        //         _isSkinOwner(_user, _skinContract, _skinTokenId)
-        //     );
     }
 
     /**
