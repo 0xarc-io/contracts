@@ -3,7 +3,7 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { BDIGGOracle, BDIGGOracleFactory } from '@src/typings';
 import { expect } from 'chai';
 
-describe('bDIGGOracle', () => {
+xdescribe('bDIGGOracle', () => {
   let oracle: BDIGGOracle;
 
   before(async () => {
