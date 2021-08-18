@@ -549,16 +549,6 @@
     "group": "DefiPassport"
   },
   {
-    "name": "DefiPassportClaimer",
-    "source": "DefiPassportClaimer",
-    "address": "0x8e8cEC23c1a6b50262A22A975CE5a89D1C24A8F8",
-    "txn": "0x60a407f9a0b3d8438591f34435979a273da165baed46d8bcdbc5cbe4e4f7d7e4",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "global",
-    "group": ""
-  },
-  {
     "name": "ARCx Test Token",
     "source": "TestToken",
     "address": "0x2d64415053671890256bB84C7961C950725E0d5f",
@@ -587,5 +577,15 @@
     "version": 1,
     "type": "global",
     "group": "StakingAccrualERC20"
+  },
+  {
+    "name": "DefiPassportClaimer",
+    "source": "DefiPassportClaimer",
+    "address": "0x5C19C692634bEd179435e4C44c3C7584571bAb42",
+    "txn": "0x5ec703c68cbb1c1e449dee772043949ca5218854e106e343b21d26d5f9b1093a",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": ""
   }
 ]
