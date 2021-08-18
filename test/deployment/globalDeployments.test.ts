@@ -100,10 +100,10 @@ describe('loadContracts', () => {
 
   it('loads multiple contracts', () => {
     const arcxTokens = loadContracts({
-      name: 'ArcxToken',
+      group: 'yUSD-STABLEx',
       network: 'rinkeby',
     });
 
-    expect(arcxTokens).to.have.length(2);
+    expect(arcxTokens).to.have.length(3);
   });
 });
