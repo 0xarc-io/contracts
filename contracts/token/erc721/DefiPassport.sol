@@ -26,6 +26,10 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         bool _status
     );
 
+    event ApprovedSkinsStatusesChanged(
+        SkinAndTokenIdStatusRecord[] _skinsRecords
+    );
+
     event DefaultSkinStatusChanged(
         address _skin,
         bool _status
@@ -221,14 +225,32 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         external
         onlySkinManager
     {
-        require(
-            approvedSkins[_skin][_skinTokenId] != _status,
-            "DefiPassport: skin already has the same status"
-        );
-
         approvedSkins[_skin][_skinTokenId] = _status;
 
         emit ApprovedSkinStatusChanged(_skin, _skinTokenId, _status);
+    }
+
+    /**
+     * @notice Sets the approved status for all skin contracts and their
+     *         token IDs passed into this function.
+     */
+    function setApprovedSkins(
+        SkinAndTokenIdStatusRecord[] memory _skinsToApprove
+    )
+        public
+        onlySkinManager
+    {
+        for (uint256 i = 0; i < _skinsToApprove.length; i++) {
+            TokenIdStatus[] memory tokensAndStatuses = _skinsToApprove[i].skinTokenIdStatuses;
+
+            for (uint256 j = 0; j < tokensAndStatuses.length; j ++) {
+                TokenIdStatus memory tokenStatusPair = tokensAndStatuses[j];
+
+                approvedSkins[_skinsToApprove[i].skin][tokenStatusPair.tokenId] = tokenStatusPair.status;
+            }
+        }
+
+        emit ApprovedSkinsStatusesChanged(_skinsToApprove);
     }
 
     /**
