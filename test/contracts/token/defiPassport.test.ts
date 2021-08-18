@@ -20,6 +20,16 @@ import {
   deployMockSapphireCreditScore,
 } from '../deployers';
 
+type TokenIdStatus = {
+  tokenId: BigNumber;
+  status: boolean;
+};
+
+type SkinAndTokenIdStatusRecord = {
+  skin: string;
+  skinTokenIdStatuses: TokenIdStatus[];
+};
+
 describe('DefiPassport', () => {
   let defiPassport: DefiPassport;
 
@@ -91,6 +101,27 @@ describe('DefiPassport', () => {
     );
     otherSkinTokenId = BigNumber.from(1);
     await otherSkinContract.mint(owner.address, otherSkinTokenId);
+  }
+
+  async function validateApprovedSkins(
+    skinsToApprove: SkinAndTokenIdStatusRecord[],
+  ) {
+    for (let i = 0; i < skinsToApprove.length; i++) {
+      const record = skinsToApprove[i];
+
+      for (let j = 0; j < record.skinTokenIdStatuses.length; j++) {
+        const approvedStatus = await defiPassport.approvedSkins(
+          record.skin,
+          record.skinTokenIdStatuses[j].tokenId,
+        );
+
+        if (approvedStatus !== record.skinTokenIdStatuses[j].status) {
+          return false;
+        }
+      }
+    }
+
+    return true;
   }
 
   /**
@@ -617,6 +648,68 @@ describe('DefiPassport', () => {
         .true;
       expect(await defiPassport.approvedSkins(skinAddress, skinTokenId.add(1)))
         .to.be.false;
+    });
+  });
+
+  describe('#setApprovedSkins', () => {
+    it('reverts if called by non-skin-manager', async () => {
+      const skinsToApprove: SkinAndTokenIdStatusRecord[] = [
+        {
+          skin: otherSkinContract.address,
+          skinTokenIdStatuses: [{ tokenId: otherSkinTokenId, status: true }],
+        },
+      ];
+
+      await expect(
+        defiPassport.connect(user).setApprovedSkins(skinsToApprove),
+      ).to.be.revertedWith('DefiPassport: caller is not skin manager');
+    });
+
+    it('sets the approved status correctly to multiple skins', async () => {
+      const skinsToApprove: SkinAndTokenIdStatusRecord[] = [];
+
+      // Mint many NFT contracts and tokens
+      for (let i = BigNumber.from(0); i.lt(4); i = i.add(1)) {
+        const contract = await new MintableNFTFactory(owner).deploy(
+          `Skin ${i.toString()}`,
+          i.toString(),
+        );
+
+        const record: SkinAndTokenIdStatusRecord = {
+          skin: contract.address,
+          skinTokenIdStatuses: [],
+        };
+
+        for (let j = BigNumber.from(0); j.lt(4); j = j.add(1)) {
+          await contract.mint(owner.address, j);
+          record.skinTokenIdStatuses.push({ tokenId: j, status: true });
+        }
+
+        skinsToApprove.push(record);
+      }
+
+      // Ensure all skins are indeed not approved
+      expect(await validateApprovedSkins(skinsToApprove)).to.be.false;
+
+      // Approve them all at once
+      await defiPassport.connect(skinManager).setApprovedSkins(skinsToApprove);
+
+      // Confirm they are all approved
+      expect(await validateApprovedSkins(skinsToApprove)).to.be.true;
+
+      // Change the status of half the tokenIDs
+      for (let i = 0; i < skinsToApprove.length; i++) {
+        const record = skinsToApprove[i];
+
+        for (let j = 0; j < record.skinTokenIdStatuses.length; j++) {
+          record.skinTokenIdStatuses[j].status = j % 2 == 0;
+        }
+      }
+
+      await defiPassport.connect(skinManager).setApprovedSkins(skinsToApprove);
+
+      // Validate again
+      expect(await validateApprovedSkins(skinsToApprove)).to.be.true;
     });
   });
 
