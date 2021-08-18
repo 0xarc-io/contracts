@@ -521,14 +521,14 @@ task(
   .addParam('sablier', 'Address of the Sablier contract to use')
   .addFlag('implementationonly', 'Only deploy implementation')
   .setAction(async (taskArgs, hre) => {
-    const {
+    let {
       name,
       symbol,
       stakingtoken: stakingToken,
       exitcooldownduration: exitCoolDownDuration,
       implementationonly: implementationOnly,
       creditscore: creditScoreContract,
-      sablier
+      sablier,
     } = taskArgs;
 
     const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
@@ -604,7 +604,9 @@ task(
       symbol: ${symbol},
       decimals: ${decimals},
       stakingToken: ${stakingToken},
-      exitCoolDownDuration: ${exitCoolDownDuration}
+      exitCoolDownDuration: ${exitCoolDownDuration},
+      creditScoreContract: ${creditScoreContract},
+      sablier: ${sablier}
     })...`),
     );
     await stakingAccrualProxyContract.init(
@@ -614,7 +616,7 @@ task(
       stakingToken,
       exitCoolDownDuration,
       creditScoreContract,
-      sablier.address
+      sablier,
     );
     console.log(green(`Init successfully called`));
 
