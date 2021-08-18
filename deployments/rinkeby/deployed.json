@@ -551,8 +551,8 @@
   {
     "name": "DefiPassport",
     "source": "DefiPassport",
-    "address": "0x83f9bD111EA152aD6D6042F35706461d5aDE6f61",
-    "txn": "0x45ecf24ccb80b4017041bb94b6ff1a24f1910d1b06cde82f0ec1065a0a07acc5",
+    "address": "0xD75Af3e6EC96DcfF27279995FAdA8C382D317d3b",
+    "txn": "0x781cf7fc72399d1790ea3d5ac3ca864b52611a6c71cee939e4ea4e703fc68142",
     "network": "rinkeby",
     "version": 1,
     "type": "global",
@@ -561,8 +561,8 @@
   {
     "name": "DefiPassportProxy",
     "source": "ArcProxy",
-    "address": "0x2Afbbcc62d0d6dCCDE2A5BFc57aa41524A387a3C",
-    "txn": "0xb2cf7676c109b79cc093716b81c63497385ec125f8c4d580f9beb411231baec4",
+    "address": "0x115A1C0D1A428d3055C622BaDEf84B7FEa8C8Cc1",
+    "txn": "0x2ef5f67c0c33991fde56f33e6617b455b3132001486e5b306602a30a8d24db40",
     "network": "rinkeby",
     "version": 1,
     "type": "global",
@@ -591,8 +591,8 @@
   {
     "name": "StakingAccrualERC20",
     "source": "StakingAccrualERC20",
-    "address": "0x0c6363932F7Ed955756fBb83639327D57E5893C8",
-    "txn": "0xd2eb08ec22eee895fdf55a4a6c0bff05b1ea84fd83c7cf7efde8f75c92a85ebc",
+    "address": "0x8ceAB6B37f57436Bd433f4dc5118cC084C945496",
+    "txn": "0xa015e4f3f73f0d0e4fa5ca52912d71f2a0f0c55c918519476fa2f83c6dd2f57d",
     "network": "rinkeby",
     "version": 1,
     "type": "global",
@@ -601,8 +601,8 @@
   {
     "name": "StakingAccrualERC20Proxy",
     "source": "ArcProxy",
-    "address": "0xDDE0c8BE32F2809bba23414f849b5D7d0C6c081F",
-    "txn": "0x232467272faf5a8f1c932e6973d21db1aae986241bd3d3da0a38a3dea2856eaf",
+    "address": "0xF7cc2F8580a495049D6AEb46234fd738de2B71F0",
+    "txn": "0x240f6eacf8012a12d1c69d31f1b627c55dc041c20838a60444e1cc0b2d38fb3c",
     "network": "rinkeby",
     "version": 1,
     "type": "global",
