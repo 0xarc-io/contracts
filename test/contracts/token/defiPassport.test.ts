@@ -20,6 +20,16 @@ import {
   deployMockSapphireCreditScore,
 } from '../deployers';
 
+type TokenIdStatus = {
+  tokenId: BigNumber;
+  status: boolean;
+};
+
+type SkinAndTokenIdStatusRecord = {
+  skin: string;
+  skinTokenIdStatuses: TokenIdStatus[];
+};
+
 describe('DefiPassport', () => {
   let defiPassport: DefiPassport;
 
@@ -93,11 +103,34 @@ describe('DefiPassport', () => {
     await otherSkinContract.mint(owner.address, otherSkinTokenId);
   }
 
+  async function validateApprovedSkins(
+    skinsToApprove: SkinAndTokenIdStatusRecord[],
+  ) {
+    for (let i = 0; i < skinsToApprove.length; i++) {
+      const record = skinsToApprove[i];
+
+      for (let j = 0; j < record.skinTokenIdStatuses.length; j++) {
+        const approvedStatus = await defiPassport.approvedSkins(
+          record.skin,
+          record.skinTokenIdStatuses[j].tokenId,
+        );
+
+        if (approvedStatus !== record.skinTokenIdStatuses[j].status) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
   /**
    * Helper function that mints a passport to the `user`
    */
   async function mintUserPassport() {
-    await defiPassport.connect(skinManager).setApprovedSkin(skinAddress, skinTokenId, true);
+    await defiPassport
+      .connect(skinManager)
+      .setApprovedSkin(skinAddress, skinTokenId, true);
     await skinsContract.transferFrom(owner.address, user.address, skinTokenId);
 
     await defiPassport.mint(user.address, skinAddress, skinTokenId);
@@ -169,7 +202,7 @@ describe('DefiPassport', () => {
     it('reverts if the receiver has no credit score', async () => {
       await defiPassport
         .connect(skinManager)
-        .setApprovedSkin(skinAddress,skinTokenId,  true);
+        .setApprovedSkin(skinAddress, skinTokenId, true);
 
       await expect(
         defiPassport.mint(userNoCreditScore.address, skinAddress, skinTokenId),
@@ -185,7 +218,7 @@ describe('DefiPassport', () => {
     it('reverts if the receiver is not the skin owner', async () => {
       await defiPassport
         .connect(skinManager)
-        .setApprovedSkin(skinAddress,skinTokenId, true);
+        .setApprovedSkin(skinAddress, skinTokenId, true);
 
       await expect(
         defiPassport.mint(user.address, skinAddress, skinTokenId),
@@ -229,7 +262,7 @@ describe('DefiPassport', () => {
     it('mints the passport to the receiver with an owned skin', async () => {
       await defiPassport
         .connect(skinManager)
-        .setApprovedSkin(skinAddress,skinTokenId,  true);
+        .setApprovedSkin(skinAddress, skinTokenId, true);
       await skinsContract.transferFrom(
         owner.address,
         user.address,
@@ -261,7 +294,7 @@ describe('DefiPassport', () => {
     it('reverts if the receiver already has a passport', async () => {
       await defiPassport
         .connect(skinManager)
-        .setApprovedSkin(skinAddress,skinTokenId,  true);
+        .setApprovedSkin(skinAddress, skinTokenId, true);
       await skinsContract.transferFrom(
         owner.address,
         user.address,
@@ -297,7 +330,6 @@ describe('DefiPassport', () => {
 
     beforeEach(async () => {
       passportId = await mintUserPassport();
-
     });
 
     it('reverts if caller has no passport', async () => {
@@ -342,6 +374,20 @@ describe('DefiPassport', () => {
       ).to.be.revertedWith('DefiPassport: invalid skin');
     });
 
+    it('reverts if the skin contract is whitelisted but the caller is not the owner of the token id', async () => {
+      await defiPassport
+        .connect(skinManager)
+        .setWhitelistedSkin(otherSkinContract.address, true);
+      expect(await defiPassport.whitelistedSkins(otherSkinContract.address)).to
+        .be.true;
+
+      await expect(
+        defiPassport
+          .connect(user)
+          .setActiveSkin(otherSkinContract.address, otherSkinTokenId),
+      ).to.be.revertedWith('DefiPassport: invalid skin');
+    });
+
     it('sets the skin if it is owned and approved', async () => {
       let activeSkinRecord = await defiPassport.getActiveSkin(passportId);
       expect(activeSkinRecord.skin).to.eq(skinAddress);
@@ -351,8 +397,12 @@ describe('DefiPassport', () => {
         .connect(skinManager)
         .setApprovedSkin(otherSkinContract.address, otherSkinTokenId, true);
 
-      expect(await defiPassport.approvedSkins(otherSkinContract.address, otherSkinTokenId))
-        .to.be.true;
+      expect(
+        await defiPassport.approvedSkins(
+          otherSkinContract.address,
+          otherSkinTokenId,
+        ),
+      ).to.be.true;
 
       await otherSkinContract.transferFrom(
         owner.address,
@@ -382,8 +432,12 @@ describe('DefiPassport', () => {
         .connect(skinManager)
         .setApprovedSkin(otherSkinContract.address, otherSkinTokenId, true);
 
-      expect(await defiPassport.approvedSkins(otherSkinContract.address, otherSkinTokenId))
-        .to.be.true;
+      expect(
+        await defiPassport.approvedSkins(
+          otherSkinContract.address,
+          otherSkinTokenId,
+        ),
+      ).to.be.true;
 
       await otherSkinContract.transferFrom(
         owner.address,
@@ -399,11 +453,9 @@ describe('DefiPassport', () => {
       expect(activeSkinRecord.skin).to.eq(otherSkinContract.address);
       expect(activeSkinRecord.skinTokenId).to.eq(otherSkinTokenId);
 
-      await otherSkinContract.connect(user).transferFrom(
-        user.address,
-        owner.address,
-        otherSkinTokenId,
-      );
+      await otherSkinContract
+        .connect(user)
+        .transferFrom(user.address, owner.address, otherSkinTokenId);
 
       activeSkinRecord = await defiPassport.getActiveSkin(passportId);
       expect(activeSkinRecord.skin).to.eq(defaultSkinAddress);
@@ -417,7 +469,6 @@ describe('DefiPassport', () => {
 
       await skinsContract.mint(user.address, 2);
 
-      
       await defiPassport
         .connect(skinManager)
         .setApprovedSkin(skinsContract.address, 2, true);
@@ -443,6 +494,30 @@ describe('DefiPassport', () => {
       activeSkinRecord = await defiPassport.getActiveSkin(passportId);
       expect(activeSkinRecord.skin).to.eq(defaultPassportSkinContract.address);
       expect(activeSkinRecord.skinTokenId).to.eq(defaultSkinTokenId);
+    });
+
+    it('sets the skin if it is whitelisted and owned even if it was not approved', async () => {
+      await defiPassport
+        .connect(skinManager)
+        .setWhitelistedSkin(otherSkinContract.address, true);
+
+      await otherSkinContract.transferFrom(
+        owner.address,
+        user.address,
+        otherSkinTokenId,
+      );
+
+      let activeSkinRecord = await defiPassport.getActiveSkin(passportId);
+      expect(activeSkinRecord.skin).to.eq(skinAddress);
+      expect(activeSkinRecord.skinTokenId).to.eq(skinTokenId);
+
+      await defiPassport
+        .connect(user)
+        .setActiveSkin(otherSkinContract.address, otherSkinTokenId);
+
+      activeSkinRecord = await defiPassport.getActiveSkin(passportId);
+      expect(activeSkinRecord.skin).to.eq(otherSkinContract.address);
+      expect(activeSkinRecord.skinTokenId).to.eq(otherSkinTokenId);
     });
   });
 
@@ -475,7 +550,7 @@ describe('DefiPassport', () => {
     it('returns false if the skin is approved but not owned by the user', async () => {
       await defiPassport
         .connect(skinManager)
-        .setApprovedSkin(skinAddress,skinTokenId,  true);
+        .setApprovedSkin(skinAddress, skinTokenId, true);
 
       expect(await defiPassport.isSkinAvailable(user.address, skinAddress, 1))
         .to.be.false;
@@ -513,6 +588,47 @@ describe('DefiPassport', () => {
     });
   });
 
+  describe('#setWhitelistedSkin', () => {
+    it('reverts if called by non-skin-manager', async () => {
+      await expect(
+        defiPassport
+          .connect(user)
+          .setWhitelistedSkin(otherSkinContract.address, true),
+      ).to.be.revertedWith('DefiPassport: caller is not skin manager');
+    });
+
+    it('reverts if address is not a contract', async () => {
+      await expect(
+        defiPassport
+          .connect(skinManager)
+          .setWhitelistedSkin(user.address, true),
+      ).to.be.revertedWith('DefiPassport: address is not a contract');
+    });
+
+    it('adds/removes the skin to the mapping of whitelisted skins', async () => {
+      const smDefiPassport = defiPassport.connect(skinManager);
+
+      expect(await defiPassport.whitelistedSkins(otherSkinContract.address)).to
+        .be.false;
+      expect(await defiPassport.whitelistedSkins(skinsContract.address)).to.be
+        .false;
+
+      await smDefiPassport.setWhitelistedSkin(otherSkinContract.address, true);
+      expect(await defiPassport.whitelistedSkins(otherSkinContract.address)).to
+        .be.true;
+      expect(await defiPassport.whitelistedSkins(skinsContract.address)).to.be
+        .false;
+
+      await smDefiPassport.setWhitelistedSkin(skinsContract.address, true);
+      expect(await defiPassport.whitelistedSkins(skinsContract.address)).to.be
+        .true;
+
+      await smDefiPassport.setWhitelistedSkin(skinsContract.address, false);
+      expect(await defiPassport.whitelistedSkins(skinsContract.address)).to.be
+        .false;
+    });
+  });
+
   describe('#setApprovedSkin', () => {
     it('reverts if called by non-skin-manager', async () => {
       await expect(
@@ -521,14 +637,79 @@ describe('DefiPassport', () => {
     });
 
     it('approves the skin', async () => {
-      expect(await defiPassport.approvedSkins(skinAddress, skinTokenId)).to.be.false;
+      expect(await defiPassport.approvedSkins(skinAddress, skinTokenId)).to.be
+        .false;
 
       await defiPassport
         .connect(skinManager)
         .setApprovedSkin(skinAddress, skinTokenId, true);
 
-      expect(await defiPassport.approvedSkins(skinAddress, skinTokenId)).to.be.true;
-      expect(await defiPassport.approvedSkins(skinAddress, skinTokenId.add(1))).to.be.false;
+      expect(await defiPassport.approvedSkins(skinAddress, skinTokenId)).to.be
+        .true;
+      expect(await defiPassport.approvedSkins(skinAddress, skinTokenId.add(1)))
+        .to.be.false;
+    });
+  });
+
+  describe('#setApprovedSkins', () => {
+    it('reverts if called by non-skin-manager', async () => {
+      const skinsToApprove: SkinAndTokenIdStatusRecord[] = [
+        {
+          skin: otherSkinContract.address,
+          skinTokenIdStatuses: [{ tokenId: otherSkinTokenId, status: true }],
+        },
+      ];
+
+      await expect(
+        defiPassport.connect(user).setApprovedSkins(skinsToApprove),
+      ).to.be.revertedWith('DefiPassport: caller is not skin manager');
+    });
+
+    it('sets the approved status correctly to multiple skins', async () => {
+      const skinsToApprove: SkinAndTokenIdStatusRecord[] = [];
+
+      // Mint many NFT contracts and tokens
+      for (let i = BigNumber.from(0); i.lt(4); i = i.add(1)) {
+        const contract = await new MintableNFTFactory(owner).deploy(
+          `Skin ${i.toString()}`,
+          i.toString(),
+        );
+
+        const record: SkinAndTokenIdStatusRecord = {
+          skin: contract.address,
+          skinTokenIdStatuses: [],
+        };
+
+        for (let j = BigNumber.from(0); j.lt(4); j = j.add(1)) {
+          await contract.mint(owner.address, j);
+          record.skinTokenIdStatuses.push({ tokenId: j, status: true });
+        }
+
+        skinsToApprove.push(record);
+      }
+
+      // Ensure all skins are indeed not approved
+      expect(await validateApprovedSkins(skinsToApprove)).to.be.false;
+
+      // Approve them all at once
+      await defiPassport.connect(skinManager).setApprovedSkins(skinsToApprove);
+
+      // Confirm they are all approved
+      expect(await validateApprovedSkins(skinsToApprove)).to.be.true;
+
+      // Change the status of half the tokenIDs
+      for (let i = 0; i < skinsToApprove.length; i++) {
+        const record = skinsToApprove[i];
+
+        for (let j = 0; j < record.skinTokenIdStatuses.length; j++) {
+          record.skinTokenIdStatuses[j].status = j % 2 == 0;
+        }
+      }
+
+      await defiPassport.connect(skinManager).setApprovedSkins(skinsToApprove);
+
+      // Validate again
+      expect(await validateApprovedSkins(skinsToApprove)).to.be.true;
     });
   });
 
@@ -547,7 +728,9 @@ describe('DefiPassport', () => {
       await otherNFT.mint(owner.address, 2);
 
       await expect(
-        defiPassport.connect(skinManager).setDefaultSkin(otherNFT.address, true),
+        defiPassport
+          .connect(skinManager)
+          .setDefaultSkin(otherNFT.address, true),
       ).to.be.revertedWith('ERC721: owner query for nonexistent token');
     });
 
@@ -560,8 +743,8 @@ describe('DefiPassport', () => {
 
       await expect(
         defiPassport
-        .connect(skinManager)
-        .setDefaultSkin(defaultSkinAddress, true),
+          .connect(skinManager)
+          .setDefaultSkin(defaultSkinAddress, true),
       ).to.be.revertedWith('DefiPassport: skin already has the same status');
     });
 
@@ -585,7 +768,7 @@ describe('DefiPassport', () => {
 
       await defiPassport
         .connect(skinManager)
-        .setDefaultActiveSkin(otherSkinContract.address, otherSkinTokenId)
+        .setDefaultActiveSkin(otherSkinContract.address, otherSkinTokenId);
 
       await defiPassport
         .connect(skinManager)
@@ -605,31 +788,46 @@ describe('DefiPassport', () => {
       expect(activeDefaultSkin.skin).eq(defaultSkinAddress);
       expect(await defiPassport.defaultSkins(defaultSkinAddress)).to.be.true;
 
-      await expect(defiPassport
-        .connect(skinManager)
-        .setDefaultSkin(defaultSkinAddress, false))
-        .revertedWith('Defi Passport: cannot unregister the default active skin');
+      await expect(
+        defiPassport
+          .connect(skinManager)
+          .setDefaultSkin(defaultSkinAddress, false),
+      ).revertedWith(
+        'Defi Passport: cannot unregister the default active skin',
+      );
     });
   });
 
   describe('#setActiveDefaultSkin', () => {
     it('reverts if called by non-skin-manager', async () => {
-      await expect(defiPassport.setDefaultActiveSkin(defaultSkinAddress, defaultSkinTokenId))
-        .revertedWith('DefiPassport: caller is not skin manager');
+      await expect(
+        defiPassport.setDefaultActiveSkin(
+          defaultSkinAddress,
+          defaultSkinTokenId,
+        ),
+      ).revertedWith('DefiPassport: caller is not skin manager');
     });
 
     it('reverts if setting a skin that is not registered as a default skin', async () => {
-      await expect(defiPassport.connect(skinManager).setDefaultActiveSkin(defaultSkinAddress, defaultSkinTokenId))
-        .revertedWith('DefiPassport: the given skin is not registered as a default');
-    })
+      await expect(
+        defiPassport
+          .connect(skinManager)
+          .setDefaultActiveSkin(defaultSkinAddress, defaultSkinTokenId),
+      ).revertedWith(
+        'DefiPassport: the given skin is not registered as a default',
+      );
+    });
 
     it('reverts if setting the same skin twice', async () => {
       await defiPassport
         .connect(skinManager)
         .setDefaultSkin(defaultSkinAddress, true);
-      
-      await expect(defiPassport.connect(skinManager).setDefaultActiveSkin(defaultSkinAddress, defaultSkinTokenId))
-        .revertedWith('DefiPassport: the skin is already set as default active');
+
+      await expect(
+        defiPassport
+          .connect(skinManager)
+          .setDefaultActiveSkin(defaultSkinAddress, defaultSkinTokenId),
+      ).revertedWith('DefiPassport: the skin is already set as default active');
     });
 
     it('sets the default active skin as the skin manager', async () => {
@@ -642,16 +840,16 @@ describe('DefiPassport', () => {
         .setDefaultSkin(otherSkinContract.address, true);
 
       let defaultActiveSkin = await defiPassport.defaultActiveSkin();
-      expect(defaultActiveSkin.skin).eq(defaultSkinAddress)
-      expect(defaultActiveSkin.skinTokenId).eq(defaultSkinTokenId)
+      expect(defaultActiveSkin.skin).eq(defaultSkinAddress);
+      expect(defaultActiveSkin.skinTokenId).eq(defaultSkinTokenId);
 
       await defiPassport
         .connect(skinManager)
         .setDefaultActiveSkin(otherSkinContract.address, otherSkinTokenId);
-      
-      defaultActiveSkin = await defiPassport.defaultActiveSkin()
-      expect(defaultActiveSkin.skin).eq(otherSkinContract.address)
-      expect(defaultActiveSkin.skinTokenId).eq(otherSkinTokenId)
+
+      defaultActiveSkin = await defiPassport.defaultActiveSkin();
+      expect(defaultActiveSkin.skin).eq(otherSkinContract.address);
+      expect(defaultActiveSkin.skinTokenId).eq(otherSkinTokenId);
     });
 
     it('changes the default active skin id', async () => {
@@ -665,16 +863,16 @@ describe('DefiPassport', () => {
         .setDefaultSkin(otherSkinContract.address, true);
 
       let defaultActiveSkin = await defiPassport.defaultActiveSkin();
-      expect(defaultActiveSkin.skin).eq(defaultSkinAddress)
-      expect(defaultActiveSkin.skinTokenId).eq(defaultSkinTokenId)
+      expect(defaultActiveSkin.skin).eq(defaultSkinAddress);
+      expect(defaultActiveSkin.skinTokenId).eq(defaultSkinTokenId);
 
       await defiPassport
         .connect(skinManager)
         .setDefaultActiveSkin(defaultSkinAddress, skinTokenId.add(1));
-      
-      defaultActiveSkin = await defiPassport.defaultActiveSkin()
-      expect(defaultActiveSkin.skin).eq(defaultSkinAddress)
-      expect(defaultActiveSkin.skinTokenId).eq(skinTokenId.add(1))
+
+      defaultActiveSkin = await defiPassport.defaultActiveSkin();
+      expect(defaultActiveSkin.skin).eq(defaultSkinAddress);
+      expect(defaultActiveSkin.skinTokenId).eq(skinTokenId.add(1));
     });
   });
 

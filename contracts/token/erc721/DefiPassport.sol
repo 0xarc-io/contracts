@@ -26,6 +26,10 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         bool _status
     );
 
+    event ApprovedSkinsStatusesChanged(
+        SkinAndTokenIdStatusRecord[] _skinsRecords
+    );
+
     event DefaultSkinStatusChanged(
         address _skin,
         bool _status
@@ -44,6 +48,8 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
     event SkinManagerSet(address _skinManager);
 
     event CreditScoreContractSet(address _creditScoreContract);
+
+    event WhitelistSkinSet(address _skin, bool _status);
 
     /* ========== Constructor ========== */
 
@@ -219,14 +225,60 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         external
         onlySkinManager
     {
-        require(
-            approvedSkins[_skin][_skinTokenId] != _status,
-            "DefiPassport: skin already has the same status"
-        );
-
         approvedSkins[_skin][_skinTokenId] = _status;
 
         emit ApprovedSkinStatusChanged(_skin, _skinTokenId, _status);
+    }
+
+    /**
+     * @notice Sets the approved status for all skin contracts and their
+     *         token IDs passed into this function.
+     */
+    function setApprovedSkins(
+        SkinAndTokenIdStatusRecord[] memory _skinsToApprove
+    )
+        public
+        onlySkinManager
+    {
+        for (uint256 i = 0; i < _skinsToApprove.length; i++) {
+            TokenIdStatus[] memory tokensAndStatuses = _skinsToApprove[i].skinTokenIdStatuses;
+
+            for (uint256 j = 0; j < tokensAndStatuses.length; j ++) {
+                TokenIdStatus memory tokenStatusPair = tokensAndStatuses[j];
+
+                approvedSkins[_skinsToApprove[i].skin][tokenStatusPair.tokenId] = tokenStatusPair.status;
+            }
+        }
+
+        emit ApprovedSkinsStatusesChanged(_skinsToApprove);
+    }
+
+    /**
+     * @notice Adds or removes a skin contract to the whitelist.
+     *         The Defi Passport considers all skins minted by whitelisted contracts
+     *         to be valid skins for applying them on to the passport.
+     *         The user applying the skins must still be their owner though.
+     */
+    function setWhitelistedSkin(
+        address _skinContract,
+        bool _status
+    )
+        external
+        onlySkinManager
+    {
+        require (
+            _skinContract.isContract(),
+            "DefiPassport: address is not a contract"
+        );
+
+        require (
+            whitelistedSkins[_skinContract] != _status,
+            "DefiPassport: the skin already has the same whitelist status"
+        );
+
+        whitelistedSkins[_skinContract] = _status;
+
+        emit WhitelistSkinSet(_skinContract, _status);
     }
 
     function setCreditScoreContract(
@@ -399,11 +451,16 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
             "DefiPassport: the specified skin token id does not exist"
         );
 
-        return defaultSkins[_skinContract] ||
-            (
-                approvedSkins[_skinContract][_skinTokenId] &&
-                _isSkinOwner(_user, _skinContract, _skinTokenId)
-            );
+        if (defaultSkins[_skinContract]) {
+            return true;
+        } else if (
+            whitelistedSkins[_skinContract] ||
+            approvedSkins[_skinContract][_skinTokenId]
+        ) {
+            return _isSkinOwner(_user, _skinContract, _skinTokenId);
+        }
+
+        return false;
     }
 
     /**

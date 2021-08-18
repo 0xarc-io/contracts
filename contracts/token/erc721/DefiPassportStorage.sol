@@ -16,6 +16,16 @@ contract DefiPassportStorage {
         uint256 skinTokenId;
     }
 
+    struct TokenIdStatus {
+        uint256 tokenId;
+        bool status;
+    }
+
+    struct SkinAndTokenIdStatusRecord {
+        address skin;
+        TokenIdStatus[] skinTokenIdStatuses;
+    }
+
     /* ========== Public Variables ========== */
 
     string public name;
@@ -25,6 +35,13 @@ contract DefiPassportStorage {
      * @notice The credit score contract used by the passport
      */
     ISapphireCreditScore public creditScoreContract;
+
+    /**
+     * @notice Records the whitelisted skins. All tokens minted by these contracts
+     *         will be considered valid to apply on the passport, given they are
+     *         owned by the caller.
+     */
+    mapping (address => bool) public whitelistedSkins;
 
     /**
      * @notice Records the approved skins of the passport
