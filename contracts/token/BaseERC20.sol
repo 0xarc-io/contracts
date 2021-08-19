@@ -20,7 +20,7 @@ contract BaseERC20 is IERC20Metadata, Permittable {
 
     mapping (address => mapping (address => uint256)) internal _allowances;
 
-    uint8   private _decimals;
+    uint8   internal _decimals;
     uint256 private _totalSupply;
 
     string  internal _name;

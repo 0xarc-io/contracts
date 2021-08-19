@@ -221,6 +221,8 @@ describe('StakingAccrualERC20', () => {
         expect(await starcx.stakingToken()).to.eq(stakingToken.address);
         expect(await starcx.exitCooldownDuration()).to.eq(COOLDOWN_DURATION);
         expect(await starcx.sablierContract()).to.eq(sablierContract.address);
+
+        expect(await starcx.decimals()).to.eq(18)
       });
     });
 
