@@ -112,6 +112,11 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
             "StakingAccrualERC20: the sablier contract is invalid"
         );
 
+        DOMAIN_SEPARATOR = _initDomainSeparator(
+            __name,
+            "1"
+        );
+
         stakingToken = IPermittableERC20(_stakingToken);
         creditScoreContract = ISapphireCreditScore(_creditScoreContract);
         sablierContract = ISablier(_sablierContract);

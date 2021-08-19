@@ -223,6 +223,7 @@ describe('StakingAccrualERC20', () => {
         expect(await starcx.sablierContract()).to.eq(sablierContract.address);
 
         expect(await starcx.decimals()).to.eq(18)
+        expect(await starcx.DOMAIN_SEPARATOR()).to.not.eq('0x0000000000000000000000000000000000000000000000000000000000000000')
       });
     });
 
