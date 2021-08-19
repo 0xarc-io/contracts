@@ -5,11 +5,12 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "../lib/SafeMath.sol";
 import {SafeERC20} from "../lib/SafeERC20.sol";
+import {Address} from "../lib/Address.sol";
 import {Adminable} from "../lib/Adminable.sol";
 
 import {IERC20} from "../token/IERC20.sol";
 
-import {SapphireCreditScore} from "../debt/sapphire/SapphireCreditScore.sol";
+import {ISapphireCreditScore} from "../debt/sapphire/ISapphireCreditScore.sol";
 import {SapphireTypes} from "../debt/sapphire/SapphireTypes.sol";
 
 /**
@@ -21,6 +22,7 @@ contract PassportCampaign is Adminable {
 
     /* ========== Libraries ========== */
 
+    using Address for address;
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -39,7 +41,7 @@ contract PassportCampaign is Adminable {
 
     /* ========== Variables ========== */
 
-    SapphireCreditScore public creditScoreContract;
+    ISapphireCreditScore public creditScoreContract;
 
     IERC20 public rewardsToken;
     IERC20 public stakingToken;
@@ -82,6 +84,8 @@ contract PassportCampaign is Adminable {
     event ClaimableStatusUpdated(bool _status);
 
     event RewardsDistributorUpdated(address _newRewardsDistributor);
+
+    event CreditScoreContractSet(address _creditScoreContract);
 
     /* ========== Modifiers ========== */
 
@@ -252,6 +256,27 @@ contract PassportCampaign is Adminable {
         creditScoreThreshold = _newThreshold;
     }
 
+    function setCreditScoreContract(
+        address _creditScoreAddress
+    )
+        external
+        onlyAdmin
+    {
+        require(
+            address(creditScoreContract) != _creditScoreAddress,
+            "PassportCampaign: the same credit score address is already set"
+        );
+
+        require(
+            _creditScoreAddress.isContract(),
+            "PassportCampaign: the given address is not a contract"
+        );
+
+        creditScoreContract = ISapphireCreditScore(_creditScoreAddress);
+
+        emit CreditScoreContractSet(_creditScoreAddress);
+    }
+
     function setMaxStakePerUser(
         uint256 _maxStakePerUser
     )
@@ -296,7 +321,7 @@ contract PassportCampaign is Adminable {
         rewardsDistributor      = _rewardsDistributor;
         rewardsToken            = IERC20(_rewardsToken);
         stakingToken            = IERC20(_stakingToken);
-        creditScoreContract     = SapphireCreditScore(_creditScoreContract);
+        creditScoreContract     = ISapphireCreditScore(_creditScoreContract);
         daoAllocation           = _daoAllocation;
         maxStakePerUser         = _maxStakePerUser;
         creditScoreThreshold    = _creditScoreThreshold;

@@ -1,6 +1,5 @@
 import {
   ArcProxyFactory,
-  BaseERC20Factory,
   JointPassportCampaignFactory,
   RewardCampaignFactory,
   StakingAccrualERC20Factory,
@@ -46,6 +45,7 @@ task('deploy-staking', 'Deploy a staking/reward pool')
     const arcDAO = await loadContract({
       name: 'ArcDAO',
       type: DeploymentType.global,
+      version: 2,
       network,
     });
 
@@ -111,7 +111,7 @@ task('deploy-staking', 'Deploy a staking/reward pool')
       networkConfig,
     );
 
-    const implementation = RewardCampaignFactory.connect(proxyContract, signer);
+    const implementation = stakingConfig.contractFactory.connect(proxyContract, signer);
 
     console.log(yellow(`* Calling init()...`));
     try {
@@ -160,6 +160,39 @@ task('deploy-staking', 'Deploy a staking/reward pool')
         red(`Failed to set the rewards duration. Reason: ${error}\n`),
       );
     }
+
+    console.log(yellow(`Verifying contracts...`))
+    if (!stakingConfig.stakingToken) {
+      const stakingToken = TestTokenFactory.connect(stakingTokenAddress, signer)
+      // A new testing token was created
+      console.log(yellow(`Verifying test token...`))
+      await hre.run('verify:verify', {
+        address: stakingTokenAddress,
+        constructorArguments: [
+          await stakingToken.name(),
+          name,
+          18
+        ]
+      })
+      console.log(green(`Test token verified!`))
+    }
+
+    console.log(yellow(`Verifying implementation...`))  
+    await hre.run('verify:verify', {
+      address: implementationContract,
+      constructorArguments: []
+    })
+    console.log(green(`Implementation contract verified`))
+
+    console.log(yellow(`Verifying proxy...`))
+    await hre.run('verify:verify', {
+      address: proxyContract,
+      constructorArguments: [
+        implementationContract,
+        await signer.getAddress(),
+        [],
+      ],
+    });
   });
 
 task('deploy-staking-liquidity', 'Deploy a LiquidityCampaign')

@@ -379,36 +379,6 @@
     "group": ""
   },
   {
-    "name": "TestStakingToken",
-    "source": "TestToken",
-    "address": "0x22b80E0BA47Add0fe11Bca798F24AE5e6A816e84",
-    "txn": "0x21ffbf242b7d7b2918bd41cae969eb9e0d043d3019ce712460ed1f8407e16156",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "staking",
-    "group": "SapphirePassportPool"
-  },
-  {
-    "name": "Implementation",
-    "source": "PassportCampaign",
-    "address": "0x785ab4716Cd90c2611988100537E8A82c810314b",
-    "txn": "0xf04c91f3d336e31cc78dddf149949a59f6f49e920ea1bb7954dbce518b52c1d0",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "staking",
-    "group": "SapphirePassportPool"
-  },
-  {
-    "name": "Proxy",
-    "source": "ArcProxy",
-    "address": "0x193ACB49FEEBE95df2911bBE93176f71B8eb609e",
-    "txn": "0xb167594f5a83b707be2c64c64cc8a1b9a95244bbc8e172fedad646403051d231",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "staking",
-    "group": "SapphirePassportPool"
-  },
-  {
     "name": "SyntheticToken",
     "source": "SyntheticTokenV2",
     "address": "0x2E933E666DfD5089AD70D5Ab25eBA1E3d5e52bA8",
@@ -587,5 +557,35 @@
     "version": 1,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "TestStakingToken",
+    "source": "TestToken",
+    "address": "0x890011621298dc297550401852284D992071eBCd",
+    "txn": "0x040fdd25b935b7907343de20c653b14ab40cc5dc3a2bb43e023715147fa7d0cb",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "staking",
+    "group": "SapphirePassportPool"
+  },
+  {
+    "name": "Implementation",
+    "source": "PassportCampaign",
+    "address": "0x29FaBE7D51A686b4F8f3739dA7fcC147342C538d",
+    "txn": "0xb17771e98a5ed4123372f10105fc3d89e29377493760962ab7b4bce631267d11",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "staking",
+    "group": "SapphirePassportPool"
+  },
+  {
+    "name": "Proxy",
+    "source": "ArcProxy",
+    "address": "0xDBC3FA8441B5b00fa1EC0fc91910C916a779B932",
+    "txn": "0xae34b9d2102889629eabdc2723a9ab01601ae1522f90e94999d33d73fb1d8250",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "staking",
+    "group": "SapphirePassportPool"
   }
 ]
