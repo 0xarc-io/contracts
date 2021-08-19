@@ -264,12 +264,12 @@ contract PassportCampaign is Adminable {
     {
         require(
             address(creditScoreContract) != _creditScoreAddress,
-            "StakingAccrualERC20: the same credit score address is already set"
+            "PassportCampaign: the same credit score address is already set"
         );
 
         require(
             _creditScoreAddress.isContract(),
-            "StakingAccrualERC20: the given address is not a contract"
+            "PassportCampaign: the given address is not a contract"
         );
 
         creditScoreContract = ISapphireCreditScore(_creditScoreAddress);

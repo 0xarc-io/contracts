@@ -379,36 +379,6 @@
     "group": ""
   },
   {
-    "name": "TestStakingToken",
-    "source": "TestToken",
-    "address": "0x22b80E0BA47Add0fe11Bca798F24AE5e6A816e84",
-    "txn": "0x21ffbf242b7d7b2918bd41cae969eb9e0d043d3019ce712460ed1f8407e16156",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "staking",
-    "group": "SapphirePassportPool"
-  },
-  {
-    "name": "Implementation",
-    "source": "PassportCampaign",
-    "address": "0x785ab4716Cd90c2611988100537E8A82c810314b",
-    "txn": "0xf04c91f3d336e31cc78dddf149949a59f6f49e920ea1bb7954dbce518b52c1d0",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "staking",
-    "group": "SapphirePassportPool"
-  },
-  {
-    "name": "Proxy",
-    "source": "ArcProxy",
-    "address": "0x193ACB49FEEBE95df2911bBE93176f71B8eb609e",
-    "txn": "0xb167594f5a83b707be2c64c64cc8a1b9a95244bbc8e172fedad646403051d231",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "staking",
-    "group": "SapphirePassportPool"
-  },
-  {
     "name": "SyntheticToken",
     "source": "SyntheticTokenV2",
     "address": "0x2E933E666DfD5089AD70D5Ab25eBA1E3d5e52bA8",

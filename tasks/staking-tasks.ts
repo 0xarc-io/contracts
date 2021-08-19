@@ -1,6 +1,5 @@
 import {
   ArcProxyFactory,
-  BaseERC20Factory,
   JointPassportCampaignFactory,
   RewardCampaignFactory,
   StakingAccrualERC20Factory,
@@ -46,6 +45,7 @@ task('deploy-staking', 'Deploy a staking/reward pool')
     const arcDAO = await loadContract({
       name: 'ArcDAO',
       type: DeploymentType.global,
+      version: 2,
       network,
     });
 
