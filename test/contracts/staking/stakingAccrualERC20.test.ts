@@ -7,6 +7,7 @@ import {
   MockSablier,
   MockSablierFactory,
   MockSapphireCreditScore,
+  SapphireCreditScoreFactory,
   TestToken,
   TestTokenFactory,
 } from '@src/typings';
@@ -339,6 +340,27 @@ describe('StakingAccrualERC20', () => {
         );
       });
     });
+
+    describe('#setCreditScoreContract', () => {
+      it('reverts if called by non-admin', async () => {
+        const newCs = await new SapphireCreditScoreFactory(admin).deploy()
+        
+        await expect(user1starcx.setCreditScoreContract(newCs.address)).to.be.revertedWith(
+          'Adminable: caller is not admin',
+        );
+      })
+
+      it('sets a new credit score contract', async () => {
+        const newCs = await new SapphireCreditScoreFactory(admin).deploy()
+
+        expect(await starcx.creditScoreContract()).to.eq(creditScoreContract.address)
+
+        await starcx.setCreditScoreContract(newCs.address)
+
+        expect(await starcx.creditScoreContract()).to.eq(newCs.address)
+      })
+    })
+    
   });
 
   describe('Mutating functions', () => {
