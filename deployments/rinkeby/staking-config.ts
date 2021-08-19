@@ -10,6 +10,7 @@ import {
   RewardCampaign,
   RewardCampaignFactory,
 } from '@src/typings';
+import { yellow } from 'chalk';
 import { utils } from 'ethers';
 
 export default {
@@ -107,7 +108,7 @@ export default {
   SapphirePassportPool: {
     source: 'PassportCampaign',
     stakingToken: '',
-    rewardsToken: 'ArcxTokenV2',
+    rewardsToken: 'ARCx Test Token',
     rewardsDurationSeconds: 60 * 60 * 24 * 31, // 31 days
     contractFactory: PassportCampaignFactory,
     getDeployTx: (signer: SignerWithAddress) =>
@@ -164,6 +165,19 @@ export default {
       // Needs a minimum of 500 credit score to participate
       const creditScoreThreshold = 500;
 
+      console.log(yellow(`Calling init:
+        {
+          arcDao: ${arcDao},
+          rewardsDistributor: ${rewardsDistributor},
+          rewardsTokenAddress: ${rewardsTokenAddress},
+          stakingTokenAddress: ${stakingTokenAddress},
+          creditScoreContractAddress: ${creditScoreContractAddress},
+          daoAllocation: ${daoAllocation},
+          maxStakePerUser: ${maxStakePerUser.toString()},
+          creditScoreThreshold: ${creditScoreThreshold}
+        }
+      `))
+      
       return contract.init(
         arcDao,
         rewardsDistributor,
