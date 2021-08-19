@@ -39,8 +39,6 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
 
     uint256 public exitCooldownDuration;
 
-    uint8 private _decimals;
-
     IPermittableERC20 public stakingToken;
 
     ISablier public sablierContract;
