@@ -557,5 +557,35 @@
     "version": 1,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "TestStakingToken",
+    "source": "TestToken",
+    "address": "0x890011621298dc297550401852284D992071eBCd",
+    "txn": "0x040fdd25b935b7907343de20c653b14ab40cc5dc3a2bb43e023715147fa7d0cb",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "staking",
+    "group": "SapphirePassportPool"
+  },
+  {
+    "name": "Implementation",
+    "source": "PassportCampaign",
+    "address": "0x29FaBE7D51A686b4F8f3739dA7fcC147342C538d",
+    "txn": "0xb17771e98a5ed4123372f10105fc3d89e29377493760962ab7b4bce631267d11",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "staking",
+    "group": "SapphirePassportPool"
+  },
+  {
+    "name": "Proxy",
+    "source": "ArcProxy",
+    "address": "0xDBC3FA8441B5b00fa1EC0fc91910C916a779B932",
+    "txn": "0xae34b9d2102889629eabdc2723a9ab01601ae1522f90e94999d33d73fb1d8250",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "staking",
+    "group": "SapphirePassportPool"
   }
 ]
