@@ -710,6 +710,7 @@ describe('PassportCampaign', () => {
         const stakingTokenAddress = await adminPassportCampaign.stakingToken();
         const daoAllocation = await adminPassportCampaign.daoAllocation();
         const scoreThreshold = await adminPassportCampaign.creditScoreThreshold();
+        const creditScoreAddy = await adminPassportCampaign.creditScoreContract()
 
         expect(arcDao).to.eq(admin.address);
         expect(rewardsDistributor).to.eq(admin.address);
@@ -717,6 +718,7 @@ describe('PassportCampaign', () => {
         expect(stakingTokenAddress).to.eq(stakingToken.address);
         expect(daoAllocation).to.eq(DAO_ALLOCATION);
         expect(scoreThreshold).to.eq(CREDIT_SCORE_THRESHOLD);
+        expect(creditScoreAddy).to.eq(creditScoreAddy)
       });
 
       it('should not be called twice by the contract owner', async () => {
@@ -927,32 +929,50 @@ describe('PassportCampaign', () => {
     });
 
     describe('#setCreditScoreContract', () => {
-      it('reverts if called by non-admin', async () => {
-        const newCs = await new SapphireCreditScoreFactory(admin).deploy()
-        
-        await expect(user1PassportCampaign.setCreditScoreContract(newCs.address)).to.be.revertedWith(
-          'Adminable: caller is not admin',
-        );
+      beforeEach(async () => {
+        await setup()
       })
+      
+      it('reverts if called by non-admin', async () => {
+        const newCs = await new SapphireCreditScoreFactory(admin).deploy();
+
+        await expect(
+          user1PassportCampaign.setCreditScoreContract(newCs.address),
+        ).to.be.revertedWith('Adminable: caller is not admin');
+      });
 
       it('reverts if setting the same contract', async () => {
-        await expect(adminPassportCampaign.setCreditScoreContract(creditScoreContract.address)).to.be.revertedWith('PassportCampaign: the same credit score address is already set')
-      })
+        await expect(
+          adminPassportCampaign.setCreditScoreContract(
+            creditScoreContract.address,
+          ),
+        ).to.be.revertedWith(
+          'PassportCampaign: the same credit score address is already set',
+        );
+      });
 
       it('reverts if the contract is not an address', async () => {
-        await expect(adminPassportCampaign.setCreditScoreContract(user1.address)).to.be.revertedWith('PassportCampaign: the given address is not a contract')
-      })
+        await expect(
+          adminPassportCampaign.setCreditScoreContract(user1.address),
+        ).to.be.revertedWith(
+          'PassportCampaign: the given address is not a contract',
+        );
+      });
 
       it('sets a new credit score contract', async () => {
-        const newCs = await new SapphireCreditScoreFactory(admin).deploy()
+        const newCs = await new SapphireCreditScoreFactory(admin).deploy();
 
-        expect(await adminPassportCampaign.creditScoreContract()).to.eq(creditScoreContract.address)
+        expect(await adminPassportCampaign.creditScoreContract()).to.eq(
+          creditScoreContract.address,
+        );
 
-        await adminPassportCampaign.setCreditScoreContract(newCs.address)
+        await adminPassportCampaign.setCreditScoreContract(newCs.address);
 
-        expect(await adminPassportCampaign.creditScoreContract()).to.eq(newCs.address)
-      })
-    })
+        expect(await adminPassportCampaign.creditScoreContract()).to.eq(
+          newCs.address,
+        );
+      });
+    });
 
     describe('#setMaxStakePerUser', () => {
       it('reverts if called by non-admin', async () => {
