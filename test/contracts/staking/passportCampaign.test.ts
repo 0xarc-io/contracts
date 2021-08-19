@@ -2,6 +2,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import {
   ArcProxyFactory,
   MockSapphireCreditScore,
+  SapphireCreditScoreFactory,
   TestToken,
   TestTokenFactory,
 } from '@src/typings';
@@ -924,6 +925,26 @@ describe('PassportCampaign', () => {
         );
       });
     });
+
+    describe('#setCreditScoreContract', () => {
+      it('reverts if called by non-admin', async () => {
+        const newCs = await new SapphireCreditScoreFactory(admin).deploy()
+        
+        await expect(user1PassportCampaign.setCreditScoreContract(newCs.address)).to.be.revertedWith(
+          'Adminable: caller is not admin',
+        );
+      })
+
+      it('sets a new credit score contract', async () => {
+        const newCs = await new SapphireCreditScoreFactory(admin).deploy()
+
+        expect(await adminPassportCampaign.creditScoreContract()).to.eq(creditScoreContract.address)
+
+        await adminPassportCampaign.setCreditScoreContract(newCs.address)
+
+        expect(await adminPassportCampaign.creditScoreContract()).to.eq(newCs.address)
+      })
+    })
 
     describe('#setMaxStakePerUser', () => {
       it('reverts if called by non-admin', async () => {
