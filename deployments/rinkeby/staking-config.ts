@@ -107,7 +107,7 @@ export default {
   SapphirePassportPool: {
     source: 'PassportCampaign',
     stakingToken: '',
-    rewardsToken: 'ArcxTokenV2',
+    rewardsToken: 'ARCx Test Token',
     rewardsDurationSeconds: 60 * 60 * 24 * 31, // 31 days
     contractFactory: PassportCampaignFactory,
     getDeployTx: (signer: SignerWithAddress) =>

@@ -935,6 +935,14 @@ describe('PassportCampaign', () => {
         );
       })
 
+      it('reverts if setting the same contract', async () => {
+        await expect(adminPassportCampaign.setCreditScoreContract(creditScoreContract.address)).to.be.revertedWith('PassportCampaign: the same credit score address is already set')
+      })
+
+      it('reverts if the contract is not an address', async () => {
+        await expect(adminPassportCampaign.setCreditScoreContract(user1.address)).to.be.revertedWith('PassportCampaign: the given address is not a contract')
+      })
+
       it('sets a new credit score contract', async () => {
         const newCs = await new SapphireCreditScoreFactory(admin).deploy()
 
