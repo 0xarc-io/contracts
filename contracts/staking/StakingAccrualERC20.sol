@@ -70,6 +70,8 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
 
     event FundsWithdrawnFromSablier(uint256 _streamId, uint256 _amount);
 
+    event CreditScoreContractSet(address _creditScoreContract);
+
     /* ========== Constructor (ignore) ========== */
 
     constructor ()
@@ -161,10 +163,31 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
         );
     }
 
+    function setCreditScoreContract(
+        address _creditScoreAddress
+    )
+        external
+        onlyAdmin
+    {
+        require(
+            address(creditScoreContract) != _creditScoreAddress,
+            "StakingAccrualERC20: the same credit score address is already set"
+        );
+
+        require(
+            _creditScoreAddress.isContract(),
+            "StakingAccrualERC20: the given address is not a contract"
+        );
+
+        creditScoreContract = ISapphireCreditScore(_creditScoreAddress);
+
+        emit CreditScoreContractSet(_creditScoreAddress);
+    }
+
     /**
      * @notice Sets the Sablier contract address
      */
-    function setSablierContract (
+    function setSablierContract(
         address _sablierContract
     )
         external

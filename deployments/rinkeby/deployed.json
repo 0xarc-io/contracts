@@ -561,8 +561,8 @@
   {
     "name": "StakingAccrualERC20",
     "source": "StakingAccrualERC20",
-    "address": "0x8ceAB6B37f57436Bd433f4dc5118cC084C945496",
-    "txn": "0xa015e4f3f73f0d0e4fa5ca52912d71f2a0f0c55c918519476fa2f83c6dd2f57d",
+    "address": "0x99077791873045Da9Db729E17057812d903f19fC",
+    "txn": "0xb27ae167242f1a43d51e5253a976de3c1ac193c27b22dac30d4b41c5229b587d",
     "network": "rinkeby",
     "version": 1,
     "type": "global",
