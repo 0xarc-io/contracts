@@ -661,8 +661,8 @@
   {
     "name": "StakingAccrualERC20",
     "source": "StakingAccrualERC20",
-    "address": "0xfc8dA2D8D318bA64307AfcC5bA8939047B63FFE7",
-    "txn": "0xf4fba61e4aba58e4abfcc8c7ec3458b2c827d3b0b13f92c03bdfa18caf849fde",
+    "address": "0x4B67B3289fFfCA4f40C0687F44931c75C473c79E",
+    "txn": "0xc4e656b336508f5c7af12281bd8f9f4c50632fbbd8bc8342a46110e86d551c4b",
     "network": "mainnet",
     "version": 1,
     "type": "global",
@@ -671,8 +671,8 @@
   {
     "name": "StakingAccrualERC20Proxy",
     "source": "ArcProxy",
-    "address": "0x6839a40A81322E14f4876E86b3Cc24e0675495a7",
-    "txn": "0x40df40e0385f46ef3d638aa32916d0efb8dca8a2368c06b563a6ac60d1a656a3",
+    "address": "0x9bfFAd7A6d5F52dBC51cAE33E419793C72fD7d9D",
+    "txn": "0x3f9ea6868cc44ac014145a19d576d606e564c9e13ba26636e58652fd56d39126",
     "network": "mainnet",
     "version": 1,
     "type": "global",
