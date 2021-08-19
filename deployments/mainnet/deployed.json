@@ -609,10 +609,90 @@
     "group": "Pool-9"
   },
   {
+    "name": "SapphireCreditScore",
+    "source": "SapphireCreditScore",
+    "address": "0x97ba29E4Fa86972f4bD3d935871e5Fe028Cb80F7",
+    "txn": "0x5f6d372a63d6b83ebaf477cb88d22ee9a9cac9417176f1e0bc3b153150d82889",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "SapphireCreditScoreProxy",
+    "source": "ArcProxy",
+    "address": "0x427d3B028fb15a06C2d75be8E8a2238aAd41ed3A",
+    "txn": "0x8ae9688a12e4a8a3d2fa2918e818fc10056d37280b48ac7d894d2c79a1ef0684",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "DefiPassport",
+    "source": "DefiPassport",
+    "address": "0x27b76E100b63731a7cF9386c1decb918E6F54756",
+    "txn": "0xda45f7184b95f52b60e360e971319dc7f4a2cf506628622fd9f0af98f239d461",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global",
+    "group": "DefiPassport"
+  },
+  {
+    "name": "DefiPassportProxy",
+    "source": "ArcProxy",
+    "address": "0x933492b6B7038A7e4f14b64DEFe40463F9bc3508",
+    "txn": "0xbbd8a3d773dad22805f5137e3af420efa8951f2223b09fd558a3fea21ee1231c",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global",
+    "group": "DefiPassport"
+  },
+  {
+    "name": "DefiPassportClaimer",
+    "source": "DefiPassportClaimer",
+    "address": "0xd525beaBF69d72e170d6f9ee153D3F6F70F7D177",
+    "txn": "0xe28868259c387a6f706482305b812985db4d013e088e37f80ad7c8197f6c8bbe",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "StakingAccrualERC20",
+    "source": "StakingAccrualERC20",
+    "address": "0xfc8dA2D8D318bA64307AfcC5bA8939047B63FFE7",
+    "txn": "0xf4fba61e4aba58e4abfcc8c7ec3458b2c827d3b0b13f92c03bdfa18caf849fde",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global",
+    "group": "StakingAccrualERC20"
+  },
+  {
+    "name": "StakingAccrualERC20Proxy",
+    "source": "ArcProxy",
+    "address": "0x6839a40A81322E14f4876E86b3Cc24e0675495a7",
+    "txn": "0x40df40e0385f46ef3d638aa32916d0efb8dca8a2368c06b563a6ac60d1a656a3",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global",
+    "group": "StakingAccrualERC20"
+  },
+  {
+    "name": "DefaultPassportSkin",
+    "source": "DefaultPassportSkin",
+    "address": "0x302434B8676048b9FDE0aD20952999C84c7f1428",
+    "txn": "0x3666333018382432bf1ce548ac111ccfcb813eb915c31b5491e67b1f2922f7b7",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
     "name": "WaitlistBatch",
     "source": "WaitlistBatch",
-    "address": "0xbd3222d94d077279A875699a8057C1F58D8a3894",
-    "txn": "0xb206749970453320cc2e4968fe74c408d311007ef7d8b70b23f5c996b1deee9a",
+    "address": "0xEF8f8e370722Ae405449Cb4cC6864AA0B4a7E6a0",
+    "txn": "0xa87acfffcc200c1e3a0c258cacd73b9c683c0bf676ea136ddd7bb168f165c1dc",
     "network": "mainnet",
     "version": 1,
     "type": "global",
