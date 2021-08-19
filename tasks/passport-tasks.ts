@@ -171,8 +171,9 @@ task(
 )
   .addParam('name', 'The name of the NFT')
   .addParam('symbol', 'The symbol of the NFT')
+  .addParam('baseuri', 'The base URI of the tokens')
   .setAction(async (taskArgs, hre) => {
-    const { name, symbol } = taskArgs;
+    const { name, symbol, baseuri } = taskArgs;
     const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
 
     await pruneDeployments(network, signer.provider);
@@ -204,4 +205,24 @@ task(
       address: defaultPassportSkinNft,
       constructorArguments: [name, symbol],
     });
+
+    const nftContract = DefaultPassportSkinFactory.connect(defaultPassportSkinNft, signer)
+    if (baseuri) {
+      console.log(yellow(`Setting base URI ${baseuri}...`))
+      await nftContract.setBaseURI(baseuri)
+      console.log(green(`Setting base URI set successfully`))
+    }
+
+    const totalTokens = await nftContract.totalSupply()
+    if (totalTokens.isZero()) {
+      console.log(yellow(`Creating the first three default skins...`))
+
+      for (let i = 1; i <= 3; i++) {
+        console.log(yellow(`\nMinting NFT ${i}...`))
+        await nftContract.mint(signer.address, i.toString())
+        console.log(green(`Token ${i} minted successfully!`))
+      }
+
+      console.log(green(`The default skins were successfully minted`))
+    }
   });
