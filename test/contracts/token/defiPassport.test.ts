@@ -327,6 +327,28 @@ describe('DefiPassport', () => {
 
       expect(await defiPassport.baseURI()).to.eq(uri);
     });
+
+    it('it is included in the token URI', async () => {
+      const uri = 'https://test.com/defipassport/';
+
+      await defiPassport.setBaseURI(uri);
+
+      await defiPassport
+        .connect(skinManager)
+        .setDefaultSkin(defaultSkinAddress, true);
+
+      await defiPassport.mint(
+        user.address,
+        defaultSkinAddress,
+        defaultSkinTokenId,
+      );
+
+      const tokenId = await defiPassport.tokenOfOwnerByIndex(user.address, 0);
+
+      expect(await defiPassport.tokenURI(tokenId)).to.eq(
+        uri + user.address.toLowerCase(),
+      );
+    });
   });
 
   describe('#setActiveSkin', () => {
