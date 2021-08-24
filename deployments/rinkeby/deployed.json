@@ -587,5 +587,15 @@
     "version": 1,
     "type": "staking",
     "group": "SapphirePassportPool"
+  },
+  {
+    "name": "DefiPassport",
+    "source": "DefiPassport",
+    "address": "0x4cD1AFDA5710f1916E4b8E3897466B05FDF04e27",
+    "txn": "0xc660c7d3bda0dad92ea781797022281e43c138a0fcf63e7b051e558f023b92b5",
+    "network": "rinkeby",
+    "version": "2",
+    "type": "global",
+    "group": "DefiPassport"
   }
 ]
