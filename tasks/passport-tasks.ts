@@ -17,6 +17,7 @@ task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
   .addParam('name', 'Name of the defi passport NFT')
   .addParam('symbol', 'Symbol of the defi passport NFT')
   .addParam('creditscore', 'Address of the SapphireCreditScore contract to use')
+  .addOptionalParam('ver', 'Version of the deployment')
   .addOptionalParam(
     'skinmanager',
     'Address of the skin manager. Default is deployer',
@@ -29,6 +30,7 @@ task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
       creditscore: creditScoreContractAddress,
       skinManager,
       implementationonly: implementationOnly,
+      ver: version,
     } = taskArgs;
 
     const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
@@ -40,7 +42,7 @@ task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
         name: 'DefiPassport',
         source: 'DefiPassport',
         data: new DefiPassportFactory(signer).getDeployTransaction(),
-        version: 1,
+        version: version || 1,
         type: DeploymentType.global,
         group: 'DefiPassport',
       },
