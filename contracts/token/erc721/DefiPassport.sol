@@ -51,6 +51,10 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
 
     event WhitelistSkinSet(address _skin, bool _status);
 
+    /* ========== Public variables ========== */
+
+    string public baseURI;
+
     /* ========== Constructor ========== */
 
     constructor()
@@ -112,7 +116,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         external
         onlyAdmin
     {
-        _setBaseURI(_baseURI);
+        baseURI = _baseURI;
         emit BaseURISet(_baseURI);
     }
 
@@ -344,7 +348,6 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
 
         uint256 newTokenId = _tokenIds.current();
         _mint(_to, newTokenId);
-        _setTokenURI(newTokenId, _toAsciiString(_to));
         _setActiveSkin(newTokenId, SkinRecord(_to, _passportSkin, _skinTokenId));
 
         return newTokenId;
@@ -476,6 +479,28 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         } else {
             return defaultActiveSkin;
         }
+    }
+
+    /**
+     * @dev Returns the URI for a given token ID. May return an empty string.
+     *
+     * Reverts if the token ID does not exist.
+     */
+    function tokenURI(
+        uint256 tokenId
+    )
+        external
+        view
+        returns (string memory)
+    {
+        require(
+            _exists(tokenId),
+            "ERC721Metadata: URI query for nonexistent token"
+        );
+
+        address owner = ownerOf(tokenId);
+
+        return string(abi.encodePacked(baseURI, "0x", _toAsciiString(owner)));
     }
 
     /* ========== Private Functions ========== */
