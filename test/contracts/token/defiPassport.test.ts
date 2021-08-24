@@ -259,7 +259,7 @@ describe('DefiPassport', () => {
 
       expect(await defiPassport.balanceOf(user.address)).to.eq(1);
       expect(await defiPassport.tokenURI(tokenId)).to.eq(
-        user.address.slice(2).toLowerCase(),
+        user.address.toLowerCase(),
       );
     });
 
@@ -279,7 +279,7 @@ describe('DefiPassport', () => {
 
       expect(await defiPassport.balanceOf(user.address)).to.eq(1);
       expect(await defiPassport.tokenURI(tokenId)).to.eq(
-        user.address.slice(2).toLowerCase(),
+        user.address.toLowerCase(),
       );
 
       const activeSkinRes = await defiPassport.getActiveSkin(tokenId);
