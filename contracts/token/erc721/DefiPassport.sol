@@ -543,9 +543,9 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
 
             if (success) {
                 (uint256 balance) = abi.decode(returnData, (uint256));
-                
+
                 return balance > 0;
-            }            
+            }
         }
 
         return false;
