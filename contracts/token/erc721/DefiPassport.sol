@@ -445,14 +445,8 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         view
         returns (bool)
     {
-        // Ensure the token exists
-        require (
-            IERC721(_skinContract).ownerOf(_skinTokenId) != address(0),
-            "DefiPassport: the specified skin token id does not exist"
-        );
-
         if (defaultSkins[_skinContract]) {
-            return true;
+            return IERC721(_skinContract).ownerOf(_skinTokenId) != address(0);
         } else if (
             whitelistedSkins[_skinContract] ||
             approvedSkins[_skinContract][_skinTokenId]
@@ -531,7 +525,30 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         view
         returns (bool)
     {
-        return IERC721(_skin).ownerOf(_tokenId) == _user;
+        /**
+         * It is not sure if the skin contract implements the ERC721 or ERC1155 standard,
+         * so we must do the check.
+         */
+        bytes memory payload = abi.encodeWithSignature("ownerOf(uint256)", _tokenId);
+        (bool success, bytes memory returnData) = _skin.staticcall(payload);
+
+        if (success) {
+            (address owner) = abi.decode(returnData, (address));
+
+            return owner == _user;
+        } else {
+            // The skin contract might be an ERC1155 (like OpenSea)
+            payload = abi.encodeWithSignature("balanceOf(address,uint256)", _user, _tokenId);
+            (success, returnData) = _skin.staticcall(payload);
+
+            if (success) {
+                (uint256 balance) = abi.decode(returnData, (uint256));
+                
+                return balance > 0;
+            }            
+        }
+
+        return false;
     }
 
     function _setActiveSkin(

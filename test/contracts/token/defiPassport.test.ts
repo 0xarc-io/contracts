@@ -2,17 +2,21 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { CreditScoreTree } from '@src/MerkleTree';
 import {
+  ArcProxyFactory,
   DefaultPassportSkin,
   DefiPassport,
+  DefiPassportFactory,
   MintableNFT,
   MintableNFTFactory,
   MockSapphireCreditScore,
   SapphireCreditScore,
+  SapphireCreditScoreFactory,
 } from '@src/typings';
 import { DefaultPassportSkinFactory } from '@src/typings/DefaultPassportSkinFactory';
 import { getScoreProof } from '@src/utils';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
+import { MockProvider } from 'ethereum-waffle';
 import { constants } from 'ethers';
 import { ethers } from 'hardhat';
 import {
@@ -522,10 +526,9 @@ describe('DefiPassport', () => {
   });
 
   describe('#isSkinAvailable', () => {
-    it('reverts if the skin does not exist', async () => {
-      await expect(
-        defiPassport.isSkinAvailable(user.address, skinAddress, 21),
-      ).to.be.revertedWith('ERC721: owner query for nonexistent token');
+    it('returns false if skin does not exist', async () => {
+      expect(await defiPassport.isSkinAvailable(user.address, skinAddress, 21))
+        .to.be.false;
     });
 
     it('returns false if the skin is not a default skin', async () => {
@@ -561,6 +564,55 @@ describe('DefiPassport', () => {
 
       expect(await defiPassport.isSkinAvailable(owner.address, skinAddress, 1))
         .to.be.true;
+    });
+
+    it('returns true if a skin is an ERC1155', async () => {
+      const provider = new MockProvider({
+        ganacheOptions: {
+          fork: process.env.GANACHE_FORK_URL,
+          fork_block_number: 13089257,
+        },
+      });
+
+      const signer = provider.getSigner();
+      const cs = await new SapphireCreditScoreFactory(signer).deploy();
+      const impl = await new DefiPassportFactory(signer).deploy();
+
+      const proxy = await new ArcProxyFactory(signer).deploy(
+        impl.address,
+        await signer.getAddress(),
+        [],
+      );
+      const dp = DefiPassportFactory.connect(proxy.address, signer);
+      await dp.init('DFP', 'DFP', cs.address, await signer.getAddress());
+
+      const skinContract = '0x495f947276749Ce646f68AC8c248420045cb7b5e';
+      const skinTokenId =
+        '75685692659921132146541619680153300115128635339872877657167321720357472174081';
+      const expectedOwner = '0x2f45724d7e384b38d5c97206e78470544304887f';
+
+      expect(
+        await dp.isSkinAvailable(expectedOwner, skinContract, skinTokenId),
+        'skin not yet approved',
+      ).to.be.false;
+
+      await dp.setApprovedSkin(
+        '0x495f947276749Ce646f68AC8c248420045cb7b5e',
+        BigNumber.from(
+          '75685692659921132146541619680153300115128635339872877657167321720357472174081',
+        ),
+        true,
+      );
+
+      expect(
+        await dp.approvedSkins(skinContract, skinTokenId),
+        'approved skin',
+      );
+
+      expect(
+        await dp.isSkinAvailable(expectedOwner, skinContract, skinTokenId),
+        'skin available for user',
+      ).to.be.true;
     });
   });
 
