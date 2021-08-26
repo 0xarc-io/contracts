@@ -28,10 +28,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     using Address for address;
     using Bytes32 for bytes32;
 
-    /* ========== Constants ========== */
-
-    uint256 constant BASE = 10**18;
-
     /* ========== Events ========== */
 
     event ActionsOperated(
