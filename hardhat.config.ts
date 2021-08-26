@@ -97,7 +97,7 @@ const config: HardhatUserConfig = {
       users: {
         eoaOwner: '0x62f31e08e279f3091d9755a09914df97554eae0b',
         multisigOwner: '0x859a95b2b50c1fc25560a2c6dad5b3d0ba34b6e9',
-        arcxDeployer: '0x9c767178528c8a205df63305ebda4bb6b147889b',
+        // arcxDeployer: '0x9c767178528c8a205df63305ebda4bb6b147889b',
       },
     },
     playnet: {
