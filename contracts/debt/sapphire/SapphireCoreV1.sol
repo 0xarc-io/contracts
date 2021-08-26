@@ -19,16 +19,12 @@ import {SapphireCoreStorage} from "./SapphireCoreStorage.sol";
 import {SapphireAssessor} from "./SapphireAssessor.sol";
 import {ISapphireAssessor} from "./ISapphireAssessor.sol";
 
-contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
+contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
     /* ========== Libraries ========== */
 
     using SafeMath for uint256;
     using Address for address;
-
-    /* ========== Constants ========== */
-
-    uint256 constant BASE = 10**18;
 
     /* ========== Events ========== */
 

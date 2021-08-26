@@ -9,6 +9,12 @@ import {ISapphireAssessor} from "./ISapphireAssessor.sol";
 import {SapphireTypes} from "./SapphireTypes.sol";
 
 contract SapphireCoreStorage {
+    /* ========== Constants ========== */
+
+    uint256 constant BASE = 10**18;
+
+    /* ========== Public variables ========== */
+
     /**
      * @notice Determines whether the contract is paused or not
      */
