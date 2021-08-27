@@ -10,8 +10,6 @@ module.exports = {
 		'token/KYFToken.sol',
 		'token/SkillsetToken.sol',
 		'token/Permittable.sol',
-		'debt/spritz/CoreV1.sol',
-		'debt/spritz/CoreV2.sol',
 		'staking/AdminRewards.sol',
 	],
 	providerOptions: {
