@@ -1,17 +1,6 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 
-import { CoreV1 } from '@src/typings/CoreV1';
-import { CoreV2 } from '@src/typings/CoreV2';
-import { CoreV3 } from '@src/typings/CoreV3';
-import { CoreV4 } from '@src/typings/CoreV4';
-import { StateV1 } from '@src/typings/StateV1';
-
 import { MockContract } from 'ethereum-waffle';
-import { StaticSyntheticToken } from '@src/typings/StaticSyntheticToken';
-import { SyntheticTokenV1 } from '@src/typings/SyntheticTokenV1';
-import { RewardCampaign } from '@src/typings/RewardCampaign';
-import { TokenStakingAccrual } from '@src/typings/TokenStakingAccrual';
-import { AdminRewards } from '@src/typings/AdminRewards';
 import { AddressAccrual } from '@src/typings/AddressAccrual';
 import { MockOracle } from '@src/typings/MockOracle';
 
