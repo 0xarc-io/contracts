@@ -4,13 +4,13 @@
   "main": "dist/src/index.js",
   "typings": "dist/src/index.d.ts",
   "files": [
-    "index.js",
-    "dist",
-    "publish/deployed/kovan/*.json",
-    "publish/deployed/rinkeby/*.json",
-    "publish/deployed/ropsten/*.json",
-    "publish/deployed/mainnet/*.json",
-    "publish/deployed/playnet/*.json"
+    "dist/arc-types/*",
+    "dist/src/typings/*",
+    "deployments/kovan/*.json",
+    "deployments/rinkeby/*.json",
+    "deployments/ropsten/*.json",
+    "deployments/mainnet/*.json",
+    "deployments/playnet/*.json"
   ],
   "author": "Kerman Kohli <kermankohli@gmail.com>",
   "license": "MIT",
