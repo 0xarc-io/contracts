@@ -1,4 +1,3 @@
-import { BigNumber } from '@ethersproject/bignumber';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import {
   LiquidityCampaign,
@@ -7,48 +6,11 @@ import {
   LiquidityCampaignV2Factory,
   PassportCampaign,
   PassportCampaignFactory,
-  RewardCampaign,
-  RewardCampaignFactory,
 } from '@src/typings';
 import { yellow } from 'chalk';
 import { utils } from 'ethers';
 
 export default {
-  'TestPool-1': {
-    type: 'RewardCampaign',
-    source: 'RewardCampaign',
-    stakingToken: '',
-    rewardsToken: 'ArcxToken',
-    rewardsDurationSeconds: 604800,
-    coreContracts: ['yUSD-STABLEx', 'cUSDC-STABLEx'],
-    getDeployTx: (signer: SignerWithAddress) =>
-      new RewardCampaignFactory(signer).getDeployTransaction(),
-    runInit: (
-      contract: RewardCampaign,
-      arcDao: string,
-      ultimateOwner: string,
-      rewardTokenAddress,
-      stakingTokenAddress,
-    ) => {
-      const config = {
-        daoAllocation: '330000000000000000',
-        slasherCut: '100000000000000000',
-        vestingEndDate: '1617829388',
-        debtToStake: '1000000',
-      };
-
-      return contract.init(
-        arcDao,
-        ultimateOwner,
-        rewardTokenAddress,
-        stakingTokenAddress,
-        { value: config.daoAllocation },
-        { value: config.slasherCut },
-        config.vestingEndDate,
-        config.debtToStake,
-      );
-    },
-  },
   'TestPool-2': {
     source: 'LiquidityCampaign',
     stakingToken: '',
@@ -165,7 +127,8 @@ export default {
       // Needs a minimum of 500 credit score to participate
       const creditScoreThreshold = 500;
 
-      console.log(yellow(`Calling init:
+      console.log(
+        yellow(`Calling init:
         {
           arcDao: ${arcDao},
           rewardsDistributor: ${rewardsDistributor},
@@ -176,8 +139,9 @@ export default {
           maxStakePerUser: ${maxStakePerUser.toString()},
           creditScoreThreshold: ${creditScoreThreshold}
         }
-      `))
-      
+      `),
+      );
+
       return contract.init(
         arcDao,
         rewardsDistributor,
