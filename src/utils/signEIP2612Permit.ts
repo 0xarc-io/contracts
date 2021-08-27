@@ -1,5 +1,5 @@
 import { JsonRpcSigner } from '@ethersproject/providers/lib';
-import { BigNumber } from '@ethersproject/bignumber';
+import { BigNumber } from 'ethers';
 import { BaseERC20Factory } from '../typings';
 
 export interface SignatureInfo {
