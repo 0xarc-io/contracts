@@ -12,8 +12,6 @@ module.exports = {
 		'token/Permittable.sol',
 		'debt/spritz/CoreV1.sol',
 		'debt/spritz/CoreV2.sol',
-		'debt/mozart/MozartCoreV1.sol',
-		'debt/mozart/savings/MozartSavingsV1.sol',
 		'staking/AdminRewards.sol',
 	],
 	providerOptions: {

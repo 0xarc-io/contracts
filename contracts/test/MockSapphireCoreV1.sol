@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import {IOracle} from "../oracle/IOracle.sol";
 
-import {SapphireCoreV1} from "../debt/sapphire/SapphireCoreV1.sol";
+import {SapphireCoreV1} from "../sapphire/SapphireCoreV1.sol";
 import {MockTimestamp} from "./MockTimestamp.sol";
 
 contract MockSapphireCoreV1 is SapphireCoreV1, MockTimestamp {

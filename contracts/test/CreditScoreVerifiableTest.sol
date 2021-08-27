@@ -4,8 +4,8 @@ pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {CreditScoreVerifiable} from "../lib/CreditScoreVerifiable.sol";
-import {ISapphireCreditScore} from "../debt/sapphire/ISapphireCreditScore.sol";
-import {SapphireTypes} from "../debt/sapphire/SapphireTypes.sol";
+import {ISapphireCreditScore} from "../sapphire/ISapphireCreditScore.sol";
+import {SapphireTypes} from "../sapphire/SapphireTypes.sol";
 
 contract CreditScoreVerifiableTest is CreditScoreVerifiable {
 

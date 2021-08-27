@@ -1,7 +1,5 @@
 import 'module-alias/register';
 
-export * from './mozart-tasks';
-export * from './spritz-tasks';
 export * from './global-tasks';
 export * from './ownership-tasks';
 export * from './subgraph-tasks';
