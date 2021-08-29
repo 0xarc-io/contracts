@@ -3,7 +3,7 @@
 pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
-import {ISapphireOracle} from "../../oracle/ISapphireOracle.sol";
+import {ISapphireOracle} from "../oracle/ISapphireOracle.sol";
 import {ISapphireAssessor} from "./ISapphireAssessor.sol";
 
 import {SapphireTypes} from "./SapphireTypes.sol";

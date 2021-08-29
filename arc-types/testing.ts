@@ -1,26 +1,10 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 
-import { CoreV1 } from '@src/typings/CoreV1';
-import { CoreV2 } from '@src/typings/CoreV2';
-import { CoreV3 } from '@src/typings/CoreV3';
-import { CoreV4 } from '@src/typings/CoreV4';
-import { StateV1 } from '@src/typings/StateV1';
-
 import { MockContract } from 'ethereum-waffle';
-import { StaticSyntheticToken } from '@src/typings/StaticSyntheticToken';
-import { SyntheticTokenV1 } from '@src/typings/SyntheticTokenV1';
-import { RewardCampaign } from '@src/typings/RewardCampaign';
-import { TokenStakingAccrual } from '@src/typings/TokenStakingAccrual';
-import { AdminRewards } from '@src/typings/AdminRewards';
 import { AddressAccrual } from '@src/typings/AddressAccrual';
-import { MockOracle } from '@src/typings/MockOracle';
 
 import { TestToken } from '@src/typings/TestToken';
-import { SpritzTestArc } from '@src/SpritzTestArc';
-import { MozartTestArc } from '@src/MozartTestArc';
 import {
-  MockMozartCoreV2,
-  MockMozartSavingsV2,
   MockSapphireCoreV1,
   MockSapphireCreditScore,
   SapphireAssessor,
@@ -45,25 +29,10 @@ export interface TestingSigners {
 }
 
 export interface SDKs {
-  spritz?: SpritzTestArc;
-  mozart?: MozartTestArc;
   sapphire?: SapphireTestArc;
 }
 
 export interface Contracts {
-  spritz: {
-    coreV1: CoreV1;
-    coreV2: CoreV2;
-    coreV3: CoreV3;
-    coreV4: CoreV4;
-    state: StateV1;
-    oracle: MockOracle;
-  };
-  mozart: {
-    core: MockMozartCoreV2;
-    savings: MockMozartSavingsV2;
-    oracle: MockOracle;
-  };
   sapphire: {
     core: MockSapphireCoreV1;
     creditScore: MockSapphireCreditScore;
@@ -72,31 +41,15 @@ export interface Contracts {
     oracle: MockSapphireOracle;
   };
   synthetic: {
-    static: StaticSyntheticToken;
-    tokenV1: SyntheticTokenV1;
     tokenV2: SyntheticTokenV2;
   };
   staking: {
     addressAccrual: AddressAccrual;
-    adminRewards: AdminRewards;
-    rewardCampaign: RewardCampaign;
-    tokenStakingAccrual: TokenStakingAccrual;
   };
   collateral: TestToken;
 }
 
 export interface Stubs {
-  spritz: {
-    coreV1: MockContract;
-    coreV2: MockContract;
-    coreV3: MockContract;
-    coreV4: MockContract;
-    state: MockContract;
-  };
-  mozart: {
-    coreV1: MockContract;
-    savingsV1: MockContract;
-  };
   synthetic: {
     static: MockContract;
     tokenV1: MockContract;

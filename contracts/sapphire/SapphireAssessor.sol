@@ -8,8 +8,8 @@ import {SapphireTypes} from "./SapphireTypes.sol";
 import {ISapphireMapper} from "./ISapphireMapper.sol";
 import {ISapphireCreditScore} from "./ISapphireCreditScore.sol";
 import {ISapphireAssessor} from "./ISapphireAssessor.sol";
-import {Ownable} from "../../lib/Ownable.sol";
-import {Address} from "../../lib/Address.sol";
+import {Ownable} from "../lib/Ownable.sol";
+import {Address} from "../lib/Address.sol";
 
 contract SapphireAssessor is Ownable, ISapphireAssessor {
 

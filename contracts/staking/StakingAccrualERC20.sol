@@ -13,8 +13,8 @@ import {CreditScoreVerifiable} from "../lib/CreditScoreVerifiable.sol";
 import {ISablier} from "../global/ISablier.sol";
 import {BaseERC20} from "../token/BaseERC20.sol";
 import {IPermittableERC20} from "../token/IPermittableERC20.sol";
-import {SapphireTypes} from "../debt/sapphire/SapphireTypes.sol";
-import {ISapphireCreditScore} from "../debt/sapphire/ISapphireCreditScore.sol";
+import {SapphireTypes} from "../sapphire/SapphireTypes.sol";
+import {ISapphireCreditScore} from "../sapphire/ISapphireCreditScore.sol";
 
 /**
  * @notice An ERC20 that allows users to deposit a given token, where their

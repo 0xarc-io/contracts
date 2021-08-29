@@ -48,7 +48,6 @@ describe('JointPassportCampaign', () => {
   let collabPassportCampaign: MockJointPassportCampaign;
   let user1PassportCampaign: MockJointPassportCampaign;
   let user2PassportCampaign: MockJointPassportCampaign;
-  let unauthorizedPassportCampaign: MockJointPassportCampaign;
 
   let creditScoreContract: MockSapphireCreditScore;
 
@@ -71,15 +70,6 @@ describe('JointPassportCampaign', () => {
   let user1: SignerWithAddress; // main staker
   let user2: SignerWithAddress; // another staker w/ valid credit score
   let unauthorized: SignerWithAddress; // low credit score
-
-  function getCurrentTimestamp() {
-    return arcPassportCampaign.currentTimestamp();
-  }
-
-  async function increaseTime(duration: number) {
-    const currentTime = await getCurrentTimestamp();
-    await arcPassportCampaign.setCurrentTimestamp(currentTime.add(duration));
-  }
 
   async function setTimestampTo(timestamp: number) {
     await arcPassportCampaign.setCurrentTimestamp(timestamp);
@@ -117,10 +107,7 @@ describe('JointPassportCampaign', () => {
     await arcPassportCampaign.connect(user).withdraw(amount);
   }
 
-  async function exitCampaign(
-    user: SignerWithAddress,
-    scoreProof?: CreditScoreProof,
-  ) {
+  async function exitCampaign(user: SignerWithAddress) {
     await arcPassportCampaign.connect(user).exit();
   }
 
@@ -246,7 +233,6 @@ describe('JointPassportCampaign', () => {
     collabPassportCampaign = arcPassportCampaign.connect(collab);
     user1PassportCampaign = arcPassportCampaign.connect(user1);
     user2PassportCampaign = arcPassportCampaign.connect(user2);
-    unauthorizedPassportCampaign = arcPassportCampaign.connect(unauthorized);
 
     await mintAndApprove(stakingToken, user1, STAKE_AMOUNT);
   });
@@ -2153,7 +2139,7 @@ describe('JointPassportCampaign', () => {
 
       await arcPassportCampaign.setTokensClaimable(true);
 
-      await exitCampaign(users.userB, creditScoreProofs.userB);
+      await exitCampaign(users.userB);
       await withdraw(users.userC, STAKE_AMOUNT);
 
       await arcPassportCampaign.setCurrentTimestamp(20);

@@ -4,8 +4,8 @@ pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 
-import {Adminable} from "../../lib/Adminable.sol";
-import {SafeMath} from "../../lib/SafeMath.sol";
+import {Adminable} from "../lib/Adminable.sol";
+import {SafeMath} from "../lib/SafeMath.sol";
 import {SapphireTypes} from "./SapphireTypes.sol";
 import {ISapphireCreditScore} from "./ISapphireCreditScore.sol";
 

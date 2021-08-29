@@ -1,6 +1,6 @@
 pragma solidity 0.5.16;
 
-import {SapphireMapperLinear} from "../debt/sapphire/SapphireMapperLinear.sol";
+import {SapphireMapperLinear} from "../sapphire/SapphireMapperLinear.sol";
 
 contract MockSapphireMapperLinear is SapphireMapperLinear {
     uint256 private _mapResult;

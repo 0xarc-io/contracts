@@ -28,8 +28,16 @@ describe('TokenAccrual', () => {
   });
 
   beforeEach(async () => {
-    stakingToken = await new TestTokenFactory(ownerAccount).deploy('LINKUSD/USDC 50/50', 'BPT', 18);
-    rewardToken = await new TestTokenFactory(ownerAccount).deploy('Arc Token', 'ARC', 18);
+    stakingToken = await new TestTokenFactory(ownerAccount).deploy(
+      'LINKUSD/USDC 50/50',
+      'BPT',
+      18,
+    );
+    rewardToken = await new TestTokenFactory(ownerAccount).deploy(
+      'Arc Token',
+      'ARC',
+      18,
+    );
 
     rewardContract = await deployTokenStakingAccrual(
       ownerAccount,
@@ -42,7 +50,9 @@ describe('TokenAccrual', () => {
   });
 
   async function getStakingContractAs(caller: SignerWithAddress) {
-    return await new TokenStakingAccrualFactory(caller).attach(rewardContract.address);
+    return await new TokenStakingAccrualFactory(caller).attach(
+      rewardContract.address,
+    );
   }
 
   async function stakeTokens(
@@ -58,15 +68,21 @@ describe('TokenAccrual', () => {
   it('should be able to stake tokens', async () => {
     const rewardContract = await getStakingContractAs(userAccount);
     await stakeTokens(rewardContract, 100, userAccount);
-    expect(await rewardContract.getUserBalance(userAccount.address)).to.equal(BigNumber.from(100));
-    expect(await rewardContract.getTotalBalance()).to.equal(BigNumber.from(100));
+    expect(await rewardContract.getUserBalance(userAccount.address)).to.equal(
+      BigNumber.from(100),
+    );
+    expect(await rewardContract.getTotalBalance()).to.equal(
+      BigNumber.from(100),
+    );
   });
 
   it('should be able to withdraw tokens', async () => {
     const rewardContract = await getStakingContractAs(userAccount);
     await stakeTokens(rewardContract, 100, userAccount);
     await rewardContract.unstake(100);
-    expect(await rewardContract.getUserBalance(userAccount.address)).to.equal(BigNumber.from(0));
+    expect(await rewardContract.getUserBalance(userAccount.address)).to.equal(
+      BigNumber.from(0),
+    );
     expect(await rewardContract.getTotalBalance()).to.equal(BigNumber.from(0));
   });
 
@@ -84,13 +100,13 @@ describe('TokenAccrual', () => {
     await rewardContract.claimFor(userAccount.address);
     await rewardContract.claimFor(ownerAccount.address);
 
-    expect((await rewardToken.balanceOf(userAccount.address)).toString()).to.equal(
-      ArcNumber.new(50).toString(),
-    );
+    expect(
+      (await rewardToken.balanceOf(userAccount.address)).toString(),
+    ).to.equal(ArcNumber.new(50).toString());
 
-    expect((await rewardToken.balanceOf(ownerAccount.address)).toString()).to.equal(
-      ArcNumber.new(50).toString(),
-    );
+    expect(
+      (await rewardToken.balanceOf(ownerAccount.address)).toString(),
+    ).to.equal(ArcNumber.new(50).toString());
 
     await expectRevert(rewardContract.claimFor(userAccount.address));
     await expectRevert(rewardContract.claimFor(ownerAccount.address));
@@ -100,13 +116,13 @@ describe('TokenAccrual', () => {
     await rewardContract.claimFor(userAccount.address);
     await rewardContract.claimFor(ownerAccount.address);
 
-    expect((await rewardToken.balanceOf(userAccount.address)).toString()).to.equal(
-      ArcNumber.new(100).toString(),
-    );
+    expect(
+      (await rewardToken.balanceOf(userAccount.address)).toString(),
+    ).to.equal(ArcNumber.new(100).toString());
 
-    expect((await rewardToken.balanceOf(ownerAccount.address)).toString()).to.equal(
-      ArcNumber.new(100).toString(),
-    );
+    expect(
+      (await rewardToken.balanceOf(ownerAccount.address)).toString(),
+    ).to.equal(ArcNumber.new(100).toString());
   });
 
   it('should be able to exit', async () => {

@@ -8,7 +8,7 @@ import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {Adminable} from "../../lib/Adminable.sol";
 import {Initializable} from "../../lib/Initializable.sol";
 import {DefiPassportStorage} from "./DefiPassportStorage.sol";
-import {ISapphireCreditScore} from "../../debt/sapphire/ISapphireCreditScore.sol";
+import {ISapphireCreditScore} from "../../sapphire/ISapphireCreditScore.sol";
 
 contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializable {
 
