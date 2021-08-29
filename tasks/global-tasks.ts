@@ -1,10 +1,4 @@
-import {
-  AddressAccrualFactory,
-  ArcxTokenFactory,
-  SynthRegistryFactory,
-  SynthRegistryV2Factory,
-  WhitelistSaleFactory,
-} from '@src/typings';
+import { AddressAccrualFactory, WhitelistSaleFactory } from '@src/typings';
 import {
   deployContract,
   loadDetails,
@@ -13,8 +7,6 @@ import {
 import { task } from 'hardhat/config';
 import { DeploymentType } from '../deployments/src/writeToDeployments';
 import { NetworkParams } from '../deployments/src/deployContract';
-import { ArcProxyInfoFactory } from '@src/typings/ArcProxyInfoFactory';
-import { SavingsRegistryFactory } from '@src/typings/SavingsRegistryFactory';
 import { green, red, yellow } from 'chalk';
 
 import path from 'path';
@@ -24,84 +16,6 @@ import { BigNumber, ContractTransaction, utils } from 'ethers';
 import _ from 'lodash';
 import ArcDecimal from '@src/utils/ArcDecimal';
 import { ArcxTokenV2Factory } from '@src/typings/ArcxTokenV2Factory';
-
-task(
-  'deploy-global',
-  'Deploy, update and interact with global contracts',
-).setAction(async (taskArgs, hre) => {
-  const network = hre.network.name;
-  const signer = (await hre.ethers.getSigners())[0];
-
-  await pruneDeployments(network, signer.provider);
-
-  const networkConfig = { network, signer } as NetworkParams;
-
-  const arcxToken = await deployContract(
-    {
-      name: 'ArcxToken',
-      source: 'ArcxToken',
-      data: new ArcxTokenFactory(signer).getDeployTransaction(),
-      version: 1,
-      type: DeploymentType.global,
-    },
-    networkConfig,
-  );
-
-  const arcDAO = await deployContract(
-    {
-      name: 'ArcDAO',
-      source: 'AddressAccrual',
-      data: new AddressAccrualFactory(signer).getDeployTransaction(arcxToken),
-      version: 1,
-      type: DeploymentType.global,
-    },
-    networkConfig,
-  );
-
-  const synthRegistry = await deployContract(
-    {
-      name: 'SynthRegistry',
-      source: 'SynthRegistry',
-      data: new SynthRegistryFactory(signer).getDeployTransaction(),
-      version: 1,
-      type: DeploymentType.global,
-    },
-    networkConfig,
-  );
-
-  const synthRegistryV2 = await deployContract(
-    {
-      name: 'SynthRegistryV2',
-      source: 'SynthRegistryV2',
-      data: new SynthRegistryV2Factory(signer).getDeployTransaction(),
-      version: 2,
-      type: DeploymentType.global,
-    },
-    networkConfig,
-  );
-
-  const proxyInfo = await deployContract(
-    {
-      name: 'ArcProxyInfo',
-      source: 'ArcProxyInfo',
-      data: new ArcProxyInfoFactory(signer).getDeployTransaction(),
-      version: 1,
-      type: DeploymentType.global,
-    },
-    networkConfig,
-  );
-
-  const savingsRegistry = await deployContract(
-    {
-      name: 'SavingsRegistry',
-      source: 'SavingsRegistry',
-      data: new SavingsRegistryFactory(signer).getDeployTransaction(),
-      version: 1,
-      type: DeploymentType.global,
-    },
-    networkConfig,
-  );
-});
 
 task(
   'deploy-accrual',

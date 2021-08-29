@@ -5,8 +5,8 @@ pragma experimental ABIEncoderV2;
 
 import {Address} from "./Address.sol";
 
-import {ISapphireCreditScore} from "../debt/sapphire/ISapphireCreditScore.sol";
-import {SapphireTypes} from "../debt/sapphire/SapphireTypes.sol";
+import {ISapphireCreditScore} from "../sapphire/ISapphireCreditScore.sol";
+import {SapphireTypes} from "../sapphire/SapphireTypes.sol";
 
 /**
  * @dev Provides the ability of verifying users' credit scores
