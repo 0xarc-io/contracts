@@ -707,5 +707,15 @@
     "version": 2,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "DefiPassport",
+    "source": "DefiPassport",
+    "address": "0xaF3D36f0E654bFEbbd505bb3271017Af179bBB26",
+    "txn": "0x09abb0d5102a2f89befe60ce50983854ae0698971e296e610f941ee2caf3424e",
+    "network": "mainnet",
+    "version": "2",
+    "type": "global",
+    "group": "DefiPassport"
   }
 ]

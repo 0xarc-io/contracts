@@ -3,8 +3,8 @@ pragma experimental ABIEncoderV2;
 
 import {Address} from "../../lib/Address.sol";
 import {Ownable} from "../../lib/Ownable.sol";
-import {ISapphireCreditScore} from "../../debt/sapphire/ISapphireCreditScore.sol";
-import {SapphireTypes} from "../../debt/sapphire/SapphireTypes.sol";
+import {ISapphireCreditScore} from "../../sapphire/ISapphireCreditScore.sol";
+import {SapphireTypes} from "../../sapphire/SapphireTypes.sol";
 import {IDefiPassport} from "./IDefiPassport.sol";
 
 contract DefiPassportClaimer is Ownable {

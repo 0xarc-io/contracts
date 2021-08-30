@@ -4,7 +4,7 @@ pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {Counters} from "@openzeppelin/contracts/drafts/Counters.sol";
-import {ISapphireCreditScore} from "../../debt/sapphire/ISapphireCreditScore.sol";
+import {ISapphireCreditScore} from "../../sapphire/ISapphireCreditScore.sol";
 
 contract DefiPassportStorage {
 

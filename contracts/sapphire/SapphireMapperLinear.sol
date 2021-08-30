@@ -3,7 +3,7 @@
 pragma solidity 0.5.16;
 
 import {ISapphireMapper} from "./ISapphireMapper.sol";
-import {SafeMath} from "../../lib/SafeMath.sol";
+import {SafeMath} from "../lib/SafeMath.sol";
 
 contract SapphireMapperLinear is ISapphireMapper {
     using SafeMath for uint256;

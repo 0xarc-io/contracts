@@ -9,8 +9,8 @@ import {IERC20} from "../token/IERC20.sol";
 import {IPermittableERC20} from "../token/IPermittableERC20.sol";
 
 import {CampaignStorage} from "./CampaignStorage.sol";
-import {ISapphireCreditScore} from "../debt/sapphire/ISapphireCreditScore.sol";
-import {SapphireTypes} from "../debt/sapphire/SapphireTypes.sol";
+import {ISapphireCreditScore} from "../sapphire/ISapphireCreditScore.sol";
+import {SapphireTypes} from "../sapphire/SapphireTypes.sol";
 
 /**
  * @notice A farm that requires a defi passport with a good credit
