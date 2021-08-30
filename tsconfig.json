@@ -45,8 +45,6 @@
   },
   "include": [
     "./src/**/*",
-    "./scripts/**/*",
-    "./tasks/**/*",
     "./test/**/*",
     "./deployments/**/*",
     "./arc-types/**/*/*",
