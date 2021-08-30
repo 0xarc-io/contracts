@@ -10,8 +10,8 @@ import {Adminable} from "../lib/Adminable.sol";
 
 import {IERC20} from "../token/IERC20.sol";
 
-import {ISapphireCreditScore} from "../debt/sapphire/ISapphireCreditScore.sol";
-import {SapphireTypes} from "../debt/sapphire/SapphireTypes.sol";
+import {ISapphireCreditScore} from "../sapphire/ISapphireCreditScore.sol";
+import {SapphireTypes} from "../sapphire/SapphireTypes.sol";
 
 /**
  * @notice A farm that does not require minting debt to earn rewards,

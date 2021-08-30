@@ -29,7 +29,6 @@
     "build": "yarn compile && yarn copy:types",
     "coverage": "yarn run build && yarn hardhat coverage --testfiles test/contracts/ --temp artifacts --network coverage",
     "test": "yarn hardhat test",
-    "deploy-all": "yarn hardhat deploy-global --network local && yarn hardhat deploy-mozart --synth ETHX --network local && yarn hardhat deploy-mozart --synth yUSD-STABLEx --network local && yarn hardhat deploy-mozart --synth cUSDC-STABLEx --network local",
     "graph:create": "graph create arcxgame/contracts --node https://api.thegraph.com/deploy/",
     "graph:create-local": "graph create arcxgame/contracts --node http://127.0.0.1:8020",
     "graph:codegen": "graph codegen",

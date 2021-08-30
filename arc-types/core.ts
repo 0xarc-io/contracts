@@ -1,5 +1,5 @@
-import { BigNumber, BigNumberish } from 'ethers';
-import { SyntheticTokenV1, SyntheticTokenV2 } from '@src/typings';
+import { BigNumberish } from 'ethers';
+import { SyntheticTokenV2 } from '@src/typings';
 import { IERC20 } from '@src/typings/IERC20';
 import { IOracle } from '@src/typings/IOracle';
 
@@ -105,7 +105,6 @@ export type SynthV1<T> = {
   core: T;
   oracle: IOracle;
   collateral: IERC20;
-  synthetic: SyntheticTokenV1;
 };
 
 export type Synth<T> = {

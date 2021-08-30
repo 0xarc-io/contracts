@@ -3,16 +3,16 @@
 pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
-import {BaseERC20} from "../../token/BaseERC20.sol";
-import {IERC20} from "../../token/IERC20.sol";
-import {IERC20Metadata} from "../../token/IERC20Metadata.sol";
-import {SafeERC20} from "../../lib/SafeERC20.sol";
-import {SafeMath} from "../../lib/SafeMath.sol";
-import {Math} from "../../lib/Math.sol";
-import {Adminable} from "../../lib/Adminable.sol";
-import {Address} from "../../lib/Address.sol";
-import {ISapphireOracle} from "../../oracle/ISapphireOracle.sol";
-import {ISyntheticTokenV2} from "../../token/ISyntheticTokenV2.sol";
+import {BaseERC20} from "../token/BaseERC20.sol";
+import {IERC20} from "../token/IERC20.sol";
+import {IERC20Metadata} from "../token/IERC20Metadata.sol";
+import {SafeERC20} from "../lib/SafeERC20.sol";
+import {SafeMath} from "../lib/SafeMath.sol";
+import {Math} from "../lib/Math.sol";
+import {Adminable} from "../lib/Adminable.sol";
+import {Address} from "../lib/Address.sol";
+import {ISapphireOracle} from "../oracle/ISapphireOracle.sol";
+import {ISyntheticTokenV2} from "../token/ISyntheticTokenV2.sol";
 
 import {SapphireTypes} from "./SapphireTypes.sol";
 import {SapphireCoreStorage} from "./SapphireCoreStorage.sol";
