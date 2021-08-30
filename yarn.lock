@@ -11621,13 +11621,6 @@ solc@^0.6.3:
     semver "^5.5.0"
     tmp "0.0.33"
 
-solidifier@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/solidifier/-/solidifier-2.1.0.tgz#982927eb2b78c9de9e3c0739a215c705a6c39f74"
-  integrity sha512-TrgSONFbcuCLDPO9Jma0vE+xcOX/0yhAIncttIP1mMwuufX1pXemuKRpsc8In1cQrlrMWk+HjUBloaRxZu5atw==
-  dependencies:
-    solidity-parser-antlr "^0.3.0"
-
 solidity-coverage@^0.7.12:
   version "0.7.12"
   resolved "https://registry.yarnpkg.com/solidity-coverage/-/solidity-coverage-0.7.12.tgz#0c6ca866cc6e15bfebecd71725666b3bc121f263"
@@ -11651,11 +11644,6 @@ solidity-coverage@^0.7.12:
     sc-istanbul "^0.4.5"
     shelljs "^0.8.3"
     web3-utils "^1.3.0"
-
-solidity-parser-antlr@^0.3.0:
-  version "0.3.3"
-  resolved "https://registry.yarnpkg.com/solidity-parser-antlr/-/solidity-parser-antlr-0.3.3.tgz#0352e35f914095daa7eef9f3a55cf8074e28cc5b"
-  integrity sha512-RNUc18pjf7DLWs//WF+V+VnvrbetEbNFUYxm2JFbXU62G9WSu+nVyDxV5r+FG4wu8jom17vLdM/3I7bMBGfZ9g==
 
 solium-plugin-security@0.1.1:
   version "0.1.1"
