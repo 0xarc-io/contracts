@@ -157,7 +157,7 @@ describe('SapphireCore.withdraw()', () => {
       signers.scoredMinter,
     );
 
-    let assessmentTx = await assessor.assess(
+    const assessmentTx = await assessor.assess(
       DEFAULT_LOW_C_RATIO,
       DEFAULT_HiGH_C_RATIO,
       getScoreProof(minterCreditScore, creditScoreTree),
