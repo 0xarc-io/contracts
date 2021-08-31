@@ -6,7 +6,6 @@ import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { SyntheticTokenV2Factory } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
-import { roundUpDiv, roundUpMul } from '@test/helpers/roundUpOperations';
 import {
   DEFAULT_COLLATERAL_DECIMALS,
   DEFAULT_HiGH_C_RATIO,
@@ -156,7 +155,7 @@ describe('SapphireCore.repay()', () => {
     await arc.updatePrice(newPrice);
 
     // Ensure position is undercollateralized
-    let vault = await arc.getVault(signers.scoredMinter.address);
+    const vault = await arc.getVault(signers.scoredMinter.address);
     let cRatio = vault.collateralAmount
       .mul(PRECISION_SCALAR)
       .mul(newPrice)

@@ -48,6 +48,7 @@
     "./test/**/*",
     "./deployments/**/*",
     "./arc-types/**/*/*",
+    "./tasks/*",
     "./deployments/rinkeby/*.json",
     "./deployments/mainnet/*.json",
     "./deployments/playnet/*.json"

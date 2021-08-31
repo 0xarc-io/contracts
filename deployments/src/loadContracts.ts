@@ -1,4 +1,4 @@
-import { gray, red, blue } from 'chalk';
+import { red } from 'chalk';
 import _ from 'lodash';
 import { loadDeployedContracts } from './loadDeployedContracts';
 

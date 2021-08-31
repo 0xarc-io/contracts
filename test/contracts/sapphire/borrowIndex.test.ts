@@ -280,7 +280,7 @@ describe('borrow index (integration)', () => {
 
       const indexLastUpdate = await arc.core().indexLastUpdate();
 
-      let expectedNormalizedAmountInVault = await convertPrincipal(
+      const expectedNormalizedAmountInVault = await convertPrincipal(
         (await denormalizeBorrowAmount(originalAmtInVault)).add(BORROW_AMOUNT),
       );
 
@@ -312,7 +312,7 @@ describe('borrow index (integration)', () => {
       );
     });
 
-    it.skip('open for 1 year and liquidate after this year', () => {});
+    it.skip('open for 1 year and liquidate after this year');
 
     it('open for 1 year and repay partially after this year', async () => {
       await setupBaseVault(arc, minter1, COLLATERAL_AMOUNT, BORROW_AMOUNT);
@@ -439,9 +439,6 @@ describe('borrow index (integration)', () => {
       );
 
       totalBorrowed = await arc.core().totalBorrowed();
-      const convertedPrincipal100 = await convertPrincipal(
-        utils.parseEther('100'),
-      );
       let expectedAmountInVault = await convertPrincipal(
         (await denormalizeBorrowAmount(normalizedBorrowed)).add(
           utils.parseEther('100'),

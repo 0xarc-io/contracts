@@ -1,6 +1,6 @@
-import { ethers } from 'ethers';
+import { providers, utils } from 'ethers';
 
-export function parseLogs(logs: ethers.providers.Log[], ...abis: string[]): any[] {
+export function parseLogs(logs: providers.Log[], ...abis: string[]): any[] {
   let abi = '';
   if (abis.length > 1) {
     abis.forEach((a) => {
@@ -12,7 +12,7 @@ export function parseLogs(logs: ethers.providers.Log[], ...abis: string[]): any[
     abi = abis[0];
   }
 
-  const iface = new ethers.utils.Interface(abi);
+  const iface = new utils.Interface(abi);
 
   return logs
     .map((log, index) => {

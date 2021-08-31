@@ -20,7 +20,7 @@ task('mint-tokens')
     const receiver = taskArgs['to'];
     const amount = taskArgs['amount'];
 
-    const { network, signer } = await loadDetails(taskArgs, hre);
+    const { signer } = await loadDetails(taskArgs, hre);
 
     const token = IMintableTokenFactory.connect(tokenAddress, signer);
 
