@@ -19,7 +19,7 @@ describe('MerkleDistributor', () => {
   let distributor: MerkleDistributor;
 
   before(async () => {
-    ctx = await generateContext(distributorFixture, () => new Promise(undefined));
+    ctx = await generateContext(distributorFixture, async () => {});
     distributor = await deployMerkleDistributor(
       ctx.signers.admin,
       ctx.contracts.collateral.address,
