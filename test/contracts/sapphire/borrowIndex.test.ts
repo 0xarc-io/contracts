@@ -312,7 +312,7 @@ describe('borrow index (integration)', () => {
       );
     });
 
-    it.skip('open for 1 year and liquidate after this year');
+    it('open for 1 year and liquidate after this year');
 
     it('open for 1 year and repay partially after this year', async () => {
       await setupBaseVault(arc, minter1, COLLATERAL_AMOUNT, BORROW_AMOUNT);
