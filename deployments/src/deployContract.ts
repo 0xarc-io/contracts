@@ -1,4 +1,4 @@
-import { ethers, Signer } from 'ethers';
+import { Signer } from 'ethers';
 import { writeToDeployments, DeploymentType } from './writeToDeployments';
 import { yellow, gray, green, red, magenta } from 'chalk';
 import { loadContracts } from './loadContracts';

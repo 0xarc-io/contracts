@@ -1,4 +1,4 @@
-import { ArcUniswapV2Oracle, ArcUniswapV2OracleFactory } from '@src/typings';
+import { ArcUniswapV2OracleFactory } from '@src/typings';
 import { green } from 'chalk';
 import { task } from 'hardhat/config';
 import { deployContract, DeploymentType, loadDetails, pruneDeployments } from '../deployments/src';

@@ -7,8 +7,7 @@ import { CreditScoreVerifiableTestFactory } from '@src/typings/CreditScoreVerifi
 import { getEmptyScoreProof, getScoreProof } from '@src/utils';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
-import { BigNumber, ethers } from 'ethers';
-import { initial } from 'lodash';
+import { BigNumber } from 'ethers';
 import { generateContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
@@ -17,7 +16,6 @@ describe('CreditScoreVerifiable', () => {
   let creditScoreContract: SapphireCreditScore;
   let contract: CreditScoreVerifiableTest;
   let owner: SignerWithAddress;
-  let user: SignerWithAddress;
 
   let userCreditScore: CreditScore;
   let ownerCreditScore: CreditScore;
@@ -39,7 +37,6 @@ describe('CreditScoreVerifiable', () => {
       });
     });
     owner = ctx.signers.admin;
-    user = ctx.signers.scoredMinter;
 
     creditScoreContract = ctx.contracts.sapphire.creditScore;
     contract = await new CreditScoreVerifiableTestFactory(owner).deploy(
