@@ -4,6 +4,8 @@
   "main": "dist/src/index.js",
   "typings": "dist/src/index.d.ts",
   "files": [
+    "dist/src/index.js",
+    "dist/src/index.d.ts",
     "dist/arc-types/*",
     "dist/src/typings/*",
     "deployments/kovan/*.json",
@@ -68,6 +70,7 @@
     "dotenv": "^8.2.0",
     "eslint": "^7.10.0",
     "eslint-config-prettier": "^6.12.0",
+    "eslint-plugin-unused-imports": "^1.1.4",
     "ethereum-waffle": "^3.2.0",
     "ethlint": "^1.2.4",
     "fs-extra": "^9.0.1",

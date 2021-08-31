@@ -46,7 +46,7 @@ export class CreditScoreTree {
   private ensureUniqueAccounts(
     creditScores: { account: string; amount: BigNumber }[],
   ) {
-    creditScores.map((creditScore, idx, arr) => {
+    creditScores.map((creditScore) => {
       const numberOfScoresPerAccount = creditScores.filter(
         ({ account }) => account === creditScore.account,
       ).length;

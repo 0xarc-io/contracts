@@ -62,6 +62,6 @@ export async function advanceEpoch(creditScoreContract: MockSapphireCreditScore)
 
   const changedTimestamp = initTimestamp.add(merkleRootDelay);
   const { wait } = await creditScoreContract.setCurrentTimestamp(changedTimestamp);
-  wait();
+  await wait();
   return changedTimestamp;
 }

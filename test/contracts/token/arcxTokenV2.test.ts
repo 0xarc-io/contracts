@@ -1,5 +1,5 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { ArcxToken, ArcxTokenFactory, TestTokenFactory } from '@src/typings';
+import { ArcxToken, ArcxTokenFactory } from '@src/typings';
 import { ArcxTokenV2 } from '@src/typings/ArcxTokenV2';
 import { ArcxTokenV2Factory } from '@src/typings/ArcxTokenV2Factory';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
@@ -86,9 +86,9 @@ describe('ArcxTokenV2', () => {
       // Transfer ownership from the old to the new
       await oldArcx.transferOwnership(arcx.address);
 
-      let oldArcBalance = await oldArcx.balanceOf(user.address);
-      let newArcBalance = await arcx.balanceOf(user.address);
-      let ownerOldBalance = await oldArcx.balanceOf(owner.address);
+      const oldArcBalance = await oldArcx.balanceOf(user.address);
+      const newArcBalance = await arcx.balanceOf(user.address);
+      const ownerOldBalance = await oldArcx.balanceOf(owner.address);
 
       expect(oldArcBalance).to.eq(TOKEN_AMOUNT);
       expect(newArcBalance).to.eq(0);

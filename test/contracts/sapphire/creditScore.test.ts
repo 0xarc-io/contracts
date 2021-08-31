@@ -3,7 +3,6 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 import {
   MockSapphireCreditScore,
-  MockSapphireCreditScoreFactory,
 } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import {

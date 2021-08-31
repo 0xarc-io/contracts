@@ -96,7 +96,7 @@ export default class MerkleTree {
   }
 
   private static deduplicateSortedElements(elements: string[]): string[] {
-    return elements.filter((el, idx, arr) => {
+    return elements.filter((el, idx) => {
       return idx === 0 || !(elements[idx - 1] === el);
     });
   }
