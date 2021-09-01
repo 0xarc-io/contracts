@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 
-import { constants, getPathToNetwork } from '../config';
+import { constants, getPathToNetwork } from './config';
 
 /*
  * Load Deployed Contracts
