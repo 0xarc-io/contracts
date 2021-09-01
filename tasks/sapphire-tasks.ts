@@ -36,7 +36,7 @@ task(
     const name = taskArgs.name;
     const symbol = taskArgs.symbol;
 
-    const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
+    const { network, signer, networkConfig } = await loadDetails(hre);
 
     await pruneDeployments(network, signer.provider);
 
@@ -127,7 +127,7 @@ task(
       signer,
       networkConfig,
       networkDetails,
-    } = await loadDetails(taskArgs, hre);
+    } = await loadDetails(hre);
 
     await pruneDeployments(network, signer.provider);
 
@@ -210,7 +210,7 @@ task(
 
 task('deploy-mapper', 'Deploy the Sapphire Mapper').setAction(
   async (taskArgs, hre) => {
-    const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
+    const { network, signer, networkConfig } = await loadDetails(hre);
 
     await pruneDeployments(network, signer.provider);
 
@@ -241,7 +241,7 @@ task('deploy-mapper', 'Deploy the Sapphire Mapper').setAction(
 
 task('deploy-assessor', 'Deploy the Sapphire Assessor').setAction(
   async (taskArgs, hre) => {
-    const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
+    const { network, signer, networkConfig } = await loadDetails(hre);
 
     await pruneDeployments(network, signer.provider);
 
@@ -303,7 +303,7 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
       signer,
       networkConfig,
       networkDetails,
-    } = await loadDetails(taskArgs, hre);
+    } = await loadDetails(hre);
 
     await pruneDeployments(network, signer.provider);
 

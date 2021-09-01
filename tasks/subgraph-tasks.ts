@@ -1,12 +1,11 @@
 import 'module-alias/register';
 
-import path from 'path';
 import fs from 'fs-extra';
 import shell from 'shelljs';
 
 import { task } from 'hardhat/config';
 import { gray } from 'chalk';
-import { constants, getPathToNetwork } from '../deployments/config';
+import { constants, getPathToNetwork } from '../deployments/src/config';
 import { loadContract } from '../deployments/src/loadContracts';
 import { DeploymentType } from '../deployments/src/writeToDeployments';
 
@@ -15,7 +14,7 @@ task('prepare-subgraph', 'Prepare a subgraph for deployment').setAction(async (t
 
   console.log(gray(`Loading the subgraph config for ${network.toUpperCase()}...`));
 
-  const subgraphFilePath = getPathToNetwork(network, constants.SUBGRAPH_CONFIG_FILENAME, path);
+  const subgraphFilePath = getPathToNetwork(network, constants.SUBGRAPH_CONFIG_FILENAME);
   fs.ensureFileSync(subgraphFilePath);
 
   const subgraphConfig = fs.readJSONSync(subgraphFilePath, { throws: false }) || {

@@ -1,7 +1,5 @@
-import path from 'path';
-
 import { gray, red, blue } from 'chalk';
-import { constants, getPathToNetwork } from '../config';
+import { constants, getPathToNetwork } from './config';
 
 /*
  * Load Synth Config
@@ -37,7 +35,7 @@ async function loadConfig(
     gray(`Loading the ${type} config for ${params.network.toUpperCase()}...`),
   );
 
-  const configFile = getPathToNetwork(params.network, filename, path);
+  const configFile = getPathToNetwork(params.network, filename);
   const { default: config } = await import(configFile);
 
   if (!(params.key in config)) {

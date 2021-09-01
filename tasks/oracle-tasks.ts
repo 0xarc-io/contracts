@@ -7,7 +7,7 @@ const KEEP3RV1_ADDRESS = '0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44';
 const UNIV2_FACTORY = '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f';
 
 task('deploy-uniswap-oracle', 'Deploy the uniswap TWAP oracle').setAction(async (taskArgs, hre) => {
-  const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
+  const { network, signer, networkConfig } = await loadDetails(hre);
 
   await pruneDeployments(network, signer.provider);
 
