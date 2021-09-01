@@ -23,5 +23,5 @@ export function getPathToNetwork(
     throw red(`** ${network} is not a valid network **`);
   }
 
-  return path.join(__dirname, network, file);
+  return path.join(__dirname, '..', network, file);
 }
