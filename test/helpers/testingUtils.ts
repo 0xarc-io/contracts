@@ -30,8 +30,8 @@ export async function setStartingBalances(
   balance: BigNumberish,
 ) {
   await asyncForEach(signers, async (signer) => {
-    const testToken = await new TestTokenFactory(signer).attach(collateral);
-    await testToken.mintShare(signer.address, balance);
+    const testToken = new TestTokenFactory(signer).attach(collateral);
+    await testToken.mintShare(await signer.getAddress(), balance);
     await Token.approve(collateral, signer, core, balance);
   });
 }

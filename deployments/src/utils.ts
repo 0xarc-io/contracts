@@ -7,9 +7,9 @@ import { Provider } from '@ethersproject/providers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { NetworkParams } from './deployContract';
 
-export async function loadDetails(taskArgs: any, hre: HardhatRuntimeEnvironment) {
+export async function loadDetails(hre: HardhatRuntimeEnvironment) {
   const network = hre.network.name;
-  const signer = (await hre.ethers.getSigners())[0];
+  const signer = (await (hre as any).ethers.getSigners())[0];
 
   const networkDetails = hre.config.networks[network];
   const networkConfig = { network, signer, gasPrice: networkDetails.gasPrice } as NetworkParams;
@@ -25,7 +25,7 @@ export async function loadDetails(taskArgs: any, hre: HardhatRuntimeEnvironment)
 export async function pruneDeployments(network: string, provider: Provider) {
   const entries = loadDeployedContracts(network);
 
-  const prunedEntries: any[] = [];
+  const prunedEntries: unknown[] = [];
 
   await asyncForEach(entries, async (entry) => {
     const address = await entry.address;
