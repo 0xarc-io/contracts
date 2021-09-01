@@ -1,7 +1,7 @@
 import path from 'path';
 
 import { gray, red, blue } from 'chalk';
-import { constants, getPathToNetwork } from '../config';
+import { constants, getPathToNetwork } from './config';
 
 /*
  * Load Synth Config
