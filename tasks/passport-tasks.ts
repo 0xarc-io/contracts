@@ -33,7 +33,7 @@ task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
       ver: version,
     } = taskArgs;
 
-    const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
+    const { network, signer, networkConfig } = await loadDetails(hre);
 
     await pruneDeployments(network, signer.provider);
 
@@ -132,7 +132,7 @@ task(
   .setAction(async (taskArgs, hre) => {
     const { creditscore, defipassport } = taskArgs;
 
-    const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
+    const { network, signer, networkConfig } = await loadDetails(hre);
 
     await pruneDeployments(network, signer.provider);
 
@@ -176,7 +176,7 @@ task(
   .addParam('baseuri', 'The base URI of the tokens')
   .setAction(async (taskArgs, hre) => {
     const { name, symbol, baseuri } = taskArgs;
-    const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
+    const { network, signer, networkConfig } = await loadDetails(hre);
 
     await pruneDeployments(network, signer.provider);
 
@@ -239,7 +239,7 @@ task(
   .addParam('passport', 'Address of the defi passport')
   .setAction(async (taskArgs, hre) => {
     const { passport } = taskArgs;
-    const { signer, network } = await loadDetails(taskArgs, hre);
+    const { signer, network } = await loadDetails(hre);
 
     const defiPassport = DefiPassportFactory.connect(passport, signer);
 
