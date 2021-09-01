@@ -6,7 +6,7 @@
   "files": [
     "dist/src/*",
     "dist/arc-types/*",
-    "deployments/src/*",
+    "dist/deployments/src/*",
     "deployments/kovan/*.json",
     "deployments/rinkeby/*.json",
     "deployments/ropsten/*.json",
