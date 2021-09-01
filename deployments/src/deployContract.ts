@@ -73,5 +73,6 @@ export async function deployContract(
     return receipt.contractAddress;
   } catch {
     console.log(red(`Failed to deploy: ${details}\n`));
+    return
   }
 }

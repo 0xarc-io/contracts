@@ -22,7 +22,7 @@
     "compile": "yarn hardhat compile",
     "execute": "rm -rf dist && yarn ts-node publish/index.ts",
     "start": "node scripts/watcher.js",
-    "copy:types": "yarn cpx src/typings/**/*d.ts dist/src/typings",
+    "copy:types": "echo 'copy:types is deprecated and should be removed with cpx dependency'",
     "lint:sol": "solium -d contracts/ --no-soliumignore",
     "lint:ts": "eslint --config ./.eslintrc.yaml --ignore-path ./.eslintignore --ext .js,.ts,.tsx .",
     "clean": "rm -rf build/compiled && rm -rf build/flattened && rm -rf src/typings && rm -rf dist && rm -rf artifacts && rm -rf cache",

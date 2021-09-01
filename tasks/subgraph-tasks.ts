@@ -1,6 +1,5 @@
 import 'module-alias/register';
 
-import path from 'path';
 import fs from 'fs-extra';
 import shell from 'shelljs';
 
@@ -15,7 +14,7 @@ task('prepare-subgraph', 'Prepare a subgraph for deployment').setAction(async (t
 
   console.log(gray(`Loading the subgraph config for ${network.toUpperCase()}...`));
 
-  const subgraphFilePath = getPathToNetwork(network, constants.SUBGRAPH_CONFIG_FILENAME, path);
+  const subgraphFilePath = getPathToNetwork(network, constants.SUBGRAPH_CONFIG_FILENAME, __dirname);
   fs.ensureFileSync(subgraphFilePath);
 
   const subgraphConfig = fs.readJSONSync(subgraphFilePath, { throws: false }) || {

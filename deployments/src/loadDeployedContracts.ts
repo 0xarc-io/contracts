@@ -1,4 +1,3 @@
-import path from 'path';
 import fs from 'fs-extra';
 
 import { constants, getPathToNetwork } from './config';
@@ -8,7 +7,7 @@ import { constants, getPathToNetwork } from './config';
  */
 
 export function getDeploymentsFilePath(network: string): string {
-  return getPathToNetwork(network, constants.DEPLOYMENT_FILENAME, path);
+  return getPathToNetwork(network, constants.DEPLOYMENT_FILENAME);
 }
 
 export function loadDeployedContracts(network: string): Array<any> {
