@@ -14,7 +14,7 @@ task('prepare-subgraph', 'Prepare a subgraph for deployment').setAction(async (t
 
   console.log(gray(`Loading the subgraph config for ${network.toUpperCase()}...`));
 
-  const subgraphFilePath = getPathToNetwork(network, constants.SUBGRAPH_CONFIG_FILENAME, __dirname);
+  const subgraphFilePath = getPathToNetwork(network, constants.SUBGRAPH_CONFIG_FILENAME);
   fs.ensureFileSync(subgraphFilePath);
 
   const subgraphConfig = fs.readJSONSync(subgraphFilePath, { throws: false }) || {
