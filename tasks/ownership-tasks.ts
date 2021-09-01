@@ -38,7 +38,7 @@ task('transfer-ownership-single', 'Transfer ownership of a single contract')
 task('transfer-ownership', 'Transfer ownership of deployed contracts')
   .addParam('addresses', 'The addresses you would like to transfer ownership for')
   .setAction(async (taskArgs, hre) => {
-    const addresses = taskArgs.addresses;
+    const addresses = taskArgs.addresses as string;
 
     const signer = (await hre.ethers.getSigners())[0];
     const network = hre.network.name;
@@ -84,10 +84,10 @@ task('change-admin', 'Transfer ownership of deployed contracts')
 
     ultimateOwner = ultimateOwner.toLowerCase();
 
-    await asyncForEach(addresses.split(','), async (address) => {
+    await asyncForEach(addresses.split(','), async (address: string) => {
       const contract = AdminableFactory.connect(address, signer);
 
-      if ((await (await contract.getAdmin()).toLowerCase()) != ultimateOwner) {
+      if ((await contract.getAdmin()).toLowerCase() != ultimateOwner) {
         console.log(yellow(`Changing admin for ${address} to ${ultimateOwner}`));
         try {
           await ArcProxyFactory.connect(address, signer).changeAdmin(ultimateOwner);
