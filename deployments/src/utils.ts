@@ -7,7 +7,7 @@ import { Provider } from '@ethersproject/providers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { NetworkParams } from './deployContract';
 
-export async function loadDetails(taskArgs: any, hre: HardhatRuntimeEnvironment) {
+export async function loadDetails(hre: HardhatRuntimeEnvironment) {
   const network = hre.network.name;
   const signer = (await hre.ethers.getSigners())[0];
 

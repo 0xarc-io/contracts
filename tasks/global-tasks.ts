@@ -87,7 +87,7 @@ task(
     true,
   )
   .setAction(async (taskArgs, hre) => {
-    const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
+    const { network, signer, networkConfig } = await loadDetails(hre);
 
     const kyfEligibilityFilePath = path.join(
       __dirname,

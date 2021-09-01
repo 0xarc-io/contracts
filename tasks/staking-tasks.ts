@@ -27,7 +27,7 @@ task('deploy-staking', 'Deploy a staking/reward pool')
       signer,
       networkConfig,
       networkDetails,
-    } = await loadDetails(taskArgs, hre);
+    } = await loadDetails(hre);
 
     const ultimateOwner = getUltimateOwner(signer, networkDetails);
 
@@ -206,7 +206,7 @@ task('deploy-staking-liquidity', 'Deploy a LiquidityCampaign')
       signer,
       networkConfig,
       networkDetails,
-    } = await loadDetails(taskArgs, hre);
+    } = await loadDetails(hre);
 
     const ultimateOwner = getUltimateOwner(signer, networkDetails);
 
@@ -333,7 +333,7 @@ task('deploy-staking-joint-passport', 'Deploy a JointPassportCampaign')
   .setAction(async (taskArgs, hre) => {
     const { name } = taskArgs;
 
-    const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
+    const { network, signer, networkConfig } = await loadDetails(hre);
 
     await pruneDeployments(network, signer.provider);
 
@@ -459,7 +459,7 @@ task(
       sablier,
     } = taskArgs;
 
-    const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
+    const { network, signer, networkConfig } = await loadDetails(hre);
 
     await pruneDeployments(network, signer.provider);
 

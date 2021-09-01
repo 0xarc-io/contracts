@@ -20,7 +20,7 @@ task('mint-tokens')
     const receiver = taskArgs['to'];
     const amount = taskArgs['amount'];
 
-    const { signer } = await loadDetails(taskArgs, hre);
+    const { signer } = await loadDetails(hre);
 
     const token = IMintableTokenFactory.connect(tokenAddress, signer);
 
@@ -50,7 +50,7 @@ task('approve-tokens')
   .setAction(async (taskArgs, hre) => {
     const { token, spender, amount } = taskArgs;
 
-    const { signer } = await loadDetails(taskArgs, hre);
+    const { signer } = await loadDetails(hre);
 
     const erc20 = IERC20Factory.connect(token, signer);
 
@@ -66,7 +66,7 @@ task('deploy-test-erc20', 'Deploys an ERC20 test token with 18 decimals')
   .setAction(async (taskArgs, hre) => {
     const { name, symbol } = taskArgs;
 
-    const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
+    const { network, signer, networkConfig } = await loadDetails(hre);
 
     await pruneDeployments(network, signer.provider);
 

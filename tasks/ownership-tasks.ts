@@ -16,7 +16,7 @@ task('transfer-ownership-single', 'Transfer ownership of a single contract')
     const newOwner = taskArgs.to
     const targetContract = taskArgs.other
 
-    const { signer } = await loadDetails(taskArgs, hre);
+    const { signer } = await loadDetails(hre);
 
     let contract = OwnableFactory.connect(contractAddy, signer)
 

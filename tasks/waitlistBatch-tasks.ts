@@ -15,7 +15,7 @@ task('deploy-waitlist-batch', 'Deploy the WaitlistBatch contract')
     'Duration in seconds that has to be elapsed after a batch is approved, for users to recover their funds',
   )
   .setAction(async (taskArgs, hre) => {
-    const { network, signer, networkConfig } = await loadDetails(taskArgs, hre);
+    const { network, signer, networkConfig } = await loadDetails(hre);
     const { currency, depositduration } = taskArgs;
 
     await pruneDeployments(network, signer.provider);
