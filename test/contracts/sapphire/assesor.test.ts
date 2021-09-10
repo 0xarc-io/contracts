@@ -132,7 +132,7 @@ describe('SapphireAssessor', () => {
           passportScoresContract.address,
         ),
       ).to.be.revertedWith(
-        'SapphireAssessor: The mapper and the credit score addresses cannot be null',
+        'SapphireAssessor: The mapper and the passport scores must be valid contracts',
       );
 
       await expect(
@@ -141,7 +141,7 @@ describe('SapphireAssessor', () => {
           '0x0000000000000000000000000000000000000000',
         ),
       ).to.be.revertedWith(
-        'SapphireAssessor: The mapper and the credit score addresses cannot be null',
+        'SapphireAssessor: The mapper and the passport scores must be valid contracts',
       );
 
       await expect(
@@ -150,7 +150,7 @@ describe('SapphireAssessor', () => {
           '0x0000000000000000000000000000000000000000',
         ),
       ).to.be.revertedWith(
-        'SapphireAssessor: The mapper and the credit score addresses cannot be null',
+        'SapphireAssessor: The mapper and the passport scores must be valid contracts',
       );
     });
 
@@ -169,19 +169,13 @@ describe('SapphireAssessor', () => {
 
   describe('#assess', () => {
     it('reverts if upper bound or account are empty', async () => {
+      expect(await assessor.passportScoresContract()).to.eq(
+        passportScoresContract.address,
+      );
+
       // upper bound is empty
       await expect(
-        assessor.assess(
-          0,
-          0,
-          {
-            account: user1.address,
-            protocol: 'arcx.creditscore',
-            score: 100,
-            merkleProof: scoresTree.getProof(passportScore1),
-          },
-          false,
-        ),
+        assessor.assess(0, 0, getScoreProof(passportScore1, scoresTree), false),
       ).to.be.revertedWith('SapphireAssessor: The upper bound cannot be zero');
 
       // account is empty
@@ -198,7 +192,7 @@ describe('SapphireAssessor', () => {
           false,
         ),
       ).to.be.revertedWith(
-        'SapphireAssessor: The account cannot be the zero address',
+        'SapphirePassportScores: account cannot be address 0',
       );
     });
 
@@ -267,7 +261,7 @@ describe('SapphireAssessor', () => {
           },
           false,
         ),
-      ).to.be.revertedWith('SapphirePassportScore: invalid proof');
+      ).to.be.revertedWith('SapphirePassportScores: invalid proof');
     });
 
     it(`returns the upperBound if the user doesn't have an existing score and no proof`, async () => {
@@ -289,7 +283,7 @@ describe('SapphireAssessor', () => {
         .withArgs(user2.address, 10);
     });
 
-    it(`returns the upperBound if the user doesn't have an existing score, score is required and no proof`, async () => {
+    it(`reverts if score is required and no proof is passed`, async () => {
       await expect(
         assessor.assess(
           1,
@@ -302,12 +296,12 @@ describe('SapphireAssessor', () => {
           },
           true,
         ),
-      )
-        .to.emit(assessor, 'Assessed')
-        .withArgs(passportScore3.account, 10);
+      ).to.be.revertedWith(
+        'PassportScoreVerifiable: proof is required but it is not passed',
+      );
     });
 
-    it(`throw an error if the user has an existing score, score is required and no proof`, async () => {
+    it(`reverts if score is required and no proof`, async () => {
       await expect(
         assessor.assess(1, 10, getScoreProof(passportScore2, scoresTree), true),
       ).to.emit(assessor, 'Assessed');
@@ -323,7 +317,7 @@ describe('SapphireAssessor', () => {
           true,
         ),
       ).to.be.revertedWith(
-        'SapphireAssessor: proof should be provided for credit score',
+        'PassportScoreVerifiable: proof is required but it is not passed',
       );
     });
 
