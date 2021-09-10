@@ -20,6 +20,7 @@ contract PassportScoreVerifiable {
     /**
      * @dev Verifies that the proof is passed if the score is required, and
      *      validates it.
+     *      Additionally, it checks the proof validity if `scoreProof` has a score > 0
      */
     modifier checkScoreProof(
         SapphireTypes.ScoreProof memory _scoreProof,
@@ -35,7 +36,7 @@ contract PassportScoreVerifiable {
 
         bool isProofPassed = _scoreProof.merkleProof.length > 0;
 
-        if (_isScoreRequired) {
+        if (_isScoreRequired || _scoreProof.score > 0) {
             require(
                 isProofPassed,
                 "PassportScoreVerifiable: proof is required but it is not passed"
