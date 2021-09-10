@@ -13,3 +13,5 @@ export const DEFAULT_VAULT_BORROW_MIN = BigNumber.from(0);
 export const DEFAULT_VAULT_BORROW_MAXIMUM = utils.parseEther('5000');
 
 export const DEFAULT_MAX_CREDIT_SCORE = BigNumber.from(1000);
+
+export const DEFAULT_PROOF_PROTOCOL = 'arcx.creditscore';

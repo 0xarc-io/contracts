@@ -1,9 +1,13 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { TestTokenFactory } from '@src/typings';
-import { DEFAULT_COLLATERAL_DECIMALS } from './sapphireDefaults';
+import {
+  DEFAULT_COLLATERAL_DECIMALS,
+  DEFAULT_PROOF_PROTOCOL,
+} from './sapphireDefaults';
 import { BigNumberish, utils } from 'ethers';
 import { PassportScoreProof } from '@arc-types/sapphireCore';
+import { getEmptyScoreProof } from '@src/utils';
 
 /**
  * Setup base **Sapphire** vault with 1000 collateral and 200 debt for a c-ratio of
@@ -20,7 +24,13 @@ export async function setupBaseVault(
   await mintApprovedCollateral(arc, caller, collateralAmount);
 
   // Open vault and mint debt
-  await arc.open(collateralAmount, borrowAmount, scoreProof, synthName, caller);
+  await arc.open(
+    collateralAmount,
+    borrowAmount,
+    scoreProof ?? getEmptyScoreProof(undefined, DEFAULT_PROOF_PROTOCOL),
+    synthName,
+    caller,
+  );
 }
 
 export async function mintApprovedCollateral(

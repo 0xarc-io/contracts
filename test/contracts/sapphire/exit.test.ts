@@ -1,8 +1,6 @@
-import { CreditScore } from '@arc-types/sapphireCore';
 import { TestingSigners } from '@arc-types/testing';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { approve } from '@src/utils/approve';
-import CreditScoreTree from '@src/MerkleTree/PassportScoreTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import { DEFAULT_COLLATERAL_DECIMALS } from '@test/helpers/sapphireDefaults';
@@ -14,6 +12,8 @@ import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 import { roundUpMul } from '@test/helpers/roundUpOperations';
+import { PassportScore } from '@arc-types/sapphireCore';
+import { PassportScoreTree } from '@src/MerkleTree';
 
 const COLLATERAL_AMOUNT = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS);
 const BORROW_AMOUNT = utils.parseEther('500');
@@ -25,8 +25,8 @@ describe('SapphireCore.exit()', () => {
   let arc: SapphireTestArc;
   let signers: TestingSigners;
 
-  let scoredMinterCreditScore: CreditScore;
-  let creditScoreTree: CreditScoreTree;
+  let scoredMinterCreditScore: PassportScore;
+  let creditScoreTree: PassportScoreTree;
 
   function getCollateralBalance(user: SignerWithAddress) {
     return ctx.sdks.sapphire.collateral().balanceOf(user.address);
@@ -39,15 +39,17 @@ describe('SapphireCore.exit()', () => {
   async function init(ctx: ITestContext) {
     scoredMinterCreditScore = {
       account: ctx.signers.scoredMinter.address,
-      amount: BigNumber.from(500),
+      protocol: 'arcx.creditscore',
+      score: BigNumber.from(500),
     };
 
     const liquidatorCreditScore = {
       account: ctx.signers.liquidator.address,
-      amount: BigNumber.from(500),
+      protocol: 'arcx.creditscore',
+      score: BigNumber.from(500),
     };
 
-    creditScoreTree = new CreditScoreTree([
+    creditScoreTree = new PassportScoreTree([
       scoredMinterCreditScore,
       liquidatorCreditScore,
     ]);

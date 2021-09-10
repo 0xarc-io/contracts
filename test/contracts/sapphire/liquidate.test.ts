@@ -9,21 +9,23 @@ import {
   addSnapshotBeforeRestoreAfterEach,
   immediatelyUpdateMerkleRoot,
 } from '@test/helpers/testingUtils';
-import ArcNumber from '@src/utils/ArcNumber';
 import { TestingSigners } from '@arc-types/testing';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import {
-  MockSapphireCreditScore,
+  MockSapphirePassportScores,
   SapphireMapperLinear,
   SyntheticTokenV2Factory,
 } from '@src/typings';
 import chai, { expect } from 'chai';
 import { solidity } from 'ethereum-waffle';
-import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
 import { BASE, ONE_YEAR_IN_SECONDS } from '@src/constants';
-import { getScoreProof } from '@src/utils/getScoreProof';
+import { getScoreProof, getEmptyScoreProof, ArcNumber } from '@src/utils';
 import * as helperSetupBaseVault from '../../helpers/setupBaseVault';
-import { DEFAULT_COLLATERAL_DECIMALS } from '@test/helpers/sapphireDefaults';
+import {
+  DEFAULT_COLLATERAL_DECIMALS,
+  DEFAULT_PROOF_PROTOCOL,
+} from '@test/helpers/sapphireDefaults';
+import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
 
 chai.use(solidity);
 
@@ -48,12 +50,12 @@ const PRECISION_SCALAR = BigNumber.from(10).pow(
  */
 describe('SapphireCore.liquidate()', () => {
   let arc: SapphireTestArc;
-  let creditScoreContract: MockSapphireCreditScore;
+  let creditScoreContract: MockSapphirePassportScores;
   let signers: TestingSigners;
   let creditScoreTree: CreditScoreTree;
   let mapper: SapphireMapperLinear;
-  let minterCreditScore: CreditScore;
-  let liquidatorCreditScore: CreditScore;
+  let minterCreditScore: PassportScore;
+  let liquidatorCreditScore: PassportScore;
 
   /**
    * Returns useful balances to use when validating numbers before and after
@@ -86,7 +88,7 @@ describe('SapphireCore.liquidate()', () => {
     collateralAmount = COLLATERAL_AMOUNT,
     debtAmount = BORROW_AMOUNT,
     collateralPrice = COLLATERAL_PRICE,
-    scoreProof?: CreditScoreProof,
+    scoreProof?: PassportScoreProof,
   ) {
     // Set collateral price
     await arc.updatePrice(collateralPrice);
@@ -103,12 +105,14 @@ describe('SapphireCore.liquidate()', () => {
   async function init(ctx: ITestContext) {
     minterCreditScore = {
       account: ctx.signers.scoredMinter.address,
-      amount: BigNumber.from(500),
+      protocol: DEFAULT_PROOF_PROTOCOL,
+      score: BigNumber.from(500),
     };
 
     liquidatorCreditScore = {
       account: ctx.signers.liquidator.address,
-      amount: BigNumber.from(500),
+      protocol: DEFAULT_PROOF_PROTOCOL,
+      score: BigNumber.from(500),
     };
 
     creditScoreTree = new CreditScoreTree([
@@ -121,7 +125,7 @@ describe('SapphireCore.liquidate()', () => {
     const ctx = await generateContext(sapphireFixture, init);
     signers = ctx.signers;
     arc = ctx.sdks.sapphire;
-    creditScoreContract = ctx.contracts.sapphire.creditScore;
+    creditScoreContract = ctx.contracts.sapphire.passportScores;
     mapper = ctx.contracts.sapphire.linearMapper;
 
     await setupSapphire(ctx, {
@@ -195,7 +199,7 @@ describe('SapphireCore.liquidate()', () => {
 
       // Make sure vault is under-collateralized
       const liquidationCRatio = await mapper.map(
-        minterCreditScore.amount,
+        minterCreditScore.score,
         1000,
         LOW_C_RATIO,
         HIGH_C_RATIO,
@@ -288,7 +292,8 @@ describe('SapphireCore.liquidate()', () => {
       // The user's credit score decreases
       const newMinterCreditScore = {
         account: signers.scoredMinter.address,
-        amount: BigNumber.from(50),
+        protocol: DEFAULT_PROOF_PROTOCOL,
+        score: BigNumber.from(50),
       };
       const newCreditTree = new CreditScoreTree([
         newMinterCreditScore,
@@ -539,13 +544,47 @@ describe('SapphireCore.liquidate()', () => {
       );
     });
 
+    it('reverts if proof is not for the correct protocol', async () => {
+      await setupBaseVault();
+
+      // Drop the price by half to make the vault under-collateralized
+      const newPrice = COLLATERAL_PRICE.div(2);
+      await arc.updatePrice(newPrice);
+
+      // Add a score for another protocol
+      const newMinterCreditScore = {
+        account: signers.scoredMinter.address,
+        protocol: 'other.protocol',
+        score: BigNumber.from(0),
+      };
+      const newCreditTree = new CreditScoreTree([
+        newMinterCreditScore,
+        minterCreditScore,
+        liquidatorCreditScore,
+      ]);
+      await immediatelyUpdateMerkleRoot(
+        creditScoreContract.connect(signers.merkleRootUpdater),
+        newCreditTree.getHexRoot(),
+      );
+
+      // Attempt to liquidate vault
+      await expect(
+        arc.liquidate(
+          signers.scoredMinter.address,
+          getScoreProof(newMinterCreditScore, newCreditTree),
+          undefined,
+          signers.liquidator,
+        ),
+      ).to.be.revertedWith('SapphireCoreV1: incorrect proof protocol');
+    });
+
     it('should not liquidate if proof is not provided', async () => {
       await setupBaseVault(COLLATERAL_AMOUNT, BORROW_AMOUNT);
 
       await expect(
         arc.liquidate(
           signers.scoredMinter.address,
-          undefined,
+          getEmptyScoreProof(undefined, DEFAULT_PROOF_PROTOCOL),
           undefined,
           signers.liquidator,
         ),
@@ -573,7 +612,8 @@ describe('SapphireCore.liquidate()', () => {
       // A new user with credit score 0 is added to the tree
       const zeroCreditScore = {
         account: signers.staker.address,
-        amount: BigNumber.from(0),
+        protocol: DEFAULT_PROOF_PROTOCOL,
+        score: BigNumber.from(0),
       };
       const newCreditTree = new CreditScoreTree([
         zeroCreditScore,
@@ -616,7 +656,8 @@ describe('SapphireCore.liquidate()', () => {
       // First, open the vault with a credit score of 0
       let newMinterCreditScore = {
         account: signers.scoredMinter.address,
-        amount: BigNumber.from(0),
+        protocol: DEFAULT_PROOF_PROTOCOL,
+        score: BigNumber.from(0),
       };
       let newCreditTree = new CreditScoreTree([
         newMinterCreditScore,
@@ -645,7 +686,8 @@ describe('SapphireCore.liquidate()', () => {
 
       newMinterCreditScore = {
         account: signers.scoredMinter.address,
-        amount: BigNumber.from(500),
+        protocol: DEFAULT_PROOF_PROTOCOL,
+        score: BigNumber.from(500),
       };
       newCreditTree = new CreditScoreTree([
         newMinterCreditScore,
@@ -1015,7 +1057,8 @@ describe('SapphireCore.liquidate()', () => {
       // Credit score drops to 50
       const newMinterCreditScore = {
         account: signers.scoredMinter.address,
-        amount: BigNumber.from(50),
+        protocol: DEFAULT_PROOF_PROTOCOL,
+        score: BigNumber.from(50),
       };
       const newCreditTree = new CreditScoreTree([
         newMinterCreditScore,
@@ -1104,7 +1147,8 @@ describe('SapphireCore.liquidate()', () => {
       // User's credit score increases to 950
       const newMinterCreditScore = {
         account: signers.scoredMinter.address,
-        amount: BigNumber.from(950),
+        protocol: DEFAULT_PROOF_PROTOCOL,
+        score: BigNumber.from(950),
       };
       const newCreditTree = new CreditScoreTree([
         newMinterCreditScore,

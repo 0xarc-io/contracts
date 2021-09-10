@@ -1,7 +1,7 @@
 import { BigNumber, BigNumberish } from 'ethers';
 import { BASE } from '../constants';
 
-export default class ArcNumber {
+export class ArcNumber {
   static new(amount: number, decimals: BigNumberish = 18): BigNumber {
     return BigNumber.from(10).pow(decimals).mul(amount);
   }

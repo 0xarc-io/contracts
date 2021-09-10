@@ -129,4 +129,8 @@ contract SapphireCoreStorage {
      */
     uint256 public vaultBorrowMaximum;
 
+    /**
+     * @dev The protocol value to be used in the score proofs
+     */
+    string public proofProtocol;
 }
