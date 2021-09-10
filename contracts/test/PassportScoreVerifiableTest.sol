@@ -13,18 +13,18 @@ contract PassportScoreVerifiableTest is PassportScoreVerifiable {
     event DidSomethingOptionalProof();
 
     constructor(
-        address _creditScoreContract
+        address _passportScoresContract
     )
         public
     {
-        creditScoreContract = ISapphirePassportScores(_creditScoreContract);
+        passportScoresContract = ISapphirePassportScores(_passportScoresContract);
     }
 
     function proofRequiredDoSomething(
         SapphireTypes.ScoreProof memory _scoreProof
     )
         public
-        checkScoreProof(_scoreProof, true)
+        checkScoreProof(_scoreProof, true, true)
     {
         emit DidSomethingAndProofPassed();
     }
@@ -33,7 +33,7 @@ contract PassportScoreVerifiableTest is PassportScoreVerifiable {
         SapphireTypes.ScoreProof memory _scoreProof
     )
         public
-        checkScoreProof(_scoreProof, false)
+        checkScoreProof(_scoreProof, false, true)
     {
         emit DidSomethingOptionalProof();
     }

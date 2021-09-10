@@ -118,7 +118,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
         );
 
         stakingToken = IPermittableERC20(_stakingToken);
-        creditScoreContract = ISapphirePassportScores(_creditScoreContract);
+        passportScoresContract = ISapphirePassportScores(_creditScoreContract);
         sablierContract = ISablier(_sablierContract);
     }
 
@@ -173,7 +173,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
         onlyAdmin
     {
         require(
-            address(creditScoreContract) != _creditScoreAddress,
+            address(passportScoresContract) != _creditScoreAddress,
             "StakingAccrualERC20: the same credit score address is already set"
         );
 
@@ -182,7 +182,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
             "StakingAccrualERC20: the given address is not a contract"
         );
 
-        creditScoreContract = ISapphirePassportScores(_creditScoreAddress);
+        passportScoresContract = ISapphirePassportScores(_creditScoreAddress);
 
         emit CreditScoreContractSet(_creditScoreAddress);
     }
@@ -239,7 +239,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
         SapphireTypes.ScoreProof memory _scoreProof
     )
         public
-        checkScoreProof(_scoreProof, true)
+        checkScoreProof(_scoreProof, true, true)
     {
         claimStreamFunds();
 

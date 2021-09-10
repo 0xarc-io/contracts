@@ -22,8 +22,6 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
 
     ISapphireMapper public mapper;
 
-    ISapphirePassportScores public passportScoresContract;
-
     /* ========== Events ========== */
 
     event MapperSet(address _newMapper);
@@ -73,7 +71,7 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
         bool _isScoreRequired
     )
         public
-        checkScoreProof(_scoreProof, _isScoreRequired)
+        checkScoreProof(_scoreProof, _isScoreRequired, false)
         returns (uint256)
     {
         require(

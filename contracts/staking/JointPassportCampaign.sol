@@ -162,15 +162,15 @@ contract JointPassportCampaign is CampaignStorage, PassportScoreVerifiable, Owna
         );
 
         arcDAO                      = _arcDAO;
-        rewardsDistributor       = _rewardsDistributor;
+        rewardsDistributor          = _rewardsDistributor;
         collabRewardsDistributor    = _collabRewardsDistributor;
-        rewardToken              = IERC20(_rewardToken);
+        rewardToken                 = IERC20(_rewardToken);
         collabRewardToken           = IERC20(_collabRewardToken);
         stakingToken                = IPermittableERC20(_stakingToken);
         creditScoreThreshold        = _creditScoreThreshold;
         maxStakePerUser             = _maxStakePerUser;
         daoAllocation               = _daoAllocation;
-        creditScoreContract         = ISapphirePassportScores(_creditScoreContract);
+        passportScoresContract      = ISapphirePassportScores(_creditScoreContract);
     }
 
     /* ========== Admin Functions ========== */
@@ -541,7 +541,7 @@ contract JointPassportCampaign is CampaignStorage, PassportScoreVerifiable, Owna
         SapphireTypes.ScoreProof memory _scoreProof
     )
         public
-        checkScoreProof(_scoreProof, true)
+        checkScoreProof(_scoreProof, true, true)
         updateReward(msg.sender, address(0))
     {
         // Do not allow user to stake if they do not meet the credit score requirements

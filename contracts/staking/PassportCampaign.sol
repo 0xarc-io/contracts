@@ -433,7 +433,7 @@ contract PassportCampaign is Adminable, PassportScoreVerifiable {
         SapphireTypes.ScoreProof memory _scoreProof
     )
         public
-        checkScoreProof(_scoreProof, true)
+        checkScoreProof(_scoreProof, true, true)
         updateReward(msg.sender)
     {
         // Do not allow user to stake if they do not meet the credit score requirements
@@ -468,7 +468,7 @@ contract PassportCampaign is Adminable, PassportScoreVerifiable {
         SapphireTypes.ScoreProof memory _scoreProof
     )
         public
-        checkScoreProof(_scoreProof, false)
+        checkScoreProof(_scoreProof, false, true)
         updateReward(_user)
     {
         _getReward(_user);
@@ -479,7 +479,7 @@ contract PassportCampaign is Adminable, PassportScoreVerifiable {
         SapphireTypes.ScoreProof memory _scoreProof
     )
         public
-        checkScoreProof(_scoreProof, false)
+        checkScoreProof(_scoreProof, false, true)
         updateReward(msg.sender)
     {
         _withdraw(_amount);
@@ -492,7 +492,7 @@ contract PassportCampaign is Adminable, PassportScoreVerifiable {
         SapphireTypes.ScoreProof memory _scoreProof
     )
         public
-        checkScoreProof(_scoreProof, false)
+        checkScoreProof(_scoreProof, false, true)
         updateReward(msg.sender)
     {
         _getReward(msg.sender);
