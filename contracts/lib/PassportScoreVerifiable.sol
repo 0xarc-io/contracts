@@ -15,7 +15,7 @@ contract PassportScoreVerifiable {
 
     using Address for address;
 
-    ISapphirePassportScores public creditScoreContract;
+    ISapphirePassportScores public passportScoresContract;
 
     /**
      * @dev Verifies that the proof is passed if the score is required, and
@@ -23,12 +23,13 @@ contract PassportScoreVerifiable {
      */
     modifier checkScoreProof(
         SapphireTypes.ScoreProof memory _scoreProof,
-        bool _isScoreRequired
+        bool _isScoreRequired,
+        bool _enforceSameCaller
     ) {
-        if (_scoreProof.account != address(0)) {
+        if (_scoreProof.account != address(0) && _enforceSameCaller) {
             require (
                 msg.sender == _scoreProof.account,
-                "CreditScoreVerifiable: proof does not belong to the caller"
+                "PassportScoreVerifiable: proof does not belong to the caller"
             );
         }
 
@@ -37,12 +38,12 @@ contract PassportScoreVerifiable {
         if (_isScoreRequired) {
             require(
                 isProofPassed,
-                "CreditScoreVerifiable: proof is required but it is not passed"
+                "PassportScoreVerifiable: proof is required but it is not passed"
             );
         }
 
         if (isProofPassed) {
-            creditScoreContract.verify(_scoreProof);
+            passportScoresContract.verify(_scoreProof);
         }
         _;
     }
