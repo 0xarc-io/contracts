@@ -12,10 +12,13 @@ export function getScoreProof(
   };
 }
 
-export function getEmptyScoreProof(account?: string): PassportScoreProof {
+export function getEmptyScoreProof(
+  account?: string,
+  protocol = '',
+): PassportScoreProof {
   return {
     account: account || constants.AddressZero,
-    protocol: '',
+    protocol,
     score: BigNumber.from(0),
     merkleProof: [],
   };

@@ -332,4 +332,10 @@ describe('SapphireCore.setters', () => {
       expect(await sapphireCore.vaultBorrowMinimum()).eq(vaultBorrowMinimum);
     });
   });
+
+  describe('#setProofProtocol', () => {
+    it('reverts if called by non-owner');
+
+    it('sets the proof protocol');
+  });
 });

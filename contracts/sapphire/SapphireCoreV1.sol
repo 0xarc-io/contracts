@@ -19,7 +19,7 @@ import {SapphireCoreStorage} from "./SapphireCoreStorage.sol";
 import {SapphireAssessor} from "./SapphireAssessor.sol";
 import {ISapphireAssessor} from "./ISapphireAssessor.sol";
 
-contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
+contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
     /* ========== Libraries ========== */
 
@@ -138,17 +138,18 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             "SapphireCoreV1: collateral or synthetic are not contracts"
         );
 
-        paused = true;
-        borrowIndex = BASE;
+        paused          = true;
+        borrowIndex     = BASE;
         indexLastUpdate = currentTimestamp();
         collateralAsset = _collateralAddress;
-        syntheticAsset = _syntheticAddress;
-        interestSetter = _interestSetter;
-        pauseOperator = _pauseOperator;
-        feeCollector = _feeCollector;
+        syntheticAsset  = _syntheticAddress;
+        interestSetter  = _interestSetter;
+        pauseOperator   = _pauseOperator;
+        feeCollector    = _feeCollector;
+        proofProtocol   = "arcx.creditscore";
 
-        IERC20Metadata collateral = IERC20Metadata(collateralAsset);
-        uint8 collateralDecimals = collateral.decimals();
+        IERC20Metadata collateral   = IERC20Metadata(collateralAsset);
+        uint8 collateralDecimals    = collateral.decimals();
 
         require(
             collateralDecimals <= 18,
@@ -572,6 +573,12 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         require(
             _actions.length > 0,
             "SapphireCoreV1: there must be at least one action"
+        );
+
+        require (
+            keccak256(abi.encodePacked(_scoreProof.protocol)) ==
+                keccak256(abi.encodePacked(proofProtocol)),
+            "SapphireCoreV1: incorrect proof protocol"
         );
 
         // Update the index to calculate how much interest has accrued
