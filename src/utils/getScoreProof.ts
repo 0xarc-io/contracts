@@ -1,24 +1,21 @@
-import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
+import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
 import { constants, BigNumber } from 'ethers';
 import CreditScoreTree from '../MerkleTree/CreditScoreTree';
 
 export function getScoreProof(
-  creditScore: CreditScore,
+  score: PassportScore,
   creditScoreTreeToCheck: CreditScoreTree,
-): CreditScoreProof {
+): PassportScoreProof {
   return {
-    account: creditScore.account,
-    score: creditScore.amount,
-    merkleProof: creditScoreTreeToCheck.getProof(
-      creditScore.account,
-      creditScore.amount,
-    ),
+    ...score,
+    merkleProof: creditScoreTreeToCheck.getProof(score),
   };
 }
 
-export function getEmptyScoreProof(account?: string) {
+export function getEmptyScoreProof(account?: string): PassportScoreProof {
   return {
     account: account || constants.AddressZero,
+    protocol: '',
     score: BigNumber.from(0),
     merkleProof: [],
   };

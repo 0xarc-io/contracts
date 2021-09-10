@@ -179,7 +179,7 @@ contract SapphirePassportScores is Adminable, Initializable, ISapphirePassportSc
             "SapphirePassportScores: account cannot be address 0"
         );
 
-        bytes32 node = keccak256(abi.encodePacked(_proof.account, _proof.score));
+        bytes32 node = keccak256(abi.encodePacked(_proof.account, _proof.protocol, _proof.score));
 
         require(
             MerkleProof.verify(_proof.merkleProof, currentMerkleRoot, node),

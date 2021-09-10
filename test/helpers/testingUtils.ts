@@ -3,11 +3,7 @@ import { BigNumberish, Signer } from 'ethers';
 import { ethers } from 'hardhat';
 import { EVM } from './EVM';
 import { asyncForEach, Token } from '@src/utils';
-import {
-  MockSapphireCreditScore,
-  MockSapphirePassportScores,
-  TestTokenFactory,
-} from '@src/typings';
+import { MockSapphirePassportScores, TestTokenFactory } from '@src/typings';
 
 // And this is our test sandboxing. It snapshots and restores between each test.
 // Note: if a test suite uses fastForward at all, then it MUST also use these snapshots,
@@ -40,7 +36,7 @@ export async function setStartingBalances(
 }
 
 export async function immediatelyUpdateMerkleRoot(
-  creditScoreContract: MockSapphirePassportScores | MockSapphireCreditScore,
+  creditScoreContract: MockSapphirePassportScores,
   targetCurrentRoot: string,
   targetUpcomingRoot?: string,
 ) {
@@ -61,9 +57,7 @@ export async function immediatelyUpdateMerkleRoot(
   );
 }
 
-export async function advanceEpoch(
-  passpotScores: MockSapphirePassportScores | MockSapphireCreditScore,
-) {
+export async function advanceEpoch(passpotScores: MockSapphirePassportScores) {
   const initTimestamp = await passpotScores.currentTimestamp();
   const merkleRootDelay = await passpotScores.merkleRootDelayDuration();
 

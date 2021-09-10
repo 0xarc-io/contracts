@@ -9,7 +9,6 @@ import {
 import {
   deployArcProxy,
   deployTestToken,
-  deployMockSapphireCreditScore,
   deployMockSapphireCoreV1,
   deploySyntheticTokenV2,
   deployMockSapphireOracle,
@@ -77,29 +76,18 @@ export async function sapphireFixture(
     deployer,
   ).deploy();
 
-  ctx.contracts.sapphire.creditScore = await deployMockSapphireCreditScore(
-    deployer,
-  );
-
-  await ctx.contracts.sapphire.creditScore.init(
-    '0x1111111111111111111111111111111111111111111111111111111111111111',
-    ctx.signers.merkleRootUpdater.address,
-    ctx.signers.pauseOperator.address,
-    1000,
-  );
-
   ctx.contracts.sapphire.passportScores = await deployMockSapphirePassportScores(
     deployer,
   );
 
   await ctx.contracts.sapphire.passportScores.init(
     '0x1111111111111111111111111111111111111111111111111111111111111111',
-    ctx.signers.interestSetter.address,
     ctx.signers.merkleRootUpdater.address,
+    ctx.signers.pauseOperator.address,
     1000,
   );
 
-  await ctx.contracts.sapphire.creditScore
+  await ctx.contracts.sapphire.passportScores
     .connect(ctx.signers.pauseOperator)
     .setPause(false);
 
@@ -107,7 +95,7 @@ export async function sapphireFixture(
     deployer,
   ).deploy(
     ctx.contracts.sapphire.linearMapper.address,
-    ctx.contracts.sapphire.creditScore.address,
+    ctx.contracts.sapphire.passportScores.address,
   );
 
   ctx.contracts.sapphire.core = MockSapphireCoreV1Factory.connect(
