@@ -6,6 +6,8 @@ pragma experimental ABIEncoderV2;
 import {SapphireTypes} from "./SapphireTypes.sol";
 
 interface ISapphirePassportScores {
+    function maxScore() external returns(uint16);
+
     function updateMerkleRoot(bytes32 newRoot) external;
 
     function setMerkleRootUpdater(address merkleRootUpdater) external;

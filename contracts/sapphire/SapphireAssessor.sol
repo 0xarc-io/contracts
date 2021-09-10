@@ -4,14 +4,15 @@
 pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
-import {SapphireTypes} from "./SapphireTypes.sol";
-import {ISapphireMapper} from "./ISapphireMapper.sol";
-import {ISapphireCreditScore} from "./ISapphireCreditScore.sol";
-import {ISapphireAssessor} from "./ISapphireAssessor.sol";
 import {Ownable} from "../lib/Ownable.sol";
 import {Address} from "../lib/Address.sol";
+import {PassportScoreVerifiable} from "../lib/PassportScoreVerifiable.sol";
+import {SapphireTypes} from "./SapphireTypes.sol";
+import {ISapphireMapper} from "./ISapphireMapper.sol";
+import {ISapphirePassportScores} from "./ISapphirePassportScores.sol";
+import {ISapphireAssessor} from "./ISapphireAssessor.sol";
 
-contract SapphireAssessor is Ownable, ISapphireAssessor {
+contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable {
 
     /* ========== Libraries ========== */
 
@@ -21,13 +22,13 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
 
     ISapphireMapper public mapper;
 
-    ISapphireCreditScore public creditScoreContract;
+    ISapphirePassportScores public passportScoresContract;
 
     /* ========== Events ========== */
 
     event MapperSet(address _newMapper);
 
-    event CreditScoreContractSet(address _newCreditScoreContract);
+    event PassportScoreContractSet(address _newCreditScoreContract);
 
     event Assessed(
         address _account,
@@ -38,18 +39,18 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
 
     constructor(
         address _mapper,
-        address _creditScore
+        address _passportScores
     )
         public
     {
         require(
-            _mapper != address(0) &&
-            _creditScore != address(0),
-            "SapphireAssessor: The mapper and the credit score addresses cannot be null"
+            _mapper.isContract() &&
+            _passportScores.isContract(),
+            "SapphireAssessor: The mapper and the passport scores must be valid contracts"
         );
 
         mapper = ISapphireMapper(_mapper);
-        creditScoreContract = ISapphireCreditScore(_creditScore);
+        passportScoresContract = ISapphirePassportScores(_passportScores);
     }
 
     /* ========== Public Functions ========== */
@@ -72,6 +73,7 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
         bool _isScoreRequired
     )
         public
+        checkScoreProof(_scoreProof, _isScoreRequired)
         returns (uint256)
     {
         require(
@@ -84,34 +86,10 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
             "SapphireAssessor: The lower bound must be smaller than the upper bound"
         );
 
-        uint256 creditScore;
-        uint16 maxScore;
-
-        (creditScore, maxScore,) = creditScoreContract.getLastScore(_scoreProof.account);
-        bool isProofPassed = _scoreProof.merkleProof.length > 0;
-
-        if (isProofPassed) {
-            require(
-                _scoreProof.account != address(0),
-                "SapphireAssessor: The account cannot be the zero address"
-            );
-        }
-
-        // If credit score is required and user has already verified the score than require proof of score
-        if (_isScoreRequired && creditScore > 0) {
-            require(
-                isProofPassed,
-                "SapphireAssessor: proof should be provided for credit score"
-            );
-        }
-
-        // If there's proof passed, use the updated credit score instead of the latest credit score
-        if (isProofPassed) {
-            (creditScore, maxScore) = creditScoreContract.verifyAndUpdate(_scoreProof);
-        }
+        uint16 maxScore = passportScoresContract.maxScore();
 
         uint256 result = mapper.map(
-            creditScore,
+            _scoreProof.score,
             maxScore,
             _lowerBound,
             _upperBound
@@ -149,7 +127,7 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
         emit MapperSet(_mapper);
     }
 
-    function setCreditScoreContract(
+    function setPassportScoreContract(
         address _creditScore
     )
         external
@@ -161,13 +139,13 @@ contract SapphireAssessor is Ownable, ISapphireAssessor {
         );
 
         require(
-            _creditScore != address(creditScoreContract),
+            _creditScore != address(passportScoresContract),
             "SapphireAssessor: The same credit score contract is already set"
         );
 
-        creditScoreContract = ISapphireCreditScore(_creditScore);
+        passportScoresContract = ISapphirePassportScores(_creditScore);
 
-        emit CreditScoreContractSet(_creditScore);
+        emit PassportScoreContractSet(_creditScore);
     }
 
     function renounceOwnership()

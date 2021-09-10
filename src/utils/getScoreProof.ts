@@ -1,6 +1,6 @@
 import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
 import { constants, BigNumber } from 'ethers';
-import CreditScoreTree from '../MerkleTree/CreditScoreTree';
+import CreditScoreTree from '../MerkleTree/PassportScoreTree';
 
 export function getScoreProof(
   score: PassportScore,

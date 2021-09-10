@@ -1,7 +1,6 @@
 import {
   ArcProxyFactory,
   DefaultPassportSkinFactory,
-  DefiPassportClaimerFactory,
   DefiPassportFactory,
 } from '@src/typings';
 import { green, red, yellow } from 'chalk';
@@ -120,50 +119,6 @@ task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
     await hre.run('verify:verify', {
       address: defiPassportProxy,
       constructorArguments: [defiPassportImpl, await signer.getAddress(), []],
-    });
-  });
-
-task(
-  'deploy-defi-passport-claimer',
-  'Deploy the Defi Passport claimer contract',
-)
-  .addParam('creditscore', 'Address of the SapphireCreditScore contract to use')
-  .addParam('defipassport', 'Address of the Defi Passport contract')
-  .setAction(async (taskArgs, hre) => {
-    const { creditscore, defipassport } = taskArgs;
-
-    const { network, signer, networkConfig } = await loadDetails(hre);
-
-    await pruneDeployments(network, signer.provider);
-
-    const defiPassportClaimer = await deployContract(
-      {
-        name: 'DefiPassportClaimer',
-        source: 'DefiPassportClaimer',
-        data: new DefiPassportClaimerFactory(signer).getDeployTransaction(
-          creditscore,
-          defipassport,
-        ),
-        version: 1,
-        type: DeploymentType.global,
-      },
-      networkConfig,
-    );
-
-    if (!defiPassportClaimer) {
-      throw red(`Defi passport claimer was not deployed!`);
-    }
-
-    console.log(
-      green(
-        `DefiPassportClaimer successfully deployed at ${defiPassportClaimer}`,
-      ),
-    );
-
-    console.log(yellow('Verifying contract...'));
-    await hre.run('verify:verify', {
-      address: defiPassportClaimer,
-      constructorArguments: [creditscore, defipassport],
     });
   });
 

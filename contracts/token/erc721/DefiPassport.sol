@@ -8,7 +8,8 @@ import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {Adminable} from "../../lib/Adminable.sol";
 import {Initializable} from "../../lib/Initializable.sol";
 import {DefiPassportStorage} from "./DefiPassportStorage.sol";
-import {ISapphireCreditScore} from "../../sapphire/ISapphireCreditScore.sol";
+import {ISapphirePassportScores} from "../../sapphire/ISapphirePassportScores.sol";
+import {SapphireTypes} from "../../sapphire/SapphireTypes.sol";
 
 contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializable {
 
@@ -47,7 +48,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
 
     event SkinManagerSet(address _skinManager);
 
-    event CreditScoreContractSet(address _creditScoreContract);
+    event CreditScoreContractSet(address _passportScoresContract);
 
     event WhitelistSkinSet(address _skin, bool _status);
 
@@ -93,7 +94,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
             "DefiPassport: credit score address is not a contract"
         );
 
-        creditScoreContract = ISapphireCreditScore(_creditScoreAddress);
+        passportScoresContract = ISapphirePassportScores(_creditScoreAddress);
 
         /*
         *   register the supported interfaces to conform to ERC721 via ERC165
@@ -292,7 +293,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         onlyAdmin
     {
         require(
-            address(creditScoreContract) != _creditScoreAddress,
+            address(passportScoresContract) != _creditScoreAddress,
             "DefiPassport: the same credit score address is already set"
         );
 
@@ -301,7 +302,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
             "DefiPassport: the given address is not a contract"
         );
 
-        creditScoreContract = ISapphireCreditScore(_creditScoreAddress);
+        passportScoresContract = ISapphirePassportScores(_creditScoreAddress);
 
         emit CreditScoreContractSet(_creditScoreAddress);
     }
@@ -321,17 +322,13 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
     function mint(
         address _to,
         address _passportSkin,
-        uint256 _skinTokenId
+        uint256 _skinTokenId,
+        SapphireTypes.ScoreProof calldata _scoreProof
     )
         external
         returns (uint256)
     {
-        (uint256 userCreditScore,,) = creditScoreContract.getLastScore(_to);
-
-        require(
-            userCreditScore > 0,
-            "DefiPassport: the user has no credit score"
-        );
+        passportScoresContract.verify(_scoreProof);
 
         require (
             isSkinAvailable(_to, _passportSkin, _skinTokenId),

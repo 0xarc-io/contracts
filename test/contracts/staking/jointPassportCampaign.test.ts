@@ -17,7 +17,7 @@ import {
 } from '@test/helpers/testingUtils';
 import { getEmptyScoreProof, getScoreProof } from '@src/utils/getScoreProof';
 import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
-import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
+import CreditScoreTree from '@src/MerkleTree/PassportScoreTree';
 import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';

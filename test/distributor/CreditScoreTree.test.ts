@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 import { Wallet } from '@ethersproject/wallet';
-import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
+import CreditScoreTree from '@src/MerkleTree/PassportScoreTree';
 
 describe('CreditScoreTree', () => {
   const account1 = Wallet.createRandom().address;

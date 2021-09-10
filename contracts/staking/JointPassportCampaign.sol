@@ -3,20 +3,20 @@ pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "../lib/Ownable.sol";
-import {CreditScoreVerifiable} from "../lib/CreditScoreVerifiable.sol";
+import {PassportScoreVerifiable} from "../lib/PassportScoreVerifiable.sol";
 
 import {IERC20} from "../token/IERC20.sol";
 import {IPermittableERC20} from "../token/IPermittableERC20.sol";
 
 import {CampaignStorage} from "./CampaignStorage.sol";
-import {ISapphireCreditScore} from "../sapphire/ISapphireCreditScore.sol";
+import {ISapphirePassportScores} from "../sapphire/ISapphirePassportScores.sol";
 import {SapphireTypes} from "../sapphire/SapphireTypes.sol";
 
 /**
  * @notice A farm that requires a defi passport with a good credit
  *         score to participate that has two reward tokens.
  */
-contract JointPassportCampaign is CampaignStorage, CreditScoreVerifiable, Ownable {
+contract JointPassportCampaign is CampaignStorage, PassportScoreVerifiable, Ownable {
 
     /* ========== Structs ========== */
 
@@ -170,7 +170,7 @@ contract JointPassportCampaign is CampaignStorage, CreditScoreVerifiable, Ownabl
         creditScoreThreshold        = _creditScoreThreshold;
         maxStakePerUser             = _maxStakePerUser;
         daoAllocation               = _daoAllocation;
-        creditScoreContract         = ISapphireCreditScore(_creditScoreContract);
+        creditScoreContract         = ISapphirePassportScores(_creditScoreContract);
     }
 
     /* ========== Admin Functions ========== */
