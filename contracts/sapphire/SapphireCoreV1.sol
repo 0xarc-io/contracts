@@ -1111,7 +1111,10 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             if (action.operation == SapphireTypes.Operation.Borrow ||
                 action.operation == SapphireTypes.Operation.Liquidate
             ) {
-                mandatoryProof = true;
+                if (action.operation == SapphireTypes.Operation.Liquidate) {
+                    mandatoryProof = true;
+                }
+
                 needsCollateralPrice = true;
 
             } else if (action.operation == SapphireTypes.Operation.Withdraw) {
