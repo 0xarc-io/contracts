@@ -264,7 +264,7 @@ describe('SapphireAssessor', () => {
       ).to.be.revertedWith('SapphirePassportScores: invalid proof');
     });
 
-    it(`returns the upperBound if the user doesn't have an existing score and no proof`, async () => {
+    it(`returns the upperBound if the user has no proof`, async () => {
       // If there's no score & no proof, pass the lowest credit score to the mapper
       await expect(
         assessor.assess(
