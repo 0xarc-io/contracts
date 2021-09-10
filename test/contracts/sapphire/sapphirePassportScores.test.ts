@@ -1,7 +1,13 @@
 import { PassportScore } from '@arc-types/sapphireCore';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
-import { MockSapphirePassportScores } from '@src/typings';
+import {
+  ArcProxyFactory,
+  MockSapphirePassportScores,
+  MockSapphirePassportScoresFactory,
+  SapphirePassportScoresFactory,
+} from '@src/typings';
+import { getScoreProof } from '@src/utils';
 import {
   addSnapshotBeforeRestoreAfterEach,
   advanceEpoch,
@@ -85,6 +91,39 @@ describe('SapphireCreditScore', () => {
   });
 
   addSnapshotBeforeRestoreAfterEach();
+
+  describe('#init', () => {
+    it('sets the initial values', async () => {
+      const impl = await new MockSapphirePassportScoresFactory(admin).deploy();
+      const proxy = await new ArcProxyFactory(admin).deploy(
+        impl.address,
+        admin.address,
+        [],
+      );
+      const contract = SapphirePassportScoresFactory.connect(
+        proxy.address,
+        admin,
+      );
+
+      await contract.init(
+        tree.getHexRoot(),
+        merkleRootUpdater.address,
+        pauseOperator.address,
+        MAX_CREDIT_SCORE,
+      );
+
+      // sets the merkle root
+      expect(await contract.currentMerkleRoot()).to.eq(tree.getHexRoot());
+      // root updater
+      expect(await contract.merkleRootUpdater()).to.eq(
+        merkleRootUpdater.address,
+      );
+      // pause operator
+      expect(await contract.pauseOperator()).to.eq(pauseOperator.address);
+      // max score
+      expect(await contract.maxScore()).to.eq(MAX_CREDIT_SCORE);
+    });
+  });
 
   describe('#setPause', () => {
     it('initially not active', async () => {
@@ -326,11 +365,35 @@ describe('SapphireCreditScore', () => {
   });
 
   describe('#verify', async () => {
-    it(`should be able to verify a user's score for the specified protocol`);
+    it(`should be able to verify a user's score for the specified protocol`, async () => {
+      expect(await passportScores.currentMerkleRoot()).eq(tree.getHexRoot());
 
-    it('reverts if proof is invalid');
+      expect(
+        await passportScores
+          .connect(unauthorized)
+          .verify(getScoreProof(passportScore1, tree)),
+      ).to.be.true;
+    });
 
-    it('reverts if protocol does not exist');
+    it('reverts if proof is invalid', async () => {
+      const user2Proof = getScoreProof(passportScore2, tree);
+
+      await expect(
+        passportScores.verify({
+          ...getScoreProof(passportScore1, tree),
+          merkleProof: user2Proof.merkleProof,
+        }),
+      ).to.be.revertedWith('SapphirePassportScores: invalid proof');
+    });
+
+    it('reverts if protocol does not exist', async () => {
+      await expect(
+        passportScores.verify({
+          ...getScoreProof(passportScore1, tree),
+          protocol: 'this.does.not.exist',
+        }),
+      ).to.be.revertedWith('SapphirePassportScores: invalid proof');
+    });
   });
 
   describe('#setMerkleRootUpdater', () => {
