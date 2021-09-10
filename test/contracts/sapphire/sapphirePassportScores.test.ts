@@ -1,4 +1,4 @@
-import { CreditScore } from '@arc-types/sapphireCore';
+import { PassportScore } from '@arc-types/sapphireCore';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 import { MockSapphirePassportScores } from '@src/typings';
@@ -38,8 +38,8 @@ describe('SapphireCreditScore', () => {
   let admin: SignerWithAddress;
   let pauseOperator: SignerWithAddress;
   let tree: CreditScoreTree;
-  let creditScore1: CreditScore;
-  let creditScore2: CreditScore;
+  let passportScore1: PassportScore;
+  let passportScore2: PassportScore;
   let ctx: ITestContext;
 
   async function createNewCreditScoreInstance(
@@ -62,15 +62,17 @@ describe('SapphireCreditScore', () => {
 
   before(async () => {
     ctx = await generateContext(sapphireFixture, async (ctx) => {
-      creditScore1 = {
+      passportScore1 = {
         account: ctx.signers.admin.address,
-        amount: BigNumber.from(12),
+        protocol: 'arcx.creditscore',
+        score: BigNumber.from(12),
       };
-      creditScore2 = {
+      passportScore2 = {
         account: ctx.signers.unauthorized.address,
-        amount: BigNumber.from(20),
+        protocol: 'compound.borrower',
+        score: BigNumber.from(20),
       };
-      tree = new CreditScoreTree([creditScore1, creditScore2]);
+      tree = new CreditScoreTree([passportScore1, passportScore2]);
       return setupSapphire(ctx, {
         merkleRoot: tree.getHexRoot(),
       });

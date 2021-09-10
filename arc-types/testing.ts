@@ -6,7 +6,6 @@ import { AddressAccrual } from '@src/typings/AddressAccrual';
 import { TestToken } from '@src/typings/TestToken';
 import {
   MockSapphireCoreV1,
-  MockSapphireCreditScore,
   MockSapphirePassportScores,
   SapphireAssessor,
   SapphireMapperLinear,
@@ -37,7 +36,6 @@ export interface SDKs {
 export interface Contracts {
   sapphire: {
     core: MockSapphireCoreV1;
-    creditScore: MockSapphireCreditScore;
     passportScores: MockSapphirePassportScores;
     linearMapper: SapphireMapperLinear;
     assessor: SapphireAssessor;

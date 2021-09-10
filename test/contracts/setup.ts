@@ -1,8 +1,6 @@
 import { BigNumber, BigNumberish } from 'ethers';
 import { ITestContext } from './context';
-import {
-  immediatelyUpdateMerkleRoot,
-} from '../helpers/testingUtils';
+import { immediatelyUpdateMerkleRoot } from '../helpers/testingUtils';
 import _ from 'lodash';
 import {
   DEFAULT_HiGH_C_RATIO,
@@ -77,7 +75,7 @@ export async function setupSapphire(
   // Set the merkle root
   if (merkleRoot) {
     await immediatelyUpdateMerkleRoot(
-      ctx.contracts.sapphire.creditScore.connect(ctx.signers.interestSetter),
+      ctx.contracts.sapphire.passportScores.connect(ctx.signers.interestSetter),
       merkleRoot,
     );
   }

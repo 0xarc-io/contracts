@@ -8,9 +8,7 @@ import { TokenStakingAccrual } from '@src/typings/TokenStakingAccrual';
 import { MockOracle } from '@src/typings/MockOracle';
 import {
   MockSapphireCoreV1Factory,
-  MockSapphireCreditScoreFactory,
   MockSapphirePassportScoresFactory,
-  SapphireCreditScoreFactory,
 } from '@src/typings';
 import { MerkleDistributor } from '@src/typings/MerkleDistributor';
 import { SyntheticTokenV2 } from '@src/typings/SyntheticTokenV2';
@@ -106,34 +104,6 @@ export async function deployMerkleDistributor(
   );
   const distributor = await merkleDistributorFactory.deploy(token, merkleRoot);
   return distributor as MerkleDistributor;
-}
-
-export async function deploySapphireCreditScore(deployer: Signer) {
-  const creditScoreImp = await new SapphireCreditScoreFactory(
-    deployer,
-  ).deploy();
-
-  const proxy = await deployArcProxy(
-    deployer,
-    creditScoreImp.address,
-    await deployer.getAddress(),
-    [],
-  );
-  return SapphireCreditScoreFactory.connect(proxy.address, deployer);
-}
-
-export async function deployMockSapphireCreditScore(deployer: Signer) {
-  const creditScoreImp = await new MockSapphireCreditScoreFactory(
-    deployer,
-  ).deploy();
-
-  const proxy = await deployArcProxy(
-    deployer,
-    creditScoreImp.address,
-    await deployer.getAddress(),
-    [],
-  );
-  return MockSapphireCreditScoreFactory.connect(proxy.address, deployer);
 }
 
 export async function deployMockSapphirePassportScores(deployer: Signer) {
