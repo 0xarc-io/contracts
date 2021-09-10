@@ -9,8 +9,7 @@ import {SapphireTypes} from "../sapphire/SapphireTypes.sol";
 
 contract PassportScoreVerifiableTest is PassportScoreVerifiable {
 
-    event DidSomethingAndProofPassed();
-    event DidSomethingOptionalProof();
+    event DidNotRevert();
 
     constructor(
         address _passportScoresContract
@@ -20,21 +19,14 @@ contract PassportScoreVerifiableTest is PassportScoreVerifiable {
         passportScoresContract = ISapphirePassportScores(_passportScoresContract);
     }
 
-    function proofRequiredDoSomething(
-        SapphireTypes.ScoreProof memory _scoreProof
+    function doSomething(
+        SapphireTypes.ScoreProof memory _scoreProof,
+        bool _mandatoryProof,
+        bool _enforceSameCaller
     )
         public
-        checkScoreProof(_scoreProof, true, true)
+        checkScoreProof(_scoreProof, _mandatoryProof, _enforceSameCaller)
     {
-        emit DidSomethingAndProofPassed();
-    }
-
-    function proofOptionalDoSomething(
-        SapphireTypes.ScoreProof memory _scoreProof
-    )
-        public
-        checkScoreProof(_scoreProof, false, true)
-    {
-        emit DidSomethingOptionalProof();
+        emit DidNotRevert();
     }
 }
