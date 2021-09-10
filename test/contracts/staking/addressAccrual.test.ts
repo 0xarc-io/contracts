@@ -4,7 +4,6 @@ import { BigNumber } from 'ethers';
 import { expect } from 'chai';
 
 import ArcDecimal from '@src/utils/ArcDecimal';
-import ArcNumber from '@src/utils/ArcNumber';
 import { expectRevert } from '@test/helpers/expectRevert';
 import { AddressAccrual } from '@src/typings/AddressAccrual';
 import { TestToken } from '@src/typings/TestToken';
@@ -12,6 +11,7 @@ import { ethers } from 'hardhat';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { AddressAccrualFactory } from '@src/typings/AddressAccrualFactory';
 import { deployAddressAccrual, deployTestToken } from '../deployers';
+import { ArcNumber } from '@src/utils';
 
 let ownerAccount: SignerWithAddress;
 let investorAccount: SignerWithAddress;

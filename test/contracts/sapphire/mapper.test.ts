@@ -2,7 +2,7 @@ import {
   SapphireMapperLinear,
   SapphireMapperLinearFactory,
 } from '@src/typings';
-import ArcNumber from '@src/utils/ArcNumber';
+import { ArcNumber } from '@src/utils';
 import { expectRevert } from '@test/helpers/expectRevert';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';

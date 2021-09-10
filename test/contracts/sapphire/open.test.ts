@@ -1,4 +1,3 @@
-import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import chai, { expect } from 'chai';
@@ -8,15 +7,17 @@ import 'module-alias/register';
 import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
-import CreditScoreTree from '@src/MerkleTree/PassportScoreTree';
 import {
   DEFAULT_COLLATERAL_DECIMALS,
   DEFAULT_PRICE,
+  DEFAULT_PROOF_PROTOCOL,
 } from '@test/helpers/sapphireDefaults';
 import { mintApprovedCollateral } from '@test/helpers/setupBaseVault';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { BASE } from '@src/constants';
 import { getScoreProof } from '@src/utils/getScoreProof';
+import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
+import { PassportScoreTree } from '@src/MerkleTree';
 
 chai.use(solidity);
 
@@ -35,20 +36,22 @@ describe('SapphireCore.open()', () => {
 
   let ctx: ITestContext;
   let arc: SapphireTestArc;
-  let creditScore1: CreditScore;
-  let creditScore2: CreditScore;
-  let creditScoreTree: CreditScoreTree;
+  let creditScore1: PassportScore;
+  let creditScore2: PassportScore;
+  let creditScoreTree: PassportScoreTree;
 
   async function init(ctx: ITestContext): Promise<void> {
     creditScore1 = {
       account: ctx.signers.scoredMinter.address,
-      amount: BigNumber.from(500),
+      protocol: DEFAULT_PROOF_PROTOCOL,
+      score: BigNumber.from(500),
     };
     creditScore2 = {
       account: ctx.signers.interestSetter.address,
-      amount: BigNumber.from(20),
+      protocol: DEFAULT_PROOF_PROTOCOL,
+      score: BigNumber.from(20),
     };
-    creditScoreTree = new CreditScoreTree([creditScore1, creditScore2]);
+    creditScoreTree = new PassportScoreTree([creditScore1, creditScore2]);
     await setupSapphire(ctx, {
       merkleRoot: creditScoreTree.getHexRoot(),
     });
@@ -197,7 +200,7 @@ describe('SapphireCore.open()', () => {
   });
 
   describe('with score proof', () => {
-    let creditScoreProof: CreditScoreProof;
+    let creditScoreProof: PassportScoreProof;
     let scoredMinter: SignerWithAddress;
     before(() => {
       creditScoreProof = getScoreProof(creditScore1, creditScoreTree);
@@ -296,7 +299,7 @@ describe('SapphireCore.open()', () => {
     });
 
     it('open if a score for address exists on-chain', async () => {
-      await ctx.contracts.sapphire.creditScore.verifyAndUpdate(
+      await ctx.contracts.sapphire.passportScores.verifyAndUpdate(
         creditScoreProof,
       );
       await arc.open(

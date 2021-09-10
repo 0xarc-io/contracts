@@ -1,8 +1,8 @@
-import { CreditScore } from '@arc-types/sapphireCore';
+import { PassportScore } from '@arc-types/sapphireCore';
 import { TestingSigners } from '@arc-types/testing';
 import { BigNumber } from '@ethersproject/bignumber';
 import { BASE } from '@src/constants';
-import CreditScoreTree from '@src/MerkleTree/PassportScoreTree';
+import { PassportScoreTree } from '@src/MerkleTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { SapphireAssessor, TestTokenFactory } from '@src/typings';
 import { getEvent } from '@src/utils/getEvent';
@@ -12,6 +12,7 @@ import {
   DEFAULT_HiGH_C_RATIO,
   DEFAULT_LOW_C_RATIO,
   DEFAULT_PRICE,
+  DEFAULT_PROOF_PROTOCOL,
 } from '@test/helpers/sapphireDefaults';
 import { setupBaseVault } from '@test/helpers/setupBaseVault';
 import {
@@ -45,20 +46,22 @@ describe('SapphireCore.withdraw()', () => {
   let ctx: ITestContext;
   let arc: SapphireTestArc;
   let signers: TestingSigners;
-  let minterCreditScore: CreditScore;
-  let creditScoreTree: CreditScoreTree;
+  let minterCreditScore: PassportScore;
+  let creditScoreTree: PassportScoreTree;
   let assessor: SapphireAssessor;
 
   async function init(ctx: ITestContext) {
     minterCreditScore = {
       account: ctx.signers.scoredMinter.address,
-      amount: BigNumber.from(500),
+      protocol: DEFAULT_PROOF_PROTOCOL,
+      score: BigNumber.from(500),
     };
     const creditScore2 = {
       account: ctx.signers.interestSetter.address,
-      amount: BigNumber.from(20),
+      protocol: DEFAULT_PROOF_PROTOCOL,
+      score: BigNumber.from(20),
     };
-    creditScoreTree = new CreditScoreTree([minterCreditScore, creditScore2]);
+    creditScoreTree = new PassportScoreTree([minterCreditScore, creditScore2]);
 
     await setupSapphire(ctx, {
       merkleRoot: creditScoreTree.getHexRoot(),
@@ -312,15 +315,16 @@ describe('SapphireCore.withdraw()', () => {
     // A new user with credit score 1000 is added to the tree
     const maxCreditScore = {
       account: signers.staker.address,
-      amount: BigNumber.from(1000),
+      protocol: DEFAULT_PROOF_PROTOCOL,
+      score: BigNumber.from(1000),
     };
-    const newCreditTree = new CreditScoreTree([
+    const newCreditTree = new PassportScoreTree([
       minterCreditScore,
       maxCreditScore,
     ]);
 
     await immediatelyUpdateMerkleRoot(
-      ctx.contracts.sapphire.creditScore.connect(signers.interestSetter),
+      ctx.contracts.sapphire.passportScores.connect(signers.interestSetter),
       newCreditTree.getHexRoot(),
     );
 

@@ -1,14 +1,15 @@
-import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
+import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
 import { TestingSigners } from '@arc-types/testing';
 import { BigNumber } from '@ethersproject/bignumber';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import CreditScoreTree from '@src/MerkleTree/PassportScoreTree';
+import { PassportScoreTree } from '@src/MerkleTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { SyntheticTokenV2Factory } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import {
   DEFAULT_COLLATERAL_DECIMALS,
   DEFAULT_HiGH_C_RATIO,
+  DEFAULT_PROOF_PROTOCOL,
 } from '@test/helpers/sapphireDefaults';
 import { setupBaseVault } from '@test/helpers/setupBaseVault';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
@@ -38,8 +39,8 @@ const PRECISION_SCALAR = BigNumber.from(10).pow(
 describe('SapphireCore.repay()', () => {
   let arc: SapphireTestArc;
   let signers: TestingSigners;
-  let minterCreditScore: CreditScore;
-  let creditScoreTree: CreditScoreTree;
+  let minterCreditScore: PassportScore;
+  let creditScoreTree: PassportScoreTree;
 
   // /**
   //  * Returns the converted principal, as calculated by the smart contract:
@@ -62,7 +63,7 @@ describe('SapphireCore.repay()', () => {
   async function repay(
     amount: BigNumber,
     caller: SignerWithAddress,
-    scoreProof?: CreditScoreProof,
+    scoreProof?: PassportScoreProof,
   ) {
     const senderContract = SyntheticTokenV2Factory.connect(
       arc.syntheticAddress(),
@@ -77,13 +78,15 @@ describe('SapphireCore.repay()', () => {
   async function init(ctx: ITestContext) {
     minterCreditScore = {
       account: ctx.signers.scoredMinter.address,
-      amount: BigNumber.from(500),
+      protocol: DEFAULT_PROOF_PROTOCOL,
+      score: BigNumber.from(500),
     };
     const creditScore2 = {
       account: ctx.signers.interestSetter.address,
-      amount: BigNumber.from(20),
+      protocol: DEFAULT_PROOF_PROTOCOL,
+      score: BigNumber.from(20),
     };
-    creditScoreTree = new CreditScoreTree([minterCreditScore, creditScore2]);
+    creditScoreTree = new PassportScoreTree([minterCreditScore, creditScore2]);
 
     await setupSapphire(ctx, {
       merkleRoot: creditScoreTree.getHexRoot(),
