@@ -2,7 +2,7 @@ import { CreditScore } from '@arc-types/sapphireCore';
 import { TestingSigners } from '@arc-types/testing';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { approve } from '@src/utils/approve';
-import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
+import CreditScoreTree from '@src/MerkleTree/PassportScoreTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import { DEFAULT_COLLATERAL_DECIMALS } from '@test/helpers/sapphireDefaults';

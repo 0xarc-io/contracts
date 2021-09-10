@@ -3,11 +3,11 @@
 pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
-import {CreditScoreVerifiable} from "../lib/CreditScoreVerifiable.sol";
-import {ISapphireCreditScore} from "../sapphire/ISapphireCreditScore.sol";
+import {PassportScoreVerifiable} from "../lib/PassportScoreVerifiable.sol";
+import {ISapphirePassportScores} from "../sapphire/ISapphirePassportScores.sol";
 import {SapphireTypes} from "../sapphire/SapphireTypes.sol";
 
-contract CreditScoreVerifiableTest is CreditScoreVerifiable {
+contract PassportScoreVerifiableTest is PassportScoreVerifiable {
 
     event DidSomethingAndProofPassed();
     event DidSomethingOptionalProof();
@@ -17,7 +17,7 @@ contract CreditScoreVerifiableTest is CreditScoreVerifiable {
     )
         public
     {
-        creditScoreContract = ISapphireCreditScore(_creditScoreContract);
+        creditScoreContract = ISapphirePassportScores(_creditScoreContract);
     }
 
     function proofRequiredDoSomething(

@@ -2,7 +2,7 @@ import { CreditScore } from '@arc-types/sapphireCore';
 import { TestingSigners } from '@arc-types/testing';
 import { BigNumber } from '@ethersproject/bignumber';
 import { BASE } from '@src/constants';
-import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
+import CreditScoreTree from '@src/MerkleTree/PassportScoreTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { SapphireAssessor, TestTokenFactory } from '@src/typings';
 import { getEvent } from '@src/utils/getEvent';
@@ -34,7 +34,7 @@ const BORROW_AMOUNT = utils.parseEther('200');
 const COLLATERAL_LIMIT = BORROW_AMOUNT.mul(DEFAULT_HiGH_C_RATIO)
   .div(DEFAULT_PRICE)
   .div(BASE)
-  .mul(BigNumber.from(10).pow(DEFAULT_COLLATERAL_DECIMALS))
+  .mul(BigNumber.from(10).pow(DEFAULT_COLLATERAL_DECIMALS));
 
 /**
  * The withdraw function allows a user to withdraw collateral from a vault, partially or completely.

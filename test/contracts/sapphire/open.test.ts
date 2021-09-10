@@ -8,7 +8,7 @@ import 'module-alias/register';
 import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
-import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
+import CreditScoreTree from '@src/MerkleTree/PassportScoreTree';
 import {
   DEFAULT_COLLATERAL_DECIMALS,
   DEFAULT_PRICE,
@@ -31,10 +31,7 @@ describe('SapphireCore.open()', () => {
     '100',
     DEFAULT_COLLATERAL_DECIMALS,
   );
-  const BORROW_AMOUNT = utils
-    .parseEther('50')
-    .mul(DEFAULT_PRICE)
-    .div(BASE)
+  const BORROW_AMOUNT = utils.parseEther('50').mul(DEFAULT_PRICE).div(BASE);
 
   let ctx: ITestContext;
   let arc: SapphireTestArc;

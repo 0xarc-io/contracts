@@ -22,7 +22,7 @@ import {
 } from '@test/helpers/testingUtils';
 import { getEmptyScoreProof, getScoreProof } from '@src/utils/getScoreProof';
 import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
-import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
+import CreditScoreTree from '@src/MerkleTree/PassportScoreTree';
 import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
@@ -710,7 +710,7 @@ describe('PassportCampaign', () => {
         const stakingTokenAddress = await adminPassportCampaign.stakingToken();
         const daoAllocation = await adminPassportCampaign.daoAllocation();
         const scoreThreshold = await adminPassportCampaign.creditScoreThreshold();
-        const creditScoreAddy = await adminPassportCampaign.creditScoreContract()
+        const creditScoreAddy = await adminPassportCampaign.creditScoreContract();
 
         expect(arcDao).to.eq(admin.address);
         expect(rewardsDistributor).to.eq(admin.address);
@@ -718,7 +718,7 @@ describe('PassportCampaign', () => {
         expect(stakingTokenAddress).to.eq(stakingToken.address);
         expect(daoAllocation).to.eq(DAO_ALLOCATION);
         expect(scoreThreshold).to.eq(CREDIT_SCORE_THRESHOLD);
-        expect(creditScoreAddy).to.eq(creditScoreAddy)
+        expect(creditScoreAddy).to.eq(creditScoreAddy);
       });
 
       it('should not be called twice by the contract owner', async () => {
@@ -930,9 +930,9 @@ describe('PassportCampaign', () => {
 
     describe('#setCreditScoreContract', () => {
       beforeEach(async () => {
-        await setup()
-      })
-      
+        await setup();
+      });
+
       it('reverts if called by non-admin', async () => {
         const newCs = await new SapphireCreditScoreFactory(admin).deploy();
 

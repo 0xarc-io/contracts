@@ -2,11 +2,11 @@ import MerkleTree from './MerkleTree';
 import { utils } from 'ethers';
 import { PassportScore } from '@arc-types/sapphireCore';
 
-export class PasspotScoreTree {
+export class PassportScoreTree {
   private readonly tree: MerkleTree;
   constructor(creditScores: PassportScore[]) {
     this.ensureUniqueAccounts(creditScores);
-    this.tree = new MerkleTree(creditScores.map(PasspotScoreTree.toNode));
+    this.tree = new MerkleTree(creditScores.map(PassportScoreTree.toNode));
   }
 
   public static verifyProof(
@@ -14,7 +14,7 @@ export class PasspotScoreTree {
     proof: string[],
     root: string,
   ): boolean {
-    let pair = PasspotScoreTree.toNode(score);
+    let pair = PassportScoreTree.toNode(score);
     for (const item of proof) {
       pair = MerkleTree.combinedHash(pair, item);
     }
@@ -34,7 +34,7 @@ export class PasspotScoreTree {
   }
 
   public getProof(score: PassportScore): string[] {
-    return this.tree.getProof(PasspotScoreTree.toNode(score));
+    return this.tree.getProof(PassportScoreTree.toNode(score));
   }
 
   private ensureUniqueAccounts(creditScores: PassportScore[]) {
@@ -49,4 +49,4 @@ export class PasspotScoreTree {
   }
 }
 
-export default PasspotScoreTree;
+export default PassportScoreTree;

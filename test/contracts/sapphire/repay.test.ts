@@ -2,7 +2,7 @@ import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
 import { TestingSigners } from '@arc-types/testing';
 import { BigNumber } from '@ethersproject/bignumber';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
+import CreditScoreTree from '@src/MerkleTree/PassportScoreTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { SyntheticTokenV2Factory } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
@@ -143,7 +143,7 @@ describe('SapphireCore.repay()', () => {
       .mul(PRECISION_SCALAR)
       .mul(COLLATERAL_PRICE)
       .div(vault.borrowedAmount);
-    expect(cRatio).to.eq(constants.WeiPerEther.mul(4)); 
+    expect(cRatio).to.eq(constants.WeiPerEther.mul(4));
   });
 
   it('repays to make the position collateralized', async () => {

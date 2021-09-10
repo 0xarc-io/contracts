@@ -5,17 +5,17 @@ pragma experimental ABIEncoderV2;
 
 import {Address} from "./Address.sol";
 
-import {ISapphireCreditScore} from "../sapphire/ISapphireCreditScore.sol";
+import {ISapphirePassportScores} from "../sapphire/ISapphirePassportScores.sol";
 import {SapphireTypes} from "../sapphire/SapphireTypes.sol";
 
 /**
  * @dev Provides the ability of verifying users' credit scores
  */
-contract CreditScoreVerifiable {
+contract PassportScoreVerifiable {
 
     using Address for address;
 
-    ISapphireCreditScore public creditScoreContract;
+    ISapphirePassportScores public creditScoreContract;
 
     /**
      * @dev Verifies that the proof is passed if the score is required, and
@@ -42,7 +42,7 @@ contract CreditScoreVerifiable {
         }
 
         if (isProofPassed) {
-            creditScoreContract.verifyAndUpdate(_scoreProof);
+            creditScoreContract.verify(_scoreProof);
         }
         _;
     }

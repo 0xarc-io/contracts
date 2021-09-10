@@ -1,6 +1,6 @@
 import { CreditScore } from '@arc-types/sapphireCore';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
+import CreditScoreTree from '@src/MerkleTree/PassportScoreTree';
 import { MockSapphireCreditScore } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import {

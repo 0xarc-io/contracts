@@ -1,6 +1,6 @@
 import { CreditScore } from '@arc-types/sapphireCore';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
+import CreditScoreTree from '@src/MerkleTree/PassportScoreTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { TestToken, TestTokenFactory } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
@@ -48,14 +48,25 @@ describe('SapphireCore.deposit()', () => {
     arc = ctx.sdks.sapphire;
     scoredMinter = ctx.signers.scoredMinter;
     minter = ctx.signers.minter;
-    collateral = TestTokenFactory.connect(await arc.collateral().address, minter);
+    collateral = TestTokenFactory.connect(
+      await arc.collateral().address,
+      minter,
+    );
 
     // mint and approve token
     await collateral.mintShare(minter.address, COLLATERAL_AMOUNT);
     await collateral.mintShare(scoredMinter.address, COLLATERAL_AMOUNT);
 
-    await collateral.approveOnBehalf(minter.address, arc.coreAddress(), COLLATERAL_AMOUNT);
-    await collateral.approveOnBehalf(scoredMinter.address, arc.coreAddress(), COLLATERAL_AMOUNT);
+    await collateral.approveOnBehalf(
+      minter.address,
+      arc.coreAddress(),
+      COLLATERAL_AMOUNT,
+    );
+    await collateral.approveOnBehalf(
+      scoredMinter.address,
+      arc.coreAddress(),
+      COLLATERAL_AMOUNT,
+    );
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -63,17 +74,17 @@ describe('SapphireCore.deposit()', () => {
   it('reverts if the contract is paused', async () => {
     await arc.core().connect(ctx.signers.pauseOperator).setPause(true);
 
-    await expect(arc.deposit(COLLATERAL_AMOUNT, undefined, undefined, minter)).revertedWith(
-      'SapphireCoreV1: the contract is paused',
-    );
+    await expect(
+      arc.deposit(COLLATERAL_AMOUNT, undefined, undefined, minter),
+    ).revertedWith('SapphireCoreV1: the contract is paused');
   });
 
   it(`reverts if the user doesn't have enough funds`, async () => {
     const preMinterBalance = await collateral.balanceOf(minter.address);
 
-    await expect(arc.deposit(preMinterBalance.add(1), undefined, undefined, minter)).revertedWith(
-      'SafeERC20: TRANSFER_FROM_FAILED',
-    );
+    await expect(
+      arc.deposit(preMinterBalance.add(1), undefined, undefined, minter),
+    ).revertedWith('SafeERC20: TRANSFER_FROM_FAILED');
   });
 
   it('deposit without credit score', async () => {
@@ -82,8 +93,12 @@ describe('SapphireCore.deposit()', () => {
 
     await arc.deposit(COLLATERAL_AMOUNT, undefined, undefined, minter);
 
-    expect(await collateral.balanceOf(minter.address)).eq(preMinterBalance.sub(COLLATERAL_AMOUNT));
-    expect(await collateral.balanceOf(arc.coreAddress())).eq(preCoreBalance.add(COLLATERAL_AMOUNT));
+    expect(await collateral.balanceOf(minter.address)).eq(
+      preMinterBalance.sub(COLLATERAL_AMOUNT),
+    );
+    expect(await collateral.balanceOf(arc.coreAddress())).eq(
+      preCoreBalance.add(COLLATERAL_AMOUNT),
+    );
   });
 
   it('deposit with credit score', async () => {
@@ -97,9 +112,10 @@ describe('SapphireCore.deposit()', () => {
       scoredMinter,
     );
 
-    expect(await collateral.balanceOf(scoredMinter.address), 'scored minter balance').eq(
-      preMinterBalance.sub(COLLATERAL_AMOUNT),
-    );
+    expect(
+      await collateral.balanceOf(scoredMinter.address),
+      'scored minter balance',
+    ).eq(preMinterBalance.sub(COLLATERAL_AMOUNT));
     expect(await collateral.balanceOf(arc.coreAddress()), 'core balance').eq(
       preCoreBalance.add(COLLATERAL_AMOUNT),
     );
@@ -136,10 +152,15 @@ describe('SapphireCore.deposit()', () => {
       account: ctx.signers.scoredMinter.address,
       amount: creditScore1.amount.sub(100),
     };
-    const newCreditScoreTree = new CreditScoreTree([newCreditScore1, creditScore2]);
+    const newCreditScoreTree = new CreditScoreTree([
+      newCreditScore1,
+      creditScore2,
+    ]);
     const creditScoreContract = ctx.contracts.sapphire.creditScore;
 
-    let lastCreditScore = await creditScoreContract.getLastScore(scoredMinter.address);
+    let lastCreditScore = await creditScoreContract.getLastScore(
+      scoredMinter.address,
+    );
     expect(lastCreditScore[0], 'original credit score - not set yet').to.eq(0);
 
     // Deposit while passing credit score
@@ -150,8 +171,12 @@ describe('SapphireCore.deposit()', () => {
       scoredMinter,
     );
 
-    lastCreditScore = await creditScoreContract.getLastScore(scoredMinter.address);
-    expect(lastCreditScore[0], 'updated credit score - original score').to.eq(creditScore1.amount);
+    lastCreditScore = await creditScoreContract.getLastScore(
+      scoredMinter.address,
+    );
+    expect(lastCreditScore[0], 'updated credit score - original score').to.eq(
+      creditScore1.amount,
+    );
 
     // Update the merkle root containing the user's new credit score
     await immediatelyUpdateMerkleRoot(
@@ -168,7 +193,11 @@ describe('SapphireCore.deposit()', () => {
     );
 
     // Check the user's last credit score and ensure it's updated
-    lastCreditScore = await creditScoreContract.getLastScore(scoredMinter.address);
-    expect(lastCreditScore[0], 'updated credit score - new score').to.eq(newCreditScore1.amount);
+    lastCreditScore = await creditScoreContract.getLastScore(
+      scoredMinter.address,
+    );
+    expect(lastCreditScore[0], 'updated credit score - new score').to.eq(
+      newCreditScore1.amount,
+    );
   });
 });

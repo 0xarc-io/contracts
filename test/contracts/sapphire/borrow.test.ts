@@ -1,6 +1,6 @@
 import { BigNumber, constants, utils } from 'ethers';
 import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
-import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
+import CreditScoreTree from '@src/MerkleTree/PassportScoreTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import {
   addSnapshotBeforeRestoreAfterEach,
