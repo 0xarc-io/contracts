@@ -91,7 +91,7 @@ describe('SapphireCore.setters', () => {
         ctx.signers.admin,
       ).deploy(
         ctx.contracts.sapphire.linearMapper.address,
-        ctx.contracts.sapphire.creditScore.address,
+        ctx.contracts.sapphire.passportScores.address,
       );
 
       newAssessorAddress = newAssessor.address;

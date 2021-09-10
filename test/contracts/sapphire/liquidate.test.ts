@@ -4,7 +4,6 @@ import 'module-alias/register';
 import { generateContext, ITestContext } from '../context';
 import { setupSapphire } from '../setup';
 import { sapphireFixture } from '../fixtures';
-import CreditScoreTree from '@src/MerkleTree/PassportScoreTree';
 import {
   addSnapshotBeforeRestoreAfterEach,
   immediatelyUpdateMerkleRoot,
@@ -26,6 +25,7 @@ import {
   DEFAULT_PROOF_PROTOCOL,
 } from '@test/helpers/sapphireDefaults';
 import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
+import { PassportScoreTree } from '@src/MerkleTree';
 
 chai.use(solidity);
 
@@ -52,7 +52,7 @@ describe('SapphireCore.liquidate()', () => {
   let arc: SapphireTestArc;
   let creditScoreContract: MockSapphirePassportScores;
   let signers: TestingSigners;
-  let creditScoreTree: CreditScoreTree;
+  let creditScoreTree: PassportScoreTree;
   let mapper: SapphireMapperLinear;
   let minterCreditScore: PassportScore;
   let liquidatorCreditScore: PassportScore;
@@ -115,7 +115,7 @@ describe('SapphireCore.liquidate()', () => {
       score: BigNumber.from(500),
     };
 
-    creditScoreTree = new CreditScoreTree([
+    creditScoreTree = new PassportScoreTree([
       minterCreditScore,
       liquidatorCreditScore,
     ]);
@@ -295,7 +295,7 @@ describe('SapphireCore.liquidate()', () => {
         protocol: DEFAULT_PROOF_PROTOCOL,
         score: BigNumber.from(50),
       };
-      const newCreditTree = new CreditScoreTree([
+      const newCreditTree = new PassportScoreTree([
         newMinterCreditScore,
         liquidatorCreditScore,
       ]);
@@ -557,7 +557,7 @@ describe('SapphireCore.liquidate()', () => {
         protocol: 'other.protocol',
         score: BigNumber.from(0),
       };
-      const newCreditTree = new CreditScoreTree([
+      const newCreditTree = new PassportScoreTree([
         newMinterCreditScore,
         minterCreditScore,
         liquidatorCreditScore,
@@ -615,7 +615,7 @@ describe('SapphireCore.liquidate()', () => {
         protocol: DEFAULT_PROOF_PROTOCOL,
         score: BigNumber.from(0),
       };
-      const newCreditTree = new CreditScoreTree([
+      const newCreditTree = new PassportScoreTree([
         zeroCreditScore,
         liquidatorCreditScore,
         minterCreditScore,
@@ -659,7 +659,7 @@ describe('SapphireCore.liquidate()', () => {
         protocol: DEFAULT_PROOF_PROTOCOL,
         score: BigNumber.from(0),
       };
-      let newCreditTree = new CreditScoreTree([
+      let newCreditTree = new PassportScoreTree([
         newMinterCreditScore,
         liquidatorCreditScore,
       ]);
@@ -689,7 +689,7 @@ describe('SapphireCore.liquidate()', () => {
         protocol: DEFAULT_PROOF_PROTOCOL,
         score: BigNumber.from(500),
       };
-      newCreditTree = new CreditScoreTree([
+      newCreditTree = new PassportScoreTree([
         newMinterCreditScore,
         liquidatorCreditScore,
       ]);
@@ -1060,7 +1060,7 @@ describe('SapphireCore.liquidate()', () => {
         protocol: DEFAULT_PROOF_PROTOCOL,
         score: BigNumber.from(50),
       };
-      const newCreditTree = new CreditScoreTree([
+      const newCreditTree = new PassportScoreTree([
         newMinterCreditScore,
         liquidatorCreditScore,
       ]);
@@ -1150,7 +1150,7 @@ describe('SapphireCore.liquidate()', () => {
         protocol: DEFAULT_PROOF_PROTOCOL,
         score: BigNumber.from(950),
       };
-      const newCreditTree = new CreditScoreTree([
+      const newCreditTree = new PassportScoreTree([
         newMinterCreditScore,
         liquidatorCreditScore,
       ]);

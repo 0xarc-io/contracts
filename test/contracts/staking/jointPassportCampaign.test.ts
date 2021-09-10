@@ -1,11 +1,11 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import {
   JointPassportCampaignFactory,
-  MockSapphireCreditScore,
   TestToken,
   TestTokenFactory,
   MockJointPassportCampaign,
   MockJointPassportCampaignFactory,
+  MockSapphirePassportScores,
 } from '@src/typings';
 import { deployTestToken } from '../deployers';
 import { BigNumber, utils } from 'ethers';
@@ -16,14 +16,15 @@ import {
   immediatelyUpdateMerkleRoot,
 } from '@test/helpers/testingUtils';
 import { getEmptyScoreProof, getScoreProof } from '@src/utils/getScoreProof';
-import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
-import CreditScoreTree from '@src/MerkleTree/PassportScoreTree';
 import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 import _ from 'lodash';
 import { BASE } from '@src/constants';
 import { ethers } from 'hardhat';
+import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
+import { PassportScoreTree } from '@src/MerkleTree';
+import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
 
 chai.use(solidity);
 const expect = chai.expect;
@@ -49,17 +50,17 @@ describe('JointPassportCampaign', () => {
   let user1PassportCampaign: MockJointPassportCampaign;
   let user2PassportCampaign: MockJointPassportCampaign;
 
-  let creditScoreContract: MockSapphireCreditScore;
+  let creditScoreContract: MockSapphirePassportScores;
 
-  let user1CreditScore: CreditScore;
-  let user2CreditScore: CreditScore;
-  let unauthorizedCreditScore: CreditScore;
+  let user1CreditScore: PassportScore;
+  let user2CreditScore: PassportScore;
+  let unauthorizedCreditScore: PassportScore;
 
-  let user1ScoreProof: CreditScoreProof;
-  let user2ScoreProof: CreditScoreProof;
-  let unauthorizedScoreProof: CreditScoreProof;
+  let user1ScoreProof: PassportScoreProof;
+  let user2ScoreProof: PassportScoreProof;
+  let unauthorizedScoreProof: PassportScoreProof;
 
-  let creditScoreTree: CreditScoreTree;
+  let creditScoreTree: PassportScoreTree;
 
   let stakingToken: TestToken;
   let arcToken: TestToken;
@@ -78,7 +79,7 @@ describe('JointPassportCampaign', () => {
   async function stake(
     user: SignerWithAddress,
     amount: BigNumber,
-    scoreProof?: CreditScoreProof,
+    scoreProof?: PassportScoreProof,
   ) {
     await mintAndApprove(stakingToken, user, amount);
     // await arcPassportCampaign.connect(user).stake(amount, scoreProof);
@@ -189,20 +190,23 @@ describe('JointPassportCampaign', () => {
 
     user1CreditScore = {
       account: user1.address,
-      amount: CREDIT_SCORE_THRESHOLD,
+      protocol: DEFAULT_PROOF_PROTOCOL,
+      score: CREDIT_SCORE_THRESHOLD,
     };
 
     user2CreditScore = {
       account: user2.address,
-      amount: CREDIT_SCORE_THRESHOLD,
+      protocol: DEFAULT_PROOF_PROTOCOL,
+      score: CREDIT_SCORE_THRESHOLD,
     };
 
     unauthorizedCreditScore = {
       account: unauthorized.address,
-      amount: CREDIT_SCORE_THRESHOLD.sub(10),
+      protocol: DEFAULT_PROOF_PROTOCOL,
+      score: CREDIT_SCORE_THRESHOLD.sub(10),
     };
 
-    creditScoreTree = new CreditScoreTree([
+    creditScoreTree = new PassportScoreTree([
       user1CreditScore,
       user2CreditScore,
       unauthorizedCreditScore,
@@ -222,7 +226,7 @@ describe('JointPassportCampaign', () => {
       merkleRoot: creditScoreTree.getHexRoot(),
     });
 
-    creditScoreContract = ctx.contracts.sapphire.creditScore;
+    creditScoreContract = ctx.contracts.sapphire.passportScores;
 
     stakingToken = await deployTestToken(admin, 'Staking Token', 'STK');
     arcToken = await deployTestToken(admin, 'Arc Token', 'ARC');
@@ -1415,7 +1419,7 @@ describe('JointPassportCampaign', () => {
 
   describe('Scenarios', () => {
     let users: Record<string, SignerWithAddress>;
-    let creditScoreProofs: Record<string, CreditScoreProof>;
+    let creditScoreProofs: Record<string, PassportScoreProof>;
 
     beforeEach(async () => {
       const signers = await ethers.getSigners();
@@ -1429,15 +1433,16 @@ describe('JointPassportCampaign', () => {
       };
 
       // Set up credit scores for the users of this scenario
-      const creditScores: Record<string, CreditScore> = {};
+      const creditScores: Record<string, PassportScore> = {};
       Object.keys(users).forEach((userKey) => {
         creditScores[userKey] = {
           account: users[userKey].address,
-          amount: CREDIT_SCORE_THRESHOLD,
+          protocol: DEFAULT_PROOF_PROTOCOL,
+          score: CREDIT_SCORE_THRESHOLD,
         };
       });
 
-      const newCreditScoreTree = new CreditScoreTree(
+      const newCreditScoreTree = new PassportScoreTree(
         Object.values(creditScores),
       );
 

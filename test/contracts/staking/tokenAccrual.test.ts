@@ -2,9 +2,7 @@ import 'module-alias/register';
 import { expect } from 'chai';
 
 import { TestToken } from '@src/typings/TestToken';
-import Token from '@src/utils/Token';
 import { BigNumber, BigNumberish } from 'ethers';
-import ArcNumber from '@src/utils/ArcNumber';
 import { TokenStakingAccrual } from '@src/typings/TokenStakingAccrual';
 import { expectRevert } from '@test/helpers/expectRevert';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
@@ -12,6 +10,7 @@ import { ethers } from 'hardhat';
 import { TestTokenFactory } from '@src/typings/TestTokenFactory';
 import { TokenStakingAccrualFactory } from '@src/typings/TokenStakingAccrualFactory';
 import { deployTokenStakingAccrual } from '../deployers';
+import { ArcNumber, Token } from '@src/utils';
 
 let ownerAccount: SignerWithAddress;
 let userAccount: SignerWithAddress;

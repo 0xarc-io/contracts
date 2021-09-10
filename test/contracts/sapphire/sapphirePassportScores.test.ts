@@ -1,6 +1,6 @@
 import { PassportScore } from '@arc-types/sapphireCore';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import CreditScoreTree from '@src/MerkleTree/PassportScoreTree';
+import { PassportScoreTree } from '@src/MerkleTree';
 import {
   ArcProxyFactory,
   MockSapphirePassportScores,
@@ -43,7 +43,7 @@ describe('SapphireCreditScore', () => {
   let unauthorized: SignerWithAddress;
   let admin: SignerWithAddress;
   let pauseOperator: SignerWithAddress;
-  let tree: CreditScoreTree;
+  let tree: PassportScoreTree;
   let passportScore1: PassportScore;
   let passportScore2: PassportScore;
   let ctx: ITestContext;
@@ -78,7 +78,7 @@ describe('SapphireCreditScore', () => {
         protocol: 'compound.borrower',
         score: BigNumber.from(20),
       };
-      tree = new CreditScoreTree([passportScore1, passportScore2]);
+      tree = new PassportScoreTree([passportScore1, passportScore2]);
       return setupSapphire(ctx, {
         merkleRoot: tree.getHexRoot(),
       });

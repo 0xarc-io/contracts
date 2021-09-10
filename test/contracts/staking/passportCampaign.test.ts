@@ -1,8 +1,8 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import {
   ArcProxyFactory,
-  MockSapphireCreditScore,
-  SapphireCreditScoreFactory,
+  MockSapphirePassportScores,
+  SapphirePassportScoresFactory,
   TestToken,
   TestTokenFactory,
 } from '@src/typings';
@@ -21,12 +21,13 @@ import {
   immediatelyUpdateMerkleRoot,
 } from '@test/helpers/testingUtils';
 import { getEmptyScoreProof, getScoreProof } from '@src/utils/getScoreProof';
-import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
-import CreditScoreTree from '@src/MerkleTree/PassportScoreTree';
 import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 import _ from 'lodash';
+import { PassportScoreTree } from '@src/MerkleTree';
+import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
+import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
 
 chai.use(solidity);
 const expect = chai.expect;
@@ -48,17 +49,17 @@ describe('PassportCampaign', () => {
   let user1PassportCampaign: MockPassportCampaign;
   let unauthorizedPassportCampaign: MockPassportCampaign;
 
-  let creditScoreContract: MockSapphireCreditScore;
+  let creditScoreContract: MockSapphirePassportScores;
 
-  let stakerCreditScore: CreditScore;
-  let user1CreditScore: CreditScore;
-  let unauthorizedCreditScore: CreditScore;
+  let stakerPassportScore: PassportScore;
+  let user1PassportScore: PassportScore;
+  let unauthorizedPassportScore: PassportScore;
 
-  let stakerScoreProof: CreditScoreProof;
-  let user1ScoreProof: CreditScoreProof;
-  let unauthorizedScoreProof: CreditScoreProof;
+  let stakerScoreProof: PassportScoreProof;
+  let user1ScoreProof: PassportScoreProof;
+  let unauthorizedScoreProof: PassportScoreProof;
 
-  let creditScoreTree: CreditScoreTree;
+  let creditScoreTree: PassportScoreTree;
 
   let stakingToken: TestToken;
   let rewardToken: TestToken;
@@ -83,7 +84,7 @@ describe('PassportCampaign', () => {
   async function stake(
     user: SignerWithAddress,
     amount: BigNumber,
-    scoreProof: CreditScoreProof,
+    scoreProof: PassportScoreProof,
   ) {
     await mintAndApprove(stakingToken, user, amount);
 
@@ -109,7 +110,7 @@ describe('PassportCampaign', () => {
   async function withdraw(
     user: SignerWithAddress,
     amount: BigNumber = STAKE_AMOUNT,
-    scoreProof?: CreditScoreProof,
+    scoreProof?: PassportScoreProof,
   ) {
     const contract = MockPassportCampaignFactory.connect(
       adminPassportCampaign.address,
@@ -121,7 +122,7 @@ describe('PassportCampaign', () => {
 
   async function exitCampaign(
     user: SignerWithAddress,
-    scoreProof?: CreditScoreProof,
+    scoreProof?: PassportScoreProof,
   ) {
     const contract = MockPassportCampaignFactory.connect(
       adminPassportCampaign.address,
@@ -133,7 +134,7 @@ describe('PassportCampaign', () => {
 
   async function claimReward(
     user: SignerWithAddress,
-    scoreProof?: CreditScoreProof,
+    scoreProof?: PassportScoreProof,
   ) {
     const contract = MockPassportCampaignFactory.connect(
       adminPassportCampaign.address,
@@ -187,31 +188,34 @@ describe('PassportCampaign', () => {
     user1 = signers.scoredMinter;
     unauthorized = signers.unauthorized;
 
-    stakerCreditScore = {
+    stakerPassportScore = {
       account: staker.address,
-      amount: CREDIT_SCORE_THRESHOLD,
+      protocol: DEFAULT_PROOF_PROTOCOL,
+      score: CREDIT_SCORE_THRESHOLD,
     };
 
-    user1CreditScore = {
+    user1PassportScore = {
       account: signers.scoredMinter.address,
-      amount: CREDIT_SCORE_THRESHOLD.add(100),
+      protocol: DEFAULT_PROOF_PROTOCOL,
+      score: CREDIT_SCORE_THRESHOLD.add(100),
     };
 
-    unauthorizedCreditScore = {
+    unauthorizedPassportScore = {
       account: unauthorized.address,
-      amount: CREDIT_SCORE_THRESHOLD.sub(10),
+      protocol: DEFAULT_PROOF_PROTOCOL,
+      score: CREDIT_SCORE_THRESHOLD.sub(10),
     };
 
-    creditScoreTree = new CreditScoreTree([
-      stakerCreditScore,
-      unauthorizedCreditScore,
-      user1CreditScore,
+    creditScoreTree = new PassportScoreTree([
+      stakerPassportScore,
+      unauthorizedPassportScore,
+      user1PassportScore,
     ]);
 
-    stakerScoreProof = getScoreProof(stakerCreditScore, creditScoreTree);
-    user1ScoreProof = getScoreProof(user1CreditScore, creditScoreTree);
+    stakerScoreProof = getScoreProof(stakerPassportScore, creditScoreTree);
+    user1ScoreProof = getScoreProof(user1PassportScore, creditScoreTree);
     unauthorizedScoreProof = getScoreProof(
-      unauthorizedCreditScore,
+      unauthorizedPassportScore,
       creditScoreTree,
     );
   }
@@ -224,7 +228,7 @@ describe('PassportCampaign', () => {
       merkleRoot: creditScoreTree.getHexRoot(),
     });
 
-    creditScoreContract = ctx.contracts.sapphire.creditScore;
+    creditScoreContract = ctx.contracts.sapphire.passportScores;
 
     stakingToken = await deployTestToken(admin, '3Pool', 'CRV');
     rewardToken = await deployTestToken(admin, 'Arc Token', 'ARC');
@@ -902,10 +906,10 @@ describe('PassportCampaign', () => {
       });
     });
 
-    describe('#setCreditScoreThreshold', () => {
+    describe('#setPassportScoreThreshold', () => {
       it('reverts if called by non-owner', async () => {
         await expect(
-          unauthorizedPassportCampaign.setCreditScoreThreshold(
+          unauthorizedPassportCampaign.setPassportScoreThreshold(
             BigNumber.from(10),
           ),
         ).to.be.revertedWith('Adminable: caller is not admin');
@@ -920,7 +924,7 @@ describe('PassportCampaign', () => {
           CREDIT_SCORE_THRESHOLD,
         );
 
-        await adminPassportCampaign.setCreditScoreThreshold(newThreshold);
+        await adminPassportCampaign.setPassportScoreThreshold(newThreshold);
 
         expect(await adminPassportCampaign.creditScoreThreshold()).to.eq(
           newThreshold,
@@ -928,22 +932,22 @@ describe('PassportCampaign', () => {
       });
     });
 
-    describe('#setCreditScoreContract', () => {
+    describe('#setPassportScoreContract', () => {
       beforeEach(async () => {
         await setup();
       });
 
       it('reverts if called by non-admin', async () => {
-        const newCs = await new SapphireCreditScoreFactory(admin).deploy();
+        const newCs = await new SapphirePassportScoresFactory(admin).deploy();
 
         await expect(
-          user1PassportCampaign.setCreditScoreContract(newCs.address),
+          user1PassportCampaign.setPassportScoreContract(newCs.address),
         ).to.be.revertedWith('Adminable: caller is not admin');
       });
 
       it('reverts if setting the same contract', async () => {
         await expect(
-          adminPassportCampaign.setCreditScoreContract(
+          adminPassportCampaign.setPassportScoreContract(
             creditScoreContract.address,
           ),
         ).to.be.revertedWith(
@@ -953,20 +957,20 @@ describe('PassportCampaign', () => {
 
       it('reverts if the contract is not an address', async () => {
         await expect(
-          adminPassportCampaign.setCreditScoreContract(user1.address),
+          adminPassportCampaign.setPassportScoreContract(user1.address),
         ).to.be.revertedWith(
           'PassportCampaign: the given address is not a contract',
         );
       });
 
       it('sets a new credit score contract', async () => {
-        const newCs = await new SapphireCreditScoreFactory(admin).deploy();
+        const newCs = await new SapphirePassportScoresFactory(admin).deploy();
 
         expect(await adminPassportCampaign.creditScoreContract()).to.eq(
           creditScoreContract.address,
         );
 
-        await adminPassportCampaign.setCreditScoreContract(newCs.address);
+        await adminPassportCampaign.setPassportScoreContract(newCs.address);
 
         expect(await adminPassportCampaign.creditScoreContract()).to.eq(
           newCs.address,
@@ -1001,7 +1005,7 @@ describe('PassportCampaign', () => {
 
   describe('Scenarios', () => {
     let users: Record<string, SignerWithAddress>;
-    let creditScoreProofs: Record<string, CreditScoreProof>;
+    let creditScoreProofs: Record<string, PassportScoreProof>;
 
     before(async () => {
       await adminPassportCampaign.setRewardsDistributor(admin.address);
@@ -1028,15 +1032,16 @@ describe('PassportCampaign', () => {
       };
 
       // Set up credit scores for the users of this scenario
-      const creditScores: Record<string, CreditScore> = {};
+      const creditScores: Record<string, PassportScore> = {};
       Object.keys(users).forEach((userKey) => {
         creditScores[userKey] = {
           account: users[userKey].address,
-          amount: CREDIT_SCORE_THRESHOLD,
+          protocol: DEFAULT_PROOF_PROTOCOL,
+          score: CREDIT_SCORE_THRESHOLD,
         };
       });
 
-      const newCreditScoreTree = new CreditScoreTree(
+      const newPassportScoreTree = new PassportScoreTree(
         Object.values(creditScores),
       );
 
@@ -1044,13 +1049,13 @@ describe('PassportCampaign', () => {
       Object.keys(users).forEach((userKey) => {
         creditScoreProofs[userKey] = getScoreProof(
           creditScores[userKey],
-          newCreditScoreTree,
+          newPassportScoreTree,
         );
       });
 
       await immediatelyUpdateMerkleRoot(
         creditScoreContract.connect(ctx.signers.interestSetter),
-        newCreditScoreTree.getHexRoot(),
+        newPassportScoreTree.getHexRoot(),
       );
     });
 
@@ -1383,7 +1388,7 @@ describe('PassportCampaign', () => {
       expect(userBalance).to.eq(STAKE_AMOUNT);
 
       // Credit score threshold is raised
-      await adminPassportCampaign.setCreditScoreThreshold(
+      await adminPassportCampaign.setPassportScoreThreshold(
         CREDIT_SCORE_THRESHOLD.add(CREDIT_SCORE_THRESHOLD.div(2)),
       );
 
@@ -1393,7 +1398,7 @@ describe('PassportCampaign', () => {
       );
 
       // Credit score threshold is lowerd back
-      await adminPassportCampaign.setCreditScoreThreshold(
+      await adminPassportCampaign.setPassportScoreThreshold(
         CREDIT_SCORE_THRESHOLD,
       );
 

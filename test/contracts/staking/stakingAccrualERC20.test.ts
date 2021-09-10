@@ -1,19 +1,20 @@
-import { CreditScoreProof } from '@arc-types/sapphireCore';
+import { PassportScoreProof } from '@arc-types/sapphireCore';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { BASE } from '@src/constants';
-import { CreditScoreTree } from '@src/MerkleTree';
+import { PassportScoreTree } from '@src/MerkleTree';
 import {
   ArcProxyFactory,
   MockSablier,
   MockSablierFactory,
-  MockSapphireCreditScore,
-  SapphireCreditScoreFactory,
+  MockSapphirePassportScores,
+  SapphirePassportScoresFactory,
   TestToken,
   TestTokenFactory,
 } from '@src/typings';
 import { MockStakingAccrualERC20 } from '@src/typings/MockStakingAccrualERC20';
 import { MockStakingAccrualERC20Factory } from '@src/typings/MockStakingAccrualERC20Factory';
 import { getEmptyScoreProof, getScoreProof } from '@src/utils';
+import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
 import {
   addSnapshotBeforeRestoreAfterEach,
   immediatelyUpdateMerkleRoot,
@@ -41,11 +42,11 @@ describe('StakingAccrualERC20', () => {
 
   let sablierContract: MockSablier;
 
-  let creditScoreTree: CreditScoreTree;
-  let user1ScoreProof: CreditScoreProof;
-  let user2ScoreProof: CreditScoreProof;
+  let creditScoreTree: PassportScoreTree;
+  let user1ScoreProof: PassportScoreProof;
+  let user2ScoreProof: PassportScoreProof;
 
-  let creditScoreContract: MockSapphireCreditScore;
+  let creditScoreContract: MockSapphirePassportScores;
 
   async function createStream(setStreamId = false) {
     const sablierId = await sablierContract.nextStreamId();
@@ -103,21 +104,26 @@ describe('StakingAccrualERC20', () => {
     user1 = signers[1];
     user2 = signers[2];
 
-    const user1CreditScore = {
+    const user1PassportScore = {
       account: user1.address,
-      amount: BigNumber.from(1),
+      protocol: DEFAULT_PROOF_PROTOCOL,
+      score: BigNumber.from(1),
     };
-    const user2CreditScore = {
+    const user2PassportScore = {
       account: user2.address,
-      amount: BigNumber.from(1),
+      protocol: DEFAULT_PROOF_PROTOCOL,
+      score: BigNumber.from(1),
     };
 
-    creditScoreTree = new CreditScoreTree([user1CreditScore, user2CreditScore]);
+    creditScoreTree = new PassportScoreTree([
+      user1PassportScore,
+      user2PassportScore,
+    ]);
 
-    user1ScoreProof = getScoreProof(user1CreditScore, creditScoreTree);
-    user2ScoreProof = getScoreProof(user2CreditScore, creditScoreTree);
+    user1ScoreProof = getScoreProof(user1PassportScore, creditScoreTree);
+    user2ScoreProof = getScoreProof(user2PassportScore, creditScoreTree);
 
-    creditScoreContract = ctx.contracts.sapphire.creditScore;
+    creditScoreContract = ctx.contracts.sapphire.passportScores;
 
     await immediatelyUpdateMerkleRoot(
       creditScoreContract.connect(ctx.signers.interestSetter),
@@ -222,8 +228,10 @@ describe('StakingAccrualERC20', () => {
         expect(await starcx.exitCooldownDuration()).to.eq(COOLDOWN_DURATION);
         expect(await starcx.sablierContract()).to.eq(sablierContract.address);
 
-        expect(await starcx.decimals()).to.eq(18)
-        expect(await starcx.DOMAIN_SEPARATOR()).to.not.eq('0x0000000000000000000000000000000000000000000000000000000000000000')
+        expect(await starcx.decimals()).to.eq(18);
+        expect(await starcx.DOMAIN_SEPARATOR()).to.not.eq(
+          '0x0000000000000000000000000000000000000000000000000000000000000000',
+        );
       });
     });
 
@@ -344,26 +352,27 @@ describe('StakingAccrualERC20', () => {
       });
     });
 
-    describe('#setCreditScoreContract', () => {
+    describe('#setPassportScoreContract', () => {
       it('reverts if called by non-admin', async () => {
-        const newCs = await new SapphireCreditScoreFactory(admin).deploy()
-        
-        await expect(user1starcx.setCreditScoreContract(newCs.address)).to.be.revertedWith(
-          'Adminable: caller is not admin',
-        );
-      })
+        const newCs = await new SapphirePassportScoresFactory(admin).deploy();
+
+        await expect(
+          user1starcx.setPassportScoreContract(newCs.address),
+        ).to.be.revertedWith('Adminable: caller is not admin');
+      });
 
       it('sets a new credit score contract', async () => {
-        const newCs = await new SapphireCreditScoreFactory(admin).deploy()
+        const newCs = await new SapphirePassportScoresFactory(admin).deploy();
 
-        expect(await starcx.creditScoreContract()).to.eq(creditScoreContract.address)
+        expect(await starcx.creditScoreContract()).to.eq(
+          creditScoreContract.address,
+        );
 
-        await starcx.setCreditScoreContract(newCs.address)
+        await starcx.setPassportScoreContract(newCs.address);
 
-        expect(await starcx.creditScoreContract()).to.eq(newCs.address)
-      })
-    })
-    
+        expect(await starcx.creditScoreContract()).to.eq(newCs.address);
+      });
+    });
   });
 
   describe('Mutating functions', () => {
@@ -373,7 +382,7 @@ describe('StakingAccrualERC20', () => {
         await expect(
           user1starcx.stake(STAKE_AMOUNT, user2ScoreProof),
         ).to.be.revertedWith(
-          'CreditScoreVerifiable: proof does not belong to the caller',
+          'PassportScoreVerifiable: proof does not belong to the caller',
         );
       });
 
@@ -381,7 +390,7 @@ describe('StakingAccrualERC20', () => {
         await expect(
           user1starcx.stake(STAKE_AMOUNT, getEmptyScoreProof()),
         ).to.be.revertedWith(
-          'CreditScoreVerifiable: proof is required but it is not passed',
+          'PassportScoreVerifiable: proof is required but it is not passed',
         );
       });
 
