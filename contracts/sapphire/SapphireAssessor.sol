@@ -85,9 +85,12 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
         );
 
         uint16 maxScore = passportScoresContract.maxScore();
+        bool isProofPassed = _scoreProof.merkleProof.length > 0;
 
+        // If the proof is passed, use the score from the score proof since at this point
+        // the proof should be verified if the score is > 0
         uint256 result = mapper.map(
-            _scoreProof.score,
+            isProofPassed ? _scoreProof.score : 0,
             maxScore,
             _lowerBound,
             _upperBound
