@@ -1,9 +1,7 @@
 import { CreditScore } from '@arc-types/sapphireCore';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
-import {
-  MockSapphireCreditScore,
-} from '@src/typings';
+import { MockSapphireCreditScore } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import {
   addSnapshotBeforeRestoreAfterEach,
@@ -80,7 +78,7 @@ describe('SapphireCreditScore', () => {
     });
     unauthorized = ctx.signers.unauthorized;
     admin = ctx.signers.admin;
-    merkleRootUpdater = ctx.signers.interestSetter;
+    merkleRootUpdater = ctx.signers.merkleRootUpdater;
     creditScoreContract = ctx.contracts.sapphire.creditScore;
     pauseOperator = ctx.signers.pauseOperator;
   });

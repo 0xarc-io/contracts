@@ -9,6 +9,7 @@ import { MockOracle } from '@src/typings/MockOracle';
 import {
   MockSapphireCoreV1Factory,
   MockSapphireCreditScoreFactory,
+  MockSapphirePassportScoresFactory,
   SapphireCreditScoreFactory,
 } from '@src/typings';
 import { MerkleDistributor } from '@src/typings/MerkleDistributor';
@@ -133,6 +134,20 @@ export async function deployMockSapphireCreditScore(deployer: Signer) {
     [],
   );
   return MockSapphireCreditScoreFactory.connect(proxy.address, deployer);
+}
+
+export async function deployMockSapphirePassportScores(deployer: Signer) {
+  const creditScoreImp = await new MockSapphirePassportScoresFactory(
+    deployer,
+  ).deploy();
+
+  const proxy = await deployArcProxy(
+    deployer,
+    creditScoreImp.address,
+    await deployer.getAddress(),
+    [],
+  );
+  return MockSapphirePassportScoresFactory.connect(proxy.address, deployer);
 }
 
 export function deployMockSapphireCoreV1(deployer: Signer) {
