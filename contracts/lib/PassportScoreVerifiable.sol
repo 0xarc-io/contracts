@@ -36,14 +36,7 @@ contract PassportScoreVerifiable {
 
         bool isProofPassed = _scoreProof.merkleProof.length > 0;
 
-        if (_isScoreRequired || _scoreProof.score > 0) {
-            require(
-                isProofPassed,
-                "PassportScoreVerifiable: proof is required but it is not passed"
-            );
-        }
-
-        if (isProofPassed) {
+        if (_isScoreRequired || isProofPassed || _scoreProof.score > 0) {
             passportScoresContract.verify(_scoreProof);
         }
         _;
