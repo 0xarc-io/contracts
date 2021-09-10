@@ -5,12 +5,12 @@
  * at the "Borrow index" tab
  */
 
-import { CreditScore } from '@arc-types/sapphireCore';
+import { PassportScore } from '@arc-types/sapphireCore';
 import { TestingSigners } from '@arc-types/testing';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { approve } from '@src/utils/approve';
 import { BASE, ONE_YEAR_IN_SECONDS } from '@src/constants';
-import CreditScoreTree from '@src/MerkleTree/PassportScoreTree';
+import { PassportScoreTree } from '@src/MerkleTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import { DEFAULT_COLLATERAL_DECIMALS } from '@test/helpers/sapphireDefaults';
@@ -35,21 +35,23 @@ const INTEREST_RATE = BigNumber.from(1547125957);
 describe('borrow index (integration)', () => {
   let arc: SapphireTestArc;
   let signers: TestingSigners;
-  let minterCreditScore: CreditScore;
-  let creditScoreTree: CreditScoreTree;
+  let minterCreditScore: PassportScore;
+  let creditScoreTree: PassportScoreTree;
   let minter1: SignerWithAddress;
   let minter2: SignerWithAddress;
 
   async function init(ctx: ITestContext): Promise<void> {
     minterCreditScore = {
       account: ctx.signers.scoredMinter.address,
-      amount: BigNumber.from(500),
+      protocol: 'arcx.creditscore',
+      score: BigNumber.from(500),
     };
     const creditScore2 = {
       account: ctx.signers.interestSetter.address,
-      amount: BigNumber.from(20),
+      protocol: 'arcx.creditscore',
+      score: BigNumber.from(20),
     };
-    creditScoreTree = new CreditScoreTree([minterCreditScore, creditScore2]);
+    creditScoreTree = new PassportScoreTree([minterCreditScore, creditScore2]);
     await setupSapphire(ctx, {
       interestRate: INTEREST_RATE,
       merkleRoot: creditScoreTree.getHexRoot(),
