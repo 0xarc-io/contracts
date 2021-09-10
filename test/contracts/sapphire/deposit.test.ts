@@ -1,14 +1,11 @@
-import { CreditScore } from '@arc-types/sapphireCore';
+import { PassportScore } from '@arc-types/sapphireCore';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import CreditScoreTree from '@src/MerkleTree/PassportScoreTree';
+import { PassportScoreTree } from '@src/MerkleTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { TestToken, TestTokenFactory } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import { DEFAULT_COLLATERAL_DECIMALS } from '@test/helpers/sapphireDefaults';
-import {
-  addSnapshotBeforeRestoreAfterEach,
-  immediatelyUpdateMerkleRoot,
-} from '@test/helpers/testingUtils';
+import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { BigNumber, utils } from 'ethers';
 import { generateContext, ITestContext } from '../context';
@@ -20,9 +17,9 @@ const COLLATERAL_AMOUNT = utils.parseUnits('100', DEFAULT_COLLATERAL_DECIMALS);
 describe('SapphireCore.deposit()', () => {
   let ctx: ITestContext;
   let arc: SapphireTestArc;
-  let creditScoreTree: CreditScoreTree;
-  let creditScore1: CreditScore;
-  let creditScore2: CreditScore;
+  let creditScoreTree: PassportScoreTree;
+  let creditScore1: PassportScore;
+  let creditScore2: PassportScore;
   let scoredMinter: SignerWithAddress;
   let minter: SignerWithAddress;
   let collateral: TestToken;
@@ -30,13 +27,15 @@ describe('SapphireCore.deposit()', () => {
   function init(ctx: ITestContext): Promise<void> {
     creditScore1 = {
       account: ctx.signers.scoredMinter.address,
-      amount: BigNumber.from(500),
+      protocol: 'arcx.creditscore',
+      score: BigNumber.from(500),
     };
     creditScore2 = {
       account: ctx.signers.interestSetter.address,
-      amount: BigNumber.from(20),
+      protocol: 'arcx.creditscore',
+      score: BigNumber.from(20),
     };
-    creditScoreTree = new CreditScoreTree([creditScore1, creditScore2]);
+    creditScoreTree = new PassportScoreTree([creditScore1, creditScore2]);
 
     return setupSapphire(ctx, {
       merkleRoot: creditScoreTree.getHexRoot(),
@@ -145,59 +144,5 @@ describe('SapphireCore.deposit()', () => {
     //   getScoreProof(creditScore1, creditScoreTree),
     //   scoredMinter.address,
     // );
-  });
-
-  it('updates the credit score if a valid proof is provided', async () => {
-    const newCreditScore1 = {
-      account: ctx.signers.scoredMinter.address,
-      amount: creditScore1.amount.sub(100),
-    };
-    const newCreditScoreTree = new CreditScoreTree([
-      newCreditScore1,
-      creditScore2,
-    ]);
-    const creditScoreContract = ctx.contracts.sapphire.creditScore;
-
-    let lastCreditScore = await creditScoreContract.getLastScore(
-      scoredMinter.address,
-    );
-    expect(lastCreditScore[0], 'original credit score - not set yet').to.eq(0);
-
-    // Deposit while passing credit score
-    await arc.deposit(
-      COLLATERAL_AMOUNT.div(2),
-      getScoreProof(creditScore1, creditScoreTree),
-      undefined,
-      scoredMinter,
-    );
-
-    lastCreditScore = await creditScoreContract.getLastScore(
-      scoredMinter.address,
-    );
-    expect(lastCreditScore[0], 'updated credit score - original score').to.eq(
-      creditScore1.amount,
-    );
-
-    // Update the merkle root containing the user's new credit score
-    await immediatelyUpdateMerkleRoot(
-      creditScoreContract.connect(ctx.signers.interestSetter),
-      newCreditScoreTree.getHexRoot(),
-    );
-
-    // Deposit while passing new credit score
-    await arc.deposit(
-      COLLATERAL_AMOUNT.div(2),
-      getScoreProof(newCreditScore1, newCreditScoreTree),
-      undefined,
-      scoredMinter,
-    );
-
-    // Check the user's last credit score and ensure it's updated
-    lastCreditScore = await creditScoreContract.getLastScore(
-      scoredMinter.address,
-    );
-    expect(lastCreditScore[0], 'updated credit score - new score').to.eq(
-      newCreditScore1.amount,
-    );
   });
 });
