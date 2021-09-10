@@ -49,6 +49,7 @@ export async function generateContext(
   signers.unauthorized = retrievedSigners[8];
   signers.scoredMinter = retrievedSigners[9];
   signers.pauseOperator = signers.positionOperator;
+  signers.merkleRootUpdater = signers.interestSetter;
 
   const sdks = {} as SDKs;
   const contracts = {

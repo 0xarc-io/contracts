@@ -13,6 +13,7 @@ import {
   deployMockSapphireCoreV1,
   deploySyntheticTokenV2,
   deployMockSapphireOracle,
+  deployMockSapphirePassportScores,
 } from './deployers';
 
 import { Signer } from 'ethers';
@@ -82,8 +83,19 @@ export async function sapphireFixture(
 
   await ctx.contracts.sapphire.creditScore.init(
     '0x1111111111111111111111111111111111111111111111111111111111111111',
-    ctx.signers.interestSetter.address,
+    ctx.signers.merkleRootUpdater.address,
     ctx.signers.pauseOperator.address,
+    1000,
+  );
+
+  ctx.contracts.sapphire.passportScores = await deployMockSapphirePassportScores(
+    deployer,
+  );
+
+  await ctx.contracts.sapphire.passportScores.init(
+    '0x1111111111111111111111111111111111111111111111111111111111111111',
+    ctx.signers.interestSetter.address,
+    ctx.signers.merkleRootUpdater.address,
     1000,
   );
 
