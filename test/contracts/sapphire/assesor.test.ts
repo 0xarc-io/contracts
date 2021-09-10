@@ -296,9 +296,7 @@ describe('SapphireAssessor', () => {
           },
           true,
         ),
-      ).to.be.revertedWith(
-        'PassportScoreVerifiable: proof is required but it is not passed',
-      );
+      ).to.be.revertedWith('SapphirePassportScores: invalid proof');
     });
 
     it(`reverts if score is required and no proof`, async () => {
@@ -316,9 +314,7 @@ describe('SapphireAssessor', () => {
           },
           true,
         ),
-      ).to.be.revertedWith(
-        'PassportScoreVerifiable: proof is required but it is not passed',
-      );
+      ).to.be.revertedWith('SapphirePassportScores: invalid proof');
     });
 
     it(`emit Assessed if the user has an existing score, score is required and proof is provided`, async () => {
