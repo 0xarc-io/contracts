@@ -352,11 +352,11 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         );
 
         require(
-            keccak256(abi.encodePacked(_scoreProof.protocol)) == 
+            keccak256(abi.encodePacked(_scoreProof.protocol)) ==
                 keccak256(abi.encodePacked(proofProtocol)),
             "DefiPassport: invalid proof protocol"
         );
-        
+
         passportScoresContract.verify(_scoreProof);
 
         require (

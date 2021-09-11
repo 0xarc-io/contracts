@@ -261,7 +261,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
                 keccak256(abi.encodePacked(proofProtocol)),
             "StakingAccrualERC20: wrong protocol in proof"
         );
-        
+
         claimStreamFunds();
 
         uint256 cooldownTimestamp = cooldowns[msg.sender];
