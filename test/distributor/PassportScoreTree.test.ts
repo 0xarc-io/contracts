@@ -4,7 +4,7 @@ import { Wallet } from '@ethersproject/wallet';
 import { PassportScoreTree } from '@src/MerkleTree';
 import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
 
-describe('CreditScoreTree', () => {
+describe('PassportScoreTree', () => {
   const account1 = Wallet.createRandom().address;
   const account2 = Wallet.createRandom().address;
   const creditScore1 = {
@@ -22,7 +22,9 @@ describe('CreditScoreTree', () => {
     it('fails if credit score is duplicated', () => {
       expect(
         () => new PassportScoreTree([creditScore1, creditScore2, creditScore2]),
-      ).throw(`Credit score for ${creditScore2.account} is not unique`);
+      ).throw(
+        `There are more than 1 score for the protocol ${DEFAULT_PROOF_PROTOCOL} for user ${creditScore2.account}`,
+      );
     });
 
     it('fails if there are more than 2 credit scores per address', () => {
@@ -37,7 +39,9 @@ describe('CreditScoreTree', () => {
               score: BigNumber.from(10),
             },
           ]),
-      ).throw(`Credit score for ${creditScore1.account} is not unique`);
+      ).throw(
+        `There are more than 1 score for the protocol ${DEFAULT_PROOF_PROTOCOL} for user ${creditScore1.account}`,
+      );
     });
 
     it('successfully created', () => {
