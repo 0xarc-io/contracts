@@ -36,6 +36,8 @@ type SkinAndTokenIdStatusRecord = {
   skinTokenIdStatuses: TokenIdStatus[];
 };
 
+const OTHER_PROTOCOL = 'defi.other';
+
 describe('DefiPassport', () => {
   let defiPassport: DefiPassport;
 
@@ -62,7 +64,7 @@ describe('DefiPassport', () => {
 
     ownerCreditScore = {
       account: owner.address,
-      protocol: DEFAULT_PROOF_PROTOCOL,
+      protocol: OTHER_PROTOCOL,
       score: BigNumber.from(500),
     };
     userCreditScore = {
@@ -82,10 +84,6 @@ describe('DefiPassport', () => {
       1000,
     );
     await creditScoreContract.setPause(false);
-
-    await creditScoreContract.verifyAndUpdate(
-      getScoreProof(userCreditScore, creditScoreTree),
-    );
   }
 
   async function _setupSkins() {
@@ -174,6 +172,8 @@ describe('DefiPassport', () => {
       creditScoreContract.address,
       skinManager.address,
     );
+
+    await defiPassport.setProofProtocol(DEFAULT_PROOF_PROTOCOL);
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -217,19 +217,51 @@ describe('DefiPassport', () => {
   });
 
   describe('#mint', () => {
-    it('reverts if the receiver has no credit score', async () => {
+    it(`reverts if proof is not the receiver's`, async () => {
       await defiPassport
         .connect(skinManager)
-        .setApprovedSkin(skinAddress, skinTokenId, true);
+        .setDefaultSkin(defaultSkinAddress, true);
 
       await expect(
         defiPassport.mint(
           userNoCreditScore.address,
-          skinAddress,
-          skinTokenId,
+          defaultSkinAddress,
+          defaultSkinTokenId,
+          getScoreProof(userCreditScore, creditScoreTree),
+        ),
+      ).to.be.revertedWith(
+        'DefiPassport: the proof must correspond to the receiver',
+      );
+    });
+
+    it('reverts if the score proof does not correspond to the proof protocol', async () => {
+      await defiPassport
+        .connect(skinManager)
+        .setDefaultSkin(defaultSkinAddress, true);
+
+      await expect(
+        defiPassport.mint(
+          ownerCreditScore.account,
+          defaultSkinAddress,
+          defaultSkinTokenId,
+          getScoreProof(ownerCreditScore, creditScoreTree),
+        ),
+      ).to.be.revertedWith('DefiPassport: invalid proof protocol');
+    });
+
+    it('reverts if the receiver has no credit score', async () => {
+      await defiPassport
+        .connect(skinManager)
+        .setDefaultSkin(defaultSkinAddress, true);
+
+      await expect(
+        defiPassport.mint(
+          userNoCreditScore.address,
+          defaultSkinAddress,
+          defaultSkinTokenId,
           getEmptyScoreProof(userNoCreditScore.address, DEFAULT_PROOF_PROTOCOL),
         ),
-      ).to.be.revertedWith('DefiPassport: the user has no credit score');
+      ).to.be.revertedWith('SapphirePassportScores: invalid proof');
     });
 
     it('reverts if the skin is not approved', async () => {
@@ -1013,7 +1045,7 @@ describe('DefiPassport', () => {
     });
 
     it('sets the credit score contract if called by admin', async () => {
-      expect(await defiPassport.creditScoreContract()).to.eq(
+      expect(await defiPassport.passportScoresContract()).to.eq(
         creditScoreContract.address,
       );
 
@@ -1086,6 +1118,22 @@ describe('DefiPassport', () => {
       ).to.be.revertedWith(
         'DefiPassport: defi passports are not transferrable',
       );
+    });
+  });
+
+  describe('#setProofProtocol', () => {
+    it('reverts if called by non-admin', async () => {
+      await expect(
+        defiPassport.connect(user).setProofProtocol('test'),
+      ).to.be.revertedWith('Adminable: caller is not admin');
+    });
+
+    it('sets the proof protocol', async () => {
+      expect(await defiPassport.proofProtocol()).to.eq(DEFAULT_PROOF_PROTOCOL);
+
+      await defiPassport.setProofProtocol('test');
+
+      expect(await defiPassport.proofProtocol()).to.eq('test');
     });
   });
 });

@@ -36,6 +36,7 @@ describe('StakingAccrualERC20', () => {
   let admin: SignerWithAddress;
   let user1: SignerWithAddress;
   let user2: SignerWithAddress;
+  let merkleRootUpdater: SignerWithAddress;
 
   let user1starcx: MockStakingAccrualERC20;
   let user2starcx: MockStakingAccrualERC20;
@@ -96,6 +97,8 @@ describe('StakingAccrualERC20', () => {
       creditScoreContract.address,
       sablierContract.address,
     );
+
+    starcx.setProofProtocol(DEFAULT_PROOF_PROTOCOL);
   }
 
   async function init(ctx: ITestContext) {
@@ -125,8 +128,9 @@ describe('StakingAccrualERC20', () => {
 
     creditScoreContract = ctx.contracts.sapphire.passportScores;
 
+    merkleRootUpdater = ctx.signers.merkleRootUpdater;
     await immediatelyUpdateMerkleRoot(
-      creditScoreContract.connect(ctx.signers.interestSetter),
+      creditScoreContract.connect(merkleRootUpdater),
       creditScoreTree.getHexRoot(),
     );
   }
@@ -330,6 +334,22 @@ describe('StakingAccrualERC20', () => {
       });
     });
 
+    describe('#setProofProtocol', () => {
+      it('reverts if called by non-admin', async () => {
+        await expect(
+          starcx.connect(user1).setProofProtocol('asdf'),
+        ).to.be.revertedWith('Adminable: caller is not admin');
+      });
+
+      it('sets the proof protocol', async () => {
+        expect(await starcx.proofProtocol()).to.eq(DEFAULT_PROOF_PROTOCOL);
+
+        await starcx.connect(admin).setProofProtocol('test');
+
+        expect(await starcx.proofProtocol()).to.eq('test');
+      });
+    });
+
     describe('#claimStreamFunds', () => {
       it('claims the funds from the sablier stream', async () => {
         expect(await stakingToken.balanceOf(starcx.address)).to.eq(0);
@@ -364,13 +384,13 @@ describe('StakingAccrualERC20', () => {
       it('sets a new credit score contract', async () => {
         const newCs = await new SapphirePassportScoresFactory(admin).deploy();
 
-        expect(await starcx.creditScoreContract()).to.eq(
+        expect(await starcx.passportScoresContract()).to.eq(
           creditScoreContract.address,
         );
 
         await starcx.setPassportScoreContract(newCs.address);
 
-        expect(await starcx.creditScoreContract()).to.eq(newCs.address);
+        expect(await starcx.passportScoresContract()).to.eq(newCs.address);
       });
     });
   });
@@ -388,10 +408,8 @@ describe('StakingAccrualERC20', () => {
 
       it('reverts if staking with no proof', async () => {
         await expect(
-          user1starcx.stake(STAKE_AMOUNT, getEmptyScoreProof()),
-        ).to.be.revertedWith(
-          'PassportScoreVerifiable: proof is required but it is not passed',
-        );
+          user1starcx.stake(STAKE_AMOUNT, getEmptyScoreProof(user1.address)),
+        ).to.be.revertedWith('SapphirePassportScores: invalid proof');
       });
 
       it('reverts if staking more than balance', async () => {
@@ -411,6 +429,33 @@ describe('StakingAccrualERC20', () => {
         ).to.be.revertedWith(
           'StakingAccrualERC20: cannot stake during cooldown period',
         );
+      });
+
+      it('reverts if staking with the proof of another protocol', async () => {
+        const otherProtocolScore = {
+          account: user1.address,
+          protocol: 'defi.other',
+          score: BigNumber.from(500),
+        };
+
+        const existingProof = {
+          account: user1ScoreProof.account,
+          score: BigNumber.from(user1ScoreProof.score),
+          protocol: user1ScoreProof.protocol,
+        };
+
+        const tree = new PassportScoreTree([existingProof, otherProtocolScore]);
+        await immediatelyUpdateMerkleRoot(
+          creditScoreContract.connect(merkleRootUpdater),
+          tree.getHexRoot(),
+        );
+
+        await expect(
+          user1starcx.stake(
+            STAKE_AMOUNT,
+            getScoreProof(otherProtocolScore, tree),
+          ),
+        ).to.be.revertedWith('StakingAccrualERC20: wrong protocol in proof');
       });
 
       it('stakes the staking token and mints an equal amount of stARCx, with a proof', async () => {
