@@ -6,6 +6,7 @@ import {
   PassportScoreProof,
   Vault,
 } from '@arc-types/sapphireCore';
+import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
 import {
   BigNumber,
   BigNumberish,
@@ -112,7 +113,11 @@ export class SapphireArc {
   ) {
     const core = this._getCore(synthName, caller);
 
-    return core.exit(passportScoreProof ?? getEmptyScoreProof(), overrides);
+    return core.exit(
+      passportScoreProof ??
+        getEmptyScoreProof(undefined, DEFAULT_PROOF_PROTOCOL),
+      overrides,
+    );
   }
 
   async liquidate(
@@ -126,7 +131,8 @@ export class SapphireArc {
 
     return core.liquidate(
       owner,
-      passportScoreProof ?? getEmptyScoreProof(),
+      passportScoreProof ??
+        getEmptyScoreProof(undefined, DEFAULT_PROOF_PROTOCOL),
       overrides,
     );
   }
@@ -142,7 +148,8 @@ export class SapphireArc {
 
     await core.executeActions(
       actions,
-      passportScoreProof ?? getEmptyScoreProof(),
+      passportScoreProof ??
+        getEmptyScoreProof(undefined, DEFAULT_PROOF_PROTOCOL),
       overrides,
     );
 
@@ -164,7 +171,7 @@ export class SapphireArc {
 
     return core.borrow(
       amount,
-      passportScoreProof ?? getEmptyScoreProof(),
+      passportScoreProof ?? getEmptyScoreProof(DEFAULT_PROOF_PROTOCOL),
       overrides,
     );
   }
@@ -180,7 +187,8 @@ export class SapphireArc {
 
     return core.repay(
       amount,
-      passportScoreProof ?? getEmptyScoreProof(),
+      passportScoreProof ??
+        getEmptyScoreProof(undefined, DEFAULT_PROOF_PROTOCOL),
       overrides,
     );
   }
@@ -198,7 +206,8 @@ export class SapphireArc {
 
     return core.deposit(
       amount,
-      passportScoreProof ?? getEmptyScoreProof(),
+      passportScoreProof ??
+        getEmptyScoreProof(undefined, DEFAULT_PROOF_PROTOCOL),
       overrides,
     );
   }
@@ -214,7 +223,8 @@ export class SapphireArc {
 
     return core.withdraw(
       amount,
-      passportScoreProof ?? getEmptyScoreProof(),
+      passportScoreProof ??
+        getEmptyScoreProof(undefined, DEFAULT_PROOF_PROTOCOL),
       overrides,
     );
   }
