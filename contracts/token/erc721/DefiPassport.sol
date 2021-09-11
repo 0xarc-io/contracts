@@ -52,9 +52,13 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
 
     event WhitelistSkinSet(address _skin, bool _status);
 
+    event ProofProtocolSet(string _protocol);
+
     /* ========== Public variables ========== */
 
     string public baseURI;
+
+    string public proofProtocol;
 
     /* ========== Constructor ========== */
 
@@ -119,6 +123,20 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
     {
         baseURI = _baseURI;
         emit BaseURISet(_baseURI);
+    }
+
+    /**
+     * @notice Sets the protocol to be used in the score proof when minting new passports
+     */
+    function setProofProtocol(
+        string calldata _protocol
+    )
+        external
+        onlyAdmin
+    {
+        proofProtocol = _protocol;
+
+        emit ProofProtocolSet(_protocol);
     }
 
     /**
@@ -328,6 +346,17 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         external
         returns (uint256)
     {
+        require(
+            _to == _scoreProof.account,
+            "DefiPassport: the proof must correspond to the receiver"
+        );
+
+        require(
+            keccak256(abi.encodePacked(_scoreProof.protocol)) == 
+                keccak256(abi.encodePacked(proofProtocol)),
+            "DefiPassport: invalid proof protocol"
+        );
+        
         passportScoresContract.verify(_scoreProof);
 
         require (
