@@ -58,6 +58,7 @@ describe('PassportCampaign', () => {
   let stakerScoreProof: PassportScoreProof;
   let user1ScoreProof: PassportScoreProof;
   let unauthorizedScoreProof: PassportScoreProof;
+  let unauthorizedProtocolProof: PassportScoreProof;
 
   let creditScoreTree: PassportScoreTree;
 
@@ -206,16 +207,26 @@ describe('PassportCampaign', () => {
       score: CREDIT_SCORE_THRESHOLD.sub(10),
     };
 
+    const unauthorizedProtocolScore = {
+      ...stakerPassportScore,
+      protocol: 'defi.other',
+    };
+
     creditScoreTree = new PassportScoreTree([
       stakerPassportScore,
       unauthorizedPassportScore,
       user1PassportScore,
+      unauthorizedProtocolScore,
     ]);
 
     stakerScoreProof = getScoreProof(stakerPassportScore, creditScoreTree);
     user1ScoreProof = getScoreProof(user1PassportScore, creditScoreTree);
     unauthorizedScoreProof = getScoreProof(
       unauthorizedPassportScore,
+      creditScoreTree,
+    );
+    unauthorizedProtocolProof = getScoreProof(
+      unauthorizedProtocolScore,
       creditScoreTree,
     );
   }
@@ -253,6 +264,8 @@ describe('PassportCampaign', () => {
 
     await rewardToken.mintShare(adminPassportCampaign.address, REWARD_AMOUNT);
     await mintAndApprove(stakingToken, staker, STAKE_AMOUNT);
+
+    await adminPassportCampaign.setProofProtocol(DEFAULT_PROOF_PROTOCOL);
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -403,10 +416,11 @@ describe('PassportCampaign', () => {
 
       it('reverts if called without a valid credit score proof', async () => {
         await expect(
-          stakerPassportCampaign.stake(STAKE_AMOUNT, getEmptyScoreProof()),
-        ).to.be.revertedWith(
-          'PassportCampaign: proof is required but it is not passed',
-        );
+          stakerPassportCampaign.stake(
+            STAKE_AMOUNT,
+            getEmptyScoreProof(staker.address),
+          ),
+        ).to.be.revertedWith('SapphirePassportScores: invalid proof');
       });
 
       it('reverts if called by a user with a credit score that is lower than required', async () => {
@@ -431,6 +445,15 @@ describe('PassportCampaign', () => {
         await expect(
           stakerPassportCampaign.stake(balance.add(1), stakerScoreProof),
         ).to.be.revertedWith('SafeERC20: TRANSFER_FROM_FAILED');
+      });
+
+      it('reverts if using a different protocol than the one registered', async () => {
+        await expect(
+          stakerPassportCampaign.stake(
+            STAKE_AMOUNT.div(2),
+            unauthorizedProtocolProof,
+          ),
+        ).to.be.revertedWith('PassportCampaign: incorrect protocol in proof');
       });
 
       it('should be able to stake', async () => {
@@ -714,7 +737,7 @@ describe('PassportCampaign', () => {
         const stakingTokenAddress = await adminPassportCampaign.stakingToken();
         const daoAllocation = await adminPassportCampaign.daoAllocation();
         const scoreThreshold = await adminPassportCampaign.creditScoreThreshold();
-        const creditScoreAddy = await adminPassportCampaign.creditScoreContract();
+        const creditScoreAddy = await adminPassportCampaign.passportScoresContract();
 
         expect(arcDao).to.eq(admin.address);
         expect(rewardsDistributor).to.eq(admin.address);
@@ -906,10 +929,10 @@ describe('PassportCampaign', () => {
       });
     });
 
-    describe('#setPassportScoreThreshold', () => {
+    describe('#setCreditScoreThreshold', () => {
       it('reverts if called by non-owner', async () => {
         await expect(
-          unauthorizedPassportCampaign.setPassportScoreThreshold(
+          unauthorizedPassportCampaign.setCreditScoreThreshold(
             BigNumber.from(10),
           ),
         ).to.be.revertedWith('Adminable: caller is not admin');
@@ -924,7 +947,7 @@ describe('PassportCampaign', () => {
           CREDIT_SCORE_THRESHOLD,
         );
 
-        await adminPassportCampaign.setPassportScoreThreshold(newThreshold);
+        await adminPassportCampaign.setCreditScoreThreshold(newThreshold);
 
         expect(await adminPassportCampaign.creditScoreThreshold()).to.eq(
           newThreshold,
@@ -932,7 +955,7 @@ describe('PassportCampaign', () => {
       });
     });
 
-    describe('#setPassportScoreContract', () => {
+    describe('#setPassportScoresContract', () => {
       beforeEach(async () => {
         await setup();
       });
@@ -941,23 +964,23 @@ describe('PassportCampaign', () => {
         const newCs = await new SapphirePassportScoresFactory(admin).deploy();
 
         await expect(
-          user1PassportCampaign.setPassportScoreContract(newCs.address),
+          user1PassportCampaign.setPassportScoresContract(newCs.address),
         ).to.be.revertedWith('Adminable: caller is not admin');
       });
 
       it('reverts if setting the same contract', async () => {
         await expect(
-          adminPassportCampaign.setPassportScoreContract(
+          adminPassportCampaign.setPassportScoresContract(
             creditScoreContract.address,
           ),
         ).to.be.revertedWith(
-          'PassportCampaign: the same credit score address is already set',
+          'PassportCampaign: the same passport scores address is already set',
         );
       });
 
       it('reverts if the contract is not an address', async () => {
         await expect(
-          adminPassportCampaign.setPassportScoreContract(user1.address),
+          adminPassportCampaign.setPassportScoresContract(user1.address),
         ).to.be.revertedWith(
           'PassportCampaign: the given address is not a contract',
         );
@@ -966,13 +989,13 @@ describe('PassportCampaign', () => {
       it('sets a new credit score contract', async () => {
         const newCs = await new SapphirePassportScoresFactory(admin).deploy();
 
-        expect(await adminPassportCampaign.creditScoreContract()).to.eq(
+        expect(await adminPassportCampaign.passportScoresContract()).to.eq(
           creditScoreContract.address,
         );
 
-        await adminPassportCampaign.setPassportScoreContract(newCs.address);
+        await adminPassportCampaign.setPassportScoresContract(newCs.address);
 
-        expect(await adminPassportCampaign.creditScoreContract()).to.eq(
+        expect(await adminPassportCampaign.passportScoresContract()).to.eq(
           newCs.address,
         );
       });
@@ -999,6 +1022,24 @@ describe('PassportCampaign', () => {
         expect(await adminPassportCampaign.maxStakePerUser()).to.eq(
           newMaxStake,
         );
+      });
+    });
+
+    describe('#setProofProtocol', () => {
+      it('reverts if called by non-admin', async () => {
+        await expect(
+          user1PassportCampaign.setProofProtocol('test'),
+        ).to.be.revertedWith('Adminable: caller is not admin');
+      });
+
+      it('sets the proof protocol', async () => {
+        expect(await user1PassportCampaign.proofProtocol()).to.eq(
+          DEFAULT_PROOF_PROTOCOL,
+        );
+
+        await adminPassportCampaign.setProofProtocol('test');
+
+        expect(await user1PassportCampaign.proofProtocol()).to.eq('test');
       });
     });
   });
@@ -1388,7 +1429,7 @@ describe('PassportCampaign', () => {
       expect(userBalance).to.eq(STAKE_AMOUNT);
 
       // Credit score threshold is raised
-      await adminPassportCampaign.setPassportScoreThreshold(
+      await adminPassportCampaign.setCreditScoreThreshold(
         CREDIT_SCORE_THRESHOLD.add(CREDIT_SCORE_THRESHOLD.div(2)),
       );
 
@@ -1398,7 +1439,7 @@ describe('PassportCampaign', () => {
       );
 
       // Credit score threshold is lowerd back
-      await adminPassportCampaign.setPassportScoreThreshold(
+      await adminPassportCampaign.setCreditScoreThreshold(
         CREDIT_SCORE_THRESHOLD,
       );
 
