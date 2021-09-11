@@ -44,6 +44,8 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
     ISablier public sablierContract;
     uint256 public sablierStreamId;
 
+    string public proofProtocol;
+
     /**
      * @notice Cooldown duration to be elapsed for users to exit
      */
@@ -69,6 +71,8 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
     event FundsWithdrawnFromSablier(uint256 _streamId, uint256 _amount);
 
     event CreditScoreContractSet(address _creditScoreContract);
+
+    event ProofProtocolSet(string _protocol);
 
     /* ========== Constructor (ignore) ========== */
 
@@ -166,7 +170,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
         );
     }
 
-    function setCreditScoreContract(
+    function setPassportScoreContract(
         address _creditScoreAddress
     )
         external
@@ -232,6 +236,17 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
         emit SablierStreamIdSet(sablierStreamId);
     }
 
+    function setProofProtocol(
+        string calldata _protocol
+    )
+        external
+        onlyAdmin
+    {
+        proofProtocol = _protocol;
+
+        emit ProofProtocolSet(proofProtocol);
+    }
+
     /* ========== Mutative Functions ========== */
 
     function stake(
@@ -241,6 +256,12 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
         public
         checkScoreProof(_scoreProof, true, true)
     {
+        require (
+            keccak256(abi.encodePacked(_scoreProof.protocol)) ==
+                keccak256(abi.encodePacked(proofProtocol)),
+            "StakingAccrualERC20: wrong protocol in proof"
+        );
+        
         claimStreamFunds();
 
         uint256 cooldownTimestamp = cooldowns[msg.sender];
