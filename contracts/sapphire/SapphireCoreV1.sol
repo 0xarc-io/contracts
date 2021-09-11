@@ -81,6 +81,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         uint256 _amount
     );
 
+    event ProofProtocolSet(string _protocol);
+
     /* ========== Admin Setters ========== */
 
     /**
@@ -414,6 +416,17 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
         interestRate = _interestRate;
         emit InterestRateUpdated(interestRate);
+    }
+
+    function setProofProtocol(
+        string calldata _protocol
+    )
+        external
+        onlyAdmin
+    {
+        proofProtocol = _protocol;
+
+        emit ProofProtocolSet(proofProtocol);
     }
 
     /* ========== Public Functions ========== */
