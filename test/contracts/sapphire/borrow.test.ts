@@ -1,5 +1,4 @@
 import { BigNumber, utils } from 'ethers';
-import PassportScoreTree from '@src/MerkleTree/PassportScoreTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import {
   addSnapshotBeforeRestoreAfterEach,
@@ -22,6 +21,7 @@ import {
 import { getScoreProof } from '@src/utils/getScoreProof';
 import { roundUpDiv, roundUpMul } from '@test/helpers/roundUpOperations';
 import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
+import { PassportScoreTree } from '@src/MerkleTree';
 
 /**
  * This is the most crucial function of the system as it's how users actually borrow from a vault.
