@@ -42,8 +42,6 @@ contract PassportCampaign is Adminable, PassportScoreVerifiable {
 
     /* ========== Variables ========== */
 
-    ISapphirePassportScores public creditScoreContract;
-
     IERC20 public rewardsToken;
     IERC20 public stakingToken;
 
@@ -68,6 +66,11 @@ contract PassportCampaign is Adminable, PassportScoreVerifiable {
 
     bool private _isInitialized;
 
+    /**
+     * @dev The protocol value to be used in the score proofs
+     */
+    string public proofProtocol;
+
     /* ========== Events ========== */
 
     event RewardAdded (uint256 reward);
@@ -87,6 +90,8 @@ contract PassportCampaign is Adminable, PassportScoreVerifiable {
     event RewardsDistributorUpdated(address _newRewardsDistributor);
 
     event CreditScoreContractSet(address _creditScoreContract);
+
+    event ProofProtocolSet(string _protocol);
 
     /* ========== Modifiers ========== */
 
@@ -234,25 +239,25 @@ contract PassportCampaign is Adminable, PassportScoreVerifiable {
         creditScoreThreshold = _newThreshold;
     }
 
-    function setCreditScoreContract(
-        address _creditScoreAddress
+    function setPassportScoresContract(
+        address _passportScoresContract
     )
         external
         onlyAdmin
     {
         require(
-            address(creditScoreContract) != _creditScoreAddress,
-            "PassportCampaign: the same credit score address is already set"
+            address(passportScoresContract) != _passportScoresContract,
+            "PassportCampaign: the same passport scores address is already set"
         );
 
         require(
-            _creditScoreAddress.isContract(),
+            _passportScoresContract.isContract(),
             "PassportCampaign: the given address is not a contract"
         );
 
-        creditScoreContract = ISapphirePassportScores(_creditScoreAddress);
+        passportScoresContract = ISapphirePassportScores(_passportScoresContract);
 
-        emit CreditScoreContractSet(_creditScoreAddress);
+        emit CreditScoreContractSet(_passportScoresContract);
     }
 
     function setMaxStakePerUser(
@@ -299,10 +304,21 @@ contract PassportCampaign is Adminable, PassportScoreVerifiable {
         rewardsDistributor      = _rewardsDistributor;
         rewardsToken            = IERC20(_rewardsToken);
         stakingToken            = IERC20(_stakingToken);
-        creditScoreContract     = ISapphirePassportScores(_creditScoreContract);
+        passportScoresContract  = ISapphirePassportScores(_creditScoreContract);
         daoAllocation           = _daoAllocation;
         maxStakePerUser         = _maxStakePerUser;
         creditScoreThreshold    = _creditScoreThreshold;
+    }
+
+    function setProofProtocol(
+        string calldata _protocol
+    )
+        external
+        onlyAdmin
+    {
+        proofProtocol = _protocol;
+
+        emit ProofProtocolSet(proofProtocol);
     }
 
     /* ========== View Functions ========== */
@@ -440,6 +456,12 @@ contract PassportCampaign is Adminable, PassportScoreVerifiable {
         require(
             _scoreProof.score >= creditScoreThreshold,
             "PassportCampaign: user does not meet the credit score requirement"
+        );
+
+        require(
+            keccak256(abi.encodePacked(_scoreProof.protocol)) ==
+                keccak256(abi.encodePacked(proofProtocol)),
+            "PassportCampaign: incorrect protocol in proof"   
         );
 
         // Setting each variable individually means we don't overwrite
