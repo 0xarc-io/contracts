@@ -1,4 +1,5 @@
 import { SapphireAssessorFactory, SapphireCoreV1 } from '@src/typings';
+import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { constants, utils, Wallet } from 'ethers';
@@ -334,8 +335,19 @@ describe('SapphireCore.setters', () => {
   });
 
   describe('#setProofProtocol', () => {
-    it('reverts if called by non-owner');
+    it('reverts if called by non-owner', async () => {
+      await expect(
+        sapphireCore.connect(ctx.signers.unauthorized).setProofProtocol('test'),
+      ).to.be.revertedWith('Adminable: caller is not admin');
+    });
 
-    it('sets the proof protocol');
+    it('sets the proof protocol', async () => {
+      expect(await sapphireCore.proofProtocol()).to.eq(DEFAULT_PROOF_PROTOCOL);
+      expect(await sapphireCore.getAdmin()).to.eq(ctx.signers.admin.address);
+
+      await sapphireCore.connect(ctx.signers.admin).setProofProtocol('test');
+
+      expect(await sapphireCore.proofProtocol()).to.eq('test');
+    });
   });
 });
