@@ -57,6 +57,7 @@ describe('JointPassportCampaign', () => {
   let unauthorizedCreditScore: PassportScore;
 
   let user1ScoreProof: PassportScoreProof;
+  let user1OtherProtoScoreProof: PassportScoreProof;
   let user2ScoreProof: PassportScoreProof;
   let unauthorizedScoreProof: PassportScoreProof;
 
@@ -194,6 +195,11 @@ describe('JointPassportCampaign', () => {
       score: CREDIT_SCORE_THRESHOLD,
     };
 
+    const user1OtherProtoScore = {
+      ...user1CreditScore,
+      protocol: 'defi.other',
+    };
+
     user2CreditScore = {
       account: user2.address,
       protocol: DEFAULT_PROOF_PROTOCOL,
@@ -208,11 +214,16 @@ describe('JointPassportCampaign', () => {
 
     creditScoreTree = new PassportScoreTree([
       user1CreditScore,
+      user1OtherProtoScore,
       user2CreditScore,
       unauthorizedCreditScore,
     ]);
 
     user1ScoreProof = getScoreProof(user1CreditScore, creditScoreTree);
+    user1OtherProtoScoreProof = getScoreProof(
+      user1OtherProtoScore,
+      creditScoreTree,
+    );
     user2ScoreProof = getScoreProof(user2CreditScore, creditScoreTree);
     unauthorizedScoreProof = getScoreProof(
       unauthorizedCreditScore,
@@ -283,7 +294,7 @@ describe('JointPassportCampaign', () => {
       const _arcToken = await campaign.rewardToken();
       const _collabToken = await campaign.collabRewardToken();
       const _stakingToken = await campaign.stakingToken();
-      const _creditScoreContract = await campaign.creditScoreContract();
+      const _creditScoreContract = await campaign.passportScoresContract();
       const daoAllocation = await campaign.daoAllocation();
       const maxStakePerUser = await campaign.maxStakePerUser();
       const creditScoreThreshold = await campaign.creditScoreThreshold();
@@ -612,7 +623,7 @@ describe('JointPassportCampaign', () => {
     describe('#stake', () => {
       it('reverts if called without a valid credit score proof', async () => {
         await expect(stake(user1, STAKE_AMOUNT)).to.be.revertedWith(
-          'CreditScoreVerifiable: proof is required but it is not passed',
+          'SapphirePassportScores: invalid proof',
         );
       });
 
@@ -644,8 +655,14 @@ describe('JointPassportCampaign', () => {
         await expect(
           stake(user1, STAKE_AMOUNT, user2ScoreProof),
         ).to.be.revertedWith(
-          'CreditScoreVerifiable: proof does not belong to the caller',
+          'PassportScoreVerifiable: proof does not belong to the caller',
         );
+      });
+
+      it('reverts if the proof protocol does not match the one registered', async () => {
+        await expect(
+          stake(user1, STAKE_AMOUNT, user1OtherProtoScoreProof),
+        ).to.be.revertedWith('JointPassportCampaign: invalid proof protocol');
       });
 
       it('should be able to stake', async () => {
@@ -1413,6 +1430,24 @@ describe('JointPassportCampaign', () => {
         expect(await arcPassportCampaign.collabTokensClaimable()).to.be.eq(
           true,
         );
+      });
+    });
+
+    describe('#setProofProtocol', () => {
+      it('reverts if called by non-owner', async () => {
+        await expect(
+          user1PassportCampaign.setProofProtocol('test'),
+        ).to.be.revertedWith('Ownable: caller is not the owner');
+      });
+
+      it('sets the proof protocol', async () => {
+        expect(await arcPassportCampaign.proofProtocol()).to.eq(
+          DEFAULT_PROOF_PROTOCOL,
+        );
+
+        await arcPassportCampaign.setProofProtocol('test');
+
+        expect(await arcPassportCampaign.proofProtocol()).to.eq('test');
       });
     });
   });

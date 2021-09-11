@@ -50,6 +50,11 @@ contract JointPassportCampaign is CampaignStorage, PassportScoreVerifiable, Owna
 
     bool public collabTokensClaimable;
 
+    /**
+     * @dev The protocol value to be used in the score proofs
+     */
+    string public proofProtocol = "arcx.creditscore";
+
     /* ========== Events ========== */
 
     event RewardAdded (
@@ -94,6 +99,8 @@ contract JointPassportCampaign is CampaignStorage, PassportScoreVerifiable, Owna
 
     event MaxStakePerUserSet(uint256 _newMaxStakePerUser);
 
+    event ProofProtocolSet(string _protocol);
+    
     /* ========== Modifiers ========== */
 
     modifier updateReward(
@@ -402,6 +409,17 @@ contract JointPassportCampaign is CampaignStorage, PassportScoreVerifiable, Owna
         emit MaxStakePerUserSet(maxStakePerUser);
     }
 
+    function setProofProtocol(
+        string calldata _protocol
+    )
+        external
+        onlyOwner
+    {
+        proofProtocol = _protocol;
+
+        emit ProofProtocolSet(proofProtocol);
+    }
+
     /* ========== View Functions ========== */
 
     function balanceOf(
@@ -548,6 +566,12 @@ contract JointPassportCampaign is CampaignStorage, PassportScoreVerifiable, Owna
         require(
             _scoreProof.score >= creditScoreThreshold,
             "JointPassportCampaign: user does not meet the credit score requirement"
+        );
+        
+        require(
+            keccak256(abi.encodePacked(_scoreProof.protocol)) ==
+                keccak256(abi.encodePacked(proofProtocol)),
+            "JointPassportCampaign: invalid proof protocol"
         );
 
         // Setting each variable individually means we don't overwrite
