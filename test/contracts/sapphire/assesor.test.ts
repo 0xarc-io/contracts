@@ -9,8 +9,7 @@ import {
   SapphireAssessorFactory,
   MockSapphirePassportScores,
 } from '@src/typings';
-import { getScoreProof } from '@src/utils';
-import ArcNumber from '@src/utils/ArcNumber';
+import { ArcNumber, getScoreProof } from '@src/utils';
 import { expect } from 'chai';
 import { BigNumber, constants } from 'ethers';
 import { ethers } from 'hardhat';
