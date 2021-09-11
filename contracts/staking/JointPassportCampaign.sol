@@ -100,7 +100,7 @@ contract JointPassportCampaign is CampaignStorage, PassportScoreVerifiable, Owna
     event MaxStakePerUserSet(uint256 _newMaxStakePerUser);
 
     event ProofProtocolSet(string _protocol);
-    
+
     /* ========== Modifiers ========== */
 
     modifier updateReward(
@@ -567,7 +567,7 @@ contract JointPassportCampaign is CampaignStorage, PassportScoreVerifiable, Owna
             _scoreProof.score >= creditScoreThreshold,
             "JointPassportCampaign: user does not meet the credit score requirement"
         );
-        
+
         require(
             keccak256(abi.encodePacked(_scoreProof.protocol)) ==
                 keccak256(abi.encodePacked(proofProtocol)),

@@ -461,7 +461,7 @@ contract PassportCampaign is Adminable, PassportScoreVerifiable {
         require(
             keccak256(abi.encodePacked(_scoreProof.protocol)) ==
                 keccak256(abi.encodePacked(proofProtocol)),
-            "PassportCampaign: incorrect protocol in proof"   
+            "PassportCampaign: incorrect protocol in proof"
         );
 
         // Setting each variable individually means we don't overwrite
