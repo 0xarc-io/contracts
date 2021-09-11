@@ -17,6 +17,7 @@ import {
   DEFAULT_HiGH_C_RATIO,
   DEFAULT_LOW_C_RATIO,
   DEFAULT_PRICE,
+  DEFAULT_PROOF_PROTOCOL,
 } from '@test/helpers/sapphireDefaults';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import { roundUpDiv, roundUpMul } from '@test/helpers/roundUpOperations';
@@ -46,6 +47,7 @@ describe('SapphireCore.borrow()', () => {
   let ctx: ITestContext;
   let arc: SapphireTestArc;
   let creditScore1: PassportScore;
+  let scoredMinterOtherProtoScore: PassportScore;
   let creditScore2: PassportScore;
   let creditScoreTree: PassportScoreTree;
   let scoredMinter: SignerWithAddress;
@@ -71,15 +73,23 @@ describe('SapphireCore.borrow()', () => {
   async function init(ctx: ITestContext): Promise<void> {
     creditScore1 = {
       account: ctx.signers.scoredMinter.address,
-      protocol: 'arcx.creditscore',
+      protocol: DEFAULT_PROOF_PROTOCOL,
       score: BigNumber.from(500),
+    };
+    scoredMinterOtherProtoScore = {
+      ...creditScore1,
+      protocol: 'defi.other',
     };
     creditScore2 = {
       account: ctx.signers.interestSetter.address,
-      protocol: 'arcx.creditscore',
+      protocol: DEFAULT_PROOF_PROTOCOL,
       score: BigNumber.from(1000),
     };
-    creditScoreTree = new PassportScoreTree([creditScore1, creditScore2]);
+    creditScoreTree = new PassportScoreTree([
+      creditScore1,
+      scoredMinterOtherProtoScore,
+      creditScore2,
+    ]);
     creditScoreProof = getScoreProof(creditScore1, creditScoreTree);
     return setupSapphire(ctx, {
       merkleRoot: creditScoreTree.getHexRoot(),
@@ -170,6 +180,17 @@ describe('SapphireCore.borrow()', () => {
     await arc.borrow(BORROW_AMOUNT, undefined, undefined, minter);
     const { borrowedAmount } = await arc.getVault(minter.address);
     expect(borrowedAmount).eq(BORROW_AMOUNT);
+  });
+
+  it('reverts if the proof protocol does not match the one registered', async () => {
+    await expect(
+      arc.borrow(
+        BORROW_AMOUNT,
+        getScoreProof(scoredMinterOtherProtoScore, creditScoreTree),
+        undefined,
+        scoredMinter,
+      ),
+    ).to.be.revertedWith('SapphireCoreV1: incorrect proof protocol');
   });
 
   it('reverts if borrower cross the c-ratio', async () => {

@@ -171,7 +171,8 @@ export class SapphireArc {
 
     return core.borrow(
       amount,
-      passportScoreProof ?? getEmptyScoreProof(DEFAULT_PROOF_PROTOCOL),
+      passportScoreProof ??
+        getEmptyScoreProof(undefined, DEFAULT_PROOF_PROTOCOL),
       overrides,
     );
   }
