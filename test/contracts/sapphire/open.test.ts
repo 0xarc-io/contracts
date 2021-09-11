@@ -138,27 +138,6 @@ describe('SapphireCore.open()', () => {
       );
     });
 
-    it('revert if proof is not provided', async () => {
-      await arc.open(
-        COLLATERAL_AMOUNT,
-        BORROW_AMOUNT,
-        getScoreProof(creditScore1, creditScoreTree),
-        undefined,
-        ctx.signers.scoredMinter,
-      );
-      await expect(
-        arc.open(
-          COLLATERAL_AMOUNT,
-          BORROW_AMOUNT,
-          undefined,
-          undefined,
-          ctx.signers.scoredMinter,
-        ),
-      ).to.be.revertedWith(
-        'SapphireAssessor: proof should be provided for credit score',
-      );
-    });
-
     it('revert if opened below the minimum position amount', async () => {
       await arc
         .core()
@@ -296,25 +275,6 @@ describe('SapphireCore.open()', () => {
       ).to.be.revertedWith(
         'SapphireCoreV1: the vault will become undercollateralized',
       );
-    });
-
-    it('open if a score for address exists on-chain', async () => {
-      await ctx.contracts.sapphire.passportScores.verifyAndUpdate(
-        creditScoreProof,
-      );
-      await arc.open(
-        COLLATERAL_AMOUNT,
-        BORROW_AMOUNT,
-        creditScoreProof,
-        undefined,
-        scoredMinter,
-      );
-
-      const { borrowedAmount, collateralAmount } = await arc.getVault(
-        scoredMinter.address,
-      );
-      expect(collateralAmount).eq(COLLATERAL_AMOUNT);
-      expect(borrowedAmount).eq(BORROW_AMOUNT);
     });
 
     it('revert if opened below the minimum position amount', async () => {
