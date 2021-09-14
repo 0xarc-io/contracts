@@ -191,25 +191,25 @@ describe('PassportCampaign', () => {
 
     stakerPassportScore = {
       account: staker.address,
-      protocol: DEFAULT_PROOF_PROTOCOL,
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: CREDIT_SCORE_THRESHOLD,
     };
 
     user1PassportScore = {
       account: signers.scoredMinter.address,
-      protocol: DEFAULT_PROOF_PROTOCOL,
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: CREDIT_SCORE_THRESHOLD.add(100),
     };
 
     unauthorizedPassportScore = {
       account: unauthorized.address,
-      protocol: DEFAULT_PROOF_PROTOCOL,
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: CREDIT_SCORE_THRESHOLD.sub(10),
     };
 
     const unauthorizedProtocolScore = {
       ...stakerPassportScore,
-      protocol: 'defi.other',
+      protocol: utils.formatBytes32String('defi.other'),
     };
 
     creditScoreTree = new PassportScoreTree([
@@ -265,7 +265,9 @@ describe('PassportCampaign', () => {
     await rewardToken.mintShare(adminPassportCampaign.address, REWARD_AMOUNT);
     await mintAndApprove(stakingToken, staker, STAKE_AMOUNT);
 
-    await adminPassportCampaign.setProofProtocol(DEFAULT_PROOF_PROTOCOL);
+    await adminPassportCampaign.setProofProtocol(
+      utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+    );
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -1028,18 +1030,22 @@ describe('PassportCampaign', () => {
     describe('#setProofProtocol', () => {
       it('reverts if called by non-admin', async () => {
         await expect(
-          user1PassportCampaign.setProofProtocol('test'),
+          user1PassportCampaign.setProofProtocol(
+            utils.formatBytes32String('test'),
+          ),
         ).to.be.revertedWith('Adminable: caller is not admin');
       });
 
       it('sets the proof protocol', async () => {
-        expect(await user1PassportCampaign.proofProtocol()).to.eq(
+        expect(await user1PassportCampaign.getProofProtocol()).to.eq(
           DEFAULT_PROOF_PROTOCOL,
         );
 
-        await adminPassportCampaign.setProofProtocol('test');
+        await adminPassportCampaign.setProofProtocol(
+          utils.formatBytes32String('test'),
+        );
 
-        expect(await user1PassportCampaign.proofProtocol()).to.eq('test');
+        expect(await user1PassportCampaign.getProofProtocol()).to.eq('test');
       });
     });
   });
@@ -1077,7 +1083,7 @@ describe('PassportCampaign', () => {
       Object.keys(users).forEach((userKey) => {
         creditScores[userKey] = {
           account: users[userKey].address,
-          protocol: DEFAULT_PROOF_PROTOCOL,
+          protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
           score: CREDIT_SCORE_THRESHOLD,
         };
       });
