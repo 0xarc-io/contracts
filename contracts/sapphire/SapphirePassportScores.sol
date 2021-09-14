@@ -39,10 +39,6 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
         address merkleRootUpdater
     );
 
-    event DocumentIdUpdated(
-        string newDocumentId
-    );
-
     /* ========== Variables ========== */
 
     uint16 public maxScore;
@@ -60,9 +56,6 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
     address public merkleRootUpdater;
 
     address public pauseOperator;
-
-    // The document ID of the IPFS document containing the current Merkle Tree
-    string public documentId;
 
     uint256 public currentEpoch;
 
@@ -312,19 +305,5 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
 
         pauseOperator = _pauseOperator;
         emit PauseOperatorUpdated(pauseOperator);
-    }
-
-    /**
-     * @dev Sets the document ID of the IPFS document containing the current Merkle Tree.
-     */
-    function setDocumentId(
-        string memory _documentId
-    )
-        public
-        onlyAdmin
-    {
-        documentId = _documentId;
-
-        emit DocumentIdUpdated(documentId);
     }
 }
