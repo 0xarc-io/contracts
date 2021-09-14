@@ -9,6 +9,9 @@ import {ISapphireAssessor} from "./ISapphireAssessor.sol";
 import {SapphireTypes} from "./SapphireTypes.sol";
 
 contract SapphireCoreStorage {
+
+    /* ========== Public Variables ========== */
+
     /**
      * @notice Determines whether the contract is paused or not
      */
@@ -129,8 +132,10 @@ contract SapphireCoreStorage {
      */
     uint256 public vaultBorrowMaximum;
 
+    /* ========== Internal Variables ========== */
+
     /**
      * @dev The protocol value to be used in the score proofs
      */
-    string public proofProtocol;
+    bytes32 internal _proofProtocol;
 }
