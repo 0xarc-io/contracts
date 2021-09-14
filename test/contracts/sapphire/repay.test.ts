@@ -78,12 +78,12 @@ describe('SapphireCore.repay()', () => {
   async function init(ctx: ITestContext) {
     minterCreditScore = {
       account: ctx.signers.scoredMinter.address,
-      protocol: DEFAULT_PROOF_PROTOCOL,
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: BigNumber.from(500),
     };
     const creditScore2 = {
       account: ctx.signers.interestSetter.address,
-      protocol: DEFAULT_PROOF_PROTOCOL,
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: BigNumber.from(20),
     };
     creditScoreTree = new PassportScoreTree([minterCreditScore, creditScore2]);
