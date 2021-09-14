@@ -5,6 +5,7 @@ import {ERC721Full} from "@openzeppelin/contracts/token/ERC721/ERC721Full.sol";
 import {Counters} from "@openzeppelin/contracts/drafts/Counters.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
+import {Bytes32} from "../../lib/Bytes32.sol";
 import {Adminable} from "../../lib/Adminable.sol";
 import {Initializable} from "../../lib/Initializable.sol";
 import {DefiPassportStorage} from "./DefiPassportStorage.sol";
@@ -16,6 +17,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
     /* ========== Libraries ========== */
 
     using Counters for Counters.Counter;
+    using Bytes32 for bytes32;
 
     /* ========== Events ========== */
 
@@ -58,7 +60,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
 
     string public baseURI;
 
-    string public proofProtocol;
+    bytes32 private _proofProtocol;
 
     /* ========== Constructor ========== */
 
@@ -129,14 +131,14 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
      * @notice Sets the protocol to be used in the score proof when minting new passports
      */
     function setProofProtocol(
-        string calldata _protocol
+        bytes32 _protocol
     )
         external
         onlyAdmin
     {
-        proofProtocol = _protocol;
+        _proofProtocol = _protocol;
 
-        emit ProofProtocolSet(_protocol);
+        emit ProofProtocolSet(_proofProtocol.toString());
     }
 
     /**
@@ -352,8 +354,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         );
 
         require(
-            keccak256(abi.encodePacked(_scoreProof.protocol)) ==
-                keccak256(abi.encodePacked(proofProtocol)),
+            _scoreProof.protocol == _proofProtocol,
             "DefiPassport: invalid proof protocol"
         );
 
@@ -527,6 +528,14 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         address owner = ownerOf(tokenId);
 
         return string(abi.encodePacked(baseURI, "0x", _toAsciiString(owner)));
+    }
+
+    function getProofProtocol()
+        external
+        view
+        returns (string memory)
+    {
+        return _proofProtocol.toString();
     }
 
     /* ========== Private Functions ========== */
