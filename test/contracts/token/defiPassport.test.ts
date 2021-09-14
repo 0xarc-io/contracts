@@ -19,7 +19,7 @@ import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { MockProvider } from 'ethereum-waffle';
-import { constants } from 'ethers';
+import { constants, utils } from 'ethers';
 import { ethers } from 'hardhat';
 import {
   deployDefiPassport,
@@ -64,12 +64,12 @@ describe('DefiPassport', () => {
 
     ownerCreditScore = {
       account: owner.address,
-      protocol: OTHER_PROTOCOL,
+      protocol: utils.formatBytes32String(OTHER_PROTOCOL),
       score: BigNumber.from(500),
     };
     userCreditScore = {
       account: user.address,
-      protocol: DEFAULT_PROOF_PROTOCOL,
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: BigNumber.from(500),
     };
     creditScoreTree = new PassportScoreTree([
@@ -173,7 +173,9 @@ describe('DefiPassport', () => {
       skinManager.address,
     );
 
-    await defiPassport.setProofProtocol(DEFAULT_PROOF_PROTOCOL);
+    await defiPassport.setProofProtocol(
+      utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+    );
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -259,7 +261,10 @@ describe('DefiPassport', () => {
           userNoCreditScore.address,
           defaultSkinAddress,
           defaultSkinTokenId,
-          getEmptyScoreProof(userNoCreditScore.address, DEFAULT_PROOF_PROTOCOL),
+          getEmptyScoreProof(
+            userNoCreditScore.address,
+            utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+          ),
         ),
       ).to.be.revertedWith('SapphirePassportScores: invalid proof');
     });
@@ -394,7 +399,9 @@ describe('DefiPassport', () => {
   describe('#setBaseURI', () => {
     it('reverts if called by non-admin', async () => {
       await expect(
-        defiPassport.connect(user).setBaseURI('test'),
+        defiPassport
+          .connect(user)
+          .setBaseURI(utils.formatBytes32String('test')),
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
@@ -1124,16 +1131,20 @@ describe('DefiPassport', () => {
   describe('#setProofProtocol', () => {
     it('reverts if called by non-admin', async () => {
       await expect(
-        defiPassport.connect(user).setProofProtocol('test'),
+        defiPassport
+          .connect(user)
+          .setProofProtocol(utils.formatBytes32String('test')),
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
     it('sets the proof protocol', async () => {
-      expect(await defiPassport.proofProtocol()).to.eq(DEFAULT_PROOF_PROTOCOL);
+      expect(await defiPassport.getProofProtocol()).to.eq(
+        DEFAULT_PROOF_PROTOCOL,
+      );
 
-      await defiPassport.setProofProtocol('test');
+      await defiPassport.setProofProtocol(utils.formatBytes32String('test'));
 
-      expect(await defiPassport.proofProtocol()).to.eq('test');
+      expect(await defiPassport.getProofProtocol()).to.eq('test');
     });
   });
 });
