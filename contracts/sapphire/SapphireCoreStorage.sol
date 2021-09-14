@@ -8,7 +8,8 @@ import {ISapphireAssessor} from "./ISapphireAssessor.sol";
 
 import {SapphireTypes} from "./SapphireTypes.sol";
 
-contract SapphireCoreStorage {
+contract SapphireCoreStorageV1 {
+    /* ========== Constants ========== */
 
     /* ========== Public Variables ========== */
 
@@ -139,3 +140,6 @@ contract SapphireCoreStorage {
      */
     bytes32 internal _proofProtocol;
 }
+
+// solium-disable-next-line no-empty-blocks
+contract SapphireCoreStorage is SapphireCoreStorageV1 {}
