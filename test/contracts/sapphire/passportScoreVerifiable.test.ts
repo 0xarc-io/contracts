@@ -1,4 +1,5 @@
 import { PassportScore } from '@arc-types/sapphireCore';
+import { utils } from '@ethereum-waffle/provider/node_modules/ethers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { PassportScoreTree } from '@src/MerkleTree';
 import {
@@ -7,6 +8,7 @@ import {
   SapphirePassportScores,
 } from '@src/typings';
 import { getEmptyScoreProof, getScoreProof } from '@src/utils';
+import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
@@ -27,12 +29,12 @@ describe('PassportScoreVerifiable', () => {
     const ctx = await generateContext(sapphireFixture, async (ctx) => {
       userCreditScore = {
         account: ctx.signers.scoredMinter.address,
-        protocol: 'arcx.creditscore',
+        protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
         score: BigNumber.from(12),
       };
       ownerCreditScore = {
         account: ctx.signers.admin.address,
-        protocol: 'arcx.creditscore',
+        protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
         score: BigNumber.from(20),
       };
       tree = new PassportScoreTree([userCreditScore, ownerCreditScore]);
