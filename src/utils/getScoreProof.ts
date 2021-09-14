@@ -1,6 +1,6 @@
 import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
 import { PassportScoreTree } from '@src/MerkleTree';
-import { constants, BigNumber } from 'ethers';
+import { constants, BigNumber, utils } from 'ethers';
 
 export function getScoreProof(
   score: PassportScore,
@@ -14,7 +14,7 @@ export function getScoreProof(
 
 export function getEmptyScoreProof(
   account?: string,
-  protocol = '',
+  protocol = utils.formatBytes32String(''),
 ): PassportScoreProof {
   return {
     account: account || constants.AddressZero,
