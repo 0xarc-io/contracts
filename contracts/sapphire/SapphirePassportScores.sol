@@ -10,7 +10,7 @@ import {Initializable} from "../lib/Initializable.sol";
 import {SapphireTypes} from "./SapphireTypes.sol";
 import {ISapphirePassportScores} from "./ISapphirePassportScores.sol";
 
-contract SapphirePassportScores is Adminable, Initializable, ISapphirePassportScores {
+contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializable {
 
     /* ========== Libraries ========== */
 
