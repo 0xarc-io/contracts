@@ -27,7 +27,11 @@ export async function setupBaseVault(
   await arc.open(
     collateralAmount,
     borrowAmount,
-    scoreProof ?? getEmptyScoreProof(undefined, DEFAULT_PROOF_PROTOCOL),
+    scoreProof ??
+      getEmptyScoreProof(
+        undefined,
+        utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      ),
     synthName,
     caller,
   );
