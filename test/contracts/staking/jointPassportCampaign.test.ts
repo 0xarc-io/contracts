@@ -191,24 +191,24 @@ describe('JointPassportCampaign', () => {
 
     user1CreditScore = {
       account: user1.address,
-      protocol: DEFAULT_PROOF_PROTOCOL,
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: CREDIT_SCORE_THRESHOLD,
     };
 
     const user1OtherProtoScore = {
       ...user1CreditScore,
-      protocol: 'defi.other',
+      protocol: utils.formatBytes32String('defi.other'),
     };
 
     user2CreditScore = {
       account: user2.address,
-      protocol: DEFAULT_PROOF_PROTOCOL,
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: CREDIT_SCORE_THRESHOLD,
     };
 
     unauthorizedCreditScore = {
       account: unauthorized.address,
-      protocol: DEFAULT_PROOF_PROTOCOL,
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: CREDIT_SCORE_THRESHOLD.sub(10),
     };
 
@@ -1436,18 +1436,22 @@ describe('JointPassportCampaign', () => {
     describe('#setProofProtocol', () => {
       it('reverts if called by non-owner', async () => {
         await expect(
-          user1PassportCampaign.setProofProtocol('test'),
+          user1PassportCampaign.setProofProtocol(
+            utils.formatBytes32String('test'),
+          ),
         ).to.be.revertedWith('Ownable: caller is not the owner');
       });
 
       it('sets the proof protocol', async () => {
-        expect(await arcPassportCampaign.proofProtocol()).to.eq(
+        expect(await arcPassportCampaign.getProofProtocol()).to.eq(
           DEFAULT_PROOF_PROTOCOL,
         );
 
-        await arcPassportCampaign.setProofProtocol('test');
+        await arcPassportCampaign.setProofProtocol(
+          utils.formatBytes32String('test'),
+        );
 
-        expect(await arcPassportCampaign.proofProtocol()).to.eq('test');
+        expect(await arcPassportCampaign.getProofProtocol()).to.eq('test');
       });
     });
   });
@@ -1472,7 +1476,7 @@ describe('JointPassportCampaign', () => {
       Object.keys(users).forEach((userKey) => {
         creditScores[userKey] = {
           account: users[userKey].address,
-          protocol: DEFAULT_PROOF_PROTOCOL,
+          protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
           score: CREDIT_SCORE_THRESHOLD,
         };
       });

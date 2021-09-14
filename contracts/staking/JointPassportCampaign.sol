@@ -3,6 +3,7 @@ pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "../lib/Ownable.sol";
+import {Bytes32} from "../lib/Bytes32.sol";
 import {PassportScoreVerifiable} from "../lib/PassportScoreVerifiable.sol";
 
 import {IERC20} from "../token/IERC20.sol";
@@ -17,6 +18,10 @@ import {SapphireTypes} from "../sapphire/SapphireTypes.sol";
  *         score to participate that has two reward tokens.
  */
 contract JointPassportCampaign is CampaignStorage, PassportScoreVerifiable, Ownable {
+
+    /* ========== Libraries ========== */
+
+    using Bytes32 for bytes32;
 
     /* ========== Structs ========== */
 
@@ -53,7 +58,7 @@ contract JointPassportCampaign is CampaignStorage, PassportScoreVerifiable, Owna
     /**
      * @dev The protocol value to be used in the score proofs
      */
-    string public proofProtocol = "arcx.creditscore";
+    bytes32 private _proofProtocol = "arcx.creditscore";
 
     /* ========== Events ========== */
 
@@ -410,14 +415,14 @@ contract JointPassportCampaign is CampaignStorage, PassportScoreVerifiable, Owna
     }
 
     function setProofProtocol(
-        string calldata _protocol
+        bytes32 _protocol
     )
         external
         onlyOwner
     {
-        proofProtocol = _protocol;
+        _proofProtocol = _protocol;
 
-        emit ProofProtocolSet(proofProtocol);
+        emit ProofProtocolSet(_proofProtocol.toString());
     }
 
     /* ========== View Functions ========== */
@@ -552,6 +557,14 @@ contract JointPassportCampaign is CampaignStorage, PassportScoreVerifiable, Owna
         return block.timestamp;
     }
 
+    function getProofProtocol()
+        external
+        view
+        returns (string memory)
+    {
+        return _proofProtocol.toString();
+    }
+
     /* ========== Mutative Functions ========== */
 
     function stake(
@@ -569,8 +582,7 @@ contract JointPassportCampaign is CampaignStorage, PassportScoreVerifiable, Owna
         );
 
         require(
-            keccak256(abi.encodePacked(_scoreProof.protocol)) ==
-                keccak256(abi.encodePacked(proofProtocol)),
+            _scoreProof.protocol == _proofProtocol,
             "JointPassportCampaign: invalid proof protocol"
         );
 
