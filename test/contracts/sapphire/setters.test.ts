@@ -343,7 +343,7 @@ describe('SapphireCore.setters', () => {
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
-    it.only('sets the proof protocol', async () => {
+    it('sets the proof protocol', async () => {
       expect(await sapphireCore.getProofProtocol()).to.eq(
         DEFAULT_PROOF_PROTOCOL,
       );
