@@ -73,16 +73,16 @@ describe('SapphireCore.borrow()', () => {
   async function init(ctx: ITestContext): Promise<void> {
     creditScore1 = {
       account: ctx.signers.scoredMinter.address,
-      protocol: DEFAULT_PROOF_PROTOCOL,
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: BigNumber.from(500),
     };
     scoredMinterOtherProtoScore = {
       ...creditScore1,
-      protocol: 'defi.other',
+      protocol: utils.formatBytes32String('defi.other'),
     };
     creditScore2 = {
       account: ctx.signers.interestSetter.address,
-      protocol: DEFAULT_PROOF_PROTOCOL,
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: BigNumber.from(1000),
     };
     creditScoreTree = new PassportScoreTree([
@@ -274,7 +274,7 @@ describe('SapphireCore.borrow()', () => {
     // Prepare the new root hash with the increased credit score for minter
     const creditScore = {
       account: scoredMinter.address,
-      protocol: 'arcx.creditscore',
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: BigNumber.from(800),
     };
     const newPassportScoreTree = new PassportScoreTree([
@@ -311,7 +311,7 @@ describe('SapphireCore.borrow()', () => {
     // Prepare the new root hash with the decreased credit score for minter
     const creditScore = {
       account: scoredMinter.address,
-      protocol: 'arcx.creditscore',
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: BigNumber.from(100),
     };
     const newPassportScoreTree = new PassportScoreTree([

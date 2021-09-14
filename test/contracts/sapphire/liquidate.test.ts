@@ -105,13 +105,13 @@ describe('SapphireCore.liquidate()', () => {
   async function init(ctx: ITestContext) {
     minterCreditScore = {
       account: ctx.signers.scoredMinter.address,
-      protocol: DEFAULT_PROOF_PROTOCOL,
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: BigNumber.from(500),
     };
 
     liquidatorCreditScore = {
       account: ctx.signers.liquidator.address,
-      protocol: DEFAULT_PROOF_PROTOCOL,
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: BigNumber.from(500),
     };
 
@@ -292,7 +292,7 @@ describe('SapphireCore.liquidate()', () => {
       // The user's credit score decreases
       const newMinterCreditScore = {
         account: signers.scoredMinter.address,
-        protocol: DEFAULT_PROOF_PROTOCOL,
+        protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
         score: BigNumber.from(50),
       };
       const newCreditTree = new PassportScoreTree([
@@ -554,7 +554,7 @@ describe('SapphireCore.liquidate()', () => {
       // Add a score for another protocol
       const newMinterCreditScore = {
         account: signers.scoredMinter.address,
-        protocol: 'other.protocol',
+        protocol: utils.formatBytes32String('defi.other'),
         score: BigNumber.from(0),
       };
       const newCreditTree = new PassportScoreTree([
@@ -584,7 +584,10 @@ describe('SapphireCore.liquidate()', () => {
       await expect(
         arc.liquidate(
           signers.scoredMinter.address,
-          getEmptyScoreProof(undefined, DEFAULT_PROOF_PROTOCOL),
+          getEmptyScoreProof(
+            undefined,
+            utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+          ),
           undefined,
           signers.liquidator,
         ),
@@ -612,7 +615,7 @@ describe('SapphireCore.liquidate()', () => {
       // A new user with credit score 0 is added to the tree
       const zeroCreditScore = {
         account: signers.staker.address,
-        protocol: DEFAULT_PROOF_PROTOCOL,
+        protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
         score: BigNumber.from(0),
       };
       const newCreditTree = new PassportScoreTree([
@@ -656,7 +659,7 @@ describe('SapphireCore.liquidate()', () => {
       // First, open the vault with a credit score of 0
       let newMinterCreditScore = {
         account: signers.scoredMinter.address,
-        protocol: DEFAULT_PROOF_PROTOCOL,
+        protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
         score: BigNumber.from(0),
       };
       let newCreditTree = new PassportScoreTree([
@@ -686,7 +689,7 @@ describe('SapphireCore.liquidate()', () => {
 
       newMinterCreditScore = {
         account: signers.scoredMinter.address,
-        protocol: DEFAULT_PROOF_PROTOCOL,
+        protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
         score: BigNumber.from(500),
       };
       newCreditTree = new PassportScoreTree([
@@ -1057,7 +1060,7 @@ describe('SapphireCore.liquidate()', () => {
       // Credit score drops to 50
       const newMinterCreditScore = {
         account: signers.scoredMinter.address,
-        protocol: DEFAULT_PROOF_PROTOCOL,
+        protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
         score: BigNumber.from(50),
       };
       const newCreditTree = new PassportScoreTree([
@@ -1147,7 +1150,7 @@ describe('SapphireCore.liquidate()', () => {
       // User's credit score increases to 950
       const newMinterCreditScore = {
         account: signers.scoredMinter.address,
-        protocol: DEFAULT_PROOF_PROTOCOL,
+        protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
         score: BigNumber.from(950),
       };
       const newCreditTree = new PassportScoreTree([
