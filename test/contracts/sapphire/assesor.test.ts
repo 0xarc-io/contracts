@@ -10,8 +10,9 @@ import {
   MockSapphirePassportScores,
 } from '@src/typings';
 import { ArcNumber, getScoreProof } from '@src/utils';
+import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
 import { expect } from 'chai';
-import { BigNumber, constants } from 'ethers';
+import { BigNumber, constants, utils } from 'ethers';
 import { ethers } from 'hardhat';
 import { deployMockSapphirePassportScores } from '../deployers';
 
@@ -41,12 +42,12 @@ describe('SapphireAssessor', () => {
   }> {
     const testPassportScore = {
       account: user1.address,
-      protocol: 'arcx.creditscore',
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: score,
     };
     const anotherPassportScore = {
       account: user2.address,
-      protocol: 'arcx.creditscore',
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: BigNumber.from(500),
     };
 
@@ -87,19 +88,19 @@ describe('SapphireAssessor', () => {
 
     passportScore1 = {
       account: user1.address,
-      protocol: 'arcx.creditscore',
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: BigNumber.from(600),
     };
 
     passportScore2 = {
       account: user2.address,
-      protocol: 'arcx.creditscore',
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: BigNumber.from(200),
     };
 
     passportScore3 = {
       account: signers[3].address,
-      protocol: 'arcx.creditscore',
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: BigNumber.from(300),
     };
 
@@ -184,7 +185,7 @@ describe('SapphireAssessor', () => {
           100,
           {
             account: constants.AddressZero,
-            protocol: 'arcx.creditscore',
+            protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
             score: passportScore1.score,
             merkleProof: scoresTree.getProof(passportScore1),
           },
@@ -202,7 +203,7 @@ describe('SapphireAssessor', () => {
           10,
           {
             account: user1.address,
-            protocol: 'arcx.creditscore',
+            protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
             score: passportScore1.score,
             merkleProof: scoresTree.getProof(passportScore1),
           },
@@ -271,7 +272,7 @@ describe('SapphireAssessor', () => {
           10,
           {
             account: user2.address,
-            protocol: '',
+            protocol: utils.formatBytes32String(''),
             score: 0,
             merkleProof: [],
           },
@@ -289,7 +290,7 @@ describe('SapphireAssessor', () => {
           10,
           {
             account: passportScore3.account,
-            protocol: '',
+            protocol: utils.formatBytes32String(''),
             score: 0,
             merkleProof: [],
           },

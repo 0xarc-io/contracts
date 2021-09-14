@@ -3,7 +3,10 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { approve } from '@src/utils/approve';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { getScoreProof } from '@src/utils/getScoreProof';
-import { DEFAULT_COLLATERAL_DECIMALS } from '@test/helpers/sapphireDefaults';
+import {
+  DEFAULT_COLLATERAL_DECIMALS,
+  DEFAULT_PROOF_PROTOCOL,
+} from '@test/helpers/sapphireDefaults';
 import { setupBaseVault } from '@test/helpers/setupBaseVault';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
@@ -39,13 +42,13 @@ describe('SapphireCore.exit()', () => {
   async function init(ctx: ITestContext) {
     scoredMinterCreditScore = {
       account: ctx.signers.scoredMinter.address,
-      protocol: 'arcx.creditscore',
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: BigNumber.from(500),
     };
 
     const liquidatorCreditScore = {
       account: ctx.signers.liquidator.address,
-      protocol: 'arcx.creditscore',
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: BigNumber.from(500),
     };
 
