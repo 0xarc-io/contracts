@@ -53,12 +53,12 @@ describe('SapphireCore.withdraw()', () => {
   async function init(ctx: ITestContext) {
     minterCreditScore = {
       account: ctx.signers.scoredMinter.address,
-      protocol: DEFAULT_PROOF_PROTOCOL,
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: BigNumber.from(500),
     };
     const creditScore2 = {
       account: ctx.signers.interestSetter.address,
-      protocol: DEFAULT_PROOF_PROTOCOL,
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: BigNumber.from(20),
     };
     creditScoreTree = new PassportScoreTree([minterCreditScore, creditScore2]);
@@ -315,7 +315,7 @@ describe('SapphireCore.withdraw()', () => {
     // A new user with credit score 1000 is added to the tree
     const maxCreditScore = {
       account: signers.staker.address,
-      protocol: DEFAULT_PROOF_PROTOCOL,
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: BigNumber.from(1000),
     };
     const newCreditTree = new PassportScoreTree([

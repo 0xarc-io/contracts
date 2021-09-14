@@ -13,6 +13,7 @@ import {
   constants,
   ContractTransaction,
   Signer,
+  utils,
 } from 'ethers';
 import {
   BaseERC20Factory,
@@ -115,7 +116,10 @@ export class SapphireArc {
 
     return core.exit(
       passportScoreProof ??
-        getEmptyScoreProof(undefined, DEFAULT_PROOF_PROTOCOL),
+        getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+        ),
       overrides,
     );
   }
@@ -132,7 +136,10 @@ export class SapphireArc {
     return core.liquidate(
       owner,
       passportScoreProof ??
-        getEmptyScoreProof(undefined, DEFAULT_PROOF_PROTOCOL),
+        getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+        ),
       overrides,
     );
   }
@@ -149,7 +156,10 @@ export class SapphireArc {
     await core.executeActions(
       actions,
       passportScoreProof ??
-        getEmptyScoreProof(undefined, DEFAULT_PROOF_PROTOCOL),
+        getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+        ),
       overrides,
     );
 
@@ -172,7 +182,10 @@ export class SapphireArc {
     return core.borrow(
       amount,
       passportScoreProof ??
-        getEmptyScoreProof(undefined, DEFAULT_PROOF_PROTOCOL),
+        getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+        ),
       overrides,
     );
   }
@@ -189,7 +202,10 @@ export class SapphireArc {
     return core.repay(
       amount,
       passportScoreProof ??
-        getEmptyScoreProof(undefined, DEFAULT_PROOF_PROTOCOL),
+        getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+        ),
       overrides,
     );
   }
@@ -208,7 +224,10 @@ export class SapphireArc {
     return core.deposit(
       amount,
       passportScoreProof ??
-        getEmptyScoreProof(undefined, DEFAULT_PROOF_PROTOCOL),
+        getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+        ),
       overrides,
     );
   }
@@ -225,7 +244,10 @@ export class SapphireArc {
     return core.withdraw(
       amount,
       passportScoreProof ??
-        getEmptyScoreProof(undefined, DEFAULT_PROOF_PROTOCOL),
+        getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+        ),
       overrides,
     );
   }
