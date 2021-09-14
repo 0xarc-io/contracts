@@ -98,7 +98,9 @@ describe('StakingAccrualERC20', () => {
       sablierContract.address,
     );
 
-    starcx.setProofProtocol(DEFAULT_PROOF_PROTOCOL);
+    await starcx.setProofProtocol(
+      utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+    );
   }
 
   async function init(ctx: ITestContext) {
@@ -109,12 +111,12 @@ describe('StakingAccrualERC20', () => {
 
     const user1PassportScore = {
       account: user1.address,
-      protocol: DEFAULT_PROOF_PROTOCOL,
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: BigNumber.from(1),
     };
     const user2PassportScore = {
       account: user2.address,
-      protocol: DEFAULT_PROOF_PROTOCOL,
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: BigNumber.from(1),
     };
 
@@ -337,16 +339,20 @@ describe('StakingAccrualERC20', () => {
     describe('#setProofProtocol', () => {
       it('reverts if called by non-admin', async () => {
         await expect(
-          starcx.connect(user1).setProofProtocol('asdf'),
+          starcx
+            .connect(user1)
+            .setProofProtocol(utils.formatBytes32String('asdf')),
         ).to.be.revertedWith('Adminable: caller is not admin');
       });
 
       it('sets the proof protocol', async () => {
-        expect(await starcx.proofProtocol()).to.eq(DEFAULT_PROOF_PROTOCOL);
+        expect(await starcx.getProofProtocol()).to.eq(DEFAULT_PROOF_PROTOCOL);
 
-        await starcx.connect(admin).setProofProtocol('test');
+        await starcx
+          .connect(admin)
+          .setProofProtocol(utils.formatBytes32String('test'));
 
-        expect(await starcx.proofProtocol()).to.eq('test');
+        expect(await starcx.getProofProtocol()).to.eq('test');
       });
     });
 
@@ -434,7 +440,7 @@ describe('StakingAccrualERC20', () => {
       it('reverts if staking with the proof of another protocol', async () => {
         const otherProtocolScore = {
           account: user1.address,
-          protocol: 'defi.other',
+          protocol: utils.formatBytes32String('defi.other'),
           score: BigNumber.from(500),
         };
 

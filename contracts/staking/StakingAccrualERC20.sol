@@ -9,6 +9,7 @@ import {Address} from "../lib/Address.sol";
 import {SafeERC20} from "../lib/SafeERC20.sol";
 import {SafeMath} from "../lib/SafeMath.sol";
 import {PassportScoreVerifiable} from "../lib/PassportScoreVerifiable.sol";
+import {Bytes32} from "../lib/Bytes32.sol";
 
 import {ISablier} from "../global/ISablier.sol";
 import {BaseERC20} from "../token/BaseERC20.sol";
@@ -32,6 +33,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
     using Address for address;
     using SafeERC20 for IPermittableERC20;
     using SafeMath for uint256;
+    using Bytes32 for bytes32;
 
     /* ========== Variables ========== */
 
@@ -44,7 +46,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
     ISablier public sablierContract;
     uint256 public sablierStreamId;
 
-    string public proofProtocol;
+    bytes32 private _proofProtocol;
 
     /**
      * @notice Cooldown duration to be elapsed for users to exit
@@ -237,14 +239,14 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
     }
 
     function setProofProtocol(
-        string calldata _protocol
+        bytes32 _protocol
     )
         external
         onlyAdmin
     {
-        proofProtocol = _protocol;
+        _proofProtocol = _protocol;
 
-        emit ProofProtocolSet(proofProtocol);
+        emit ProofProtocolSet(_proofProtocol.toString());
     }
 
     /* ========== Mutative Functions ========== */
@@ -257,8 +259,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
         checkScoreProof(_scoreProof, true, true)
     {
         require (
-            keccak256(abi.encodePacked(_scoreProof.protocol)) ==
-                keccak256(abi.encodePacked(proofProtocol)),
+            _scoreProof.protocol == _proofProtocol,
             "StakingAccrualERC20: wrong protocol in proof"
         );
 
@@ -423,5 +424,13 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
         returns (uint256)
     {
         return block.timestamp;
+    }
+
+    function getProofProtocol()
+        external
+        view
+        returns (string memory)
+    {
+        return _proofProtocol.toString();
     }
 }
