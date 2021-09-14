@@ -54,7 +54,9 @@ export class PassportScoreTree {
 
         if (nbScoresSameProtocol > 1) {
           throw Error(
-            `There are more than 1 score for the protocol ${protocol} for user ${passScore.account}`,
+            `There are more than 1 score for the protocol ${utils.parseBytes32String(
+              protocol,
+            )} for user ${passScore.account}`,
           );
         }
       });
