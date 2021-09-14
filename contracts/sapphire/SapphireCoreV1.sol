@@ -11,6 +11,7 @@ import {SafeMath} from "../lib/SafeMath.sol";
 import {Math} from "../lib/Math.sol";
 import {Adminable} from "../lib/Adminable.sol";
 import {Address} from "../lib/Address.sol";
+import {Bytes32} from "../lib/Bytes32.sol";
 import {ISapphireOracle} from "../oracle/ISapphireOracle.sol";
 import {ISyntheticTokenV2} from "../token/ISyntheticTokenV2.sol";
 
@@ -25,6 +26,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
     using SafeMath for uint256;
     using Address for address;
+    using Bytes32 for bytes32;
 
     /* ========== Constants ========== */
 
@@ -148,7 +150,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         interestSetter  = _interestSetter;
         pauseOperator   = _pauseOperator;
         feeCollector    = _feeCollector;
-        proofProtocol   = "arcx.creditscore";
+        _proofProtocol   = "arcx.creditscore";
 
         IERC20Metadata collateral   = IERC20Metadata(collateralAsset);
         uint8 collateralDecimals    = collateral.decimals();
@@ -419,14 +421,14 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     }
 
     function setProofProtocol(
-        string calldata _protocol
+        bytes32 _protocol
     )
         external
         onlyAdmin
     {
-        proofProtocol = _protocol;
+        _proofProtocol = _protocol;
 
-        emit ProofProtocolSet(proofProtocol);
+        emit ProofProtocolSet(_proofProtocol.toString());
     }
 
     /* ========== Public Functions ========== */
@@ -589,8 +591,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         );
 
         require (
-            keccak256(abi.encodePacked(_scoreProof.protocol)) ==
-                keccak256(abi.encodePacked(proofProtocol)),
+            _scoreProof.protocol == _proofProtocol,
             "SapphireCoreV1: incorrect proof protocol"
         );
 
@@ -663,6 +664,14 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         returns (uint256)
     {
         return borrowIndex.mul(accumulatedInterest()).div(BASE).add(borrowIndex);
+    }
+
+    function getProofProtocol()
+        external
+        view
+        returns (string memory)
+    {
+        return _proofProtocol.toString();
     }
 
     /**

@@ -25,7 +25,7 @@ export class PassportScoreTree {
 
   public static toNode(score: PassportScore): string {
     return utils.solidityKeccak256(
-      ['address', 'string', 'uint256'],
+      ['address', 'bytes32', 'uint256'],
       [score.account, score.protocol, score.score],
     );
   }

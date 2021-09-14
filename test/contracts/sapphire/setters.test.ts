@@ -337,17 +337,23 @@ describe('SapphireCore.setters', () => {
   describe('#setProofProtocol', () => {
     it('reverts if called by non-owner', async () => {
       await expect(
-        sapphireCore.connect(ctx.signers.unauthorized).setProofProtocol('test'),
+        sapphireCore
+          .connect(ctx.signers.unauthorized)
+          .setProofProtocol(utils.formatBytes32String('test')),
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
-    it('sets the proof protocol', async () => {
-      expect(await sapphireCore.proofProtocol()).to.eq(DEFAULT_PROOF_PROTOCOL);
+    it.only('sets the proof protocol', async () => {
+      expect(await sapphireCore.getProofProtocol()).to.eq(
+        DEFAULT_PROOF_PROTOCOL,
+      );
       expect(await sapphireCore.getAdmin()).to.eq(ctx.signers.admin.address);
 
-      await sapphireCore.connect(ctx.signers.admin).setProofProtocol('test');
+      await sapphireCore
+        .connect(ctx.signers.admin)
+        .setProofProtocol(utils.formatBytes32String('test'));
 
-      expect(await sapphireCore.proofProtocol()).to.eq('test');
+      expect(await sapphireCore.getProofProtocol()).to.eq('test');
     });
   });
 });
