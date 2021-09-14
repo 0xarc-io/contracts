@@ -1,4 +1,5 @@
 import { PassportScore } from '@arc-types/sapphireCore';
+import { utils } from '@ethereum-waffle/provider/node_modules/ethers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { PassportScoreTree } from '@src/MerkleTree';
 import {
@@ -8,6 +9,7 @@ import {
   SapphirePassportScoresFactory,
 } from '@src/typings';
 import { getScoreProof } from '@src/utils';
+import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
 import {
   addSnapshotBeforeRestoreAfterEach,
   advanceEpoch,
@@ -70,12 +72,12 @@ describe('SapphireCreditScore', () => {
     ctx = await generateContext(sapphireFixture, async (ctx) => {
       passportScore1 = {
         account: ctx.signers.admin.address,
-        protocol: 'arcx.creditscore',
+        protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
         score: BigNumber.from(12),
       };
       passportScore2 = {
         account: ctx.signers.unauthorized.address,
-        protocol: 'compound.borrower',
+        protocol: utils.formatBytes32String('defi.other'),
         score: BigNumber.from(20),
       };
       tree = new PassportScoreTree([passportScore1, passportScore2]);
@@ -390,7 +392,7 @@ describe('SapphireCreditScore', () => {
       await expect(
         passportScores.verify({
           ...getScoreProof(passportScore1, tree),
-          protocol: 'this.does.not.exist',
+          protocol: utils.formatBytes32String('this.does.not.exist'),
         }),
       ).to.be.revertedWith('SapphirePassportScores: invalid proof');
     });
