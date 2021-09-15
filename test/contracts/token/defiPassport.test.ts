@@ -9,11 +9,11 @@ import {
   DefiPassportFactory,
   MintableNFT,
   MintableNFTFactory,
-  MockSapphirePassportScores,
-  SapphirePassportScores,
-  SapphirePassportScoresFactory,
 } from '@src/typings';
 import { DefaultPassportSkinFactory } from '@src/typings/DefaultPassportSkinFactory';
+import { MockSapphirePassportScores } from '@src/typings/MockSapphirePassportScores';
+import { SapphirePassportScores } from '@src/typings/SapphirePassportScores';
+import { SapphirePassportScoresFactory } from '@src/typings/SapphirePassportScoresFactory';
 import { getEmptyScoreProof, getScoreProof } from '@src/utils';
 import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
@@ -81,7 +81,6 @@ describe('DefiPassport', () => {
       creditScoreTree.getHexRoot(),
       owner.address,
       owner.address,
-      1000,
     );
     await creditScoreContract.setPause(false);
   }

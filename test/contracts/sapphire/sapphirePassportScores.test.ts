@@ -16,7 +16,7 @@ import {
 } from '@test/helpers/testingUtils';
 import chai, { expect } from 'chai';
 import { solidity } from 'ethereum-waffle';
-import { BigNumber, BigNumberish } from 'ethers';
+import { BigNumber } from 'ethers';
 import 'module-alias/register';
 import { generateContext, ITestContext } from '../context';
 import { deployMockSapphirePassportScores } from '../deployers';
@@ -24,8 +24,6 @@ import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 
 chai.use(solidity);
-
-const MAX_CREDIT_SCORE = 1000;
 
 const ONE_BYTES32 =
   '0x1111111111111111111111111111111111111111111111111111111111111111';
@@ -54,7 +52,6 @@ describe('SapphireCreditScore', () => {
     merkleRoot: string,
     merkleRootUpdater: string,
     pauseOperator: string,
-    maxScore: BigNumberish,
   ) {
     const creditScoreInstance = await deployMockSapphirePassportScores(admin);
 
@@ -62,7 +59,6 @@ describe('SapphireCreditScore', () => {
       merkleRoot,
       merkleRootUpdater,
       pauseOperator,
-      maxScore,
     );
 
     return creditScoreInstance;
@@ -111,7 +107,6 @@ describe('SapphireCreditScore', () => {
         tree.getHexRoot(),
         merkleRootUpdater.address,
         pauseOperator.address,
-        MAX_CREDIT_SCORE,
       );
 
       // sets the merkle root
@@ -123,7 +118,6 @@ describe('SapphireCreditScore', () => {
       // pause operator
       expect(await contract.pauseOperator()).to.eq(pauseOperator.address);
       // max score
-      expect(await contract.maxScore()).to.eq(MAX_CREDIT_SCORE);
     });
   });
 
@@ -133,7 +127,6 @@ describe('SapphireCreditScore', () => {
         ONE_BYTES32,
         merkleRootUpdater.address,
         pauseOperator.address,
-        1000,
       );
       expect(await contract.isPaused()).to.be.true;
     });
@@ -320,7 +313,6 @@ describe('SapphireCreditScore', () => {
         ONE_BYTES32,
         merkleRootUpdater.address,
         pauseOperator.address,
-        MAX_CREDIT_SCORE,
       );
 
       await mockpassportScores.connect(pauseOperator).setPause(false);

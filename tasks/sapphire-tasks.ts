@@ -23,6 +23,7 @@ import _ from 'lodash';
 import { MAX_UINT256 } from '@src/constants';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import getUltimateOwner from './task-utils/getUltimateOwner';
+import { DEFAULT_MAX_CREDIT_SCORE } from '@test/helpers/sapphireDefaults';
 
 task(
   'deploy-sapphire-synth',
@@ -273,6 +274,7 @@ task('deploy-assessor', 'Deploy the Sapphire Assessor').setAction(
         data: new SapphireAssessorFactory(signer).getDeployTransaction(
           mapperAddress,
           creditScoreAddress,
+          DEFAULT_MAX_CREDIT_SCORE,
         ),
         version: 1,
         type: DeploymentType.global,
