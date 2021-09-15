@@ -5,16 +5,19 @@ import {ERC721Full} from "@openzeppelin/contracts/token/ERC721/ERC721Full.sol";
 import {Counters} from "@openzeppelin/contracts/drafts/Counters.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
+import {Bytes32} from "../../lib/Bytes32.sol";
 import {Adminable} from "../../lib/Adminable.sol";
 import {Initializable} from "../../lib/Initializable.sol";
 import {DefiPassportStorage} from "./DefiPassportStorage.sol";
-import {ISapphireCreditScore} from "../../sapphire/ISapphireCreditScore.sol";
+import {ISapphirePassportScores} from "../../sapphire/ISapphirePassportScores.sol";
+import {SapphireTypes} from "../../sapphire/SapphireTypes.sol";
 
 contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializable {
 
     /* ========== Libraries ========== */
 
     using Counters for Counters.Counter;
+    using Bytes32 for bytes32;
 
     /* ========== Events ========== */
 
@@ -47,13 +50,17 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
 
     event SkinManagerSet(address _skinManager);
 
-    event CreditScoreContractSet(address _creditScoreContract);
+    event PassportScoresContractSet(address _passportScoresContract);
 
     event WhitelistSkinSet(address _skin, bool _status);
+
+    event ProofProtocolSet(string _protocol);
 
     /* ========== Public variables ========== */
 
     string public baseURI;
+
+    bytes32 private _proofProtocol;
 
     /* ========== Constructor ========== */
 
@@ -77,7 +84,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
     function init(
         string calldata _name,
         string calldata _symbol,
-        address _creditScoreAddress,
+        address _passportScoresAddress,
         address _skinManager
     )
         external
@@ -89,11 +96,11 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         skinManager = _skinManager;
 
         require(
-            _creditScoreAddress.isContract(),
-            "DefiPassport: credit score address is not a contract"
+            _passportScoresAddress.isContract(),
+            "DefiPassport: passport scores address is not a contract"
         );
 
-        creditScoreContract = ISapphireCreditScore(_creditScoreAddress);
+        passportScoresContract = ISapphirePassportScores(_passportScoresAddress);
 
         /*
         *   register the supported interfaces to conform to ERC721 via ERC165
@@ -118,6 +125,20 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
     {
         baseURI = _baseURI;
         emit BaseURISet(_baseURI);
+    }
+
+    /**
+     * @notice Sets the protocol to be used in the score proof when minting new passports
+     */
+    function setProofProtocol(
+        bytes32 _protocol
+    )
+        external
+        onlyAdmin
+    {
+        _proofProtocol = _protocol;
+
+        emit ProofProtocolSet(_proofProtocol.toString());
     }
 
     /**
@@ -285,25 +306,25 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         emit WhitelistSkinSet(_skinContract, _status);
     }
 
-    function setCreditScoreContract(
-        address _creditScoreAddress
+    function setPassportScoresContract(
+        address _passportScoresAddress
     )
         external
         onlyAdmin
     {
         require(
-            address(creditScoreContract) != _creditScoreAddress,
-            "DefiPassport: the same credit score address is already set"
+            address(passportScoresContract) != _passportScoresAddress,
+            "DefiPassport: the same passport scores address is already set"
         );
 
         require(
-            _creditScoreAddress.isContract(),
+            _passportScoresAddress.isContract(),
             "DefiPassport: the given address is not a contract"
         );
 
-        creditScoreContract = ISapphireCreditScore(_creditScoreAddress);
+        passportScoresContract = ISapphirePassportScores(_passportScoresAddress);
 
-        emit CreditScoreContractSet(_creditScoreAddress);
+        emit PassportScoresContractSet(_passportScoresAddress);
     }
 
     /* ========== Public Functions ========== */
@@ -321,17 +342,23 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
     function mint(
         address _to,
         address _passportSkin,
-        uint256 _skinTokenId
+        uint256 _skinTokenId,
+        SapphireTypes.ScoreProof calldata _scoreProof
     )
         external
         returns (uint256)
     {
-        (uint256 userCreditScore,,) = creditScoreContract.getLastScore(_to);
+        require(
+            _to == _scoreProof.account,
+            "DefiPassport: the proof must correspond to the receiver"
+        );
 
         require(
-            userCreditScore > 0,
-            "DefiPassport: the user has no credit score"
+            _scoreProof.protocol == _proofProtocol,
+            "DefiPassport: invalid proof protocol"
         );
+
+        passportScoresContract.verify(_scoreProof);
 
         require (
             isSkinAvailable(_to, _passportSkin, _skinTokenId),
@@ -501,6 +528,14 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         address owner = ownerOf(tokenId);
 
         return string(abi.encodePacked(baseURI, "0x", _toAsciiString(owner)));
+    }
+
+    function getProofProtocol()
+        external
+        view
+        returns (string memory)
+    {
+        return _proofProtocol.toString();
     }
 
     /* ========== Private Functions ========== */

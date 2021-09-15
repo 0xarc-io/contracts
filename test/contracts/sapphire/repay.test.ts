@@ -1,14 +1,15 @@
-import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
+import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
 import { TestingSigners } from '@arc-types/testing';
 import { BigNumber } from '@ethersproject/bignumber';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
+import { PassportScoreTree } from '@src/MerkleTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { SyntheticTokenV2Factory } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import {
   DEFAULT_COLLATERAL_DECIMALS,
-  DEFAULT_HiGH_C_RATIO,
+  DEFAULT_HIGH_C_RATIO,
+  DEFAULT_PROOF_PROTOCOL,
 } from '@test/helpers/sapphireDefaults';
 import { setupBaseVault } from '@test/helpers/setupBaseVault';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
@@ -23,7 +24,7 @@ const NORMALIZED_COLLATERAL_AMOUNT = utils.parseEther('1000');
 const COLLATERAL_AMOUNT = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS);
 const COLLATERAL_PRICE = utils.parseEther('1');
 const BORROW_AMOUNT = NORMALIZED_COLLATERAL_AMOUNT.mul(COLLATERAL_PRICE).div(
-  DEFAULT_HiGH_C_RATIO,
+  DEFAULT_HIGH_C_RATIO,
 );
 const PRECISION_SCALAR = BigNumber.from(10).pow(
   BigNumber.from(18).sub(DEFAULT_COLLATERAL_DECIMALS),
@@ -38,8 +39,8 @@ const PRECISION_SCALAR = BigNumber.from(10).pow(
 describe('SapphireCore.repay()', () => {
   let arc: SapphireTestArc;
   let signers: TestingSigners;
-  let minterCreditScore: CreditScore;
-  let creditScoreTree: CreditScoreTree;
+  let minterCreditScore: PassportScore;
+  let creditScoreTree: PassportScoreTree;
 
   // /**
   //  * Returns the converted principal, as calculated by the smart contract:
@@ -62,7 +63,7 @@ describe('SapphireCore.repay()', () => {
   async function repay(
     amount: BigNumber,
     caller: SignerWithAddress,
-    scoreProof?: CreditScoreProof,
+    scoreProof?: PassportScoreProof,
   ) {
     const senderContract = SyntheticTokenV2Factory.connect(
       arc.syntheticAddress(),
@@ -77,13 +78,15 @@ describe('SapphireCore.repay()', () => {
   async function init(ctx: ITestContext) {
     minterCreditScore = {
       account: ctx.signers.scoredMinter.address,
-      amount: BigNumber.from(500),
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      score: BigNumber.from(500),
     };
     const creditScore2 = {
       account: ctx.signers.interestSetter.address,
-      amount: BigNumber.from(20),
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      score: BigNumber.from(20),
     };
-    creditScoreTree = new CreditScoreTree([minterCreditScore, creditScore2]);
+    creditScoreTree = new PassportScoreTree([minterCreditScore, creditScore2]);
 
     await setupSapphire(ctx, {
       merkleRoot: creditScoreTree.getHexRoot(),
@@ -143,7 +146,7 @@ describe('SapphireCore.repay()', () => {
       .mul(PRECISION_SCALAR)
       .mul(COLLATERAL_PRICE)
       .div(vault.borrowedAmount);
-    expect(cRatio).to.eq(constants.WeiPerEther.mul(4)); 
+    expect(cRatio).to.eq(constants.WeiPerEther.mul(4));
   });
 
   it('repays to make the position collateralized', async () => {

@@ -2,16 +2,18 @@ import { Synth } from '@arc-types/core';
 import { TransactionOverrides } from '@arc-types/ethereum';
 import {
   Action,
-  CreditScoreProof,
   Operation,
+  PassportScoreProof,
   Vault,
 } from '@arc-types/sapphireCore';
+import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
 import {
   BigNumber,
   BigNumberish,
   constants,
   ContractTransaction,
   Signer,
+  utils,
 } from 'ethers';
 import {
   BaseERC20Factory,
@@ -71,7 +73,7 @@ export class SapphireArc {
   async open(
     collateralAmount: BigNumberish,
     borrowAmount: BigNumber,
-    creditScoreProof?: CreditScoreProof,
+    passportScoreProof?: PassportScoreProof,
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
@@ -94,7 +96,7 @@ export class SapphireArc {
 
     return this.executeActions(
       actions,
-      creditScoreProof,
+      passportScoreProof,
       synthName,
       caller,
       overrides,
@@ -105,19 +107,26 @@ export class SapphireArc {
    * Runs repay and withdraw with full amounts at the given core.
    */
   async exit(
-    creditScoreProof?: CreditScoreProof,
+    passportScoreProof?: PassportScoreProof,
     synthName = this.getSynthNames()[0],
     caller = this.signer,
     overrides: TransactionOverrides = {},
   ) {
     const core = this._getCore(synthName, caller);
 
-    return core.exit(creditScoreProof ?? getEmptyScoreProof(), overrides);
+    return core.exit(
+      passportScoreProof ??
+        getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+        ),
+      overrides,
+    );
   }
 
   async liquidate(
     owner: string,
-    creditScoreProof?: CreditScoreProof,
+    passportScoreProof?: PassportScoreProof,
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
@@ -126,14 +135,18 @@ export class SapphireArc {
 
     return core.liquidate(
       owner,
-      creditScoreProof ?? getEmptyScoreProof(),
+      passportScoreProof ??
+        getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+        ),
       overrides,
     );
   }
 
   async executeActions(
     actions: Action[],
-    creditScoreProof?: CreditScoreProof,
+    passportScoreProof?: PassportScoreProof,
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
@@ -142,7 +155,11 @@ export class SapphireArc {
 
     await core.executeActions(
       actions,
-      creditScoreProof ?? getEmptyScoreProof(),
+      passportScoreProof ??
+        getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+        ),
       overrides,
     );
 
@@ -155,7 +172,7 @@ export class SapphireArc {
 
   async borrow(
     amount: BigNumber,
-    creditScoreProof?: CreditScoreProof,
+    passportScoreProof?: PassportScoreProof,
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
@@ -164,14 +181,18 @@ export class SapphireArc {
 
     return core.borrow(
       amount,
-      creditScoreProof ?? getEmptyScoreProof(),
+      passportScoreProof ??
+        getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+        ),
       overrides,
     );
   }
 
   async repay(
     amount: BigNumber,
-    creditScoreProof?: CreditScoreProof,
+    passportScoreProof?: PassportScoreProof,
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
@@ -180,7 +201,11 @@ export class SapphireArc {
 
     return core.repay(
       amount,
-      creditScoreProof ?? getEmptyScoreProof(),
+      passportScoreProof ??
+        getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+        ),
       overrides,
     );
   }
@@ -189,7 +214,7 @@ export class SapphireArc {
 
   async deposit(
     amount: BigNumber,
-    creditScoreProof?: CreditScoreProof,
+    passportScoreProof?: PassportScoreProof,
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
@@ -198,14 +223,18 @@ export class SapphireArc {
 
     return core.deposit(
       amount,
-      creditScoreProof ?? getEmptyScoreProof(),
+      passportScoreProof ??
+        getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+        ),
       overrides,
     );
   }
 
   async withdraw(
     amount: BigNumber,
-    creditScoreProof?: CreditScoreProof,
+    passportScoreProof?: PassportScoreProof,
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
@@ -214,7 +243,11 @@ export class SapphireArc {
 
     return core.withdraw(
       amount,
-      creditScoreProof ?? getEmptyScoreProof(),
+      passportScoreProof ??
+        getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+        ),
       overrides,
     );
   }

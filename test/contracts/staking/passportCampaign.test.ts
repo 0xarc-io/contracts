@@ -1,8 +1,8 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import {
   ArcProxyFactory,
-  MockSapphireCreditScore,
-  SapphireCreditScoreFactory,
+  MockSapphirePassportScores,
+  SapphirePassportScoresFactory,
   TestToken,
   TestTokenFactory,
 } from '@src/typings';
@@ -21,12 +21,13 @@ import {
   immediatelyUpdateMerkleRoot,
 } from '@test/helpers/testingUtils';
 import { getEmptyScoreProof, getScoreProof } from '@src/utils/getScoreProof';
-import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
-import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 import _ from 'lodash';
+import { PassportScoreTree } from '@src/MerkleTree';
+import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
+import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
 
 chai.use(solidity);
 const expect = chai.expect;
@@ -48,17 +49,18 @@ describe('PassportCampaign', () => {
   let user1PassportCampaign: MockPassportCampaign;
   let unauthorizedPassportCampaign: MockPassportCampaign;
 
-  let creditScoreContract: MockSapphireCreditScore;
+  let creditScoreContract: MockSapphirePassportScores;
 
-  let stakerCreditScore: CreditScore;
-  let user1CreditScore: CreditScore;
-  let unauthorizedCreditScore: CreditScore;
+  let stakerPassportScore: PassportScore;
+  let user1PassportScore: PassportScore;
+  let unauthorizedPassportScore: PassportScore;
 
-  let stakerScoreProof: CreditScoreProof;
-  let user1ScoreProof: CreditScoreProof;
-  let unauthorizedScoreProof: CreditScoreProof;
+  let stakerScoreProof: PassportScoreProof;
+  let user1ScoreProof: PassportScoreProof;
+  let unauthorizedScoreProof: PassportScoreProof;
+  let unauthorizedProtocolProof: PassportScoreProof;
 
-  let creditScoreTree: CreditScoreTree;
+  let creditScoreTree: PassportScoreTree;
 
   let stakingToken: TestToken;
   let rewardToken: TestToken;
@@ -83,7 +85,7 @@ describe('PassportCampaign', () => {
   async function stake(
     user: SignerWithAddress,
     amount: BigNumber,
-    scoreProof: CreditScoreProof,
+    scoreProof: PassportScoreProof,
   ) {
     await mintAndApprove(stakingToken, user, amount);
 
@@ -109,38 +111,31 @@ describe('PassportCampaign', () => {
   async function withdraw(
     user: SignerWithAddress,
     amount: BigNumber = STAKE_AMOUNT,
-    scoreProof?: CreditScoreProof,
   ) {
     const contract = MockPassportCampaignFactory.connect(
       adminPassportCampaign.address,
       user,
     );
 
-    await contract.withdraw(amount, scoreProof ?? getEmptyScoreProof());
+    await contract.withdraw(amount);
   }
 
-  async function exitCampaign(
-    user: SignerWithAddress,
-    scoreProof?: CreditScoreProof,
-  ) {
+  async function exitCampaign(user: SignerWithAddress) {
     const contract = MockPassportCampaignFactory.connect(
       adminPassportCampaign.address,
       user,
     );
 
-    await contract.exit(scoreProof ?? getEmptyScoreProof());
+    await contract.exit();
   }
 
-  async function claimReward(
-    user: SignerWithAddress,
-    scoreProof?: CreditScoreProof,
-  ) {
+  async function claimReward(user: SignerWithAddress) {
     const contract = MockPassportCampaignFactory.connect(
       adminPassportCampaign.address,
       user,
     );
 
-    await contract.getReward(user.address, scoreProof ?? getEmptyScoreProof());
+    await contract.getReward(user.address);
   }
 
   async function rewardBalanceOf(user: SignerWithAddress) {
@@ -187,31 +182,44 @@ describe('PassportCampaign', () => {
     user1 = signers.scoredMinter;
     unauthorized = signers.unauthorized;
 
-    stakerCreditScore = {
+    stakerPassportScore = {
       account: staker.address,
-      amount: CREDIT_SCORE_THRESHOLD,
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      score: CREDIT_SCORE_THRESHOLD,
     };
 
-    user1CreditScore = {
+    user1PassportScore = {
       account: signers.scoredMinter.address,
-      amount: CREDIT_SCORE_THRESHOLD.add(100),
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      score: CREDIT_SCORE_THRESHOLD.add(100),
     };
 
-    unauthorizedCreditScore = {
+    unauthorizedPassportScore = {
       account: unauthorized.address,
-      amount: CREDIT_SCORE_THRESHOLD.sub(10),
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      score: CREDIT_SCORE_THRESHOLD.sub(10),
     };
 
-    creditScoreTree = new CreditScoreTree([
-      stakerCreditScore,
-      unauthorizedCreditScore,
-      user1CreditScore,
+    const unauthorizedProtocolScore = {
+      ...stakerPassportScore,
+      protocol: utils.formatBytes32String('defi.other'),
+    };
+
+    creditScoreTree = new PassportScoreTree([
+      stakerPassportScore,
+      unauthorizedPassportScore,
+      user1PassportScore,
+      unauthorizedProtocolScore,
     ]);
 
-    stakerScoreProof = getScoreProof(stakerCreditScore, creditScoreTree);
-    user1ScoreProof = getScoreProof(user1CreditScore, creditScoreTree);
+    stakerScoreProof = getScoreProof(stakerPassportScore, creditScoreTree);
+    user1ScoreProof = getScoreProof(user1PassportScore, creditScoreTree);
     unauthorizedScoreProof = getScoreProof(
-      unauthorizedCreditScore,
+      unauthorizedPassportScore,
+      creditScoreTree,
+    );
+    unauthorizedProtocolProof = getScoreProof(
+      unauthorizedProtocolScore,
       creditScoreTree,
     );
   }
@@ -224,7 +232,7 @@ describe('PassportCampaign', () => {
       merkleRoot: creditScoreTree.getHexRoot(),
     });
 
-    creditScoreContract = ctx.contracts.sapphire.creditScore;
+    creditScoreContract = ctx.contracts.sapphire.passportScores;
 
     stakingToken = await deployTestToken(admin, '3Pool', 'CRV');
     rewardToken = await deployTestToken(admin, 'Arc Token', 'ARC');
@@ -249,6 +257,10 @@ describe('PassportCampaign', () => {
 
     await rewardToken.mintShare(adminPassportCampaign.address, REWARD_AMOUNT);
     await mintAndApprove(stakingToken, staker, STAKE_AMOUNT);
+
+    await adminPassportCampaign.setProofProtocol(
+      utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+    );
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -399,10 +411,11 @@ describe('PassportCampaign', () => {
 
       it('reverts if called without a valid credit score proof', async () => {
         await expect(
-          stakerPassportCampaign.stake(STAKE_AMOUNT, getEmptyScoreProof()),
-        ).to.be.revertedWith(
-          'PassportCampaign: proof is required but it is not passed',
-        );
+          stakerPassportCampaign.stake(
+            STAKE_AMOUNT,
+            getEmptyScoreProof(staker.address),
+          ),
+        ).to.be.revertedWith('SapphirePassportScores: invalid proof');
       });
 
       it('reverts if called by a user with a credit score that is lower than required', async () => {
@@ -427,6 +440,15 @@ describe('PassportCampaign', () => {
         await expect(
           stakerPassportCampaign.stake(balance.add(1), stakerScoreProof),
         ).to.be.revertedWith('SafeERC20: TRANSFER_FROM_FAILED');
+      });
+
+      it('reverts if using a different protocol than the one registered', async () => {
+        await expect(
+          stakerPassportCampaign.stake(
+            STAKE_AMOUNT.div(2),
+            unauthorizedProtocolProof,
+          ),
+        ).to.be.revertedWith('PassportCampaign: incorrect protocol in proof');
       });
 
       it('should be able to stake', async () => {
@@ -510,7 +532,7 @@ describe('PassportCampaign', () => {
         await increaseTime(REWARD_DURATION / 2);
 
         await expect(
-          stakerPassportCampaign.getReward(staker.address, stakerScoreProof),
+          stakerPassportCampaign.getReward(staker.address),
         ).to.be.revertedWith('PassportCampaign: tokens cannot be claimed yet');
       });
 
@@ -520,10 +542,7 @@ describe('PassportCampaign', () => {
 
         await setTimestampTo(1);
 
-        await stakerPassportCampaign.getReward(
-          staker.address,
-          stakerScoreProof,
-        );
+        await stakerPassportCampaign.getReward(staker.address);
 
         let currentBalance = await rewardToken.balanceOf(staker.address);
 
@@ -531,10 +550,7 @@ describe('PassportCampaign', () => {
 
         await setTimestampTo(2);
 
-        await stakerPassportCampaign.getReward(
-          staker.address,
-          stakerScoreProof,
-        );
+        await stakerPassportCampaign.getReward(staker.address);
 
         currentBalance = await rewardToken.balanceOf(staker.address);
 
@@ -548,10 +564,7 @@ describe('PassportCampaign', () => {
 
         await setTimestampTo(1);
 
-        await stakerPassportCampaign.getReward(
-          staker.address,
-          stakerScoreProof,
-        );
+        await stakerPassportCampaign.getReward(staker.address);
 
         expect(await rewardToken.balanceOf(staker.address)).to.eq(
           utils.parseEther('6'),
@@ -561,11 +574,8 @@ describe('PassportCampaign', () => {
 
         await setTimestampTo(2);
 
-        await stakerPassportCampaign.getReward(
-          staker.address,
-          stakerScoreProof,
-        );
-        await user1PassportCampaign.getReward(user1.address, user1ScoreProof);
+        await stakerPassportCampaign.getReward(staker.address);
+        await user1PassportCampaign.getReward(user1.address);
 
         expect(await rewardToken.balanceOf(staker.address)).to.eq(
           utils.parseEther('9'),
@@ -581,10 +591,7 @@ describe('PassportCampaign', () => {
 
         await setTimestampTo(1);
 
-        await stakerPassportCampaign.getReward(
-          staker.address,
-          getEmptyScoreProof(),
-        );
+        await stakerPassportCampaign.getReward(staker.address);
 
         const currentBalance = await rewardToken.balanceOf(staker.address);
 
@@ -601,10 +608,7 @@ describe('PassportCampaign', () => {
         await stakerPassportCampaign.stake(STAKE_AMOUNT, stakerScoreProof);
 
         await expect(
-          stakerPassportCampaign.withdraw(
-            STAKE_AMOUNT.add(1),
-            stakerScoreProof,
-          ),
+          stakerPassportCampaign.withdraw(STAKE_AMOUNT.add(1)),
         ).to.be.revertedWith(
           'PassportCampaign: cannot withdraw more than the balance',
         );
@@ -613,7 +617,7 @@ describe('PassportCampaign', () => {
       it('should withdraw the correct amount', async () => {
         await stakerPassportCampaign.stake(STAKE_AMOUNT, stakerScoreProof);
 
-        await stakerPassportCampaign.withdraw(STAKE_AMOUNT, stakerScoreProof);
+        await stakerPassportCampaign.withdraw(STAKE_AMOUNT);
 
         const balance = await stakingToken.balanceOf(staker.address);
 
@@ -623,10 +627,7 @@ describe('PassportCampaign', () => {
       it('should withdraw the correct amount even if an empty proof was given', async () => {
         await stakerPassportCampaign.stake(STAKE_AMOUNT, stakerScoreProof);
 
-        await stakerPassportCampaign.withdraw(
-          STAKE_AMOUNT,
-          getEmptyScoreProof(),
-        );
+        await stakerPassportCampaign.withdraw(STAKE_AMOUNT);
 
         const balance = await stakingToken.balanceOf(staker.address);
 
@@ -649,7 +650,7 @@ describe('PassportCampaign', () => {
         expect(await stakingToken.balanceOf(staker.address), 'a').to.eq(0);
         expect(await rewardToken.balanceOf(staker.address), 'b').to.eq(0);
 
-        await stakerPassportCampaign.exit(stakerScoreProof);
+        await stakerPassportCampaign.exit();
 
         const stakingBalance = await stakingToken.balanceOf(staker.address);
         const rewardBalance = await rewardToken.balanceOf(staker.address);
@@ -664,7 +665,7 @@ describe('PassportCampaign', () => {
 
         await setTimestampTo(1);
 
-        await stakerPassportCampaign.exit(getEmptyScoreProof());
+        await stakerPassportCampaign.exit();
 
         const stakingBalance = await stakingToken.balanceOf(staker.address);
         const rewardBalance = await rewardToken.balanceOf(staker.address);
@@ -710,7 +711,7 @@ describe('PassportCampaign', () => {
         const stakingTokenAddress = await adminPassportCampaign.stakingToken();
         const daoAllocation = await adminPassportCampaign.daoAllocation();
         const scoreThreshold = await adminPassportCampaign.creditScoreThreshold();
-        const creditScoreAddy = await adminPassportCampaign.creditScoreContract()
+        const creditScoreAddy = await adminPassportCampaign.passportScoresContract();
 
         expect(arcDao).to.eq(admin.address);
         expect(rewardsDistributor).to.eq(admin.address);
@@ -718,7 +719,7 @@ describe('PassportCampaign', () => {
         expect(stakingTokenAddress).to.eq(stakingToken.address);
         expect(daoAllocation).to.eq(DAO_ALLOCATION);
         expect(scoreThreshold).to.eq(CREDIT_SCORE_THRESHOLD);
-        expect(creditScoreAddy).to.eq(creditScoreAddy)
+        expect(creditScoreAddy).to.eq(creditScoreAddy);
       });
 
       it('should not be called twice by the contract owner', async () => {
@@ -928,47 +929,47 @@ describe('PassportCampaign', () => {
       });
     });
 
-    describe('#setCreditScoreContract', () => {
+    describe('#setPassportScoresContract', () => {
       beforeEach(async () => {
-        await setup()
-      })
-      
+        await setup();
+      });
+
       it('reverts if called by non-admin', async () => {
-        const newCs = await new SapphireCreditScoreFactory(admin).deploy();
+        const newCs = await new SapphirePassportScoresFactory(admin).deploy();
 
         await expect(
-          user1PassportCampaign.setCreditScoreContract(newCs.address),
+          user1PassportCampaign.setPassportScoresContract(newCs.address),
         ).to.be.revertedWith('Adminable: caller is not admin');
       });
 
       it('reverts if setting the same contract', async () => {
         await expect(
-          adminPassportCampaign.setCreditScoreContract(
+          adminPassportCampaign.setPassportScoresContract(
             creditScoreContract.address,
           ),
         ).to.be.revertedWith(
-          'PassportCampaign: the same credit score address is already set',
+          'PassportCampaign: the same passport scores address is already set',
         );
       });
 
       it('reverts if the contract is not an address', async () => {
         await expect(
-          adminPassportCampaign.setCreditScoreContract(user1.address),
+          adminPassportCampaign.setPassportScoresContract(user1.address),
         ).to.be.revertedWith(
           'PassportCampaign: the given address is not a contract',
         );
       });
 
       it('sets a new credit score contract', async () => {
-        const newCs = await new SapphireCreditScoreFactory(admin).deploy();
+        const newCs = await new SapphirePassportScoresFactory(admin).deploy();
 
-        expect(await adminPassportCampaign.creditScoreContract()).to.eq(
+        expect(await adminPassportCampaign.passportScoresContract()).to.eq(
           creditScoreContract.address,
         );
 
-        await adminPassportCampaign.setCreditScoreContract(newCs.address);
+        await adminPassportCampaign.setPassportScoresContract(newCs.address);
 
-        expect(await adminPassportCampaign.creditScoreContract()).to.eq(
+        expect(await adminPassportCampaign.passportScoresContract()).to.eq(
           newCs.address,
         );
       });
@@ -997,11 +998,33 @@ describe('PassportCampaign', () => {
         );
       });
     });
+
+    describe('#setProofProtocol', () => {
+      it('reverts if called by non-admin', async () => {
+        await expect(
+          user1PassportCampaign.setProofProtocol(
+            utils.formatBytes32String('test'),
+          ),
+        ).to.be.revertedWith('Adminable: caller is not admin');
+      });
+
+      it('sets the proof protocol', async () => {
+        expect(await user1PassportCampaign.getProofProtocol()).to.eq(
+          DEFAULT_PROOF_PROTOCOL,
+        );
+
+        await adminPassportCampaign.setProofProtocol(
+          utils.formatBytes32String('test'),
+        );
+
+        expect(await user1PassportCampaign.getProofProtocol()).to.eq('test');
+      });
+    });
   });
 
   describe('Scenarios', () => {
     let users: Record<string, SignerWithAddress>;
-    let creditScoreProofs: Record<string, CreditScoreProof>;
+    let creditScoreProofs: Record<string, PassportScoreProof>;
 
     before(async () => {
       await adminPassportCampaign.setRewardsDistributor(admin.address);
@@ -1028,15 +1051,16 @@ describe('PassportCampaign', () => {
       };
 
       // Set up credit scores for the users of this scenario
-      const creditScores: Record<string, CreditScore> = {};
+      const creditScores: Record<string, PassportScore> = {};
       Object.keys(users).forEach((userKey) => {
         creditScores[userKey] = {
           account: users[userKey].address,
-          amount: CREDIT_SCORE_THRESHOLD,
+          protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+          score: CREDIT_SCORE_THRESHOLD,
         };
       });
 
-      const newCreditScoreTree = new CreditScoreTree(
+      const newPassportScoreTree = new PassportScoreTree(
         Object.values(creditScores),
       );
 
@@ -1044,13 +1068,13 @@ describe('PassportCampaign', () => {
       Object.keys(users).forEach((userKey) => {
         creditScoreProofs[userKey] = getScoreProof(
           creditScores[userKey],
-          newCreditScoreTree,
+          newPassportScoreTree,
         );
       });
 
       await immediatelyUpdateMerkleRoot(
         creditScoreContract.connect(ctx.signers.interestSetter),
-        newCreditScoreTree.getHexRoot(),
+        newPassportScoreTree.getHexRoot(),
       );
     });
 
@@ -1291,7 +1315,7 @@ describe('PassportCampaign', () => {
 
       await adminPassportCampaign.setTokensClaimable(true);
 
-      await exitCampaign(users.userB, creditScoreProofs.userB);
+      await exitCampaign(users.userB);
       await withdraw(users.userC, STAKE_AMOUNT);
 
       await adminPassportCampaign.setCurrentTimestamp(20);
@@ -1352,7 +1376,7 @@ describe('PassportCampaign', () => {
 
       await adminPassportCampaign.setTokensClaimable(true);
 
-      await claimReward(users.userA, creditScoreProofs.userA);
+      await claimReward(users.userA);
 
       expect(await rewardToken.balanceOf(users.userA.address)).to.eq(
         utils.parseEther('19.8'),
@@ -1362,7 +1386,7 @@ describe('PassportCampaign', () => {
 
       expect(await earned(users.userB)).to.eq(utils.parseEther('45'));
 
-      await claimReward(users.userB, creditScoreProofs.userB);
+      await claimReward(users.userB);
 
       expect(await rewardToken.balanceOf(users.userB.address)).to.eq(
         utils.parseEther('27'),

@@ -1,3 +1,3 @@
-export * from './BalanceTree'
-export * from './CreditScoreTree'
-export * from './MerkleTree'
+export * from './BalanceTree';
+export * from './PassportScoreTree';
+export * from './MerkleTree';

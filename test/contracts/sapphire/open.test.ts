@@ -1,4 +1,3 @@
-import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import chai, { expect } from 'chai';
@@ -8,15 +7,17 @@ import 'module-alias/register';
 import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
-import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 import {
   DEFAULT_COLLATERAL_DECIMALS,
   DEFAULT_PRICE,
+  DEFAULT_PROOF_PROTOCOL,
 } from '@test/helpers/sapphireDefaults';
 import { mintApprovedCollateral } from '@test/helpers/setupBaseVault';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { BASE } from '@src/constants';
 import { getScoreProof } from '@src/utils/getScoreProof';
+import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
+import { PassportScoreTree } from '@src/MerkleTree';
 
 chai.use(solidity);
 
@@ -31,27 +32,26 @@ describe('SapphireCore.open()', () => {
     '100',
     DEFAULT_COLLATERAL_DECIMALS,
   );
-  const BORROW_AMOUNT = utils
-    .parseEther('50')
-    .mul(DEFAULT_PRICE)
-    .div(BASE)
+  const BORROW_AMOUNT = utils.parseEther('50').mul(DEFAULT_PRICE).div(BASE);
 
   let ctx: ITestContext;
   let arc: SapphireTestArc;
-  let creditScore1: CreditScore;
-  let creditScore2: CreditScore;
-  let creditScoreTree: CreditScoreTree;
+  let creditScore1: PassportScore;
+  let creditScore2: PassportScore;
+  let creditScoreTree: PassportScoreTree;
 
   async function init(ctx: ITestContext): Promise<void> {
     creditScore1 = {
       account: ctx.signers.scoredMinter.address,
-      amount: BigNumber.from(500),
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      score: BigNumber.from(500),
     };
     creditScore2 = {
       account: ctx.signers.interestSetter.address,
-      amount: BigNumber.from(20),
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      score: BigNumber.from(20),
     };
-    creditScoreTree = new CreditScoreTree([creditScore1, creditScore2]);
+    creditScoreTree = new PassportScoreTree([creditScore1, creditScore2]);
     await setupSapphire(ctx, {
       merkleRoot: creditScoreTree.getHexRoot(),
     });
@@ -138,27 +138,6 @@ describe('SapphireCore.open()', () => {
       );
     });
 
-    it('revert if proof is not provided', async () => {
-      await arc.open(
-        COLLATERAL_AMOUNT,
-        BORROW_AMOUNT,
-        getScoreProof(creditScore1, creditScoreTree),
-        undefined,
-        ctx.signers.scoredMinter,
-      );
-      await expect(
-        arc.open(
-          COLLATERAL_AMOUNT,
-          BORROW_AMOUNT,
-          undefined,
-          undefined,
-          ctx.signers.scoredMinter,
-        ),
-      ).to.be.revertedWith(
-        'SapphireAssessor: proof should be provided for credit score',
-      );
-    });
-
     it('revert if opened below the minimum position amount', async () => {
       await arc
         .core()
@@ -200,7 +179,7 @@ describe('SapphireCore.open()', () => {
   });
 
   describe('with score proof', () => {
-    let creditScoreProof: CreditScoreProof;
+    let creditScoreProof: PassportScoreProof;
     let scoredMinter: SignerWithAddress;
     before(() => {
       creditScoreProof = getScoreProof(creditScore1, creditScoreTree);
@@ -296,25 +275,6 @@ describe('SapphireCore.open()', () => {
       ).to.be.revertedWith(
         'SapphireCoreV1: the vault will become undercollateralized',
       );
-    });
-
-    it('open if a score for address exists on-chain', async () => {
-      await ctx.contracts.sapphire.creditScore.verifyAndUpdate(
-        creditScoreProof,
-      );
-      await arc.open(
-        COLLATERAL_AMOUNT,
-        BORROW_AMOUNT,
-        creditScoreProof,
-        undefined,
-        scoredMinter,
-      );
-
-      const { borrowedAmount, collateralAmount } = await arc.getVault(
-        scoredMinter.address,
-      );
-      expect(collateralAmount).eq(COLLATERAL_AMOUNT);
-      expect(borrowedAmount).eq(BORROW_AMOUNT);
     });
 
     it('revert if opened below the minimum position amount', async () => {

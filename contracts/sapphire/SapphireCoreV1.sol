@@ -11,6 +11,7 @@ import {SafeMath} from "../lib/SafeMath.sol";
 import {Math} from "../lib/Math.sol";
 import {Adminable} from "../lib/Adminable.sol";
 import {Address} from "../lib/Address.sol";
+import {Bytes32} from "../lib/Bytes32.sol";
 import {ISapphireOracle} from "../oracle/ISapphireOracle.sol";
 import {ISyntheticTokenV2} from "../token/ISyntheticTokenV2.sol";
 
@@ -19,12 +20,13 @@ import {SapphireCoreStorage} from "./SapphireCoreStorage.sol";
 import {SapphireAssessor} from "./SapphireAssessor.sol";
 import {ISapphireAssessor} from "./ISapphireAssessor.sol";
 
-contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
+contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
     /* ========== Libraries ========== */
 
     using SafeMath for uint256;
     using Address for address;
+    using Bytes32 for bytes32;
 
     /* ========== Constants ========== */
 
@@ -80,6 +82,8 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         address _destination,
         uint256 _amount
     );
+
+    event ProofProtocolSet(string _protocol);
 
     /* ========== Admin Setters ========== */
 
@@ -138,17 +142,18 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             "SapphireCoreV1: collateral or synthetic are not contracts"
         );
 
-        paused = true;
-        borrowIndex = BASE;
+        paused          = true;
+        borrowIndex     = BASE;
         indexLastUpdate = currentTimestamp();
         collateralAsset = _collateralAddress;
-        syntheticAsset = _syntheticAddress;
-        interestSetter = _interestSetter;
-        pauseOperator = _pauseOperator;
-        feeCollector = _feeCollector;
+        syntheticAsset  = _syntheticAddress;
+        interestSetter  = _interestSetter;
+        pauseOperator   = _pauseOperator;
+        feeCollector    = _feeCollector;
+        _proofProtocol   = "arcx.creditscore";
 
-        IERC20Metadata collateral = IERC20Metadata(collateralAsset);
-        uint8 collateralDecimals = collateral.decimals();
+        IERC20Metadata collateral   = IERC20Metadata(collateralAsset);
+        uint8 collateralDecimals    = collateral.decimals();
 
         require(
             collateralDecimals <= 18,
@@ -415,6 +420,17 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         emit InterestRateUpdated(interestRate);
     }
 
+    function setProofProtocol(
+        bytes32 _protocol
+    )
+        external
+        onlyAdmin
+    {
+        _proofProtocol = _protocol;
+
+        emit ProofProtocolSet(_proofProtocol.toString());
+    }
+
     /* ========== Public Functions ========== */
 
     /**
@@ -574,6 +590,11 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             "SapphireCoreV1: there must be at least one action"
         );
 
+        require (
+            _scoreProof.protocol == _proofProtocol,
+            "SapphireCoreV1: incorrect proof protocol"
+        );
+
         // Update the index to calculate how much interest has accrued
         updateIndex();
 
@@ -643,6 +664,14 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
         returns (uint256)
     {
         return borrowIndex.mul(accumulatedInterest()).div(BASE).add(borrowIndex);
+    }
+
+    function getProofProtocol()
+        external
+        view
+        returns (string memory)
+    {
+        return _proofProtocol.toString();
     }
 
     /**
@@ -1111,7 +1140,10 @@ contract SapphireCoreV1 is SapphireCoreStorage, Adminable {
             if (action.operation == SapphireTypes.Operation.Borrow ||
                 action.operation == SapphireTypes.Operation.Liquidate
             ) {
-                mandatoryProof = true;
+                if (action.operation == SapphireTypes.Operation.Liquidate) {
+                    mandatoryProof = true;
+                }
+
                 needsCollateralPrice = true;
 
             } else if (action.operation == SapphireTypes.Operation.Withdraw) {

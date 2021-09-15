@@ -8,13 +8,14 @@ import {Initializable} from "../lib/Initializable.sol";
 import {Address} from "../lib/Address.sol";
 import {SafeERC20} from "../lib/SafeERC20.sol";
 import {SafeMath} from "../lib/SafeMath.sol";
-import {CreditScoreVerifiable} from "../lib/CreditScoreVerifiable.sol";
+import {PassportScoreVerifiable} from "../lib/PassportScoreVerifiable.sol";
+import {Bytes32} from "../lib/Bytes32.sol";
 
 import {ISablier} from "../global/ISablier.sol";
 import {BaseERC20} from "../token/BaseERC20.sol";
 import {IPermittableERC20} from "../token/IPermittableERC20.sol";
 import {SapphireTypes} from "../sapphire/SapphireTypes.sol";
-import {ISapphireCreditScore} from "../sapphire/ISapphireCreditScore.sol";
+import {ISapphirePassportScores} from "../sapphire/ISapphirePassportScores.sol";
 
 /**
  * @notice An ERC20 that allows users to deposit a given token, where their
@@ -25,13 +26,14 @@ import {ISapphireCreditScore} from "../sapphire/ISapphireCreditScore.sol";
  *         intent, which will trigger a cooldown after which they will be able
  *         to reclaim their share.
  */
-contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Initializable {
+contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, Initializable {
 
     /* ========== Libraries ========== */
 
     using Address for address;
     using SafeERC20 for IPermittableERC20;
     using SafeMath for uint256;
+    using Bytes32 for bytes32;
 
     /* ========== Variables ========== */
 
@@ -43,6 +45,8 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
 
     ISablier public sablierContract;
     uint256 public sablierStreamId;
+
+    bytes32 private _proofProtocol;
 
     /**
      * @notice Cooldown duration to be elapsed for users to exit
@@ -68,7 +72,9 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
 
     event FundsWithdrawnFromSablier(uint256 _streamId, uint256 _amount);
 
-    event CreditScoreContractSet(address _creditScoreContract);
+    event PassportScoresContractSet(address _passportScoresContract);
+
+    event ProofProtocolSet(string _protocol);
 
     /* ========== Constructor (ignore) ========== */
 
@@ -85,7 +91,7 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
         uint8 __decimals,
         address _stakingToken,
         uint256 _exitCooldownDuration,
-        address _creditScoreContract,
+        address _passportScoresContract,
         address _sablierContract
     )
         external
@@ -103,8 +109,8 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
         );
 
         require (
-            _creditScoreContract.isContract(),
-            "StakingAccrualERC20: the credit score contract is invalid"
+            _passportScoresContract.isContract(),
+            "StakingAccrualERC20: the passport scores contract is invalid"
         );
 
         require (
@@ -118,7 +124,7 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
         );
 
         stakingToken = IPermittableERC20(_stakingToken);
-        creditScoreContract = ISapphireCreditScore(_creditScoreContract);
+        passportScoresContract = ISapphirePassportScores(_passportScoresContract);
         sablierContract = ISablier(_sablierContract);
     }
 
@@ -166,25 +172,25 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
         );
     }
 
-    function setCreditScoreContract(
-        address _creditScoreAddress
+    function setPassportScoreContract(
+        address _passportScoresContract
     )
         external
         onlyAdmin
     {
         require(
-            address(creditScoreContract) != _creditScoreAddress,
-            "StakingAccrualERC20: the same credit score address is already set"
+            address(passportScoresContract) != _passportScoresContract,
+            "StakingAccrualERC20: the same passport scores address is already set"
         );
 
         require(
-            _creditScoreAddress.isContract(),
+            _passportScoresContract.isContract(),
             "StakingAccrualERC20: the given address is not a contract"
         );
 
-        creditScoreContract = ISapphireCreditScore(_creditScoreAddress);
+        passportScoresContract = ISapphirePassportScores(_passportScoresContract);
 
-        emit CreditScoreContractSet(_creditScoreAddress);
+        emit PassportScoresContractSet(_passportScoresContract);
     }
 
     /**
@@ -232,6 +238,17 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
         emit SablierStreamIdSet(sablierStreamId);
     }
 
+    function setProofProtocol(
+        bytes32 _protocol
+    )
+        external
+        onlyAdmin
+    {
+        _proofProtocol = _protocol;
+
+        emit ProofProtocolSet(_proofProtocol.toString());
+    }
+
     /* ========== Mutative Functions ========== */
 
     function stake(
@@ -239,8 +256,13 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
         SapphireTypes.ScoreProof memory _scoreProof
     )
         public
-        checkScoreProof(_scoreProof, true)
+        checkScoreProof(_scoreProof, true, true)
     {
+        require (
+            _scoreProof.protocol == _proofProtocol,
+            "StakingAccrualERC20: wrong protocol in proof"
+        );
+
         claimStreamFunds();
 
         uint256 cooldownTimestamp = cooldowns[msg.sender];
@@ -402,5 +424,13 @@ contract StakingAccrualERC20 is BaseERC20, CreditScoreVerifiable, Adminable, Ini
         returns (uint256)
     {
         return block.timestamp;
+    }
+
+    function getProofProtocol()
+        external
+        view
+        returns (string memory)
+    {
+        return _proofProtocol.toString();
     }
 }

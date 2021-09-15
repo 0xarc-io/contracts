@@ -1,11 +1,9 @@
 import { BigNumber, BigNumberish } from 'ethers';
 import { ITestContext } from './context';
-import {
-  immediatelyUpdateMerkleRoot,
-} from '../helpers/testingUtils';
+import { immediatelyUpdateMerkleRoot } from '../helpers/testingUtils';
 import _ from 'lodash';
 import {
-  DEFAULT_HiGH_C_RATIO,
+  DEFAULT_HIGH_C_RATIO,
   DEFAULT_LOW_C_RATIO,
   DEFAULT_TOTAL_BORROW_LIMIT,
   DEFAULT_VAULT_BORROW_MAXIMUM,
@@ -77,7 +75,7 @@ export async function setupSapphire(
   // Set the merkle root
   if (merkleRoot) {
     await immediatelyUpdateMerkleRoot(
-      ctx.contracts.sapphire.creditScore.connect(ctx.signers.interestSetter),
+      ctx.contracts.sapphire.passportScores.connect(ctx.signers.interestSetter),
       merkleRoot,
     );
   }
@@ -94,11 +92,11 @@ async function _setCRatiosIfNeeded(
   };
   if (
     !existingRatios.lowCRatio.eq(newLowCRatio || DEFAULT_LOW_C_RATIO) ||
-    !existingRatios.highcRatio.eq(newHighCRatio || DEFAULT_HiGH_C_RATIO)
+    !existingRatios.highcRatio.eq(newHighCRatio || DEFAULT_HIGH_C_RATIO)
   ) {
     await core.setCollateralRatios(
       newLowCRatio || DEFAULT_LOW_C_RATIO,
-      newHighCRatio || DEFAULT_HiGH_C_RATIO,
+      newHighCRatio || DEFAULT_HIGH_C_RATIO,
     );
   }
 }

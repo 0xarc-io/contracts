@@ -1,6 +1,6 @@
 import { BigNumber, BigNumberish } from 'ethers';
+import { ArcNumber } from '.';
 import { BASE } from '../constants';
-import ArcNumber from './ArcNumber';
 
 export interface LiquidationInformation {
   debtNeededToLiquidate: BigNumber;
@@ -14,7 +14,10 @@ export function calculateLiquidationPrice(
   currentPrice: BigNumberish,
   liquidationRatio: BigNumberish,
 ) {
-  return ArcNumber.bigMul(BigNumber.from(currentPrice), BASE.sub(liquidationRatio));
+  return ArcNumber.bigMul(
+    BigNumber.from(currentPrice),
+    BASE.sub(liquidationRatio),
+  );
 }
 
 export function calculateCollateralNeeded(
@@ -22,14 +25,20 @@ export function calculateCollateralNeeded(
   price: BigNumberish,
   collateralRatio: BigNumberish,
 ) {
-  return ArcNumber.bigDiv(ArcNumber.bigMul(BigNumber.from(borrowedAmount), collateralRatio), price);
+  return ArcNumber.bigDiv(
+    ArcNumber.bigMul(BigNumber.from(borrowedAmount), collateralRatio),
+    price,
+  );
 }
 
 export function calculateCollateralPadded(
   collateralAmount: BigNumberish,
   liquidationRatio: BigNumberish,
 ) {
-  return ArcNumber.bigMul(BigNumber.from(collateralAmount), BASE.add(liquidationRatio));
+  return ArcNumber.bigMul(
+    BigNumber.from(collateralAmount),
+    BASE.add(liquidationRatio),
+  );
 }
 
 export function calculateLiquidationAmount(
@@ -40,7 +49,10 @@ export function calculateLiquidationAmount(
   collateralRatio: BigNumberish,
   arcRatio: BigNumberish,
 ): LiquidationInformation {
-  const liquidationPrice = calculateLiquidationPrice(currentPrice, liquidationRatio);
+  const liquidationPrice = calculateLiquidationPrice(
+    currentPrice,
+    liquidationRatio,
+  );
 
   const collateralNeeded = calculateCollateralNeeded(
     borrowedAmount,
@@ -53,8 +65,13 @@ export function calculateLiquidationAmount(
     liquidationRatio,
   );
 
-  const borrowToLiquidate = ArcNumber.bigMul(collateralToLiquidate, liquidationPrice);
-  const newCollateralAmount = BigNumber.from(collateralAmount).sub(collateralToLiquidate);
+  const borrowToLiquidate = ArcNumber.bigMul(
+    collateralToLiquidate,
+    liquidationPrice,
+  );
+  const newCollateralAmount = BigNumber.from(collateralAmount).sub(
+    collateralToLiquidate,
+  );
   const newBorrowAmount = BigNumber.from(borrowedAmount).sub(borrowToLiquidate);
   const collateralProfit = collateralToLiquidate.sub(
     ArcNumber.bigDiv(borrowToLiquidate, currentPrice),

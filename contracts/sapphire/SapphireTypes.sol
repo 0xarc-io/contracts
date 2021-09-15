@@ -7,6 +7,7 @@ library SapphireTypes {
 
     struct ScoreProof {
         address account;
+        bytes32 protocol;
         uint256 score;
         bytes32[] merkleProof;
     }

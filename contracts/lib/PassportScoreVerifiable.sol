@@ -5,44 +5,39 @@ pragma experimental ABIEncoderV2;
 
 import {Address} from "./Address.sol";
 
-import {ISapphireCreditScore} from "../sapphire/ISapphireCreditScore.sol";
+import {ISapphirePassportScores} from "../sapphire/ISapphirePassportScores.sol";
 import {SapphireTypes} from "../sapphire/SapphireTypes.sol";
 
 /**
  * @dev Provides the ability of verifying users' credit scores
  */
-contract CreditScoreVerifiable {
+contract PassportScoreVerifiable {
 
     using Address for address;
 
-    ISapphireCreditScore public creditScoreContract;
+    ISapphirePassportScores public passportScoresContract;
 
     /**
      * @dev Verifies that the proof is passed if the score is required, and
      *      validates it.
+     *      Additionally, it checks the proof validity if `scoreProof` has a score > 0
      */
     modifier checkScoreProof(
         SapphireTypes.ScoreProof memory _scoreProof,
-        bool _isScoreRequired
+        bool _isScoreRequired,
+        bool _enforceSameCaller
     ) {
-        if (_scoreProof.account != address(0)) {
+        if (_scoreProof.account != address(0) && _enforceSameCaller) {
             require (
                 msg.sender == _scoreProof.account,
-                "CreditScoreVerifiable: proof does not belong to the caller"
+                "PassportScoreVerifiable: proof does not belong to the caller"
             );
         }
 
         bool isProofPassed = _scoreProof.merkleProof.length > 0;
 
-        if (_isScoreRequired) {
-            require(
-                isProofPassed,
-                "CreditScoreVerifiable: proof is required but it is not passed"
-            );
-        }
-
-        if (isProofPassed) {
-            creditScoreContract.verifyAndUpdate(_scoreProof);
+        if (_isScoreRequired || isProofPassed || _scoreProof.score > 0) {
+            passportScoresContract.verify(_scoreProof);
         }
         _;
     }

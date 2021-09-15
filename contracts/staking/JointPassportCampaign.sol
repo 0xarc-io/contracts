@@ -3,20 +3,25 @@ pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "../lib/Ownable.sol";
-import {CreditScoreVerifiable} from "../lib/CreditScoreVerifiable.sol";
+import {Bytes32} from "../lib/Bytes32.sol";
+import {PassportScoreVerifiable} from "../lib/PassportScoreVerifiable.sol";
 
 import {IERC20} from "../token/IERC20.sol";
 import {IPermittableERC20} from "../token/IPermittableERC20.sol";
 
 import {CampaignStorage} from "./CampaignStorage.sol";
-import {ISapphireCreditScore} from "../sapphire/ISapphireCreditScore.sol";
+import {ISapphirePassportScores} from "../sapphire/ISapphirePassportScores.sol";
 import {SapphireTypes} from "../sapphire/SapphireTypes.sol";
 
 /**
  * @notice A farm that requires a defi passport with a good credit
  *         score to participate that has two reward tokens.
  */
-contract JointPassportCampaign is CampaignStorage, CreditScoreVerifiable, Ownable {
+contract JointPassportCampaign is CampaignStorage, PassportScoreVerifiable, Ownable {
+
+    /* ========== Libraries ========== */
+
+    using Bytes32 for bytes32;
 
     /* ========== Structs ========== */
 
@@ -49,6 +54,11 @@ contract JointPassportCampaign is CampaignStorage, CreditScoreVerifiable, Ownabl
     uint256 public collabRewardRate = 0;
 
     bool public collabTokensClaimable;
+
+    /**
+     * @dev The protocol value to be used in the score proofs
+     */
+    bytes32 private _proofProtocol = "arcx.creditscore";
 
     /* ========== Events ========== */
 
@@ -93,6 +103,8 @@ contract JointPassportCampaign is CampaignStorage, CreditScoreVerifiable, Ownabl
     event CreditScoreThresholdSet(uint16 _newThreshold);
 
     event MaxStakePerUserSet(uint256 _newMaxStakePerUser);
+
+    event ProofProtocolSet(string _protocol);
 
     /* ========== Modifiers ========== */
 
@@ -162,15 +174,15 @@ contract JointPassportCampaign is CampaignStorage, CreditScoreVerifiable, Ownabl
         );
 
         arcDAO                      = _arcDAO;
-        rewardsDistributor       = _rewardsDistributor;
+        rewardsDistributor          = _rewardsDistributor;
         collabRewardsDistributor    = _collabRewardsDistributor;
-        rewardToken              = IERC20(_rewardToken);
+        rewardToken                 = IERC20(_rewardToken);
         collabRewardToken           = IERC20(_collabRewardToken);
         stakingToken                = IPermittableERC20(_stakingToken);
         creditScoreThreshold        = _creditScoreThreshold;
         maxStakePerUser             = _maxStakePerUser;
         daoAllocation               = _daoAllocation;
-        creditScoreContract         = ISapphireCreditScore(_creditScoreContract);
+        passportScoresContract      = ISapphirePassportScores(_creditScoreContract);
     }
 
     /* ========== Admin Functions ========== */
@@ -402,6 +414,17 @@ contract JointPassportCampaign is CampaignStorage, CreditScoreVerifiable, Ownabl
         emit MaxStakePerUserSet(maxStakePerUser);
     }
 
+    function setProofProtocol(
+        bytes32 _protocol
+    )
+        external
+        onlyOwner
+    {
+        _proofProtocol = _protocol;
+
+        emit ProofProtocolSet(_proofProtocol.toString());
+    }
+
     /* ========== View Functions ========== */
 
     function balanceOf(
@@ -534,6 +557,14 @@ contract JointPassportCampaign is CampaignStorage, CreditScoreVerifiable, Ownabl
         return block.timestamp;
     }
 
+    function getProofProtocol()
+        external
+        view
+        returns (string memory)
+    {
+        return _proofProtocol.toString();
+    }
+
     /* ========== Mutative Functions ========== */
 
     function stake(
@@ -541,13 +572,18 @@ contract JointPassportCampaign is CampaignStorage, CreditScoreVerifiable, Ownabl
         SapphireTypes.ScoreProof memory _scoreProof
     )
         public
-        checkScoreProof(_scoreProof, true)
+        checkScoreProof(_scoreProof, true, true)
         updateReward(msg.sender, address(0))
     {
         // Do not allow user to stake if they do not meet the credit score requirements
         require(
             _scoreProof.score >= creditScoreThreshold,
             "JointPassportCampaign: user does not meet the credit score requirement"
+        );
+
+        require(
+            _scoreProof.protocol == _proofProtocol,
+            "JointPassportCampaign: invalid proof protocol"
         );
 
         // Setting each variable individually means we don't overwrite

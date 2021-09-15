@@ -3,10 +3,10 @@
 pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
-import { SapphireCreditScore } from "../sapphire/SapphireCreditScore.sol";
+import { SapphirePassportScores } from "../sapphire/SapphirePassportScores.sol";
 import {MockTimestamp} from "./MockTimestamp.sol";
 
 // solium-disable-next-line no-empty-blocks
-contract MockSapphireCreditScore is SapphireCreditScore, MockTimestamp {
+contract MockSapphirePassportScores is SapphirePassportScores, MockTimestamp {
 
 }

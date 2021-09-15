@@ -6,10 +6,11 @@ import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 
 import {Adminable} from "../lib/Adminable.sol";
 import {SafeMath} from "../lib/SafeMath.sol";
+import {Initializable} from "../lib/Initializable.sol";
 import {SapphireTypes} from "./SapphireTypes.sol";
-import {ISapphireCreditScore} from "./ISapphireCreditScore.sol";
+import {ISapphirePassportScores} from "./ISapphirePassportScores.sol";
 
-contract SapphireCreditScore is ISapphireCreditScore, Adminable {
+contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializable {
 
     /* ========== Libraries ========== */
 
@@ -21,12 +22,6 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
         address indexed updater,
         bytes32 merkleRoot,
         uint256 updatedAt
-    );
-
-    event CreditScoreUpdated(
-        address indexed account,
-        uint256 score,
-        uint256 lastUpdated
     );
 
     event PauseStatusUpdated(bool value);
@@ -44,15 +39,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
         address merkleRootUpdater
     );
 
-    event DocumentIdUpdated(
-        string newDocumentId
-    );
-
     /* ========== Variables ========== */
-
-    bool private _initialized;
-
-    uint16 public maxScore;
 
     bool public isPaused;
 
@@ -68,11 +55,6 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
 
     address public pauseOperator;
 
-    // The document ID of the IPFS document containing the current Merkle Tree
-    string public documentId;
-
-    mapping(address => SapphireTypes.CreditScore) public userScores;
-
     uint256 public currentEpoch;
 
     /* ========== Modifiers ========== */
@@ -80,7 +62,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
     modifier onlyMerkleRootUpdater() {
         require(
             merkleRootUpdater == msg.sender,
-            "SapphireCreditScore: caller is not authorized to update merkle root"
+            "SapphirePassportScores: caller is not authorized to update merkle root"
         );
         _;
     }
@@ -88,7 +70,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
     modifier onlyWhenActive() {
         require(
             !isPaused,
-            "SapphireCreditScore: contract is not active"
+            "SapphirePassportScores: contract is not active"
         );
         _;
     }
@@ -98,22 +80,12 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
     function init(
         bytes32 _merkleRoot,
         address _merkleRootUpdater,
-        address _pauseOperator,
-        uint16 _maxScore
+        address _pauseOperator
     )
         public
         onlyAdmin
+        initializer()
     {
-        require(
-            !_initialized,
-            "SapphireCreditScore: init already called"
-        );
-
-        require(
-            _maxScore > 0,
-            "SapphireCreditScore: max score cannot be zero"
-        );
-
         currentMerkleRoot = _merkleRoot;
         upcomingMerkleRoot = _merkleRoot;
         merkleRootUpdater = _merkleRootUpdater;
@@ -121,9 +93,6 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
         lastMerkleRootUpdate = 0;
         isPaused = true;
         merkleRootDelayDuration = 86400; // 24 * 60 * 60 sec
-        maxScore = _maxScore;
-
-        _initialized = true;
     }
 
     /* ========== View Functions ========== */
@@ -139,20 +108,6 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
         returns (uint256)
     {
         return block.timestamp;
-    }
-
-    /**
-     * @dev Return last verified user score
-     */
-    function getLastScore(
-        address _user
-    )
-        external
-        view
-        returns (uint256, uint16, uint256)
-    {
-        SapphireTypes.CreditScore memory userScore = userScores[_user];
-        return (userScore.score, maxScore, userScore.lastUpdated);
     }
 
     /* ========== Mutative Functions ========== */
@@ -180,7 +135,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
     {
         require(
             _newRoot != 0x0000000000000000000000000000000000000000000000000000000000000000,
-            "SapphireCreditScore: root is empty"
+            "SapphirePassportScores: root is empty"
         );
 
         if (msg.sender == getAdmin()) {
@@ -192,38 +147,31 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
     }
 
     /**
-     * @dev Request for verifying user's credit score
+     * @notice Verifies the user's score proof. Reverts if the proof is invalid.
      *
-     * @notice If the credit score is verified, this function updates the
-     *         user's credit score with the verified one and current timestamp
-     *
-     * @param _proof Data required to verify if score is correct for current merkle root
+     * @param _proof Data required to verify if score is correct for the current merkle root
      */
-    function verifyAndUpdate(
-        SapphireTypes.ScoreProof memory _proof
+    function verify(
+        SapphireTypes.ScoreProof calldata _proof
     )
-        public
-        returns (uint256, uint16)
+        external
+        view
+        returns (bool)
     {
         require(
             _proof.account != address(0),
-            "SapphireCreditScore: account cannot be address 0"
+            "SapphirePassportScores: account cannot be address 0"
         );
 
-        bytes32 node = keccak256(abi.encodePacked(_proof.account, _proof.score));
+        bytes32 node = keccak256(abi.encodePacked(_proof.account, _proof.protocol, _proof.score));
 
         require(
             MerkleProof.verify(_proof.merkleProof, currentMerkleRoot, node),
-            "SapphireCreditScore: invalid proof"
+            "SapphirePassportScores: invalid proof"
         );
 
-        userScores[_proof.account] = SapphireTypes.CreditScore({
-            score: _proof.score,
-            lastUpdated: currentTimestamp()
-        });
-        emit CreditScoreUpdated(_proof.account, _proof.score, currentTimestamp());
-
-        return (_proof.score, maxScore);
+        // Return true to improve experience when interacting with this contract (ex. Etherscan)
+        return true;
     }
 
      /* ========== Private Functions ========== */
@@ -240,7 +188,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
     {
         require(
             currentTimestamp() >= merkleRootDelayDuration.add(lastMerkleRootUpdate),
-            "SapphireCreditScore: cannot update merkle root before delay period"
+            "SapphirePassportScores: cannot update merkle root before delay period"
         );
 
         currentMerkleRoot = upcomingMerkleRoot;
@@ -260,7 +208,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
     {
         require(
             isPaused,
-            "SapphireCreditScore: only admin can update merkle root if paused"
+            "SapphirePassportScores: only admin can update merkle root if paused"
         );
 
         upcomingMerkleRoot = _newRoot;
@@ -279,12 +227,12 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
     {
         require(
             _delay > 0,
-            "SapphireCreditScore: the delay must be greater than 0"
+            "SapphirePassportScores: the delay must be greater than 0"
         );
 
         require(
             _delay != merkleRootDelayDuration,
-            "SapphireCreditScore: the same delay is already set"
+            "SapphirePassportScores: the same delay is already set"
         );
 
         merkleRootDelayDuration = _delay;
@@ -302,12 +250,12 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
     {
         require(
             msg.sender == pauseOperator,
-            "SapphireCreditScore: caller is not the pause operator"
+            "SapphirePassportScores: caller is not the pause operator"
         );
 
         require(
             _value != isPaused,
-            "SapphireCreditScore: cannot set the same pause value"
+            "SapphirePassportScores: cannot set the same pause value"
         );
 
         isPaused = _value;
@@ -325,7 +273,7 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
     {
         require(
             _merkleRootUpdater != merkleRootUpdater,
-            "SapphireCreditScore: cannot set the same merkle root updater"
+            "SapphirePassportScores: cannot set the same merkle root updater"
         );
 
         merkleRootUpdater = _merkleRootUpdater;
@@ -343,24 +291,10 @@ contract SapphireCreditScore is ISapphireCreditScore, Adminable {
     {
         require(
             _pauseOperator != pauseOperator,
-            "SapphireCreditScore: cannot set the same pause operator"
+            "SapphirePassportScores: cannot set the same pause operator"
         );
 
         pauseOperator = _pauseOperator;
         emit PauseOperatorUpdated(pauseOperator);
-    }
-
-    /**
-     * @dev Sets the document ID of the IPFS document containing the current Merkle Tree.
-     */
-    function setDocumentId(
-        string memory _documentId
-    )
-        public
-        onlyAdmin
-    {
-        documentId = _documentId;
-
-        emit DocumentIdUpdated(documentId);
     }
 }
