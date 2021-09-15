@@ -20,7 +20,7 @@ import { ITestContext, ITestContextArgs } from './context';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import {
   DEFAULT_COLLATERAL_DECIMALS,
-  DEFAULT_HiGH_C_RATIO,
+  DEFAULT_HIGH_C_RATIO,
   DEFAULT_LOW_C_RATIO,
   DEFAULT_MAX_CREDIT_SCORE,
 } from '@test/helpers/sapphireDefaults';
@@ -111,7 +111,7 @@ export async function sapphireFixture(
     ctx.signers.pauseOperator.address,
     ctx.contracts.sapphire.assessor.address,
     ctx.signers.feeCollector.address,
-    DEFAULT_HiGH_C_RATIO,
+    DEFAULT_HIGH_C_RATIO,
     DEFAULT_LOW_C_RATIO,
     0,
     0,

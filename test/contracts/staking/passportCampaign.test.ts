@@ -111,38 +111,31 @@ describe('PassportCampaign', () => {
   async function withdraw(
     user: SignerWithAddress,
     amount: BigNumber = STAKE_AMOUNT,
-    scoreProof?: PassportScoreProof,
   ) {
     const contract = MockPassportCampaignFactory.connect(
       adminPassportCampaign.address,
       user,
     );
 
-    await contract.withdraw(amount, scoreProof ?? getEmptyScoreProof());
+    await contract.withdraw(amount);
   }
 
-  async function exitCampaign(
-    user: SignerWithAddress,
-    scoreProof?: PassportScoreProof,
-  ) {
+  async function exitCampaign(user: SignerWithAddress) {
     const contract = MockPassportCampaignFactory.connect(
       adminPassportCampaign.address,
       user,
     );
 
-    await contract.exit(scoreProof ?? getEmptyScoreProof());
+    await contract.exit();
   }
 
-  async function claimReward(
-    user: SignerWithAddress,
-    scoreProof?: PassportScoreProof,
-  ) {
+  async function claimReward(user: SignerWithAddress) {
     const contract = MockPassportCampaignFactory.connect(
       adminPassportCampaign.address,
       user,
     );
 
-    await contract.getReward(user.address, scoreProof ?? getEmptyScoreProof());
+    await contract.getReward(user.address);
   }
 
   async function rewardBalanceOf(user: SignerWithAddress) {
@@ -539,7 +532,7 @@ describe('PassportCampaign', () => {
         await increaseTime(REWARD_DURATION / 2);
 
         await expect(
-          stakerPassportCampaign.getReward(staker.address, stakerScoreProof),
+          stakerPassportCampaign.getReward(staker.address),
         ).to.be.revertedWith('PassportCampaign: tokens cannot be claimed yet');
       });
 
@@ -549,10 +542,7 @@ describe('PassportCampaign', () => {
 
         await setTimestampTo(1);
 
-        await stakerPassportCampaign.getReward(
-          staker.address,
-          stakerScoreProof,
-        );
+        await stakerPassportCampaign.getReward(staker.address);
 
         let currentBalance = await rewardToken.balanceOf(staker.address);
 
@@ -560,10 +550,7 @@ describe('PassportCampaign', () => {
 
         await setTimestampTo(2);
 
-        await stakerPassportCampaign.getReward(
-          staker.address,
-          stakerScoreProof,
-        );
+        await stakerPassportCampaign.getReward(staker.address);
 
         currentBalance = await rewardToken.balanceOf(staker.address);
 
@@ -577,10 +564,7 @@ describe('PassportCampaign', () => {
 
         await setTimestampTo(1);
 
-        await stakerPassportCampaign.getReward(
-          staker.address,
-          stakerScoreProof,
-        );
+        await stakerPassportCampaign.getReward(staker.address);
 
         expect(await rewardToken.balanceOf(staker.address)).to.eq(
           utils.parseEther('6'),
@@ -590,11 +574,8 @@ describe('PassportCampaign', () => {
 
         await setTimestampTo(2);
 
-        await stakerPassportCampaign.getReward(
-          staker.address,
-          stakerScoreProof,
-        );
-        await user1PassportCampaign.getReward(user1.address, user1ScoreProof);
+        await stakerPassportCampaign.getReward(staker.address);
+        await user1PassportCampaign.getReward(user1.address);
 
         expect(await rewardToken.balanceOf(staker.address)).to.eq(
           utils.parseEther('9'),
@@ -610,10 +591,7 @@ describe('PassportCampaign', () => {
 
         await setTimestampTo(1);
 
-        await stakerPassportCampaign.getReward(
-          staker.address,
-          getEmptyScoreProof(),
-        );
+        await stakerPassportCampaign.getReward(staker.address);
 
         const currentBalance = await rewardToken.balanceOf(staker.address);
 
@@ -630,10 +608,7 @@ describe('PassportCampaign', () => {
         await stakerPassportCampaign.stake(STAKE_AMOUNT, stakerScoreProof);
 
         await expect(
-          stakerPassportCampaign.withdraw(
-            STAKE_AMOUNT.add(1),
-            stakerScoreProof,
-          ),
+          stakerPassportCampaign.withdraw(STAKE_AMOUNT.add(1)),
         ).to.be.revertedWith(
           'PassportCampaign: cannot withdraw more than the balance',
         );
@@ -642,7 +617,7 @@ describe('PassportCampaign', () => {
       it('should withdraw the correct amount', async () => {
         await stakerPassportCampaign.stake(STAKE_AMOUNT, stakerScoreProof);
 
-        await stakerPassportCampaign.withdraw(STAKE_AMOUNT, stakerScoreProof);
+        await stakerPassportCampaign.withdraw(STAKE_AMOUNT);
 
         const balance = await stakingToken.balanceOf(staker.address);
 
@@ -652,10 +627,7 @@ describe('PassportCampaign', () => {
       it('should withdraw the correct amount even if an empty proof was given', async () => {
         await stakerPassportCampaign.stake(STAKE_AMOUNT, stakerScoreProof);
 
-        await stakerPassportCampaign.withdraw(
-          STAKE_AMOUNT,
-          getEmptyScoreProof(),
-        );
+        await stakerPassportCampaign.withdraw(STAKE_AMOUNT);
 
         const balance = await stakingToken.balanceOf(staker.address);
 
@@ -678,7 +650,7 @@ describe('PassportCampaign', () => {
         expect(await stakingToken.balanceOf(staker.address), 'a').to.eq(0);
         expect(await rewardToken.balanceOf(staker.address), 'b').to.eq(0);
 
-        await stakerPassportCampaign.exit(stakerScoreProof);
+        await stakerPassportCampaign.exit();
 
         const stakingBalance = await stakingToken.balanceOf(staker.address);
         const rewardBalance = await rewardToken.balanceOf(staker.address);
@@ -693,7 +665,7 @@ describe('PassportCampaign', () => {
 
         await setTimestampTo(1);
 
-        await stakerPassportCampaign.exit(getEmptyScoreProof());
+        await stakerPassportCampaign.exit();
 
         const stakingBalance = await stakingToken.balanceOf(staker.address);
         const rewardBalance = await rewardToken.balanceOf(staker.address);
@@ -1343,7 +1315,7 @@ describe('PassportCampaign', () => {
 
       await adminPassportCampaign.setTokensClaimable(true);
 
-      await exitCampaign(users.userB, creditScoreProofs.userB);
+      await exitCampaign(users.userB);
       await withdraw(users.userC, STAKE_AMOUNT);
 
       await adminPassportCampaign.setCurrentTimestamp(20);
@@ -1404,7 +1376,7 @@ describe('PassportCampaign', () => {
 
       await adminPassportCampaign.setTokensClaimable(true);
 
-      await claimReward(users.userA, creditScoreProofs.userA);
+      await claimReward(users.userA);
 
       expect(await rewardToken.balanceOf(users.userA.address)).to.eq(
         utils.parseEther('19.8'),
@@ -1414,7 +1386,7 @@ describe('PassportCampaign', () => {
 
       expect(await earned(users.userB)).to.eq(utils.parseEther('45'));
 
-      await claimReward(users.userB, creditScoreProofs.userB);
+      await claimReward(users.userB);
 
       expect(await rewardToken.balanceOf(users.userB.address)).to.eq(
         utils.parseEther('27'),

@@ -8,7 +8,7 @@ import { SyntheticTokenV2Factory } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import {
   DEFAULT_COLLATERAL_DECIMALS,
-  DEFAULT_HiGH_C_RATIO,
+  DEFAULT_HIGH_C_RATIO,
   DEFAULT_PROOF_PROTOCOL,
 } from '@test/helpers/sapphireDefaults';
 import { setupBaseVault } from '@test/helpers/setupBaseVault';
@@ -24,7 +24,7 @@ const NORMALIZED_COLLATERAL_AMOUNT = utils.parseEther('1000');
 const COLLATERAL_AMOUNT = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS);
 const COLLATERAL_PRICE = utils.parseEther('1');
 const BORROW_AMOUNT = NORMALIZED_COLLATERAL_AMOUNT.mul(COLLATERAL_PRICE).div(
-  DEFAULT_HiGH_C_RATIO,
+  DEFAULT_HIGH_C_RATIO,
 );
 const PRECISION_SCALAR = BigNumber.from(10).pow(
   BigNumber.from(18).sub(DEFAULT_COLLATERAL_DECIMALS),

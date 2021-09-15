@@ -3,7 +3,7 @@ import { ITestContext } from './context';
 import { immediatelyUpdateMerkleRoot } from '../helpers/testingUtils';
 import _ from 'lodash';
 import {
-  DEFAULT_HiGH_C_RATIO,
+  DEFAULT_HIGH_C_RATIO,
   DEFAULT_LOW_C_RATIO,
   DEFAULT_TOTAL_BORROW_LIMIT,
   DEFAULT_VAULT_BORROW_MAXIMUM,
@@ -92,11 +92,11 @@ async function _setCRatiosIfNeeded(
   };
   if (
     !existingRatios.lowCRatio.eq(newLowCRatio || DEFAULT_LOW_C_RATIO) ||
-    !existingRatios.highcRatio.eq(newHighCRatio || DEFAULT_HiGH_C_RATIO)
+    !existingRatios.highcRatio.eq(newHighCRatio || DEFAULT_HIGH_C_RATIO)
   ) {
     await core.setCollateralRatios(
       newLowCRatio || DEFAULT_LOW_C_RATIO,
-      newHighCRatio || DEFAULT_HiGH_C_RATIO,
+      newHighCRatio || DEFAULT_HIGH_C_RATIO,
     );
   }
 }
