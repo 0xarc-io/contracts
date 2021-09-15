@@ -22,6 +22,8 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
 
     ISapphireMapper public mapper;
 
+    uint16 public maxScore;
+
     /* ========== Events ========== */
 
     event MapperSet(address _newMapper);
@@ -33,11 +35,14 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
         uint256 _assessedValue
     );
 
+    event MaxScoreSet(uint16 _maxScore);
+
     /* ========== Constructor ========== */
 
     constructor(
         address _mapper,
-        address _passportScores
+        address _passportScores,
+        uint16 _maxScore
     )
         public
     {
@@ -49,6 +54,7 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
 
         mapper = ISapphireMapper(_mapper);
         passportScoresContract = ISapphirePassportScores(_passportScores);
+        setMaxScore(_maxScore);
     }
 
     /* ========== Public Functions ========== */
@@ -84,7 +90,6 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
             "SapphireAssessor: The lower bound must be smaller than the upper bound"
         );
 
-        uint16 maxScore = passportScoresContract.maxScore();
         bool isProofPassed = _scoreProof.merkleProof.length > 0;
 
         // If the proof is passed, use the score from the score proof since at this point
@@ -147,6 +152,22 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
         passportScoresContract = ISapphirePassportScores(_creditScore);
 
         emit PassportScoreContractSet(_creditScore);
+    }
+
+    function setMaxScore(
+        uint16 _maxScore
+    )
+        public
+        onlyOwner
+    {
+        require(
+            _maxScore > 0,
+            "SapphireAssessor: max score cannot be zero"
+        );
+
+        maxScore = _maxScore;
+
+        emit MaxScoreSet(_maxScore);
     }
 
     function renounceOwnership()

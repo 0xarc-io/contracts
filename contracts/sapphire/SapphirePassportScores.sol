@@ -41,8 +41,6 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
 
     /* ========== Variables ========== */
 
-    uint16 public maxScore;
-
     bool public isPaused;
 
     uint256 public lastMerkleRootUpdate;
@@ -82,18 +80,12 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
     function init(
         bytes32 _merkleRoot,
         address _merkleRootUpdater,
-        address _pauseOperator,
-        uint16 _maxScore
+        address _pauseOperator
     )
         public
         onlyAdmin
         initializer()
     {
-        require(
-            _maxScore > 0,
-            "SapphirePassportScores: max score cannot be zero"
-        );
-
         currentMerkleRoot = _merkleRoot;
         upcomingMerkleRoot = _merkleRoot;
         merkleRootUpdater = _merkleRootUpdater;
@@ -101,7 +93,6 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
         lastMerkleRootUpdate = 0;
         isPaused = true;
         merkleRootDelayDuration = 86400; // 24 * 60 * 60 sec
-        maxScore = _maxScore;
     }
 
     /* ========== View Functions ========== */
