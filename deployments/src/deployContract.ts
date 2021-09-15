@@ -23,6 +23,7 @@ export interface NetworkParams {
 export async function deployContract(
   deployParams: DeployContractParams,
   networkParams: NetworkParams,
+  confirmations?: number
 ) {
   // Ignore source since it may vary based on the network
   const existing = loadContracts({
@@ -56,7 +57,7 @@ export async function deployContract(
   console.log(gray(`* Sending tx: ${signedTx.hash}`));
 
   try {
-    const receipt = await signedTx.wait();
+    const receipt = await signedTx.wait(confirmations);
     console.log(green(`Deployed: ${details}\n`));
 
     await writeToDeployments({
