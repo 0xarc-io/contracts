@@ -308,7 +308,7 @@ describe('SapphireCreditScore', () => {
       expect(await passportScores.currentMerkleRoot()).not.eq(maliciousRoot);
     });
 
-    it('should check if updater cannot update merklee root before thee delay duration passes', async () => {
+    it('should check if updater cannot update Merkle root before the delay duration passes', async () => {
       const mockpassportScores = await createNewCreditScoreInstance(
         ONE_BYTES32,
         merkleRootUpdater.address,
