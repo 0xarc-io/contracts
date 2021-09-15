@@ -4,7 +4,7 @@ pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {Counters} from "@openzeppelin/contracts/drafts/Counters.sol";
-import {ISapphireCreditScore} from "../../sapphire/ISapphireCreditScore.sol";
+import {ISapphirePassportScores} from "../../sapphire/ISapphirePassportScores.sol";
 
 contract DefiPassportStorage {
 
@@ -34,7 +34,7 @@ contract DefiPassportStorage {
     /**
      * @notice The credit score contract used by the passport
      */
-    ISapphireCreditScore public creditScoreContract;
+    ISapphirePassportScores public passportScoresContract;
 
     /**
      * @notice Records the whitelisted skins. All tokens minted by these contracts

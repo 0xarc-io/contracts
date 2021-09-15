@@ -7,10 +7,12 @@ import {SafeMath} from "../lib/SafeMath.sol";
 import {SafeERC20} from "../lib/SafeERC20.sol";
 import {Address} from "../lib/Address.sol";
 import {Adminable} from "../lib/Adminable.sol";
+import {Bytes32} from "../lib/Bytes32.sol";
+import {PassportScoreVerifiable} from "../lib/PassportScoreVerifiable.sol";
 
 import {IERC20} from "../token/IERC20.sol";
 
-import {ISapphireCreditScore} from "../sapphire/ISapphireCreditScore.sol";
+import {ISapphirePassportScores} from "../sapphire/ISapphirePassportScores.sol";
 import {SapphireTypes} from "../sapphire/SapphireTypes.sol";
 
 /**
@@ -18,13 +20,14 @@ import {SapphireTypes} from "../sapphire/SapphireTypes.sol";
  *         but requires a valid defi passport with a good credit score.
  *         Users can get slashed if their credit score go below a threshold.
  */
-contract PassportCampaign is Adminable {
+contract PassportCampaign is Adminable, PassportScoreVerifiable {
 
     /* ========== Libraries ========== */
 
     using Address for address;
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
+    using Bytes32 for bytes32;
 
     /* ========== Structs ========== */
 
@@ -40,8 +43,6 @@ contract PassportCampaign is Adminable {
     uint256 constant BASE = 10 ** 18;
 
     /* ========== Variables ========== */
-
-    ISapphireCreditScore public creditScoreContract;
 
     IERC20 public rewardsToken;
     IERC20 public stakingToken;
@@ -67,6 +68,11 @@ contract PassportCampaign is Adminable {
 
     bool private _isInitialized;
 
+    /**
+     * @dev The protocol value to be used in the score proofs
+     */
+    bytes32 private _proofProtocol;
+
     /* ========== Events ========== */
 
     event RewardAdded (uint256 reward);
@@ -87,6 +93,8 @@ contract PassportCampaign is Adminable {
 
     event CreditScoreContractSet(address _creditScoreContract);
 
+    event ProofProtocolSet(string _protocol);
+
     /* ========== Modifiers ========== */
 
     modifier updateReward(address _account) {
@@ -105,29 +113,6 @@ contract PassportCampaign is Adminable {
             msg.sender == rewardsDistributor,
             "PassportCampaign: caller is not a rewards distributor"
         );
-        _;
-    }
-
-    /**
-     * @dev Verifies that the proof is passed if the score is required, and
-     *      validates it.
-     */
-    modifier checkScoreProof(
-        SapphireTypes.ScoreProof memory _scoreProof,
-        bool _isScoreRequired
-    ) {
-        bool isProofPassed = _scoreProof.merkleProof.length > 0;
-
-        if (_isScoreRequired) {
-            require(
-                isProofPassed,
-                "PassportCampaign: proof is required but it is not passed"
-            );
-        }
-
-        if (isProofPassed) {
-            creditScoreContract.verifyAndUpdate(_scoreProof);
-        }
         _;
     }
 
@@ -256,25 +241,25 @@ contract PassportCampaign is Adminable {
         creditScoreThreshold = _newThreshold;
     }
 
-    function setCreditScoreContract(
-        address _creditScoreAddress
+    function setPassportScoresContract(
+        address _passportScoresContract
     )
         external
         onlyAdmin
     {
         require(
-            address(creditScoreContract) != _creditScoreAddress,
-            "PassportCampaign: the same credit score address is already set"
+            address(passportScoresContract) != _passportScoresContract,
+            "PassportCampaign: the same passport scores address is already set"
         );
 
         require(
-            _creditScoreAddress.isContract(),
+            _passportScoresContract.isContract(),
             "PassportCampaign: the given address is not a contract"
         );
 
-        creditScoreContract = ISapphireCreditScore(_creditScoreAddress);
+        passportScoresContract = ISapphirePassportScores(_passportScoresContract);
 
-        emit CreditScoreContractSet(_creditScoreAddress);
+        emit CreditScoreContractSet(_passportScoresContract);
     }
 
     function setMaxStakePerUser(
@@ -321,10 +306,21 @@ contract PassportCampaign is Adminable {
         rewardsDistributor      = _rewardsDistributor;
         rewardsToken            = IERC20(_rewardsToken);
         stakingToken            = IERC20(_stakingToken);
-        creditScoreContract     = ISapphireCreditScore(_creditScoreContract);
+        passportScoresContract  = ISapphirePassportScores(_creditScoreContract);
         daoAllocation           = _daoAllocation;
         maxStakePerUser         = _maxStakePerUser;
         creditScoreThreshold    = _creditScoreThreshold;
+    }
+
+    function setProofProtocol(
+        bytes32 _protocol
+    )
+        external
+        onlyAdmin
+    {
+        _proofProtocol = _protocol;
+
+        emit ProofProtocolSet(_proofProtocol.toString());
     }
 
     /* ========== View Functions ========== */
@@ -448,6 +444,14 @@ contract PassportCampaign is Adminable {
         return BASE.sub(daoAllocation);
     }
 
+    function getProofProtocol()
+        external
+        view
+        returns (string memory)
+    {
+        return _proofProtocol.toString();
+    }
+
     /* ========== Mutative Functions ========== */
 
     function stake(
@@ -455,13 +459,18 @@ contract PassportCampaign is Adminable {
         SapphireTypes.ScoreProof memory _scoreProof
     )
         public
-        checkScoreProof(_scoreProof, true)
+        checkScoreProof(_scoreProof, true, true)
         updateReward(msg.sender)
     {
         // Do not allow user to stake if they do not meet the credit score requirements
         require(
             _scoreProof.score >= creditScoreThreshold,
             "PassportCampaign: user does not meet the credit score requirement"
+        );
+
+        require(
+            _scoreProof.protocol == _proofProtocol,
+            "PassportCampaign: incorrect protocol in proof"
         );
 
         // Setting each variable individually means we don't overwrite
@@ -486,22 +495,18 @@ contract PassportCampaign is Adminable {
     }
 
     function getReward(
-        address _user,
-        SapphireTypes.ScoreProof memory _scoreProof
+        address _user
     )
         public
-        checkScoreProof(_scoreProof, false)
         updateReward(_user)
     {
         _getReward(_user);
     }
 
     function withdraw(
-        uint256 _amount,
-        SapphireTypes.ScoreProof memory _scoreProof
+        uint256 _amount
     )
         public
-        checkScoreProof(_scoreProof, false)
         updateReward(msg.sender)
     {
         _withdraw(_amount);
@@ -510,11 +515,8 @@ contract PassportCampaign is Adminable {
     /**
      * @notice Claim reward and withdraw collateral
      */
-    function exit(
-        SapphireTypes.ScoreProof memory _scoreProof
-    )
+    function exit()
         public
-        checkScoreProof(_scoreProof, false)
         updateReward(msg.sender)
     {
         _getReward(msg.sender);

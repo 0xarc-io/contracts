@@ -1,10 +1,10 @@
 // // Buidler automatically injects the waffle version into chai
-import { MockSapphireCreditScore, TestTokenFactory } from '../../src/typings';
 import { BigNumberish, Signer } from 'ethers';
 import { ethers } from 'hardhat';
 import { EVM } from './EVM';
-import { asyncForEach } from '../../src/utils/asyncForEach';
-import Token from '../../src/utils/Token';
+import { asyncForEach, Token } from '@src/utils';
+import { TestTokenFactory } from '@src/typings';
+import { MockSapphirePassportScores } from '@src/typings/MockSapphirePassportScores';
 
 // And this is our test sandboxing. It snapshots and restores between each test.
 // Note: if a test suite uses fastForward at all, then it MUST also use these snapshots,
@@ -37,7 +37,7 @@ export async function setStartingBalances(
 }
 
 export async function immediatelyUpdateMerkleRoot(
-  creditScoreContract: MockSapphireCreditScore,
+  creditScoreContract: MockSapphirePassportScores,
   targetCurrentRoot: string,
   targetUpcomingRoot?: string,
 ) {
@@ -53,15 +53,17 @@ export async function immediatelyUpdateMerkleRoot(
 
   await advanceEpoch(creditScoreContract);
   // intended root set as current one
-  await creditScoreContract.updateMerkleRoot(targetUpcomingRoot || targetCurrentRoot);
+  await creditScoreContract.updateMerkleRoot(
+    targetUpcomingRoot || targetCurrentRoot,
+  );
 }
 
-export async function advanceEpoch(creditScoreContract: MockSapphireCreditScore) {
-  const initTimestamp = await creditScoreContract.currentTimestamp();
-  const merkleRootDelay = await creditScoreContract.merkleRootDelayDuration();
+export async function advanceEpoch(passpotScores: MockSapphirePassportScores) {
+  const initTimestamp = await passpotScores.currentTimestamp();
+  const merkleRootDelay = await passpotScores.merkleRootDelayDuration();
 
   const changedTimestamp = initTimestamp.add(merkleRootDelay);
-  const { wait } = await creditScoreContract.setCurrentTimestamp(changedTimestamp);
+  const { wait } = await passpotScores.setCurrentTimestamp(changedTimestamp);
   await wait();
   return changedTimestamp;
 }

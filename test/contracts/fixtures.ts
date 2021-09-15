@@ -9,10 +9,10 @@ import {
 import {
   deployArcProxy,
   deployTestToken,
-  deployMockSapphireCreditScore,
   deployMockSapphireCoreV1,
   deploySyntheticTokenV2,
   deployMockSapphireOracle,
+  deployMockSapphirePassportScores,
 } from './deployers';
 
 import { Signer } from 'ethers';
@@ -20,8 +20,9 @@ import { ITestContext, ITestContextArgs } from './context';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import {
   DEFAULT_COLLATERAL_DECIMALS,
-  DEFAULT_HiGH_C_RATIO,
+  DEFAULT_HIGH_C_RATIO,
   DEFAULT_LOW_C_RATIO,
+  DEFAULT_MAX_CREDIT_SCORE,
 } from '@test/helpers/sapphireDefaults';
 
 export async function distributorFixture(ctx: ITestContext) {
@@ -76,18 +77,17 @@ export async function sapphireFixture(
     deployer,
   ).deploy();
 
-  ctx.contracts.sapphire.creditScore = await deployMockSapphireCreditScore(
+  ctx.contracts.sapphire.passportScores = await deployMockSapphirePassportScores(
     deployer,
   );
 
-  await ctx.contracts.sapphire.creditScore.init(
+  await ctx.contracts.sapphire.passportScores.init(
     '0x1111111111111111111111111111111111111111111111111111111111111111',
-    ctx.signers.interestSetter.address,
+    ctx.signers.merkleRootUpdater.address,
     ctx.signers.pauseOperator.address,
-    1000,
   );
 
-  await ctx.contracts.sapphire.creditScore
+  await ctx.contracts.sapphire.passportScores
     .connect(ctx.signers.pauseOperator)
     .setPause(false);
 
@@ -95,7 +95,8 @@ export async function sapphireFixture(
     deployer,
   ).deploy(
     ctx.contracts.sapphire.linearMapper.address,
-    ctx.contracts.sapphire.creditScore.address,
+    ctx.contracts.sapphire.passportScores.address,
+    DEFAULT_MAX_CREDIT_SCORE,
   );
 
   ctx.contracts.sapphire.core = MockSapphireCoreV1Factory.connect(
@@ -110,7 +111,7 @@ export async function sapphireFixture(
     ctx.signers.pauseOperator.address,
     ctx.contracts.sapphire.assessor.address,
     ctx.signers.feeCollector.address,
-    DEFAULT_HiGH_C_RATIO,
+    DEFAULT_HIGH_C_RATIO,
     DEFAULT_LOW_C_RATIO,
     0,
     0,

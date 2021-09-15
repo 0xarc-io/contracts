@@ -13,13 +13,15 @@ export type Vault = {
   borrowedAmount: BigNumber;
 };
 
-export type CreditScore = {
+export type PassportScore = {
   account: string;
-  amount: BigNumber;
+  protocol: string;
+  score: BigNumber;
 };
 
-export interface CreditScoreProof {
+export interface PassportScoreProof {
   account: string;
+  protocol: string;
   score: BigNumberish;
   merkleProof: string[];
 }

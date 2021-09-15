@@ -6,7 +6,7 @@ import { AddressAccrual } from '@src/typings/AddressAccrual';
 import { TestToken } from '@src/typings/TestToken';
 import {
   MockSapphireCoreV1,
-  MockSapphireCreditScore,
+  MockSapphirePassportScores,
   SapphireAssessor,
   SapphireMapperLinear,
   SyntheticTokenV2,
@@ -18,6 +18,7 @@ export interface TestingSigners {
   admin: SignerWithAddress;
   minter: SignerWithAddress;
   interestSetter: SignerWithAddress;
+  merkleRootUpdater: SignerWithAddress;
   liquidator: SignerWithAddress;
   staker: SignerWithAddress;
   feeCollector: SignerWithAddress;
@@ -35,7 +36,7 @@ export interface SDKs {
 export interface Contracts {
   sapphire: {
     core: MockSapphireCoreV1;
-    creditScore: MockSapphireCreditScore;
+    passportScores: MockSapphirePassportScores;
     linearMapper: SapphireMapperLinear;
     assessor: SapphireAssessor;
     oracle: MockSapphireOracle;

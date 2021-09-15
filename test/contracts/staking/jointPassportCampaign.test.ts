@@ -1,11 +1,11 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import {
   JointPassportCampaignFactory,
-  MockSapphireCreditScore,
   TestToken,
   TestTokenFactory,
   MockJointPassportCampaign,
   MockJointPassportCampaignFactory,
+  MockSapphirePassportScores,
 } from '@src/typings';
 import { deployTestToken } from '../deployers';
 import { BigNumber, utils } from 'ethers';
@@ -16,14 +16,15 @@ import {
   immediatelyUpdateMerkleRoot,
 } from '@test/helpers/testingUtils';
 import { getEmptyScoreProof, getScoreProof } from '@src/utils/getScoreProof';
-import { CreditScore, CreditScoreProof } from '@arc-types/sapphireCore';
-import CreditScoreTree from '@src/MerkleTree/CreditScoreTree';
 import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 import _ from 'lodash';
 import { BASE } from '@src/constants';
 import { ethers } from 'hardhat';
+import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
+import { PassportScoreTree } from '@src/MerkleTree';
+import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
 
 chai.use(solidity);
 const expect = chai.expect;
@@ -49,17 +50,18 @@ describe('JointPassportCampaign', () => {
   let user1PassportCampaign: MockJointPassportCampaign;
   let user2PassportCampaign: MockJointPassportCampaign;
 
-  let creditScoreContract: MockSapphireCreditScore;
+  let creditScoreContract: MockSapphirePassportScores;
 
-  let user1CreditScore: CreditScore;
-  let user2CreditScore: CreditScore;
-  let unauthorizedCreditScore: CreditScore;
+  let user1CreditScore: PassportScore;
+  let user2CreditScore: PassportScore;
+  let unauthorizedCreditScore: PassportScore;
 
-  let user1ScoreProof: CreditScoreProof;
-  let user2ScoreProof: CreditScoreProof;
-  let unauthorizedScoreProof: CreditScoreProof;
+  let user1ScoreProof: PassportScoreProof;
+  let user1OtherProtoScoreProof: PassportScoreProof;
+  let user2ScoreProof: PassportScoreProof;
+  let unauthorizedScoreProof: PassportScoreProof;
 
-  let creditScoreTree: CreditScoreTree;
+  let creditScoreTree: PassportScoreTree;
 
   let stakingToken: TestToken;
   let arcToken: TestToken;
@@ -78,7 +80,7 @@ describe('JointPassportCampaign', () => {
   async function stake(
     user: SignerWithAddress,
     amount: BigNumber,
-    scoreProof?: CreditScoreProof,
+    scoreProof?: PassportScoreProof,
   ) {
     await mintAndApprove(stakingToken, user, amount);
     // await arcPassportCampaign.connect(user).stake(amount, scoreProof);
@@ -189,26 +191,39 @@ describe('JointPassportCampaign', () => {
 
     user1CreditScore = {
       account: user1.address,
-      amount: CREDIT_SCORE_THRESHOLD,
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      score: CREDIT_SCORE_THRESHOLD,
+    };
+
+    const user1OtherProtoScore = {
+      ...user1CreditScore,
+      protocol: utils.formatBytes32String('defi.other'),
     };
 
     user2CreditScore = {
       account: user2.address,
-      amount: CREDIT_SCORE_THRESHOLD,
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      score: CREDIT_SCORE_THRESHOLD,
     };
 
     unauthorizedCreditScore = {
       account: unauthorized.address,
-      amount: CREDIT_SCORE_THRESHOLD.sub(10),
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      score: CREDIT_SCORE_THRESHOLD.sub(10),
     };
 
-    creditScoreTree = new CreditScoreTree([
+    creditScoreTree = new PassportScoreTree([
       user1CreditScore,
+      user1OtherProtoScore,
       user2CreditScore,
       unauthorizedCreditScore,
     ]);
 
     user1ScoreProof = getScoreProof(user1CreditScore, creditScoreTree);
+    user1OtherProtoScoreProof = getScoreProof(
+      user1OtherProtoScore,
+      creditScoreTree,
+    );
     user2ScoreProof = getScoreProof(user2CreditScore, creditScoreTree);
     unauthorizedScoreProof = getScoreProof(
       unauthorizedCreditScore,
@@ -222,7 +237,7 @@ describe('JointPassportCampaign', () => {
       merkleRoot: creditScoreTree.getHexRoot(),
     });
 
-    creditScoreContract = ctx.contracts.sapphire.creditScore;
+    creditScoreContract = ctx.contracts.sapphire.passportScores;
 
     stakingToken = await deployTestToken(admin, 'Staking Token', 'STK');
     arcToken = await deployTestToken(admin, 'Arc Token', 'ARC');
@@ -279,7 +294,7 @@ describe('JointPassportCampaign', () => {
       const _arcToken = await campaign.rewardToken();
       const _collabToken = await campaign.collabRewardToken();
       const _stakingToken = await campaign.stakingToken();
-      const _creditScoreContract = await campaign.creditScoreContract();
+      const _creditScoreContract = await campaign.passportScoresContract();
       const daoAllocation = await campaign.daoAllocation();
       const maxStakePerUser = await campaign.maxStakePerUser();
       const creditScoreThreshold = await campaign.creditScoreThreshold();
@@ -608,7 +623,7 @@ describe('JointPassportCampaign', () => {
     describe('#stake', () => {
       it('reverts if called without a valid credit score proof', async () => {
         await expect(stake(user1, STAKE_AMOUNT)).to.be.revertedWith(
-          'CreditScoreVerifiable: proof is required but it is not passed',
+          'SapphirePassportScores: invalid proof',
         );
       });
 
@@ -640,8 +655,14 @@ describe('JointPassportCampaign', () => {
         await expect(
           stake(user1, STAKE_AMOUNT, user2ScoreProof),
         ).to.be.revertedWith(
-          'CreditScoreVerifiable: proof does not belong to the caller',
+          'PassportScoreVerifiable: proof does not belong to the caller',
         );
+      });
+
+      it('reverts if the proof protocol does not match the one registered', async () => {
+        await expect(
+          stake(user1, STAKE_AMOUNT, user1OtherProtoScoreProof),
+        ).to.be.revertedWith('JointPassportCampaign: invalid proof protocol');
       });
 
       it('should be able to stake', async () => {
@@ -1411,11 +1432,33 @@ describe('JointPassportCampaign', () => {
         );
       });
     });
+
+    describe('#setProofProtocol', () => {
+      it('reverts if called by non-owner', async () => {
+        await expect(
+          user1PassportCampaign.setProofProtocol(
+            utils.formatBytes32String('test'),
+          ),
+        ).to.be.revertedWith('Ownable: caller is not the owner');
+      });
+
+      it('sets the proof protocol', async () => {
+        expect(await arcPassportCampaign.getProofProtocol()).to.eq(
+          DEFAULT_PROOF_PROTOCOL,
+        );
+
+        await arcPassportCampaign.setProofProtocol(
+          utils.formatBytes32String('test'),
+        );
+
+        expect(await arcPassportCampaign.getProofProtocol()).to.eq('test');
+      });
+    });
   });
 
   describe('Scenarios', () => {
     let users: Record<string, SignerWithAddress>;
-    let creditScoreProofs: Record<string, CreditScoreProof>;
+    let creditScoreProofs: Record<string, PassportScoreProof>;
 
     beforeEach(async () => {
       const signers = await ethers.getSigners();
@@ -1429,15 +1472,16 @@ describe('JointPassportCampaign', () => {
       };
 
       // Set up credit scores for the users of this scenario
-      const creditScores: Record<string, CreditScore> = {};
+      const creditScores: Record<string, PassportScore> = {};
       Object.keys(users).forEach((userKey) => {
         creditScores[userKey] = {
           account: users[userKey].address,
-          amount: CREDIT_SCORE_THRESHOLD,
+          protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+          score: CREDIT_SCORE_THRESHOLD,
         };
       });
 
-      const newCreditScoreTree = new CreditScoreTree(
+      const newCreditScoreTree = new PassportScoreTree(
         Object.values(creditScores),
       );
 

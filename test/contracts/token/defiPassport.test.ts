@@ -1,6 +1,7 @@
+import { PassportScore } from '@arc-types/sapphireCore';
 import { BigNumber } from '@ethersproject/bignumber';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { CreditScoreTree } from '@src/MerkleTree';
+import { PassportScoreTree } from '@src/MerkleTree';
 import {
   ArcProxyFactory,
   DefaultPassportSkin,
@@ -8,20 +9,21 @@ import {
   DefiPassportFactory,
   MintableNFT,
   MintableNFTFactory,
-  MockSapphireCreditScore,
-  SapphireCreditScore,
-  SapphireCreditScoreFactory,
 } from '@src/typings';
 import { DefaultPassportSkinFactory } from '@src/typings/DefaultPassportSkinFactory';
-import { getScoreProof } from '@src/utils';
+import { MockSapphirePassportScores } from '@src/typings/MockSapphirePassportScores';
+import { SapphirePassportScores } from '@src/typings/SapphirePassportScores';
+import { SapphirePassportScoresFactory } from '@src/typings/SapphirePassportScoresFactory';
+import { getEmptyScoreProof, getScoreProof } from '@src/utils';
+import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { MockProvider } from 'ethereum-waffle';
-import { constants } from 'ethers';
+import { constants, utils } from 'ethers';
 import { ethers } from 'hardhat';
 import {
   deployDefiPassport,
-  deployMockSapphireCreditScore,
+  deployMockSapphirePassportScores,
 } from '../deployers';
 
 type TokenIdStatus = {
@@ -34,10 +36,12 @@ type SkinAndTokenIdStatusRecord = {
   skinTokenIdStatuses: TokenIdStatus[];
 };
 
+const OTHER_PROTOCOL = 'defi.other';
+
 describe('DefiPassport', () => {
   let defiPassport: DefiPassport;
 
-  let creditScoreContract: SapphireCreditScore;
+  let creditScoreContract: SapphirePassportScores;
   let owner: SignerWithAddress;
   let user: SignerWithAddress;
   let userNoCreditScore: SignerWithAddress;
@@ -51,32 +55,34 @@ describe('DefiPassport', () => {
   let otherSkinContract: MintableNFT;
   let otherSkinTokenId: BigNumber;
 
-  let creditScoreTree: CreditScoreTree;
+  let creditScoreTree: PassportScoreTree;
+  let ownerCreditScore: PassportScore;
+  let userCreditScore: PassportScore;
 
   async function _setupCreditScoreContract() {
-    creditScoreContract = await deployMockSapphireCreditScore(owner);
+    creditScoreContract = await deployMockSapphirePassportScores(owner);
 
-    const ownerCreditScore = {
+    ownerCreditScore = {
       account: owner.address,
-      amount: BigNumber.from(500),
+      protocol: utils.formatBytes32String(OTHER_PROTOCOL),
+      score: BigNumber.from(500),
     };
-    const userCreditScore = {
+    userCreditScore = {
       account: user.address,
-      amount: BigNumber.from(500),
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      score: BigNumber.from(500),
     };
-    creditScoreTree = new CreditScoreTree([ownerCreditScore, userCreditScore]);
+    creditScoreTree = new PassportScoreTree([
+      ownerCreditScore,
+      userCreditScore,
+    ]);
 
     await creditScoreContract.init(
       creditScoreTree.getHexRoot(),
       owner.address,
       owner.address,
-      1000,
     );
     await creditScoreContract.setPause(false);
-
-    await creditScoreContract.verifyAndUpdate(
-      getScoreProof(userCreditScore, creditScoreTree),
-    );
   }
 
   async function _setupSkins() {
@@ -137,7 +143,12 @@ describe('DefiPassport', () => {
       .setApprovedSkin(skinAddress, skinTokenId, true);
     await skinsContract.transferFrom(owner.address, user.address, skinTokenId);
 
-    await defiPassport.mint(user.address, skinAddress, skinTokenId);
+    await defiPassport.mint(
+      user.address,
+      skinAddress,
+      skinTokenId,
+      getScoreProof(userCreditScore, creditScoreTree),
+    );
 
     return defiPassport.tokenOfOwnerByIndex(user.address, 0);
   }
@@ -159,6 +170,10 @@ describe('DefiPassport', () => {
       'DefiPassport',
       creditScoreContract.address,
       skinManager.address,
+    );
+
+    await defiPassport.setProofProtocol(
+      utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
     );
   });
 
@@ -203,19 +218,64 @@ describe('DefiPassport', () => {
   });
 
   describe('#mint', () => {
+    it(`reverts if proof is not the receiver's`, async () => {
+      await defiPassport
+        .connect(skinManager)
+        .setDefaultSkin(defaultSkinAddress, true);
+
+      await expect(
+        defiPassport.mint(
+          userNoCreditScore.address,
+          defaultSkinAddress,
+          defaultSkinTokenId,
+          getScoreProof(userCreditScore, creditScoreTree),
+        ),
+      ).to.be.revertedWith(
+        'DefiPassport: the proof must correspond to the receiver',
+      );
+    });
+
+    it('reverts if the score proof does not correspond to the proof protocol', async () => {
+      await defiPassport
+        .connect(skinManager)
+        .setDefaultSkin(defaultSkinAddress, true);
+
+      await expect(
+        defiPassport.mint(
+          ownerCreditScore.account,
+          defaultSkinAddress,
+          defaultSkinTokenId,
+          getScoreProof(ownerCreditScore, creditScoreTree),
+        ),
+      ).to.be.revertedWith('DefiPassport: invalid proof protocol');
+    });
+
     it('reverts if the receiver has no credit score', async () => {
       await defiPassport
         .connect(skinManager)
-        .setApprovedSkin(skinAddress, skinTokenId, true);
+        .setDefaultSkin(defaultSkinAddress, true);
 
       await expect(
-        defiPassport.mint(userNoCreditScore.address, skinAddress, skinTokenId),
-      ).to.be.revertedWith('DefiPassport: the user has no credit score');
+        defiPassport.mint(
+          userNoCreditScore.address,
+          defaultSkinAddress,
+          defaultSkinTokenId,
+          getEmptyScoreProof(
+            userNoCreditScore.address,
+            utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+          ),
+        ),
+      ).to.be.revertedWith('SapphirePassportScores: invalid proof');
     });
 
     it('reverts if the skin is not approved', async () => {
       await expect(
-        defiPassport.mint(user.address, skinAddress, skinTokenId),
+        defiPassport.mint(
+          user.address,
+          skinAddress,
+          skinTokenId,
+          getScoreProof(userCreditScore, creditScoreTree),
+        ),
       ).to.be.revertedWith('DefiPassport: invalid skin');
     });
 
@@ -225,7 +285,12 @@ describe('DefiPassport', () => {
         .setApprovedSkin(skinAddress, skinTokenId, true);
 
       await expect(
-        defiPassport.mint(user.address, skinAddress, skinTokenId),
+        defiPassport.mint(
+          user.address,
+          skinAddress,
+          skinTokenId,
+          getScoreProof(userCreditScore, creditScoreTree),
+        ),
       ).to.be.revertedWith('DefiPassport: invalid skin');
     });
 
@@ -240,6 +305,7 @@ describe('DefiPassport', () => {
           user.address,
           defaultSkinAddress,
           BigNumber.from(420),
+          getScoreProof(userCreditScore, creditScoreTree),
         ),
       ).to.be.revertedWith('ERC721: owner query for nonexistent token');
     });
@@ -253,6 +319,7 @@ describe('DefiPassport', () => {
         user.address,
         defaultSkinAddress,
         defaultSkinTokenId,
+        getScoreProof(userCreditScore, creditScoreTree),
       );
 
       const tokenId = await defiPassport.tokenOfOwnerByIndex(user.address, 0);
@@ -273,7 +340,12 @@ describe('DefiPassport', () => {
         skinTokenId,
       );
 
-      await defiPassport.mint(user.address, skinAddress, skinTokenId);
+      await defiPassport.mint(
+        user.address,
+        skinAddress,
+        skinTokenId,
+        getScoreProof(userCreditScore, creditScoreTree),
+      );
 
       const tokenId = await defiPassport.tokenOfOwnerByIndex(user.address, 0);
 
@@ -305,10 +377,20 @@ describe('DefiPassport', () => {
         skinTokenId,
       );
 
-      await defiPassport.mint(user.address, skinAddress, skinTokenId);
+      await defiPassport.mint(
+        user.address,
+        skinAddress,
+        skinTokenId,
+        getScoreProof(userCreditScore, creditScoreTree),
+      );
 
       await expect(
-        defiPassport.mint(user.address, skinAddress, skinTokenId),
+        defiPassport.mint(
+          user.address,
+          skinAddress,
+          skinTokenId,
+          getScoreProof(userCreditScore, creditScoreTree),
+        ),
       ).to.be.revertedWith('DefiPassport: user already has a defi passport');
     });
   });
@@ -316,7 +398,9 @@ describe('DefiPassport', () => {
   describe('#setBaseURI', () => {
     it('reverts if called by non-admin', async () => {
       await expect(
-        defiPassport.connect(user).setBaseURI('test'),
+        defiPassport
+          .connect(user)
+          .setBaseURI(utils.formatBytes32String('test')),
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
@@ -341,6 +425,7 @@ describe('DefiPassport', () => {
         user.address,
         defaultSkinAddress,
         defaultSkinTokenId,
+        getScoreProof(userCreditScore, creditScoreTree),
       );
 
       const tokenId = await defiPassport.tokenOfOwnerByIndex(user.address, 0);
@@ -597,7 +682,7 @@ describe('DefiPassport', () => {
       });
 
       const signer = provider.getSigner();
-      const cs = await new SapphireCreditScoreFactory(signer).deploy();
+      const cs = await new SapphirePassportScoresFactory(signer).deploy();
       const impl = await new DefiPassportFactory(signer).deploy();
 
       const proxy = await new ArcProxyFactory(signer).deploy(
@@ -950,27 +1035,27 @@ describe('DefiPassport', () => {
     });
   });
 
-  describe('#setCreditScoreContract', () => {
-    let otherCreditScoreContract: MockSapphireCreditScore;
+  describe('#setPassportScoresContract', () => {
+    let otherCreditScoreContract: MockSapphirePassportScores;
 
     beforeEach(async () => {
-      otherCreditScoreContract = await deployMockSapphireCreditScore(owner);
+      otherCreditScoreContract = await deployMockSapphirePassportScores(owner);
     });
 
     it('reverts if called by non-admin', async () => {
       await expect(
         defiPassport
           .connect(user)
-          .setCreditScoreContract(otherCreditScoreContract.address),
+          .setPassportScoresContract(otherCreditScoreContract.address),
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
     it('sets the credit score contract if called by admin', async () => {
-      expect(await defiPassport.creditScoreContract()).to.eq(
+      expect(await defiPassport.passportScoresContract()).to.eq(
         creditScoreContract.address,
       );
 
-      await defiPassport.setCreditScoreContract(
+      await defiPassport.setPassportScoresContract(
         otherCreditScoreContract.address,
       );
     });
@@ -1007,13 +1092,10 @@ describe('DefiPassport', () => {
       const tokenId = await mintUserPassport();
 
       await expect(
-        defiPassport
-          .connect(user)
-          ['safeTransferFrom(address,address,uint256)'](
-            user.address,
-            owner.address,
-            tokenId,
-          ),
+        defiPassport.connect(user)[
+          // eslint-disable-next-line no-unexpected-multiline
+          'safeTransferFrom(address,address,uint256)'
+        ](user.address, owner.address, tokenId),
       ).to.be.revertedWith(
         'DefiPassport: defi passports are not transferrable',
       );
@@ -1025,14 +1107,10 @@ describe('DefiPassport', () => {
       const tokenId = await mintUserPassport();
 
       await expect(
-        defiPassport
-          .connect(user)
-          ['safeTransferFrom(address,address,uint256,bytes)'](
-            user.address,
-            owner.address,
-            tokenId,
-            [],
-          ),
+        defiPassport.connect(user)[
+          // eslint-disable-next-line no-unexpected-multiline
+          'safeTransferFrom(address,address,uint256,bytes)'
+        ](user.address, owner.address, tokenId, []),
       ).to.be.revertedWith(
         'DefiPassport: defi passports are not transferrable',
       );
@@ -1046,6 +1124,26 @@ describe('DefiPassport', () => {
       ).to.be.revertedWith(
         'DefiPassport: defi passports are not transferrable',
       );
+    });
+  });
+
+  describe('#setProofProtocol', () => {
+    it('reverts if called by non-admin', async () => {
+      await expect(
+        defiPassport
+          .connect(user)
+          .setProofProtocol(utils.formatBytes32String('test')),
+      ).to.be.revertedWith('Adminable: caller is not admin');
+    });
+
+    it('sets the proof protocol', async () => {
+      expect(await defiPassport.getProofProtocol()).to.eq(
+        DEFAULT_PROOF_PROTOCOL,
+      );
+
+      await defiPassport.setProofProtocol(utils.formatBytes32String('test'));
+
+      expect(await defiPassport.getProofProtocol()).to.eq('test');
     });
   });
 });

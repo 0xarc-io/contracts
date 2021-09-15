@@ -5,14 +5,15 @@ pragma experimental ABIEncoderV2;
 
 import {SapphireTypes} from "./SapphireTypes.sol";
 
-interface ISapphireCreditScore {
+interface ISapphirePassportScores {
     function updateMerkleRoot(bytes32 newRoot) external;
 
     function setMerkleRootUpdater(address merkleRootUpdater) external;
 
-    function verifyAndUpdate(SapphireTypes.ScoreProof calldata proof) external returns (uint256, uint16);
-
-    function getLastScore(address user) external view returns (uint256, uint16, uint256);
+    /**
+     * Reverts if proof is invalid
+     */
+    function verify(SapphireTypes.ScoreProof calldata proof) external view returns(bool);
 
     function setMerkleRootDelay(uint256 delay) external;
 

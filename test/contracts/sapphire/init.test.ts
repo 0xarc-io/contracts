@@ -8,13 +8,14 @@ import {
   SapphireMapperLinearFactory,
   TestToken,
 } from '@src/typings';
+import { DEFAULT_MAX_CREDIT_SCORE } from '@test/helpers/sapphireDefaults';
 import { expect } from 'chai';
 import { createFixtureLoader } from 'ethereum-waffle';
 import { constants, utils } from 'ethers';
 import {
   deployArcProxy,
   deployMockSapphireCoreV1,
-  deployMockSapphireCreditScore,
+  deployMockSapphirePassportScores,
   deployTestToken,
 } from '../deployers';
 
@@ -51,7 +52,8 @@ describe('SapphireCore.init', () => {
   let unauthorized: Wallet;
   let collateral: TestToken;
   let synthetic: TestToken;
-  let init: Function;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let init: (overrides?: any) => unknown;
 
   let defaultOptions;
   beforeEach(async () => {
@@ -66,16 +68,16 @@ describe('SapphireCore.init', () => {
 
     const oracle = await new MockSapphireOracleFactory(deployer).deploy();
     const mapper = await new SapphireMapperLinearFactory(deployer).deploy();
-    const creditScore = await deployMockSapphireCreditScore(deployer);
+    const creditScore = await deployMockSapphirePassportScores(deployer);
     await creditScore.init(
       '0x1111111111111111111111111111111111111111111111111111111111111111',
       Wallet.createRandom().address,
       Wallet.createRandom().address,
-      1000,
     );
     const assessor = await new SapphireAssessorFactory(deployer).deploy(
       mapper.address,
       creditScore.address,
+      DEFAULT_MAX_CREDIT_SCORE,
     );
 
     defaultOptions = {

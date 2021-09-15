@@ -1,4 +1,8 @@
 import { SapphireAssessorFactory, SapphireCoreV1 } from '@src/typings';
+import {
+  DEFAULT_MAX_CREDIT_SCORE,
+  DEFAULT_PROOF_PROTOCOL,
+} from '@test/helpers/sapphireDefaults';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { constants, utils, Wallet } from 'ethers';
@@ -91,7 +95,8 @@ describe('SapphireCore.setters', () => {
         ctx.signers.admin,
       ).deploy(
         ctx.contracts.sapphire.linearMapper.address,
-        ctx.contracts.sapphire.creditScore.address,
+        ctx.contracts.sapphire.passportScores.address,
+        DEFAULT_MAX_CREDIT_SCORE,
       );
 
       newAssessorAddress = newAssessor.address;
@@ -330,6 +335,29 @@ describe('SapphireCore.setters', () => {
       expect(await sapphireCore.totalBorrowLimit()).eq(totalBorrowLimit);
       expect(await sapphireCore.vaultBorrowMaximum()).eq(vaultBorrowMaximum);
       expect(await sapphireCore.vaultBorrowMinimum()).eq(vaultBorrowMinimum);
+    });
+  });
+
+  describe('#setProofProtocol', () => {
+    it('reverts if called by non-owner', async () => {
+      await expect(
+        sapphireCore
+          .connect(ctx.signers.unauthorized)
+          .setProofProtocol(utils.formatBytes32String('test')),
+      ).to.be.revertedWith('Adminable: caller is not admin');
+    });
+
+    it('sets the proof protocol', async () => {
+      expect(await sapphireCore.getProofProtocol()).to.eq(
+        DEFAULT_PROOF_PROTOCOL,
+      );
+      expect(await sapphireCore.getAdmin()).to.eq(ctx.signers.admin.address);
+
+      await sapphireCore
+        .connect(ctx.signers.admin)
+        .setProofProtocol(utils.formatBytes32String('test'));
+
+      expect(await sapphireCore.getProofProtocol()).to.eq('test');
     });
   });
 });
