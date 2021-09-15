@@ -22,6 +22,7 @@ import {
   DEFAULT_COLLATERAL_DECIMALS,
   DEFAULT_HiGH_C_RATIO,
   DEFAULT_LOW_C_RATIO,
+  DEFAULT_MAX_CREDIT_SCORE,
 } from '@test/helpers/sapphireDefaults';
 
 export async function distributorFixture(ctx: ITestContext) {
@@ -84,7 +85,6 @@ export async function sapphireFixture(
     '0x1111111111111111111111111111111111111111111111111111111111111111',
     ctx.signers.merkleRootUpdater.address,
     ctx.signers.pauseOperator.address,
-    1000,
   );
 
   await ctx.contracts.sapphire.passportScores
@@ -96,6 +96,7 @@ export async function sapphireFixture(
   ).deploy(
     ctx.contracts.sapphire.linearMapper.address,
     ctx.contracts.sapphire.passportScores.address,
+    DEFAULT_MAX_CREDIT_SCORE,
   );
 
   ctx.contracts.sapphire.core = MockSapphireCoreV1Factory.connect(

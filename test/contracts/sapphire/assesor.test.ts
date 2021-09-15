@@ -7,10 +7,13 @@ import {
   MockSapphireMapperLinearFactory,
   SapphireAssessor,
   SapphireAssessorFactory,
-  MockSapphirePassportScores,
 } from '@src/typings';
+import { MockSapphirePassportScores } from '@src/typings/MockSapphirePassportScores';
 import { ArcNumber, getScoreProof } from '@src/utils';
-import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
+import {
+  DEFAULT_MAX_CREDIT_SCORE,
+  DEFAULT_PROOF_PROTOCOL,
+} from '@test/helpers/sapphireDefaults';
 import { expect } from 'chai';
 import { BigNumber, constants, utils } from 'ethers';
 import { ethers } from 'hardhat';
@@ -63,12 +66,12 @@ describe('SapphireAssessor', () => {
       testPassportScoreTree.getHexRoot(),
       owner.address,
       owner.address,
-      1000,
     );
 
     const testAssessor = await new SapphireAssessorFactory(owner).deploy(
       mapper.address,
       testPassportScoreContract.address,
+      DEFAULT_MAX_CREDIT_SCORE,
     );
 
     return {
@@ -115,12 +118,12 @@ describe('SapphireAssessor', () => {
       scoresTree.getHexRoot(),
       '0x0000000000000000000000000000000000000000',
       '0x0000000000000000000000000000000000000000',
-      1000,
     );
 
     assessor = await new SapphireAssessorFactory(owner).deploy(
       mapper.address,
       passportScoresContract.address,
+      DEFAULT_MAX_CREDIT_SCORE,
     );
   });
 
@@ -130,6 +133,7 @@ describe('SapphireAssessor', () => {
         new SapphireAssessorFactory(owner).deploy(
           '0x0000000000000000000000000000000000000000',
           passportScoresContract.address,
+          DEFAULT_MAX_CREDIT_SCORE,
         ),
       ).to.be.revertedWith(
         'SapphireAssessor: The mapper and the passport scores must be valid contracts',
@@ -139,6 +143,7 @@ describe('SapphireAssessor', () => {
         new SapphireAssessorFactory(owner).deploy(
           mapper.address,
           '0x0000000000000000000000000000000000000000',
+          DEFAULT_MAX_CREDIT_SCORE,
         ),
       ).to.be.revertedWith(
         'SapphireAssessor: The mapper and the passport scores must be valid contracts',
@@ -148,16 +153,28 @@ describe('SapphireAssessor', () => {
         new SapphireAssessorFactory(owner).deploy(
           '0x0000000000000000000000000000000000000000',
           '0x0000000000000000000000000000000000000000',
+          DEFAULT_MAX_CREDIT_SCORE,
         ),
       ).to.be.revertedWith(
         'SapphireAssessor: The mapper and the passport scores must be valid contracts',
       );
     });
 
+    it('reverts if max score is 0', async () => {
+      await expect(
+        new SapphireAssessorFactory(owner).deploy(
+          mapper.address,
+          passportScoresContract.address,
+          0,
+        ),
+      ).to.be.revertedWith('SapphireAssessor: max score cannot be zero');
+    });
+
     it('initializes the mapper and the credit score', async () => {
       const testAssessor = await new SapphireAssessorFactory(owner).deploy(
         mapper.address,
         passportScoresContract.address,
+        DEFAULT_MAX_CREDIT_SCORE,
       );
 
       expect(await testAssessor.mapper()).to.eq(mapper.address);
@@ -221,6 +238,7 @@ describe('SapphireAssessor', () => {
       const testAssessor = await new SapphireAssessorFactory(owner).deploy(
         testMapper.address,
         passportScoresContract.address,
+        DEFAULT_MAX_CREDIT_SCORE,
       );
 
       await testMapper.setMapResult(0);
@@ -432,6 +450,28 @@ describe('SapphireAssessor', () => {
     });
   });
 
+  describe('#setMaxScore', () => {
+    it('reverts if called by non-owner', async () => {
+      await expect(assessor.connect(user1).setMaxScore(21)).to.be.revertedWith(
+        'Ownable: caller is not the owner',
+      );
+    });
+
+    it('sets the max score', async () => {
+      expect(await assessor.maxScore()).to.eq(DEFAULT_MAX_CREDIT_SCORE);
+
+      await assessor.setMaxScore(21);
+
+      expect(await assessor.maxScore()).to.eq(21);
+    });
+
+    it('reverts if max score is set to 0', async () => {
+      await expect(assessor.setMaxScore(0)).to.be.revertedWith(
+        'SapphireAssessor: max score cannot be zero',
+      );
+    });
+  });
+
   describe('#setPassportScoreContract', () => {
     it('reverts if called by non-owner', async () => {
       const userAssessor = SapphireAssessorFactory.connect(
@@ -470,7 +510,6 @@ describe('SapphireAssessor', () => {
         testPassportScoreTree.getHexRoot(),
         owner.address,
         owner.address,
-        1000,
       );
 
       await assessor.setPassportScoreContract(
@@ -492,7 +531,6 @@ describe('SapphireAssessor', () => {
         testPassportScoreTree.getHexRoot(),
         owner.address,
         owner.address,
-        1000,
       );
 
       await expect(

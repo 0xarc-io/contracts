@@ -8,6 +8,7 @@ import {
   SapphireMapperLinearFactory,
   TestToken,
 } from '@src/typings';
+import { DEFAULT_MAX_CREDIT_SCORE } from '@test/helpers/sapphireDefaults';
 import { expect } from 'chai';
 import { createFixtureLoader } from 'ethereum-waffle';
 import { constants, utils } from 'ethers';
@@ -72,11 +73,11 @@ describe('SapphireCore.init', () => {
       '0x1111111111111111111111111111111111111111111111111111111111111111',
       Wallet.createRandom().address,
       Wallet.createRandom().address,
-      1000,
     );
     const assessor = await new SapphireAssessorFactory(deployer).deploy(
       mapper.address,
       creditScore.address,
+      DEFAULT_MAX_CREDIT_SCORE,
     );
 
     defaultOptions = {

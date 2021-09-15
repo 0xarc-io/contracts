@@ -1,5 +1,8 @@
 import { SapphireAssessorFactory, SapphireCoreV1 } from '@src/typings';
-import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
+import {
+  DEFAULT_MAX_CREDIT_SCORE,
+  DEFAULT_PROOF_PROTOCOL,
+} from '@test/helpers/sapphireDefaults';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { constants, utils, Wallet } from 'ethers';
@@ -93,6 +96,7 @@ describe('SapphireCore.setters', () => {
       ).deploy(
         ctx.contracts.sapphire.linearMapper.address,
         ctx.contracts.sapphire.passportScores.address,
+        DEFAULT_MAX_CREDIT_SCORE,
       );
 
       newAssessorAddress = newAssessor.address;
