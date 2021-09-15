@@ -1035,7 +1035,7 @@ describe('DefiPassport', () => {
     });
   });
 
-  describe('#setCreditScoreContract', () => {
+  describe('#setPassportScoresContract', () => {
     let otherCreditScoreContract: MockSapphirePassportScores;
 
     beforeEach(async () => {
@@ -1046,7 +1046,7 @@ describe('DefiPassport', () => {
       await expect(
         defiPassport
           .connect(user)
-          .setCreditScoreContract(otherCreditScoreContract.address),
+          .setPassportScoresContract(otherCreditScoreContract.address),
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
@@ -1055,7 +1055,7 @@ describe('DefiPassport', () => {
         creditScoreContract.address,
       );
 
-      await defiPassport.setCreditScoreContract(
+      await defiPassport.setPassportScoresContract(
         otherCreditScoreContract.address,
       );
     });
