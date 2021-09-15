@@ -27,7 +27,7 @@ describe('PassportScoreTree', () => {
       );
     });
 
-    it('fails if there are more than 2 credit scores per address', () => {
+    it('fails if there are more than 1 credit scores per address', () => {
       expect(
         () =>
           new PassportScoreTree([
