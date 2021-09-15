@@ -66,7 +66,7 @@ describe('PassportScoreVerifiable', () => {
       ).to.be.revertedWith('SapphirePassportScores: invalid proof');
     });
 
-    it(`reverts if the proof is not the caller's same caller is required`, async () => {
+    it(`reverts if the proof is not the caller's and _enforceSameCaller is true`, async () => {
       await expect(
         contract
           .connect(owner)
