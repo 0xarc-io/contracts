@@ -440,20 +440,4 @@ describe('SapphireCreditScore', () => {
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
   });
-
-  describe('#setDocumentId', () => {
-    it('should be able to update as the admin', async () => {
-      const documentId = 'test123';
-
-      await expect(passportScores.setDocumentId(documentId))
-        .to.emit(passportScores, 'DocumentIdUpdated')
-        .withArgs(documentId);
-    });
-
-    it('should not be able to update as non-admin', async () => {
-      await expect(
-        passportScores.connect(merkleRootUpdater).setDocumentId('test123'),
-      ).to.be.revertedWith('Adminable: caller is not admin');
-    });
-  });
 });
