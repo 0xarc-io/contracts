@@ -14,7 +14,7 @@ import { expect } from 'chai';
 import { ONE_YEAR_IN_SECONDS } from '@src/constants';
 import {
   DEFAULT_COLLATERAL_DECIMALS,
-  DEFAULT_HiGH_C_RATIO,
+  DEFAULT_HIGH_C_RATIO,
   DEFAULT_LOW_C_RATIO,
   DEFAULT_PRICE,
   DEFAULT_PROOF_PROTOCOL,
@@ -36,12 +36,12 @@ import { PassportScoreTree } from '@src/MerkleTree';
 const NORMALIZED_COLLATERAL_AMOUNT = utils.parseEther('100');
 const COLLATERAL_AMOUNT = utils.parseUnits('100', DEFAULT_COLLATERAL_DECIMALS);
 const BORROW_AMOUNT = NORMALIZED_COLLATERAL_AMOUNT.mul(DEFAULT_PRICE).div(
-  DEFAULT_HiGH_C_RATIO,
+  DEFAULT_HIGH_C_RATIO,
 );
 // for credit score equals 500 what is the a half of max credit score
-const MAX_BORROW_AMOUNT = NORMALIZED_COLLATERAL_AMOUNT.mul(DEFAULT_PRICE).div(
-  DEFAULT_LOW_C_RATIO.add(DEFAULT_HiGH_C_RATIO).div(2),
-);
+const BORROW_AMOUNT_500_SCORE = NORMALIZED_COLLATERAL_AMOUNT.mul(
+  DEFAULT_PRICE,
+).div(DEFAULT_LOW_C_RATIO.add(DEFAULT_HIGH_C_RATIO).div(2));
 
 describe('SapphireCore.borrow()', () => {
   let ctx: ITestContext;
@@ -146,7 +146,7 @@ describe('SapphireCore.borrow()', () => {
     expect(collateralDecimals).not.eq(18);
 
     await arc.borrow(
-      MAX_BORROW_AMOUNT,
+      BORROW_AMOUNT_500_SCORE,
       creditScoreProof,
       undefined,
       scoredMinter,
@@ -157,7 +157,7 @@ describe('SapphireCore.borrow()', () => {
     );
 
     expect(collateralAmount, 'collateral amt').eq(COLLATERAL_AMOUNT);
-    expect(borrowedAmount, 'borrow amt').eq(MAX_BORROW_AMOUNT);
+    expect(borrowedAmount, 'borrow amt').eq(BORROW_AMOUNT_500_SCORE);
   });
 
   it('borrows with the highest c-ratio if proof is not provided', async () => {
@@ -235,7 +235,7 @@ describe('SapphireCore.borrow()', () => {
   it('borrows more if a valid score proof is provided', async () => {
     // With the credit score user can borrow more than amount based default collateral ratio
     await arc.borrow(
-      MAX_BORROW_AMOUNT,
+      BORROW_AMOUNT_500_SCORE,
       creditScoreProof,
       undefined,
       scoredMinter,
@@ -243,13 +243,13 @@ describe('SapphireCore.borrow()', () => {
 
     const { borrowedAmount } = await arc.getVault(scoredMinter.address);
 
-    expect(borrowedAmount).eq(MAX_BORROW_AMOUNT);
+    expect(borrowedAmount).eq(BORROW_AMOUNT_500_SCORE);
   });
 
   it('borrows more if the credit score increases', async () => {
     // The user's existing credit score is updated and increases letting them borrow more
     await arc.borrow(
-      MAX_BORROW_AMOUNT,
+      BORROW_AMOUNT_500_SCORE,
       creditScoreProof,
       undefined,
       scoredMinter,
@@ -298,7 +298,7 @@ describe('SapphireCore.borrow()', () => {
       scoredMinter.address,
     );
     const expectedVaultBorrowAmt = await convertPrincipal(
-      (await denormalizeBorrowAmount(MAX_BORROW_AMOUNT)).add(
+      (await denormalizeBorrowAmount(BORROW_AMOUNT_500_SCORE)).add(
         additionalBorrowAmount,
       ),
     );
@@ -326,7 +326,7 @@ describe('SapphireCore.borrow()', () => {
     // Shouldn't be able to borrow the same as with credit score equals 500
     await expect(
       arc.borrow(
-        MAX_BORROW_AMOUNT,
+        BORROW_AMOUNT_500_SCORE,
         getScoreProof(creditScore, newPassportScoreTree),
         undefined,
         scoredMinter,
@@ -338,7 +338,7 @@ describe('SapphireCore.borrow()', () => {
 
   it('updates the total borrowed amount correctly', async () => {
     await arc.borrow(
-      MAX_BORROW_AMOUNT,
+      BORROW_AMOUNT_500_SCORE,
       creditScoreProof,
       undefined,
       scoredMinter,
@@ -346,9 +346,9 @@ describe('SapphireCore.borrow()', () => {
 
     const { borrowedAmount } = await arc.getVault(scoredMinter.address);
 
-    expect(borrowedAmount).eq(MAX_BORROW_AMOUNT);
+    expect(borrowedAmount).eq(BORROW_AMOUNT_500_SCORE);
     expect(await ctx.contracts.sapphire.core.totalBorrowed()).eq(
-      MAX_BORROW_AMOUNT,
+      BORROW_AMOUNT_500_SCORE,
     );
 
     await arc.deposit(
@@ -360,7 +360,7 @@ describe('SapphireCore.borrow()', () => {
 
     await arc.borrow(BORROW_AMOUNT, undefined, undefined, ctx.signers.minter);
     expect(await ctx.contracts.sapphire.core.totalBorrowed()).eq(
-      MAX_BORROW_AMOUNT.add(BORROW_AMOUNT),
+      BORROW_AMOUNT_500_SCORE.add(BORROW_AMOUNT),
     );
   });
 
@@ -384,13 +384,13 @@ describe('SapphireCore.borrow()', () => {
 
   it('should not borrow more if the price decreases', async () => {
     await arc.borrow(
-      MAX_BORROW_AMOUNT.div(2),
+      BORROW_AMOUNT_500_SCORE.div(2),
       creditScoreProof,
       undefined,
       scoredMinter,
     );
     await arc.borrow(
-      MAX_BORROW_AMOUNT.div(4),
+      BORROW_AMOUNT_500_SCORE.div(4),
       creditScoreProof,
       undefined,
       scoredMinter,
@@ -398,7 +398,7 @@ describe('SapphireCore.borrow()', () => {
     await arc.updatePrice(utils.parseEther('0.99'));
     await expect(
       arc.borrow(
-        MAX_BORROW_AMOUNT.div(4),
+        BORROW_AMOUNT_500_SCORE.div(4),
         creditScoreProof,
         undefined,
         scoredMinter,
@@ -410,7 +410,7 @@ describe('SapphireCore.borrow()', () => {
 
   it(`should not borrow if using someone else's score proof`, async () => {
     await arc.borrow(
-      MAX_BORROW_AMOUNT,
+      BORROW_AMOUNT_500_SCORE,
       creditScoreProof,
       undefined,
       scoredMinter,

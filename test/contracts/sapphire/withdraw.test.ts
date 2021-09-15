@@ -9,7 +9,7 @@ import { getEvent } from '@src/utils/getEvent';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import {
   DEFAULT_COLLATERAL_DECIMALS,
-  DEFAULT_HiGH_C_RATIO,
+  DEFAULT_HIGH_C_RATIO,
   DEFAULT_LOW_C_RATIO,
   DEFAULT_PRICE,
   DEFAULT_PROOF_PROTOCOL,
@@ -32,7 +32,7 @@ const BORROW_AMOUNT = utils.parseEther('200');
  * When the contract computes the c-ratio, it will be slightly smaller to be on the
  * safe side.
  */
-const COLLATERAL_LIMIT = BORROW_AMOUNT.mul(DEFAULT_HiGH_C_RATIO)
+const COLLATERAL_LIMIT = BORROW_AMOUNT.mul(DEFAULT_HIGH_C_RATIO)
   .div(DEFAULT_PRICE)
   .div(BASE)
   .mul(BigNumber.from(10).pow(DEFAULT_COLLATERAL_DECIMALS));
@@ -111,7 +111,7 @@ describe('SapphireCore.withdraw()', () => {
   it('withdraws to the limit', async () => {
     await setupBaseVault(arc, signers.minter, COLLATERAL_AMOUNT, BORROW_AMOUNT);
 
-    // Withdraw the max collateral to respect the c-ratio set by DEFAULT_HiGH_C_RATIO
+    // Withdraw the max collateral to respect the c-ratio set by DEFAULT_HIGH_C_RATIO
     const withdrawAmt = COLLATERAL_AMOUNT.sub(COLLATERAL_LIMIT);
     const preBalance = await arc.collateral().balanceOf(signers.minter.address);
 
@@ -145,7 +145,7 @@ describe('SapphireCore.withdraw()', () => {
      * c-ratio is lower
      */
 
-    // Withdraw the max collateral to respect the c-ratio set by DEFAULT_HiGH_C_RATIO
+    // Withdraw the max collateral to respect the c-ratio set by DEFAULT_HIGH_C_RATIO
     const withdrawAmt1 = COLLATERAL_AMOUNT.sub(COLLATERAL_LIMIT);
 
     const preBalance = await arc
@@ -162,7 +162,7 @@ describe('SapphireCore.withdraw()', () => {
 
     const assessmentTx = await assessor.assess(
       DEFAULT_LOW_C_RATIO,
-      DEFAULT_HiGH_C_RATIO,
+      DEFAULT_HIGH_C_RATIO,
       getScoreProof(minterCreditScore, creditScoreTree),
       true,
     );
