@@ -72,7 +72,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
 
     event FundsWithdrawnFromSablier(uint256 _streamId, uint256 _amount);
 
-    event CreditScoreContractSet(address _creditScoreContract);
+    event PassportScoresContractSet(address _passportScoresContract);
 
     event ProofProtocolSet(string _protocol);
 
@@ -91,7 +91,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
         uint8 __decimals,
         address _stakingToken,
         uint256 _exitCooldownDuration,
-        address _creditScoreContract,
+        address _passportScoresContract,
         address _sablierContract
     )
         external
@@ -109,8 +109,8 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
         );
 
         require (
-            _creditScoreContract.isContract(),
-            "StakingAccrualERC20: the credit score contract is invalid"
+            _passportScoresContract.isContract(),
+            "StakingAccrualERC20: the passport scores contract is invalid"
         );
 
         require (
@@ -124,7 +124,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
         );
 
         stakingToken = IPermittableERC20(_stakingToken);
-        passportScoresContract = ISapphirePassportScores(_creditScoreContract);
+        passportScoresContract = ISapphirePassportScores(_passportScoresContract);
         sablierContract = ISablier(_sablierContract);
     }
 
@@ -173,24 +173,24 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
     }
 
     function setPassportScoreContract(
-        address _creditScoreAddress
+        address _passportScoresContract
     )
         external
         onlyAdmin
     {
         require(
-            address(passportScoresContract) != _creditScoreAddress,
-            "StakingAccrualERC20: the same credit score address is already set"
+            address(passportScoresContract) != _passportScoresContract,
+            "StakingAccrualERC20: the same passport scores address is already set"
         );
 
         require(
-            _creditScoreAddress.isContract(),
+            _passportScoresContract.isContract(),
             "StakingAccrualERC20: the given address is not a contract"
         );
 
-        passportScoresContract = ISapphirePassportScores(_creditScoreAddress);
+        passportScoresContract = ISapphirePassportScores(_passportScoresContract);
 
-        emit CreditScoreContractSet(_creditScoreAddress);
+        emit PassportScoresContractSet(_passportScoresContract);
     }
 
     /**
