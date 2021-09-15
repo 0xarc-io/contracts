@@ -50,7 +50,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
 
     event SkinManagerSet(address _skinManager);
 
-    event CreditScoreContractSet(address _passportScoresContract);
+    event PassportScoresContractSet(address _passportScoresContract);
 
     event WhitelistSkinSet(address _skin, bool _status);
 
@@ -84,7 +84,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
     function init(
         string calldata _name,
         string calldata _symbol,
-        address _creditScoreAddress,
+        address _passportScoresAddress,
         address _skinManager
     )
         external
@@ -96,11 +96,11 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         skinManager = _skinManager;
 
         require(
-            _creditScoreAddress.isContract(),
-            "DefiPassport: credit score address is not a contract"
+            _passportScoresAddress.isContract(),
+            "DefiPassport: passport scores address is not a contract"
         );
 
-        passportScoresContract = ISapphirePassportScores(_creditScoreAddress);
+        passportScoresContract = ISapphirePassportScores(_passportScoresAddress);
 
         /*
         *   register the supported interfaces to conform to ERC721 via ERC165
@@ -306,25 +306,25 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         emit WhitelistSkinSet(_skinContract, _status);
     }
 
-    function setCreditScoreContract(
-        address _creditScoreAddress
+    function setPassportScoresContract(
+        address _passportScoresAddress
     )
         external
         onlyAdmin
     {
         require(
-            address(passportScoresContract) != _creditScoreAddress,
-            "DefiPassport: the same credit score address is already set"
+            address(passportScoresContract) != _passportScoresAddress,
+            "DefiPassport: the same passport scores address is already set"
         );
 
         require(
-            _creditScoreAddress.isContract(),
+            _passportScoresAddress.isContract(),
             "DefiPassport: the given address is not a contract"
         );
 
-        passportScoresContract = ISapphirePassportScores(_creditScoreAddress);
+        passportScoresContract = ISapphirePassportScores(_passportScoresAddress);
 
-        emit CreditScoreContractSet(_creditScoreAddress);
+        emit PassportScoresContractSet(_passportScoresAddress);
     }
 
     /* ========== Public Functions ========== */
