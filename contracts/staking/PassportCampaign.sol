@@ -495,22 +495,18 @@ contract PassportCampaign is Adminable, PassportScoreVerifiable {
     }
 
     function getReward(
-        address _user,
-        SapphireTypes.ScoreProof memory _scoreProof
+        address _user
     )
         public
-        checkScoreProof(_scoreProof, false, true)
         updateReward(_user)
     {
         _getReward(_user);
     }
 
     function withdraw(
-        uint256 _amount,
-        SapphireTypes.ScoreProof memory _scoreProof
+        uint256 _amount
     )
         public
-        checkScoreProof(_scoreProof, false, true)
         updateReward(msg.sender)
     {
         _withdraw(_amount);
@@ -519,11 +515,8 @@ contract PassportCampaign is Adminable, PassportScoreVerifiable {
     /**
      * @notice Claim reward and withdraw collateral
      */
-    function exit(
-        SapphireTypes.ScoreProof memory _scoreProof
-    )
+    function exit()
         public
-        checkScoreProof(_scoreProof, false, true)
         updateReward(msg.sender)
     {
         _getReward(msg.sender);
