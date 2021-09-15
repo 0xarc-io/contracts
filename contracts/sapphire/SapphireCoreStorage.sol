@@ -9,7 +9,10 @@ import {ISapphireAssessor} from "./ISapphireAssessor.sol";
 import {SapphireTypes} from "./SapphireTypes.sol";
 
 contract SapphireCoreStorageV1 {
+
     /* ========== Constants ========== */
+
+    uint256 constant BASE = 10**18;
 
     /* ========== Public Variables ========== */
 
