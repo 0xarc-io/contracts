@@ -10,6 +10,7 @@ export * from './waitlistBatch-tasks';
 export * from './sapphire-tasks';
 export * from './utility-tasks';
 export * from './passport-tasks';
+export * from './distributor-tasks';
 
 import { task } from 'hardhat/config';
 

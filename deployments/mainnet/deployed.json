@@ -717,5 +717,15 @@
     "version": "2",
     "type": "global",
     "group": "DefiPassport"
+  },
+  {
+    "name": "MerkleDistributor",
+    "source": "MerkleDistributor",
+    "address": "0x17306b702DEA65f12c9967A47182EC1CcD84c7c7",
+    "txn": "0xa665f5bd3e77ed418ca77e298a51084fc9662d45c22601f9f85f6d561204716e",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global",
+    "group": ""
   }
 ]
