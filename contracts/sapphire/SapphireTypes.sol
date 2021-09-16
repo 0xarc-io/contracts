@@ -17,7 +17,7 @@ library SapphireTypes {
         uint256 borrowedAmount;
     }
 
-    struct RootTimestamp {
+    struct RootInfo {
         bytes32 merkleRoot;
         uint256 timestamp;
     }

@@ -44,7 +44,7 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
     /**
      * @dev Mapping of the epoch to a merkle root and its timestamp
      */
-    mapping (uint256 => SapphireTypes.RootTimestamp) public rootsHistory;
+    mapping (uint256 => SapphireTypes.RootInfo) public rootsHistory;
 
     bool public isPaused;
 
@@ -86,7 +86,7 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
         initializer()
     {
         // Current Merkle root
-        rootsHistory[currentEpoch] = SapphireTypes.RootTimestamp(
+        rootsHistory[currentEpoch] = SapphireTypes.RootInfo(
             _merkleRoot,
             currentTimestamp()
         );
