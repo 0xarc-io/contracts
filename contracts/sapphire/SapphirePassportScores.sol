@@ -182,23 +182,23 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
      * @param _proof Data required to verify if score is correct for the current merkle root
      */
     function verify(
-        SapphireTypes.ScoreProof calldata _proof
+        SapphireTypes.ScoreProof memory _proof
     )
-        external
+        public
         view
         returns (bool)
     {
-        return verify(_proof, currentEpoch);
+        return verifyForEpoch(_proof, currentEpoch);
     }
 
     /**
-     * @notice Verifies the user's score proof against the merkle root of the given epoch. 
+     * @notice Verifies the user's score proof against the merkle root of the given epoch.
      *         Reverts if proof is invalid
      *
      * @param _proof Data required to verify if score is correct for the current merkle root
      * @param _epoch The epoch of the Merkle root to verify the proof against
-     */         
-    function verify(
+     */
+    function verifyForEpoch(
         SapphireTypes.ScoreProof memory _proof,
         uint256 _epoch
     )
