@@ -41,15 +41,14 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
 
     /* ========== Variables ========== */
 
+    /**
+     * @dev Mapping of the epoch to a merkle root and its timestamp
+     */
+    mapping (uint256 => SapphireTypes.RootTimestamp) public rootsHistory;
+
     bool public isPaused;
 
-    uint256 public lastMerkleRootUpdate;
-
     uint256 public merkleRootDelayDuration;
-
-    bytes32 public currentMerkleRoot;
-
-    bytes32 public upcomingMerkleRoot;
 
     address public merkleRootUpdater;
 
@@ -86,11 +85,17 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
         onlyAdmin
         initializer()
     {
-        currentMerkleRoot = _merkleRoot;
-        upcomingMerkleRoot = _merkleRoot;
+        // Current Merkle root
+        rootsHistory[currentEpoch] = SapphireTypes.RootTimestamp(
+            _merkleRoot,
+            currentTimestamp()
+        );
+
+        // Upcoming Merkle root
+        rootsHistory[currentEpoch + 1].merkleRoot = _merkleRoot;
+
         merkleRootUpdater = _merkleRootUpdater;
         pauseOperator = _pauseOperator;
-        lastMerkleRootUpdate = 0;
         isPaused = true;
         merkleRootDelayDuration = 86400; // 24 * 60 * 60 sec
     }
@@ -108,6 +113,30 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
         returns (uint256)
     {
         return block.timestamp;
+    }
+
+    function lastMerkleRootUpdate()
+        public
+        view
+        returns (uint256)
+    {
+        return rootsHistory[currentEpoch].timestamp;
+    }
+
+    function currentMerkleRoot()
+        public
+        view
+        returns (bytes32)
+    {
+        return rootsHistory[currentEpoch].merkleRoot;
+    }
+
+    function upcomingMerkleRoot()
+        external
+        view
+        returns (bytes32)
+    {
+        return rootsHistory[currentEpoch + 1].merkleRoot;
     }
 
     /* ========== Mutative Functions ========== */
@@ -147,7 +176,8 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
     }
 
     /**
-     * @notice Verifies the user's score proof. Reverts if the proof is invalid.
+     * @notice Verifies the user's score proof against the current Merkle root.
+     *         Reverts if the proof is invalid.
      *
      * @param _proof Data required to verify if score is correct for the current merkle root
      */
@@ -166,7 +196,7 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
         bytes32 node = keccak256(abi.encodePacked(_proof.account, _proof.protocol, _proof.score));
 
         require(
-            MerkleProof.verify(_proof.merkleProof, currentMerkleRoot, node),
+            MerkleProof.verify(_proof.merkleProof, currentMerkleRoot(), node),
             "SapphirePassportScores: invalid proof"
         );
 
@@ -187,14 +217,14 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
         onlyWhenActive
     {
         require(
-            currentTimestamp() >= merkleRootDelayDuration.add(lastMerkleRootUpdate),
+            currentTimestamp() >= merkleRootDelayDuration.add(lastMerkleRootUpdate()),
             "SapphirePassportScores: cannot update merkle root before delay period"
         );
 
-        currentMerkleRoot = upcomingMerkleRoot;
-        upcomingMerkleRoot = _newRoot;
         currentEpoch++;
-        lastMerkleRootUpdate = currentTimestamp();
+
+        rootsHistory[currentEpoch].timestamp = currentTimestamp();
+        rootsHistory[currentEpoch + 1].merkleRoot = _newRoot;
     }
 
     /**
@@ -211,7 +241,7 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
             "SapphirePassportScores: only admin can update merkle root if paused"
         );
 
-        upcomingMerkleRoot = _newRoot;
+        rootsHistory[currentEpoch + 1].merkleRoot = _newRoot;
     }
 
     /* ========== Admin Functions ========== */

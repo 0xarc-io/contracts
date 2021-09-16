@@ -12,14 +12,14 @@ library SapphireTypes {
         bytes32[] merkleProof;
     }
 
-    struct CreditScore {
-        uint256 score;
-        uint256 lastUpdated;
-    }
-
     struct Vault {
         uint256 collateralAmount;
         uint256 borrowedAmount;
+    }
+
+    struct RootTimestamp {
+        bytes32 merkleRoot;
+        uint256 timestamp;
     }
 
     enum Operation {
