@@ -188,6 +188,29 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
         view
         returns (bool)
     {
+        return verify(_proof, currentEpoch);
+    }
+
+    /**
+     * @notice Verifies the user's score proof against the merkle root of the given epoch. 
+     *         Reverts if proof is invalid
+     *
+     * @param _proof Data required to verify if score is correct for the current merkle root
+     * @param _epoch The epoch of the Merkle root to verify the proof against
+     */         
+    function verify(
+        SapphireTypes.ScoreProof memory _proof,
+        uint256 _epoch
+    )
+        public
+        view
+        returns (bool)
+    {
+        require(
+            _epoch <= currentEpoch,
+            "SapphirePassportScores: cannot verify a proof in the future"
+        );
+
         require(
             _proof.account != address(0),
             "SapphirePassportScores: account cannot be address 0"
@@ -196,7 +219,7 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
         bytes32 node = keccak256(abi.encodePacked(_proof.account, _proof.protocol, _proof.score));
 
         require(
-            MerkleProof.verify(_proof.merkleProof, currentMerkleRoot(), node),
+            MerkleProof.verify(_proof.merkleProof, rootsHistory[_epoch].merkleRoot, node),
             "SapphirePassportScores: invalid proof"
         );
 
