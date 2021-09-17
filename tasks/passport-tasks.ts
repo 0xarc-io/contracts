@@ -41,7 +41,7 @@ task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
         name: 'DefiPassport',
         source: 'DefiPassport',
         data: new DefiPassportFactory(signer).getDeployTransaction(),
-        version: version || 1,
+        version: Number(version) || 1,
         type: DeploymentType.global,
         group: 'DefiPassport',
       },
