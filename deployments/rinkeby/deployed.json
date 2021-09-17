@@ -617,5 +617,15 @@
     "version": 1,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "DefiPassport",
+    "source": "DefiPassport",
+    "address": "0x82575D3b0685611D7A456EE430Cd470aF58E5b43",
+    "txn": "0x2e21d01bf04cfc55acf714af4aa8f9e3497e8e8f3191a12e4d2296c1934a0539",
+    "network": "rinkeby",
+    "version": 3,
+    "type": "global",
+    "group": "DefiPassport"
   }
 ]
