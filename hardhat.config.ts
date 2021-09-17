@@ -77,7 +77,7 @@ const config: HardhatUserConfig = {
     rinkeby: {
       url: getNetworkUrl('rinkeby'),
       accounts: [params.testnet_private_key],
-      gasPrice: 1000000000,
+      gasPrice: 2 * 10 ** 9,
       users: {
         eoaOwner: '0xa8C01EfD74A206Bb2d769b6b3a5759508c83F20C',
       },
