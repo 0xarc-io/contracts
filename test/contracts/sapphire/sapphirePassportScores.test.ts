@@ -356,6 +356,38 @@ describe('SapphireCreditScore', () => {
       expect(await mockpassportScores.currentMerkleRoot()).eq(TWO_BYTES32);
       expect(await mockpassportScores.upcomingMerkleRoot()).eq(THREE_BYTES32);
     });
+
+    it('saves the merkle root to the rootHistory mapping', async () => {
+      const firstEpoch = await passportScores.currentEpoch();
+      const firstTimestamp = await passportScores.lastMerkleRootUpdate();
+      const firstRootTuple = await passportScores.rootsHistory(firstEpoch);
+      const firstMerkleRoot = await passportScores.currentMerkleRoot();
+
+      expect(firstRootTuple.merkleRoot).to.eq(firstMerkleRoot);
+      expect(firstRootTuple.timestamp).to.eq(firstTimestamp);
+
+      const secondRoot = await passportScores.upcomingMerkleRoot();
+      const secondTimestamp = await advanceEpoch(passportScores);
+
+      await passportScores
+        .connect(merkleRootUpdater)
+        .updateMerkleRoot(TWO_BYTES32);
+
+      const secondTuple = await passportScores.rootsHistory(firstEpoch.add(1));
+      expect(secondTuple.merkleRoot).to.eq(secondRoot);
+      expect(secondTuple.timestamp).to.eq(secondTimestamp);
+
+      const thirdRoot = await passportScores.upcomingMerkleRoot();
+      const thirdTimestamp = await advanceEpoch(passportScores);
+
+      await passportScores
+        .connect(merkleRootUpdater)
+        .updateMerkleRoot(THREE_BYTES32);
+
+      const thirdTuple = await passportScores.rootsHistory(firstEpoch.add(2));
+      expect(thirdTuple.merkleRoot).to.eq(thirdRoot);
+      expect(thirdTuple.timestamp).to.eq(thirdTimestamp);
+    });
   });
 
   describe('#verify', async () => {
@@ -387,6 +419,116 @@ describe('SapphireCreditScore', () => {
           protocol: utils.formatBytes32String('this.does.not.exist'),
         }),
       ).to.be.revertedWith('SapphirePassportScores: invalid proof');
+    });
+  });
+
+  describe('#verifyForEpoch', () => {
+    let rootsHistory: {
+      epoch: BigNumber;
+      score: PassportScore;
+      tree: PassportScoreTree;
+    }[] = [];
+
+    beforeEach(async () => {
+      const secondScore = {
+        ...passportScore2,
+        score: passportScore2.score.add(100),
+      };
+      const thirdScore = {
+        ...passportScore2,
+        score: passportScore2.score.add(200),
+      };
+
+      const secondTree = new PassportScoreTree([passportScore1, secondScore]);
+      const thirdTree = new PassportScoreTree([passportScore1, thirdScore]);
+
+      expect(await passportScores.upcomingMerkleRoot()).to.eq(
+        tree.getHexRoot(),
+      );
+
+      await advanceEpoch(passportScores);
+      await passportScores
+        .connect(merkleRootUpdater)
+        .updateMerkleRoot(secondTree.getHexRoot());
+      const firstEpoch = await passportScores.currentEpoch();
+
+      await advanceEpoch(passportScores);
+      await passportScores
+        .connect(merkleRootUpdater)
+        .updateMerkleRoot(thirdTree.getHexRoot());
+      const secondEpoch = await passportScores.currentEpoch();
+
+      await advanceEpoch(passportScores);
+      await passportScores
+        .connect(merkleRootUpdater)
+        .updateMerkleRoot(ONE_BYTES32);
+      const thirdEpoch = await passportScores.currentEpoch();
+
+      rootsHistory = [
+        {
+          epoch: firstEpoch,
+          score: passportScore1,
+          tree,
+        },
+        {
+          epoch: secondEpoch,
+          score: secondScore,
+          tree: secondTree,
+        },
+        {
+          epoch: thirdEpoch,
+          score: thirdScore,
+          tree: thirdTree,
+        },
+      ];
+    });
+
+    it(`verifies a user's score for the specified protocol and epoch`, async () => {
+      expect(
+        await passportScores.verifyForEpoch(
+          getScoreProof(rootsHistory[0].score, rootsHistory[0].tree),
+          rootsHistory[0].epoch,
+        ),
+      ).to.eq(true);
+      expect(
+        await passportScores.verifyForEpoch(
+          getScoreProof(rootsHistory[1].score, rootsHistory[1].tree),
+          rootsHistory[1].epoch,
+        ),
+      ).to.eq(true);
+      expect(
+        await passportScores.verifyForEpoch(
+          getScoreProof(rootsHistory[2].score, rootsHistory[2].tree),
+          rootsHistory[2].epoch,
+        ),
+      ).to.eq(true);
+    });
+
+    it('reverts if proof is invalid', async () => {
+      expect(
+        await passportScores.verifyForEpoch(
+          getScoreProof(rootsHistory[0].score, rootsHistory[0].tree),
+          rootsHistory[0].epoch,
+        ),
+      ).to.eq(true);
+
+      await expect(
+        passportScores.verifyForEpoch(
+          getScoreProof(rootsHistory[1].score, rootsHistory[1].tree),
+          rootsHistory[0].epoch,
+        ),
+      ).to.be.revertedWith('SapphirePassportScores: invalid proof');
+    });
+
+    it('reverts if epoch is in the future', async () => {
+      await expect(
+        passportScores.verifyForEpoch(
+          getScoreProof(rootsHistory[0].score, rootsHistory[0].tree),
+          rootsHistory[2].epoch.add(1),
+        ),
+      ).to.be.revertedWith(
+        'SapphirePassportScores: cannot verify a proof in the future',
+      );
     });
   });
 
