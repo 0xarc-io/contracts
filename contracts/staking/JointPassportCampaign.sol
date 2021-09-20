@@ -58,7 +58,7 @@ contract JointPassportCampaign is CampaignStorage, PassportScoreVerifiable, Owna
     /**
      * @dev The protocol value to be used in the score proofs
      */
-    bytes32 private _proofProtocol = "arcx.creditscore";
+    bytes32 private _proofProtocol = "arcx.creditScore";
 
     /* ========== Events ========== */
 
