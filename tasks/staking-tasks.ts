@@ -448,6 +448,7 @@ task(
   .addParam('creditscore', 'Address of the credit score contract')
   .addParam('sablier', 'Address of the Sablier contract to use')
   .addFlag('implementationonly', 'Only deploy implementation')
+  .addOptionalParam('ver', 'Version of the implementation contract')
   .setAction(async (taskArgs, hre) => {
     const {
       name,
@@ -457,6 +458,7 @@ task(
       implementationonly: implementationOnly,
       creditscore: creditScoreContract,
       sablier,
+      ver: version,
     } = taskArgs;
 
     const { network, signer, networkConfig } = await loadDetails(hre);
@@ -468,7 +470,7 @@ task(
         name: 'StakingAccrualERC20',
         source: 'StakingAccrualERC20',
         data: new StakingAccrualERC20Factory(signer).getDeployTransaction(),
-        version: 1,
+        version: Number(version) || 1,
         type: DeploymentType.global,
         group: 'StakingAccrualERC20',
       },
