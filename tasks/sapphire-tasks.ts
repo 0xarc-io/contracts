@@ -4,6 +4,7 @@ import {
   SapphireAssessorFactory,
   SapphireCoreV1Factory,
   SapphireMapperLinearFactory,
+  SapphirePassportScoresFactory,
   SyntheticTokenV2Factory,
   TestTokenFactory,
 } from '@src/typings';
@@ -24,6 +25,7 @@ import { MAX_UINT256 } from '@src/constants';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import getUltimateOwner from './task-utils/getUltimateOwner';
 import { DEFAULT_MAX_CREDIT_SCORE } from '@test/helpers/sapphireDefaults';
+import { constants } from 'ethers';
 
 task(
   'deploy-sapphire-synth',
@@ -108,106 +110,105 @@ task(
     console.log(green(`Contract verified successfully!`));
   });
 
-// task(
-//   'deploy-credit-score',
-//   'Deploy the Sapphire Credit Score with zero hash as the root and 1000 as the max credit score',
-// )
-//   .addOptionalParam('rootupdater', 'The merkle root updater')
-//   .addOptionalParam('pauseoperator', 'The pause operator')
-//   .addFlag('implementationonly', 'Deploy only the implementation contract')
-//   .setAction(async (taskArgs, hre) => {
-//     const {
-//       rootupdater: rootUpdater,
-//       pauseoperator: pauseOperator,
-//       implementationonly: implementationOnly,
-//     } = taskArgs;
-//     const {
-//       network,
-//       signer,
-//       networkConfig,
-//       networkDetails,
-//     } = await loadDetails(hre);
+task(
+  'deploy-passport-scores',
+  'Deploy the SapphirePassportScores with zero hash as the root',
+)
+  .addOptionalParam('rootupdater', 'The merkle root updater')
+  .addOptionalParam('pauseoperator', 'The pause operator')
+  .addFlag('implementationonly', 'Deploy only the implementation contract')
+  .setAction(async (taskArgs, hre) => {
+    const {
+      rootupdater: rootUpdater,
+      pauseoperator: pauseOperator,
+      implementationonly: implementationOnly,
+    } = taskArgs;
+    const {
+      network,
+      signer,
+      networkConfig,
+      networkDetails,
+    } = await loadDetails(hre);
 
-//     await pruneDeployments(network, signer.provider);
+    await pruneDeployments(network, signer.provider);
 
-//     const ultimateOwner = getUltimateOwner(signer, networkDetails);
+    const ultimateOwner = getUltimateOwner(signer, networkDetails);
 
-//     let version = 1;
-//     try {
-//       const existingCreditScoreImpl = loadContract({
-//         name: 'SapphireCreditScore',
-//         source: 'SapphireCreditScore',
-//         network: network,
-//       });
-//       version = existingCreditScoreImpl.version + 1;
-//       console.log(
-//         yellow(
-//           `SapphireCreditScore implementation found. Deploying a new version ${version}`,
-//         ),
-//       );
-//     } catch (err) {
-//       // Nothing to do
-//     }
+    let version = 1;
+    try {
+      const existingPassportScoresImpl = loadContract({
+        name: 'SapphirePassportScores',
+        source: 'SapphirePassportScores',
+        network: network,
+      });
+      version = existingPassportScoresImpl.version + 1;
+      console.log(
+        yellow(
+          `SapphireCreditScore implementation found. Deploying a new version ${version}`,
+        ),
+      );
+    } catch (err) {
+      // Nothing to do
+    }
 
-//     const creditScoreImpAddress = await deployContract(
-//       {
-//         name: 'SapphireCreditScore',
-//         source: 'SapphireCreditScore',
-//         data: new SapphireCreditScoreFactory(signer).getDeployTransaction(),
-//         version,
-//         type: DeploymentType.global,
-//       },
-//       networkConfig,
-//     );
+    const passportScoresImpAddress = await deployContract(
+      {
+        name: 'SapphirePassportScores',
+        source: 'SapphirePassportScores',
+        data: new SapphirePassportScoresFactory(signer).getDeployTransaction(),
+        version,
+        type: DeploymentType.global,
+      },
+      networkConfig,
+    );
 
-//     if (implementationOnly) {
-//       console.log(yellow(`Verifying contract...`));
-//       await hre.run('verify:verify', {
-//         address: creditScoreImpAddress,
-//         constructorArguments: [],
-//       });
-//       console.log(green(`Contract verified successfully!`));
-//       return;
-//     }
+    if (implementationOnly) {
+      console.log(yellow(`Verifying contract...`));
+      await hre.run('verify:verify', {
+        address: passportScoresImpAddress,
+        constructorArguments: [],
+      });
+      console.log(green(`Contract verified successfully!`));
+      return;
+    }
 
-//     const creditScoreProxyAddress = await deployContract(
-//       {
-//         name: 'SapphireCreditScoreProxy',
-//         source: 'ArcProxy',
-//         data: new ArcProxyFactory(signer).getDeployTransaction(
-//           creditScoreImpAddress,
-//           await signer.getAddress(),
-//           [],
-//         ),
-//         version: 1,
-//         type: DeploymentType.global,
-//       },
-//       networkConfig,
-//     );
-//     const creditScoreContract = SapphireCreditScoreFactory.connect(
-//       creditScoreProxyAddress,
-//       signer,
-//     );
+    const passportScoresProxyAddress = await deployContract(
+      {
+        name: 'SapphirePassportScoresProxy',
+        source: 'ArcProxy',
+        data: new ArcProxyFactory(signer).getDeployTransaction(
+          passportScoresImpAddress,
+          await signer.getAddress(),
+          [],
+        ),
+        version: 1,
+        type: DeploymentType.global,
+      },
+      networkConfig,
+    );
+    const passportScoresContract = SapphirePassportScoresFactory.connect(
+      passportScoresProxyAddress,
+      signer,
+    );
 
-//     if (!creditScoreProxyAddress) {
-//       throw red(`Sapphire Credit Score could not be deployed :(`);
-//     }
+    if (!passportScoresProxyAddress) {
+      throw red(`SapphirePassportScores could not be deployed :(`);
+    }
 
-//     console.log(
-//       green(
-//         `Sapphire Credit Score was successfully deployed at ${creditScoreProxyAddress}`,
-//       ),
-//     );
+    console.log(
+      green(
+        `SapphirePassportScores was successfully deployed at ${passportScoresProxyAddress}`,
+      ),
+    );
 
-//     console.log(yellow(`Calling init()...`));
-//     await creditScoreContract.init(
-//       constants.HashZero,
-//       rootUpdater || ultimateOwner,
-//       pauseOperator || ultimateOwner,
-//       1000,
-//     );
-//     console.log(green(`init() called successfully!`));
-//   });
+    console.log(yellow(`Calling init()...`));
+    await passportScoresContract.init(
+      constants.HashZero,
+      rootUpdater || ultimateOwner,
+      pauseOperator || ultimateOwner,
+    );
+    console.log(green(`init() called successfully!`));
+  });
 
 task('deploy-mapper', 'Deploy the Sapphire Mapper').setAction(
   async (taskArgs, hre) => {
