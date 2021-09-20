@@ -146,7 +146,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         interestSetter  = _interestSetter;
         pauseOperator   = _pauseOperator;
         feeCollector    = _feeCollector;
-        _proofProtocol   = "arcx.creditscore";
+        _proofProtocol   = "arcx.creditScore";
 
         IERC20Metadata collateral   = IERC20Metadata(collateralAsset);
         uint8 collateralDecimals    = collateral.decimals();
