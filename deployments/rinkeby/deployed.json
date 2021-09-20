@@ -529,26 +529,6 @@
     "group": ""
   },
   {
-    "name": "StakingAccrualERC20",
-    "source": "StakingAccrualERC20",
-    "address": "0x99077791873045Da9Db729E17057812d903f19fC",
-    "txn": "0xb27ae167242f1a43d51e5253a976de3c1ac193c27b22dac30d4b41c5229b587d",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "global",
-    "group": "StakingAccrualERC20"
-  },
-  {
-    "name": "StakingAccrualERC20Proxy",
-    "source": "ArcProxy",
-    "address": "0xF7cc2F8580a495049D6AEb46234fd738de2B71F0",
-    "txn": "0x240f6eacf8012a12d1c69d31f1b627c55dc041c20838a60444e1cc0b2d38fb3c",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "global",
-    "group": "StakingAccrualERC20"
-  },
-  {
     "name": "DefiPassportClaimer",
     "source": "DefiPassportClaimer",
     "address": "0x5C19C692634bEd179435e4C44c3C7584571bAb42",
@@ -631,10 +611,20 @@
   {
     "name": "StakingAccrualERC20",
     "source": "StakingAccrualERC20",
-    "address": "0xcF055CA2ADF7C7e594E936b9243dBFC143e7446f",
-    "txn": "0x8bcdb2031d2510ff8ee35e8f6c6d1f9b381092c57dd940d85b1c48eadd9d2f0c",
+    "address": "0x0F3A8872efF955D74AcE632bdB9C422Fc3370686",
+    "txn": "0x383557c56469d366be2222ceae13298047ea9746cb0bf42c15be6e3a15713552",
     "network": "rinkeby",
-    "version": 2,
+    "version": 1,
+    "type": "global",
+    "group": "StakingAccrualERC20"
+  },
+  {
+    "name": "StakingAccrualERC20Proxy",
+    "source": "ArcProxy",
+    "address": "0xFf80e4552d1704CFD9dB8110E5740e1b5a8f344E",
+    "txn": "0xd8b852c2d2774f6cd296bfc9507c5b5d522e9defaf72bb693be304663247e3d9",
+    "network": "rinkeby",
+    "version": 1,
     "type": "global",
     "group": "StakingAccrualERC20"
   }
