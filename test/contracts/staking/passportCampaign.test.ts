@@ -8,7 +8,7 @@ import {
 } from '@src/typings';
 import hre from 'hardhat';
 import { ethers } from 'hardhat';
-import { deployTestToken } from '../deployers';
+
 import { BigNumber, utils } from 'ethers';
 import chai from 'chai';
 import { BASE } from '@src/constants';

@@ -7,7 +7,7 @@ import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { constants, utils, Wallet } from 'ethers';
 import { generateContext, ITestContext } from '../context';
-import { deployMockSapphireOracle } from '../deployers';
+
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 

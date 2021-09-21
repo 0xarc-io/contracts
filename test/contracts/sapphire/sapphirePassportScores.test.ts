@@ -19,7 +19,7 @@ import { solidity } from 'ethereum-waffle';
 import { BigNumber } from 'ethers';
 import 'module-alias/register';
 import { generateContext, ITestContext } from '../context';
-import { deployMockSapphirePassportScores } from '../deployers';
+
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 

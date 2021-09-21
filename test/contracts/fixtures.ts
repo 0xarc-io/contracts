@@ -26,12 +26,9 @@ import {
 } from '@test/helpers/sapphireDefaults';
 
 export async function distributorFixture(ctx: ITestContext) {
-  ctx.contracts.collateral = await deployTestToken(
+  ctx.contracts.collateral = await new TestToken__factory(
     ctx.signers.admin,
-    'ARC GOVERNANCE',
-    'ARCX',
-    18,
-  );
+  ).deploy('ARC GOVERNANCE', 'ARCX', 18);
 }
 
 export async function sapphireFixture(
@@ -41,8 +38,7 @@ export async function sapphireFixture(
   const deployer: Signer = ctx.signers.admin;
   const deployerAddress = await deployer.getAddress();
 
-  ctx.contracts.collateral = await deployTestToken(
-    deployer,
+  ctx.contracts.collateral = await new TestToken__factory(deployer).deploy(
     'Test collateral',
     'COLL',
     args?.decimals ?? DEFAULT_COLLATERAL_DECIMALS,
@@ -51,16 +47,14 @@ export async function sapphireFixture(
   ctx.contracts.sapphire.oracle = await deployMockSapphireOracle(deployer);
 
   const coreImp = await deployMockSapphireCoreV1(deployer);
-  const coreProxy = await deployArcProxy(
-    deployer,
+  const coreProxy = await new ArcProxy__factory(deployer).deploy(
     coreImp.address,
     deployerAddress,
     [],
   );
 
   const synthImp = await deploySyntheticTokenV2(deployer, 'STABLExV2', '1');
-  const syntheticProxy = await deployArcProxy(
-    deployer,
+  const syntheticProxy = await new ArcProxy__factory(deployer).deploy(
     synthImp.address,
     deployerAddress,
     [],
@@ -77,9 +71,9 @@ export async function sapphireFixture(
     deployer,
   ).deploy();
 
-  ctx.contracts.sapphire.passportScores = await deployMockSapphirePassportScores(
+  ctx.contracts.sapphire.passportScores = await new MockSapphirePassportScores__factory(
     deployer,
-  );
+  ).deploy();
 
   await ctx.contracts.sapphire.passportScores.init(
     '0x1111111111111111111111111111111111111111111111111111111111111111',

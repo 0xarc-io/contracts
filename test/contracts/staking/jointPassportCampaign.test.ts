@@ -7,7 +7,7 @@ import {
   MockJointPassportCampaign__factory,
   MockSapphirePassportScores,
 } from '@src/typings';
-import { deployTestToken } from '../deployers';
+
 import { BigNumber, utils } from 'ethers';
 import chai from 'chai';
 import { solidity } from 'ethereum-waffle';

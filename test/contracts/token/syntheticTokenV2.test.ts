@@ -1,13 +1,12 @@
 import 'module-alias/register';
 import { expect } from 'chai';
-import { deployArcProxy, deploySyntheticTokenV2 } from '../deployers';
 import { ethers } from 'hardhat';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expectRevert } from '../../helpers/expectRevert';
 import { SyntheticTokenV2 } from '@src/typings/SyntheticTokenV2';
 import { constants, Wallet } from 'ethers';
-import { SyntheticTokenV2__factory } from '@src/typings';
+import { ArcProxy__factory, SyntheticTokenV2__factory } from '@src/typings';
 
 describe('SyntheticTokenV2', () => {
   let syntheticToken: SyntheticTokenV2;
@@ -34,10 +33,12 @@ describe('SyntheticTokenV2', () => {
     // userAccount = Wallet.createRandom();
     // userAccount = userAccount.connect(ethers.provider);
 
-    const synthImpl = await deploySyntheticTokenV2(ownerAccount, 'ARCx', '1');
+    const synthImpl = await new SyntheticTokenV2__factory(ownerAccount).deploy(
+      'ARCx',
+      '1',
+    );
 
-    const proxy = await deployArcProxy(
-      ownerAccount,
+    const proxy = await new ArcProxy__factory(ownerAccount).deploy(
       synthImpl.address,
       ownerAccount.address,
       [],
@@ -137,13 +138,10 @@ describe('SyntheticTokenV2', () => {
       });
 
       it('emits InitCalled', async () => {
-        const synthImpl = await deploySyntheticTokenV2(
+        const synthImpl = await new SyntheticTokenV2__factory(
           ownerAccount,
-          'ARCx',
-          '1',
-        );
-        const proxy = await deployArcProxy(
-          ownerAccount,
+        ).deploy('ARCx', '1');
+        const proxy = await new ArcProxy__factory(ownerAccount).deploy(
           synthImpl.address,
           ownerAccount.address,
           [],

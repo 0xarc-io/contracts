@@ -1,6 +1,6 @@
 import chai, { expect } from 'chai';
 import { solidity } from 'ethereum-waffle';
-import { Contract, BigNumber, constants } from 'ethers';
+import { BigNumber, constants } from 'ethers';
 
 import BalanceTree from '@src/MerkleTree/BalanceTree';
 import { generateContext, ITestContext } from '@test/contracts/context';
@@ -19,6 +19,7 @@ describe('MerkleDistributor', () => {
   let distributor: MerkleDistributor;
 
   before(async () => {
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     ctx = await generateContext(distributorFixture, async () => {});
     distributor = await new MerkleDistributor__factory(
       ctx.signers.admin,
@@ -264,11 +265,9 @@ describe('MerkleDistributor', () => {
             };
           }),
         );
-        distributor = await deployMerkleDistributor(
+        distributor = await new MerkleDistributor__factory(
           ctx.signers.admin,
-          ctx.contracts.collateral.address,
-          tree.getHexRoot(),
-        );
+        ).deploy(ctx.contracts.collateral.address, tree.getHexRoot());
         await distributor.switchActive();
         await ctx.contracts.collateral.mintShare(distributor.address, 201);
       });
@@ -299,7 +298,7 @@ describe('MerkleDistributor', () => {
     });
 
     describe('realistic size tree', () => {
-      let distributor: Contract;
+      let distributor: MerkleDistributor;
       let tree: BalanceTree;
       const NUM_LEAVES = 100_000;
       const NUM_SAMPLES = 25;
@@ -336,11 +335,9 @@ describe('MerkleDistributor', () => {
       });
 
       beforeEach('deploy', async () => {
-        distributor = await deployMerkleDistributor(
+        distributor = await new MerkleDistributor__factory(
           ctx.signers.admin,
-          ctx.contracts.collateral.address,
-          tree.getHexRoot(),
-        );
+        ).deploy(ctx.contracts.collateral.address, tree.getHexRoot());
         await distributor.switchActive();
         await ctx.contracts.collateral.mintShare(
           distributor.address,

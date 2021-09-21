@@ -17,7 +17,6 @@ import {
 import { expect } from 'chai';
 import { BigNumber, constants, utils } from 'ethers';
 import { ethers } from 'hardhat';
-import { deployMockSapphirePassportScores } from '../deployers';
 
 describe('SapphireAssessor', () => {
   let owner: SignerWithAddress;
@@ -59,9 +58,9 @@ describe('SapphireAssessor', () => {
       anotherPassportScore,
     ]);
 
-    const testPassportScoreContract = await deployMockSapphirePassportScores(
+    const testPassportScoreContract = await new MockSapphirePassportScores__factory(
       owner,
-    );
+    ).deploy();
     await testPassportScoreContract.init(
       testPassportScoreTree.getHexRoot(),
       owner.address,
@@ -507,9 +506,9 @@ describe('SapphireAssessor', () => {
     it('sets the new credit score contract', async () => {
       const testPassportScoreTree = new PassportScoreTree([passportScore2]);
 
-      const testPassportScoreContract = await deployMockSapphirePassportScores(
+      const testPassportScoreContract = await new MockSapphirePassportScores__factory(
         owner,
-      );
+      ).deploy();
       await testPassportScoreContract.init(
         testPassportScoreTree.getHexRoot(),
         owner.address,
@@ -528,9 +527,9 @@ describe('SapphireAssessor', () => {
     it('emits the PassportScoreContractSet event', async () => {
       const testPassportScoreTree = new PassportScoreTree([passportScore2]);
 
-      const testPassportScoreContract = await deployMockSapphirePassportScores(
+      const testPassportScoreContract = await new MockSapphirePassportScores__factory(
         owner,
-      );
+      ).deploy();
       await testPassportScoreContract.init(
         testPassportScoreTree.getHexRoot(),
         owner.address,

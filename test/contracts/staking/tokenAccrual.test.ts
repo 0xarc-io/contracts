@@ -9,7 +9,6 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { ethers } from 'hardhat';
 import { TestToken__factory } from '@src/typings';
 import { TokenStakingAccrual__factory } from '@src/typings';
-import { deployTokenStakingAccrual } from '../deployers';
 import { ArcNumber, Token } from '@src/utils';
 
 let ownerAccount: SignerWithAddress;
@@ -38,11 +37,9 @@ describe('TokenAccrual', () => {
       18,
     );
 
-    rewardContract = await deployTokenStakingAccrual(
+    rewardContract = await new TokenStakingAccrual__factory(
       ownerAccount,
-      stakingToken.address,
-      rewardToken.address,
-    );
+    ).deploy(stakingToken.address, rewardToken.address);
 
     expect(await rewardContract.stakingToken()).to.equal(stakingToken.address);
     expect(await rewardContract.accrualToken()).to.equal(rewardToken.address);

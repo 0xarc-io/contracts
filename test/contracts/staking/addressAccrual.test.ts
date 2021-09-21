@@ -10,7 +10,7 @@ import { TestToken } from '@src/typings/TestToken';
 import { ethers } from 'hardhat';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { AddressAccrual__factory } from '@src/typings';
-import { deployAddressAccrual, deployTestToken } from '../deployers';
+
 import { ArcNumber } from '@src/utils';
 
 let ownerAccount: SignerWithAddress;
@@ -36,8 +36,7 @@ describe('Distribution', () => {
     arcAccount = signers[3];
 
     rewardToken = await deployTestToken(ownerAccount, 'ARC', 'ARC');
-    distribution = await deployAddressAccrual(
-      ownerAccount,
+    distribution = await new AddressAccrual__factory(ownerAccount).deploy(
       rewardToken.address,
     );
 

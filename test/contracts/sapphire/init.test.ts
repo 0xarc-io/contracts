@@ -21,8 +21,7 @@ import {
 
 export async function setup([deployer, unauthorized]: Wallet[]): Promise<any> {
   const coreImp = await deployMockSapphireCoreV1(deployer);
-  const coreProxy = await deployArcProxy(
-    deployer,
+  const coreProxy = await new ArcProxy__factory(deployer).deploy(
     coreImp.address,
     deployer.address,
     [],
@@ -31,14 +30,12 @@ export async function setup([deployer, unauthorized]: Wallet[]): Promise<any> {
     coreProxy.address,
     deployer,
   );
-  const collateral = await deployTestToken(
-    deployer,
+  const collateral = await new TestToken__factory(deployer).deploy(
     'Collateral Token Name',
     'CTKN6',
     6,
   );
-  const synthetic = await deployTestToken(
-    deployer,
+  const synthetic = await new TestToken__factory(deployer).deploy(
     'Synthetic Token Name',
     'STKN',
   );

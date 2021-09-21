@@ -11,7 +11,7 @@ import {
   TestToken__factory,
   WhitelistSale__factory,
 } from '@src/typings';
-import { deployTestToken } from '../deployers';
+
 import { solidity } from 'ethereum-waffle';
 import { ArcNumber } from '@src/utils';
 
