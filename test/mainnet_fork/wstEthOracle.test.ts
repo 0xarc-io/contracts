@@ -1,7 +1,7 @@
 import { MockProvider } from '@ethereum-waffle/provider';
 import { BigNumber } from '@ethersproject/bignumber';
+import { WstEthOracle__factory } from '@src/typings';
 import { WstEthOracle } from '@src/typings/WstEthOracle';
-import { WstEthOracleFactory } from '@src/typings/WstEthOracleFactory';
 import { expect } from 'chai';
 
 xdescribe('WstEthOracle', () => {
@@ -16,7 +16,7 @@ xdescribe('WstEthOracle', () => {
     });
     const signer = await provider.getSigner();
 
-    oracle = await new WstEthOracleFactory(signer).deploy();
+    oracle = await new WstEthOracle__factory(signer).deploy();
   });
 
   it('should give the correct price', async () => {

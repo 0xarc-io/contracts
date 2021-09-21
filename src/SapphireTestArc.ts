@@ -1,7 +1,7 @@
 import { BigNumberish, Signer } from 'ethers';
 import { SapphireArc } from './SapphireArc';
-import { MockSapphireCoreV1Factory } from './typings/MockSapphireCoreV1Factory';
-import { MockSapphireOracleFactory } from './typings/MockSapphireOracleFactory';
+import { MockSapphireCoreV1__factory } from './typings/MockSapphireCoreV1__factory';
+import { MockSapphireOracle__factory } from './typings/MockSapphireOracle__factory';
 
 export class SapphireTestArc extends SapphireArc {
   static new(signer: Signer): SapphireTestArc {
@@ -13,14 +13,14 @@ export class SapphireTestArc extends SapphireArc {
   }
 
   public async updatePrice(price: BigNumberish) {
-    const mockOracle = new MockSapphireOracleFactory(this.signer).attach(
+    const mockOracle = new MockSapphireOracle__factory(this.signer).attach(
       this.synth().oracle.address,
     );
     await mockOracle.setPrice(price);
   }
 
   public async updateTime(value: BigNumberish) {
-    const mockArc = new MockSapphireCoreV1Factory(this.signer).attach(
+    const mockArc = new MockSapphireCoreV1__factory(this.signer).attach(
       this.synth().core.address,
     );
     await mockArc.setCurrentTimestamp(value);
@@ -30,7 +30,7 @@ export class SapphireTestArc extends SapphireArc {
   }
 
   public async setOracleTimestamp(value: BigNumberish) {
-    const mockOracle = new MockSapphireOracleFactory(this.signer).attach(
+    const mockOracle = new MockSapphireOracle__factory(this.signer).attach(
       await this.synth().core.oracle(),
     );
     await mockOracle.setTimestamp(value);

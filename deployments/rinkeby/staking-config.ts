@@ -1,11 +1,11 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import {
   LiquidityCampaign,
-  LiquidityCampaignFactory,
+  LiquidityCampaign__factory,
   LiquidityCampaignV2,
-  LiquidityCampaignV2Factory,
+  LiquidityCampaignV2__factory,
   PassportCampaign,
-  PassportCampaignFactory,
+  PassportCampaign__factory,
 } from '@src/typings';
 import { yellow } from 'chalk';
 import { utils } from 'ethers';
@@ -16,9 +16,9 @@ export default {
     stakingToken: '',
     rewardsToken: 'ArcxToken',
     rewardsDurationSeconds: 60 * 60 * 24 * 31, // 31 days
-    contractFactory: LiquidityCampaignFactory,
+    contractFactory: LiquidityCampaign__factory,
     getDeployTx: (signer: SignerWithAddress) =>
-      new LiquidityCampaignFactory(signer).getDeployTransaction(),
+      new LiquidityCampaign__factory(signer).getDeployTransaction(),
     runInit: (
       contract: LiquidityCampaign,
       arcDao: string,
@@ -44,9 +44,9 @@ export default {
     stakingToken: '0x969850e65A62532a4Dde8a20dB67f9E860AAA515',
     rewardsToken: 'ArcxTokenV2',
     rewardsDurationSeconds: 60 * 60 * 24 * 31, // 31 days
-    contractFactory: LiquidityCampaignV2Factory,
+    contractFactory: LiquidityCampaignV2__factory,
     getDeployTx: (signer: SignerWithAddress) =>
-      new LiquidityCampaignV2Factory(signer).getDeployTransaction(),
+      new LiquidityCampaignV2__factory(signer).getDeployTransaction(),
     runInit: (
       contract: LiquidityCampaignV2,
       arcDao: string,
@@ -72,9 +72,9 @@ export default {
     stakingToken: '',
     rewardsToken: 'ARCx Test Token',
     rewardsDurationSeconds: 60 * 60 * 24 * 31, // 31 days
-    contractFactory: PassportCampaignFactory,
+    contractFactory: PassportCampaign__factory,
     getDeployTx: (signer: SignerWithAddress) =>
-      new PassportCampaignFactory(signer).getDeployTransaction(),
+      new PassportCampaign__factory(signer).getDeployTransaction(),
     runInit: (
       contract: PassportCampaign,
       arcDao: string,
@@ -108,9 +108,9 @@ export default {
     stakingToken: '0x5c9DbC786ed0b7dA9a4F1F5479794C1bc01F293e',
     rewardsToken: 'ArcxTokenV2',
     rewardsDurationSeconds: 60 * 60 * 24 * 31, // 31 days
-    contractFactory: PassportCampaignFactory,
+    contractFactory: PassportCampaign__factory,
     getDeployTx: (signer: SignerWithAddress) =>
-      new PassportCampaignFactory(signer).getDeployTransaction(),
+      new PassportCampaign__factory(signer).getDeployTransaction(),
     runInit: (
       contract: PassportCampaign,
       arcDao: string,

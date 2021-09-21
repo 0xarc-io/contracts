@@ -7,8 +7,8 @@ import { TokenStakingAccrual } from '@src/typings/TokenStakingAccrual';
 import { expectRevert } from '@test/helpers/expectRevert';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { ethers } from 'hardhat';
-import { TestTokenFactory } from '@src/typings/TestTokenFactory';
-import { TokenStakingAccrualFactory } from '@src/typings/TokenStakingAccrualFactory';
+import { TestToken__factory } from '@src/typings';
+import { TokenStakingAccrual__factory } from '@src/typings';
 import { deployTokenStakingAccrual } from '../deployers';
 import { ArcNumber, Token } from '@src/utils';
 
@@ -27,12 +27,12 @@ describe('TokenAccrual', () => {
   });
 
   beforeEach(async () => {
-    stakingToken = await new TestTokenFactory(ownerAccount).deploy(
+    stakingToken = await new TestToken__factory(ownerAccount).deploy(
       'LINKUSD/USDC 50/50',
       'BPT',
       18,
     );
-    rewardToken = await new TestTokenFactory(ownerAccount).deploy(
+    rewardToken = await new TestToken__factory(ownerAccount).deploy(
       'Arc Token',
       'ARC',
       18,
@@ -49,7 +49,7 @@ describe('TokenAccrual', () => {
   });
 
   async function getStakingContractAs(caller: SignerWithAddress) {
-    return await new TokenStakingAccrualFactory(caller).attach(
+    return await new TokenStakingAccrual__factory(caller).attach(
       rewardContract.address,
     );
   }

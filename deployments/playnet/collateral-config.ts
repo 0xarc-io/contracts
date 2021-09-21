@@ -1,18 +1,19 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import {
-  ChainLinkOracleFactory,
-  CTokenOracleFactory,
-  IbETHOracleFactory,
-  ImUSDOracleFactory,
-  WstEthOracleFactory,
-  XSushiOracleFactory,
-  YUSDOracleFactory,
+  ChainLinkOracle__factory,
+  CTokenOracle__factory,
+  IbETHOracle__factory,
+  ImUSDOracle__factory,
+  WstEthOracle__factory,
+  XSushiOracle__factory,
+  YUSDOracle__factory,
 } from '@src/typings';
 
 export default {
   LINKUSD: {
     collateral_address: '0x514910771af9ca656af840dff83e8264ecf986ca',
-    oracle_link_aggregator_address: '0x2c1d072e956AFFC0D435Cb7AC38EF18d24d9127c',
+    oracle_link_aggregator_address:
+      '0x2c1d072e956AFFC0D435Cb7AC38EF18d24d9127c',
     synthetic_address: '0x0e2ec54fc0b509f445631bf4b91ab8168230c752',
     version: 1,
     params: {
@@ -29,7 +30,7 @@ export default {
     oracle: {
       source: 'ChainLinkOracle',
       getDeployTx: (signer: SignerWithAddress) =>
-        new ChainLinkOracleFactory(signer).getDeployTransaction(
+        new ChainLinkOracle__factory(signer).getDeployTransaction(
           '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419',
         ),
     },
@@ -50,7 +51,7 @@ export default {
     oracle: {
       source: 'YUSDOracle',
       getDeployTx: (signer: SignerWithAddress) =>
-        new YUSDOracleFactory(signer).getDeployTransaction(),
+        new YUSDOracle__factory(signer).getDeployTransaction(),
     },
     version: '1',
     params: {
@@ -68,14 +69,15 @@ export default {
     oracle: {
       source: 'CTokenOracle',
       getDeployTx: (signer: SignerWithAddress) =>
-        new CTokenOracleFactory(signer).getDeployTransaction(
+        new CTokenOracle__factory(signer).getDeployTransaction(
           '0x39aa39c021dfbae8fac545936693ac917d5e7563',
           '0x986b5E1e1755e3C2440e960477f25201B0a8bbD4',
           '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419',
         ),
     },
     oracle_source: 'CTokenOracle',
-    oracle_token_aggregator_address: '0x986b5E1e1755e3C2440e960477f25201B0a8bbD4',
+    oracle_token_aggregator_address:
+      '0x986b5E1e1755e3C2440e960477f25201B0a8bbD4',
     oracle_eth_aggregator_address: '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419',
     version: 1,
     params: {
@@ -92,7 +94,7 @@ export default {
     oracle: {
       source: 'ibETHOracle',
       getDeployTx: (signer: SignerWithAddress) =>
-        new IbETHOracleFactory(signer).getDeployTransaction(),
+        new IbETHOracle__factory(signer).getDeployTransaction(),
     },
     version: 1,
     params: {
@@ -109,7 +111,7 @@ export default {
     oracle: {
       source: 'xSushiOracle',
       getDeployTx: (signer: SignerWithAddress) =>
-        new XSushiOracleFactory(signer).getDeployTransaction(),
+        new XSushiOracle__factory(signer).getDeployTransaction(),
     },
     version: 1,
     params: {
@@ -126,7 +128,7 @@ export default {
     oracle: {
       source: 'imUSDOracle',
       getDeployTx: (signer: SignerWithAddress) =>
-        new ImUSDOracleFactory(signer).getDeployTransaction(),
+        new ImUSDOracle__factory(signer).getDeployTransaction(),
     },
     version: 1,
     params: {
@@ -143,7 +145,7 @@ export default {
     oracle: {
       source: 'WstEthOracle',
       getDeployTx: (signer: SignerWithAddress) =>
-        new WstEthOracleFactory(signer).getDeployTransaction(),
+        new WstEthOracle__factory(signer).getDeployTransaction(),
     },
     version: 1,
     params: {

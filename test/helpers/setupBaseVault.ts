@@ -1,6 +1,6 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { SapphireTestArc } from '@src/SapphireTestArc';
-import { TestTokenFactory } from '@src/typings';
+import { TestToken__factory } from '@src/typings';
 import {
   DEFAULT_COLLATERAL_DECIMALS,
   DEFAULT_PROOF_PROTOCOL,
@@ -42,7 +42,7 @@ export async function mintApprovedCollateral(
   caller: SignerWithAddress,
   collateralAmount: BigNumberish,
 ) {
-  const collateralContract = TestTokenFactory.connect(
+  const collateralContract = TestToken__factory.connect(
     arc.collateral().address,
     caller,
   );

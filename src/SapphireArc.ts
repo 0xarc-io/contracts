@@ -16,12 +16,12 @@ import {
   utils,
 } from 'ethers';
 import {
-  BaseERC20Factory,
+  BaseERC20__factory,
   SapphireCoreV1,
-  SapphireCoreV1Factory,
-  SyntheticTokenV2Factory,
+  SapphireCoreV1__factory,
+  SyntheticTokenV2__factory,
 } from './typings';
-import { IOracleFactory } from './typings/IOracleFactory';
+import { IOracle__factory } from './typings/IOracle__factory';
 import { getEmptyScoreProof } from './utils/getScoreProof';
 
 export type SapphireSynth = Synth<SapphireCoreV1>;
@@ -37,16 +37,16 @@ export class SapphireArc {
   public async addSynths(synths: Record<string, string | undefined>) {
     const keys = Object.keys(synths);
     for (const key of keys) {
-      const core = SapphireCoreV1Factory.connect(synths[key], this.signer);
+      const core = SapphireCoreV1__factory.connect(synths[key], this.signer);
 
       this.synths[key] = {
         core,
-        oracle: IOracleFactory.connect(await core.oracle(), this.signer),
-        collateral: BaseERC20Factory.connect(
+        oracle: IOracle__factory.connect(await core.oracle(), this.signer),
+        collateral: BaseERC20__factory.connect(
           await core.collateralAsset(),
           this.signer,
         ),
-        synthetic: SyntheticTokenV2Factory.connect(
+        synthetic: SyntheticTokenV2__factory.connect(
           await core.syntheticAsset(),
           this.signer,
         ),

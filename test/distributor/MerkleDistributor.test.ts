@@ -6,8 +6,8 @@ import BalanceTree from '@src/MerkleTree/BalanceTree';
 import { generateContext, ITestContext } from '@test/contracts/context';
 import { distributorFixture } from '@test/contracts/fixtures';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
-import { deployMerkleDistributor } from '@test/contracts/deployers';
 import { MerkleDistributor } from '@src/typings/MerkleDistributor';
+import { MerkleDistributor__factory } from '@src/typings';
 
 chai.use(solidity);
 
@@ -20,11 +20,9 @@ describe('MerkleDistributor', () => {
 
   before(async () => {
     ctx = await generateContext(distributorFixture, async () => {});
-    distributor = await deployMerkleDistributor(
+    distributor = await new MerkleDistributor__factory(
       ctx.signers.admin,
-      ctx.contracts.collateral.address,
-      ZERO_BYTES32,
-    );
+    ).deploy(ctx.contracts.collateral.address, ZERO_BYTES32);
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -80,7 +78,7 @@ describe('MerkleDistributor', () => {
     });
 
     describe('two account tree', () => {
-      let distributor: Contract;
+      let distributor: MerkleDistributor;
       let tree: BalanceTree;
       beforeEach('deploy', async () => {
         tree = new BalanceTree([
@@ -90,11 +88,9 @@ describe('MerkleDistributor', () => {
             amount: BigNumber.from(101),
           },
         ]);
-        distributor = await deployMerkleDistributor(
+        distributor = await new MerkleDistributor__factory(
           ctx.signers.admin,
-          ctx.contracts.collateral.address,
-          tree.getHexRoot(),
-        );
+        ).deploy(ctx.contracts.collateral.address, tree.getHexRoot());
         await distributor.switchActive();
         await ctx.contracts.collateral.mintShare(distributor.address, 201);
       });

@@ -9,7 +9,7 @@ import { AddressAccrual } from '@src/typings/AddressAccrual';
 import { TestToken } from '@src/typings/TestToken';
 import { ethers } from 'hardhat';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { AddressAccrualFactory } from '@src/typings/AddressAccrualFactory';
+import { AddressAccrual__factory } from '@src/typings';
 import { deployAddressAccrual, deployTestToken } from '../deployers';
 import { ArcNumber } from '@src/utils';
 
@@ -52,7 +52,7 @@ describe('Distribution', () => {
   });
 
   async function claimAs(caller: SignerWithAddress) {
-    const contract = await new AddressAccrualFactory(caller).attach(
+    const contract = await new AddressAccrual__factory(caller).attach(
       distribution.address,
     );
     return await contract.claimFees();

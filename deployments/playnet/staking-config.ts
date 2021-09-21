@@ -1,9 +1,9 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import {
   LiquidityCampaign,
-  LiquidityCampaignFactory,
+  LiquidityCampaign__factory,
   LiquidityCampaignV2,
-  LiquidityCampaignV2Factory,
+  LiquidityCampaignV2__factory,
 } from '@src/typings';
 
 export default {
@@ -12,9 +12,9 @@ export default {
     stakingToken: '0x6c0ffb49AD9072F253e254445CFD829BCb8A1b5d',
     rewardsToken: 'ArcxToken',
     rewardsDurationSeconds: 60 * 60 * 24 * 31, // 31 days
-    contractFactory: LiquidityCampaignFactory,
+    contractFactory: LiquidityCampaign__factory,
     getDeployTx: (signer: SignerWithAddress) =>
-      new LiquidityCampaignFactory(signer).getDeployTransaction(),
+      new LiquidityCampaign__factory(signer).getDeployTransaction(),
     runInit: (
       contract: LiquidityCampaign,
       arcDao: string,
@@ -40,9 +40,9 @@ export default {
     stakingToken: '0x6c0ffb49AD9072F253e254445CFD829BCb8A1b5d',
     rewardsToken: 'ArcxToken',
     rewardsDurationSeconds: 60 * 60 * 24 * 31, // 31 days
-    contractFactory: LiquidityCampaignFactory,
+    contractFactory: LiquidityCampaign__factory,
     getDeployTx: (signer: SignerWithAddress) =>
-      new LiquidityCampaignFactory(signer).getDeployTransaction(),
+      new LiquidityCampaign__factory(signer).getDeployTransaction(),
     runInit: (
       contract: LiquidityCampaign,
       arcDao: string,
@@ -68,9 +68,9 @@ export default {
     stakingToken: 'todo: add fake arcx token v2',
     rewardsToken: 'ArcxTokenV2',
     rewardsDurationSeconds: 60 * 60 * 24 * 31, // 31 days
-    contractFactory: LiquidityCampaignV2Factory,
+    contractFactory: LiquidityCampaignV2__factory,
     getDeployTx: (signer: SignerWithAddress) =>
-      new LiquidityCampaignV2Factory(signer).getDeployTransaction(),
+      new LiquidityCampaignV2__factory(signer).getDeployTransaction(),
     runInit: (
       contract: LiquidityCampaignV2,
       arcDao: string,

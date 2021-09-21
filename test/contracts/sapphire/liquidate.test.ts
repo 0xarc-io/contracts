@@ -13,7 +13,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import {
   MockSapphirePassportScores,
   SapphireMapperLinear,
-  SyntheticTokenV2Factory,
+  SyntheticTokenV2__factory,
 } from '@src/typings';
 import chai, { expect } from 'chai';
 import { solidity } from 'ethereum-waffle';
@@ -159,7 +159,7 @@ describe('SapphireCore.liquidate()', () => {
     );
 
     // Approve synth to the core for liquidation
-    const synthContract = SyntheticTokenV2Factory.connect(
+    const synthContract = SyntheticTokenV2__factory.connect(
       arc.syntheticAddress(),
       signers.liquidator,
     );

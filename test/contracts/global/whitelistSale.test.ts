@@ -8,8 +8,8 @@ import { ethers } from 'hardhat';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import {
   TestToken,
-  TestTokenFactory,
-  WhitelistSaleFactory,
+  TestToken__factory,
+  WhitelistSale__factory,
 } from '@src/typings';
 import { deployTestToken } from '../deployers';
 import { solidity } from 'ethereum-waffle';
@@ -27,7 +27,7 @@ describe('WhitelistSale', () => {
   let currency: TestToken;
 
   function connectAs(signer: SignerWithAddress) {
-    return WhitelistSaleFactory.connect(whitelistSaleAddress, signer);
+    return WhitelistSale__factory.connect(whitelistSaleAddress, signer);
   }
 
   function setAllocation(user: SignerWithAddress, allocation: BigNumber) {
@@ -43,14 +43,14 @@ describe('WhitelistSale', () => {
   beforeEach(async () => {
     currency = await deployTestToken(ownerAccount, 'TestToken', 'TESTx');
 
-    const whitelistSale = await new WhitelistSaleFactory(ownerAccount).deploy(
+    const whitelistSale = await new WhitelistSale__factory(ownerAccount).deploy(
       currency.address,
     );
 
     // Give some test tokens to the user account
     const mintAmount = ArcNumber.new(10);
     await currency.mintShare(userAccount.address, mintAmount);
-    const userTokenContract = TestTokenFactory.connect(
+    const userTokenContract = TestToken__factory.connect(
       currency.address,
       userAccount,
     );
@@ -259,7 +259,7 @@ describe('WhitelistSale', () => {
   describe('#updateSaleStatus', () => {
     it('should not be able to update the sale status as a non-owner', async () => {
       const whitelistSale = connectAs(userAccount);
-      const userContract = WhitelistSaleFactory.connect(
+      const userContract = WhitelistSale__factory.connect(
         whitelistSale.address,
         userAccount,
       );

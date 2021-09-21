@@ -1,10 +1,10 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import {
-  JointPassportCampaignFactory,
+  JointPassportCampaign__factory,
   TestToken,
-  TestTokenFactory,
+  TestToken__factory,
   MockJointPassportCampaign,
-  MockJointPassportCampaignFactory,
+  MockJointPassportCampaign__factory,
   MockSapphirePassportScores,
 } from '@src/typings';
 import { deployTestToken } from '../deployers';
@@ -94,7 +94,7 @@ describe('JointPassportCampaign', () => {
     tokenReceiver: SignerWithAddress,
     amount: BigNumber,
   ) {
-    const tokenContract = TestTokenFactory.connect(
+    const tokenContract = TestToken__factory.connect(
       token.address,
       tokenReceiver,
     );
@@ -140,7 +140,7 @@ describe('JointPassportCampaign', () => {
       throw 'Admin cannot be null';
     }
 
-    const passportCampaign = await new MockJointPassportCampaignFactory(
+    const passportCampaign = await new MockJointPassportCampaign__factory(
       admin,
     ).deploy(
       admin.address,
@@ -257,7 +257,7 @@ describe('JointPassportCampaign', () => {
   describe('#constructor', () => {
     it('reverts if the variables are null', async () => {
       await expect(
-        new JointPassportCampaignFactory(user1).deploy(
+        new JointPassportCampaign__factory(user1).deploy(
           user1.address,
           user1.address,
           collab.address,
@@ -275,7 +275,7 @@ describe('JointPassportCampaign', () => {
     });
 
     it('initializes the variables correctly', async () => {
-      const campaign = await new JointPassportCampaignFactory(user1).deploy(
+      const campaign = await new JointPassportCampaign__factory(user1).deploy(
         user1.address,
         user1.address,
         collab.address,
@@ -1303,7 +1303,7 @@ describe('JointPassportCampaign', () => {
       let testToken: TestToken;
 
       beforeEach(async () => {
-        testToken = await new TestTokenFactory(admin).deploy('a', 'b', 18);
+        testToken = await new TestToken__factory(admin).deploy('a', 'b', 18);
         await testToken.mintShare(arcPassportCampaign.address, erc20Amt);
       });
 
@@ -1797,7 +1797,7 @@ describe('JointPassportCampaign', () => {
 
       await setTimestampTo(25);
 
-      const userCStakingToken = TestTokenFactory.connect(
+      const userCStakingToken = TestToken__factory.connect(
         stakingToken.address,
         users.userC,
       );

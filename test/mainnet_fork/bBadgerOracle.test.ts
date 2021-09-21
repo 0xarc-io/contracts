@@ -1,6 +1,6 @@
 import { MockProvider } from '@ethereum-waffle/provider';
 import { BigNumber } from '@ethersproject/bignumber';
-import { BBadgerOracle, BBadgerOracleFactory } from '@src/typings';
+import { BBadgerOracle, BBadgerOracle__factory } from '@src/typings';
 import { expect } from 'chai';
 
 xdescribe('bBadgerOracle', () => {
@@ -16,7 +16,7 @@ xdescribe('bBadgerOracle', () => {
 
     const signer = await provider.getSigner();
 
-    oracle = await new BBadgerOracleFactory(signer).deploy();
+    oracle = await new BBadgerOracle__factory(signer).deploy();
   });
 
   it('should give the correct price', async () => {

@@ -1,6 +1,6 @@
 import {
   SapphireMapperLinear,
-  SapphireMapperLinearFactory,
+  SapphireMapperLinear__factory,
 } from '@src/typings';
 import { ArcNumber } from '@src/utils';
 import { expectRevert } from '@test/helpers/expectRevert';
@@ -14,7 +14,7 @@ describe('SapphireMapperLinear', () => {
   before(async () => {
     const signers = await ethers.getSigners();
     const admin = signers[0];
-    mapper = await new SapphireMapperLinearFactory(admin).deploy();
+    mapper = await new SapphireMapperLinear__factory(admin).deploy();
   });
 
   it('reverts if scoreMax or upperbound are 0', async () => {

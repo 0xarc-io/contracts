@@ -10,10 +10,10 @@ import { addSnapshotBeforeRestoreAfterEach } from '../../helpers/testingUtils';
 import { WaitlistBatch } from '@src/typings/WaitlistBatch';
 import {
   TestToken,
-  TestTokenFactory,
-  WaitlistBatchFactory,
+  TestToken__factory,
+  WaitlistBatch__factory,
 } from '@src/typings';
-import { MockWaitlistBatchFactory } from '@src/typings/MockWaitlistBatchFactory';
+import { MockWaitlistBatch__factory } from '@src/typings';
 
 chai.use(solidity);
 const expect = chai.expect;
@@ -49,7 +49,7 @@ describe('WhitelistBatch', () => {
 
     await depositToken.mintShare(user2.address, batch.depositAmount.div(2));
 
-    const user2DepositToken = TestTokenFactory.connect(
+    const user2DepositToken = TestToken__factory.connect(
       depositToken.address,
       user2,
     );
@@ -66,24 +66,24 @@ describe('WhitelistBatch', () => {
     user2 = signers[2];
     moderator = signers[3];
 
-    depositToken = await new TestTokenFactory(ownerAccount).deploy(
+    depositToken = await new TestToken__factory(ownerAccount).deploy(
       'TEST',
       'TEST',
       18,
     );
 
-    waitlist = await new MockWaitlistBatchFactory(ownerAccount).deploy(
+    waitlist = await new MockWaitlistBatch__factory(ownerAccount).deploy(
       depositToken.address,
       DEPOSIT_LOCKUP_DURATION,
     );
     waitlist.setCurrentTimestamp(BASE_TIMESTAMP);
 
-    userWaitlist = MockWaitlistBatchFactory.connect(
+    userWaitlist = MockWaitlistBatch__factory.connect(
       waitlist.address,
       userAccount,
     );
 
-    const userDepositToken = TestTokenFactory.connect(
+    const userDepositToken = TestToken__factory.connect(
       depositToken.address,
       userAccount,
     );
@@ -192,7 +192,7 @@ describe('WhitelistBatch', () => {
       let user2Waitlist: WaitlistBatch;
 
       before(() => {
-        user2Waitlist = WaitlistBatchFactory.connect(waitlist.address, user2);
+        user2Waitlist = WaitlistBatch__factory.connect(waitlist.address, user2);
       });
 
       beforeEach(setupBatch);
@@ -450,7 +450,7 @@ describe('WhitelistBatch', () => {
       });
 
       it('cannot start a batch as a non-owner', async () => {
-        const unauthorizedWaitlist = MockWaitlistBatchFactory.connect(
+        const unauthorizedWaitlist = MockWaitlistBatch__factory.connect(
           waitlist.address,
           userAccount,
         );
@@ -556,7 +556,7 @@ describe('WhitelistBatch', () => {
       });
 
       it('cannot change the batch start timestamp as a non-owner', async () => {
-        const unauthorizedWaitlist = MockWaitlistBatchFactory.connect(
+        const unauthorizedWaitlist = MockWaitlistBatch__factory.connect(
           waitlist.address,
           userAccount,
         );
@@ -609,7 +609,7 @@ describe('WhitelistBatch', () => {
       });
 
       it('cannot change the total spots as a non-owner', async () => {
-        const unauthorizedWaitlist = MockWaitlistBatchFactory.connect(
+        const unauthorizedWaitlist = MockWaitlistBatch__factory.connect(
           waitlist.address,
           userAccount,
         );
@@ -666,7 +666,7 @@ describe('WhitelistBatch', () => {
       let otherToken: TestToken;
 
       before(async () => {
-        otherToken = await new TestTokenFactory(ownerAccount).deploy(
+        otherToken = await new TestToken__factory(ownerAccount).deploy(
           'OTHER TOKEN',
           'OTHERTOK',
           18,
@@ -679,7 +679,7 @@ describe('WhitelistBatch', () => {
       });
 
       it('cannot transfer tokens as a non-owner', async () => {
-        const unauthorizedWaitlist = MockWaitlistBatchFactory.connect(
+        const unauthorizedWaitlist = MockWaitlistBatch__factory.connect(
           waitlist.address,
           userAccount,
         );
@@ -722,7 +722,7 @@ describe('WhitelistBatch', () => {
 
     describe('#setModerator', () => {
       it('reverts if called by a normie', async () => {
-        const unauthorizedWaitlist = MockWaitlistBatchFactory.connect(
+        const unauthorizedWaitlist = MockWaitlistBatch__factory.connect(
           waitlist.address,
           userAccount,
         );
@@ -811,7 +811,7 @@ describe('WhitelistBatch', () => {
       });
 
       it('reverts if called by non-moderator', async () => {
-        const unauthorizedWaitlist = MockWaitlistBatchFactory.connect(
+        const unauthorizedWaitlist = MockWaitlistBatch__factory.connect(
           waitlist.address,
           userAccount,
         );

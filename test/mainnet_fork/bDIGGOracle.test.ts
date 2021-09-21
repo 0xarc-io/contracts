@@ -1,6 +1,6 @@
 import { MockProvider } from '@ethereum-waffle/provider';
 import { BigNumber } from '@ethersproject/bignumber';
-import { BDIGGOracle, BDIGGOracleFactory } from '@src/typings';
+import { BDIGGOracle, BDIGGOracle__factory } from '@src/typings';
 import { expect } from 'chai';
 
 xdescribe('bDIGGOracle', () => {
@@ -15,7 +15,7 @@ xdescribe('bDIGGOracle', () => {
     });
     const signer = await provider.getSigner();
 
-    oracle = await new BDIGGOracleFactory(signer).deploy();
+    oracle = await new BDIGGOracle__factory(signer).deploy();
   });
 
   it('should give the correct price', async () => {

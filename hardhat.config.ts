@@ -7,11 +7,11 @@ import { privateKeys } from './test/helpers/generatedWallets';
 import 'hardhat-preprocessor';
 import 'hardhat-spdx-license-identifier';
 import 'hardhat-contract-sizer';
-import 'hardhat-typechain';
 import 'hardhat-watcher';
 
 import 'solidity-coverage';
 
+import '@typechain/hardhat';
 import '@nomiclabs/hardhat-waffle';
 import '@nomiclabs/hardhat-etherscan';
 

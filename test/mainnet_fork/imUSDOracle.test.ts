@@ -1,5 +1,5 @@
 import { MockProvider } from '@ethereum-waffle/provider';
-import { ImUSDOracle, ImUSDOracleFactory } from '@src/typings';
+import { ImUSDOracle, ImUSDOracle__factory } from '@src/typings';
 import { expect } from 'chai';
 
 xdescribe('imUSDOracle', () => {
@@ -14,7 +14,7 @@ xdescribe('imUSDOracle', () => {
     });
     const signer = await provider.getSigner();
 
-    oracle = await new ImUSDOracleFactory(signer).deploy();
+    oracle = await new ImUSDOracle__factory(signer).deploy();
   });
 
   it('should give the correct price', async () => {

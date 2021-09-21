@@ -3,17 +3,17 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { PassportScoreTree } from '@src/MerkleTree';
 import {
-  ArcProxyFactory,
+  ArcProxy__factory,
   DefaultPassportSkin,
   DefiPassport,
-  DefiPassportFactory,
+  DefiPassport__factory,
   MintableNFT,
-  MintableNFTFactory,
+  MintableNFT__factory,
 } from '@src/typings';
-import { DefaultPassportSkinFactory } from '@src/typings/DefaultPassportSkinFactory';
+import { DefaultPassportSkin__factory } from '@src/typings';
 import { MockSapphirePassportScores } from '@src/typings/MockSapphirePassportScores';
 import { SapphirePassportScores } from '@src/typings/SapphirePassportScores';
-import { SapphirePassportScoresFactory } from '@src/typings/SapphirePassportScoresFactory';
+import { SapphirePassportScores__factory } from '@src/typings';
 import { getEmptyScoreProof, getScoreProof } from '@src/utils';
 import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
@@ -86,7 +86,7 @@ describe('DefiPassport', () => {
   }
 
   async function _setupSkins() {
-    skinsContract = await new MintableNFTFactory(owner).deploy(
+    skinsContract = await new MintableNFT__factory(owner).deploy(
       'Passport Skins',
       'PS',
     );
@@ -95,7 +95,7 @@ describe('DefiPassport', () => {
     skinTokenId = BigNumber.from(1);
     await skinsContract.mint(owner.address, skinTokenId);
 
-    defaultPassportSkinContract = await new DefaultPassportSkinFactory(
+    defaultPassportSkinContract = await new DefaultPassportSkin__factory(
       owner,
     ).deploy('Default passport skin nft', 'DPS');
     defaultSkinAddress = defaultPassportSkinContract.address;
@@ -105,7 +105,7 @@ describe('DefiPassport', () => {
       owner.address,
       0,
     );
-    otherSkinContract = await new MintableNFTFactory(owner).deploy(
+    otherSkinContract = await new MintableNFT__factory(owner).deploy(
       'Other Passport Skins',
       'OPS',
     );
@@ -682,15 +682,15 @@ describe('DefiPassport', () => {
       });
 
       const signer = provider.getSigner();
-      const cs = await new SapphirePassportScoresFactory(signer).deploy();
-      const impl = await new DefiPassportFactory(signer).deploy();
+      const cs = await new SapphirePassportScores__factory(signer).deploy();
+      const impl = await new DefiPassport__factory(signer).deploy();
 
-      const proxy = await new ArcProxyFactory(signer).deploy(
+      const proxy = await new ArcProxy__factory(signer).deploy(
         impl.address,
         await signer.getAddress(),
         [],
       );
-      const dp = DefiPassportFactory.connect(proxy.address, signer);
+      const dp = DefiPassport__factory.connect(proxy.address, signer);
       await dp.init('DFP', 'DFP', cs.address, await signer.getAddress());
 
       const skinContract = '0x495f947276749Ce646f68AC8c248420045cb7b5e';
@@ -829,7 +829,7 @@ describe('DefiPassport', () => {
 
       // Mint many NFT contracts and tokens
       for (let i = BigNumber.from(0); i.lt(4); i = i.add(1)) {
-        const contract = await new MintableNFTFactory(owner).deploy(
+        const contract = await new MintableNFT__factory(owner).deploy(
           `Skin ${i.toString()}`,
           i.toString(),
         );
@@ -880,7 +880,7 @@ describe('DefiPassport', () => {
     });
 
     it('reverts if default token does not have token id eq 1', async () => {
-      const otherNFT = await new MintableNFTFactory(owner).deploy(
+      const otherNFT = await new MintableNFT__factory(owner).deploy(
         'Some Default token',
         'PS',
       );

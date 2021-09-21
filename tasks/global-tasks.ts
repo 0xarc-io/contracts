@@ -1,4 +1,4 @@
-import { AddressAccrualFactory, WhitelistSaleFactory } from '@src/typings';
+import { AddressAccrual__factory, WhitelistSale__factory } from '@src/typings';
 import {
   deployContract,
   loadDetails,
@@ -15,7 +15,7 @@ import fs from 'fs';
 import { BigNumber, ContractTransaction, utils } from 'ethers';
 import _ from 'lodash';
 import ArcDecimal from '@src/utils/ArcDecimal';
-import { ArcxTokenV2Factory } from '@src/typings/ArcxTokenV2Factory';
+import { ArcxTokenV2__factory } from '@src/typings';
 
 task(
   'deploy-accrual',
@@ -35,7 +35,7 @@ task(
       {
         name: 'ArcDAO',
         source: 'AddressAccrual',
-        data: new AddressAccrualFactory(signer).getDeployTransaction(token),
+        data: new AddressAccrual__factory(signer).getDeployTransaction(token),
         version: 2,
         type: DeploymentType.global,
       },
@@ -61,7 +61,7 @@ task('deploy-arcx-token-v2', 'Deploy the ArcxTokenV2')
       {
         name: 'ArcxToken',
         source: 'ArcxTokenV2',
-        data: new ArcxTokenV2Factory(signer).getDeployTransaction(
+        data: new ArcxTokenV2__factory(signer).getDeployTransaction(
           name,
           symbol,
           oldArcxToken,
@@ -103,7 +103,7 @@ task(
       {
         name: 'WhitelistSale-2',
         source: 'WhitelistSale',
-        data: new WhitelistSaleFactory(signer).getDeployTransaction(
+        data: new WhitelistSale__factory(signer).getDeployTransaction(
           USDCAddress,
         ),
         version: 1,
@@ -160,7 +160,7 @@ task(
     // Set allowances
     console.log(yellow(`Setting up ${allowances.length} allowances...`));
 
-    const whitelistSaleContract = WhitelistSaleFactory.connect(
+    const whitelistSaleContract = WhitelistSale__factory.connect(
       whitelistSaleAddress,
       signer,
     );

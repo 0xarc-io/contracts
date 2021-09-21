@@ -1,11 +1,11 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import {
-  ChainLinkOracleFactory,
-  CTokenOracleFactory,
-  IbETHOracleFactory,
-  ImUSDOracleFactory,
-  XSushiOracleFactory,
-  YUSDOracleFactory,
+  ChainLinkOracle__factory,
+  CTokenOracle__factory,
+  IbETHOracle__factory,
+  ImUSDOracle__factory,
+  XSushiOracle__factory,
+  YUSDOracle__factory,
 } from '@src/typings';
 
 const collateralConfig = {
@@ -29,7 +29,7 @@ const collateralConfig = {
     oracle: {
       source: 'ChainLinkOracle',
       getDeployTx: (signer: SignerWithAddress) =>
-        new ChainLinkOracleFactory(signer).getDeployTransaction(
+        new ChainLinkOracle__factory(signer).getDeployTransaction(
           '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419',
         ),
     },
@@ -50,7 +50,7 @@ const collateralConfig = {
     oracle: {
       source: 'YUSDOracle',
       getDeployTx: (signer: SignerWithAddress) =>
-        new YUSDOracleFactory(signer).getDeployTransaction(),
+        new YUSDOracle__factory(signer).getDeployTransaction(),
     },
     version: '1',
     params: {
@@ -68,7 +68,7 @@ const collateralConfig = {
     oracle: {
       source: 'CTokenOracle',
       getDeployTx: (signer: SignerWithAddress) =>
-        new CTokenOracleFactory(signer).getDeployTransaction(
+        new CTokenOracle__factory(signer).getDeployTransaction(
           '0x39aa39c021dfbae8fac545936693ac917d5e7563',
           '0x986b5E1e1755e3C2440e960477f25201B0a8bbD4',
           '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419',
@@ -93,7 +93,7 @@ const collateralConfig = {
     oracle: {
       source: 'ibETHOracle',
       getDeployTx: (signer: SignerWithAddress) =>
-        new IbETHOracleFactory(signer).getDeployTransaction(),
+        new IbETHOracle__factory(signer).getDeployTransaction(),
     },
     version: 1,
     params: {
@@ -110,7 +110,7 @@ const collateralConfig = {
     oracle: {
       source: 'xSushiOracle',
       getDeployTx: (signer: SignerWithAddress) =>
-        new XSushiOracleFactory(signer).getDeployTransaction(),
+        new XSushiOracle__factory(signer).getDeployTransaction(),
     },
     version: 1,
     params: {
@@ -127,7 +127,7 @@ const collateralConfig = {
     oracle: {
       source: 'imUSDOracle',
       getDeployTx: (signer: SignerWithAddress) =>
-        new ImUSDOracleFactory(signer).getDeployTransaction(),
+        new ImUSDOracle__factory(signer).getDeployTransaction(),
     },
     version: 1,
     params: {
@@ -144,7 +144,7 @@ const collateralConfig = {
     oracle: {
       source: 'imUSDOracle',
       getDeployTx: (signer: SignerWithAddress) =>
-        new ImUSDOracleFactory(signer).getDeployTransaction(),
+        new ImUSDOracle__factory(signer).getDeployTransaction(),
     },
     params: {
       interestSetter: '0xAF36712cb4ebD3BD706E898F5703ce3Ca96E8982',

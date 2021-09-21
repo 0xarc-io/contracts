@@ -1,6 +1,6 @@
 import { JsonRpcSigner } from '@ethersproject/providers/lib';
 import { BigNumber } from 'ethers';
-import { BaseERC20Factory } from '../typings';
+import { BaseERC20__factory } from '../typings';
 
 export interface SignatureInfo {
   v: number;
@@ -22,7 +22,7 @@ export const signEIP2612Permit = async (
   deadline: BigNumber,
   nonce: BigNumber,
   chainId: number,
-  version = '1'
+  version = '1',
 ): Promise<SignatureInfo> => {
   const message = {
     owner,
@@ -57,7 +57,7 @@ const _getDomain = async (
   chainId: number,
   version: string,
 ) => {
-  const tokenContract = BaseERC20Factory.connect(token, signer);
+  const tokenContract = BaseERC20__factory.connect(token, signer);
 
   const tokenAddress = token;
   const name = await tokenContract.name();

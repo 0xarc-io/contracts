@@ -1,4 +1,4 @@
-import { SapphireAssessorFactory, SapphireCoreV1 } from '@src/typings';
+import { SapphireAssessor__factory, SapphireCoreV1 } from '@src/typings';
 import {
   DEFAULT_MAX_CREDIT_SCORE,
   DEFAULT_PROOF_PROTOCOL,
@@ -91,7 +91,7 @@ describe('SapphireCore.setters', () => {
     let newAssessorAddress: string;
 
     before(async () => {
-      const newAssessor = await new SapphireAssessorFactory(
+      const newAssessor = await new SapphireAssessor__factory(
         ctx.signers.admin,
       ).deploy(
         ctx.contracts.sapphire.linearMapper.address,

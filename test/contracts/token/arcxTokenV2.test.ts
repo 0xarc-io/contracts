@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { ArcxToken, ArcxTokenFactory } from '@src/typings';
+import { ArcxToken, ArcxToken__factory } from '@src/typings';
 import { ArcxTokenV2 } from '@src/typings/ArcxTokenV2';
-import { ArcxTokenV2Factory } from '@src/typings/ArcxTokenV2Factory';
+import { ArcxTokenV2__factory } from '@src/typings';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { BigNumber, constants, utils } from 'ethers';
@@ -22,8 +22,12 @@ describe('ArcxTokenV2', () => {
     owner = signers[0];
     user = signers[1];
 
-    oldArcx = await new ArcxTokenFactory(owner).deploy();
-    arcx = await new ArcxTokenV2Factory(owner).deploy('TEST arcx token', 'ARCHX', oldArcx.address);
+    oldArcx = await new ArcxToken__factory(owner).deploy();
+    arcx = await new ArcxTokenV2__factory(owner).deploy(
+      'TEST arcx token',
+      'ARCHX',
+      oldArcx.address,
+    );
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -31,7 +35,11 @@ describe('ArcxTokenV2', () => {
   describe('#constructor', () => {
     it('reverts if old token is address 0', async () => {
       await expect(
-        new ArcxTokenV2Factory(owner).deploy('test', 'test', constants.AddressZero),
+        new ArcxTokenV2__factory(owner).deploy(
+          'test',
+          'test',
+          constants.AddressZero,
+        ),
       ).to.be.revertedWith('ArcxTokenV2: old ARCX token cannot be address 0');
     });
 
@@ -205,7 +213,7 @@ describe('ArcxTokenV2', () => {
     });
 
     it('reverts if called on a target that is not owned by the contract', async () => {
-      const otherToken = await new ArcxTokenFactory(owner).deploy();
+      const otherToken = await new ArcxToken__factory(owner).deploy();
 
       await expect(
         arcx.transferOtherOwnership(otherToken.address, owner.address),

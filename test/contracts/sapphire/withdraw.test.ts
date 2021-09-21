@@ -4,7 +4,7 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { BASE } from '@src/constants';
 import { PassportScoreTree } from '@src/MerkleTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
-import { SapphireAssessor, TestTokenFactory } from '@src/typings';
+import { SapphireAssessor, TestToken__factory } from '@src/typings';
 import { getEvent } from '@src/utils/getEvent';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import {
@@ -195,7 +195,7 @@ describe('SapphireCore.withdraw()', () => {
 
   it('withdraws the correct amount of collateral, given that collateral has a different number of decimals than 18', async () => {
     const collateralAddress = await arc.core().collateralAsset();
-    const collateralContract = TestTokenFactory.connect(
+    const collateralContract = TestToken__factory.connect(
       collateralAddress,
       signers.scoredMinter,
     );

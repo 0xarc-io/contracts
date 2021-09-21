@@ -3,7 +3,7 @@ import { BigNumberish, Signer } from 'ethers';
 import { ethers } from 'hardhat';
 import { EVM } from './EVM';
 import { asyncForEach, Token } from '@src/utils';
-import { TestTokenFactory } from '@src/typings';
+import { TestToken__factory } from '@src/typings';
 import { MockSapphirePassportScores } from '@src/typings/MockSapphirePassportScores';
 
 // And this is our test sandboxing. It snapshots and restores between each test.
@@ -30,7 +30,7 @@ export async function setStartingBalances(
   balance: BigNumberish,
 ) {
   await asyncForEach(signers, async (signer) => {
-    const testToken = new TestTokenFactory(signer).attach(collateral);
+    const testToken = new TestToken__factory(signer).attach(collateral);
     await testToken.mintShare(await signer.getAddress(), balance);
     await Token.approve(collateral, signer, core, balance);
   });

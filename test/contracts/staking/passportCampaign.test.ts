@@ -1,10 +1,10 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import {
-  ArcProxyFactory,
+  ArcProxy__factory,
   MockSapphirePassportScores,
-  SapphirePassportScoresFactory,
+  SapphirePassportScores__factory,
   TestToken,
-  TestTokenFactory,
+  TestToken__factory,
 } from '@src/typings';
 import hre from 'hardhat';
 import { ethers } from 'hardhat';
@@ -15,7 +15,7 @@ import { BASE } from '@src/constants';
 import { EVM } from '@test/helpers/EVM';
 import { solidity } from 'ethereum-waffle';
 import { MockPassportCampaign } from '@src/typings/MockPassportCampaign';
-import { MockPassportCampaignFactory } from '@src/typings/MockPassportCampaignFactory';
+import { MockPassportCampaign__factory } from '@src/typings';
 import {
   addSnapshotBeforeRestoreAfterEach,
   immediatelyUpdateMerkleRoot,
@@ -100,7 +100,7 @@ describe('PassportCampaign', () => {
     tokenReceiver: SignerWithAddress,
     amount: BigNumber,
   ) {
-    const tokenContract = TestTokenFactory.connect(
+    const tokenContract = TestToken__factory.connect(
       token.address,
       tokenReceiver,
     );
@@ -112,7 +112,7 @@ describe('PassportCampaign', () => {
     user: SignerWithAddress,
     amount: BigNumber = STAKE_AMOUNT,
   ) {
-    const contract = MockPassportCampaignFactory.connect(
+    const contract = MockPassportCampaign__factory.connect(
       adminPassportCampaign.address,
       user,
     );
@@ -121,7 +121,7 @@ describe('PassportCampaign', () => {
   }
 
   async function exitCampaign(user: SignerWithAddress) {
-    const contract = MockPassportCampaignFactory.connect(
+    const contract = MockPassportCampaign__factory.connect(
       adminPassportCampaign.address,
       user,
     );
@@ -130,7 +130,7 @@ describe('PassportCampaign', () => {
   }
 
   async function claimReward(user: SignerWithAddress) {
-    const contract = MockPassportCampaignFactory.connect(
+    const contract = MockPassportCampaign__factory.connect(
       adminPassportCampaign.address,
       user,
     );
@@ -238,19 +238,19 @@ describe('PassportCampaign', () => {
     rewardToken = await deployTestToken(admin, 'Arc Token', 'ARC');
     otherErc20 = await deployTestToken(admin, 'Another ERC20 token', 'AERC20');
 
-    adminPassportCampaign = await new MockPassportCampaignFactory(
+    adminPassportCampaign = await new MockPassportCampaign__factory(
       admin,
     ).deploy();
 
-    const proxy = await new ArcProxyFactory(admin).deploy(
+    const proxy = await new ArcProxy__factory(admin).deploy(
       adminPassportCampaign.address,
       await admin.getAddress(),
       [],
     );
 
-    adminPassportCampaign = await new MockPassportCampaignFactory(admin).attach(
-      proxy.address,
-    );
+    adminPassportCampaign = await new MockPassportCampaign__factory(
+      admin,
+    ).attach(proxy.address);
     stakerPassportCampaign = adminPassportCampaign.connect(staker);
     user1PassportCampaign = adminPassportCampaign.connect(user1);
     unauthorizedPassportCampaign = adminPassportCampaign.connect(unauthorized);
@@ -935,7 +935,7 @@ describe('PassportCampaign', () => {
       });
 
       it('reverts if called by non-admin', async () => {
-        const newCs = await new SapphirePassportScoresFactory(admin).deploy();
+        const newCs = await new SapphirePassportScores__factory(admin).deploy();
 
         await expect(
           user1PassportCampaign.setPassportScoresContract(newCs.address),
@@ -961,7 +961,7 @@ describe('PassportCampaign', () => {
       });
 
       it('sets a new credit score contract', async () => {
-        const newCs = await new SapphirePassportScoresFactory(admin).deploy();
+        const newCs = await new SapphirePassportScores__factory(admin).deploy();
 
         expect(await adminPassportCampaign.passportScoresContract()).to.eq(
           creditScoreContract.address,

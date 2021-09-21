@@ -1,5 +1,5 @@
-import { IERC20Factory } from '@src/typings/IERC20Factory';
-import { IMintableTokenFactory } from '@src/typings/IMintableTokenFactory';
+import { IERC20__factory } from '@src/typings';
+import { IMintableToken__factory } from '@src/typings';
 import { green, yellow } from 'chalk';
 import {
   deployContract,
@@ -9,7 +9,7 @@ import {
 } from '../deployments/src';
 import { utils } from 'ethers';
 import { task } from 'hardhat/config';
-import { TestTokenFactory } from '@src/typings';
+import { TestToken__factory } from '@src/typings';
 
 task('mint-tokens')
   .addParam('token', 'The address of the token to mint from')
@@ -22,7 +22,7 @@ task('mint-tokens')
 
     const { signer } = await loadDetails(hre);
 
-    const token = IMintableTokenFactory.connect(tokenAddress, signer);
+    const token = IMintableToken__factory.connect(tokenAddress, signer);
 
     // mint to deployer
     console.log(
@@ -52,7 +52,7 @@ task('approve-tokens')
 
     const { signer } = await loadDetails(hre);
 
-    const erc20 = IERC20Factory.connect(token, signer);
+    const erc20 = IERC20__factory.connect(token, signer);
 
     console.log(yellow(`Approving token...`));
     const tx = await erc20.approve(spender, utils.parseEther(amount));
@@ -74,7 +74,7 @@ task('deploy-test-erc20', 'Deploys an ERC20 test token with 18 decimals')
       {
         name,
         source: 'TestToken',
-        data: new TestTokenFactory(signer).getDeployTransaction(
+        data: new TestToken__factory(signer).getDeployTransaction(
           name,
           symbol,
           18,

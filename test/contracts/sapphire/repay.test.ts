@@ -4,7 +4,7 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { PassportScoreTree } from '@src/MerkleTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
-import { SyntheticTokenV2Factory } from '@src/typings';
+import { SyntheticTokenV2__factory } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import {
   DEFAULT_COLLATERAL_DECIMALS,
@@ -65,7 +65,7 @@ describe('SapphireCore.repay()', () => {
     caller: SignerWithAddress,
     scoreProof?: PassportScoreProof,
   ) {
-    const senderContract = SyntheticTokenV2Factory.connect(
+    const senderContract = SyntheticTokenV2__factory.connect(
       arc.syntheticAddress(),
       caller,
     );

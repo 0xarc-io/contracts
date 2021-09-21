@@ -8,7 +8,7 @@ import 'module-alias/register';
 import { ITestContext, generateContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
-import { BaseERC20Factory, TestTokenFactory } from '@src/typings';
+import { BaseERC20__factory, TestToken__factory } from '@src/typings';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { expect } from 'chai';
 import { ONE_YEAR_IN_SECONDS } from '@src/constants';
@@ -61,7 +61,7 @@ describe('SapphireCore.borrow()', () => {
     caller: SignerWithAddress,
     amount = COLLATERAL_AMOUNT,
   ) {
-    const collateral = TestTokenFactory.connect(
+    const collateral = TestToken__factory.connect(
       arc.collateral().address,
       minter,
     );
@@ -137,7 +137,7 @@ describe('SapphireCore.borrow()', () => {
 
   it('borrows the correct amount for collateral tokens that have other than 18 decimal places', async () => {
     const collateralAddress = await arc.core().collateralAsset();
-    const collateralContract = BaseERC20Factory.connect(
+    const collateralContract = BaseERC20__factory.connect(
       collateralAddress,
       ctx.signers.minter,
     );

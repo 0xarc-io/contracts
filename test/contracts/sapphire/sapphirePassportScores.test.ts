@@ -3,10 +3,10 @@ import { utils } from '@ethereum-waffle/provider/node_modules/ethers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { PassportScoreTree } from '@src/MerkleTree';
 import {
-  ArcProxyFactory,
+  ArcProxy__factory,
   MockSapphirePassportScores,
-  MockSapphirePassportScoresFactory,
-  SapphirePassportScoresFactory,
+  MockSapphirePassportScores__factory,
+  SapphirePassportScores__factory,
 } from '@src/typings';
 import { getScoreProof } from '@src/utils';
 import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
@@ -92,13 +92,15 @@ describe('SapphireCreditScore', () => {
 
   describe('#init', () => {
     it('sets the initial values', async () => {
-      const impl = await new MockSapphirePassportScoresFactory(admin).deploy();
-      const proxy = await new ArcProxyFactory(admin).deploy(
+      const impl = await new MockSapphirePassportScores__factory(
+        admin,
+      ).deploy();
+      const proxy = await new ArcProxy__factory(admin).deploy(
         impl.address,
         admin.address,
         [],
       );
-      const contract = SapphirePassportScoresFactory.connect(
+      const contract = SapphirePassportScores__factory.connect(
         proxy.address,
         admin,
       );

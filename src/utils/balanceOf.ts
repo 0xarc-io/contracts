@@ -1,8 +1,11 @@
 import { BigNumber } from '@ethersproject/bignumber';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { IERC20Factory } from '../typings/IERC20Factory';
+import { IERC20__factory } from '../typings/IERC20__factory';
 
-export function balanceOf(user: SignerWithAddress, tokenAddress: string): Promise<BigNumber> {
-  const tokenContract = IERC20Factory.connect(tokenAddress, user);
+export function balanceOf(
+  user: SignerWithAddress,
+  tokenAddress: string,
+): Promise<BigNumber> {
+  const tokenContract = IERC20__factory.connect(tokenAddress, user);
   return tokenContract.balanceOf(user.address);
 }

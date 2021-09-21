@@ -1,7 +1,7 @@
 import {
-  ArcProxyFactory,
-  DefaultPassportSkinFactory,
-  DefiPassportFactory,
+  ArcProxy__factory,
+  DefaultPassportSkin__factory,
+  DefiPassport__factory,
 } from '@src/typings';
 import { green, red, yellow } from 'chalk';
 import {
@@ -40,7 +40,7 @@ task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
       {
         name: 'DefiPassport',
         source: 'DefiPassport',
-        data: new DefiPassportFactory(signer).getDeployTransaction(),
+        data: new DefiPassport__factory(signer).getDeployTransaction(),
         version: Number(version) || 1,
         type: DeploymentType.global,
         group: 'DefiPassport',
@@ -68,7 +68,7 @@ task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
       {
         name: 'DefiPassportProxy',
         source: 'ArcProxy',
-        data: new ArcProxyFactory(signer).getDeployTransaction(
+        data: new ArcProxy__factory(signer).getDeployTransaction(
           defiPassportImpl,
           await signer.getAddress(),
           [],
@@ -90,7 +90,7 @@ task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
       throw red(`DefiPassportProxy was not deployed!`);
     }
 
-    const defiPassportProxyContract = DefiPassportFactory.connect(
+    const defiPassportProxyContract = DefiPassport__factory.connect(
       defiPassportProxy,
       signer,
     );
@@ -139,7 +139,7 @@ task(
       {
         name: 'DefaultPassportSkin',
         source: 'DefaultPassportSkin',
-        data: new DefaultPassportSkinFactory(signer).getDeployTransaction(
+        data: new DefaultPassportSkin__factory(signer).getDeployTransaction(
           name,
           symbol,
         ),
@@ -163,7 +163,7 @@ task(
       constructorArguments: [name, symbol],
     });
 
-    const nftContract = DefaultPassportSkinFactory.connect(
+    const nftContract = DefaultPassportSkin__factory.connect(
       defaultPassportSkinNft,
       signer,
     );
@@ -196,7 +196,7 @@ task(
     const { passport } = taskArgs;
     const { signer, network } = await loadDetails(hre);
 
-    const defiPassport = DefiPassportFactory.connect(passport, signer);
+    const defiPassport = DefiPassport__factory.connect(passport, signer);
 
     const skinsToApprove = [
       {

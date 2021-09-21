@@ -1,6 +1,6 @@
 import { MockProvider } from '@ethereum-waffle/provider';
 import { BigNumber } from '@ethersproject/bignumber';
-import { ChainLinkOracle, ChainLinkOracleFactory } from '@src/typings';
+import { ChainLinkOracle, ChainLinkOracle__factory } from '@src/typings';
 import { expect } from 'chai';
 
 const WETH_PRICE_FEED = '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419';
@@ -17,7 +17,7 @@ describe('ChainLinkOracle', () => {
     });
     const signer = await provider.getSigner();
 
-    oracle = await new ChainLinkOracleFactory(signer).deploy(WETH_PRICE_FEED);
+    oracle = await new ChainLinkOracle__factory(signer).deploy(WETH_PRICE_FEED);
   });
 
   it('should give the correct price', async () => {

@@ -1,5 +1,5 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { LiquidityCampaign, LiquidityCampaignFactory } from '@src/typings';
+import { LiquidityCampaign, LiquidityCampaign__factory } from '@src/typings';
 
 import { utils } from 'ethers';
 
@@ -9,9 +9,9 @@ export default {
     stakingToken: '0x6c0ffb49AD9072F253e254445CFD829BCb8A1b5d',
     rewardsToken: 'ArcxToken',
     rewardsDurationSeconds: 60 * 60 * 24 * 31, // 31 days
-    contractFactory: LiquidityCampaignFactory,
+    contractFactory: LiquidityCampaign__factory,
     getDeployTx: (signer: SignerWithAddress) =>
-      new LiquidityCampaignFactory(signer).getDeployTransaction(),
+      new LiquidityCampaign__factory(signer).getDeployTransaction(),
     runInit: (
       contract: LiquidityCampaign,
       arcDao: string,
@@ -37,9 +37,9 @@ export default {
     stakingToken: '0x6c0ffb49AD9072F253e254445CFD829BCb8A1b5d',
     rewardsToken: 'ArcxToken',
     rewardsDurationSeconds: 60 * 60 * 24 * 31, // 31 days
-    contractFactory: LiquidityCampaignFactory,
+    contractFactory: LiquidityCampaign__factory,
     getDeployTx: (signer: SignerWithAddress) =>
-      new LiquidityCampaignFactory(signer).getDeployTransaction(),
+      new LiquidityCampaign__factory(signer).getDeployTransaction(),
     runInit: (
       contract: LiquidityCampaign,
       arcDao: string,

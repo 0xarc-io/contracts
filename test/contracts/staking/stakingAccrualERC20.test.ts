@@ -3,16 +3,16 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { BASE } from '@src/constants';
 import { PassportScoreTree } from '@src/MerkleTree';
 import {
-  ArcProxyFactory,
+  ArcProxy__factory,
   MockSablier,
-  MockSablierFactory,
+  MockSablier__factory,
   MockSapphirePassportScores,
-  SapphirePassportScoresFactory,
+  SapphirePassportScores__factory,
   TestToken,
-  TestTokenFactory,
+  TestToken__factory,
 } from '@src/typings';
 import { MockStakingAccrualERC20 } from '@src/typings/MockStakingAccrualERC20';
-import { MockStakingAccrualERC20Factory } from '@src/typings/MockStakingAccrualERC20Factory';
+import { MockStakingAccrualERC20__factory } from '@src/typings';
 import { getEmptyScoreProof, getScoreProof } from '@src/utils';
 import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
 import {
@@ -78,16 +78,18 @@ describe('StakingAccrualERC20', () => {
       throw Error('Contract already set up');
     }
 
-    sablierContract = await new MockSablierFactory(admin).deploy();
+    sablierContract = await new MockSablier__factory(admin).deploy();
 
-    const starcxImpl = await new MockStakingAccrualERC20Factory(admin).deploy();
-    const proxy = await new ArcProxyFactory(admin).deploy(
+    const starcxImpl = await new MockStakingAccrualERC20__factory(
+      admin,
+    ).deploy();
+    const proxy = await new ArcProxy__factory(admin).deploy(
       starcxImpl.address,
       admin.address,
       [],
     );
 
-    starcx = MockStakingAccrualERC20Factory.connect(proxy.address, admin);
+    starcx = MockStakingAccrualERC20__factory.connect(proxy.address, admin);
     await starcx.init(
       'stARCx',
       'stARCx',
@@ -140,7 +142,11 @@ describe('StakingAccrualERC20', () => {
   before(async () => {
     await generateContext(sapphireFixture, init);
 
-    stakingToken = await new TestTokenFactory(admin).deploy('ARCx', 'ARCx', 18);
+    stakingToken = await new TestToken__factory(admin).deploy(
+      'ARCx',
+      'ARCx',
+      18,
+    );
 
     await _deployContract();
 
@@ -187,16 +193,16 @@ describe('StakingAccrualERC20', () => {
       });
 
       it('reverts if the staking token is address 0', async () => {
-        const starcxImpl = await new MockStakingAccrualERC20Factory(
+        const starcxImpl = await new MockStakingAccrualERC20__factory(
           admin,
         ).deploy();
-        const proxy = await new ArcProxyFactory(admin).deploy(
+        const proxy = await new ArcProxy__factory(admin).deploy(
           starcxImpl.address,
           admin.address,
           [],
         );
 
-        const starcxProxy = MockStakingAccrualERC20Factory.connect(
+        const starcxProxy = MockStakingAccrualERC20__factory.connect(
           proxy.address,
           admin,
         );
@@ -293,7 +299,7 @@ describe('StakingAccrualERC20', () => {
       let otherSablier: MockSablier;
 
       beforeEach(async () => {
-        otherSablier = await new MockSablierFactory(user1).deploy();
+        otherSablier = await new MockSablier__factory(user1).deploy();
       });
 
       it('reverts if called by non-admin', async () => {
@@ -380,7 +386,7 @@ describe('StakingAccrualERC20', () => {
 
     describe('#setPassportScoreContract', () => {
       it('reverts if called by non-admin', async () => {
-        const newCs = await new SapphirePassportScoresFactory(admin).deploy();
+        const newCs = await new SapphirePassportScores__factory(admin).deploy();
 
         await expect(
           user1starcx.setPassportScoreContract(newCs.address),
@@ -388,7 +394,7 @@ describe('StakingAccrualERC20', () => {
       });
 
       it('sets a new credit score contract', async () => {
-        const newCs = await new SapphirePassportScoresFactory(admin).deploy();
+        const newCs = await new SapphirePassportScores__factory(admin).deploy();
 
         expect(await starcx.passportScoresContract()).to.eq(
           creditScoreContract.address,

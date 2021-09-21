@@ -1,4 +1,4 @@
-import { WaitlistBatchFactory } from '@src/typings';
+import { WaitlistBatch__factory } from '@src/typings';
 import { green, yellow } from 'chalk';
 import { task } from 'hardhat/config';
 import {
@@ -24,7 +24,7 @@ task('deploy-waitlist-batch', 'Deploy the WaitlistBatch contract')
       {
         name: 'WaitlistBatch',
         source: 'WaitlistBatch',
-        data: new WaitlistBatchFactory(signer).getDeployTransaction(
+        data: new WaitlistBatch__factory(signer).getDeployTransaction(
           currency,
           depositduration,
         ),

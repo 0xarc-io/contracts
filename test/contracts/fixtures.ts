@@ -1,9 +1,9 @@
 import { MAX_UINT256 } from '@src/constants';
 import {
-  MockSapphireCoreV1Factory,
-  SapphireAssessorFactory,
-  SapphireMapperLinearFactory,
-  SyntheticTokenV2Factory,
+  MockSapphireCoreV1__factory,
+  SapphireAssessor__factory,
+  SapphireMapperLinear__factory,
+  SyntheticTokenV2__factory,
 } from '@src/typings';
 
 import {
@@ -65,7 +65,7 @@ export async function sapphireFixture(
     deployerAddress,
     [],
   );
-  const tokenV2 = SyntheticTokenV2Factory.connect(
+  const tokenV2 = SyntheticTokenV2__factory.connect(
     syntheticProxy.address,
     deployer,
   );
@@ -73,7 +73,7 @@ export async function sapphireFixture(
 
   ctx.contracts.synthetic.tokenV2 = tokenV2;
 
-  ctx.contracts.sapphire.linearMapper = await new SapphireMapperLinearFactory(
+  ctx.contracts.sapphire.linearMapper = await new SapphireMapperLinear__factory(
     deployer,
   ).deploy();
 
@@ -91,7 +91,7 @@ export async function sapphireFixture(
     .connect(ctx.signers.pauseOperator)
     .setPause(false);
 
-  ctx.contracts.sapphire.assessor = await new SapphireAssessorFactory(
+  ctx.contracts.sapphire.assessor = await new SapphireAssessor__factory(
     deployer,
   ).deploy(
     ctx.contracts.sapphire.linearMapper.address,
@@ -99,7 +99,7 @@ export async function sapphireFixture(
     DEFAULT_MAX_CREDIT_SCORE,
   );
 
-  ctx.contracts.sapphire.core = MockSapphireCoreV1Factory.connect(
+  ctx.contracts.sapphire.core = MockSapphireCoreV1__factory.connect(
     coreProxy.address,
     deployer,
   );

@@ -1,7 +1,7 @@
 import { MockProvider } from '@ethereum-waffle/provider';
 import { BigNumber } from '@ethersproject/bignumber';
+import { IbETHOracle__factory } from '@src/typings';
 import { IbETHOracle } from '@src/typings/IbETHOracle';
-import { IbETHOracleFactory } from '@src/typings/IbETHOracleFactory';
 import { expect } from 'chai';
 
 xdescribe('ibETHOracle', () => {
@@ -16,7 +16,7 @@ xdescribe('ibETHOracle', () => {
     });
     const signer = await provider.getSigner();
 
-    oracle = await new IbETHOracleFactory(signer).deploy();
+    oracle = await new IbETHOracle__factory(signer).deploy();
   });
 
   it('should give the correct price', async () => {

@@ -2,8 +2,8 @@ import 'module-alias/register';
 import { expect } from 'chai';
 import { MockProvider } from 'ethereum-waffle';
 import deployments from '../../deployments/mainnet/deployed.json';
-import { OwnableFactory } from '@src/typings/OwnableFactory';
-import { AdminableFactory } from '@src/typings';
+import { Ownable__factory } from '@src/typings';
+import { Adminable__factory } from '@src/typings';
 import { loadContract } from '../../deployments/src';
 
 /* eslint-disable @typescript-eslint/no-var-requires */
@@ -42,7 +42,7 @@ describe('Ownable contracts', () => {
 
       if (shouldBeOwnable(deployment.source)) {
         it(`${deployment.group} ${deployment.name} ${deployment.address}`, async () => {
-          const owner = await OwnableFactory.connect(
+          const owner = await Ownable__factory.connect(
             deployment.address,
             provider,
           ).owner();
@@ -60,7 +60,7 @@ describe('Ownable contracts', () => {
 
       if (shouldBeOwnable(deployment.source)) {
         it(`${deployment.group} ${deployment.name} ${deployment.address}`, async () => {
-          const owner = await OwnableFactory.connect(
+          const owner = await Ownable__factory.connect(
             deployment.address,
             provider,
           ).owner();
@@ -85,7 +85,7 @@ describe('Ownable contracts', () => {
       type: 'global',
     });
 
-    const arcxOwner = await OwnableFactory.connect(
+    const arcxOwner = await Ownable__factory.connect(
       arcx.address,
       provider,
     ).owner();
@@ -113,7 +113,7 @@ describe('Ownable contracts', () => {
     for (const deployment of deployments) {
       if (shouldBeAdminable(deployment.source)) {
         it(`${deployment.group} ${deployment.name} ${deployment.address}`, async () => {
-          const admin = await AdminableFactory.connect(
+          const admin = await Adminable__factory.connect(
             deployment.address,
             provider,
           ).getAdmin();
@@ -121,7 +121,7 @@ describe('Ownable contracts', () => {
         });
       } else if (['ArcProxy'].includes(deployment.source)) {
         it(`${deployment.group} ${deployment.name} ${deployment.address}`, async () => {
-          const admin = await AdminableFactory.connect(
+          const admin = await Adminable__factory.connect(
             deployment.address,
             provider,
           ).getAdmin();

@@ -1,12 +1,12 @@
 import {
-  ArcProxyFactory,
-  MockOracleFactory,
-  SapphireAssessorFactory,
-  SapphireCoreV1Factory,
-  SapphireMapperLinearFactory,
-  SapphirePassportScoresFactory,
-  SyntheticTokenV2Factory,
-  TestTokenFactory,
+  ArcProxy__factory,
+  MockOracle__factory,
+  SapphireAssessor__factory,
+  SapphireCoreV1__factory,
+  SapphireMapperLinear__factory,
+  SapphirePassportScores__factory,
+  SyntheticTokenV2__factory,
+  TestToken__factory,
 } from '@src/typings';
 import { green, magenta, red, yellow } from 'chalk';
 import {
@@ -47,7 +47,7 @@ task(
       {
         name: 'SyntheticToken',
         source: 'SyntheticTokenV2',
-        data: new SyntheticTokenV2Factory(signer).getDeployTransaction(
+        data: new SyntheticTokenV2__factory(signer).getDeployTransaction(
           name,
           '2',
         ),
@@ -67,7 +67,7 @@ task(
       {
         name: 'SyntheticV2Proxy',
         source: 'ArcProxy',
-        data: new ArcProxyFactory(signer).getDeployTransaction(
+        data: new ArcProxy__factory(signer).getDeployTransaction(
           syntheticAddress,
           signer.address,
           [],
@@ -79,7 +79,7 @@ task(
       networkConfig,
     );
 
-    const synthetic = SyntheticTokenV2Factory.connect(
+    const synthetic = SyntheticTokenV2__factory.connect(
       syntheticProxyAddress,
       signer,
     );
@@ -155,7 +155,9 @@ task(
       {
         name: 'SapphirePassportScores',
         source: 'SapphirePassportScores',
-        data: new SapphirePassportScoresFactory(signer).getDeployTransaction(),
+        data: new SapphirePassportScores__factory(
+          signer,
+        ).getDeployTransaction(),
         version,
         type: DeploymentType.global,
       },
@@ -176,7 +178,7 @@ task(
       {
         name: 'SapphirePassportScoresProxy',
         source: 'ArcProxy',
-        data: new ArcProxyFactory(signer).getDeployTransaction(
+        data: new ArcProxy__factory(signer).getDeployTransaction(
           passportScoresImpAddress,
           await signer.getAddress(),
           [],
@@ -186,7 +188,7 @@ task(
       },
       networkConfig,
     );
-    const passportScoresContract = SapphirePassportScoresFactory.connect(
+    const passportScoresContract = SapphirePassportScores__factory.connect(
       passportScoresProxyAddress,
       signer,
     );
@@ -221,7 +223,7 @@ task('deploy-mapper', 'Deploy the Sapphire Mapper').setAction(
       {
         name: 'SapphireMapperLinear',
         source: 'SapphireMapperLinear',
-        data: new SapphireMapperLinearFactory(signer).getDeployTransaction(),
+        data: new SapphireMapperLinear__factory(signer).getDeployTransaction(),
         version: 1,
         type: DeploymentType.global,
       },
@@ -272,7 +274,7 @@ task('deploy-assessor', 'Deploy the Sapphire Assessor').setAction(
       {
         name: 'SapphireAssessor',
         source: 'SapphireAssessor',
-        data: new SapphireAssessorFactory(signer).getDeployTransaction(
+        data: new SapphireAssessor__factory(signer).getDeployTransaction(
           mapperAddress,
           creditScoreAddress,
           DEFAULT_MAX_CREDIT_SCORE,
@@ -325,7 +327,7 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
       {
         name: 'SapphireCore',
         source: 'SapphireCoreV1',
-        data: new SapphireCoreV1Factory(signer).getDeployTransaction(),
+        data: new SapphireCoreV1__factory(signer).getDeployTransaction(),
         version: 1,
         type: DeploymentType.synth,
       },
@@ -356,7 +358,7 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
       {
         name: 'SapphireCoreProxy',
         source: 'ArcProxy',
-        data: new ArcProxyFactory(signer).getDeployTransaction(
+        data: new ArcProxy__factory(signer).getDeployTransaction(
           coreAddress,
           await signer.getAddress(),
           [],
@@ -396,8 +398,8 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
       );
     }
 
-    const core = SapphireCoreV1Factory.connect(coreProxyAddress, signer);
-    const synthetic = SyntheticTokenV2Factory.connect(
+    const core = SapphireCoreV1__factory.connect(coreProxyAddress, signer);
+    const synthetic = SyntheticTokenV2__factory.connect(
       syntheticProxyAddress,
       signer,
     );
@@ -475,7 +477,7 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
     if (network === 'mainnet') {
       console.log(yellow(`Chaingin admin...`));
 
-      const proxy = ArcProxyFactory.connect(coreProxyAddress, signer);
+      const proxy = ArcProxy__factory.connect(coreProxyAddress, signer);
       await proxy.changeAdmin(ultimateOwner);
 
       console.log(green(`Admin successfully set to ${ultimateOwner}`));
@@ -508,7 +510,7 @@ function _deployTestCollateral(
       {
         name: 'CollateralToken',
         source: 'TestToken',
-        data: new TestTokenFactory(signer).getDeployTransaction(
+        data: new TestToken__factory(signer).getDeployTransaction(
           collatName,
           collatName,
           18,
@@ -543,7 +545,7 @@ async function _deployOracle(
       {
         name: 'Oracle',
         source: 'MockOracle',
-        data: new MockOracleFactory(signer).getDeployTransaction(),
+        data: new MockOracle__factory(signer).getDeployTransaction(),
         version: 1,
         type: DeploymentType.synth,
         group: collatName,

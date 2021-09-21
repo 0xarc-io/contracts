@@ -4,7 +4,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { PassportScoreTree } from '@src/MerkleTree';
 import {
   PassportScoreVerifiableTest,
-  PassportScoreVerifiableTestFactory,
+  PassportScoreVerifiableTest__factory,
   SapphirePassportScores,
 } from '@src/typings';
 import { getEmptyScoreProof, getScoreProof } from '@src/utils';
@@ -45,7 +45,7 @@ describe('PassportScoreVerifiable', () => {
     owner = ctx.signers.admin;
 
     creditScoreContract = ctx.contracts.sapphire.passportScores;
-    contract = await new PassportScoreVerifiableTestFactory(owner).deploy(
+    contract = await new PassportScoreVerifiableTest__factory(owner).deploy(
       creditScoreContract.address,
     );
   });

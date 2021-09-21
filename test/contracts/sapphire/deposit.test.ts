@@ -2,7 +2,7 @@ import { PassportScore } from '@arc-types/sapphireCore';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { PassportScoreTree } from '@src/MerkleTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
-import { TestToken, TestTokenFactory } from '@src/typings';
+import { TestToken, TestToken__factory } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import {
   DEFAULT_COLLATERAL_DECIMALS,
@@ -50,7 +50,7 @@ describe('SapphireCore.deposit()', () => {
     arc = ctx.sdks.sapphire;
     scoredMinter = ctx.signers.scoredMinter;
     minter = ctx.signers.minter;
-    collateral = TestTokenFactory.connect(
+    collateral = TestToken__factory.connect(
       await arc.collateral().address,
       minter,
     );

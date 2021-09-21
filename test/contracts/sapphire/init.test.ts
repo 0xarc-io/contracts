@@ -2,10 +2,10 @@ import { MockProvider } from '@ethereum-waffle/provider';
 import { Wallet } from '@ethersproject/wallet';
 import {
   MockSapphireCoreV1,
-  MockSapphireCoreV1Factory,
-  MockSapphireOracleFactory,
-  SapphireAssessorFactory,
-  SapphireMapperLinearFactory,
+  MockSapphireCoreV1__factory,
+  MockSapphireOracle__factory,
+  SapphireAssessor__factory,
+  SapphireMapperLinear__factory,
   TestToken,
 } from '@src/typings';
 import { DEFAULT_MAX_CREDIT_SCORE } from '@test/helpers/sapphireDefaults';
@@ -27,7 +27,7 @@ export async function setup([deployer, unauthorized]: Wallet[]): Promise<any> {
     deployer.address,
     [],
   );
-  const sapphireCore = MockSapphireCoreV1Factory.connect(
+  const sapphireCore = MockSapphireCoreV1__factory.connect(
     coreProxy.address,
     deployer,
   );
@@ -66,15 +66,15 @@ describe('SapphireCore.init', () => {
       synthetic,
     } = await createFixtureLoader(provider.getWallets())(setup));
 
-    const oracle = await new MockSapphireOracleFactory(deployer).deploy();
-    const mapper = await new SapphireMapperLinearFactory(deployer).deploy();
+    const oracle = await new MockSapphireOracle__factory(deployer).deploy();
+    const mapper = await new SapphireMapperLinear__factory(deployer).deploy();
     const creditScore = await deployMockSapphirePassportScores(deployer);
     await creditScore.init(
       '0x1111111111111111111111111111111111111111111111111111111111111111',
       Wallet.createRandom().address,
       Wallet.createRandom().address,
     );
-    const assessor = await new SapphireAssessorFactory(deployer).deploy(
+    const assessor = await new SapphireAssessor__factory(deployer).deploy(
       mapper.address,
       creditScore.address,
       DEFAULT_MAX_CREDIT_SCORE,

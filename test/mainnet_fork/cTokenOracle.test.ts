@@ -1,6 +1,6 @@
 import { MockProvider } from '@ethereum-waffle/provider';
 import { BigNumber } from '@ethersproject/bignumber';
-import { CTokenOracle, CTokenOracleFactory } from '@src/typings';
+import { CTokenOracle, CTokenOracle__factory } from '@src/typings';
 import { expect } from 'chai';
 
 xdescribe('CTokenOracle', () => {
@@ -16,7 +16,7 @@ xdescribe('CTokenOracle', () => {
 
     const signer = await provider.getSigner();
 
-    cUSDCOracle = await new CTokenOracleFactory(signer).deploy(
+    cUSDCOracle = await new CTokenOracle__factory(signer).deploy(
       '0x39aa39c021dfbae8fac545936693ac917d5e7563',
       '0x986b5E1e1755e3C2440e960477f25201B0a8bbD4',
       '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419',

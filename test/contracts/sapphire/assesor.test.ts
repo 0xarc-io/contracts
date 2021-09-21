@@ -3,10 +3,10 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { PassportScoreTree } from '@src/MerkleTree';
 import {
   SapphireMapperLinear,
-  SapphireMapperLinearFactory,
-  MockSapphireMapperLinearFactory,
+  SapphireMapperLinear__factory,
+  MockSapphireMapperLinear__factory,
   SapphireAssessor,
-  SapphireAssessorFactory,
+  SapphireAssessor__factory,
 } from '@src/typings';
 import { MockSapphirePassportScores } from '@src/typings/MockSapphirePassportScores';
 import { ArcNumber, getScoreProof } from '@src/utils';
@@ -68,7 +68,7 @@ describe('SapphireAssessor', () => {
       owner.address,
     );
 
-    const testAssessor = await new SapphireAssessorFactory(owner).deploy(
+    const testAssessor = await new SapphireAssessor__factory(owner).deploy(
       mapper.address,
       testPassportScoreContract.address,
       DEFAULT_MAX_CREDIT_SCORE,
@@ -87,7 +87,7 @@ describe('SapphireAssessor', () => {
     user1 = signers[1];
     user2 = signers[2];
 
-    mapper = await new SapphireMapperLinearFactory(owner).deploy();
+    mapper = await new SapphireMapperLinear__factory(owner).deploy();
 
     passportScore1 = {
       account: user1.address,
@@ -120,7 +120,7 @@ describe('SapphireAssessor', () => {
       '0x0000000000000000000000000000000000000000',
     );
 
-    assessor = await new SapphireAssessorFactory(owner).deploy(
+    assessor = await new SapphireAssessor__factory(owner).deploy(
       mapper.address,
       passportScoresContract.address,
       DEFAULT_MAX_CREDIT_SCORE,
@@ -130,7 +130,7 @@ describe('SapphireAssessor', () => {
   describe('constructor', () => {
     it('reverts if mapper and credit score are null', async () => {
       await expect(
-        new SapphireAssessorFactory(owner).deploy(
+        new SapphireAssessor__factory(owner).deploy(
           '0x0000000000000000000000000000000000000000',
           passportScoresContract.address,
           DEFAULT_MAX_CREDIT_SCORE,
@@ -140,7 +140,7 @@ describe('SapphireAssessor', () => {
       );
 
       await expect(
-        new SapphireAssessorFactory(owner).deploy(
+        new SapphireAssessor__factory(owner).deploy(
           mapper.address,
           '0x0000000000000000000000000000000000000000',
           DEFAULT_MAX_CREDIT_SCORE,
@@ -150,7 +150,7 @@ describe('SapphireAssessor', () => {
       );
 
       await expect(
-        new SapphireAssessorFactory(owner).deploy(
+        new SapphireAssessor__factory(owner).deploy(
           '0x0000000000000000000000000000000000000000',
           '0x0000000000000000000000000000000000000000',
           DEFAULT_MAX_CREDIT_SCORE,
@@ -162,7 +162,7 @@ describe('SapphireAssessor', () => {
 
     it('reverts if max score is 0', async () => {
       await expect(
-        new SapphireAssessorFactory(owner).deploy(
+        new SapphireAssessor__factory(owner).deploy(
           mapper.address,
           passportScoresContract.address,
           0,
@@ -171,7 +171,7 @@ describe('SapphireAssessor', () => {
     });
 
     it('initializes the mapper and the credit score', async () => {
-      const testAssessor = await new SapphireAssessorFactory(owner).deploy(
+      const testAssessor = await new SapphireAssessor__factory(owner).deploy(
         mapper.address,
         passportScoresContract.address,
         DEFAULT_MAX_CREDIT_SCORE,
@@ -232,10 +232,10 @@ describe('SapphireAssessor', () => {
     });
 
     it('reverts if the mapper returns a value that is outside the lower and upper bounds', async () => {
-      const testMapper = await new MockSapphireMapperLinearFactory(
+      const testMapper = await new MockSapphireMapperLinear__factory(
         owner,
       ).deploy();
-      const testAssessor = await new SapphireAssessorFactory(owner).deploy(
+      const testAssessor = await new SapphireAssessor__factory(owner).deploy(
         testMapper.address,
         passportScoresContract.address,
         DEFAULT_MAX_CREDIT_SCORE,
@@ -410,7 +410,7 @@ describe('SapphireAssessor', () => {
 
   describe('#setMapper', () => {
     it('reverts if called by non-owner', async () => {
-      const userAssessor = SapphireAssessorFactory.connect(
+      const userAssessor = SapphireAssessor__factory.connect(
         assessor.address,
         user1,
       );
@@ -433,7 +433,9 @@ describe('SapphireAssessor', () => {
     });
 
     it('sets the new mapper as owner', async () => {
-      const testMapper = await new SapphireMapperLinearFactory(owner).deploy();
+      const testMapper = await new SapphireMapperLinear__factory(
+        owner,
+      ).deploy();
 
       await assessor.setMapper(testMapper.address);
 
@@ -442,7 +444,9 @@ describe('SapphireAssessor', () => {
     });
 
     it('emits a MapperSet event', async () => {
-      const testMapper = await new SapphireMapperLinearFactory(owner).deploy();
+      const testMapper = await new SapphireMapperLinear__factory(
+        owner,
+      ).deploy();
 
       await expect(assessor.setMapper(testMapper.address))
         .to.emit(assessor, 'MapperSet')
@@ -474,7 +478,7 @@ describe('SapphireAssessor', () => {
 
   describe('#setPassportScoreContract', () => {
     it('reverts if called by non-owner', async () => {
-      const userAssessor = SapphireAssessorFactory.connect(
+      const userAssessor = SapphireAssessor__factory.connect(
         assessor.address,
         user1,
       );

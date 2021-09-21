@@ -1,8 +1,8 @@
 import {
-  ArcProxyFactory,
-  JointPassportCampaignFactory,
-  StakingAccrualERC20Factory,
-  TestTokenFactory,
+  ArcProxy__factory,
+  JointPassportCampaign__factory,
+  StakingAccrualERC20__factory,
+  TestToken__factory,
 } from '@src/typings';
 import { green, red, yellow } from 'chalk';
 
@@ -66,7 +66,7 @@ task('deploy-staking', 'Deploy a staking/reward pool')
         {
           name: 'TestStakingToken',
           source: 'TestToken',
-          data: new TestTokenFactory(signer).getDeployTransaction(
+          data: new TestToken__factory(signer).getDeployTransaction(
             `${name}-TestToken`,
             name,
             18,
@@ -98,7 +98,7 @@ task('deploy-staking', 'Deploy a staking/reward pool')
       {
         name: 'Proxy',
         source: 'ArcProxy',
-        data: new ArcProxyFactory(signer).getDeployTransaction(
+        data: new ArcProxy__factory(signer).getDeployTransaction(
           implementationContract,
           await signer.getAddress(),
           [],
@@ -165,7 +165,7 @@ task('deploy-staking', 'Deploy a staking/reward pool')
 
     console.log(yellow(`Verifying contracts...`));
     if (!stakingConfig.stakingToken) {
-      const stakingToken = TestTokenFactory.connect(
+      const stakingToken = TestToken__factory.connect(
         stakingTokenAddress,
         signer,
       );
@@ -245,7 +245,7 @@ task('deploy-staking-liquidity', 'Deploy a LiquidityCampaign')
         {
           name: 'TestStakingToken',
           source: 'TestToken',
-          data: new TestTokenFactory(signer).getDeployTransaction(
+          data: new TestToken__factory(signer).getDeployTransaction(
             `${name}-TestToken`,
             name,
             18,
@@ -273,7 +273,7 @@ task('deploy-staking-liquidity', 'Deploy a LiquidityCampaign')
       {
         name: 'Proxy',
         source: 'ArcProxy',
-        data: new ArcProxyFactory(signer).getDeployTransaction(
+        data: new ArcProxy__factory(signer).getDeployTransaction(
           implementationContractAddress,
           await signer.getAddress(),
           [],
@@ -386,7 +386,7 @@ task('deploy-staking-joint-passport', 'Deploy a JointPassportCampaign')
       {
         name: 'JointPassportCampaign',
         source: stakingConfig.source,
-        data: new JointPassportCampaignFactory(signer).getDeployTransaction(
+        data: new JointPassportCampaign__factory(signer).getDeployTransaction(
           arcDAO.address,
           arcRewardsDistributor || signer.address,
           collabRewardsDistributor || signer.address,
@@ -404,7 +404,7 @@ task('deploy-staking-joint-passport', 'Deploy a JointPassportCampaign')
       },
       networkConfig,
     );
-    const jointPassportCampaign = JointPassportCampaignFactory.connect(
+    const jointPassportCampaign = JointPassportCampaign__factory.connect(
       jointPassportCampaignAddy,
       signer,
     );
@@ -469,7 +469,7 @@ task(
       {
         name: 'StakingAccrualERC20',
         source: 'StakingAccrualERC20',
-        data: new StakingAccrualERC20Factory(signer).getDeployTransaction(),
+        data: new StakingAccrualERC20__factory(signer).getDeployTransaction(),
         version: Number(version) || 1,
         type: DeploymentType.global,
         group: 'StakingAccrualERC20',
@@ -499,7 +499,7 @@ task(
       {
         name: 'StakingAccrualERC20Proxy',
         source: 'ArcProxy',
-        data: new ArcProxyFactory(signer).getDeployTransaction(
+        data: new ArcProxy__factory(signer).getDeployTransaction(
           contractImplementation,
           await signer.getAddress(),
           [],
@@ -521,7 +521,7 @@ task(
       throw red(`StakingAccrualERC20Proxy was not deployed!`);
     }
 
-    const stakingAccrualProxyContract = StakingAccrualERC20Factory.connect(
+    const stakingAccrualProxyContract = StakingAccrualERC20__factory.connect(
       proxyAddress,
       signer,
     );

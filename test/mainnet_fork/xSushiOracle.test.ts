@@ -1,7 +1,7 @@
 import { MockProvider } from '@ethereum-waffle/provider';
 import { BigNumber } from '@ethersproject/bignumber';
+import { XSushiOracle__factory } from '@src/typings';
 import { XSushiOracle } from '@src/typings/XSushiOracle';
-import { XSushiOracleFactory } from '@src/typings/XSushiOracleFactory';
 import { expect } from 'chai';
 
 xdescribe('XSushiOracle', () => {
@@ -16,7 +16,7 @@ xdescribe('XSushiOracle', () => {
     });
     const signer = await provider.getSigner();
 
-    xSushiOracle = await new XSushiOracleFactory(signer).deploy();
+    xSushiOracle = await new XSushiOracle__factory(signer).deploy();
   });
 
   it('should give the correct price', async () => {

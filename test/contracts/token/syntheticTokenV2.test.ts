@@ -7,7 +7,7 @@ import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expectRevert } from '../../helpers/expectRevert';
 import { SyntheticTokenV2 } from '@src/typings/SyntheticTokenV2';
 import { constants, Wallet } from 'ethers';
-import { SyntheticTokenV2Factory } from '@src/typings';
+import { SyntheticTokenV2__factory } from '@src/typings';
 
 describe('SyntheticTokenV2', () => {
   let syntheticToken: SyntheticTokenV2;
@@ -19,7 +19,7 @@ describe('SyntheticTokenV2', () => {
   let userAccount: SignerWithAddress;
 
   function getContract(caller: SignerWithAddress | Wallet) {
-    return SyntheticTokenV2Factory.connect(syntheticToken.address, caller);
+    return SyntheticTokenV2__factory.connect(syntheticToken.address, caller);
   }
 
   before(async () => {
@@ -43,7 +43,7 @@ describe('SyntheticTokenV2', () => {
       [],
     );
 
-    syntheticToken = SyntheticTokenV2Factory.connect(
+    syntheticToken = SyntheticTokenV2__factory.connect(
       proxy.address,
       ownerAccount,
     );
@@ -149,7 +149,7 @@ describe('SyntheticTokenV2', () => {
           [],
         );
 
-        const synthProxy = SyntheticTokenV2Factory.connect(
+        const synthProxy = SyntheticTokenV2__factory.connect(
           proxy.address,
           ownerAccount,
         );
