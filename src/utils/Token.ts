@@ -1,5 +1,5 @@
 import { Signer } from 'ethers';
-import { BaseERC20__factory } from '../typings/BaseERC20__factory';
+import { BaseERC20__factory } from '../typings';
 
 import { TransactionOverrides } from '../../arc-types/ethereum';
 import { BigNumberish } from '@ethersproject/bignumber';

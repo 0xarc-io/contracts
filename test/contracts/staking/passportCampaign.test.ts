@@ -234,9 +234,9 @@ describe('PassportCampaign', () => {
 
     creditScoreContract = ctx.contracts.sapphire.passportScores;
 
-    stakingToken = await deployTestToken(admin, '3Pool', 'CRV');
-    rewardToken = await deployTestToken(admin, 'Arc Token', 'ARC');
-    otherErc20 = await deployTestToken(admin, 'Another ERC20 token', 'AERC20');
+    stakingToken = await new TestToken__factory(admin).deploy('3Pool', 'CRV', 18);
+    rewardToken = await new TestToken__factory(admin).deploy('Arc Token', 'ARC', 18);
+    otherErc20 = await new TestToken__factory(admin).deploy('Another ERC20 token', 'AERC20', 18);
 
     adminPassportCampaign = await new MockPassportCampaign__factory(
       admin,

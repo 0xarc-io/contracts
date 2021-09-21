@@ -9,7 +9,7 @@ import { AddressAccrual } from '@src/typings/AddressAccrual';
 import { TestToken } from '@src/typings/TestToken';
 import { ethers } from 'hardhat';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { AddressAccrual__factory } from '@src/typings';
+import { AddressAccrual__factory, TestToken__factory } from '@src/typings';
 
 import { ArcNumber } from '@src/utils';
 
@@ -35,7 +35,7 @@ describe('Distribution', () => {
     kermanHoldersAccount = signers[2];
     arcAccount = signers[3];
 
-    rewardToken = await deployTestToken(ownerAccount, 'ARC', 'ARC');
+    rewardToken = await new TestToken__factory(ownerAccount).deploy('ARC', 'ARC', 18);
     distribution = await new AddressAccrual__factory(ownerAccount).deploy(
       rewardToken.address,
     );

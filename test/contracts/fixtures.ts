@@ -1,19 +1,14 @@
 import { MAX_UINT256 } from '@src/constants';
 import {
+  ArcProxy__factory,
   MockSapphireCoreV1__factory,
+  MockSapphireOracle__factory,
+  MockSapphirePassportScores__factory,
   SapphireAssessor__factory,
   SapphireMapperLinear__factory,
   SyntheticTokenV2__factory,
+  TestToken__factory,
 } from '@src/typings';
-
-import {
-  deployArcProxy,
-  deployTestToken,
-  deployMockSapphireCoreV1,
-  deploySyntheticTokenV2,
-  deployMockSapphireOracle,
-  deployMockSapphirePassportScores,
-} from './deployers';
 
 import { Signer } from 'ethers';
 import { ITestContext, ITestContextArgs } from './context';
@@ -44,16 +39,16 @@ export async function sapphireFixture(
     args?.decimals ?? DEFAULT_COLLATERAL_DECIMALS,
   );
 
-  ctx.contracts.sapphire.oracle = await deployMockSapphireOracle(deployer);
+  ctx.contracts.sapphire.oracle = await new MockSapphireOracle__factory(deployer).deploy();
 
-  const coreImp = await deployMockSapphireCoreV1(deployer);
+  const coreImp = await new MockSapphireCoreV1__factory(deployer).deploy();
   const coreProxy = await new ArcProxy__factory(deployer).deploy(
     coreImp.address,
     deployerAddress,
     [],
   );
 
-  const synthImp = await deploySyntheticTokenV2(deployer, 'STABLExV2', '1');
+  const synthImp = await new SyntheticTokenV2__factory(deployer).deploy('STABLExV2', '1');
   const syntheticProxy = await new ArcProxy__factory(deployer).deploy(
     synthImp.address,
     deployerAddress,

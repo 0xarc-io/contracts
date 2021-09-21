@@ -1,5 +1,5 @@
 import { PassportScore } from '@arc-types/sapphireCore';
-import { utils } from '@ethereum-waffle/provider/node_modules/ethers';
+import { utils } from 'ethers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { PassportScoreTree } from '@src/MerkleTree';
 import {
@@ -53,7 +53,7 @@ describe('SapphireCreditScore', () => {
     merkleRootUpdater: string,
     pauseOperator: string,
   ) {
-    const creditScoreInstance = await deployMockSapphirePassportScores(admin);
+    const creditScoreInstance = await new MockSapphirePassportScores__factory(admin).deploy();
 
     await creditScoreInstance.init(
       merkleRoot,

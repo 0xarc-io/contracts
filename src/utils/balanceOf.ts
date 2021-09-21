@@ -1,6 +1,6 @@
 import { BigNumber } from '@ethersproject/bignumber';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { IERC20__factory } from '../typings/IERC20__factory';
+import { IERC20__factory } from '../typings';
 
 export function balanceOf(
   user: SignerWithAddress,

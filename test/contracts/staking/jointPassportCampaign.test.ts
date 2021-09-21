@@ -239,9 +239,9 @@ describe('JointPassportCampaign', () => {
 
     creditScoreContract = ctx.contracts.sapphire.passportScores;
 
-    stakingToken = await deployTestToken(admin, 'Staking Token', 'STK');
-    arcToken = await deployTestToken(admin, 'Arc Token', 'ARC');
-    collabToken = await deployTestToken(admin, 'Collab reward token', 'CLB');
+    stakingToken = await new TestToken__factory(admin).deploy('Staking Token', 'STK', 18);
+    arcToken = await new TestToken__factory(admin).deploy('Arc Token', 'ARC', 18);
+    collabToken = await new TestToken__factory(admin).deploy('Collab reward token', 'CLB', 18);
 
     arcPassportCampaign = await deployCampaign();
 

@@ -1,5 +1,5 @@
 import { TransactionOverrides } from '@arc-types/ethereum';
-import { IERC20__factory } from '../typings/IERC20__factory';
+import { IERC20__factory } from '../typings';
 import { BigNumberish, Signer } from 'ethers';
 
 export async function approve(

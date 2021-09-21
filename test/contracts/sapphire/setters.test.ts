@@ -1,4 +1,4 @@
-import { SapphireAssessor__factory, SapphireCoreV1 } from '@src/typings';
+import { MockSapphireOracle__factory, SapphireAssessor__factory, SapphireCoreV1 } from '@src/typings';
 import {
   DEFAULT_MAX_CREDIT_SCORE,
   DEFAULT_PROOF_PROTOCOL,
@@ -186,7 +186,7 @@ describe('SapphireCore.setters', () => {
     let newOracleAddress: string;
 
     before(async () => {
-      const newOracle = await deployMockSapphireOracle(ctx.signers.admin);
+      const newOracle = await new MockSapphireOracle__factory(ctx.signers.admin).deploy();
       newOracleAddress = newOracle.address;
     });
 

@@ -1,26 +1,26 @@
 import { MockProvider } from '@ethereum-waffle/provider';
 import { Wallet } from '@ethersproject/wallet';
 import {
+  ArcProxy__factory,
   MockSapphireCoreV1,
   MockSapphireCoreV1__factory,
   MockSapphireOracle__factory,
   SapphireAssessor__factory,
+  SapphireCoreV1__factory,
   SapphireMapperLinear__factory,
   TestToken,
+  TestToken__factory,
 } from '@src/typings';
 import { DEFAULT_MAX_CREDIT_SCORE } from '@test/helpers/sapphireDefaults';
 import { expect } from 'chai';
 import { createFixtureLoader } from 'ethereum-waffle';
 import { constants, utils } from 'ethers';
 import {
-  deployArcProxy,
-  deployMockSapphireCoreV1,
   deployMockSapphirePassportScores,
-  deployTestToken,
 } from '../deployers';
 
 export async function setup([deployer, unauthorized]: Wallet[]): Promise<any> {
-  const coreImp = await deployMockSapphireCoreV1(deployer);
+  const coreImp = await new SapphireCoreV1__factory(deployer).deploy();
   const coreProxy = await new ArcProxy__factory(deployer).deploy(
     coreImp.address,
     deployer.address,
@@ -38,6 +38,7 @@ export async function setup([deployer, unauthorized]: Wallet[]): Promise<any> {
   const synthetic = await new TestToken__factory(deployer).deploy(
     'Synthetic Token Name',
     'STKN',
+    18
   );
 
   return { sapphireCore, deployer, unauthorized, collateral, synthetic };

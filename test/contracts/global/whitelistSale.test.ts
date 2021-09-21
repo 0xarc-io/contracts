@@ -41,7 +41,7 @@ describe('WhitelistSale', () => {
   });
 
   beforeEach(async () => {
-    currency = await deployTestToken(ownerAccount, 'TestToken', 'TESTx');
+    currency = await new TestToken__factory(ownerAccount).deploy('TestToken', 'TESTx', 18);
 
     const whitelistSale = await new WhitelistSale__factory(ownerAccount).deploy(
       currency.address,

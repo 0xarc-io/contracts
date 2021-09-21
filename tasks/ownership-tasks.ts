@@ -25,7 +25,7 @@ task('transfer-ownership-single', 'Transfer ownership of a single contract')
 
     const { signer } = await loadDetails(hre);
 
-    let contract = Ownable__factory.connect(contractAddy, signer);
+    let contract = ArcxTokenV2__factory.connect(contractAddy, signer);
 
     console.log(yellow(`Changing owner for ${contractAddy} to ${newOwner}...`));
 

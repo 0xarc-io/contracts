@@ -9,6 +9,7 @@ import { solidity } from 'ethereum-waffle';
 import { addSnapshotBeforeRestoreAfterEach } from '../../helpers/testingUtils';
 import { WaitlistBatch } from '@src/typings/WaitlistBatch';
 import {
+  MockWaitlistBatch,
   TestToken,
   TestToken__factory,
   WaitlistBatch__factory,
@@ -26,8 +27,8 @@ describe('WhitelistBatch', () => {
   let userAccount: SignerWithAddress;
   let moderator: SignerWithAddress;
   let user2: SignerWithAddress;
-  let waitlist: WaitlistBatch;
-  let userWaitlist: WaitlistBatch;
+  let waitlist: MockWaitlistBatch;
+  let userWaitlist: MockWaitlistBatch;
   let depositToken: TestToken;
 
   const batch = {
@@ -76,6 +77,7 @@ describe('WhitelistBatch', () => {
       depositToken.address,
       DEPOSIT_LOCKUP_DURATION,
     );
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     waitlist.setCurrentTimestamp(BASE_TIMESTAMP);
 
     userWaitlist = MockWaitlistBatch__factory.connect(

@@ -1,8 +1,8 @@
-import { Contract, providers } from "ethers"
+import { providers } from "ethers"
 
-export async function getEvent (
+export async function getEvent<T, U>(
     txPromise: Promise<providers.TransactionResponse> | providers.TransactionResponse,
-    contract: Contract,
+    contract: any , // Typechain extends BaseContract and interface inside it
     eventName: string,
   ) {
     const tx = await txPromise

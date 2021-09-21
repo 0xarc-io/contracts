@@ -7,6 +7,7 @@ import {
   MockSapphireMapperLinear__factory,
   SapphireAssessor,
   SapphireAssessor__factory,
+  MockSapphirePassportScores__factory,
 } from '@src/typings';
 import { MockSapphirePassportScores } from '@src/typings/MockSapphirePassportScores';
 import { ArcNumber, getScoreProof } from '@src/utils';
@@ -112,7 +113,7 @@ describe('SapphireAssessor', () => {
       passportScore3,
     ]);
 
-    passportScoresContract = await deployMockSapphirePassportScores(owner);
+    passportScoresContract = await new MockSapphirePassportScores__factory(owner).deploy();
     await passportScoresContract.init(
       scoresTree.getHexRoot(),
       '0x0000000000000000000000000000000000000000',
