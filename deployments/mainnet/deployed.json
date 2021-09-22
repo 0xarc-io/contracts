@@ -721,8 +721,8 @@
   {
     "name": "MerkleDistributor",
     "source": "MerkleDistributor",
-    "address": "0x17306b702DEA65f12c9967A47182EC1CcD84c7c7",
-    "txn": "0xa665f5bd3e77ed418ca77e298a51084fc9662d45c22601f9f85f6d561204716e",
+    "address": "0x79822A9696b11bCDF9380d4eF56b7566509E98aB",
+    "txn": "0xf2e7b0fcfc9f88748d020f327d7535797802f23e0ef52a9336b805c2a8899093",
     "network": "mainnet",
     "version": 1,
     "type": "global",
