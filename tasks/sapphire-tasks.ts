@@ -162,13 +162,14 @@ task(
       networkConfig,
     );
 
+    console.log(yellow(`Verifying contract...`));
+    await hre.run('verify:verify', {
+      address: passportScoresImpAddress,
+      constructorArguments: [],
+    });
+    console.log(green(`Contract verified successfully!`));
+
     if (implementationOnly) {
-      console.log(yellow(`Verifying contract...`));
-      await hre.run('verify:verify', {
-        address: passportScoresImpAddress,
-        constructorArguments: [],
-      });
-      console.log(green(`Contract verified successfully!`));
       return;
     }
 
@@ -208,6 +209,17 @@ task(
       pauseOperator || ultimateOwner,
     );
     console.log(green(`init() called successfully!`));
+
+    console.log(yellow('Verifying proxy..'));
+    await hre.run('verify:verify', {
+      address: passportScoresProxyAddress,
+      constructorArguments: [
+        passportScoresImpAddress,
+        await signer.getAddress(),
+        [],
+      ],
+    });
+    console.log(green(`Proxy verified successfully!`));
   });
 
 task('deploy-mapper', 'Deploy the Sapphire Mapper').setAction(
