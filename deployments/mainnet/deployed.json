@@ -727,5 +727,25 @@
     "version": 1,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "SapphirePassportScores",
+    "source": "SapphirePassportScores",
+    "address": "0xBfa32Fbb6f4e1B8E3ae72173aA3CD4Eae8Dc0268",
+    "txn": "0xa03f59f96278390d54cb006c4e49533d1c872302c6dd2a1223ea692f21215ff6",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "SapphirePassportScoresProxy",
+    "source": "ArcProxy",
+    "address": "0x548Ab653A6aB2e54deBF05F3A728b602Ac1C2E69",
+    "txn": "0x6091b9128db519e5b867e581128ddeccec11da8ccb4ba24d67be96a1bd6d738b",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global",
+    "group": ""
   }
 ]
