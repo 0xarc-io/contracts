@@ -6,6 +6,7 @@ pragma experimental ABIEncoderV2;
 import {Ownable} from "../lib/Ownable.sol";
 import {SafeMath} from "../lib/SafeMath.sol";
 import {SafeERC20} from "../lib/SafeERC20.sol";
+import {Address} from "../lib/Address.sol";
 
 import {IERC20} from "../token/IERC20.sol";
 
@@ -14,6 +15,7 @@ contract WaitlistBatch is Ownable {
     /* ========== Libraries ========== */
 
     using SafeMath for uint256;
+    using Address for address;
 
     /* ========== Types ========== */
 
@@ -106,6 +108,8 @@ contract WaitlistBatch is Ownable {
     );
 
     event DepositLockupDurationSet(uint256 _depositLockupDuration);
+
+    event DepositCurrencySet(address _depositCurrency);
 
     /* ========== Modifiers ========== */
 
@@ -442,6 +446,32 @@ contract WaitlistBatch is Ownable {
         depositLockupDuration = _duration;
 
         emit DepositLockupDurationSet(depositLockupDuration);
+    }
+
+    /**
+     * @notice Sets a new deposit currency. Caution: after this is called, 
+     *         users will be able to apply in all batches with the new 
+     *         currency and the specific amounts of each batch.
+     */
+    function setDepositCurrency(
+        address _newCurrency
+    )
+        external
+        onlyOwner
+    {
+        require(
+            _newCurrency.isContract(),
+            "WaitlistBatch: invalid currency"
+        );
+
+        require(
+            _newCurrency != address(depositCurrency),
+            "WaitlistBatch: cannot set the same deposit token"
+        );
+
+        depositCurrency = IERC20(_newCurrency);
+
+        emit DepositCurrencySet(_newCurrency);
     }
 
     /* ========== Moderator Functions ========== */

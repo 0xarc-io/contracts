@@ -745,7 +745,7 @@ describe('WhitelistBatch', () => {
       });
     });
 
-    describe('setDepositLockupDuration', () => {
+    describe('#setDepositLockupDuration', () => {
       it('reverts if called by non-owner', async () => {
         await expect(
           userWaitlist.setDepositLockupDuration(5),
@@ -762,6 +762,40 @@ describe('WhitelistBatch', () => {
         await waitlist.setDepositLockupDuration(newDuration);
 
         expect(await waitlist.depositLockupDuration()).to.eq(newDuration);
+      });
+    });
+
+    describe('#setDepositCurrency', () => {
+      let newCurrency: TestToken;
+
+      beforeEach(async () => {
+        newCurrency = await new TestTokenFactory(ownerAccount).deploy(
+          'TEST',
+          'TEST',
+          18,
+        );
+      });
+
+      it('reverts if called by non-owner', async () => {
+        await expect(
+          userWaitlist.setDepositCurrency(newCurrency.address),
+        ).to.be.revertedWith('Ownable: caller is not the owner');
+      });
+
+      it('reverts if setting the same currency', async () => {
+        await expect(
+          waitlist.setDepositCurrency(depositToken.address),
+        ).to.be.revertedWith(
+          'WaitlistBatch: cannot set the same deposit token',
+        );
+      });
+
+      it('sets the deposit currency', async () => {
+        expect(await waitlist.depositCurrency()).to.eq(depositToken.address);
+
+        await waitlist.setDepositCurrency(newCurrency.address);
+
+        expect(await waitlist.depositCurrency()).to.eq(newCurrency.address);
       });
     });
   });
