@@ -582,4 +582,73 @@ describe('SapphireCreditScore', () => {
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
   });
+
+  describe('#setCurrentEpoch', () => {
+    let currentEpoch: BigNumber;
+
+    beforeEach(async () => {
+      currentEpoch = await passportScores.currentEpoch();
+    });
+
+    it('reverts if called by non-admin', async () => {
+      await passportScores.connect(pauseOperator).setPause(true);
+
+      await expect(
+        passportScores.connect(merkleRootUpdater).setCurrentEpoch(21),
+      ).to.be.revertedWith('Adminable: caller is not admin');
+    });
+
+    it('reverts if not paused', async () => {
+      expect(await passportScores.isPaused()).to.be.false;
+
+      await expect(
+        passportScores.setCurrentEpoch(currentEpoch.add(1)),
+      ).to.be.revertedWith('SapphirePassportScores: contract is not paused');
+    });
+
+    it('reverts if setting a smaller or equal epoch', async () => {
+      await passportScores.connect(pauseOperator).setPause(true);
+
+      expect(currentEpoch).to.be.gt(0);
+
+      await expect(
+        passportScores.setCurrentEpoch(currentEpoch),
+      ).to.be.revertedWith(
+        'SapphirePassportScores: new epoch must be greater than the current',
+      );
+
+      await expect(
+        passportScores.setCurrentEpoch(currentEpoch.sub(1)),
+      ).to.be.revertedWith(
+        'SapphirePassportScores: new epoch must be greater than the current',
+      );
+    });
+
+    it('sets the epoch if called by the admin', async () => {
+      await passportScores.connect(pauseOperator).setPause(true);
+
+      const originalEpoch = currentEpoch;
+      const currentRoot = await passportScores.currentMerkleRoot();
+      const upcomingRoot = await passportScores.upcomingMerkleRoot();
+
+      await passportScores.setCurrentEpoch(originalEpoch.add(21));
+
+      expect(await passportScores.currentEpoch()).to.eq(originalEpoch.add(21));
+      expect(await passportScores.currentMerkleRoot()).to.eq(currentRoot);
+      expect(await passportScores.upcomingMerkleRoot()).to.eq(upcomingRoot);
+
+      // Update the Merkle root and ensure integrity of the contarct
+      await passportScores.connect(pauseOperator).setPause(false);
+
+      await advanceEpoch(passportScores);
+
+      await passportScores
+        .connect(merkleRootUpdater)
+        .updateMerkleRoot(TWO_BYTES32);
+
+      expect(await passportScores.currentEpoch()).to.eq(originalEpoch.add(22));
+      expect(await passportScores.currentMerkleRoot()).to.eq(upcomingRoot);
+      expect(await passportScores.upcomingMerkleRoot()).to.eq(TWO_BYTES32);
+    });
+  });
 });
