@@ -39,6 +39,11 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
         address merkleRootUpdater
     );
 
+    event CurrentEpochSet(
+        uint256 _newEpoch,
+        uint256 _timestamp
+    );
+
     /* ========== Variables ========== */
 
     /**
@@ -132,7 +137,7 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
     }
 
     function upcomingMerkleRoot()
-        external
+        public
         view
         returns (bytes32)
     {
@@ -349,5 +354,33 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
 
         pauseOperator = _pauseOperator;
         emit PauseOperatorUpdated(pauseOperator);
+    }
+
+    /**
+     * @dev Sets a new current epoch. It has to be greater than the current one
+     */
+    function setCurrentEpoch(
+        uint256 _newEpoch
+    )
+        external
+        onlyAdmin
+    {
+        require(
+            isPaused,
+            "SapphirePassportScores: contract is not paused"
+        );
+
+        require(
+            _newEpoch > currentEpoch,
+            "SapphirePassportScores: new epoch must be greater than the current"
+        );
+
+        rootsHistory[_newEpoch].timestamp = currentTimestamp();
+        rootsHistory[_newEpoch + 1].merkleRoot = upcomingMerkleRoot();
+        rootsHistory[_newEpoch].merkleRoot = currentMerkleRoot();
+
+        currentEpoch = _newEpoch;
+
+        emit CurrentEpochSet(_newEpoch, currentTimestamp());
     }
 }
