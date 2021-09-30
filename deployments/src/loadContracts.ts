@@ -12,7 +12,7 @@ export interface LoadContractParams {
   source?: string;
   type?: string;
   group?: string;
-  version?: number;
+  version?: number | string;
 }
 
 export interface ContractDetails {
