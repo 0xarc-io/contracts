@@ -13,7 +13,7 @@ describe('Ownable contracts', () => {
   const {
     eoaOwner: expectedOwner,
     multisigOwner,
-    arcxDeployer,
+    // arcxDeployer,
   } = hre.config.networks.mainnet.users;
 
   const provider = new MockProvider({
@@ -129,7 +129,7 @@ describe('Ownable contracts', () => {
           expect(admin.toLowerCase()).to.be.oneOf([
             expectedOwner,
             multisigOwner,
-            arcxDeployer,
+            // arcxDeployer,
           ]);
         });
       }
