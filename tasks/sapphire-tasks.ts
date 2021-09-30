@@ -116,12 +116,14 @@ task(
 )
   .addOptionalParam('rootupdater', 'The merkle root updater')
   .addOptionalParam('pauseoperator', 'The pause operator')
+  .addOptionalParam('initialEpoch', 'The initial epoch number')
   .addFlag('implementationonly', 'Deploy only the implementation contract')
   .setAction(async (taskArgs, hre) => {
     const {
       rootupdater: rootUpdater,
       pauseoperator: pauseOperator,
       implementationonly: implementationOnly,
+      initialEpoch,
     } = taskArgs;
     const {
       network,
@@ -207,6 +209,7 @@ task(
       constants.HashZero,
       rootUpdater || ultimateOwner,
       pauseOperator || ultimateOwner,
+      initialEpoch || 0,
     );
     console.log(green(`init() called successfully!`));
 

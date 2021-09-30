@@ -85,6 +85,7 @@ export async function sapphireFixture(
     '0x1111111111111111111111111111111111111111111111111111111111111111',
     ctx.signers.merkleRootUpdater.address,
     ctx.signers.pauseOperator.address,
+    0,
   );
 
   await ctx.contracts.sapphire.passportScores
