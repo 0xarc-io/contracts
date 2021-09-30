@@ -16,7 +16,7 @@ import {
 } from '@test/helpers/testingUtils';
 import chai, { expect } from 'chai';
 import { solidity } from 'ethereum-waffle';
-import { BigNumber } from 'ethers';
+import { BigNumber, BigNumberish } from 'ethers';
 import 'module-alias/register';
 import { generateContext, ITestContext } from '../context';
 import { deployMockSapphirePassportScores } from '../deployers';
@@ -52,6 +52,7 @@ describe('SapphireCreditScore', () => {
     merkleRoot: string,
     merkleRootUpdater: string,
     pauseOperator: string,
+    initialEpoch: BigNumberish,
   ) {
     const creditScoreInstance = await deployMockSapphirePassportScores(admin);
 
@@ -59,6 +60,7 @@ describe('SapphireCreditScore', () => {
       merkleRoot,
       merkleRootUpdater,
       pauseOperator,
+      initialEpoch,
     );
 
     return creditScoreInstance;
@@ -92,6 +94,8 @@ describe('SapphireCreditScore', () => {
 
   describe('#init', () => {
     it('sets the initial values', async () => {
+      const initialEpoch = 211;
+
       const impl = await new MockSapphirePassportScoresFactory(admin).deploy();
       const proxy = await new ArcProxyFactory(admin).deploy(
         impl.address,
@@ -107,17 +111,28 @@ describe('SapphireCreditScore', () => {
         tree.getHexRoot(),
         merkleRootUpdater.address,
         pauseOperator.address,
+        initialEpoch,
       );
 
       // sets the merkle root
-      expect(await contract.currentMerkleRoot()).to.eq(tree.getHexRoot());
+      const currentMerkleRoot = await contract.currentMerkleRoot();
+      const upcomingMerkleRoot = await contract.upcomingMerkleRoot();
+
+      expect(currentMerkleRoot).to.eq(tree.getHexRoot());
       // root updater
       expect(await contract.merkleRootUpdater()).to.eq(
         merkleRootUpdater.address,
       );
       // pause operator
       expect(await contract.pauseOperator()).to.eq(pauseOperator.address);
-      // max score
+      // Current epoch
+      expect(await contract.currentEpoch()).to.eq(initialEpoch);
+      expect((await contract.rootsHistory(initialEpoch)).merkleRoot).to.eq(
+        currentMerkleRoot,
+      );
+      expect((await contract.rootsHistory(initialEpoch + 1)).merkleRoot).to.eq(
+        upcomingMerkleRoot,
+      );
     });
   });
 
@@ -127,6 +142,7 @@ describe('SapphireCreditScore', () => {
         ONE_BYTES32,
         merkleRootUpdater.address,
         pauseOperator.address,
+        0,
       );
       expect(await contract.isPaused()).to.be.true;
     });
@@ -313,6 +329,7 @@ describe('SapphireCreditScore', () => {
         ONE_BYTES32,
         merkleRootUpdater.address,
         pauseOperator.address,
+        0,
       );
 
       await mockpassportScores.connect(pauseOperator).setPause(false);
