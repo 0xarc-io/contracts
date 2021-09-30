@@ -92,7 +92,7 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
         initializer()
     {
         currentEpoch = _initialMerkleRoot;
-        
+
         // Current Merkle root
         rootsHistory[currentEpoch] = SapphireTypes.RootInfo(
             _merkleRoot,
