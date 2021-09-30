@@ -19,6 +19,7 @@ import {
   deployTestToken,
 } from '../deployers';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function setup([deployer, unauthorized]: Wallet[]): Promise<any> {
   const coreImp = await deployMockSapphireCoreV1(deployer);
   const coreProxy = await deployArcProxy(
@@ -73,6 +74,7 @@ describe('SapphireCore.init', () => {
       '0x1111111111111111111111111111111111111111111111111111111111111111',
       Wallet.createRandom().address,
       Wallet.createRandom().address,
+      0,
     );
     const assessor = await new SapphireAssessorFactory(deployer).deploy(
       mapper.address,

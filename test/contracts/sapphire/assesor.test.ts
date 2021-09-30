@@ -66,6 +66,7 @@ describe('SapphireAssessor', () => {
       testPassportScoreTree.getHexRoot(),
       owner.address,
       owner.address,
+      0,
     );
 
     const testAssessor = await new SapphireAssessorFactory(owner).deploy(
@@ -118,6 +119,7 @@ describe('SapphireAssessor', () => {
       scoresTree.getHexRoot(),
       '0x0000000000000000000000000000000000000000',
       '0x0000000000000000000000000000000000000000',
+      0,
     );
 
     assessor = await new SapphireAssessorFactory(owner).deploy(
@@ -510,6 +512,7 @@ describe('SapphireAssessor', () => {
         testPassportScoreTree.getHexRoot(),
         owner.address,
         owner.address,
+        0,
       );
 
       await assessor.setPassportScoreContract(
@@ -531,6 +534,7 @@ describe('SapphireAssessor', () => {
         testPassportScoreTree.getHexRoot(),
         owner.address,
         owner.address,
+        0,
       );
 
       await expect(
