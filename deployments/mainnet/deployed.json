@@ -714,7 +714,7 @@
     "address": "0xaF3D36f0E654bFEbbd505bb3271017Af179bBB26",
     "txn": "0x09abb0d5102a2f89befe60ce50983854ae0698971e296e610f941ee2caf3424e",
     "network": "mainnet",
-    "version": "2",
+    "version": 2,
     "type": "global",
     "group": "DefiPassport"
   },
@@ -747,5 +747,25 @@
     "version": 1,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "DefiPassport",
+    "source": "DefiPassport",
+    "address": "0xa7db1BAEd010a7b61B876bF8409A74a18df8A153",
+    "txn": "0x0a4f2d5b99e4e8b9570c8af84e4655c3f02b28d2babcd0fb9b4e4323c3ccb63c",
+    "network": "mainnet",
+    "version": 3,
+    "type": "global",
+    "group": "DefiPassport"
+  },
+  {
+    "name": "StakingAccrualERC20",
+    "source": "StakingAccrualERC20",
+    "address": "0xAd1c28CAF4280658533E1bA94f3653f0f47c6824",
+    "txn": "0xd149ed36ad0520357119b581e27cc16d4dafd639ddf9ca0d412c58b5d02ed5a1",
+    "network": "mainnet",
+    "version": 2,
+    "type": "global",
+    "group": "StakingAccrualERC20"
   }
 ]
