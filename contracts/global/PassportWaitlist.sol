@@ -13,7 +13,7 @@ contract PassportWaitlist is Ownable {
     /* ========== Libraries ========== */
 
     using Address for address;
-    
+
     /* ========== Events ========== */
 
     event UserApplied(
@@ -41,7 +41,7 @@ contract PassportWaitlist is Ownable {
         address _paymentReceiver
     ) public {
         setPayment(
-            _paymentToken, 
+            _paymentToken,
             _paymentAmount,
             _paymentReceiver
         );
@@ -91,9 +91,9 @@ contract PassportWaitlist is Ownable {
     function applyForPassport() public
     {
         SafeERC20.safeTransferFrom(
-            paymentToken, 
-            msg.sender, 
-            paymentReceiver, 
+            paymentToken,
+            msg.sender,
+            paymentReceiver,
             paymentAmount
         );
 
