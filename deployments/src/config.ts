@@ -1,7 +1,14 @@
 import { red } from 'chalk';
 import path from 'path';
 
-export const networks = ['local', 'rinkeby', 'kovan', 'mainnet', 'playnet'];
+export const networks = [
+  'local',
+  'rinkeby',
+  'mainnet',
+  'playnet',
+  'mumbai',
+  'polygon',
+];
 export const deploymentTestNetworks = ['mainnet' /*'playnet'*/];
 
 export const constants = {
@@ -16,7 +23,7 @@ export const constants = {
 
 export function getPathToNetwork(
   network: string = 'mainnet',
-  file: string = ''
+  file: string = '',
 ) {
   if (!networks.includes(network)) {
     throw red(`** ${network} is not a valid network **`);

@@ -1,0 +1,12 @@
+[
+  {
+    "name": "DefaultPassportSkin",
+    "source": "DefaultPassportSkin",
+    "address": "0x13A05400affAa43705392Cf989BceD4c5534C5C8",
+    "txn": "0xb864d4cbb921d6f5f68f985299cd95f9095f1d894b58da1d5f17162771f05391",
+    "network": "mumbai",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  }
+]

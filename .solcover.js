@@ -2,7 +2,6 @@ module.exports = {
 	skipFiles: [
 		'interfaces',
 		'test',
-		'global',
 		'oracle',
 		'ArcProxy.sol',
 		'ArcProxyInfo.sol',
