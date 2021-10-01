@@ -26,7 +26,11 @@ describe('PassportWaitlist', () => {
 
     paymentToken = await new TestTokenFactory(owner).deploy('TEST', 'TEST', 18);
 
-    waitlist = await new PassportWaitlistFactory(owner).deploy();
+    waitlist = await new PassportWaitlistFactory(owner).deploy(
+      paymentToken.address,
+      PAYMENT_AMOUNT,
+      owner.address,
+    );
     userWaitlist = waitlist.connect(user);
   });
 
@@ -36,7 +40,7 @@ describe('PassportWaitlist', () => {
     it('sets the payment token and amount', async () => {
       expect(await waitlist.paymentToken()).to.eq(paymentToken.address);
       expect(await waitlist.paymentAmount()).to.eq(PAYMENT_AMOUNT);
-      expect(await waitlist.paymentRecevier()).to.eq(owner.address);
+      expect(await waitlist.paymentReceiver()).to.eq(owner.address);
     });
   });
 
@@ -110,6 +114,9 @@ describe('PassportWaitlist', () => {
       expect(await paymentToken.balanceOf(owner.address)).to.eq(PAYMENT_AMOUNT);
     });
   });
+
+  // describe('#applyWithPermit', () => {
+  // })
 
   describe('#setPayment', () => {
     let newTokenAddy: string;
