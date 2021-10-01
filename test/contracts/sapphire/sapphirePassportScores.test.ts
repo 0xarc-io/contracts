@@ -16,7 +16,7 @@ import {
 } from '@test/helpers/testingUtils';
 import chai, { expect } from 'chai';
 import { solidity } from 'ethereum-waffle';
-import { BigNumber } from 'ethers';
+import { BigNumber, BigNumberish } from 'ethers';
 import 'module-alias/register';
 import { generateContext, ITestContext } from '../context';
 import { deployMockSapphirePassportScores } from '../deployers';
@@ -52,6 +52,7 @@ describe('SapphireCreditScore', () => {
     merkleRoot: string,
     merkleRootUpdater: string,
     pauseOperator: string,
+    initialEpoch: BigNumberish,
   ) {
     const creditScoreInstance = await deployMockSapphirePassportScores(admin);
 
@@ -59,6 +60,7 @@ describe('SapphireCreditScore', () => {
       merkleRoot,
       merkleRootUpdater,
       pauseOperator,
+      initialEpoch,
     );
 
     return creditScoreInstance;
@@ -92,6 +94,8 @@ describe('SapphireCreditScore', () => {
 
   describe('#init', () => {
     it('sets the initial values', async () => {
+      const initialEpoch = 211;
+
       const impl = await new MockSapphirePassportScoresFactory(admin).deploy();
       const proxy = await new ArcProxyFactory(admin).deploy(
         impl.address,
@@ -107,17 +111,28 @@ describe('SapphireCreditScore', () => {
         tree.getHexRoot(),
         merkleRootUpdater.address,
         pauseOperator.address,
+        initialEpoch,
       );
 
       // sets the merkle root
-      expect(await contract.currentMerkleRoot()).to.eq(tree.getHexRoot());
+      const currentMerkleRoot = await contract.currentMerkleRoot();
+      const upcomingMerkleRoot = await contract.upcomingMerkleRoot();
+
+      expect(currentMerkleRoot).to.eq(tree.getHexRoot());
       // root updater
       expect(await contract.merkleRootUpdater()).to.eq(
         merkleRootUpdater.address,
       );
       // pause operator
       expect(await contract.pauseOperator()).to.eq(pauseOperator.address);
-      // max score
+      // Current epoch
+      expect(await contract.currentEpoch()).to.eq(initialEpoch);
+      expect((await contract.rootsHistory(initialEpoch)).merkleRoot).to.eq(
+        currentMerkleRoot,
+      );
+      expect((await contract.rootsHistory(initialEpoch + 1)).merkleRoot).to.eq(
+        upcomingMerkleRoot,
+      );
     });
   });
 
@@ -127,6 +142,7 @@ describe('SapphireCreditScore', () => {
         ONE_BYTES32,
         merkleRootUpdater.address,
         pauseOperator.address,
+        0,
       );
       expect(await contract.isPaused()).to.be.true;
     });
@@ -313,6 +329,7 @@ describe('SapphireCreditScore', () => {
         ONE_BYTES32,
         merkleRootUpdater.address,
         pauseOperator.address,
+        0,
       );
 
       await mockpassportScores.connect(pauseOperator).setPause(false);
@@ -580,6 +597,75 @@ describe('SapphireCreditScore', () => {
       await expect(
         passportScores.connect(merkleRootUpdater).setMerkleRootDelay(5),
       ).to.be.revertedWith('Adminable: caller is not admin');
+    });
+  });
+
+  describe('#setCurrentEpoch', () => {
+    let currentEpoch: BigNumber;
+
+    beforeEach(async () => {
+      currentEpoch = await passportScores.currentEpoch();
+    });
+
+    it('reverts if called by non-admin', async () => {
+      await passportScores.connect(pauseOperator).setPause(true);
+
+      await expect(
+        passportScores.connect(merkleRootUpdater).setCurrentEpoch(21),
+      ).to.be.revertedWith('Adminable: caller is not admin');
+    });
+
+    it('reverts if not paused', async () => {
+      expect(await passportScores.isPaused()).to.be.false;
+
+      await expect(
+        passportScores.setCurrentEpoch(currentEpoch.add(1)),
+      ).to.be.revertedWith('SapphirePassportScores: contract is not paused');
+    });
+
+    it('reverts if setting a smaller or equal epoch', async () => {
+      await passportScores.connect(pauseOperator).setPause(true);
+
+      expect(currentEpoch).to.be.gt(0);
+
+      await expect(
+        passportScores.setCurrentEpoch(currentEpoch),
+      ).to.be.revertedWith(
+        'SapphirePassportScores: new epoch must be greater than the current',
+      );
+
+      await expect(
+        passportScores.setCurrentEpoch(currentEpoch.sub(1)),
+      ).to.be.revertedWith(
+        'SapphirePassportScores: new epoch must be greater than the current',
+      );
+    });
+
+    it('sets the epoch if called by the admin', async () => {
+      await passportScores.connect(pauseOperator).setPause(true);
+
+      const originalEpoch = currentEpoch;
+      const currentRoot = await passportScores.currentMerkleRoot();
+      const upcomingRoot = await passportScores.upcomingMerkleRoot();
+
+      await passportScores.setCurrentEpoch(originalEpoch.add(21));
+
+      expect(await passportScores.currentEpoch()).to.eq(originalEpoch.add(21));
+      expect(await passportScores.currentMerkleRoot()).to.eq(currentRoot);
+      expect(await passportScores.upcomingMerkleRoot()).to.eq(upcomingRoot);
+
+      // Update the Merkle root and ensure integrity of the contarct
+      await passportScores.connect(pauseOperator).setPause(false);
+
+      await advanceEpoch(passportScores);
+
+      await passportScores
+        .connect(merkleRootUpdater)
+        .updateMerkleRoot(TWO_BYTES32);
+
+      expect(await passportScores.currentEpoch()).to.eq(originalEpoch.add(22));
+      expect(await passportScores.currentMerkleRoot()).to.eq(upcomingRoot);
+      expect(await passportScores.upcomingMerkleRoot()).to.eq(TWO_BYTES32);
     });
   });
 });
