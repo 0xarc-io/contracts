@@ -2,11 +2,11 @@ import { utils } from '@ethereum-waffle/provider/node_modules/ethers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { approve } from '@src/utils';
 import { TestToken, TestTokenFactory } from '@src/typings';
-import { PassportWaitlist } from '@src/typings/PassportWaitlist';
-import { PassportWaitlistFactory } from '@src/typings/PassportWaitlistFactory';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
+import { MockPassportWaitlist } from '@src/typings/MockPassportWaitlist';
+import { MockPassportWaitlistFactory } from '@src/typings/MockPassportWaitlistFactory';
 
 const PAYMENT_AMOUNT = utils.parseEther('50');
 
@@ -14,8 +14,8 @@ describe('PassportWaitlist', () => {
   let owner: SignerWithAddress;
   let user: SignerWithAddress;
 
-  let waitlist: PassportWaitlist;
-  let userWaitlist: PassportWaitlist;
+  let waitlist: MockPassportWaitlist;
+  let userWaitlist: MockPassportWaitlist;
 
   let paymentToken: TestToken;
 
@@ -26,7 +26,7 @@ describe('PassportWaitlist', () => {
 
     paymentToken = await new TestTokenFactory(owner).deploy('TEST', 'TEST', 18);
 
-    waitlist = await new PassportWaitlistFactory(owner).deploy(
+    waitlist = await new MockPassportWaitlistFactory(owner).deploy(
       paymentToken.address,
       PAYMENT_AMOUNT,
       owner.address,
@@ -44,7 +44,7 @@ describe('PassportWaitlist', () => {
     });
   });
 
-  describe('#apply', () => {
+  describe('#applyForPassport', () => {
     it('reverts if user does not have enough tokens to pay', async () => {
       await paymentToken.mintShare(user.address, PAYMENT_AMOUNT.sub(1));
 
@@ -55,7 +55,7 @@ describe('PassportWaitlist', () => {
         user,
       );
 
-      await expect(userWaitlist.apply()).to.be.revertedWith(
+      await expect(userWaitlist.applyForPassport()).to.be.revertedWith(
         'SafeERC20: TRANSFER_FROM_FAILED',
       );
     });
@@ -70,7 +70,7 @@ describe('PassportWaitlist', () => {
         user,
       );
 
-      await expect(userWaitlist.apply()).to.be.revertedWith(
+      await expect(userWaitlist.applyForPassport()).to.be.revertedWith(
         'SafeERC20: TRANSFER_FROM_FAILED',
       );
     });
@@ -88,14 +88,14 @@ describe('PassportWaitlist', () => {
       await waitlist.setCurrentTimestamp(timestamp);
 
       // emit UserApplied event with user, currency, amount and timestamp
-      await expect(userWaitlist.apply())
+      await expect(userWaitlist.applyForPassport())
         .to.emit(userWaitlist, 'UserApplied')
-        .withArgs([
+        .withArgs(
           user.address,
           paymentToken.address,
           PAYMENT_AMOUNT,
           timestamp,
-        ]);
+        );
     });
 
     it('transferred the payment to the receiver', async () => {
@@ -109,13 +109,13 @@ describe('PassportWaitlist', () => {
         user,
       );
 
-      await userWaitlist.apply();
+      await userWaitlist.applyForPassport();
 
       expect(await paymentToken.balanceOf(owner.address)).to.eq(PAYMENT_AMOUNT);
     });
   });
 
-  // describe('#applyWithPermit', () => {
+  // describe('#permitApplyForPassport', () => {
   // })
 
   describe('#setPayment', () => {
