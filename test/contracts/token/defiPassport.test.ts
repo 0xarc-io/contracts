@@ -81,6 +81,7 @@ describe('DefiPassport', () => {
       creditScoreTree.getHexRoot(),
       owner.address,
       owner.address,
+      0,
     );
     await creditScoreContract.setPause(false);
   }
