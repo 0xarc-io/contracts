@@ -23,7 +23,7 @@ export interface NetworkParams {
 export async function deployContract(
   deployParams: DeployContractParams,
   networkParams: NetworkParams,
-  confirmations?: number
+  confirmations?: number,
 ) {
   // Ignore source since it may vary based on the network
   const existing = loadContracts({
@@ -71,9 +71,15 @@ export async function deployContract(
       group: deployParams.group || '',
     });
 
+    console.log(
+      green(
+        `${deployParams.source} contract deployed at ${receipt.contractAddress}`,
+      ),
+    );
+
     return receipt.contractAddress;
   } catch {
     console.log(red(`Failed to deploy: ${details}\n`));
-    return
+    return;
   }
 }
