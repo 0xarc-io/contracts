@@ -133,33 +133,19 @@ describe('PassportWaitlist', () => {
 
     it('reverts if called by non-owner', async () => {
       await expect(
-        userWaitlist.setPayment(newTokenAddy, newAmount),
+        userWaitlist.setPayment(newTokenAddy, newAmount, user.address),
       ).to.be.revertedWith('Ownable: caller is not the owner');
     });
 
-    it('sets the payment token and amount', async () => {
+    it('sets the payment token, amount and receiver', async () => {
       expect(await waitlist.paymentToken()).to.eq(paymentToken.address);
       expect(await waitlist.paymentAmount()).to.eq(PAYMENT_AMOUNT);
+      expect(await waitlist.paymentReceiver()).to.eq(owner.address);
 
-      await waitlist.setPayment(newTokenAddy, newAmount);
+      await waitlist.setPayment(newTokenAddy, newAmount, user.address);
 
       expect(await waitlist.paymentToken()).to.eq(newTokenAddy);
       expect(await waitlist.paymentAmount()).to.eq(newAmount);
-    });
-  });
-
-  describe('#setPaymentReceiver', () => {
-    it('reverts if called by non-owner', async () => {
-      await expect(
-        userWaitlist.setPaymentReceiver(user.address),
-      ).to.be.revertedWith('Ownable: caller is not the owner');
-    });
-
-    it('sets the payment receiver', async () => {
-      expect(await waitlist.paymentReceiver()).to.eq(owner.address);
-
-      await waitlist.setPaymentReceiver(user.address);
-
       expect(await waitlist.paymentReceiver()).to.eq(user.address);
     });
   });

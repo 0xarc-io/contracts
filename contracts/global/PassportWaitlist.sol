@@ -23,6 +23,12 @@ contract PassportWaitlist is Ownable {
         uint256 _timestamp
     );
 
+    event PaymentSet(
+        address _paymentToken,
+        uint256 _paymentAmount,
+        address _paymentReceiver
+    );
+
     /* ========== Storage ========== */
 
     IPermittableERC20 public paymentToken;
@@ -34,14 +40,31 @@ contract PassportWaitlist is Ownable {
         uint256 _paymentAmount,
         address _paymentReceiver
     ) public {
+        setPayment(
+            _paymentToken, 
+            _paymentAmount,
+            _paymentReceiver
+        );
+    }
+
+    /* ========== Admin ========== */
+
+    function setPayment(
+        address _paymentToken,
+        uint256 _paymentAmount,
+        address _paymentReceiver
+    )
+        public
+        onlyOwner
+    {
         require(
             _paymentToken.isContract(),
-            "PassportWaitlist: payment token is not a contract"
+            "PassportWaitlist: the payment token is not a contract"
         );
 
         require(
             _paymentAmount > 0,
-            "PassportWaitlist: payment amount must be greater than 0"
+            "PassportWaitlist: the payment amount must be higher than 0"
         );
 
         require(
@@ -52,10 +75,19 @@ contract PassportWaitlist is Ownable {
         paymentToken    = IPermittableERC20(_paymentToken);
         paymentAmount   = _paymentAmount;
         paymentReceiver = _paymentReceiver;
+
+        emit PaymentSet(
+            address(paymentToken),
+            paymentAmount,
+            paymentReceiver
+        );
     }
 
     /* ========== Public Functions ========== */
 
+    /**
+     * @notice Pays the fee and signs up for the passport. This action is only recorded at the logs level and not in the storage.
+     */
     function applyForPassport() public
     {
         SafeERC20.safeTransferFrom(
@@ -73,6 +105,9 @@ contract PassportWaitlist is Ownable {
         );
     }
 
+    /**
+     * @notice Same as `applyForPassport()` but with a permit to avoid making 2 transactions
+     */
     function permitApplyForPassport (
         uint256 _deadline,
         uint8 _v,
