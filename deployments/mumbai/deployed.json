@@ -1,0 +1,52 @@
+[
+  {
+    "name": "DefaultPassportSkin",
+    "source": "DefaultPassportSkin",
+    "address": "0x13A05400affAa43705392Cf989BceD4c5534C5C8",
+    "txn": "0xb864d4cbb921d6f5f68f985299cd95f9095f1d894b58da1d5f17162771f05391",
+    "network": "mumbai",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "SapphirePassportScores",
+    "source": "SapphirePassportScores",
+    "address": "0x1fC0c4321582a1Cc26373Da9FA175E69d1ec5ff0",
+    "txn": "0xafb62d71707862380bd7ff6c917e604649e615087289a854743ab7556d4b0be0",
+    "network": "mumbai",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "SapphirePassportScoresProxy",
+    "source": "ArcProxy",
+    "address": "0x4Fb30A81B176D5901512DBaD01506F1FCEdB25C0",
+    "txn": "0x0520ae5bc14dcecc54d89034aba5d8345d0f1f8586f2f08ad3e62b37519eb007",
+    "network": "mumbai",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "DefiPassport",
+    "source": "DefiPassport",
+    "address": "0xA93f1C620Ba2f702274D287151957E185b9D3d0f",
+    "txn": "0xddbacb430a30cebc4c220c58818880dda7ff226454872670d1abf4bf72359e12",
+    "network": "mumbai",
+    "version": 1,
+    "type": "global",
+    "group": "DefiPassport"
+  },
+  {
+    "name": "DefiPassportProxy",
+    "source": "ArcProxy",
+    "address": "0x5251D3B66fe387019c086b0243b21C75f8AA01fa",
+    "txn": "0x7485126089a466358c8d95f06dd3ffee3fee0eb03b5926ad9b762766d3f79b12",
+    "network": "mumbai",
+    "version": 1,
+    "type": "global",
+    "group": "DefiPassport"
+  }
+]
