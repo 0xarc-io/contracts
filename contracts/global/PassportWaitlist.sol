@@ -17,7 +17,7 @@ contract PassportWaitlist is Ownable {
     /* ========== Events ========== */
 
     event UserApplied(
-        address _user,
+        address indexed _user,
         address _paymentToken,
         uint256 _paymentAmount,
         uint256 _timestamp

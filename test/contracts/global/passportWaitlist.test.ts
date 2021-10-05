@@ -1,4 +1,3 @@
-import { utils } from '@ethereum-waffle/provider/node_modules/ethers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { approve } from '@src/utils';
 import { TestToken, TestTokenFactory } from '@src/typings';
@@ -7,6 +6,7 @@ import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { MockPassportWaitlist } from '@src/typings/MockPassportWaitlist';
 import { MockPassportWaitlistFactory } from '@src/typings/MockPassportWaitlistFactory';
+import { utils } from 'ethers';
 
 const PAYMENT_AMOUNT = utils.parseEther('50');
 
