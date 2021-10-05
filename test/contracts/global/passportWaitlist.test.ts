@@ -115,9 +115,6 @@ describe('PassportWaitlist', () => {
     });
   });
 
-  // describe('#permitApplyForPassport', () => {
-  // })
-
   describe('#setPayment', () => {
     let newTokenAddy: string;
     const newAmount = PAYMENT_AMOUNT.div(2);
