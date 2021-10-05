@@ -32,7 +32,13 @@ export const params = {
 };
 
 export function getNetworkUrl(network: string) {
-  return `https://${network}.infura.io/v3/${process.env.INFURA_PROJECT_ID}`;
+  let prefix = '';
+
+  if (network === 'mumbai' || network === 'polygon') {
+    prefix = 'polygon-';
+  }
+
+  return `https://${prefix}${network}.infura.io/v3/${process.env.INFURA_PROJECT_ID}`;
 }
 
 const HUNDRED_THOUSAND_ETH = BigNumber.from(100000).pow(18).toString();
@@ -78,6 +84,13 @@ const config: HardhatUserConfig = {
       url: getNetworkUrl('rinkeby'),
       accounts: [params.testnet_private_key],
       gasPrice: 2 * 10 ** 9,
+      users: {
+        eoaOwner: '0xa8C01EfD74A206Bb2d769b6b3a5759508c83F20C',
+      },
+    },
+    mumbai: {
+      url: getNetworkUrl('mumbai'),
+      accounts: [params.testnet_private_key],
       users: {
         eoaOwner: '0xa8C01EfD74A206Bb2d769b6b3a5759508c83F20C',
       },
