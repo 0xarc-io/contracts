@@ -6,8 +6,8 @@ import { ethers } from 'hardhat';
 import { MockPassportWaitlist } from '@src/typings/MockPassportWaitlist';
 import { MockPassportWaitlistFactory } from '@src/typings/MockPassportWaitlistFactory';
 import { constants, utils } from 'ethers';
-import { BigNumber } from 'ethers';
 import { approve } from '@src/utils';
+import { Wallet } from '@ethereum-waffle/provider/node_modules/ethers';
 
 const PAYMENT_AMOUNT = utils.parseEther('50');
 
@@ -19,18 +19,6 @@ describe('PassportWaitlist', () => {
   let userWaitlist: MockPassportWaitlist;
 
   let paymentToken: TestToken;
-
-  function sendEth(
-    from: SignerWithAddress,
-    to: SignerWithAddress,
-    amount: BigNumber,
-  ) {
-    return from.sendTransaction({
-      from: from.address,
-      to: to.address,
-      value: amount,
-    });
-  }
 
   before(async () => {
     const signers = await ethers.getSigners();
@@ -129,22 +117,15 @@ describe('PassportWaitlist', () => {
   });
 
   describe('#payableApplyForPassport', () => {
+    let paymentReceiver: Wallet;
+
     beforeEach(async () => {
+      paymentReceiver = await Wallet.createRandom();
+
       await waitlist.setPayment(
         constants.AddressZero,
         PAYMENT_AMOUNT,
-        owner.address,
-      );
-    });
-
-    it('reverts if user does not have enough eth', async () => {
-      const userBalance = await user.getBalance();
-
-      // Ensure user misses only 1 wei for the application
-      await sendEth(user, owner, userBalance.sub(PAYMENT_AMOUNT).add(1));
-
-      await expect(userWaitlist.payableApplyForPassport()).to.be.revertedWith(
-        'PassportWaitlist: not enough funds',
+        paymentReceiver.address,
       );
     });
 
@@ -152,19 +133,31 @@ describe('PassportWaitlist', () => {
       await waitlist.setPayment(
         paymentToken.address,
         PAYMENT_AMOUNT,
-        owner.address,
+        paymentReceiver.address,
       );
 
-      await expect(userWaitlist.payableApplyForPassport()).to.be.revertedWith(
-        'PassportWaitlist: the payment is an erc20',
-      );
+      await expect(
+        userWaitlist.payableApplyForPassport({ value: PAYMENT_AMOUNT }),
+      ).to.be.revertedWith('PassportWaitlist: the payment is an erc20');
+    });
+
+    it('reverts if paying more or less the payment amount', async () => {
+      await expect(
+        userWaitlist.payableApplyForPassport({ value: PAYMENT_AMOUNT.sub(1) }),
+      ).to.be.revertedWith('PassportWaitlist: wrong payment amount');
+
+      await expect(
+        userWaitlist.payableApplyForPassport({ value: PAYMENT_AMOUNT.add(1) }),
+      ).to.be.revertedWith('PassportWaitlist: wrong payment amount');
     });
 
     it('applies for the passport', async () => {
       const timestamp = 10;
       await waitlist.setCurrentTimestamp(timestamp);
 
-      await expect(userWaitlist.payableApplyForPassport())
+      await expect(
+        userWaitlist.payableApplyForPassport({ value: PAYMENT_AMOUNT }),
+      )
         .to.emit(userWaitlist, 'UserApplied')
         .withArgs(
           user.address,
@@ -175,12 +168,10 @@ describe('PassportWaitlist', () => {
     });
 
     it('transferred the payment to the receiver', async () => {
-      const initialOwnerBalance = await owner.getBalance();
+      await userWaitlist.payableApplyForPassport({ value: PAYMENT_AMOUNT });
 
-      await userWaitlist.payableApplyForPassport();
-
-      expect(await owner.getBalance()).to.eq(
-        initialOwnerBalance.add(PAYMENT_AMOUNT),
+      expect(await waitlist.provider.getBalance(paymentReceiver.address)).to.eq(
+        PAYMENT_AMOUNT,
       );
     });
   });
