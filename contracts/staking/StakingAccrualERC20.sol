@@ -383,11 +383,21 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
             return;
         }
 
-        uint256 availableBalance = sablierContract.balanceOf(sablierStreamId, address(this));
-
-        if (availableBalance == 0) {
+        // Get the balance of the stream. If the stream is complete, .balanceOf() will
+        // throw. For that reason, we will use .staticcall() to check the balance.
+        bytes memory payload = abi.encodeWithSignature(
+            "balanceOf(uint256,address)",
+            sablierStreamId,
+            address(this)
+        );
+        (bool success, bytes memory returnData) = address(sablierContract).staticcall(payload);
+        
+        if (!success) {
+            // The stream is finished
             return;
         }
+
+        (uint256 availableBalance) = abi.decode(returnData, (uint256));
 
         sablierContract.withdrawFromStream(sablierStreamId, availableBalance);
 
