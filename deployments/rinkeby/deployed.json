@@ -637,5 +637,15 @@
     "version": 2,
     "type": "global",
     "group": "StakingAccrualERC20"
+  },
+  {
+    "name": "StakingAccrualERC20",
+    "source": "StakingAccrualERC20",
+    "address": "0x86056F1f4663FF8A4D7b67E3f051FfCbfbCD8590",
+    "txn": "0x935209a3018600338018782d89f2692d439a8017cfe5fe6606b2feaadf3e02d4",
+    "network": "rinkeby",
+    "version": 3,
+    "type": "global",
+    "group": "StakingAccrualERC20"
   }
 ]
