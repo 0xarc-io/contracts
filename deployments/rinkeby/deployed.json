@@ -647,5 +647,15 @@
     "version": 3,
     "type": "global",
     "group": "StakingAccrualERC20"
+  },
+  {
+    "name": "PassportWaitlist",
+    "source": "PassportWaitlist",
+    "address": "0x9A02A1A8aFA7bc3931f970979Db730D947C734c2",
+    "txn": "0xccf9573aba9999b84c8f4feb4a2bbc6b27349fb2bd6cdaf93027a5bc71ae0847",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": ""
   }
 ]
