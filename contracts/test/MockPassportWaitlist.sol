@@ -11,7 +11,7 @@ contract MockPassportWaitlist is PassportWaitlist, MockTimestamp {
     constructor(
         address _paymentToken,
         uint256 _paymentAmount,
-        address _paymentReceiver
+        address payable _paymentReceiver
     )
         public
         PassportWaitlist(

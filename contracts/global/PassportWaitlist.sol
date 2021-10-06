@@ -4,15 +4,10 @@ pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "../lib/Ownable.sol";
-import {Address} from "../lib/Address.sol";
 import {SafeERC20} from "../lib/SafeERC20.sol";
 import {IPermittableERC20} from "../token/IPermittableERC20.sol";
 
 contract PassportWaitlist is Ownable {
-
-    /* ========== Libraries ========== */
-
-    using Address for address;
 
     /* ========== Events ========== */
 
@@ -33,12 +28,12 @@ contract PassportWaitlist is Ownable {
 
     IPermittableERC20 public paymentToken;
     uint256           public paymentAmount;
-    address           public paymentReceiver;
+    address payable   public paymentReceiver;
 
     constructor(
         address _paymentToken,
         uint256 _paymentAmount,
-        address _paymentReceiver
+        address payable _paymentReceiver
     ) public {
         setPayment(
             _paymentToken,
@@ -52,16 +47,11 @@ contract PassportWaitlist is Ownable {
     function setPayment(
         address _paymentToken,
         uint256 _paymentAmount,
-        address _paymentReceiver
+        address payable _paymentReceiver
     )
         public
         onlyOwner
     {
-        require(
-            _paymentToken.isContract(),
-            "PassportWaitlist: the payment token is not a contract"
-        );
-
         require(
             _paymentAmount > 0,
             "PassportWaitlist: the payment amount must be higher than 0"
@@ -126,6 +116,30 @@ contract PassportWaitlist is Ownable {
             _s
         );
         applyForPassport();
+    }
+
+    function payableApplyForPassport()
+        public
+        payable
+    {
+        require(
+            address(paymentToken) == address(0),
+            "PassportWaitlist: the payment is an erc20"
+        );
+
+        require(
+            msg.value == paymentAmount,
+            "PassportWaitlist: wrong payment amount"
+        );
+
+        paymentReceiver.transfer(msg.value);
+
+        emit UserApplied(
+            msg.sender,
+            address(0),
+            paymentAmount,
+            currentTimestamp()
+        );
     }
 
     /* ========== Dev Functions ========== */
