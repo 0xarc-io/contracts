@@ -631,16 +631,22 @@ describe('StakingAccrualERC20', () => {
         );
       });
 
-      it.only('exits at the end of the sablier stream', async () => {
+      it('exits at the end of the sablier stream', async () => {
+        await sablierContract.setCurrentTimestamp(0);
+        await starcx.setCurrentTimestamp(0);
+
         await createStream(true);
+
+        await sablierContract.setCurrentTimestamp(1);
 
         await user1starcx.stake(STAKE_AMOUNT, user1ScoreProof);
 
-        await sablierContract.setCurrentTimestamp(STREAM_DURATION + 1);
+        await user1starcx.startExitCooldown();
+
+        await sablierContract.setCurrentTimestamp(COOLDOWN_DURATION);
+        await starcx.setCurrentTimestamp(COOLDOWN_DURATION);
 
         await starcx.claimStreamFunds();
-        await user1starcx.startExitCooldown();
-        await waitCooldown();
 
         await user1starcx.exit();
 
