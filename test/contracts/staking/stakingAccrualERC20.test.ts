@@ -28,6 +28,7 @@ import { sapphireFixture } from '../fixtures';
 const STAKE_AMOUNT = utils.parseEther('100');
 const COOLDOWN_DURATION = 60;
 const INITIAL_BALANCE = STAKE_AMOUNT.mul('10');
+const STREAM_DURATION = 10;
 
 describe('StakingAccrualERC20', () => {
   let starcx: MockStakingAccrualERC20;
@@ -58,7 +59,7 @@ describe('StakingAccrualERC20', () => {
       STAKE_AMOUNT,
       stakingToken.address,
       0,
-      10,
+      STREAM_DURATION,
     );
 
     if (setStreamId) {
@@ -627,6 +628,30 @@ describe('StakingAccrualERC20', () => {
         expect(await starcx.balanceOf(user1.address)).to.eq(0);
         expect(await stakingToken.balanceOf(user1.address)).to.eq(
           INITIAL_BALANCE.sub(STAKE_AMOUNT.div(2)),
+        );
+      });
+
+      it('exits at the end of the sablier stream', async () => {
+        await sablierContract.setCurrentTimestamp(0);
+        await starcx.setCurrentTimestamp(0);
+
+        await createStream(true);
+
+        await sablierContract.setCurrentTimestamp(1);
+
+        await user1starcx.stake(STAKE_AMOUNT, user1ScoreProof);
+
+        await user1starcx.startExitCooldown();
+
+        await sablierContract.setCurrentTimestamp(COOLDOWN_DURATION);
+        await starcx.setCurrentTimestamp(COOLDOWN_DURATION);
+
+        await starcx.claimStreamFunds();
+
+        await user1starcx.exit();
+
+        expect(await stakingToken.balanceOf(user1.address)).to.eq(
+          INITIAL_BALANCE.add(STAKE_AMOUNT),
         );
       });
     });
