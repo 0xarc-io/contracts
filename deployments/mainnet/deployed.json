@@ -767,5 +767,15 @@
     "version": 2,
     "type": "global",
     "group": "StakingAccrualERC20"
+  },
+  {
+    "name": "StakingAccrualERC20",
+    "source": "StakingAccrualERC20",
+    "address": "0x6690D669a4ED1ff2C20536B2FA4d04413c0DbED1",
+    "txn": "0x6c4d309588aaa1c51d727f231739ee06ab912cfbae6b4d12cb07b2b0329a1583",
+    "network": "mainnet",
+    "version": 3,
+    "type": "global",
+    "group": "StakingAccrualERC20"
   }
 ]
