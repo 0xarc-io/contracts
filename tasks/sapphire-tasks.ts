@@ -26,6 +26,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import getUltimateOwner from './task-utils/getUltimateOwner';
 import { DEFAULT_MAX_CREDIT_SCORE } from '@test/helpers/sapphireDefaults';
 import { constants } from 'ethers';
+import { verifyContract } from './task-utils';
 
 task(
   'deploy-sapphire-synth',
@@ -61,8 +62,9 @@ task(
       throw red('Synthetic Token has not been deployed!');
     }
 
-    // Deploy proxy
+    await verifyContract(hre, syntheticAddress, name, '2');
 
+    // Deploy proxy
     const syntheticProxyAddress = await deployContract(
       {
         name: 'SyntheticV2Proxy',
@@ -79,13 +81,20 @@ task(
       networkConfig,
     );
 
+    await verifyContract(
+      hre,
+      syntheticProxyAddress,
+      syntheticAddress,
+      signer.address,
+      [],
+    );
+
     const synthetic = SyntheticTokenV2Factory.connect(
       syntheticProxyAddress,
       signer,
     );
 
     // Call init()
-
     const synthName = await synthetic.name();
     if (synthName.length > 0) {
       console.log(
@@ -101,13 +110,6 @@ task(
     } catch (e) {
       console.log(red(`Failed to call synthetic init().\nReason: ${e}\n`));
     }
-
-    console.log(yellow(`Verifying contract...`));
-    await hre.run('verify:verify', {
-      address: syntheticAddress,
-      constructorArguments: [name, '2'],
-    });
-    console.log(green(`Contract verified successfully!`));
   });
 
 task(
@@ -163,13 +165,7 @@ task(
       },
       networkConfig,
     );
-
-    console.log(yellow(`Verifying contract...`));
-    await hre.run('verify:verify', {
-      address: passportScoresImpAddress,
-      constructorArguments: [],
-    });
-    console.log(green(`Contract verified successfully!`));
+    await verifyContract(hre, passportScoresImpAddress);
 
     if (implementationOnly) {
       return;
@@ -214,15 +210,13 @@ task(
     console.log(green(`init() called successfully!`));
 
     console.log(yellow('Verifying proxy..'));
-    await hre.run('verify:verify', {
-      address: passportScoresProxyAddress,
-      constructorArguments: [
-        passportScoresImpAddress,
-        await signer.getAddress(),
-        [],
-      ],
-    });
-    console.log(green(`Proxy verified successfully!`));
+    await verifyContract(
+      hre,
+      passportScoresProxyAddress,
+      passportScoresImpAddress,
+      await signer.getAddress(),
+      [],
+    );
   });
 
 task('deploy-mapper', 'Deploy the Sapphire Mapper').setAction(
@@ -247,12 +241,7 @@ task('deploy-mapper', 'Deploy the Sapphire Mapper').setAction(
       green(`Sapphire Mapper Linear successfully deployed at ${mapperAddress}`),
     );
 
-    console.log(yellow(`Verifying contract...`));
-    await hre.run('verify:verify', {
-      address: mapperAddress,
-      constructorArguments: [],
-    });
-    console.log(green(`Contract verified successfully!`));
+    await verifyContract(hre, mapperAddress);
   },
 );
 
@@ -262,13 +251,13 @@ task('deploy-assessor', 'Deploy the Sapphire Assessor').setAction(
 
     await pruneDeployments(network, signer.provider);
 
-    const creditScoreAddress = loadContract({
+    const passportScoresAddress = loadContract({
       network,
       type: DeploymentType.global,
-      name: 'SapphireCreditScore',
+      name: 'SapphirePassportScores',
     }).address;
 
-    if (!creditScoreAddress) {
+    if (!passportScoresAddress) {
       throw red(`The Sapphire Credit Score must be deployed first`);
     }
 
@@ -289,7 +278,7 @@ task('deploy-assessor', 'Deploy the Sapphire Assessor').setAction(
         source: 'SapphireAssessor',
         data: new SapphireAssessorFactory(signer).getDeployTransaction(
           mapperAddress,
-          creditScoreAddress,
+          passportScoresAddress,
           DEFAULT_MAX_CREDIT_SCORE,
         ),
         version: 1,
@@ -298,16 +287,13 @@ task('deploy-assessor', 'Deploy the Sapphire Assessor').setAction(
       networkConfig,
     );
 
-    console.log(
-      green(`Sapphire Assessor successfully deployed at ${assessorAddress}`),
+    await verifyContract(
+      hre,
+      assessorAddress,
+      mapperAddress,
+      passportScoresAddress,
+      DEFAULT_MAX_CREDIT_SCORE,
     );
-
-    console.log(yellow(`Verifying contract...`));
-    await hre.run('verify:verify', {
-      address: assessorAddress,
-      constructorArguments: [mapperAddress, creditScoreAddress],
-    });
-    console.log(green(`Contract verified successfully!`));
   },
 );
 
@@ -346,10 +332,10 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
       },
       networkConfig,
     );
-
     console.log(
       green(`Sapphire Core implementation deployed at ${coreAddress}`),
     );
+    await verifyContract(hre, coreAddress);
 
     const collateralAddress =
       collatConfig.collateral_address ||
@@ -382,8 +368,14 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
       },
       networkConfig,
     );
-
     console.log(green(`Sapphire core proxy deployed at ${coreProxyAddress}`));
+    await verifyContract(
+      hre,
+      coreProxyAddress,
+      coreAddress,
+      await signer.getAddress(),
+      [],
+    );
 
     // Initialize core
 
@@ -393,23 +385,11 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
       name: 'SyntheticV2Proxy',
     }).address;
 
-    if (!syntheticProxyAddress) {
-      throw red(
-        `SyntheticTokenV2 was not deployed! Deploy it first, then try again.`,
-      );
-    }
-
     const assessorAddress = loadContract({
       network,
       type: DeploymentType.global,
       name: 'SapphireAssessor',
     }).address;
-
-    if (!assessorAddress) {
-      throw red(
-        `SapphireAssessor was not deployed! Deploy it first, then try again.`,
-      );
-    }
 
     const core = SapphireCoreV1Factory.connect(coreProxyAddress, signer);
     const synthetic = SyntheticTokenV2Factory.connect(
@@ -495,13 +475,6 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
 
       console.log(green(`Admin successfully set to ${ultimateOwner}`));
     }
-
-    console.log(yellow(`Verifying contract...`));
-    await hre.run('verify:verify', {
-      address: coreAddress,
-      constructorArguments: [],
-    });
-    console.log(green(`Contract verified successfully!`));
   });
 
 function _deployTestCollateral(
@@ -566,12 +539,7 @@ async function _deployOracle(
       networkConfig,
     );
 
-    console.log(yellow(`Verifying mock oracle...`));
-    await hre.run('verify:verify', {
-      address: mockOracleAddress,
-      constructorArguments: [],
-    });
-    console.log(green(`Mock Oracle verified successfully!`));
+    await verifyContract(hre, mockOracleAddress);
   } else {
     // Oracle is found, deploy it
     const { source, getDeployTx, constructorArguments } = collatConfig.oracle;
@@ -597,21 +565,7 @@ async function _deployOracle(
     console.log(
       green(`Oracle successfully deployed (or found) at ${oracleAddress}`),
     );
-
-    try {
-      console.log(yellow(`Verifying oracle...`));
-      await hre.run('verify:verify', {
-        address: oracleAddress,
-        constructorArguments,
-      });
-      console.log(green(`Oracle verified successfully!`));
-    } catch (err) {
-      console.log(
-        red(
-          `Error verifying oracle. It could be because it was already deployed. ${err}`,
-        ),
-      );
-    }
+    await verifyContract(hre, oracleAddress, ...constructorArguments);
 
     return oracleAddress;
   }
