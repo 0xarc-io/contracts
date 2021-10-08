@@ -85,13 +85,13 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
         bytes32 _merkleRoot,
         address _merkleRootUpdater,
         address _pauseOperator,
-        uint256 _initialMerkleRoot
+        uint256 _initialEpoch
     )
         public
         onlyAdmin
         initializer()
     {
-        currentEpoch = _initialMerkleRoot;
+        currentEpoch = _initialEpoch;
 
         // Current Merkle root
         rootsHistory[currentEpoch] = SapphireTypes.RootInfo(
