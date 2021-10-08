@@ -391,7 +391,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
             address(this)
         );
         (bool success, bytes memory returnData) = address(sablierContract).staticcall(payload);
-        
+
         if (!success) {
             // The stream is finished
             return;
