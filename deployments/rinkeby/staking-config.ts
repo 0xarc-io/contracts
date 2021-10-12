@@ -105,8 +105,8 @@ export default {
   },
   ARCxPassportPool: {
     source: 'PassportCampaign',
-    stakingToken: '0x5c9DbC786ed0b7dA9a4F1F5479794C1bc01F293e',
-    rewardsToken: 'ArcxTokenV2',
+    stakingToken: '0x1Cb19E2C7a2EFB90D4A2f9b370Fc691DBA873782',
+    rewardsToken: 'ArcxToken',
     rewardsDurationSeconds: 60 * 60 * 24 * 31, // 31 days
     contractFactory: PassportCampaignFactory,
     getDeployTx: (signer: SignerWithAddress) =>
@@ -119,8 +119,7 @@ export default {
       stakingTokenAddress: string,
     ) => {
       const daoAllocation = '400000000000000000';
-      const creditScoreContractAddress =
-        '0x78e4177619dc5B49bE33a26D1032C85458186c35';
+      const passportScoresAddy = '0xF084633A8398d82CfCAe59345A910abE3f6caB00';
 
       // Max 1000 stake amount
       const maxStakePerUser = utils.parseEther('1000');
@@ -134,7 +133,7 @@ export default {
           rewardsDistributor: ${rewardsDistributor},
           rewardsTokenAddress: ${rewardsTokenAddress},
           stakingTokenAddress: ${stakingTokenAddress},
-          creditScoreContractAddress: ${creditScoreContractAddress},
+          passportScoresAddress: ${passportScoresAddy},
           daoAllocation: ${daoAllocation},
           maxStakePerUser: ${maxStakePerUser.toString()},
           creditScoreThreshold: ${creditScoreThreshold}
@@ -147,7 +146,7 @@ export default {
         rewardsDistributor,
         rewardsTokenAddress,
         stakingTokenAddress,
-        creditScoreContractAddress,
+        passportScoresAddy,
         daoAllocation,
         maxStakePerUser,
         creditScoreThreshold,

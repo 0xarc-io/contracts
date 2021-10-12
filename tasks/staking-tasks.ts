@@ -16,6 +16,7 @@ import {
 } from '../deployments/src';
 import { task } from 'hardhat/config';
 import getUltimateOwner from './task-utils/getUltimateOwner';
+import { verifyContract } from './task-utils';
 
 task('deploy-staking', 'Deploy a staking/reward pool')
   .addParam('name', 'The name of the pool you would like to deploy')
@@ -48,17 +49,11 @@ task('deploy-staking', 'Deploy a staking/reward pool')
       network,
     });
 
-    const rewardToken = await loadContract({
+    const rewardToken = loadContract({
       name: stakingConfig.rewardsToken,
       type: DeploymentType.global,
       network,
     });
-
-    if (!arcDAO || !rewardToken) {
-      throw red(
-        `There is no ArcDAO, RewardToken or Core Contract in this deployments file`,
-      );
-    }
 
     const stakingTokenAddress =
       stakingConfig.stakingToken ||
@@ -82,6 +77,21 @@ task('deploy-staking', 'Deploy a staking/reward pool')
       throw red(`There was no valid staking token address that could be used`);
     }
 
+    if (!stakingConfig.stakingToken) {
+      const stakingToken = TestTokenFactory.connect(
+        stakingTokenAddress,
+        signer,
+      );
+      // A new testing token was created
+      await verifyContract(
+        hre,
+        stakingTokenAddress,
+        await stakingToken.name(),
+        name,
+        18,
+      );
+    }
+
     const implementationContract = await deployContract(
       {
         name: 'Implementation',
@@ -93,8 +103,10 @@ task('deploy-staking', 'Deploy a staking/reward pool')
       },
       networkConfig,
     );
+    console.log(yellow(`Verifying implementation...`));
+    await verifyContract(hre, implementationContract);
 
-    const proxyContract = await deployContract(
+    const proxyAddress = await deployContract(
       {
         name: 'Proxy',
         source: 'ArcProxy',
@@ -109,91 +121,85 @@ task('deploy-staking', 'Deploy a staking/reward pool')
       },
       networkConfig,
     );
+    console.log(yellow(`Verifying proxy...`));
+    await verifyContract(
+      hre,
+      proxyAddress,
+      implementationContract,
+      await signer.getAddress(),
+      [],
+    );
 
-    const implementation = stakingConfig.contractFactory.connect(
-      proxyContract,
+    const proxyContract = stakingConfig.contractFactory.connect(
+      proxyAddress,
       signer,
     );
 
-    console.log(yellow(`* Calling init()...`));
-    try {
-      await stakingConfig.runInit(
-        implementation,
-        arcDAO.address,
-        ultimateOwner,
-        rewardToken.address,
-        stakingTokenAddress,
-      );
-      console.log(green(`Called init() successfully!\n`));
-    } catch (error) {
-      console.log(red(`Failed to call init().\nReason: ${error}\n`));
+    if ((await proxyContract.rewardsToken()) !== rewardToken.address) {
+      // Contract is not initialized yet
+      console.log(yellow(`* Calling init()...`));
+      try {
+        await stakingConfig.runInit(
+          proxyContract,
+          arcDAO.address,
+          ultimateOwner,
+          rewardToken.address,
+          stakingTokenAddress,
+        );
+        console.log(green(`Called init() successfully!\n`));
+      } catch (error) {
+        console.log(red(`Failed to call init().\nReason: ${error}\n`));
+        return;
+      }
+    } else {
+      console.log(yellow(`Contract is already initialized`));
     }
 
     // Add approved state contracts
-    const stateProxies = [];
-    try {
-      for (const rewardGroup of stakingConfig.coreContracts) {
-        const contract = await loadContract({
-          name: 'CoreProxy',
-          type: DeploymentType.synth,
-          network,
-          group: rewardGroup,
-        });
-        stateProxies.push(contract.address);
+    if (stakingConfig.coreContracts) {
+      const stateProxies = [];
+      try {
+        for (const rewardGroup of stakingConfig.coreContracts) {
+          const contract = await loadContract({
+            name: 'CoreProxy',
+            type: DeploymentType.synth,
+            network,
+            group: rewardGroup,
+          });
+          stateProxies.push(contract.address);
+        }
+
+        console.log(yellow('Approving state contracts...'));
+        await proxyContract.setApprovedStateContracts(stateProxies);
+        console.log(green('State contracts approved successfully!'));
+      } catch (error) {
+        console.log(
+          red(`Failed to set approved state contracts. Reason: ${error}\n`),
+        );
       }
-
-      console.log(yellow('Approving state contracts...'));
-      await implementation.setApprovedStateContracts(stateProxies);
-      console.log(green('State contracts approved successfully!'));
-    } catch (error) {
-      console.log(
-        red(`Failed to set approved state contracts. Reason: ${error}\n`),
-      );
     }
 
-    try {
-      console.log(yellow('Setting rewards duration...'));
-      await implementation.setRewardsDuration(
-        stakingConfig.rewardsDurationSeconds,
-      );
-      console.log(green('Rewards duration successfully set'));
-    } catch (error) {
-      console.log(
-        red(`Failed to set the rewards duration. Reason: ${error}\n`),
-      );
+    const existingRewardsDuration = await proxyContract.rewardsDuration();
+    if (!existingRewardsDuration.eq(stakingConfig.rewardsDurationSeconds)) {
+      try {
+        console.log(
+          yellow(
+            `Setting rewards duration: ${stakingConfig.rewardsDurationSeconds}`,
+          ),
+        );
+        await proxyContract.setRewardsDuration(
+          stakingConfig.rewardsDurationSeconds,
+        );
+        console.log(green('Rewards duration successfully set'));
+      } catch (error) {
+        console.log(
+          red(`Failed to set the rewards duration. Reason: ${error}\n`),
+        );
+        return;
+      }
+    } else {
+      console.log(green(`Rewards duration is already set`));
     }
-
-    console.log(yellow(`Verifying contracts...`));
-    if (!stakingConfig.stakingToken) {
-      const stakingToken = TestTokenFactory.connect(
-        stakingTokenAddress,
-        signer,
-      );
-      // A new testing token was created
-      console.log(yellow(`Verifying test token...`));
-      await hre.run('verify:verify', {
-        address: stakingTokenAddress,
-        constructorArguments: [await stakingToken.name(), name, 18],
-      });
-      console.log(green(`Test token verified!`));
-    }
-
-    console.log(yellow(`Verifying implementation...`));
-    await hre.run('verify:verify', {
-      address: implementationContract,
-      constructorArguments: [],
-    });
-    console.log(green(`Implementation contract verified`));
-
-    console.log(yellow(`Verifying proxy...`));
-    await hre.run('verify:verify', {
-      address: proxyContract,
-      constructorArguments: [
-        implementationContract,
-        await signer.getAddress(),
-        [],
-      ],
-    });
   });
 
 task('deploy-staking-liquidity', 'Deploy a LiquidityCampaign')
@@ -404,6 +410,21 @@ task('deploy-staking-joint-passport', 'Deploy a JointPassportCampaign')
       },
       networkConfig,
     );
+    await verifyContract(
+      hre,
+      jointPassportCampaignAddy,
+      arcDAO.address,
+      arcRewardsDistributor || signer.address,
+      collabRewardsDistributor || signer.address,
+      rewardToken.address,
+      collabRewardsToken,
+      stakingToken,
+      creditScoreDetails.address,
+      daoAllocation,
+      maxStakePerUser,
+      creditScoreThreshold,
+    );
+
     const jointPassportCampaign = JointPassportCampaignFactory.connect(
       jointPassportCampaignAddy,
       signer,
@@ -412,26 +433,6 @@ task('deploy-staking-joint-passport', 'Deploy a JointPassportCampaign')
     console.log(yellow(`Setting rewards duration...`));
     await jointPassportCampaign.setRewardsDuration(rewardsDurationSeconds);
     console.log(green(`Rewards duration was set successfully`));
-
-    if (['mainnet', 'rinkeby'].includes(network)) {
-      console.log(yellow(`Verifying contract...`));
-      await hre.run('verify:verify', {
-        address: jointPassportCampaignAddy,
-        constructorArguments: [
-          arcDAO.address,
-          arcRewardsDistributor || signer.address,
-          collabRewardsDistributor || signer.address,
-          rewardToken.address,
-          collabRewardsToken,
-          stakingToken,
-          creditScoreDetails.address,
-          daoAllocation,
-          maxStakePerUser,
-          creditScoreThreshold,
-        ],
-      });
-      console.log(green(`Contract verified successfully!`));
-    }
   });
 
 task(
