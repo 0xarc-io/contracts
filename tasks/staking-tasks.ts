@@ -103,8 +103,8 @@ task('deploy-staking', 'Deploy a staking/reward pool')
       },
       networkConfig,
     );
-    // console.log(yellow(`Verifying implementation...`));
-    // await verifyContract(hre, implementationContract);
+    console.log(yellow(`Verifying implementation...`));
+    await verifyContract(hre, implementationContract);
 
     const proxyAddress = await deployContract(
       {
@@ -121,14 +121,14 @@ task('deploy-staking', 'Deploy a staking/reward pool')
       },
       networkConfig,
     );
-    // console.log(yellow(`Verifying proxy...`));
-    // await verifyContract(
-    //   hre,
-    //   proxyAddress,
-    //   implementationContract,
-    //   await signer.getAddress(),
-    //   [],
-    // );
+    console.log(yellow(`Verifying proxy...`));
+    await verifyContract(
+      hre,
+      proxyAddress,
+      implementationContract,
+      await signer.getAddress(),
+      [],
+    );
 
     const proxyContract = stakingConfig.contractFactory.connect(
       proxyAddress,
@@ -156,28 +156,28 @@ task('deploy-staking', 'Deploy a staking/reward pool')
     }
 
     // Add approved state contracts
-    // if (stakingConfig.coreContracts) {
-    //   const stateProxies = [];
-    //   try {
-    //     for (const rewardGroup of stakingConfig.coreContracts) {
-    //       const contract = await loadContract({
-    //         name: 'CoreProxy',
-    //         type: DeploymentType.synth,
-    //         network,
-    //         group: rewardGroup,
-    //       });
-    //       stateProxies.push(contract.address);
-    //     }
+    if (stakingConfig.coreContracts) {
+      const stateProxies = [];
+      try {
+        for (const rewardGroup of stakingConfig.coreContracts) {
+          const contract = await loadContract({
+            name: 'CoreProxy',
+            type: DeploymentType.synth,
+            network,
+            group: rewardGroup,
+          });
+          stateProxies.push(contract.address);
+        }
 
-    //     console.log(yellow('Approving state contracts...'));
-    //     await proxyContract.setApprovedStateContracts(stateProxies);
-    //     console.log(green('State contracts approved successfully!'));
-    //   } catch (error) {
-    //     console.log(
-    //       red(`Failed to set approved state contracts. Reason: ${error}\n`),
-    //     );
-    //   }
-    // }
+        console.log(yellow('Approving state contracts...'));
+        await proxyContract.setApprovedStateContracts(stateProxies);
+        console.log(green('State contracts approved successfully!'));
+      } catch (error) {
+        console.log(
+          red(`Failed to set approved state contracts. Reason: ${error}\n`),
+        );
+      }
+    }
 
     const existingRewardsDuration = await proxyContract.rewardsDuration();
     if (!existingRewardsDuration.eq(stakingConfig.rewardsDurationSeconds)) {
