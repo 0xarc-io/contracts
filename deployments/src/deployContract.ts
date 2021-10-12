@@ -53,6 +53,7 @@ export async function deployContract(
 
   console.log(yellow(`* Deploying: ${details}`));
   const signedTx = await networkParams.signer.sendTransaction(tx);
+  await signedTx.wait();
 
   console.log(gray(`* Sending tx: ${signedTx.hash}`));
 
