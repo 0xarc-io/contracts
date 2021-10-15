@@ -1,0 +1,32 @@
+[
+  {
+    "name": "SapphirePassportScores",
+    "source": "SapphirePassportScores",
+    "address": "0x2b98fD7F8A06d7E732442C8B437b929b20803D07",
+    "txn": "0xb769e5597bafc2f435527985023872699c257597f169aac21bd0dac74bb2df09",
+    "network": "fuji",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "SapphirePassportScores",
+    "source": "SapphirePassportScores",
+    "address": "0x79c1bbF8Fcd80ed61CAf4f31F0A4433c63a6ff0C",
+    "txn": "0x56b9fd3380789b9ceeffca0c121b4334098cacbd66f1a56e6c9ad0b191663c5e",
+    "network": "fuji",
+    "version": 2,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "SapphirePassportScoresProxy",
+    "source": "ArcProxy",
+    "address": "0x13A05400affAa43705392Cf989BceD4c5534C5C8",
+    "txn": "0x7bac63fc1514cb8fe1fbf4e690a594a1b9288286dcbf93756f3462767316bda4",
+    "network": "fuji",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  }
+]
