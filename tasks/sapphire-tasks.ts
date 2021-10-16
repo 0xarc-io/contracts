@@ -144,7 +144,7 @@ task(
         source: 'SapphirePassportScores',
         network: network,
       });
-      version = existingPassportScoresImpl.version + 1;
+      version = existingPassportScoresImpl.version;
       console.log(
         yellow(
           `SapphireCreditScore implementation found. Deploying a new version ${version}`,
