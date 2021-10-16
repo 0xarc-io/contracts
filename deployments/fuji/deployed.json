@@ -10,16 +10,6 @@
     "group": ""
   },
   {
-    "name": "SapphirePassportScores",
-    "source": "SapphirePassportScores",
-    "address": "0x79c1bbF8Fcd80ed61CAf4f31F0A4433c63a6ff0C",
-    "txn": "0x56b9fd3380789b9ceeffca0c121b4334098cacbd66f1a56e6c9ad0b191663c5e",
-    "network": "fuji",
-    "version": 2,
-    "type": "global",
-    "group": ""
-  },
-  {
     "name": "SapphirePassportScoresProxy",
     "source": "ArcProxy",
     "address": "0x13A05400affAa43705392Cf989BceD4c5534C5C8",
