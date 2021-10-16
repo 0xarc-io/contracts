@@ -31,7 +31,7 @@
         "test/*"
       ],
       "@deployments/*": [
-        "@deployments/*"
+        "deployments/*"
       ],
     },
     "plugins": [
@@ -44,17 +44,17 @@
     ]
   },
   "include": [
-    "./src/**/*",
-    "./test/**/*",
-    "./deployments/**/*",
-    "./arc-types/**/*/*",
-    "./tasks/*",
-    "./deployments/rinkeby/*.json",
-    "./deployments/mainnet/*.json",
-    "./deployments/playnet/*.json"
+    "src/**/*",
+    "arc-types",
+    "deployments/**/*.json",
+    "deployments/types"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "deployments/local",
+    "deployments/src",
+    "test/**/*",
+    "tasks/**/*"
   ],
   "files": [
     "arc-types/augmentations.d.ts",
