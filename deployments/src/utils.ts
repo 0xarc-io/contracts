@@ -1,18 +1,25 @@
 import fs from 'fs-extra';
 
-import { loadDeployedContracts, getDeploymentsFilePath } from './loadDeployedContracts';
+import {
+  loadDeployedContracts,
+  getDeploymentsFilePath,
+} from './loadDeployedContracts';
 import { asyncForEach } from '../../src/utils/asyncForEach';
 import { red, magenta } from 'chalk';
 import { Provider } from '@ethersproject/providers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { NetworkParams } from './deployContract';
+import { NetworkParams } from '@deployments/types';
 
 export async function loadDetails(hre: HardhatRuntimeEnvironment) {
   const network = hre.network.name;
   const signer = (await (hre as any).ethers.getSigners())[0];
 
   const networkDetails = hre.config.networks[network];
-  const networkConfig = { network, signer, gasPrice: networkDetails.gasPrice } as NetworkParams;
+  const networkConfig = {
+    network,
+    signer,
+    gasPrice: networkDetails.gasPrice,
+  } as NetworkParams;
 
   return {
     network,
@@ -44,7 +51,10 @@ export async function pruneDeployments(network: string, provider: Provider) {
   if (network == 'local' || network == 'hardhat') {
     const deploymentPath = getDeploymentsFilePath(network);
     console.log(magenta(`${prunedLength} Contracts Pruned!`));
-    await fs.writeFileSync(deploymentPath, JSON.stringify(prunedEntries, null, 2));
+    await fs.writeFileSync(
+      deploymentPath,
+      JSON.stringify(prunedEntries, null, 2),
+    );
     return;
   }
 

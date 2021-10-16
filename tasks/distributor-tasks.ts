@@ -1,3 +1,4 @@
+import { DeploymentType } from '@deployments/types';
 import BalanceTree from '@src/MerkleTree/BalanceTree';
 import { MerkleDistributorFactory } from '@src/typings';
 import { readCsv } from '@src/utils/readCsv';
@@ -5,7 +6,11 @@ import { green, yellow } from 'chalk';
 import { BigNumber } from 'ethers';
 import { task } from 'hardhat/config';
 import path from 'path';
-import { deployContract, DeploymentType, loadDetails, pruneDeployments } from '../deployments/src';
+import {
+  deployContract,
+  loadDetails,
+  pruneDeployments,
+} from '../deployments/src';
 
 task('distributor-deploy', 'Deploy merkle token distributor')
   .addParam('token', 'The address of the distributed token')
@@ -37,7 +42,9 @@ task('distributor-deploy', 'Deploy merkle token distributor')
       5,
     );
 
-    console.log(green(`Contract MerkleDistributor is at ${distributorAddress}`));
+    console.log(
+      green(`Contract MerkleDistributor is at ${distributorAddress}`),
+    );
 
     console.log(yellow(`Verifying contract...`));
     await hre.run('verify:verify', {
@@ -51,7 +58,10 @@ task('distributor-toggle-activity', 'Switch activity of distributor')
   .addParam('address', 'The address of the distributor contract')
   .setAction(async (taskArgs, hre) => {
     const { signer } = await loadDetails(hre);
-    const distributorContract = MerkleDistributorFactory.connect(taskArgs.address, signer);
+    const distributorContract = MerkleDistributorFactory.connect(
+      taskArgs.address,
+      signer,
+    );
     const { wait } = await distributorContract.switchActive();
     await wait();
     console.log(

@@ -1,24 +1,7 @@
-import { Signer } from 'ethers';
-import { writeToDeployments, DeploymentType } from './writeToDeployments';
+import { writeToDeployments } from './writeToDeployments';
 import { yellow, gray, green, red, magenta } from 'chalk';
 import { loadContracts } from './loadContracts';
-import { TransactionRequest } from '@ethersproject/providers';
-
-export interface DeployContractParams {
-  name: string;
-  source: string;
-  data: TransactionRequest;
-  version: number;
-  type: DeploymentType;
-  group?: string;
-}
-
-export interface NetworkParams {
-  signer: Signer;
-  network: string;
-  gasPrice?: string;
-  gasLimit?: string;
-}
+import { DeployContractParams, NetworkParams } from '@deployments/types';
 
 export async function deployContract(
   deployParams: DeployContractParams,
