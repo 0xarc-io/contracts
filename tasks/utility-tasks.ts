@@ -3,13 +3,13 @@ import { IMintableTokenFactory } from '@src/typings/IMintableTokenFactory';
 import { green, yellow } from 'chalk';
 import {
   deployContract,
-  DeploymentType,
   loadDetails,
   pruneDeployments,
 } from '../deployments/src';
 import { utils } from 'ethers';
 import { task } from 'hardhat/config';
 import { TestTokenFactory } from '@src/typings';
+import { DeploymentType } from '@deployments/types';
 
 task('mint-tokens')
   .addParam('token', 'The address of the token to mint from')
