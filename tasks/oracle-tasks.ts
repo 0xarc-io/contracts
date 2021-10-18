@@ -1,4 +1,4 @@
-import { DeploymentType } from '@deployments/types';
+import { DeploymentType } from '../deployments/types';
 import { ArcUniswapV2OracleFactory } from '@src/typings';
 import { green } from 'chalk';
 import { task } from 'hardhat/config';

@@ -8,7 +8,7 @@ import { asyncForEach } from '../../src/utils/asyncForEach';
 import { red, magenta } from 'chalk';
 import { Provider } from '@ethersproject/providers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { NetworkParams } from '@deployments/types';
+import { NetworkParams } from '../types';
 
 export async function loadDetails(hre: HardhatRuntimeEnvironment) {
   const network = hre.network.name;

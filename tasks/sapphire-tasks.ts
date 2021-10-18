@@ -25,7 +25,7 @@ import getUltimateOwner from './task-utils/getUltimateOwner';
 import { DEFAULT_MAX_CREDIT_SCORE } from '@test/helpers/sapphireDefaults';
 import { constants } from 'ethers';
 import { verifyContract } from './task-utils';
-import { DeploymentType, NetworkParams } from '@deployments/types';
+import { DeploymentType, NetworkParams } from '../deployments/types';
 
 task(
   'deploy-sapphire-synth',

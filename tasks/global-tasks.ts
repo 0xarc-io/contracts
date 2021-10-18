@@ -14,7 +14,7 @@ import { BigNumber, ContractTransaction, utils } from 'ethers';
 import _ from 'lodash';
 import ArcDecimal from '@src/utils/ArcDecimal';
 import { ArcxTokenV2Factory } from '@src/typings/ArcxTokenV2Factory';
-import { DeploymentType, NetworkParams } from '@deployments/types';
+import { DeploymentType, NetworkParams } from '../deployments/types';
 
 task(
   'deploy-accrual',

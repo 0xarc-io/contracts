@@ -1,4 +1,4 @@
-import { DeploymentType } from '@deployments/types';
+import { DeploymentType } from '../deployments/types';
 import BalanceTree from '@src/MerkleTree/BalanceTree';
 import { MerkleDistributorFactory } from '@src/typings';
 import { readCsv } from '@src/utils/readCsv';

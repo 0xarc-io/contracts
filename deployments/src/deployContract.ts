@@ -1,7 +1,7 @@
 import { writeToDeployments } from './writeToDeployments';
 import { yellow, gray, green, red, magenta } from 'chalk';
 import { loadContracts } from './loadContracts';
-import { DeployContractParams, NetworkParams } from '@deployments/types';
+import { DeployContractParams, NetworkParams } from '../types';
 
 export async function deployContract(
   deployParams: DeployContractParams,
