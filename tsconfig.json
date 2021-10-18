@@ -9,55 +9,31 @@
     "sourceMap": false,
     "outDir": "dist",
     "resolveJsonModule": true,
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@src/*": [
-        "src/*"
-      ],
-      "@utils/*": [
-        "src/utils/*"
-      ],
-      "@typings/*": [
-        "src/typings/*"
-      ],
-      "@arc-types/*": [
-        "arc-types/*"
-      ],
-      "@test/*": [
-        "test/*"
-      ],
-      "@deployments/*": [
-        "@deployments/*"
-      ],
+      "@src/*": ["src/*"],
+      "@utils/*": ["src/utils/*"],
+      "@typings/*": ["src/typings/*"],
+      "@arc-types/*": ["arc-types/*"],
+      "@test/*": ["test/*"],
+      "@deployments/*": ["deployments/*"]
     },
     "plugins": [
       {
         "transform": "@zerollup/ts-transform-paths",
-        "exclude": [
-          "*"
-        ]
+        "exclude": ["*"]
       }
     ]
   },
   "include": [
-    "./src/**/*",
-    "./test/**/*",
-    "./deployments/**/*",
-    "./arc-types/**/*/*",
-    "./tasks/*",
-    "./deployments/rinkeby/*.json",
-    "./deployments/mainnet/*.json",
-    "./deployments/playnet/*.json"
-  ],
-  "exclude": [
-    "node_modules"
-  ],
-  "files": [
+    "src/**/*",
+    "arc-types/**/*",
+    "deployments/**/*",
+    "tasks/**/*",
     "arc-types/augmentations.d.ts",
     "hardhat.config.ts"
-  ]
+  ],
+  "exclude": ["node_modules"]
 }
