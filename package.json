@@ -5,6 +5,7 @@
   "typings": "dist/src/index.d.ts",
   "files": [
     "dist/src/*",
+    "dist/arc-types/*",
     "dist/deployments/src/*",
     "deployments/{mainnet,rinkeby,mumbai}/*.json"
   ],
