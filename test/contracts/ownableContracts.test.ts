@@ -1,10 +1,10 @@
 import 'module-alias/register';
 import { expect } from 'chai';
 import { MockProvider } from 'ethereum-waffle';
-import deployments from '@deployments/mainnet/deployed.json';
+import deployments from '../../deployments/mainnet/deployed.json';
 import { OwnableFactory } from '@src/typings/OwnableFactory';
 import { AdminableFactory } from '@src/typings';
-import { loadContract } from '@deployments/src';
+import { loadContract } from '../../deployments/src';
 
 /* eslint-disable @typescript-eslint/no-var-requires */
 const hre = require('hardhat');
