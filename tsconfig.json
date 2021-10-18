@@ -18,16 +18,14 @@
       "@typings/*": ["src/typings/*"],
       "@arc-types/*": ["arc-types/*"],
       "@test/*": ["test/*"],
-      "*": ["*"]
-    }
-    // "plugins": [
-    //   {
-    //     "transform": "@zerollup/ts-transform-paths",
-    //     "exclude": [
-    //       "*"
-    //     ]
-    //   }
-    // ]
+      "@deployments/*": ["deployments/*"]
+    },
+    "plugins": [
+      {
+        "transform": "@zerollup/ts-transform-paths",
+        "exclude": ["*"]
+      }
+    ]
   },
   "include": [
     "src/**/*",
