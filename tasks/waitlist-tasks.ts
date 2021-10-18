@@ -1,3 +1,4 @@
+import { DeploymentType } from '../deployments/types';
 import { WaitlistBatchFactory } from '@src/typings';
 import { PassportWaitlistFactory } from '@src/typings/PassportWaitlistFactory';
 import { green, yellow } from 'chalk';
@@ -5,7 +6,6 @@ import { utils } from 'ethers';
 import { task } from 'hardhat/config';
 import {
   deployContract,
-  DeploymentType,
   loadDetails,
   pruneDeployments,
 } from '../deployments/src';

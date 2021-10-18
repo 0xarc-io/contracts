@@ -11,11 +11,9 @@ import {
 import { green, magenta, red, yellow } from 'chalk';
 import {
   deployContract,
-  DeploymentType,
   loadCollateralConfig,
   loadContract,
   loadDetails,
-  NetworkParams,
   pruneDeployments,
 } from '../deployments/src';
 import { task } from 'hardhat/config';
@@ -27,6 +25,7 @@ import getUltimateOwner from './task-utils/getUltimateOwner';
 import { DEFAULT_MAX_CREDIT_SCORE } from '@test/helpers/sapphireDefaults';
 import { constants } from 'ethers';
 import { verifyContract } from './task-utils';
+import { DeploymentType, NetworkParams } from '../deployments/types';
 
 task(
   'deploy-sapphire-synth',

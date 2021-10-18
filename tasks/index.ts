@@ -2,7 +2,6 @@ import 'module-alias/register';
 
 export * from './global-tasks';
 export * from './ownership-tasks';
-export * from './subgraph-tasks';
 export * from './verify-contract-tasks';
 export * from './staking-tasks';
 export * from './oracle-tasks';

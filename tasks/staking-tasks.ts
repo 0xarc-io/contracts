@@ -8,7 +8,6 @@ import { green, red, yellow } from 'chalk';
 
 import {
   deployContract,
-  DeploymentType,
   loadContract,
   loadDetails,
   loadStakingConfig,
@@ -17,6 +16,7 @@ import {
 import { task } from 'hardhat/config';
 import getUltimateOwner from './task-utils/getUltimateOwner';
 import { verifyContract } from './task-utils';
+import { DeploymentType } from '../deployments/types';
 
 task('deploy-staking', 'Deploy a staking/reward pool')
   .addParam('name', 'The name of the pool you would like to deploy')
