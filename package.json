@@ -106,7 +106,10 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^2.5.0",
-    "ethers": "^5.0.2"
+    "ethers": "5.0.2"
+  },
+  "resolutions": {
+    "ethereum-waffle/**/ethers": "5.0.2"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
