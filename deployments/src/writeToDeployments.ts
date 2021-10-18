@@ -1,4 +1,4 @@
-import { WriteToDeploymentsParams } from '@deployments/types';
+import { WriteToDeploymentsParams } from '../types';
 import fs from 'fs-extra';
 
 import {

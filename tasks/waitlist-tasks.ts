@@ -1,4 +1,4 @@
-import { DeploymentType } from '@deployments/types';
+import { DeploymentType } from '../deployments/types';
 import { WaitlistBatchFactory } from '@src/typings';
 import { PassportWaitlistFactory } from '@src/typings/PassportWaitlistFactory';
 import { green, yellow } from 'chalk';

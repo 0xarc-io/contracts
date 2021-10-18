@@ -9,7 +9,7 @@ import {
 import { utils } from 'ethers';
 import { task } from 'hardhat/config';
 import { TestTokenFactory } from '@src/typings';
-import { DeploymentType } from '@deployments/types';
+import { DeploymentType } from '../deployments/types';
 
 task('mint-tokens')
   .addParam('token', 'The address of the token to mint from')
