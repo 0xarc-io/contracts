@@ -1,5 +1,4 @@
 import { PassportScore } from '@arc-types/sapphireCore';
-import { utils } from '@ethereum-waffle/provider/node_modules/ethers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { PassportScoreTree } from '@src/MerkleTree';
 import {
@@ -16,7 +15,7 @@ import {
 } from '@test/helpers/testingUtils';
 import chai, { expect } from 'chai';
 import { solidity } from 'ethereum-waffle';
-import { BigNumber, BigNumberish } from 'ethers';
+import { BigNumber, BigNumberish, utils } from 'ethers';
 import 'module-alias/register';
 import { generateContext, ITestContext } from '../context';
 import { deployMockSapphirePassportScores } from '../deployers';
