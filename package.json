@@ -5,8 +5,8 @@
   "typings": "dist/src/index.d.ts",
   "files": [
     "dist/src/*",
-    "dist/arc-types/*",
-    "dist/deployments"
+    "dist/deployments/src/*",
+    "deployments/{mainnet,rinkeby,mumbai}/*.json"
   ],
   "author": "Kerman Kohli <kermankohli@gmail.com>",
   "license": "MIT",
