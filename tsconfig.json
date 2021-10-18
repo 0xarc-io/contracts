@@ -45,16 +45,13 @@
   },
   "include": [
     "src/**/*",
-    "arc-types",
-    "deployments/**/*.json",
-    "deployments/types"
+    "arc-types/**/*",
+    "deployments/**/*",
+    "deployments/**/*",
+    "tasks/**/*"
   ],
   "exclude": [
-    "node_modules",
-    "deployments/local",
-    "deployments/src",
-    "test/**/*",
-    "tasks/**/*"
+    "node_modules"
   ],
   "files": [
     "arc-types/augmentations.d.ts",
