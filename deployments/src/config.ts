@@ -8,6 +8,8 @@ export const networks = [
   'playnet',
   'mumbai',
   'polygon',
+  'fuji',
+  'avalanche',
 ];
 export const deploymentTestNetworks = ['mainnet' /*'playnet'*/];
 

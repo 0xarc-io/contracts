@@ -95,12 +95,22 @@ const config: HardhatUserConfig = {
         eoaOwner: '0xa8C01EfD74A206Bb2d769b6b3a5759508c83F20C',
       },
     },
-    kovan: {
-      url: getNetworkUrl('kovan'),
+    fuji: {
+      url: 'https://api.avax-test.network/ext/bc/C/rpc',
+      chainId: 43113,
       accounts: [params.testnet_private_key],
-      gasPrice: 1000000000,
       users: {
         eoaOwner: '0xa8C01EfD74A206Bb2d769b6b3a5759508c83F20C',
+      },
+    },
+    avalanche: {
+      url: 'https://api.avax.network/ext/bc/C/rpc',
+      chainId: 43114,
+      accounts: [params.deploy_private_key],
+      users: {
+        eoaOwner: '0x62f31e08e279f3091d9755a09914df97554eae0b',
+        multisigOwner: '0x859a95b2b50c1fc25560a2c6dad5b3d0ba34b6e9',
+        arcxDeployer: '0x9c767178528c8a205df63305ebda4bb6b147889b',
       },
     },
     mainnet: {
