@@ -1,28 +1,14 @@
+import { WriteToDeploymentsParams } from '../types';
 import fs from 'fs-extra';
 
-import { getDeploymentsFilePath, loadDeployedContracts } from './loadDeployedContracts';
+import {
+  getDeploymentsFilePath,
+  loadDeployedContracts,
+} from './loadDeployedContracts';
 
 /*
  * Write To Deployments
  */
-
-export enum DeploymentType {
-  synth = 'synth',
-  staking = 'staking',
-  global = 'global',
-  savings = 'savings',
-}
-
-export interface WriteToDeploymentsParams {
-  name: string;
-  source: string;
-  address: string;
-  txn: string;
-  network: string;
-  version: number;
-  type: DeploymentType;
-  group?: string;
-}
 
 export async function writeToDeployments(params: WriteToDeploymentsParams) {
   const contracts = loadDeployedContracts(params.network);

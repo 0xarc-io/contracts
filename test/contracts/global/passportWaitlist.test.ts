@@ -7,7 +7,7 @@ import { MockPassportWaitlist } from '@src/typings/MockPassportWaitlist';
 import { MockPassportWaitlistFactory } from '@src/typings/MockPassportWaitlistFactory';
 import { constants, utils } from 'ethers';
 import { approve } from '@src/utils';
-import { Wallet } from '@ethereum-waffle/provider/node_modules/ethers';
+import { Wallet } from 'ethers';
 
 const PAYMENT_AMOUNT = utils.parseEther('50');
 

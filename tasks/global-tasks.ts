@@ -5,8 +5,6 @@ import {
   pruneDeployments,
 } from '../deployments/src';
 import { task } from 'hardhat/config';
-import { DeploymentType } from '../deployments/src/writeToDeployments';
-import { NetworkParams } from '../deployments/src/deployContract';
 import { green, red, yellow } from 'chalk';
 
 import path from 'path';
@@ -16,6 +14,7 @@ import { BigNumber, ContractTransaction, utils } from 'ethers';
 import _ from 'lodash';
 import ArcDecimal from '@src/utils/ArcDecimal';
 import { ArcxTokenV2Factory } from '@src/typings/ArcxTokenV2Factory';
+import { DeploymentType, NetworkParams } from '../deployments/types';
 
 task(
   'deploy-accrual',
