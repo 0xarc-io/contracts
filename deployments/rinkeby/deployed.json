@@ -369,56 +369,6 @@
     "group": ""
   },
   {
-    "name": "SapphireAssessor",
-    "source": "SapphireAssessor",
-    "address": "0xEAA47d55a17B59Dc0FC72AAceE1240875059E314",
-    "txn": "0x0947f61587a6b142b82f68362a64b2260b914e51b8aa130cff0da26c44f84634",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "global",
-    "group": ""
-  },
-  {
-    "name": "SyntheticToken",
-    "source": "SyntheticTokenV2",
-    "address": "0x2E933E666DfD5089AD70D5Ab25eBA1E3d5e52bA8",
-    "txn": "0xb135ea8c612894c4ddd45187fe0eada4c39258ba1bfd16546961e2a2fc36ec0d",
-    "network": "rinkeby",
-    "version": 2,
-    "type": "synth",
-    "group": ""
-  },
-  {
-    "name": "SyntheticV2Proxy",
-    "source": "ArcProxy",
-    "address": "0x3E9190F29ef08DFdE0550116A8919Cf89FD3F4Fe",
-    "txn": "0x99f7f33c7cee0535d8d917dbc3c239ef6ec9102e3dd2a9b7a0272bdd450236a1",
-    "network": "rinkeby",
-    "version": 2,
-    "type": "synth",
-    "group": "STABLEx"
-  },
-  {
-    "name": "SapphireCore",
-    "source": "SapphireCoreV1",
-    "address": "0xF8C7039Eb95ba3a2de30bD63120EBD905A111474",
-    "txn": "0x1552e97d483c51221e5c60d6a190b3ce49ad93260ac8288b254d922c8c974366",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "synth",
-    "group": ""
-  },
-  {
-    "name": "SapphireCoreProxy",
-    "source": "ArcProxy",
-    "address": "0xBC8636BD79CA9DD20fC373E1076Ad98b2F379E25",
-    "txn": "0xf30c6fb983212efaa1cd97c28e2391aed9926ecc336a5d8f182b95defcae9d9a",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "synth",
-    "group": "cUSDC-STABLEx"
-  },
-  {
     "name": "SapphireCreditScore",
     "source": "SapphireCreditScore",
     "address": "0xa632DD6655BE448c1f1E88654B33463c3CAa6D91",
@@ -449,26 +399,6 @@
     "group": ""
   },
   {
-    "name": "Implementation",
-    "source": "PassportCampaign",
-    "address": "0x785723d4cD1705CE5Ecf13d9C2d7668E0e475260",
-    "txn": "0x90f91eaac87a9dfcd58290d5df0cfeb61dcc9f74c7520389198a8ef89de65829",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "staking",
-    "group": "ARCxPassportPool"
-  },
-  {
-    "name": "Proxy",
-    "source": "ArcProxy",
-    "address": "0xCb8b1A39CfcceAdD69121Ba3f2c6B005dCdFAb9f",
-    "txn": "0xd2072a892a4f1993e9337ee21b2f276844377dd0cad5cfdaa0a06b4587d63eb5",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "staking",
-    "group": "ARCxPassportPool"
-  },
-  {
     "name": "WaitlistBatch",
     "source": "WaitlistBatch",
     "address": "0xbC0611cb95B8Aeb2d4758196a5383baD374BC189",
@@ -477,16 +407,6 @@
     "version": 1,
     "type": "global",
     "group": ""
-  },
-  {
-    "name": "JointPassportCampaign",
-    "source": "JointPassportCampaign",
-    "address": "0xeFadB9174C86bE1b97893f04f6a52659B63E9fDf",
-    "txn": "0xd7f57b25ed4427a785a8d7d26b3778dbc307e485bbd0b7025c1f7b12c5c4af61",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "staking",
-    "group": "JointPassportPool"
   },
   {
     "name": "DefaultPassportSkin",
@@ -543,16 +463,6 @@
     "source": "TestToken",
     "address": "0x890011621298dc297550401852284D992071eBCd",
     "txn": "0x040fdd25b935b7907343de20c653b14ab40cc5dc3a2bb43e023715147fa7d0cb",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "staking",
-    "group": "SapphirePassportPool"
-  },
-  {
-    "name": "Implementation",
-    "source": "PassportCampaign",
-    "address": "0x29FaBE7D51A686b4F8f3739dA7fcC147342C538d",
-    "txn": "0xb17771e98a5ed4123372f10105fc3d89e29377493760962ab7b4bce631267d11",
     "network": "rinkeby",
     "version": 1,
     "type": "staking",
@@ -657,5 +567,95 @@
     "version": 1,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "Implementation",
+    "source": "PassportCampaign",
+    "address": "0xE1852D6C2163594e30E3D0bf49735d41Dc4582dE",
+    "txn": "0x69a3ee4b124202d91917c21da9a4b8efe895ef994798eef9925c2827bde941a3",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "staking",
+    "group": "ARCxPassportPool"
+  },
+  {
+    "name": "Proxy",
+    "source": "ArcProxy",
+    "address": "0x65b738f70a70702eD5c055e4AE52Ef84C1660a3d",
+    "txn": "0xd70a8efcf5560b245197f74fc00536dd2413c35ad0a1e1326a11a544888b4d3d",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "staking",
+    "group": "ARCxPassportPool"
+  },
+  {
+    "name": "JointPassportCampaign",
+    "source": "JointPassportCampaign",
+    "address": "0x5B2CC2a293B45bc1d2749f4040F26b1e3140af1a",
+    "txn": "0x1de9063437cb9c32de4474fb514184937ca496630fe1390c431bb73480feb72e",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "staking",
+    "group": "JointPassportPool"
+  },
+  {
+    "name": "SyntheticToken",
+    "source": "SyntheticTokenV2",
+    "address": "0xF04B56B66844Ef14f3b0F5C5E0c0Fe7379621aFF",
+    "txn": "0xd70f74c53e73f6f95f53bbc765cc5d69b898a302fcf2e5af8f91296f2821f3cf",
+    "network": "rinkeby",
+    "version": 2,
+    "type": "synth",
+    "group": ""
+  },
+  {
+    "name": "SyntheticV2Proxy",
+    "source": "ArcProxy",
+    "address": "0x8b18421D1ece5806DC246E14F600C2cA1534Aa3F",
+    "txn": "0xa3ea5ef0d5ff4a11f3deb62e84d50bf8d36319b5e7852e8a0f22aac0a7a6e6ef",
+    "network": "rinkeby",
+    "version": 2,
+    "type": "synth",
+    "group": "ARCUSD"
+  },
+  {
+    "name": "SapphireAssessor",
+    "source": "SapphireAssessor",
+    "address": "0x8ac97Bb5c95Ff42765D64c8cD96B51f96512E4fA",
+    "txn": "0x39cf641a92ae8dcfa30d909046c5b79bc53fcf43f20c1157ddfab3b053d209aa",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "SapphireCore",
+    "source": "SapphireCoreV1",
+    "address": "0x4E99D54A001A2036Be8824eec0F0FA0E22812800",
+    "txn": "0x83b153d9f16ce03d00beddeeba250b3c7d3886ce5b780a133d9ccf3a8f3d6849",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": ""
+  },
+  {
+    "name": "Oracle",
+    "source": "CTokenOracle",
+    "address": "0x050ED3e6Ee6ED5CD838Ef83F81beBd4ac655B40f",
+    "txn": "0x33d28fb0ee55c06ee859a6990b722c549267cea863deff561fa66eeac86d83c0",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": "cUSDC-ARCUSD"
+  },
+  {
+    "name": "SapphireCoreProxy",
+    "source": "ArcProxy",
+    "address": "0x147B9f7e8eB2Fd159fDc9E6E81d67CE82a4B6381",
+    "txn": "0x818d1ab5deff91e5059a9b3c8ed0f80fb9ed4cce89123acf3c98c36b55d92448",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "synth",
+    "group": "cUSDC-ARCUSD"
   }
 ]

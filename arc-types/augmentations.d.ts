@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Fixture } from 'ethereum-waffle';
 
 import { Contracts, Stubs, TestingSigners, SDKs } from './testing';

@@ -7,10 +7,10 @@ import { green, red, yellow } from 'chalk';
 import {
   pruneDeployments,
   loadDetails,
-  DeploymentType,
   deployContract,
 } from '../deployments/src';
 import { task } from 'hardhat/config';
+import { DeploymentType } from '../deployments/types';
 
 task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
   .addParam('name', 'Name of the defi passport NFT')

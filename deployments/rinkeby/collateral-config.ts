@@ -54,20 +54,20 @@ export default {
       position_minimum_collateral: '',
     },
   },
-  'cUSDC-STABLEx': {
+  'cUSDC-ARCUSD': {
     collateral_address: '0x5b281a6dda0b271e91ae35de655ad301c976edb1',
     oracle: {
       source: 'CTokenOracle',
       getDeployTx: (signer: SignerWithAddress) =>
         new CTokenOracleFactory(signer).getDeployTransaction(
           '0x5b281a6dda0b271e91ae35de655ad301c976edb1',
-          '0x986b5E1e1755e3C2440e960477f25201B0a8bbD4',
-          '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419',
+          '0xdCA36F27cbC4E38aE16C4E9f99D39b42337F6dcf',
+          '0x8A753747A1Fa494EC906cE90E9f37563A8AF630e',
         ),
       constructorArguments: [
         '0x5b281a6dda0b271e91ae35de655ad301c976edb1',
-        '0x986b5E1e1755e3C2440e960477f25201B0a8bbD4',
-        '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419',
+        '0xdCA36F27cbC4E38aE16C4E9f99D39b42337F6dcf',
+        '0x8A753747A1Fa494EC906cE90E9f37563A8AF630e',
       ],
     },
     version: 1,
