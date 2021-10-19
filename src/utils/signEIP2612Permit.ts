@@ -22,7 +22,7 @@ export const signEIP2612Permit = async (
   deadline: BigNumber,
   nonce: BigNumber,
   chainId: number,
-  version = '1'
+  version = '1',
 ): Promise<SignatureInfo> => {
   const message = {
     owner,
@@ -41,8 +41,6 @@ export const signEIP2612Permit = async (
       { name: 'deadline', type: 'uint256' },
     ],
   };
-
-  console.log({ domain, message });
 
   const signature = await signer._signTypedData(domain, types, message);
 
