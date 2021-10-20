@@ -14,7 +14,7 @@ export async function verifyContract(
   ...contractArgs: any[]
 ) {
   const { network } = hre.hardhatArguments;
-  if (!(network in ETHERSCAN_APY_SUPPORTED_NETWORKS)) {
+  if (!ETHERSCAN_APY_SUPPORTED_NETWORKS.includes(network)) {
     console.log(
       yellow(
         `Unable to verify contract ${contractAddress}: network ${network} is not supported on the hardhat etherscan verify plugin`,

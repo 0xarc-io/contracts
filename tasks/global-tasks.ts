@@ -15,6 +15,7 @@ import _ from 'lodash';
 import ArcDecimal from '@src/utils/ArcDecimal';
 import { ArcxTokenV2Factory } from '@src/typings/ArcxTokenV2Factory';
 import { DeploymentType, NetworkParams } from '../deployments/types';
+import { verifyContract } from '.';
 
 task(
   'deploy-accrual',
@@ -70,6 +71,7 @@ task('deploy-arcx-token-v2', 'Deploy the ArcxTokenV2')
       },
       networkConfig,
     );
+    await verifyContract(hre, arcxToken, name, symbol, oldArcxToken);
 
     console.log(green(`ARCX V2 successfully deployed at ${arcxToken}`));
   });

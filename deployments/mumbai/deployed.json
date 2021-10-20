@@ -48,5 +48,35 @@
     "version": 1,
     "type": "global",
     "group": "DefiPassport"
+  },
+  {
+    "name": "TestToken",
+    "source": "TestToken",
+    "address": "0xa09AD20Adf13175A7BedB6Af95cbC4d38d87D524",
+    "txn": "0xa53ccdd5d89b5847c8559caca48d525ee16831fefe17acfb597ac68d33c50117",
+    "network": "mumbai",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "WaitlistBatch",
+    "source": "WaitlistBatch",
+    "address": "0xec680208d3F6A9266CdC80517E5F6Ed8AE02fe3A",
+    "txn": "0x8a726b0ef0a82a236b488acff644469213eb9b7c3a2cb6543c34d3a351091062",
+    "network": "mumbai",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "PassportWaitlist",
+    "source": "PassportWaitlist",
+    "address": "0x6fd5f8042C01AB3Ab7a8a861F6088cDD6852090f",
+    "txn": "0x786439b60dfd91870238645297f9a5ae937c13474a3bd067f444e80d6416846e",
+    "network": "mumbai",
+    "version": 1,
+    "type": "global",
+    "group": ""
   }
 ]
