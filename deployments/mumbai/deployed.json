@@ -60,30 +60,20 @@
     "group": ""
   },
   {
-    "name": "ArcxToken",
-    "source": "ArcxTokenV2",
-    "address": "0x9A0CC1F58C842245d846705123e3B37Ba7aB4cC3",
-    "txn": "0xf03d03bb5525dc95516b39a21f3d59ab0193e06e43ad0e4ce394788ae0478826",
-    "network": "mumbai",
-    "version": 2,
-    "type": "global",
-    "group": ""
-  },
-  {
-    "name": "PassportWaitlist",
-    "source": "PassportWaitlist",
-    "address": "0xeA117bcc23E86fA1E9367CD98828016a0fCe4d21",
-    "txn": "0xcf9918c249eba075c932894b90c992eb6450c3c189953db48be0043bba242482",
+    "name": "WaitlistBatch",
+    "source": "WaitlistBatch",
+    "address": "0xec680208d3F6A9266CdC80517E5F6Ed8AE02fe3A",
+    "txn": "0x8a726b0ef0a82a236b488acff644469213eb9b7c3a2cb6543c34d3a351091062",
     "network": "mumbai",
     "version": 1,
     "type": "global",
     "group": ""
   },
   {
-    "name": "WaitlistBatch",
-    "source": "WaitlistBatch",
-    "address": "0xe843f5C2B65A6492Eb82771cff4D55C77f1d0993",
-    "txn": "0x63dbd5eebd3d087220904868ea0b8273e23755070d7b896566da18d95d5e8ab9",
+    "name": "PassportWaitlist",
+    "source": "PassportWaitlist",
+    "address": "0x6fd5f8042C01AB3Ab7a8a861F6088cDD6852090f",
+    "txn": "0x786439b60dfd91870238645297f9a5ae937c13474a3bd067f444e80d6416846e",
     "network": "mumbai",
     "version": 1,
     "type": "global",
