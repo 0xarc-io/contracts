@@ -1,4 +1,8 @@
-import { AddressAccrualFactory, WhitelistSaleFactory } from '@src/typings';
+import {
+  AddressAccrualFactory,
+  TestTokenFactory,
+  WhitelistSaleFactory,
+} from '@src/typings';
 import {
   deployContract,
   loadDetails,
@@ -15,6 +19,7 @@ import _ from 'lodash';
 import ArcDecimal from '@src/utils/ArcDecimal';
 import { ArcxTokenV2Factory } from '@src/typings/ArcxTokenV2Factory';
 import { DeploymentType, NetworkParams } from '../deployments/types';
+import { verifyContract } from '.';
 
 task(
   'deploy-accrual',
@@ -48,13 +53,40 @@ task(
 task('deploy-arcx-token-v2', 'Deploy the ArcxTokenV2')
   .addParam('name', 'Then name of the token')
   .addParam('symbol', 'The symbol of the token')
-  .addParam('oldtoken', 'The address of the old ARCX token')
+  .addOptionalParam('oldtoken', 'The address of the old ARCX token')
   .setAction(async (taskArgs, hre) => {
     const network = hre.network.name;
     const { name, symbol, oldtoken: oldArcxToken } = taskArgs;
 
     const signer = (await hre.ethers.getSigners())[0];
     const networkConfig = { network, signer } as NetworkParams;
+
+    let testToken = '';
+
+    if (!oldArcxToken) {
+      if (['mainnet', 'polygon', 'avalanche'].includes(network)) {
+        throw Error(
+          `You are deploying on ${network} but have not specified the old token`,
+        );
+      }
+
+      testToken = await deployContract(
+        {
+          name: 'TestToken',
+          source: 'TestToken',
+          data: new TestTokenFactory(signer).getDeployTransaction(
+            'TestToken',
+            'TEST',
+            18,
+          ),
+          version: 1,
+          type: DeploymentType.global,
+        },
+        networkConfig,
+      );
+
+      await verifyContract(hre, testToken, 'TestToken', 'TEST', 18);
+    }
 
     const arcxToken = await deployContract(
       {
@@ -63,12 +95,19 @@ task('deploy-arcx-token-v2', 'Deploy the ArcxTokenV2')
         data: new ArcxTokenV2Factory(signer).getDeployTransaction(
           name,
           symbol,
-          oldArcxToken,
+          oldArcxToken || testToken,
         ),
         version: 2,
         type: DeploymentType.global,
       },
       networkConfig,
+    );
+    await verifyContract(
+      hre,
+      arcxToken,
+      name,
+      symbol,
+      oldArcxToken || testToken,
     );
 
     console.log(green(`ARCX V2 successfully deployed at ${arcxToken}`));
