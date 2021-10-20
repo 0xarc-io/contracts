@@ -1,7 +1,6 @@
 import { DeploymentType } from '../deployments/types';
 import { WaitlistBatchFactory } from '@src/typings';
 import { PassportWaitlistFactory } from '@src/typings/PassportWaitlistFactory';
-import { green, yellow } from 'chalk';
 import { utils } from 'ethers';
 import { task } from 'hardhat/config';
 import {
@@ -37,14 +36,7 @@ task('deploy-waitlist-batch', 'Deploy the WaitlistBatch contract')
       networkConfig,
     );
 
-    console.log(green(`Contract WaitlistBatch deployed at ${waitlistAddress}`));
-
-    console.log(yellow(`Verifying contract...`));
-    await hre.run('verify:verify', {
-      address: waitlistAddress,
-      constructorArguments: [currency, depositduration],
-    });
-    console.log(green(`Contract verified successfully!`));
+    await verifyContract(hre, waitlistAddress, currency, depositduration);
   });
 
 task('deploy-passport-waitlist', 'Deploy the PassportWaitlist contract')
