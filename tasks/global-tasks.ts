@@ -49,7 +49,7 @@ task(
 task('deploy-arcx-token-v2', 'Deploy the ArcxTokenV2')
   .addParam('name', 'Then name of the token')
   .addParam('symbol', 'The symbol of the token')
-  .addOptionalParam('oldtoken', 'The address of the old ARCX token')
+  .addParam('oldtoken', 'The address of the old ARCX token')
   .setAction(async (taskArgs, hre) => {
     const network = hre.network.name;
     const { name, symbol, oldtoken: oldArcxToken } = taskArgs;
