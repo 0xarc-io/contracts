@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
+pragma solidity ^0.8.9;
 
-pragma solidity ^0.5.16;
+// solhint-disable avoid-low-level-calls
+// solhint-disable reason-string
+// solhint-disable comprehensive-interface
+// solhint-disable no-inline-assembly
 
 contract ArcProxy {
 
@@ -51,7 +55,7 @@ contract ArcProxy {
     /**
     * Contract constructor.
     * @param _logic address of the initial implementation.
-    * @param _admin Address of the proxy administrator.
+    * @param admin_ Address of the proxy administrator.
     * @param _data Data to send as msg.data to the implementation to initialize the proxied contract.
     * It should include the signature and the parameters of the function to be called, as described in
     * https://solidity.readthedocs.io/en/v0.4.24/abi-spec.html#function-selector-and-argument-encoding.
@@ -59,10 +63,9 @@ contract ArcProxy {
     */
     constructor(
         address _logic,
-        address _admin,
+        address admin_,
         bytes memory _data
     )
-        public
         payable
     {
         assert(
@@ -86,14 +89,14 @@ contract ArcProxy {
             )
         );
 
-        _setAdmin(_admin);
+        _setAdmin(admin_);
     }
 
     /**
      * @dev Fallback function.
      * Implemented entirely in `_fallback`.
      */
-    function () external payable {
+    fallback() external payable {
         _fallback();
     }
 
@@ -106,30 +109,38 @@ contract ArcProxy {
     }
 
     /**
+     * @dev Fallback function that delegates calls to the address returned by `_implementation()`.
+     *      Will run if call data is empty.
+     */
+    receive() external payable virtual {
+        _fallback();
+    }
+
+    /**
      * @dev Delegates execution to an implementation contract.
      * This is a low level function that doesn't return to its internal call site.
      * It will return to the external caller whatever the implementation returns.
-     * @param implementation Address to delegate.
+     * @param implementation_ Address to delegate.
      */
-    function _delegate(address implementation) internal {
+    function _delegate(address implementation_) internal {
         /* solium-disable-next-line */
         assembly {
             // Copy msg.data. We take full control of memory in this inline assembly
             // block because it will not return to Solidity code. We overwrite the
             // Solidity scratch pad at memory position 0.
-            calldatacopy(0, 0, calldatasize)
+            calldatacopy(0, 0, calldatasize())
 
             // Call the implementation.
             // out and outsize are 0 because we don't know the size yet.
-            let result := delegatecall(gas, implementation, 0, calldatasize, 0, 0)
+            let result := delegatecall(gas(), implementation_, 0, calldatasize(), 0, 0)
 
             // Copy the returned data.
-            returndatacopy(0, 0, returndatasize)
+            returndatacopy(0, 0, returndatasize())
 
             switch result
             // delegatecall returns 0 on error.
-            case 0 { revert(0, returndatasize) }
-            default { return(0, returndatasize) }
+            case 0 { revert(0, returndatasize()) }
+            default { return(0, returndatasize()) }
         }
     }
 
@@ -155,7 +166,7 @@ contract ArcProxy {
 
     /**
     * @dev Returns the current implementation.
-    * @return Address of the current implementation
+    * @return impl Address of the current implementation
     */
     function _implementation() internal view returns (address impl) {
         bytes32 slot = IMPLEMENTATION_SLOT;
@@ -255,7 +266,7 @@ contract ArcProxy {
     }
 
     /**
-    * @return The admin slot.
+    * @return adm The admin slot.
     */
     function _admin() internal view returns (address adm) {
         bytes32 slot = ADMIN_SLOT;
