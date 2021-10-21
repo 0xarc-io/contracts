@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.9;
 
-import {Counters} from "@openzeppelin/contracts/drafts/Counters.sol";
+import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
 import {ISapphirePassportScores} from "../../sapphire/ISapphirePassportScores.sol";
 
 contract DefiPassportStorage {
@@ -26,9 +26,6 @@ contract DefiPassportStorage {
     }
 
     /* ========== Public Variables ========== */
-
-    string public name;
-    string public symbol;
 
     /**
      * @notice The credit score contract used by the passport
@@ -72,4 +69,6 @@ contract DefiPassportStorage {
 
     Counters.Counter internal _tokenIds;
 
+    string internal _name;
+    string internal _symbol;
 }
