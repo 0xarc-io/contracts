@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.9;
 
 import {Ownable} from "../lib/Ownable.sol";
 import {Bytes32} from "../lib/Bytes32.sol";
@@ -285,7 +284,7 @@ contract JointPassportCampaign is CampaignStorage, PassportScoreVerifiable, Owna
         } else {
             require(
                 msg.sender == collabRewardsDistributor,
-                "JointPassportCampaign: only the collab distributor can notify collab rewards"
+                "JointPassportCampaign: only collab distributor can notify collab rewards"
             );
 
             // collab token

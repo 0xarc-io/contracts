@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 // prettier-ignore
 
-pragma solidity 0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.9;
 
 import {Ownable} from "../lib/Ownable.sol";
 import {Address} from "../lib/Address.sol";
@@ -49,7 +48,7 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
         require(
             _mapper.isContract() &&
             _passportScores.isContract(),
-            "SapphireAssessor: The mapper and the passport scores must be valid contracts"
+            "SapphireAssessor: mapper and passport scores must be valid contracts"
         );
 
         mapper = ISapphireMapper(_mapper);

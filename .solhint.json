@@ -3,6 +3,7 @@
   "rules": {
     "comprehensive-interface": "off",
     "compiler-version": ["warn", "^0.8.9"],
-    "reason-string": ["error", { "maxLength": 75 }]
+    "reason-string": ["error", { "maxLength": 75 }],
+    "not-rely-on-time": "off"
   }
 }

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.9;
 
 import {Decimal} from "../../lib/Decimal.sol";
 import {SafeMath} from "../../lib/SafeMath.sol";
@@ -21,7 +20,7 @@ contract CTokenOracle is IOracle {
     uint256 public chainlinkTokenScalar;
     uint256 public chainlinkEthScalar;
 
-    uint256 constant BASE = 10 ** 18;
+    uint256 public constant BASE = 10 ** 18;
 
     ICToken public cToken;
 

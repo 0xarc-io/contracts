@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.9;
 
 import {SafeMath} from "../../lib/SafeMath.sol";
 import {Decimal} from "../../lib/Decimal.sol";
@@ -12,7 +11,7 @@ import {IChainLinkAggregator} from "../chainlink/IChainLinkAggregator.sol";
 
 import {IBadgerSett} from "./IBadgerSett.sol";
 
-/* solium-disable-next-line */
+/* solhint-disable-next-line */
 contract bBadgerOracle is IOracle {
 
     using SafeMath for uint256;

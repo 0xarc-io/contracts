@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.9;
 
 import {ISapphireOracle} from "../oracle/ISapphireOracle.sol";
 import {ISapphireAssessor} from "./ISapphireAssessor.sol";
@@ -144,5 +143,5 @@ contract SapphireCoreStorageV1 {
     bytes32 internal _proofProtocol;
 }
 
-// solium-disable-next-line no-empty-blocks
+// solhint-disable-next-line no-empty-blocks
 contract SapphireCoreStorage is SapphireCoreStorageV1 {}

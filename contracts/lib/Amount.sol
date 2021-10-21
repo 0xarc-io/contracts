@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.9;
 
 import {SafeMath} from "../lib/SafeMath.sol";
 import {Math} from "../lib/Math.sol";
@@ -13,7 +12,7 @@ library Amount {
 
     // ============ Constants ============
 
-    uint256 constant BASE = 10**18;
+    uint256 public constant BASE = 10**18;
 
     // A Principal Amount is an amount that's been adjusted by an index
 

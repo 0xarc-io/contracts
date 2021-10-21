@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Modified from https://github.com/iearn-finance/audit/blob/master/contracts/yGov/YearnGovernanceBPT.sol
 
-pragma solidity ^0.5.16;
+pragma solidity ^0.8.9;
 
 import {IERC20} from "../token/IERC20.sol";
 

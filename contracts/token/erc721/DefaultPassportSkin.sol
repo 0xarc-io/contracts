@@ -1,4 +1,4 @@
-pragma solidity 0.5.16;
+pragma solidity 0.8.9;
 
 import {ERC721Full} from "@openzeppelin/contracts/token/ERC721/ERC721Full.sol";
 import {Counters} from "@openzeppelin/contracts/drafts/Counters.sol";
