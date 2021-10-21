@@ -46,7 +46,7 @@ const HUNDRED_THOUSAND_ETH = BigNumber.from(100000).pow(18).toString();
 const config: HardhatUserConfig = {
   defaultNetwork: 'hardhat',
   solidity: {
-    version: '0.5.16',
+    version: '0.8.9',
     settings: {
       optimizer: {
         enabled: true,
