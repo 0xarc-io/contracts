@@ -1,7 +1,9 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity 0.8.9;
 
-import {ERC721Full} from "@openzeppelin/contracts/token/ERC721/ERC721Full.sol";
-import {Counters} from "@openzeppelin/contracts/drafts/Counters.sol";
+import {ERC721Enumerable} from "@openzeppelin/contracts/token/erc721/extensions/ERC721Enumerable.sol";
+import {ERC721} from "@openzeppelin/contracts/token/erc721/ERC721.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import {Bytes32} from "../../lib/Bytes32.sol";
@@ -10,12 +12,15 @@ import {Initializable} from "../../lib/Initializable.sol";
 import {DefiPassportStorage} from "./DefiPassportStorage.sol";
 import {ISapphirePassportScores} from "../../sapphire/ISapphirePassportScores.sol";
 import {SapphireTypes} from "../../sapphire/SapphireTypes.sol";
+import {Address} from "../../lib/Address.sol";
+import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
 
-contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializable {
+contract DefiPassport is ERC721Enumerable, Adminable, Initializable, DefiPassportStorage {
 
     /* ========== Libraries ========== */
 
     using Counters for Counters.Counter;
+    using Address for address;
     using Bytes32 for bytes32;
 
     /* ========== Events ========== */
@@ -63,10 +68,10 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
 
     /* ========== Constructor ========== */
 
-    constructor()
-        ERC721Full("", "")
-        public
+    // solhint-disable no-empty-blocks
+    constructor() ERC721("", "")
     {}
+    // solhint-enable no-empty-blocks
 
     /* ========== Modifier ========== */
 
@@ -81,8 +86,8 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
     /* ========== Restricted Functions ========== */
 
     function init(
-        string calldata _name,
-        string calldata _symbol,
+        string calldata name_,
+        string calldata symbol_,
         address _passportScoresAddress,
         address _skinManager
     )
@@ -90,8 +95,8 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         onlyAdmin
         initializer
     {
-        name = _name;
-        symbol = _symbol;
+        _name = name_;
+        _symbol = symbol_;
         skinManager = _skinManager;
 
         require(
@@ -100,16 +105,6 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         );
 
         passportScoresContract = ISapphirePassportScores(_passportScoresAddress);
-
-        /*
-        *   register the supported interfaces to conform to ERC721 via ERC165
-        *   bytes4(keccak256('name()')) == 0x06fdde03
-        *   bytes4(keccak256('symbol()')) == 0x95d89b41
-        *   bytes4(keccak256('tokenURI(uint256)')) == 0xc87b56dd
-        *
-        *   => 0x06fdde03 ^ 0x95d89b41 ^ 0xc87b56dd == 0x5b5e139f
-        */
-        _registerInterface(0x5b5e139f);
     }
 
     /**
@@ -406,51 +401,79 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         _setActiveSkin(tokenId, SkinRecord(msg.sender, _skin, _skinTokenId));
     }
 
+    function name()
+        public
+        view
+        override(ERC721)
+        returns (string memory)
+    {
+        return _name;
+    }
+
+    function symbol()
+        public
+        view
+        override(ERC721)
+        returns (string memory)
+    {
+        return _symbol;
+    }
+
     function approve(
-        address to,
-        uint256 tokenId
+        address,
+        uint256
     )
         public
+        pure
+        override
     {
         revert("DefiPassport: defi passports are not transferrable");
     }
 
     function setApprovalForAll(
-        address to,
-        bool approved
+        address,
+        bool
     )
         public
+        pure
+        override
     {
         revert("DefiPassport: defi passports are not transferrable");
     }
 
     function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId
+        address,
+        address,
+        uint256
     )
         public
+        pure
+        override
     {
         revert("DefiPassport: defi passports are not transferrable");
     }
 
     function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId,
-        bytes memory _data
+        address ,
+        address ,
+        uint256 ,
+        bytes memory
     )
         public
+        pure
+        override
     {
         revert("DefiPassport: defi passports are not transferrable");
     }
 
     function transferFrom(
-        address from,
-        address to,
-        uint256 tokenId
+        address ,
+        address ,
+        uint256 
     )
         public
+        pure
+        override
     {
         revert("DefiPassport: defi passports are not transferrable");
     }
@@ -515,8 +538,9 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
     function tokenURI(
         uint256 tokenId
     )
-        external
+        public
         view
+        override
         returns (string memory)
     {
         require(
@@ -537,7 +561,7 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         return _proofProtocol.toString();
     }
 
-    /* ========== Private Functions ========== */
+    /* ========== Private/Internal Functions ========== */
 
     /**
      * @dev Converts the given address to string. Used when minting new
