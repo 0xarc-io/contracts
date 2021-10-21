@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.5.16;
+pragma solidity 0.8.9;
 
-pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "../lib/SafeMath.sol";
 import {Decimal} from "../lib/Decimal.sol";

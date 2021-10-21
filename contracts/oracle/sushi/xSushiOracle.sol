@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.9;
 
 import {Decimal} from "../../lib/Decimal.sol";
 import {SafeMath} from "../../lib/SafeMath.sol";
@@ -11,7 +10,7 @@ import {IERC20} from "../../token/IERC20.sol";
 import {IOracle} from "../IOracle.sol";
 import {IChainLinkAggregator} from "../chainlink/IChainLinkAggregator.sol";
 
-/* solium-disable-next-line */
+/* solhint-disable-next-line */
 contract xSushiOracle is IOracle {
 
     using SafeMath for uint256;

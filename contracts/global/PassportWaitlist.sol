@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.9;
 
 import {Ownable} from "../lib/Ownable.sol";
 import {SafeERC20} from "../lib/SafeERC20.sol";
@@ -34,7 +33,7 @@ contract PassportWaitlist is Ownable {
         address _paymentToken,
         uint256 _paymentAmount,
         address payable _paymentReceiver
-    ) public {
+    ) {
         setPayment(
             _paymentToken,
             _paymentAmount,

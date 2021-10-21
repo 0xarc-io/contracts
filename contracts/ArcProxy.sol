@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-// solhint-disable avoid-low-level-calls
-// solhint-disable reason-string
-// solhint-disable no-inline-assembly
-
 contract ArcProxy {
 
     /**
@@ -26,7 +22,7 @@ contract ArcProxy {
     * validated in the constructor.
     */
 
-    /* solium-disable-next-line */
+    /* solhint-disable-next-line */
     bytes32 internal constant ADMIN_SLOT = 0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103;
 
     /**
@@ -35,7 +31,7 @@ contract ArcProxy {
     * validated in the constructor.
     */
 
-    /* solium-disable-next-line */
+    /* solhint-disable-next-line */
     bytes32 internal constant IMPLEMENTATION_SLOT = 0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
 
     /**
@@ -76,9 +72,9 @@ contract ArcProxy {
         _setImplementation(_logic);
 
         if (_data.length > 0) {
-            /* solium-disable-next-line */
+            /* solhint-disable-next-line */
             (bool success,) = _logic.delegatecall(_data);
-            /* solium-disable-next-line */
+            /* solhint-disable-next-line */
             require(success);
         }
 
@@ -122,7 +118,7 @@ contract ArcProxy {
      * @param implementation_ Address to delegate.
      */
     function _delegate(address implementation_) internal {
-        /* solium-disable-next-line */
+        /* solhint-disable-next-line */
         assembly {
             // Copy msg.data. We take full control of memory in this inline assembly
             // block because it will not return to Solidity code. We overwrite the
@@ -158,7 +154,7 @@ contract ArcProxy {
         // for more details about how this works.
         // TODO Check this again before the Serenity release, because all addresses will be
         // contracts then.
-        /* solium-disable-next-line */
+        /* solhint-disable-next-line */
         assembly { size := extcodesize(account) }
         return size > 0;
     }
@@ -169,7 +165,7 @@ contract ArcProxy {
     */
     function _implementation() internal view returns (address impl) {
         bytes32 slot = IMPLEMENTATION_SLOT;
-        /* solium-disable-next-line */
+        /* solhint-disable-next-line */
         assembly {
             impl := sload(slot)
         }
@@ -196,7 +192,7 @@ contract ArcProxy {
 
         bytes32 slot = IMPLEMENTATION_SLOT;
 
-        /* solium-disable-next-line */
+        /* solhint-disable-next-line */
         assembly {
             sstore(slot, newImplementation)
         }
@@ -258,9 +254,9 @@ contract ArcProxy {
         ifAdmin
     {
         _upgradeTo(newImplementation);
-        /* solium-disable-next-line */
+        /* solhint-disable-next-line */
         (bool success,) = newImplementation.delegatecall(data);
-        /* solium-disable-next-line */
+        /* solhint-disable-next-line */
         require(success);
     }
 
@@ -270,7 +266,7 @@ contract ArcProxy {
     function _admin() internal view returns (address adm) {
         bytes32 slot = ADMIN_SLOT;
 
-        /* solium-disable-next-line */
+        /* solhint-disable-next-line */
         assembly {
             adm := sload(slot)
         }
@@ -283,7 +279,7 @@ contract ArcProxy {
     function _setAdmin(address newAdmin) internal {
         bytes32 slot = ADMIN_SLOT;
 
-        /* solium-disable-next-line */
+        /* solhint-disable-next-line */
         assembly {
             sstore(slot, newAdmin)
         }

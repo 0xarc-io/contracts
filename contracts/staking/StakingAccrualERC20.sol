@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.9;
 
 import {Adminable} from "../lib/Adminable.sol";
 import {Initializable} from "../lib/Initializable.sol";

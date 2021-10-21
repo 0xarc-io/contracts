@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.9;
 
 import {Ownable} from "../lib/Ownable.sol";
 import {SafeMath} from "../lib/SafeMath.sol";
@@ -47,7 +46,7 @@ contract WhitelistSale is Ownable {
 
     /* ========== Constructor ========== */
 
-    constructor(address currencyAddress) public {
+    constructor(address currencyAddress) {
         currency = IERC20(currencyAddress);
         saleOpen = false;
     }

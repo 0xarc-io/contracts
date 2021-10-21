@@ -1,4 +1,4 @@
-pragma solidity ^0.5.16;
+pragma solidity ^0.8.9;
 
 import "../token/IERC20.sol";
 import "../lib/SafeERC20.sol";
