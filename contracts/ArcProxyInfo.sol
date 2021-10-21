@@ -3,7 +3,6 @@
 pragma solidity ^0.8.9;
 pragma experimental ABIEncoderV2;
 
-// solhint-disable comprehensive-interface
 // solhint-disable reason-string
 
 contract ArcProxyInfo {

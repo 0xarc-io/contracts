@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import {Ownable} from "../lib/Ownable.sol";
 import {IMerkleDistributor} from "./IMerkleDistributor.sol";
 
-// solhint-disable comprehensive-interface
 
 contract MerkleDistributor is IMerkleDistributor, Ownable {
     address public token;

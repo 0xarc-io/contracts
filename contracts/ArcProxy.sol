@@ -3,7 +3,6 @@ pragma solidity ^0.8.9;
 
 // solhint-disable avoid-low-level-calls
 // solhint-disable reason-string
-// solhint-disable comprehensive-interface
 // solhint-disable no-inline-assembly
 
 contract ArcProxy {
