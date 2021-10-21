@@ -1,7 +1,6 @@
 {
   "extends": "solhint:recommended",
   "rules": {
-    "comprehensive-interface": "warn",
     "compiler-version": ["warn", "^0.8.9"],
     "reason-string": ["error", { "maxLength": 75 }]
   }
