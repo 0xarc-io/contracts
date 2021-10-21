@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.5.16;
+pragma solidity ^0.8.9;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import {Ownable} from "../lib/Ownable.sol";
 import {IMerkleDistributor} from "./IMerkleDistributor.sol";
+
+// solhint-disable comprehensive-interface
 
 contract MerkleDistributor is IMerkleDistributor, Ownable {
     address public token;
@@ -20,7 +22,7 @@ contract MerkleDistributor is IMerkleDistributor, Ownable {
         _;
     }
 
-    constructor(address token_, bytes32 merkleRoot_) public {
+    constructor(address token_, bytes32 merkleRoot_) {
         token = token_;
         merkleRoot = merkleRoot_;
         active = false;
