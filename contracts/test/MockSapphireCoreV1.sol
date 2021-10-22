@@ -30,7 +30,7 @@ contract MockSapphireCoreV1 is SapphireCoreV1, MockTimestamp {
         if (currentTimestamp() < halfDay) {
             return true;
         } else {
-            return _oracleTimestamp >= currentTimestamp().sub(halfDay);
+            return _oracleTimestamp >= currentTimestamp() - halfDay;
         }
     }
 
