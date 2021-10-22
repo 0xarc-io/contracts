@@ -11,5 +11,5 @@ contract MintableNFT is ERC721 {
         string memory _symbol
     )
         ERC721(_name, _symbol)
-    {}
+    {} // solhint-disable-line
 }

@@ -20,7 +20,7 @@ contract CampaignStorage {
 
     /* ========== Constants ========== */
 
-    uint256 constant BASE = 1e18;
+    uint256 public constant BASE = 1e18;
 
     /* ========== Variables ========== */
 

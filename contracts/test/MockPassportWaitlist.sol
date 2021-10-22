@@ -12,11 +12,19 @@ contract MockPassportWaitlist is PassportWaitlist, MockTimestamp {
         uint256 _paymentAmount,
         address payable _paymentReceiver
     )
-        public
         PassportWaitlist(
             _paymentToken,
             _paymentAmount,
             _paymentReceiver
         )
-    {/* solium-disable-line no-empty-blocks */}
+    {} // solhint-disable-line
+
+    function currentTimestamp()
+        public
+        view
+        override(PassportWaitlist, MockTimestamp)
+        returns (uint256)
+    {
+        return MockTimestamp.currentTimestamp();
+    }
 }

@@ -25,13 +25,14 @@ contract WstEthOracle is IOracle {
 
     uint256 public chainlinkEthScalar;
 
-    constructor() public {
+    constructor() {
         chainlinkEthScalar = uint256(18 - chainLinkEthAggregator.decimals());
     }
 
     function fetchCurrentPrice()
         external
         view
+        override
         returns (Decimal.D256 memory)
     {
         // get stETH per wstETH

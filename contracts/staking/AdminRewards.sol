@@ -36,13 +36,8 @@ contract AdminRewards is Ownable {
 
     constructor(
         address _arcDAO,
-        address _rewardsDistribution,
-        address _rewardsToken,
-        address _stakingToken,
-        address _feesToken
-    )
-        public
-    {
+        address _rewardsToken
+    ) {
         arcDAO = _arcDAO;
         rewardsToken = IERC20(_rewardsToken);
     }
@@ -161,20 +156,20 @@ contract AdminRewards is Ownable {
         uint256 amount
     )
         public
-    { /* solium-disable-line no-empty-blocks */ }
+    { } // solhint-disable-line
 
     function withdraw(
         uint256 amount
     )
         public
-    { /* solium-disable-line no-empty-blocks */ }
+    { } // solhint-disable-line
 
     function getReward()
         public
     {
         require(
             tokensClaimable == true,
-            "Tokens cannnot be claimed yet"
+            "Tokens cannot be claimed yet"
         );
 
         uint256 reward = rewards[msg.sender];

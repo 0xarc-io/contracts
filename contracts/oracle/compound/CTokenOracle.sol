@@ -31,9 +31,7 @@ contract CTokenOracle is IOracle {
         address _cTokenAddress,
         address _chainLinkTokenAggregator,
         address _chainLinkEthAggregator
-    )
-        public
-    {
+    ) {
         cToken = ICToken(_cTokenAddress);
         chainLinkTokenAggregator = IChainLinkAggregator(_chainLinkTokenAggregator);
         chainLinkEthAggregator = IChainLinkAggregator(_chainLinkEthAggregator);
@@ -54,6 +52,7 @@ contract CTokenOracle is IOracle {
     function fetchCurrentPrice()
         external
         view
+        override
         returns (Decimal.D256 memory)
     {
         uint256 exchangeRate = cToken.exchangeRateStored(); // 213927934173700 (16 dp)

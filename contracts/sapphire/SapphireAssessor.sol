@@ -42,9 +42,7 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
         address _mapper,
         address _passportScores,
         uint16 _maxScore
-    )
-        public
-    {
+    ) {
         require(
             _mapper.isContract() &&
             _passportScores.isContract(),
@@ -76,6 +74,7 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
         bool _isScoreRequired
     )
         public
+        override
         checkScoreProof(_scoreProof, _isScoreRequired, false)
         returns (uint256)
     {
@@ -172,6 +171,7 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
     function renounceOwnership()
         public
         onlyOwner
+        override
     {
         revert("SapphireAssessor: cannot renounce ownership");
     }

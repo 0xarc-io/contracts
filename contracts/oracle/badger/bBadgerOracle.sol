@@ -32,11 +32,11 @@ contract bBadgerOracle is IOracle {
         0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419
     );
 
-    uint256 badgerEthChainlinkScalar;
-    uint256 chainlinkEthScalar;
-    uint256 badgerScalar;
+    uint256 public badgerEthChainlinkScalar;
+    uint256 public chainlinkEthScalar;
+    uint256 public badgerScalar;
 
-    constructor() public {
+    constructor() {
         badgerEthChainlinkScalar = uint256(18 - badgerEthChainlinkOracle.decimals());
         chainlinkEthScalar = uint256(18 - chainLinkEthAggregator.decimals());
 
@@ -46,6 +46,7 @@ contract bBadgerOracle is IOracle {
     function fetchCurrentPrice()
         external
         view
+        override
         returns (Decimal.D256 memory)
     {
         uint256 badgerPerbBadger = bBadger.getPricePerFullShare().mul(10 ** badgerScalar);
