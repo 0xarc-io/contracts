@@ -24,6 +24,7 @@ contract SapphireMapperLinear is ISapphireMapper {
         uint256 _upperBound
     )
         public
+        virtual
         override
         view
         returns (uint256)

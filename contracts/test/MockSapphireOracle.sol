@@ -14,6 +14,7 @@ contract MockSapphireOracle is ISapphireOracle {
 
     function fetchCurrentPrice()
         external
+        override
         view
         returns (uint256 price, uint256 timestamp)
     {

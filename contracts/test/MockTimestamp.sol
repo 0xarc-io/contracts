@@ -13,6 +13,7 @@ contract MockTimestamp {
 
     function currentTimestamp()
         public
+        virtual
         view
         returns (uint256)
     {

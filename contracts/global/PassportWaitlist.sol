@@ -145,6 +145,7 @@ contract PassportWaitlist is Ownable {
 
     function currentTimestamp()
         public
+        virtual
         view
         returns (uint256)
     {

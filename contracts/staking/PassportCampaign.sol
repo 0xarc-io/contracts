@@ -431,6 +431,7 @@ contract PassportCampaign is Adminable, PassportScoreVerifiable {
 
     function currentTimestamp()
         public
+        virtual
         view
         returns (uint256)
     {

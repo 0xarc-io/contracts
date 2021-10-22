@@ -116,6 +116,7 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
      */
     function currentTimestamp()
         public
+        virtual
         view
         returns (uint256)
     {

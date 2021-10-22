@@ -471,6 +471,7 @@ contract WaitlistBatch is Ownable {
 
     function currentTimestamp()
         public
+        virtual
         view
         returns (uint256)
     {

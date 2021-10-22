@@ -133,6 +133,7 @@ contract BaseERC20 is IERC20Metadata, Permittable {
     )
         public
         override
+        virtual
         returns (bool)
     {
         _transfer(msg.sender, recipient, amount);
@@ -191,6 +192,7 @@ contract BaseERC20 is IERC20Metadata, Permittable {
         uint256 amount
     )
         public
+        virtual
         override
         returns (bool)
     {
@@ -254,6 +256,7 @@ contract BaseERC20 is IERC20Metadata, Permittable {
         uint256 amount
     )
         internal
+        virtual
     {
         require(
             sender != address(0),
