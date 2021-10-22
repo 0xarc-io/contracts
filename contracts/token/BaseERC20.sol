@@ -51,6 +51,7 @@ contract BaseERC20 is IERC20Metadata, Permittable {
      */
     function name()
         public
+        override
         view
         returns (string memory)
     {
@@ -63,6 +64,7 @@ contract BaseERC20 is IERC20Metadata, Permittable {
      */
     function symbol()
         public
+        override
         view
         returns (string memory)
     {
@@ -84,6 +86,7 @@ contract BaseERC20 is IERC20Metadata, Permittable {
      */
     function decimals()
         public
+        override
         view
         returns (uint8)
     {
