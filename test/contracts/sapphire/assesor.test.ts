@@ -138,7 +138,7 @@ describe('SapphireAssessor', () => {
           DEFAULT_MAX_CREDIT_SCORE,
         ),
       ).to.be.revertedWith(
-        'SapphireAssessor: The mapper and the passport scores must be valid contracts',
+        'SapphireAssessor: mapper and passport scores must be valid contracts',
       );
 
       await expect(
@@ -148,7 +148,7 @@ describe('SapphireAssessor', () => {
           DEFAULT_MAX_CREDIT_SCORE,
         ),
       ).to.be.revertedWith(
-        'SapphireAssessor: The mapper and the passport scores must be valid contracts',
+        'SapphireAssessor: mapper and passport scores must be valid contracts',
       );
 
       await expect(
@@ -158,7 +158,7 @@ describe('SapphireAssessor', () => {
           DEFAULT_MAX_CREDIT_SCORE,
         ),
       ).to.be.revertedWith(
-        'SapphireAssessor: The mapper and the passport scores must be valid contracts',
+        'SapphireAssessor: mapper and passport scores must be valid contracts',
       );
     });
 
