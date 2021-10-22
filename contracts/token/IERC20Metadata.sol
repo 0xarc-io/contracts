@@ -9,7 +9,7 @@ import {IERC20} from "./IERC20.sol";
  *
  * _Available since v4.1._
  */
-contract IERC20Metadata is IERC20 {
+abstract contract IERC20Metadata is IERC20 {
     /**
      * @dev Returns the name of the token.
      */
