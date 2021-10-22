@@ -168,6 +168,7 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
         bytes32 _newRoot
     )
         external
+        override
     {
         require(
             _newRoot != 0x0000000000000000000000000000000000000000000000000000000000000000,
@@ -192,6 +193,7 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
         SapphireTypes.ScoreProof memory _proof
     )
         public
+        override
         view
         returns (bool)
     {
@@ -283,6 +285,7 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
         uint256 _delay
     )
         external
+        override
         onlyAdmin
     {
         require(
@@ -307,6 +310,7 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
         bool _value
     )
         external
+        override
     {
         require(
             msg.sender == pauseOperator,
@@ -329,6 +333,7 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
         address _merkleRootUpdater
     )
         external
+        override
         onlyAdmin
     {
         require(
