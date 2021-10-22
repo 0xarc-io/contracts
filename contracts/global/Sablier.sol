@@ -84,6 +84,7 @@ contract Sablier is ISablier, ReentrancyGuard, CarefulMath {
      */
     function getStream(uint256 streamId)
         external
+        override
         view
         streamExists(streamId)
         returns (
@@ -136,7 +137,13 @@ contract Sablier is ISablier, ReentrancyGuard, CarefulMath {
      * @param who The address for which to query the balance.
      * @return balance The total funds allocated to `who` as uint256.
      */
-    function balanceOf(uint256 streamId, address who) public view streamExists(streamId) returns (uint256 balance) {
+    function balanceOf(uint256 streamId, address who)
+        public
+        override
+        view 
+        streamExists(streamId)
+        returns (uint256 balance)
+    {
         Stream memory stream = streams[streamId];
         BalanceOfLocalVars memory vars;
 
@@ -203,6 +210,7 @@ contract Sablier is ISablier, ReentrancyGuard, CarefulMath {
         uint256 stopTime
     )
         public
+        override
         returns (uint256)
     {
         require(recipient != address(0x00), "stream to the zero address");
@@ -269,6 +277,7 @@ contract Sablier is ISablier, ReentrancyGuard, CarefulMath {
      */
     function withdrawFromStream(uint256 streamId, uint256 amount)
         external
+        override
         nonReentrant
         streamExists(streamId)
         onlySenderOrRecipient(streamId)
@@ -305,6 +314,7 @@ contract Sablier is ISablier, ReentrancyGuard, CarefulMath {
      */
     function cancelStream(uint256 streamId)
         external
+        override
         nonReentrant
         streamExists(streamId)
         onlySenderOrRecipient(streamId)
