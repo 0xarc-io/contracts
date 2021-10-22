@@ -85,9 +85,9 @@
     "shelljs": "^0.8.4",
     "solc": "^0.5.16",
     "solhint": "^3.3.6",
-    "solidity-coverage": "^0.7.12",
+    "solidity-coverage": "^0.7.17",
     "system-commands": "^1.1.7",
-    "ts-node": "^9.0.0",
+    "ts-node": "^10.4.0",
     "tsconfig-paths": "^3.9.0",
     "ttypescript": "^1.5.12",
     "typechain": "^4.0.0",
@@ -105,7 +105,8 @@
     "ethers": "5.0.2"
   },
   "resolutions": {
-    "ethereum-waffle/**/ethers": "5.0.2"
+    "ethereum-waffle/**/ethers": "5.0.2",
+    "sc-istanbul": "^0.4.6"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
