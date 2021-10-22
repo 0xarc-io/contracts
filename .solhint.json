@@ -2,7 +2,7 @@
   "extends": "solhint:recommended",
   "rules": {
     "comprehensive-interface": "off",
-    "compiler-version": ["warn", "^0.8.9"],
+    "compiler-version": ["warn", "^0.8.4"],
     "reason-string": ["error", { "maxLength": 75 }],
     "not-rely-on-time": "off"
   }

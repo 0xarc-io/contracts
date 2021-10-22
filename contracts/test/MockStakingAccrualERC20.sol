@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.4;
 
 import {StakingAccrualERC20} from "../staking/StakingAccrualERC20.sol";
 import { MockTimestamp } from "./MockTimestamp.sol";
