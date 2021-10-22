@@ -7,8 +7,8 @@ interface ISapphireOracle {
     /**
      * @notice Fetches the current price of the asset
      *
-     * @return The price in 18 decimals and the timestamp when
-     *         the price was updated and the decimals of the asset
+     * @return price The price in 18 decimals
+     * @return timestamp The timestamp when price is updated and the decimals of the asset
      */
     function fetchCurrentPrice()
         external
