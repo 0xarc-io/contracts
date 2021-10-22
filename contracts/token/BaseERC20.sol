@@ -98,6 +98,7 @@ contract BaseERC20 is IERC20Metadata, Permittable {
      */
     function totalSupply()
         public
+        override
         view
         returns (uint256)
     {
@@ -111,6 +112,7 @@ contract BaseERC20 is IERC20Metadata, Permittable {
         address account
     )
         public
+        override
         view
         returns (uint256)
     {
@@ -130,6 +132,7 @@ contract BaseERC20 is IERC20Metadata, Permittable {
         uint256 amount
     )
         public
+        override
         returns (bool)
     {
         _transfer(msg.sender, recipient, amount);
@@ -144,6 +147,7 @@ contract BaseERC20 is IERC20Metadata, Permittable {
         address spender
     )
         public
+        override
         view
         returns (uint256)
     {
@@ -162,6 +166,7 @@ contract BaseERC20 is IERC20Metadata, Permittable {
         uint256 amount
     )
         public
+        override
         returns (bool)
     {
         _approve(msg.sender, spender, amount);
@@ -186,6 +191,7 @@ contract BaseERC20 is IERC20Metadata, Permittable {
         uint256 amount
     )
         public
+        override
         returns (bool)
     {
         _transfer(sender, recipient, amount);
