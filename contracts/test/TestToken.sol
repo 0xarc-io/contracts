@@ -15,9 +15,8 @@ contract TestToken is BaseERC20 {
         string memory symbol,
         uint8         decimals
     )
-        public
         BaseERC20(name, symbol, decimals)
-    { }
+    { } // solhint-disable-line
 
     // ============ Functions ============
 

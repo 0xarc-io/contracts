@@ -19,7 +19,6 @@ contract MockJointPassportCampaign is JointPassportCampaign, MockTimestamp {
         uint256 _maxStakePerUser,
         uint16 _creditScoreThreshold
     )
-        public
         JointPassportCampaign (
             _arcDAO,
             _arcRewardsDistributor,
@@ -32,7 +31,7 @@ contract MockJointPassportCampaign is JointPassportCampaign, MockTimestamp {
             _maxStakePerUser,
             _creditScoreThreshold
         )
-    { }
+    { } // solhint-disable-line
 
     function actualEarned(
         address _account,
@@ -44,6 +43,15 @@ contract MockJointPassportCampaign is JointPassportCampaign, MockTimestamp {
         returns (uint256)
     {
         return _actualEarned(_account, _rewardToken);
+    }
+
+    function currentTimestamp()
+        public
+        view
+        override(JointPassportCampaign, MockTimestamp)
+        returns (uint256)
+    {
+        return MockTimestamp.currentTimestamp();
     }
 
 }

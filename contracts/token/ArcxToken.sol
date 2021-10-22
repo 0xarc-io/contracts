@@ -13,9 +13,8 @@ contract ArcxToken is BaseERC20, IMintableToken, Ownable {
     // ============ Constructor ============
 
     constructor()
-        public
         BaseERC20("ARC Governance Token", "ARCX", 18)
-    { }
+    { } // solhint-disable-line
 
     // ============ Core Functions ============
 
@@ -24,6 +23,7 @@ contract ArcxToken is BaseERC20, IMintableToken, Ownable {
         uint256 value
     )
         external
+        override
         onlyOwner
     {
         _mint(to, value);
@@ -34,6 +34,7 @@ contract ArcxToken is BaseERC20, IMintableToken, Ownable {
         uint256 value
     )
         external
+        override
         onlyOwner
     {
         _burn(to, value);

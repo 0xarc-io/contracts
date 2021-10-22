@@ -14,6 +14,8 @@ import {IERC20} from "../token/IERC20.sol";
 import {ISapphirePassportScores} from "../sapphire/ISapphirePassportScores.sol";
 import {SapphireTypes} from "../sapphire/SapphireTypes.sol";
 
+// solhint-disable max-states-count
+
 /**
  * @notice A farm that does not require minting debt to earn rewards,
  *         but requires a valid defi passport with a good credit score.
@@ -39,7 +41,7 @@ contract PassportCampaign is Adminable, PassportScoreVerifiable {
 
     /* ========== Constants ========== */
 
-    uint256 constant BASE = 10 ** 18;
+    uint256 public constant BASE = 10 ** 18;
 
     /* ========== Variables ========== */
 

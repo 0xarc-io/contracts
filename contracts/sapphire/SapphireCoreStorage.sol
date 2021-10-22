@@ -7,11 +7,13 @@ import {ISapphireAssessor} from "./ISapphireAssessor.sol";
 
 import {SapphireTypes} from "./SapphireTypes.sol";
 
+ // solhint-disable max-states-count
+
 contract SapphireCoreStorageV1 {
 
     /* ========== Constants ========== */
 
-    uint256 constant BASE = 10**18;
+    uint256 public constant BASE = 10**18;
 
     /* ========== Public Variables ========== */
 

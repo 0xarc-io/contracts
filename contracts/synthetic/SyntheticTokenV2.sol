@@ -47,8 +47,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
         string memory _version
     )
         Permittable(_name, _version)
-        public
-    { }
+    { } // solhint-disable-line
 
     /* ========== Init Function ========== */
 
@@ -100,6 +99,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
     function totalSupply()
         external
         view
+        override
         returns (uint256)
     {
         return _totalSupply;
@@ -110,6 +110,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
     )
         public
         view
+        override
         returns (uint256)
     {
         return _balances[account];
@@ -121,6 +122,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
     )
         public
         view
+        override
         returns (uint256)
     {
         return _allowances[owner][spender];
@@ -210,7 +212,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
         for (uint256 i = 0; i < _mintersArray.length; i++) {
             if (_mintersArray[i] == _minter) {
                 _mintersArray[i] = _mintersArray[_mintersArray.length - 1];
-                _mintersArray.length--;
+                _mintersArray.pop();
 
                 break;
             }
@@ -326,6 +328,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
         uint256 amount
     )
         public
+        override
         returns (bool)
     {
         _transfer(msg.sender, recipient, amount);
@@ -344,6 +347,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
         uint256 amount
     )
         public
+        override
         returns (bool)
     {
         _approve(msg.sender, spender, amount);
@@ -356,6 +360,7 @@ contract SyntheticTokenV2 is Adminable, SyntheticStorageV2, IERC20, Permittable 
         uint256 amount
     )
         public
+        override
         returns (bool)
     {
         require(

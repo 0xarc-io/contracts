@@ -15,7 +15,7 @@ contract YUSDOracle is IOracle {
 
     using SafeMath for uint256;
 
-    uint256 constant BASE = 10**18;
+    uint256 public constant BASE = 10**18;
 
     IRiskOracle public aaveRiskOracle;
     IChainLinkAggregator public chainlinkETHUSDAggregator;
@@ -23,7 +23,6 @@ contract YUSDOracle is IOracle {
     address public yUSDAddress;
 
     constructor()
-        public
     {
         yUSDAddress = 0x5dbcF33D8c2E976c6b560249878e6F1491Bca25c;
         /* solhint-disable-next-line */
@@ -34,6 +33,7 @@ contract YUSDOracle is IOracle {
     function fetchCurrentPrice()
         external
         view
+        override
         returns (Decimal.D256 memory)
     {
         uint256 yUSDPricePerFullShare = IYToken(yUSDAddress).getPricePerFullShare();
