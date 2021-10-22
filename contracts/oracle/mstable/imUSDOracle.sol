@@ -22,6 +22,7 @@ contract imUSDOracle is IOracle {
 
     function fetchCurrentPrice()
         external
+        override
         view
         returns (Decimal.D256 memory)
     {

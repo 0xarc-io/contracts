@@ -23,6 +23,7 @@ contract ChainLinkOracle is ISapphireOracle {
 
     function fetchCurrentPrice()
         external
+        override
         view
         returns (uint256, uint256)
     {
