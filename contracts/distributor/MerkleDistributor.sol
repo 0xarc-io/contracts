@@ -8,8 +8,8 @@ import {IMerkleDistributor} from "./IMerkleDistributor.sol";
 
 
 contract MerkleDistributor is IMerkleDistributor, Ownable {
-    address public token;
-    bytes32 public merkleRoot;
+    address public override token;
+    bytes32 public override merkleRoot;
     bool public active;
     mapping(uint256 => uint256) private claimedBitMap;
 
@@ -30,7 +30,7 @@ contract MerkleDistributor is IMerkleDistributor, Ownable {
         active = !active;
     }
 
-    function isClaimed(uint256 index) public view returns (bool) {
+    function isClaimed(uint256 index) public override view returns (bool) {
         uint256 claimedWordIndex = index / 256;
         uint256 claimedBitIndex = index % 256;
         uint256 claimedWord = claimedBitMap[claimedWordIndex];
@@ -49,7 +49,7 @@ contract MerkleDistributor is IMerkleDistributor, Ownable {
         address account,
         uint256 amount,
         bytes32[] calldata merkleProof
-    ) external isActive {
+    ) external override isActive {
         require(!isClaimed(index), "MerkleDistributor: Drop already claimed");
 
         // Verify the merkle proof.
