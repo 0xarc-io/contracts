@@ -16,7 +16,7 @@ contract ChainLinkOracle is ISapphireOracle {
 
     uint256 public decimals;
 
-    constructor(address _priceFeed) public {
+    constructor(address _priceFeed) {
         priceFeed = AggregatorV3Interface(_priceFeed);
         decimals = priceFeed.decimals();
     }

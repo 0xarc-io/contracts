@@ -34,16 +34,15 @@ contract BaseERC20 is IERC20Metadata, Permittable {
      * construction.
      */
     constructor (
-        string memory name,
-        string memory symbol,
-        uint8         decimals
+        string memory name_,
+        string memory symbol_,
+        uint8         decimals_
     )
-        public
-        Permittable(name, "1")
+        Permittable(name_, "1")
     {
-        _name = name;
-        _symbol = symbol;
-        _decimals = decimals;
+        _name = name_;
+        _symbol = symbol_;
+        _decimals = decimals_;
     }
 
     /**

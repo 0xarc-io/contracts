@@ -121,7 +121,7 @@ contract WaitlistBatch is Ownable {
     constructor(
         address _depositCurrency,
         uint256 _depositLockupDuration
-    ) public {
+    ) {
         depositCurrency = IERC20(_depositCurrency);
         depositLockupDuration = _depositLockupDuration;
 
