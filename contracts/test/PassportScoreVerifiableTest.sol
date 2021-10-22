@@ -12,9 +12,7 @@ contract PassportScoreVerifiableTest is PassportScoreVerifiable {
 
     constructor(
         address _passportScoresContract
-    )
-        public
-    {
+    ) {
         passportScoresContract = ISapphirePassportScores(_passportScoresContract);
     }
 

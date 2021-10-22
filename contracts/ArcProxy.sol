@@ -199,17 +199,17 @@ contract ArcProxy {
     }
 
     /**
-    * @return The address of the proxy admin.
+    * @return admin_ The address of the proxy admin.
     */
-    function admin() external ifAdmin returns (address) {
-        return _admin();
+    function admin() external ifAdmin returns (address admin_) {
+        admin_ = _admin();
     }
 
     /**
-    * @return The address of the implementation.
+    * @return implementation_ The address of the implementation.
     */
-    function implementation() external ifAdmin returns (address) {
-        return _implementation();
+    function implementation() external ifAdmin returns (address implementation_) {
+        implementation_ = _implementation();
     }
 
     /**

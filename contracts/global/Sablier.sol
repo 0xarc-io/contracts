@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity 0.8.4;
 
 import "../token/IERC20.sol";
@@ -63,7 +65,7 @@ contract Sablier is ISablier, ReentrancyGuard, CarefulMath {
 
     /*** Contract Logic Starts Here */
 
-    constructor() public {
+    constructor() {
         nextStreamId = 100000;
     }
 

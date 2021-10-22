@@ -31,7 +31,7 @@ contract xSushiOracle is IOracle {
 
     uint256 constant public CHAIN_LINK_DECIMALS = 10**8;
 
-    constructor() public {
+    constructor() {
         chainlinkEthScalar = uint256(18 - chainLinkEthAggregator.decimals());
         chainlinkTokenScalar = uint256(18 - chainLinkTokenAggregator.decimals());
     }

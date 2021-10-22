@@ -57,7 +57,6 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
         string memory symbol,
         address _oldArcxToken
     )
-        public
         BaseERC20(name, symbol, 18)
     {
         require(

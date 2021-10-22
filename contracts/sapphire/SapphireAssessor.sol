@@ -170,6 +170,7 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
 
     function renounceOwnership()
         public
+        view
         onlyOwner
         override
     {
