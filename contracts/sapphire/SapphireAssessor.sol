@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // prettier-ignore
 
-pragma solidity 0.8.9;
+pragma solidity 0.8.4;
 
 import {Ownable} from "../lib/Ownable.sol";
 import {Address} from "../lib/Address.sol";

@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.9;
+pragma solidity 0.8.4;
 
 contract Permittable {
 
     /* ============ Variables ============ */
 
+    // solhint-disable-next-line
     bytes32 public DOMAIN_SEPARATOR;
 
     mapping (address => uint256) public nonces;
@@ -21,9 +22,7 @@ contract Permittable {
     constructor(
         string memory name,
         string memory version
-    )
-        public
-    {
+    ) {
         DOMAIN_SEPARATOR = _initDomainSeparator(name, version);
     }
 

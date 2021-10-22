@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.9;
+pragma solidity 0.8.4;
 
-import {ERC721Enumerable} from "@openzeppelin/contracts/token/erc721/extensions/ERC721Enumerable.sol";
-import {ERC721} from "@openzeppelin/contracts/token/erc721/ERC721.sol";
+import {ERC721Enumerable} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
 
 import {Bytes32} from "../../lib/Bytes32.sol";
 import {Adminable} from "../../lib/Adminable.sol";
@@ -13,7 +14,6 @@ import {DefiPassportStorage} from "./DefiPassportStorage.sol";
 import {ISapphirePassportScores} from "../../sapphire/ISapphirePassportScores.sol";
 import {SapphireTypes} from "../../sapphire/SapphireTypes.sol";
 import {Address} from "../../lib/Address.sol";
-import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
 
 contract DefiPassport is ERC721Enumerable, Adminable, Initializable, DefiPassportStorage {
 
@@ -561,7 +561,7 @@ contract DefiPassport is ERC721Enumerable, Adminable, Initializable, DefiPasspor
         return _proofProtocol.toString();
     }
 
-    /* ========== Private/Internal Functions ========== */
+    /* ========== Private Functions ========== */
 
     /**
      * @dev Converts the given address to string. Used when minting new

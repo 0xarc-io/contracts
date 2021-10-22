@@ -1,15 +1,15 @@
-pragma solidity 0.8.9;
+// SPDX-License-Identifier: MIT
 
-import {ERC721Full} from "@openzeppelin/contracts/token/ERC721/ERC721Full.sol";
-import {ERC721Mintable} from "@openzeppelin/contracts/token/ERC721/ERC721Mintable.sol";
+pragma solidity 0.8.4;
 
-contract MintableNFT is ERC721Full, ERC721Mintable {
+import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+
+contract MintableNFT is ERC721 {
 
     constructor (
         string memory _name,
         string memory _symbol
     )
-        public
-        ERC721Full(_name, _symbol)
+        ERC721(_name, _symbol)
     {}
 }

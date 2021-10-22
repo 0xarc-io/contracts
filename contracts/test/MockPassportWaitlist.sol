@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.4;
 
 import {PassportWaitlist} from "../global/PassportWaitlist.sol";
 import {MockTimestamp} from "./MockTimestamp.sol";

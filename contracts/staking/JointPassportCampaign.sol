@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.9;
+pragma solidity 0.8.4;
 
 import {Ownable} from "../lib/Ownable.sol";
 import {Bytes32} from "../lib/Bytes32.sol";

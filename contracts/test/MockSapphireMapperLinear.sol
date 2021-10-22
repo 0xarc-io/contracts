@@ -1,4 +1,4 @@
-pragma solidity 0.8.9;
+pragma solidity 0.8.4;
 
 import {SapphireMapperLinear} from "../sapphire/SapphireMapperLinear.sol";
 
