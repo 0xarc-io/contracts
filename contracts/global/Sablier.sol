@@ -73,7 +73,14 @@ contract Sablier is ISablier, ReentrancyGuard, CarefulMath {
      * @notice Returns the stream with all its properties.
      * @dev Throws if the id does not point to a valid stream.
      * @param streamId The id of the stream to query.
-     * @return The stream object.
+     * @return sender The sender of the stream.
+     * @return recipient The recipient of the stream.
+     * @return deposit The deposit amount of the stream.
+     * @return tokenAddress The token address of deposited amount.
+     * @return startTime Start of the stream.
+     * @return stopTime Stop of the stream.
+     * @return remainingBalance Remaining balance after executing stream.
+     * @return ratePerSecond Rate per second of the stream.
      */
     function getStream(uint256 streamId)
         external
@@ -106,7 +113,7 @@ contract Sablier is ISablier, ReentrancyGuard, CarefulMath {
      *  `startTime`, it returns 0.
      * @dev Throws if the id does not point to a valid stream.
      * @param streamId The id of the stream for which to query the delta.
-     * @return The time delta in seconds.
+     * @return delta The time delta in seconds.
      */
     function deltaOf(uint256 streamId) public view streamExists(streamId) returns (uint256 delta) {
         Stream memory stream = streams[streamId];
@@ -127,7 +134,7 @@ contract Sablier is ISablier, ReentrancyGuard, CarefulMath {
      * @dev Throws if the id does not point to a valid stream.
      * @param streamId The id of the stream for which to query the balance.
      * @param who The address for which to query the balance.
-     * @return The total funds allocated to `who` as uint256.
+     * @return balance The total funds allocated to `who` as uint256.
      */
     function balanceOf(uint256 streamId, address who) public view streamExists(streamId) returns (uint256 balance) {
         Stream memory stream = streams[streamId];
