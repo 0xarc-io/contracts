@@ -16,4 +16,13 @@ contract MockPassportCampaign is PassportCampaign, MockTimestamp {
     {
         return _actualEarned(_account);
     }
+
+     function currentTimestamp()
+        public
+        view
+        override(PassportCampaign, MockTimestamp)
+        returns (uint256)
+    {
+        return MockTimestamp.currentTimestamp();
+    }
 }

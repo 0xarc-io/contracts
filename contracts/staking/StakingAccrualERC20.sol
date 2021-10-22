@@ -428,6 +428,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
 
     function currentTimestamp()
         public
+        virtual
         view
         returns (uint256)
     {

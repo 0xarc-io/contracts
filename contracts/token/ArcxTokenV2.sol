@@ -79,6 +79,7 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
         uint256 value
     )
         external
+        override
         onlyOwner
     {
         _mint(to, value);
@@ -89,6 +90,7 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
         uint256 value
     )
         external
+        override
         onlyOwner
     {
         _burn(to, value);
@@ -139,6 +141,7 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
         uint256 amount
     )
         public
+        override
         isNotPaused
         returns (bool)
     {
@@ -152,6 +155,7 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
         uint256 amount
     )
         public
+        override
         isNotPaused
         returns (bool)
     {

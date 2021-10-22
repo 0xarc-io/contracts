@@ -709,6 +709,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      */
     function currentTimestamp()
         public
+        virtual
         view
         returns (uint256)
     {
@@ -1222,6 +1223,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         uint256 _oracleTimestamp
     )
         internal
+        virtual
         view
         returns (bool)
     {

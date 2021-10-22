@@ -555,6 +555,7 @@ contract JointPassportCampaign is CampaignStorage, PassportScoreVerifiable, Owna
 
     function currentTimestamp()
         public
+        virtual
         view
         returns (uint256)
     {

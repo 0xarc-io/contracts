@@ -342,6 +342,7 @@ contract Sablier is ISablier, ReentrancyGuard, CarefulMath {
 
     function currentTimestamp()
         public
+        virtual
         view
         returns (uint256)
     {

@@ -21,6 +21,7 @@ contract MockSapphireCoreV1 is SapphireCoreV1, MockTimestamp {
         uint256 _oracleTimestamp
     )
         internal
+        override
         view
         returns (bool)
     {
@@ -31,5 +32,14 @@ contract MockSapphireCoreV1 is SapphireCoreV1, MockTimestamp {
         } else {
             return _oracleTimestamp >= currentTimestamp().sub(halfDay);
         }
+    }
+
+     function currentTimestamp()
+        public
+        view
+        override(SapphireCoreV1, MockTimestamp)
+        returns (uint256)
+    {
+        return MockTimestamp.currentTimestamp();
     }
 }
