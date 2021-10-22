@@ -94,6 +94,7 @@ describe('DefiPassport', () => {
     skinAddress = skinsContract.address;
 
     skinTokenId = BigNumber.from(1);
+
     await skinsContract.mint(owner.address, skinTokenId);
 
     defaultPassportSkinContract = await new DefaultPassportSkinFactory(
