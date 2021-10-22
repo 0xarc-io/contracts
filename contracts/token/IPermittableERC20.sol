@@ -6,7 +6,7 @@ import {IERC20} from "./IERC20.sol";
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP.
  */
-contract IPermittableERC20 is IERC20 {
+interface IPermittableERC20 is IERC20 {
 
     /**
      * @notice Approve token with signature
