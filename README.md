@@ -84,3 +84,45 @@ For any concerns or feedback, open an issue or visit us on [Discord](https://dis
 - [x] Is verified on Etherscan on Rinkeby
 - [x] Go to https://ethgasstation.info/ and set the **fast** gas price you see there in `hardhat.config.ts` under the `mainnet` key
 - [x] Send it
+
+## Verifying contracts with `solc` and Sourcify
+
+[Sourcify](https://sourcify.dev/) is a nice tool to verify your contracts on different chains.
+To use it, you must deploy your contract on the chain you want, generate its _metadata_ file then
+upload that file on the Sourcify website.
+
+To generate the _metadata_ file, you must first install `solc`. The easiest way to do so is with
+docker ([see here](https://docs.soliditylang.org/en/v0.8.9/installing-solidity.html?highlight=docker#docker)).
+
+After you installed docker, simply run this command:
+
+```
+docker run \
+  -v `pwd`:/contracts \
+  --platform linux/amd64 \
+  ethereum/solc:0.8.4 \
+  @openzeppelin=/contracts/node_modules/@openzeppelin \
+  --metadata --metadata-literal \
+  /contracts/<path to your .sol file> \
+  -o /contracts/output \
+  --allow-paths /contracts/contracts, \
+  --optimize
+```
+
+For example, to compile `SapphirePassportScores.sol`, you can run:
+
+```
+docker run \
+  -v `pwd`:/contracts \
+  --platform linux/amd64 \
+  ethereum/solc:0.8.4 \
+  @openzeppelin=/contracts/node_modules/@openzeppelin \
+  --metadata --metadata-literal \
+  /contracts/contracts/sapphire/SapphirePassportScores.sol \
+  -o /contracts/output \
+  --allow-paths /contracts/contracts, \
+  --optimize
+```
+
+Once the `<contract name>_meta.json` file was created (under `output/`), simply upload it on
+[sourcify.dev](https://sourcify.dev) and you're done!
