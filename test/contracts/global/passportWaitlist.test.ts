@@ -43,6 +43,8 @@ describe('PassportWaitlist', () => {
       expect(await waitlist.paymentAmount()).to.eq(PAYMENT_AMOUNT);
       expect(await waitlist.paymentReceiver()).to.eq(owner.address);
     });
+
+    it('emits UserApplied for each user in array of initial aplicants');
   });
 
   describe('#applyForPassport', () => {
@@ -206,5 +208,11 @@ describe('PassportWaitlist', () => {
       expect(await waitlist.paymentAmount()).to.eq(newAmount);
       expect(await waitlist.paymentReceiver()).to.eq(user.address);
     });
+  });
+
+  describe('#applyOnBehalf', () => {
+    it('reverts if called by non-owner');
+
+    it('emits UserApplied for all given users');
   });
 });
