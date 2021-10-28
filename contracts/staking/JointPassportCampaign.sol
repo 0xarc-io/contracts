@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.4;
 
 import {Ownable} from "../lib/Ownable.sol";
 import {Bytes32} from "../lib/Bytes32.sol";
+import {Address} from "../lib/Address.sol";
+import {SafeMath} from "../lib/SafeMath.sol";
+import {SafeERC20} from "../lib/SafeERC20.sol";
 import {PassportScoreVerifiable} from "../lib/PassportScoreVerifiable.sol";
 
 import {IERC20} from "../token/IERC20.sol";
@@ -21,6 +23,10 @@ contract JointPassportCampaign is CampaignStorage, PassportScoreVerifiable, Owna
 
     /* ========== Libraries ========== */
 
+    using Address for address;
+    using SafeMath for uint256;
+    using SafeERC20 for IERC20;
+    using SafeERC20 for IPermittableERC20;
     using Bytes32 for bytes32;
 
     /* ========== Structs ========== */
@@ -157,9 +163,7 @@ contract JointPassportCampaign is CampaignStorage, PassportScoreVerifiable, Owna
         uint256 _daoAllocation,
         uint256 _maxStakePerUser,
         uint16 _creditScoreThreshold
-    )
-        public
-    {
+    ) {
         require(
             _arcDAO != address(0) &&
             _rewardsDistributor != address(0) &&
@@ -285,7 +289,7 @@ contract JointPassportCampaign is CampaignStorage, PassportScoreVerifiable, Owna
         } else {
             require(
                 msg.sender == collabRewardsDistributor,
-                "JointPassportCampaign: only the collab distributor can notify collab rewards"
+                "JointPassportCampaign: only collab distributor can notify collab rewards"
             );
 
             // collab token
@@ -551,6 +555,7 @@ contract JointPassportCampaign is CampaignStorage, PassportScoreVerifiable, Owna
 
     function currentTimestamp()
         public
+        virtual
         view
         returns (uint256)
     {

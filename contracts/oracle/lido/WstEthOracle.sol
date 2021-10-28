@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.4;
 
 import {Decimal} from "../../lib/Decimal.sol";
 import {SafeMath} from "../../lib/SafeMath.sol";
@@ -26,13 +25,14 @@ contract WstEthOracle is IOracle {
 
     uint256 public chainlinkEthScalar;
 
-    constructor() public {
+    constructor() {
         chainlinkEthScalar = uint256(18 - chainLinkEthAggregator.decimals());
     }
 
     function fetchCurrentPrice()
         external
         view
+        override
         returns (Decimal.D256 memory)
     {
         // get stETH per wstETH

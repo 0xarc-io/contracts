@@ -1,20 +1,19 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 // a library for handling binary fixed point numbers (https://en.wikipedia.org/wiki/Q_(number_format))
 library FixedPoint {
     // range: [0, 2**112 - 1]
     // resolution: 1 / 2**112
-    // solium-disable-next-line camelcase
+    // solhint-disable-next-line contract-name-camelcase
     struct uq112x112 {
         uint224 _x;
     }
 
     // range: [0, 2**144 - 1]
     // resolution: 1 / 2**112
-    // solium-disable-next-line camelcase
+    // solhint-disable-next-line contract-name-camelcase
     struct uq144x112 {
         uint _x;
     }

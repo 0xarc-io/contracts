@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
+pragma solidity ^0.8.4;
 
 import {SafeMath} from "../lib/SafeMath.sol";
 
@@ -34,16 +34,15 @@ contract BaseERC20 is IERC20Metadata, Permittable {
      * construction.
      */
     constructor (
-        string memory name,
-        string memory symbol,
-        uint8         decimals
+        string memory name_,
+        string memory symbol_,
+        uint8         decimals_
     )
-        public
-        Permittable(name, "1")
+        Permittable(name_, "1")
     {
-        _name = name;
-        _symbol = symbol;
-        _decimals = decimals;
+        _name = name_;
+        _symbol = symbol_;
+        _decimals = decimals_;
     }
 
     /**
@@ -51,6 +50,7 @@ contract BaseERC20 is IERC20Metadata, Permittable {
      */
     function name()
         public
+        override
         view
         returns (string memory)
     {
@@ -63,6 +63,7 @@ contract BaseERC20 is IERC20Metadata, Permittable {
      */
     function symbol()
         public
+        override
         view
         returns (string memory)
     {
@@ -84,6 +85,7 @@ contract BaseERC20 is IERC20Metadata, Permittable {
      */
     function decimals()
         public
+        override
         view
         returns (uint8)
     {
@@ -95,6 +97,7 @@ contract BaseERC20 is IERC20Metadata, Permittable {
      */
     function totalSupply()
         public
+        override
         view
         returns (uint256)
     {
@@ -108,6 +111,7 @@ contract BaseERC20 is IERC20Metadata, Permittable {
         address account
     )
         public
+        override
         view
         returns (uint256)
     {
@@ -127,6 +131,8 @@ contract BaseERC20 is IERC20Metadata, Permittable {
         uint256 amount
     )
         public
+        override
+        virtual
         returns (bool)
     {
         _transfer(msg.sender, recipient, amount);
@@ -141,6 +147,7 @@ contract BaseERC20 is IERC20Metadata, Permittable {
         address spender
     )
         public
+        override
         view
         returns (uint256)
     {
@@ -159,6 +166,7 @@ contract BaseERC20 is IERC20Metadata, Permittable {
         uint256 amount
     )
         public
+        override
         returns (bool)
     {
         _approve(msg.sender, spender, amount);
@@ -183,6 +191,8 @@ contract BaseERC20 is IERC20Metadata, Permittable {
         uint256 amount
     )
         public
+        virtual
+        override
         returns (bool)
     {
         _transfer(sender, recipient, amount);
@@ -245,6 +255,7 @@ contract BaseERC20 is IERC20Metadata, Permittable {
         uint256 amount
     )
         internal
+        virtual
     {
         require(
             sender != address(0),

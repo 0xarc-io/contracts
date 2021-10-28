@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.4.24;
+// solhint-disable-next-line
+pragma solidity >=0.8.0;
 
 interface IStakingRewards {
 

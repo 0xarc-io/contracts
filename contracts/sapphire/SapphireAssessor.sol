@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 // prettier-ignore
 
-pragma solidity 0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.4;
 
 import {Ownable} from "../lib/Ownable.sol";
 import {Address} from "../lib/Address.sol";
@@ -43,13 +42,11 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
         address _mapper,
         address _passportScores,
         uint16 _maxScore
-    )
-        public
-    {
+    ) {
         require(
             _mapper.isContract() &&
             _passportScores.isContract(),
-            "SapphireAssessor: The mapper and the passport scores must be valid contracts"
+            "SapphireAssessor: mapper and passport scores must be valid contracts"
         );
 
         mapper = ISapphireMapper(_mapper);
@@ -77,6 +74,7 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
         bool _isScoreRequired
     )
         public
+        override
         checkScoreProof(_scoreProof, _isScoreRequired, false)
         returns (uint256)
     {
@@ -172,7 +170,9 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
 
     function renounceOwnership()
         public
+        view
         onlyOwner
+        override
     {
         revert("SapphireAssessor: cannot renounce ownership");
     }

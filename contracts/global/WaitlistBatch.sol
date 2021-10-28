@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import {Ownable} from "../lib/Ownable.sol";
 import {SafeMath} from "../lib/SafeMath.sol";
@@ -122,7 +121,7 @@ contract WaitlistBatch is Ownable {
     constructor(
         address _depositCurrency,
         uint256 _depositLockupDuration
-    ) public {
+    ) {
         depositCurrency = IERC20(_depositCurrency);
         depositLockupDuration = _depositLockupDuration;
 
@@ -472,6 +471,7 @@ contract WaitlistBatch is Ownable {
 
     function currentTimestamp()
         public
+        virtual
         view
         returns (uint256)
     {

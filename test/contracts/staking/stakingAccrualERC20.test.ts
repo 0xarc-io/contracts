@@ -321,7 +321,7 @@ describe('StakingAccrualERC20', () => {
 
       it('reverts if setting an incorrect ID', async () => {
         await expect(starcx.setSablierStreamId(21)).to.be.revertedWith(
-          'revert stream does not exist',
+          'stream does not exist',
         );
       });
 

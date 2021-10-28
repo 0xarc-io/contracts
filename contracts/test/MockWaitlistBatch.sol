@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import {WaitlistBatch} from "../global/WaitlistBatch.sol";
 
@@ -12,9 +11,8 @@ contract MockWaitlistBatch is WaitlistBatch {
         address _depositCurrency,
         uint256 _depositLockupDuration
     )
-        public
         WaitlistBatch(_depositCurrency, _depositLockupDuration)
-    {}
+    {} // solhint-disable-line
 
     function setCurrentTimestamp(uint256 _timestamp)
         public
@@ -25,6 +23,7 @@ contract MockWaitlistBatch is WaitlistBatch {
     function currentTimestamp()
         public
         view
+        override
         returns (uint256)
     {
         return _currentTimestamp;

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.4;
 
 import {SafeMath} from "../lib/SafeMath.sol";
 import {SafeERC20} from "../lib/SafeERC20.sol";
@@ -14,6 +13,8 @@ import {IERC20} from "../token/IERC20.sol";
 
 import {ISapphirePassportScores} from "../sapphire/ISapphirePassportScores.sol";
 import {SapphireTypes} from "../sapphire/SapphireTypes.sol";
+
+// solhint-disable max-states-count
 
 /**
  * @notice A farm that does not require minting debt to earn rewards,
@@ -40,7 +41,7 @@ contract PassportCampaign is Adminable, PassportScoreVerifiable {
 
     /* ========== Constants ========== */
 
-    uint256 constant BASE = 10 ** 18;
+    uint256 public constant BASE = 10 ** 18;
 
     /* ========== Variables ========== */
 
@@ -430,6 +431,7 @@ contract PassportCampaign is Adminable, PassportScoreVerifiable {
 
     function currentTimestamp()
         public
+        virtual
         view
         returns (uint256)
     {

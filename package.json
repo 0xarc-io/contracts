@@ -18,7 +18,7 @@
     "compile": "yarn hardhat compile",
     "execute": "rm -rf dist && yarn ts-node publish/index.ts",
     "start": "node scripts/watcher.js",
-    "lint:sol": "solium -d contracts/ --no-soliumignore",
+    "lint:sol": "solhint 'contracts/**/*.sol'",
     "lint:ts": "eslint --config ./.eslintrc.yaml --ignore-path ./.eslintignore --ext .js,.ts,.tsx .",
     "clean": "rm -rf build/compiled && rm -rf build/flattened && rm -rf src/typings && rm -rf dist && rm -rf artifacts && rm -rf cache",
     "chain": "ganache-cli --networkId 50 --accounts 20 -l 19000000 -e 10000000000 -m 'concert load couple harbor equip island argue ramp clarify fence smart topic' -h 0.0.0.0",
@@ -65,9 +65,8 @@
     "eslint-config-prettier": "^6.12.0",
     "eslint-plugin-unused-imports": "^1.1.4",
     "ethereum-waffle": "^3.2.0",
-    "ethlint": "^1.2.4",
     "fs-extra": "^9.0.1",
-    "hardhat": "^2.0.2",
+    "hardhat": "^2.6.7",
     "hardhat-contract-sizer": "^2.0.3",
     "hardhat-preprocessor": "^0.1.1",
     "hardhat-spdx-license-identifier": "^2.0.1",
@@ -85,9 +84,10 @@
     "semantic-release": "^17.2.1",
     "shelljs": "^0.8.4",
     "solc": "^0.5.16",
-    "solidity-coverage": "^0.7.12",
+    "solhint": "^3.3.6",
+    "solidity-coverage": "^0.7.17",
     "system-commands": "^1.1.7",
-    "ts-node": "^9.0.0",
+    "ts-node": "^10.4.0",
     "tsconfig-paths": "^3.9.0",
     "ttypescript": "^1.5.12",
     "typechain": "^4.0.0",
@@ -101,11 +101,12 @@
     "@test": "test/"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^2.5.0",
+    "@openzeppelin/contracts": "^4.3.2",
     "ethers": "5.0.2"
   },
   "resolutions": {
-    "ethereum-waffle/**/ethers": "5.0.2"
+    "ethereum-waffle/**/ethers": "5.0.2",
+    "sc-istanbul": "^0.4.6"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"

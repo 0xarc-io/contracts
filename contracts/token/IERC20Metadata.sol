@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.5.16;
+pragma solidity 0.8.4;
 
 import {IERC20} from "./IERC20.sol";
 
@@ -9,7 +9,7 @@ import {IERC20} from "./IERC20.sol";
  *
  * _Available since v4.1._
  */
-contract IERC20Metadata is IERC20 {
+interface IERC20Metadata is IERC20 {
     /**
      * @dev Returns the name of the token.
      */

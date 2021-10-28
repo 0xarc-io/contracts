@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import {SafeMath} from "../lib/SafeMath.sol";
 import {SafeERC20} from "../lib/SafeERC20.sol";
@@ -21,7 +20,7 @@ contract CampaignStorage {
 
     /* ========== Constants ========== */
 
-    uint256 constant BASE = 1e18;
+    uint256 public constant BASE = 1e18;
 
     /* ========== Variables ========== */
 

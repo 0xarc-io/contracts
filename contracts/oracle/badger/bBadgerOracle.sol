@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.4;
 
 import {SafeMath} from "../../lib/SafeMath.sol";
 import {Decimal} from "../../lib/Decimal.sol";
@@ -12,7 +11,7 @@ import {IChainLinkAggregator} from "../chainlink/IChainLinkAggregator.sol";
 
 import {IBadgerSett} from "./IBadgerSett.sol";
 
-/* solium-disable-next-line */
+/* solhint-disable-next-line */
 contract bBadgerOracle is IOracle {
 
     using SafeMath for uint256;
@@ -33,11 +32,11 @@ contract bBadgerOracle is IOracle {
         0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419
     );
 
-    uint256 badgerEthChainlinkScalar;
-    uint256 chainlinkEthScalar;
-    uint256 badgerScalar;
+    uint256 public badgerEthChainlinkScalar;
+    uint256 public chainlinkEthScalar;
+    uint256 public badgerScalar;
 
-    constructor() public {
+    constructor() {
         badgerEthChainlinkScalar = uint256(18 - badgerEthChainlinkOracle.decimals());
         chainlinkEthScalar = uint256(18 - chainLinkEthAggregator.decimals());
 
@@ -47,6 +46,7 @@ contract bBadgerOracle is IOracle {
     function fetchCurrentPrice()
         external
         view
+        override
         returns (Decimal.D256 memory)
     {
         uint256 badgerPerbBadger = bBadger.getPricePerFullShare().mul(10 ** badgerScalar);

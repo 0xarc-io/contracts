@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import {SafeMath} from "../../lib/SafeMath.sol";
 
@@ -36,8 +35,8 @@ library UniswapV2Library {
     {
         (address token0, address token1) = sortTokens(tokenA, tokenB);
 
-        pair = address(
-            uint(
+        pair = address(uint160(
+            uint256(
                 keccak256(
                     abi.encodePacked(
                         hex"ff",
@@ -47,6 +46,6 @@ library UniswapV2Library {
                     )
                 )
             )
-        );
+        ));
     }
 }

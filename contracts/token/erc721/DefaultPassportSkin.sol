@@ -1,15 +1,22 @@
-pragma solidity 0.5.16;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.4;
 
-import {ERC721Full} from "@openzeppelin/contracts/token/ERC721/ERC721Full.sol";
-import {Counters} from "@openzeppelin/contracts/drafts/Counters.sol";
+import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import {ERC721Enumerable} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import {ERC721URIStorage} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
 
 import {Ownable} from "../../lib/Ownable.sol";
 
-contract DefaultPassportSkin is ERC721Full, Ownable {
+contract DefaultPassportSkin is Ownable, ERC721URIStorage, ERC721Enumerable {
 
     /* ========== Libraries ========== */
 
     using Counters for Counters.Counter;
+
+    /* ========== Public variables ========== */
+
+    string public baseURI;
 
     /* ========== Private variables ========== */
 
@@ -25,9 +32,8 @@ contract DefaultPassportSkin is ERC721Full, Ownable {
         string memory _name,
         string memory _symbol
     )
-        ERC721Full(_name, _symbol)
-        public
-    {}
+        ERC721(_name, _symbol)
+    {} // solhint-disable-line
 
     /* ========== Restricted Functions ========== */
 
@@ -58,13 +64,59 @@ contract DefaultPassportSkin is ERC721Full, Ownable {
      *      token URI.
      */
     function setBaseURI(
-        string calldata _baseURI
+        string calldata baseURI_
     )
         external
         onlyOwner
     {
-        _setBaseURI(_baseURI);
-        emit BaseURISet(_baseURI);
+        baseURI = baseURI_;
+        emit BaseURISet(baseURI_);
     }
 
+    /* ========== Internal Functions ========== */
+
+    function _baseURI()
+        internal
+        view
+        override
+        returns (string memory)
+    {
+        return baseURI;
+    }
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    )
+        internal
+        override(ERC721, ERC721Enumerable)
+    {
+        super._beforeTokenTransfer(from, to, tokenId);
+    }
+
+    function _burn(uint256 tokenId) 
+        internal 
+        override(ERC721, ERC721URIStorage) 
+    {
+        super._burn(tokenId);
+    }
+
+    function supportsInterface(bytes4 interfaceId) 
+        public 
+        view 
+        override(ERC721, ERC721Enumerable)
+        returns (bool) 
+    {
+        return super.supportsInterface(interfaceId);
+    }
+
+    function tokenURI(uint256 tokenId) 
+        public 
+        view 
+        override(ERC721, ERC721URIStorage)
+        returns (string memory) 
+    {
+        return super.tokenURI(tokenId);
+    }
 }

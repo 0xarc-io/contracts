@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.4;
 
 import {Adminable} from "../lib/Adminable.sol";
 import {Initializable} from "../lib/Initializable.sol";
@@ -37,7 +36,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
 
     /* ========== Variables ========== */
 
-    uint256 constant BASE = 1e18;
+    uint256 public constant BASE = 1e18;
 
     uint256 public exitCooldownDuration;
 
@@ -79,9 +78,8 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
     /* ========== Constructor (ignore) ========== */
 
     constructor ()
-        public
         BaseERC20("", "", 18)
-    {}
+    {} // solhint-disable-line
 
     /* ========== Restricted Functions ========== */
 
@@ -430,6 +428,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
 
     function currentTimestamp()
         public
+        virtual
         view
         returns (uint256)
     {

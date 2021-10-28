@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import {Ownable} from "../lib/Ownable.sol";
 import {SafeERC20} from "../lib/SafeERC20.sol";
@@ -58,7 +57,6 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
         string memory symbol,
         address _oldArcxToken
     )
-        public
         BaseERC20(name, symbol, 18)
     {
         require(
@@ -80,6 +78,7 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
         uint256 value
     )
         external
+        override
         onlyOwner
     {
         _mint(to, value);
@@ -90,6 +89,7 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
         uint256 value
     )
         external
+        override
         onlyOwner
     {
         _burn(to, value);
@@ -140,6 +140,7 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
         uint256 amount
     )
         public
+        override
         isNotPaused
         returns (bool)
     {
@@ -153,6 +154,7 @@ contract ArcxTokenV2 is BaseERC20, IMintableToken, Ownable {
         uint256 amount
     )
         public
+        override
         isNotPaused
         returns (bool)
     {

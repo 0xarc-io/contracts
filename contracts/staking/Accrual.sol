@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Modified from https://github.com/iearn-finance/audit/blob/master/contracts/yGov/YearnGovernanceBPT.sol
 
-pragma solidity ^0.5.16;
+pragma solidity ^0.8.4;
 
 import {IERC20} from "../token/IERC20.sol";
 
@@ -12,7 +12,7 @@ import {SafeERC20} from "../lib/SafeERC20.sol";
  * @title Accrual is an abstract contract which allows users of some
  *        distribution to claim a portion of tokens based on their share.
  */
-contract Accrual {
+abstract contract Accrual {
 
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -26,9 +26,7 @@ contract Accrual {
 
     constructor(
         address _accrualToken
-    )
-        public
-    {
+    ) {
         accrualToken = IERC20(_accrualToken);
     }
 
@@ -37,11 +35,13 @@ contract Accrual {
     )
         public
         view
+        virtual
         returns (uint256);
 
     function getTotalBalance()
         public
         view
+        virtual
         returns (uint256);
 
     function updateFees()

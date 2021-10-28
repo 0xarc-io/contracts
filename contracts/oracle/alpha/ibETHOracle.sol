@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import {Decimal} from "../../lib/Decimal.sol";
 import {SafeMath} from "../../lib/SafeMath.sol";
@@ -12,7 +11,7 @@ import {IChainLinkAggregator} from "../chainlink/IChainLinkAggregator.sol";
 
 import {IibETH} from "./IibETH.sol";
 
-/* solium-disable-next-line */
+/* solhint-disable-next-line */
 contract ibETHOracle is IOracle {
 
     using SafeMath for uint256;
@@ -27,12 +26,13 @@ contract ibETHOracle is IOracle {
 
     uint256 constant public CHAIN_LINK_DECIMALS = 10**8;
 
-    constructor() public {
+    constructor() {
         chainlinkEthScalar = uint256(18 - chainLinkEthAggregator.decimals());
     }
 
     function fetchCurrentPrice()
         external
+        override
         view
         returns (Decimal.D256 memory)
     {

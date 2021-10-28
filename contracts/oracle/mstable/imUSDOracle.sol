@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import {Decimal} from "../../lib/Decimal.sol";
 import {SafeMath} from "../../lib/SafeMath.sol";
@@ -13,7 +12,7 @@ import {IOracle} from "../IOracle.sol";
 import {IimUSD} from "./IimUSD.sol";
 import {ICurve} from "../ICurve.sol";
 
-/* solium-disable-next-line */
+/* solhint-disable-next-line */
 contract imUSDOracle is IOracle {
 
     using SafeMath for uint256;
@@ -23,6 +22,7 @@ contract imUSDOracle is IOracle {
 
     function fetchCurrentPrice()
         external
+        override
         view
         returns (Decimal.D256 memory)
     {

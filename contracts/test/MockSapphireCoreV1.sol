@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import {IOracle} from "../oracle/IOracle.sol";
 
@@ -22,6 +21,7 @@ contract MockSapphireCoreV1 is SapphireCoreV1, MockTimestamp {
         uint256 _oracleTimestamp
     )
         internal
+        override
         view
         returns (bool)
     {
@@ -30,7 +30,16 @@ contract MockSapphireCoreV1 is SapphireCoreV1, MockTimestamp {
         if (currentTimestamp() < halfDay) {
             return true;
         } else {
-            return _oracleTimestamp >= currentTimestamp().sub(halfDay);
+            return _oracleTimestamp >= currentTimestamp() - halfDay;
         }
+    }
+
+     function currentTimestamp()
+        public
+        view
+        override(SapphireCoreV1, MockTimestamp)
+        returns (uint256)
+    {
+        return MockTimestamp.currentTimestamp();
     }
 }

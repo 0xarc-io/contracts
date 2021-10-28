@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.5.16;
+pragma solidity 0.8.4;
 
 /**
  * @dev Collection of functions related to the address type.
@@ -31,7 +31,7 @@ library Address {
         // constructor execution.
 
         uint256 size;
-        // solium-disable-next-line security/no-inline-assembly
+        // solhint-disable-next-line no-inline-assembly
         assembly { size := extcodesize(account) }
         return size > 0;
     }

@@ -1,12 +1,18 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import { SapphirePassportScores } from "../sapphire/SapphirePassportScores.sol";
 import {MockTimestamp} from "./MockTimestamp.sol";
 
-// solium-disable-next-line no-empty-blocks
+// solhint-disable-next-line no-empty-blocks
 contract MockSapphirePassportScores is SapphirePassportScores, MockTimestamp {
-
+     function currentTimestamp()
+        public
+        view
+        override(SapphirePassportScores, MockTimestamp)
+        returns (uint256)
+    {
+        return MockTimestamp.currentTimestamp();
+    }
 }

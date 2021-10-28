@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import {SafeMath} from "../../lib/SafeMath.sol";
 import {Ownable} from "../../lib/Ownable.sol";
@@ -21,7 +20,7 @@ contract ArcUniswapV2Oracle is Ownable {
 
     /* ========== Storage ========== */
 
-    IKeep3rV1 public KP3R;
+    IKeep3rV1 public KP3R; // solhint-disable-line
 
     address public uniV2Factory;
 
@@ -75,9 +74,7 @@ contract ArcUniswapV2Oracle is Ownable {
     constructor(
         address _kp3r,
         address _uniV2Factory
-    )
-        public
-    {
+    ) {
         require(
             _kp3r != address(0) && _uniV2Factory != address(0),
             "ArcUniswapV2Oracle: Keeper and univ2Factory address must not be null"
@@ -478,7 +475,7 @@ contract ArcUniswapV2Oracle is Ownable {
             if (_pairs[i] == pair) {
                 delete _pairs[i];
                 _pairs[i] = _pairs[_pairs.length - 1];
-                _pairs.length--;
+                _pairs.pop();
 
                 break;
             }

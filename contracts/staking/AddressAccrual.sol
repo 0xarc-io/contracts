@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
+pragma solidity ^0.8.4;
 
 import {Ownable} from "../lib/Ownable.sol";
+import {SafeMath} from "../lib/SafeMath.sol";
 
 import {IERC20} from "../token/IERC20.sol";
 
 import {Accrual} from "./Accrual.sol";
 
 contract AddressAccrual is Ownable, Accrual {
+
+    using SafeMath for uint256;
 
     uint256 public _supply = 0;
 
@@ -17,9 +20,8 @@ contract AddressAccrual is Ownable, Accrual {
     constructor(
         address _claimableToken
     )
-        public
         Accrual(_claimableToken)
-    {}
+    {} // solhint-disable-line
 
     function totalSupply()
         public
@@ -42,6 +44,7 @@ contract AddressAccrual is Ownable, Accrual {
     function getTotalBalance()
         public
         view
+        override
         returns (uint256)
     {
         return totalSupply();
@@ -52,6 +55,7 @@ contract AddressAccrual is Ownable, Accrual {
     )
         public
         view
+        override
         returns (uint256)
     {
         return balanceOf(owner);

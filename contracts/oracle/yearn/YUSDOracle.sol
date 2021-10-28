@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import {Decimal} from "../../lib/Decimal.sol";
 import {SafeMath} from "../../lib/SafeMath.sol";
@@ -16,7 +15,7 @@ contract YUSDOracle is IOracle {
 
     using SafeMath for uint256;
 
-    uint256 constant BASE = 10**18;
+    uint256 public constant BASE = 10**18;
 
     IRiskOracle public aaveRiskOracle;
     IChainLinkAggregator public chainlinkETHUSDAggregator;
@@ -24,10 +23,9 @@ contract YUSDOracle is IOracle {
     address public yUSDAddress;
 
     constructor()
-        public
     {
         yUSDAddress = 0x5dbcF33D8c2E976c6b560249878e6F1491Bca25c;
-        /* solium-disable-next-line */
+        /* solhint-disable-next-line */
         chainlinkETHUSDAggregator = IChainLinkAggregator(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
         aaveRiskOracle = IRiskOracle(0x4CC91E0c97c5128247E71a5DdF01CA46f4fa8d1d);
     }
@@ -35,6 +33,7 @@ contract YUSDOracle is IOracle {
     function fetchCurrentPrice()
         external
         view
+        override
         returns (Decimal.D256 memory)
     {
         uint256 yUSDPricePerFullShare = IYToken(yUSDAddress).getPricePerFullShare();

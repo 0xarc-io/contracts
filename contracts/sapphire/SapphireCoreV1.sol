@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.4;
 
 import {BaseERC20} from "../token/BaseERC20.sol";
 import {IERC20} from "../token/IERC20.sol";
@@ -710,6 +709,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      */
     function currentTimestamp()
         public
+        virtual
         view
         returns (uint256)
     {
@@ -1223,6 +1223,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         uint256 _oracleTimestamp
     )
         internal
+        virtual
         view
         returns (bool)
     {

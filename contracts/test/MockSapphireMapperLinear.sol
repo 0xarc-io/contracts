@@ -1,4 +1,6 @@
-pragma solidity 0.5.16;
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.8.4;
 
 import {SapphireMapperLinear} from "../sapphire/SapphireMapperLinear.sol";
 
@@ -14,13 +16,14 @@ contract MockSapphireMapperLinear is SapphireMapperLinear {
     }
 
     function map(
-        uint256 _score,
-        uint256 _scoreMax,
-        uint256 _lowerBound,
-        uint256 _upperBound
+        uint256,
+        uint256,
+        uint256,
+        uint256
     )
         public
         view
+        override
         returns (uint256)
     {
         return _mapResult;

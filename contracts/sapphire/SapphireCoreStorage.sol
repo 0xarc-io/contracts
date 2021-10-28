@@ -1,18 +1,19 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.4;
 
 import {ISapphireOracle} from "../oracle/ISapphireOracle.sol";
 import {ISapphireAssessor} from "./ISapphireAssessor.sol";
 
 import {SapphireTypes} from "./SapphireTypes.sol";
 
+ // solhint-disable max-states-count
+
 contract SapphireCoreStorageV1 {
 
     /* ========== Constants ========== */
 
-    uint256 constant BASE = 10**18;
+    uint256 public constant BASE = 10**18;
 
     /* ========== Public Variables ========== */
 
@@ -144,5 +145,5 @@ contract SapphireCoreStorageV1 {
     bytes32 internal _proofProtocol;
 }
 
-// solium-disable-next-line no-empty-blocks
+// solhint-disable-next-line no-empty-blocks
 contract SapphireCoreStorage is SapphireCoreStorageV1 {}

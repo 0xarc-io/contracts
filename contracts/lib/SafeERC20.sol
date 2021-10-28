@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-pragma solidity ^0.5.16;
+pragma solidity ^0.8.4;
 
 import {IERC20} from "../token/IERC20.sol";
 
@@ -12,7 +12,7 @@ library SafeERC20 {
         uint256 value
     ) internal {
         // bytes4(keccak256(bytes('approve(address,uint256)')));
-        /* solium-disable-next-line */
+        /* solhint-disable-next-line */
         (bool success, bytes memory data) = address(token).call(
             abi.encodeWithSelector(0x095ea7b3, to, value)
         );
@@ -29,7 +29,7 @@ library SafeERC20 {
         uint256 value
     ) internal {
         // bytes4(keccak256(bytes('transfer(address,uint256)')));
-        /* solium-disable-next-line */
+        /* solhint-disable-next-line */
         (bool success, bytes memory data) = address(token).call(
             abi.encodeWithSelector(0xa9059cbb, to, value)
         );
@@ -47,7 +47,7 @@ library SafeERC20 {
         uint256 value
     ) internal {
         // bytes4(keccak256(bytes('transferFrom(address,address,uint256)')));
-        /* solium-disable-next-line */
+        /* solhint-disable-next-line */
         (bool success, bytes memory data) = address(token).call(
             abi.encodeWithSelector(
                 0x23b872dd,
