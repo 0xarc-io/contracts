@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.4;
 
 import {Decimal} from "../lib/Decimal.sol";
 import {ISapphireOracle} from "../oracle/ISapphireOracle.sol";
@@ -15,6 +14,7 @@ contract MockSapphireOracle is ISapphireOracle {
 
     function fetchCurrentPrice()
         external
+        override
         view
         returns (uint256 price, uint256 timestamp)
     {

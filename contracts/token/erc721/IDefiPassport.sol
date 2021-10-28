@@ -1,9 +1,10 @@
-pragma solidity 0.5.16;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.8.4;
 
 import {SapphireTypes} from "../../sapphire/SapphireTypes.sol";
 
-contract IDefiPassport {
+abstract contract IDefiPassport {
     function mint(
         address _to,
         address _passportSkin,
@@ -11,5 +12,6 @@ contract IDefiPassport {
         SapphireTypes.ScoreProof calldata _scoreProof
     )
         external
+        virtual
         returns (uint256);
 }

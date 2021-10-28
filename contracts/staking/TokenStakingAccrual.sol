@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
+pragma solidity ^0.8.4;
 
 import {IERC20} from "../token/IERC20.sol";
 import {SafeERC20} from "../lib/SafeERC20.sol";
+import {SafeMath} from "../lib/SafeMath.sol";
 
 import {Accrual} from "./Accrual.sol";
 
 contract TokenStakingAccrual is Accrual {
 
+    using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
     IERC20 public stakingToken;
@@ -24,7 +26,6 @@ contract TokenStakingAccrual is Accrual {
         address _stakingToken,
         address _earningToken
     )
-        public
         Accrual(
             _earningToken
         )
@@ -37,6 +38,7 @@ contract TokenStakingAccrual is Accrual {
     )
         public
         view
+        override
         returns (uint256)
     {
         return stakedBalance[owner];
@@ -45,6 +47,7 @@ contract TokenStakingAccrual is Accrual {
     function getTotalBalance()
         public
         view
+        override
         returns (uint256)
     {
         return stakedTotal;

@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.5.16;
+pragma solidity 0.8.4;
 
 import {IERC20} from "./IERC20.sol";
 
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP.
  */
-contract IPermittableERC20 is IERC20 {
+interface IPermittableERC20 is IERC20 {
 
     /**
      * @notice Approve token with signature

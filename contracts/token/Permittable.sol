@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.5.16;
+pragma solidity 0.8.4;
 
 contract Permittable {
 
     /* ============ Variables ============ */
 
+    // solhint-disable-next-line
     bytes32 public DOMAIN_SEPARATOR;
 
     mapping (address => uint256) public nonces;
@@ -13,7 +14,7 @@ contract Permittable {
     /* ============ Constants ============ */
 
     // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
-    /* solium-disable-next-line */
+    /* solhint-disable-next-line */
     bytes32 public constant PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
 
     /* ============ Constructor ============ */
@@ -21,9 +22,7 @@ contract Permittable {
     constructor(
         string memory name,
         string memory version
-    )
-        public
-    {
+    ) {
         DOMAIN_SEPARATOR = _initDomainSeparator(name, version);
     }
 
@@ -39,7 +38,7 @@ contract Permittable {
         returns (bytes32)
     {
         uint256 chainID;
-        /* solium-disable-next-line */
+        /* solhint-disable-next-line */
         assembly {
             chainID := chainid()
         }

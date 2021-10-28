@@ -1230,7 +1230,7 @@ describe('JointPassportCampaign', () => {
             collabToken.address,
           ),
         ).to.be.revertedWith(
-          'JointPassportCampaign: only the collab distributor can notify collab rewards',
+          'JointPassportCampaign: only collab distributor can notify collab rewards',
         );
       });
 

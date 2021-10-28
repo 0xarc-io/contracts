@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.5.16;
-pragma experimental ABIEncoderV2;
-import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
+pragma solidity 0.8.4;
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 import {Adminable} from "../lib/Adminable.sol";
 import {SafeMath} from "../lib/SafeMath.sol";
@@ -117,6 +116,7 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
      */
     function currentTimestamp()
         public
+        virtual
         view
         returns (uint256)
     {
@@ -169,6 +169,7 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
         bytes32 _newRoot
     )
         external
+        override
     {
         require(
             _newRoot != 0x0000000000000000000000000000000000000000000000000000000000000000,
@@ -193,6 +194,7 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
         SapphireTypes.ScoreProof memory _proof
     )
         public
+        override
         view
         returns (bool)
     {
@@ -284,6 +286,7 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
         uint256 _delay
     )
         external
+        override
         onlyAdmin
     {
         require(
@@ -308,6 +311,7 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
         bool _value
     )
         external
+        override
     {
         require(
             msg.sender == pauseOperator,
@@ -330,6 +334,7 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
         address _merkleRootUpdater
     )
         external
+        override
         onlyAdmin
     {
         require(

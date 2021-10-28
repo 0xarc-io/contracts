@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.4;
 
 import {PassportScoreVerifiable} from "../lib/PassportScoreVerifiable.sol";
 import {ISapphirePassportScores} from "../sapphire/ISapphirePassportScores.sol";
@@ -13,9 +12,7 @@ contract PassportScoreVerifiableTest is PassportScoreVerifiable {
 
     constructor(
         address _passportScoresContract
-    )
-        public
-    {
+    ) {
         passportScoresContract = ISapphirePassportScores(_passportScoresContract);
     }
 

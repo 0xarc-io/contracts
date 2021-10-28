@@ -1,9 +1,19 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import {Sablier} from "../global/Sablier.sol";
 import {MockTimestamp} from "./MockTimestamp.sol";
 
-contract MockSablier is Sablier, MockTimestamp {/* solium-disable-line no-empty-blocks */}
+contract MockSablier is Sablier, MockTimestamp {
+
+    function currentTimestamp()
+        public
+        view
+        override(Sablier, MockTimestamp)
+        returns (uint256)
+    {
+        return MockTimestamp.currentTimestamp();
+    }
+
+}

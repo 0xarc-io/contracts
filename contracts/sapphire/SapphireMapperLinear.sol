@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.5.16;
+pragma solidity 0.8.4;
 
 import {ISapphireMapper} from "./ISapphireMapper.sol";
 import {SafeMath} from "../lib/SafeMath.sol";
@@ -24,6 +24,8 @@ contract SapphireMapperLinear is ISapphireMapper {
         uint256 _upperBound
     )
         public
+        virtual
+        override
         view
         returns (uint256)
     {

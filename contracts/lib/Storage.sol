@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 library Storage {
 
@@ -16,7 +15,7 @@ library Storage {
         returns (bytes32)
     {
         bytes32 result;
-        /* solium-disable-next-line security/no-inline-assembly */
+        /* solhint-disable-next-line no-inline-assembly */
         assembly {
             result := sload(slot)
         }
@@ -32,7 +31,7 @@ library Storage {
     )
         internal
     {
-        /* solium-disable-next-line security/no-inline-assembly */
+        /* solhint-disable-next-line no-inline-assembly */
         assembly {
             sstore(slot, value)
         }

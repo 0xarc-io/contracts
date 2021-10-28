@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.4;
 
 import {Decimal} from "../../lib/Decimal.sol";
 import {SafeMath} from "../../lib/SafeMath.sol";
@@ -12,12 +11,13 @@ import {IChainLinkAggregator} from "../chainlink/IChainLinkAggregator.sol";
 
 import {IBadgerSett} from "./IBadgerSett.sol";
 
-/* solium-disable-next-line */
+/* solhint-disable-next-line */
 contract bDIGGOracle is IOracle {
 
     using SafeMath for uint256;
 
     IBadgerSett public bDIGG = IBadgerSett(0x7e7E112A68d8D2E221E11047a72fFC1065c38e1a);
+    // solhint-disable-next-line
     BaseERC20 public DIGG = BaseERC20(0x798D1bE841a82a273720CE31c822C61a67a601C3);
 
     IChainLinkAggregator public diggBtcChainlinkOracle = IChainLinkAggregator(
@@ -32,7 +32,7 @@ contract bDIGGOracle is IOracle {
     uint256 public btcUsdChainlinkScalar;
     uint256 public diggScalar;
 
-    constructor() public {
+    constructor() {
         diggBtcChainlinkScalar = uint256(18 - diggBtcChainlinkOracle.decimals());
         btcUsdChainlinkScalar = uint256(18 - btcUsdChainlinkOracle.decimals());
 
@@ -42,6 +42,7 @@ contract bDIGGOracle is IOracle {
     function fetchCurrentPrice()
         external
         view
+        override
         returns (Decimal.D256 memory)
     {
         uint256 totalDiggInbDigg = bDIGG.balance().mul(10 ** diggScalar);

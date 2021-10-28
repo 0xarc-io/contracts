@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import {BaseERC20} from "../token/BaseERC20.sol";
 
@@ -16,9 +15,8 @@ contract TestToken is BaseERC20 {
         string memory symbol,
         uint8         decimals
     )
-        public
         BaseERC20(name, symbol, decimals)
-    { }
+    { } // solhint-disable-line
 
     // ============ Functions ============
 

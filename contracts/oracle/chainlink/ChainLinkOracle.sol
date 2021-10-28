@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.5.16;
+pragma solidity 0.8.4;
 
 import {Decimal} from "../../lib/Decimal.sol";
 import {SafeMath} from "../../lib/SafeMath.sol";
@@ -16,13 +16,14 @@ contract ChainLinkOracle is ISapphireOracle {
 
     uint256 public decimals;
 
-    constructor(address _priceFeed) public {
+    constructor(address _priceFeed) {
         priceFeed = AggregatorV3Interface(_priceFeed);
         decimals = priceFeed.decimals();
     }
 
     function fetchCurrentPrice()
         external
+        override
         view
         returns (uint256, uint256)
     {

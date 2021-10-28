@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import {Decimal} from "../lib/Decimal.sol";
 import {IOracle} from "../oracle/IOracle.sol";
@@ -9,11 +8,12 @@ import {IOracle} from "../oracle/IOracle.sol";
 contract MockOracle is IOracle {
 
     // Priced at $10.00 (18 d.p)
-    Decimal.D256 public CURRENT_PRICE = Decimal.D256({ value: 10**19 });
+    Decimal.D256 public CURRENT_PRICE = Decimal.D256({ value: 10**19 }); // solhint-disable-line
 
     function fetchCurrentPrice()
         external
         view
+        override
         returns (Decimal.D256 memory)
     {
         return CURRENT_PRICE;
