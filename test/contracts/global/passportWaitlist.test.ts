@@ -8,6 +8,7 @@ import { MockPassportWaitlistFactory } from '@src/typings/MockPassportWaitlistFa
 import { constants, utils } from 'ethers';
 import { approve } from '@src/utils';
 import { Wallet } from 'ethers';
+import { id } from '@ethersproject/hash';
 
 const PAYMENT_AMOUNT = utils.parseEther('50');
 
@@ -37,14 +38,12 @@ describe('PassportWaitlist', () => {
 
   addSnapshotBeforeRestoreAfterEach();
 
-  describe('#constructor', () => {
+  describe.only('#constructor', () => {
     it('sets the payment token and amount', async () => {
       expect(await waitlist.paymentToken()).to.eq(paymentToken.address);
       expect(await waitlist.paymentAmount()).to.eq(PAYMENT_AMOUNT);
       expect(await waitlist.paymentReceiver()).to.eq(owner.address);
     });
-
-    it('emits UserApplied for each user in array of initial aplicants');
   });
 
   describe('#applyForPassport', () => {
@@ -211,8 +210,25 @@ describe('PassportWaitlist', () => {
   });
 
   describe('#applyOnBehalf', () => {
-    it('reverts if called by non-owner');
+    it('reverts if called by non-owner', async () => {
+      await expect(
+        waitlist.connect(user).applyOnBehalf([user.address]),
+      ).to.be.revertedWith('Ownable: caller is not the owner');
+    });
 
-    it('emits UserApplied for all given users');
+    it('emits UserApplied for all given users', async () => {
+      await waitlist
+        .connect(owner)
+        .applyOnBehalf([user.address, owner.address]);
+
+      const logs = await owner.provider.getLogs({
+        address: waitlist.address,
+        fromBlock: 0,
+        toBlock: 'latest',
+        topics: [id('UserApplied(address,address,uint256,uint256)')],
+      });
+
+      expect(logs).to.have.length(2);
+    });
   });
 });
