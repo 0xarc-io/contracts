@@ -52,6 +52,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
      */
 
     mapping (address => uint256) public cooldowns;
+    mapping (address => uint256) public stakedAmounts;
 
     /* ========== Events ========== */
 
