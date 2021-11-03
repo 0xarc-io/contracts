@@ -38,7 +38,7 @@ describe('PassportWaitlist', () => {
 
   addSnapshotBeforeRestoreAfterEach();
 
-  describe.only('#constructor', () => {
+  describe('#constructor', () => {
     it('sets the payment token and amount', async () => {
       expect(await waitlist.paymentToken()).to.eq(paymentToken.address);
       expect(await waitlist.paymentAmount()).to.eq(PAYMENT_AMOUNT);
