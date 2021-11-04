@@ -12,7 +12,6 @@ import {
 } from '@src/typings';
 import { DefaultPassportSkinFactory } from '@src/typings/DefaultPassportSkinFactory';
 import { MockSapphirePassportScores } from '@src/typings/MockSapphirePassportScores';
-import { SapphirePassportScores } from '@src/typings/SapphirePassportScores';
 import { SapphirePassportScoresFactory } from '@src/typings/SapphirePassportScoresFactory';
 import { getEmptyScoreProof, getScoreProof } from '@src/utils';
 import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
@@ -41,10 +40,11 @@ const OTHER_PROTOCOL = 'defi.other';
 describe('DefiPassport', () => {
   let defiPassport: DefiPassport;
 
-  let creditScoreContract: SapphirePassportScores;
+  let creditScoreContract: MockSapphirePassportScores;
   let owner: SignerWithAddress;
   let user: SignerWithAddress;
   let userNoCreditScore: SignerWithAddress;
+  let userZeroCreditScore: SignerWithAddress;
   let skinManager: SignerWithAddress;
   let defaultPassportSkinContract: DefaultPassportSkin;
   let defaultSkinAddress: string;
@@ -58,6 +58,7 @@ describe('DefiPassport', () => {
   let creditScoreTree: PassportScoreTree;
   let ownerCreditScore: PassportScore;
   let userCreditScore: PassportScore;
+  let zeroUserScore: PassportScore;
 
   async function _setupCreditScoreContract() {
     creditScoreContract = await deployMockSapphirePassportScores(owner);
@@ -72,9 +73,16 @@ describe('DefiPassport', () => {
       protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: BigNumber.from(500),
     };
+
+    zeroUserScore = {
+      account: userZeroCreditScore.address,
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      score: BigNumber.from(0),
+    };
     creditScoreTree = new PassportScoreTree([
       ownerCreditScore,
       userCreditScore,
+      zeroUserScore,
     ]);
 
     await creditScoreContract.init(
@@ -161,6 +169,7 @@ describe('DefiPassport', () => {
     user = signers[1];
     userNoCreditScore = signers[2];
     skinManager = signers[3];
+    userZeroCreditScore = signers[4];
 
     await _setupSkins();
 
@@ -310,6 +319,21 @@ describe('DefiPassport', () => {
           getScoreProof(userCreditScore, creditScoreTree),
         ),
       ).to.be.revertedWith('ERC721: owner query for nonexistent token');
+    });
+
+    it('reverts if proof has a score of 0', async () => {
+      await defiPassport
+        .connect(skinManager)
+        .setDefaultSkin(defaultSkinAddress, true);
+
+      await expect(
+        defiPassport.mint(
+          userZeroCreditScore.address,
+          defaultSkinAddress,
+          defaultSkinTokenId,
+          getScoreProof(zeroUserScore, creditScoreTree),
+        ),
+      ).to.be.revertedWith('DefiPassport: user has score of 0');
     });
 
     it('mints the passport to the receiver with a default skin', async () => {
