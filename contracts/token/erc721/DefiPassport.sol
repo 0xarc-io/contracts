@@ -352,6 +352,11 @@ contract DefiPassport is ERC721Enumerable, Adminable, Initializable, DefiPasspor
             "DefiPassport: invalid proof protocol"
         );
 
+        require(
+            _scoreProof.score > 0,
+            "DefiPassport: score is 0"
+        );
+
         passportScoresContract.verify(_scoreProof);
 
         require (

@@ -13,7 +13,7 @@ import {
 import { DefaultPassportSkinFactory } from '@src/typings/DefaultPassportSkinFactory';
 import { MockSapphirePassportScores } from '@src/typings/MockSapphirePassportScores';
 import { SapphirePassportScoresFactory } from '@src/typings/SapphirePassportScoresFactory';
-import { getEmptyScoreProof, getScoreProof } from '@src/utils';
+import { getScoreProof } from '@src/utils';
 import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
@@ -271,10 +271,26 @@ describe('DefiPassport', () => {
           userNoCreditScore.address,
           defaultSkinAddress,
           defaultSkinTokenId,
-          getEmptyScoreProof(
-            userNoCreditScore.address,
-            utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
-          ),
+          {
+            account: userNoCreditScore.address,
+            protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+            score: BigNumber.from(0),
+            merkleProof: [],
+          },
+        ),
+      ).to.be.revertedWith('DefiPassport: score is 0');
+
+      await expect(
+        defiPassport.mint(
+          userNoCreditScore.address,
+          defaultSkinAddress,
+          defaultSkinTokenId,
+          {
+            account: userNoCreditScore.address,
+            protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+            score: BigNumber.from(1),
+            merkleProof: [],
+          },
         ),
       ).to.be.revertedWith('SapphirePassportScores: invalid proof');
     });
@@ -333,7 +349,7 @@ describe('DefiPassport', () => {
           defaultSkinTokenId,
           getScoreProof(zeroUserScore, creditScoreTree),
         ),
-      ).to.be.revertedWith('DefiPassport: user has score of 0');
+      ).to.be.revertedWith('DefiPassport: score is 0');
     });
 
     it('mints the passport to the receiver with a default skin', async () => {
