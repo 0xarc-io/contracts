@@ -41,7 +41,7 @@ contract PassportWaitlist is Ownable {
         );
     }
 
-    /* ========== Admin ========== */
+    /* ========== Restricted functions ========== */
 
     function setPayment(
         address _paymentToken,
@@ -70,6 +70,22 @@ contract PassportWaitlist is Ownable {
             paymentAmount,
             paymentReceiver
         );
+    }
+
+    function applyOnBehalf(
+        address[] memory _users
+    )
+        external
+        onlyOwner
+    {
+        for (uint256 i = 0; i < _users.length; i++) {
+            emit UserApplied(
+                _users[i],
+                address(0),
+                0,
+                currentTimestamp()
+            );
+        }
     }
 
     /* ========== Public Functions ========== */
