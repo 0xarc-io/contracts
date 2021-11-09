@@ -11,8 +11,6 @@ import {Bytes32} from "../../lib/Bytes32.sol";
 import {Adminable} from "../../lib/Adminable.sol";
 import {Initializable} from "../../lib/Initializable.sol";
 import {DefiPassportStorage} from "./DefiPassportStorage.sol";
-import {ISapphirePassportScores} from "../../sapphire/ISapphirePassportScores.sol";
-import {SapphireTypes} from "../../sapphire/SapphireTypes.sol";
 import {Address} from "../../lib/Address.sol";
 
 contract DefiPassport is ERC721Enumerable, Adminable, Initializable, DefiPassportStorage {
@@ -54,16 +52,15 @@ contract DefiPassport is ERC721Enumerable, Adminable, Initializable, DefiPasspor
 
     event SkinManagerSet(address _skinManager);
 
-    event PassportScoresContractSet(address _passportScoresContract);
-
     event WhitelistSkinSet(address _skin, bool _status);
-
-    event ProofProtocolSet(string _protocol);
 
     /* ========== Public variables ========== */
 
     string public baseURI;
 
+    /**
+     * @dev Deprecated. Including this because this is a proxy implementation.
+     */
     bytes32 private _proofProtocol;
 
     /* ========== Constructor ========== */
@@ -88,7 +85,6 @@ contract DefiPassport is ERC721Enumerable, Adminable, Initializable, DefiPasspor
     function init(
         string calldata name_,
         string calldata symbol_,
-        address _passportScoresAddress,
         address _skinManager
     )
         external
@@ -98,13 +94,6 @@ contract DefiPassport is ERC721Enumerable, Adminable, Initializable, DefiPasspor
         _name = name_;
         _symbol = symbol_;
         skinManager = _skinManager;
-
-        require(
-            _passportScoresAddress.isContract(),
-            "DefiPassport: passport scores address is not a contract"
-        );
-
-        passportScoresContract = ISapphirePassportScores(_passportScoresAddress);
     }
 
     /**
@@ -119,20 +108,6 @@ contract DefiPassport is ERC721Enumerable, Adminable, Initializable, DefiPasspor
     {
         baseURI = _baseURI;
         emit BaseURISet(_baseURI);
-    }
-
-    /**
-     * @notice Sets the protocol to be used in the score proof when minting new passports
-     */
-    function setProofProtocol(
-        bytes32 _protocol
-    )
-        external
-        onlyAdmin
-    {
-        _proofProtocol = _protocol;
-
-        emit ProofProtocolSet(_proofProtocol.toString());
     }
 
     /**
@@ -300,27 +275,6 @@ contract DefiPassport is ERC721Enumerable, Adminable, Initializable, DefiPasspor
         emit WhitelistSkinSet(_skinContract, _status);
     }
 
-    function setPassportScoresContract(
-        address _passportScoresAddress
-    )
-        external
-        onlyAdmin
-    {
-        require(
-            address(passportScoresContract) != _passportScoresAddress,
-            "DefiPassport: the same passport scores address is already set"
-        );
-
-        require(
-            _passportScoresAddress.isContract(),
-            "DefiPassport: the given address is not a contract"
-        );
-
-        passportScoresContract = ISapphirePassportScores(_passportScoresAddress);
-
-        emit PassportScoresContractSet(_passportScoresAddress);
-    }
-
     /* ========== Public Functions ========== */
 
     /**
@@ -336,24 +290,11 @@ contract DefiPassport is ERC721Enumerable, Adminable, Initializable, DefiPasspor
     function mint(
         address _to,
         address _passportSkin,
-        uint256 _skinTokenId,
-        SapphireTypes.ScoreProof calldata _scoreProof
+        uint256 _skinTokenId
     )
         external
         returns (uint256)
     {
-        require(
-            _to == _scoreProof.account,
-            "DefiPassport: the proof must correspond to the receiver"
-        );
-
-        require(
-            _scoreProof.protocol == _proofProtocol,
-            "DefiPassport: invalid proof protocol"
-        );
-
-        passportScoresContract.verify(_scoreProof);
-
         require (
             isSkinAvailable(_to, _passportSkin, _skinTokenId),
             "DefiPassport: invalid skin"
@@ -551,14 +492,6 @@ contract DefiPassport is ERC721Enumerable, Adminable, Initializable, DefiPasspor
         address owner = ownerOf(tokenId);
 
         return string(abi.encodePacked(baseURI, "0x", _toAsciiString(owner)));
-    }
-
-    function getProofProtocol()
-        external
-        view
-        returns (string memory)
-    {
-        return _proofProtocol.toString();
     }
 
     /* ========== Private Functions ========== */
