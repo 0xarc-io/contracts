@@ -429,16 +429,6 @@
     "group": "DefiPassport"
   },
   {
-    "name": "DefiPassportProxy",
-    "source": "ArcProxy",
-    "address": "0x115A1C0D1A428d3055C622BaDEf84B7FEa8C8Cc1",
-    "txn": "0x2ef5f67c0c33991fde56f33e6617b455b3132001486e5b306602a30a8d24db40",
-    "network": "rinkeby",
-    "version": 1,
-    "type": "global",
-    "group": "DefiPassport"
-  },
-  {
     "name": "ARCx Test Token",
     "source": "TestToken",
     "address": "0x2d64415053671890256bB84C7961C950725E0d5f",
@@ -659,12 +649,12 @@
     "group": "cUSDC-ARCUSD"
   },
   {
-    "name": "DefiPassport",
-    "source": "DefiPassport",
-    "address": "0x2d0E228E8c42A78d413a4632090C7c26034d2698",
-    "txn": "0x706e69df00fdb2d9e38f0f89d8395fdfcc93a2afffced7138b8f8ba8dc77af9f",
+    "name": "DefiPassportProxy",
+    "source": "ArcProxy",
+    "address": "0xA221EFf2E57480D925D1D82eaE2Fbd940F5b4DD0",
+    "txn": "0xab9e180770d1423292c906edf5722df12d8c6f5901ed8e5c4c7ff063a243a6a4",
     "network": "rinkeby",
-    "version": 4,
+    "version": 1,
     "type": "global",
     "group": "DefiPassport"
   }
