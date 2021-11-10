@@ -11,6 +11,7 @@ import {
 } from '../deployments/src';
 import { task } from 'hardhat/config';
 import { DeploymentType } from '../deployments/types';
+import { verifyContract } from './task-utils';
 
 task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
   .addParam('name', 'Name of the defi passport NFT')
@@ -54,11 +55,8 @@ task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
       throw red(`DefiPassport implementation was not deployed!`);
     }
 
+    await verifyContract(hre, defiPassportImpl);
     if (implementationOnly) {
-      await hre.run('verify:verify', {
-        address: defiPassportImpl,
-        constructorArguments: [],
-      });
       return;
     }
 
@@ -107,15 +105,13 @@ task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
     );
     console.log(green(`Init successfully called`));
 
-    console.log(yellow('Verifying contracts...'));
-    await hre.run('verify:verify', {
-      address: defiPassportImpl,
-      constructorArguments: [],
-    });
-    await hre.run('verify:verify', {
-      address: defiPassportProxy,
-      constructorArguments: [defiPassportImpl, await signer.getAddress(), []],
-    });
+    await verifyContract(
+      hre,
+      defiPassportProxy,
+      defiPassportImpl,
+      await signer.getAddress(),
+      [],
+    );
   });
 
 task(
