@@ -7,8 +7,13 @@ import {
   deployContract,
   loadDetails,
   pruneDeployments,
+  loadContract,
 } from '../deployments/src';
 import { verifyContract } from './task-utils';
+import { id } from '@ethersproject/hash';
+import { createArrayCsvWriter } from 'csv-writer';
+import { green } from 'chalk';
+import { formatEther } from '@ethersproject/units';
 
 task('deploy-waitlist-batch', 'Deploy the WaitlistBatch contract')
   .addParam('currency', 'The address of the deposit currency')
@@ -77,3 +82,41 @@ task('deploy-passport-waitlist', 'Deploy the PassportWaitlist contract')
       paymentReceiver || signer.address,
     );
   });
+
+task(
+  'get-waitlist-applicants',
+  'Gets all the applicants from the WaitlistBatch contract and saves them to applicants.csv in the format used by multisender.app',
+).setAction(async (_taskArgs, hre) => {
+  const { network, signer } = await loadDetails(hre);
+  const csvFileName = 'applicants.csv';
+  const csvWriter = createArrayCsvWriter({
+    path: csvFileName,
+  });
+
+  // Get applicants from waitlist
+  const waitlistDetails = await loadContract({
+    network,
+    name: 'WaitlistBatch',
+  });
+  const waitlistBatch = WaitlistBatchFactory.connect(
+    waitlistDetails.address,
+    signer,
+  );
+  const applicantsLogs = await signer.provider.getLogs({
+    address: waitlistBatch.address,
+    topics: [id('AppliedToBatch(address,uint256,uint256)')],
+    fromBlock: 13056463,
+  });
+  const parsedLogs = applicantsLogs.map((log) =>
+    waitlistBatch.interface.parseLog(log),
+  );
+  const applicants: [string, string][] = parsedLogs.map((log) => [
+    log.args.user as string,
+    formatEther(log.args.amount).toString(),
+  ]);
+  console.log({ applicants });
+
+  // Save applicants to csv
+  await csvWriter.writeRecords(applicants);
+  console.log(green(`All applicants have been saved to ${csvFileName}`));
+});

@@ -9,10 +9,11 @@ import { red, magenta } from 'chalk';
 import { Provider } from '@ethersproject/providers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { NetworkParams } from '../types';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 
 export async function loadDetails(hre: HardhatRuntimeEnvironment) {
   const network = hre.network.name;
-  const signer = (await (hre as any).ethers.getSigners())[0];
+  const signer: SignerWithAddress = (await hre.ethers.getSigners())[0];
 
   const networkDetails = hre.config.networks[network];
   const networkConfig = {
