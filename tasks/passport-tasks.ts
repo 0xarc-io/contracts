@@ -15,7 +15,6 @@ import { DeploymentType } from '../deployments/types';
 task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
   .addParam('name', 'Name of the defi passport NFT')
   .addParam('symbol', 'Symbol of the defi passport NFT')
-  .addParam('creditscore', 'Address of the SapphireCreditScore contract to use')
   .addOptionalParam('ver', 'Version of the deployment')
   .addOptionalParam(
     'skinmanager',
@@ -26,7 +25,6 @@ task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
     const {
       name,
       symbol,
-      creditscore: creditScoreContractAddress,
       skinManager,
       implementationonly: implementationOnly,
       ver: version,
@@ -99,14 +97,12 @@ task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
       yellow(`Calling init({
       name: ${name},
       symbol: ${symbol},
-      creditScoreContractAddress: ${creditScoreContractAddress},
       skinManager: ${skinManager || (await signer.getAddress())}
     })...`),
     );
     await defiPassportProxyContract.init(
       name,
       symbol,
-      creditScoreContractAddress,
       skinManager || (await signer.getAddress()),
     );
     console.log(green(`Init successfully called`));
