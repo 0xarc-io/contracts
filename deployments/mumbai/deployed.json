@@ -78,15 +78,5 @@
     "version": 1,
     "type": "global",
     "group": ""
-  },
-  {
-    "name": "DefiPassport",
-    "source": "DefiPassport",
-    "address": "0xFbD34A5f9Fe89bD0d76bD317457fe5BAcD1320a7",
-    "txn": "0x8303045cbc829b4527c71a7f038b572c2045dc517da691b59105d2a3b6e50490",
-    "network": "mumbai",
-    "version": 4,
-    "type": "global",
-    "group": "DefiPassport"
   }
 ]
