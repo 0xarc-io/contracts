@@ -651,10 +651,20 @@
   {
     "name": "DefiPassportProxy",
     "source": "ArcProxy",
-    "address": "0xA221EFf2E57480D925D1D82eaE2Fbd940F5b4DD0",
-    "txn": "0xab9e180770d1423292c906edf5722df12d8c6f5901ed8e5c4c7ff063a243a6a4",
+    "address": "0xb3AA4341D71d802115E09fe80055ba17b84954d4",
+    "txn": "0xf0f79b6471f7c92f626d525f35a6bba79fe7d7639703f4c1e7ac639753c64b53",
     "network": "rinkeby",
     "version": 1,
+    "type": "global",
+    "group": "DefiPassport"
+  },
+  {
+    "name": "DefiPassport",
+    "source": "DefiPassport",
+    "address": "0xacDC36414A406707DD781bed8EF6ad26122748Ad",
+    "txn": "0xee31ff873bde281762b1bd036a6c2a3d552e78d151e5a1534430591afcfc8fcd",
+    "network": "rinkeby",
+    "version": 4,
     "type": "global",
     "group": "DefiPassport"
   }
