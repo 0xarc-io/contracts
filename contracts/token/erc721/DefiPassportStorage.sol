@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.4;
 
-import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
+import {Counters} from "../../.openzeppelin/0.8/drafts/Counters.sol";
 import {ISapphirePassportScores} from "../../sapphire/ISapphirePassportScores.sol";
 
 contract DefiPassportStorage {
@@ -27,10 +27,13 @@ contract DefiPassportStorage {
 
     /* ========== Public Variables ========== */
 
+    string internal _name;
+    string internal _symbol;
+
     /**
      * @notice The credit score contract used by the passport
      */
-    ISapphirePassportScores public passportScoresContract;
+    ISapphirePassportScores private passportScoresContract;
 
     /**
      * @notice Records the whitelisted skins. All tokens minted by these contracts
@@ -68,7 +71,4 @@ contract DefiPassportStorage {
     mapping (uint256 => SkinRecord) internal _activeSkins;
 
     Counters.Counter internal _tokenIds;
-
-    string internal _name;
-    string internal _symbol;
 }
