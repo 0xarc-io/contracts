@@ -21,3 +21,6 @@ solc-input-*.json
 
 # Metadata files
 output/
+
+# Output of the get-waitlist-applicants task
+applicants.csv
