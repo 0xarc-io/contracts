@@ -105,7 +105,7 @@ task(
   const applicantsLogs = await signer.provider.getLogs({
     address: waitlistBatch.address,
     topics: [id('AppliedToBatch(address,uint256,uint256)')],
-    fromBlock: 13056463,
+    fromBlock: 13056463, // The block where this contract was deployed; Taken from Etherscan
   });
   const parsedLogs = applicantsLogs.map((log) =>
     waitlistBatch.interface.parseLog(log),
