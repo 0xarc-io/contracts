@@ -1,4 +1,5 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 import "../../GSN/Context.sol";
 import "./IERC721Enumerable.sol";
@@ -32,20 +33,12 @@ contract ERC721Enumerable is Context, ERC165, ERC721, IERC721Enumerable {
     bytes4 private constant _INTERFACE_ID_ERC721_ENUMERABLE = 0x780e9d63;
 
     /**
-     * @dev Constructor function.
-     */
-    constructor () public {
-        // register the supported interface to conform to ERC721Enumerable via ERC165
-        _registerInterface(_INTERFACE_ID_ERC721_ENUMERABLE);
-    }
-
-    /**
      * @dev Gets the token ID at a given index of the tokens list of the requested owner.
      * @param owner address owning the tokens list to be accessed
      * @param index uint256 representing the index to be accessed of the requested tokens list
      * @return uint256 token ID at the given index of the tokens list owned by the requested address
      */
-    function tokenOfOwnerByIndex(address owner, uint256 index) public view returns (uint256) {
+    function tokenOfOwnerByIndex(address owner, uint256 index) public override view returns (uint256) {
         require(index < balanceOf(owner), "ERC721Enumerable: owner index out of bounds");
         return _ownedTokens[owner][index];
     }
@@ -54,7 +47,7 @@ contract ERC721Enumerable is Context, ERC165, ERC721, IERC721Enumerable {
      * @dev Gets the total amount of tokens stored by the contract.
      * @return uint256 representing the total amount of tokens
      */
-    function totalSupply() public view returns (uint256) {
+    function totalSupply() public override view returns (uint256) {
         return _allTokens.length;
     }
 
@@ -64,7 +57,7 @@ contract ERC721Enumerable is Context, ERC165, ERC721, IERC721Enumerable {
      * @param index uint256 representing the index to be accessed of the tokens list
      * @return uint256 token ID at the given index of the tokens list
      */
-    function tokenByIndex(uint256 index) public view returns (uint256) {
+    function tokenByIndex(uint256 index) public override view returns (uint256) {
         require(index < totalSupply(), "ERC721Enumerable: global index out of bounds");
         return _allTokens[index];
     }
@@ -76,7 +69,7 @@ contract ERC721Enumerable is Context, ERC165, ERC721, IERC721Enumerable {
      * @param to address to receive the ownership of the given token ID
      * @param tokenId uint256 ID of the token to be transferred
      */
-    function _transferFrom(address from, address to, uint256 tokenId) internal {
+    function _transferFrom(address from, address to, uint256 tokenId) internal override virtual {
         super._transferFrom(from, to, tokenId);
 
         _removeTokenFromOwnerEnumeration(from, tokenId);
@@ -90,7 +83,7 @@ contract ERC721Enumerable is Context, ERC165, ERC721, IERC721Enumerable {
      * @param to address the beneficiary that will own the minted token
      * @param tokenId uint256 ID of the token to be minted
      */
-    function _mint(address to, uint256 tokenId) internal {
+    function _mint(address to, uint256 tokenId) internal override virtual {
         super._mint(to, tokenId);
 
         _addTokenToOwnerEnumeration(to, tokenId);
@@ -105,7 +98,7 @@ contract ERC721Enumerable is Context, ERC165, ERC721, IERC721Enumerable {
      * @param owner owner of the token to burn
      * @param tokenId uint256 ID of the token being burned
      */
-    function _burn(address owner, uint256 tokenId) internal {
+    function _burn(address owner, uint256 tokenId) internal override virtual {
         super._burn(owner, tokenId);
 
         _removeTokenFromOwnerEnumeration(owner, tokenId);
@@ -155,7 +148,7 @@ contract ERC721Enumerable is Context, ERC165, ERC721, IERC721Enumerable {
         // To prevent a gap in from's tokens array, we store the last token in the index of the token to delete, and
         // then delete the last slot (swap and pop).
 
-        uint256 lastTokenIndex = _ownedTokens[from].length.sub(1);
+        uint256 lastTokenIndex = _ownedTokens[from].length - 1;
         uint256 tokenIndex = _ownedTokensIndex[tokenId];
 
         // When the token to delete is the last token, the swap operation is unnecessary
@@ -167,7 +160,7 @@ contract ERC721Enumerable is Context, ERC165, ERC721, IERC721Enumerable {
         }
 
         // This also deletes the contents at the last position of the array
-        _ownedTokens[from].length--;
+        _ownedTokens[from].pop();
 
         // Note that _ownedTokensIndex[tokenId] hasn't been cleared: it still points to the old slot (now occupied by
         // lastTokenId, or just over the end of the array if the token was the last one).
@@ -182,7 +175,7 @@ contract ERC721Enumerable is Context, ERC165, ERC721, IERC721Enumerable {
         // To prevent a gap in the tokens array, we store the last token in the index of the token to delete, and
         // then delete the last slot (swap and pop).
 
-        uint256 lastTokenIndex = _allTokens.length.sub(1);
+        uint256 lastTokenIndex = _allTokens.length - 1;
         uint256 tokenIndex = _allTokensIndex[tokenId];
 
         // When the token to delete is the last token, the swap operation is unnecessary. However, since this occurs so
@@ -194,7 +187,8 @@ contract ERC721Enumerable is Context, ERC165, ERC721, IERC721Enumerable {
         _allTokensIndex[lastTokenId] = tokenIndex; // Update the moved token's index
 
         // This also deletes the contents at the last position of the array
-        _allTokens.length--;
+        _allTokens.pop();
         _allTokensIndex[tokenId] = 0;
     }
+
 }

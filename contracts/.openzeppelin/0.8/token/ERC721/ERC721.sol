@@ -1,4 +1,5 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 import "../../GSN/Context.sol";
 import "./IERC721.sol";
@@ -49,17 +50,12 @@ contract ERC721 is Context, ERC165, IERC721 {
      */
     bytes4 private constant _INTERFACE_ID_ERC721 = 0x80ac58cd;
 
-    constructor () public {
-        // register the supported interfaces to conform to ERC721 via ERC165
-        _registerInterface(_INTERFACE_ID_ERC721);
-    }
-
     /**
      * @dev Gets the balance of the specified address.
      * @param owner address to query the balance of
      * @return uint256 representing the amount owned by the passed address
      */
-    function balanceOf(address owner) public view returns (uint256) {
+    function balanceOf(address owner) public override view returns (uint256) {
         require(owner != address(0), "ERC721: balance query for the zero address");
 
         return _ownedTokensCount[owner].current();
@@ -70,7 +66,7 @@ contract ERC721 is Context, ERC165, IERC721 {
      * @param tokenId uint256 ID of the token to query the owner of
      * @return address currently marked as the owner of the given token ID
      */
-    function ownerOf(uint256 tokenId) public view returns (address) {
+    function ownerOf(uint256 tokenId) public override view returns (address) {
         address owner = _tokenOwner[tokenId];
         require(owner != address(0), "ERC721: owner query for nonexistent token");
 
@@ -85,7 +81,7 @@ contract ERC721 is Context, ERC165, IERC721 {
      * @param to address to be approved for the given token ID
      * @param tokenId uint256 ID of the token to be approved
      */
-    function approve(address to, uint256 tokenId) public {
+    function approve(address to, uint256 tokenId) public override virtual {
         address owner = ownerOf(tokenId);
         require(to != owner, "ERC721: approval to current owner");
 
@@ -103,7 +99,7 @@ contract ERC721 is Context, ERC165, IERC721 {
      * @param tokenId uint256 ID of the token to query the approval of
      * @return address currently approved for the given token ID
      */
-    function getApproved(uint256 tokenId) public view returns (address) {
+    function getApproved(uint256 tokenId) public override view returns (address) {
         require(_exists(tokenId), "ERC721: approved query for nonexistent token");
 
         return _tokenApprovals[tokenId];
@@ -115,7 +111,7 @@ contract ERC721 is Context, ERC165, IERC721 {
      * @param to operator address to set the approval
      * @param approved representing the status of the approval to be set
      */
-    function setApprovalForAll(address to, bool approved) public {
+    function setApprovalForAll(address to, bool approved) public override virtual {
         require(to != _msgSender(), "ERC721: approve to caller");
 
         _operatorApprovals[_msgSender()][to] = approved;
@@ -128,7 +124,7 @@ contract ERC721 is Context, ERC165, IERC721 {
      * @param operator operator address which you want to query the approval of
      * @return bool whether the given operator is approved by the given owner
      */
-    function isApprovedForAll(address owner, address operator) public view returns (bool) {
+    function isApprovedForAll(address owner, address operator) public override view returns (bool) {
         return _operatorApprovals[owner][operator];
     }
 
@@ -140,7 +136,7 @@ contract ERC721 is Context, ERC165, IERC721 {
      * @param to address to receive the ownership of the given token ID
      * @param tokenId uint256 ID of the token to be transferred
      */
-    function transferFrom(address from, address to, uint256 tokenId) public {
+    function transferFrom(address from, address to, uint256 tokenId) public override virtual {
         //solhint-disable-next-line max-line-length
         require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: transfer caller is not owner nor approved");
 
@@ -158,7 +154,7 @@ contract ERC721 is Context, ERC165, IERC721 {
      * @param to address to receive the ownership of the given token ID
      * @param tokenId uint256 ID of the token to be transferred
      */
-    function safeTransferFrom(address from, address to, uint256 tokenId) public {
+    function safeTransferFrom(address from, address to, uint256 tokenId) public override virtual {
         safeTransferFrom(from, to, tokenId, "");
     }
 
@@ -174,7 +170,7 @@ contract ERC721 is Context, ERC165, IERC721 {
      * @param tokenId uint256 ID of the token to be transferred
      * @param _data bytes data to send along with a safe transfer check
      */
-    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory _data) public {
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory _data) public override virtual {
         require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: transfer caller is not owner nor approved");
         _safeTransferFrom(from, to, tokenId, _data);
     }
@@ -255,7 +251,7 @@ contract ERC721 is Context, ERC165, IERC721 {
      * @param to The address that will own the minted token
      * @param tokenId uint256 ID of the token to be minted
      */
-    function _mint(address to, uint256 tokenId) internal {
+    function _mint(address to, uint256 tokenId) internal virtual {
         require(to != address(0), "ERC721: mint to the zero address");
         require(!_exists(tokenId), "ERC721: token already minted");
 
@@ -272,7 +268,7 @@ contract ERC721 is Context, ERC165, IERC721 {
      * @param owner owner of the token to burn
      * @param tokenId uint256 ID of the token being burned
      */
-    function _burn(address owner, uint256 tokenId) internal {
+    function _burn(address owner, uint256 tokenId) internal virtual {
         require(ownerOf(tokenId) == owner, "ERC721: burn of token that is not own");
 
         _clearApproval(tokenId);
@@ -299,7 +295,7 @@ contract ERC721 is Context, ERC165, IERC721 {
      * @param to address to receive the ownership of the given token ID
      * @param tokenId uint256 ID of the token to be transferred
      */
-    function _transferFrom(address from, address to, uint256 tokenId) internal {
+    function _transferFrom(address from, address to, uint256 tokenId) internal virtual {
         require(ownerOf(tokenId) == from, "ERC721: transfer of token that is not own");
         require(to != address(0), "ERC721: transfer to the zero address");
 
