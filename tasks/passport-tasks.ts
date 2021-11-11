@@ -14,8 +14,8 @@ import { DeploymentType } from '../deployments/types';
 import { verifyContract } from './task-utils';
 
 task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
-  .addParam('name', 'Name of the defi passport NFT')
-  .addParam('symbol', 'Symbol of the defi passport NFT')
+  .addOptionalParam('name', 'Name of the defi passport NFT')
+  .addOptionalParam('symbol', 'Symbol of the defi passport NFT')
   .addOptionalParam('ver', 'Version of the deployment')
   .addOptionalParam(
     'skinmanager',
@@ -30,6 +30,10 @@ task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
       implementationonly: implementationOnly,
       ver: version,
     } = taskArgs;
+
+    if (!implementationOnly && (!name || !symbol)) {
+      throw Error(`--name and/or --symbol missing`);
+    }
 
     const { network, signer, networkConfig } = await loadDetails(hre);
 
