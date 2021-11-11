@@ -336,24 +336,6 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
         _setActiveSkin(tokenId, SkinRecord(msg.sender, _skin, _skinTokenId));
     }
 
-    function name()
-        public
-        view
-        override
-        returns (string memory)
-    {
-        return _name;
-    }
-
-    function symbol()
-        public
-        view
-        override
-        returns (string memory)
-    {
-        return _symbol;
-    }
-
     function approve(
         address,
         uint256
@@ -414,6 +396,24 @@ contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializab
     }
 
     /* ========== Public View Functions ========== */
+
+    function name()
+        external
+        override
+        view
+        returns (string memory)
+    {
+        return _name;
+    }
+
+    function symbol()
+        external
+        override
+        view
+        returns (string memory)
+    {
+        return _symbol;
+    }
 
     /**
      * @notice Returns whether a certain skin can be applied to the specified
