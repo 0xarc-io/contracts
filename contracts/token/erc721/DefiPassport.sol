@@ -2,18 +2,19 @@
 
 pragma solidity 0.8.4;
 
-import {ERC721Enumerable} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
+import {ERC721Full} from "../../.openzeppelin/0.8/token/ERC721/ERC721Full.sol";
+import {Counters} from "../../.openzeppelin/0.8/drafts/Counters.sol";
+import {IERC721} from "../../.openzeppelin/0.8/token/ERC721/IERC721.sol";
 
+import {Address} from "../../lib/Address.sol";
 import {Bytes32} from "../../lib/Bytes32.sol";
 import {Adminable} from "../../lib/Adminable.sol";
 import {Initializable} from "../../lib/Initializable.sol";
 import {DefiPassportStorage} from "./DefiPassportStorage.sol";
-import {Address} from "../../lib/Address.sol";
+import {ISapphirePassportScores} from "../../sapphire/ISapphirePassportScores.sol";
+import {SapphireTypes} from "../../sapphire/SapphireTypes.sol";
 
-contract DefiPassport is ERC721Enumerable, Adminable, Initializable, DefiPassportStorage {
+contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializable {
 
     /* ========== Libraries ========== */
 
@@ -56,19 +57,12 @@ contract DefiPassport is ERC721Enumerable, Adminable, Initializable, DefiPasspor
 
     /* ========== Public variables ========== */
 
-    string public baseURI;
+    string public override baseURI;
 
     /**
      * @dev Deprecated. Including this because this is a proxy implementation.
      */
     bytes32 private _proofProtocol;
-
-    /* ========== Constructor ========== */
-
-    // solhint-disable no-empty-blocks
-    constructor() ERC721("", "")
-    {}
-    // solhint-enable no-empty-blocks
 
     /* ========== Modifier ========== */
 
@@ -345,7 +339,7 @@ contract DefiPassport is ERC721Enumerable, Adminable, Initializable, DefiPasspor
     function name()
         public
         view
-        override(ERC721)
+        override
         returns (string memory)
     {
         return _name;
@@ -354,7 +348,7 @@ contract DefiPassport is ERC721Enumerable, Adminable, Initializable, DefiPasspor
     function symbol()
         public
         view
-        override(ERC721)
+        override
         returns (string memory)
     {
         return _symbol;
@@ -395,9 +389,9 @@ contract DefiPassport is ERC721Enumerable, Adminable, Initializable, DefiPasspor
     }
 
     function safeTransferFrom(
-        address ,
-        address ,
-        uint256 ,
+        address,
+        address,
+        uint256,
         bytes memory
     )
         public
@@ -408,9 +402,9 @@ contract DefiPassport is ERC721Enumerable, Adminable, Initializable, DefiPasspor
     }
 
     function transferFrom(
-        address ,
-        address ,
-        uint256 
+        address,
+        address,
+        uint256
     )
         public
         pure

@@ -1,4 +1,5 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 import "../../GSN/Context.sol";
 import "./ERC721.sol";
@@ -28,21 +29,10 @@ contract ERC721Metadata is Context, ERC165, ERC721, IERC721Metadata {
     bytes4 private constant _INTERFACE_ID_ERC721_METADATA = 0x5b5e139f;
 
     /**
-     * @dev Constructor function
-     */
-    constructor (string memory name, string memory symbol) public {
-        _name = name;
-        _symbol = symbol;
-
-        // register the supported interfaces to conform to ERC721 via ERC165
-        _registerInterface(_INTERFACE_ID_ERC721_METADATA);
-    }
-
-    /**
      * @dev Gets the token name.
      * @return string representing the token name
      */
-    function name() external view returns (string memory) {
+    function name() external override virtual view returns (string memory) {
         return _name;
     }
 
@@ -50,7 +40,7 @@ contract ERC721Metadata is Context, ERC165, ERC721, IERC721Metadata {
      * @dev Gets the token symbol.
      * @return string representing the token symbol
      */
-    function symbol() external view returns (string memory) {
+    function symbol() external override virtual view returns (string memory) {
         return _symbol;
     }
 
@@ -62,7 +52,7 @@ contract ERC721Metadata is Context, ERC165, ERC721, IERC721Metadata {
      *
      * Reverts if the token ID does not exist.
      */
-    function tokenURI(uint256 tokenId) external view returns (string memory) {
+    function tokenURI(uint256 tokenId) external override virtual view returns (string memory) {
         require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
 
         string memory _tokenURI = _tokenURIs[tokenId];
@@ -96,8 +86,8 @@ contract ERC721Metadata is Context, ERC165, ERC721, IERC721Metadata {
      *
      * _Available since v2.5.0._
      */
-    function _setBaseURI(string memory baseURI) internal {
-        _baseURI = baseURI;
+    function _setBaseURI(string memory baseURI_) internal {
+        _baseURI = baseURI_;
     }
 
     /**
@@ -107,7 +97,7 @@ contract ERC721Metadata is Context, ERC165, ERC721, IERC721Metadata {
     *
     * _Available since v2.5.0._
     */
-    function baseURI() external view returns (string memory) {
+    function baseURI() external virtual view returns (string memory) {
         return _baseURI;
     }
 
@@ -118,7 +108,7 @@ contract ERC721Metadata is Context, ERC165, ERC721, IERC721Metadata {
      * @param owner owner of the token to burn
      * @param tokenId uint256 ID of the token being burned by the msg.sender
      */
-    function _burn(address owner, uint256 tokenId) internal {
+    function _burn(address owner, uint256 tokenId) internal override virtual {
         super._burn(owner, tokenId);
 
         // Clear metadata (if any)

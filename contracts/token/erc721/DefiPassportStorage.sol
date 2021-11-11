@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.4;
 
-import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
+import {Counters} from "../../.openzeppelin/0.8/drafts/Counters.sol";
 import {ISapphirePassportScores} from "../../sapphire/ISapphirePassportScores.sol";
 
 contract DefiPassportStorage {
