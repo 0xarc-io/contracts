@@ -11,10 +11,11 @@ import {
 } from '../deployments/src';
 import { task } from 'hardhat/config';
 import { DeploymentType } from '../deployments/types';
+import { verifyContract } from './task-utils';
 
 task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
-  .addParam('name', 'Name of the defi passport NFT')
-  .addParam('symbol', 'Symbol of the defi passport NFT')
+  .addOptionalParam('name', 'Name of the defi passport NFT')
+  .addOptionalParam('symbol', 'Symbol of the defi passport NFT')
   .addOptionalParam('ver', 'Version of the deployment')
   .addOptionalParam(
     'skinmanager',
@@ -29,6 +30,10 @@ task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
       implementationonly: implementationOnly,
       ver: version,
     } = taskArgs;
+
+    if (!implementationOnly && (!name || !symbol)) {
+      throw Error(`--name and/or --symbol missing`);
+    }
 
     const { network, signer, networkConfig } = await loadDetails(hre);
 
@@ -46,19 +51,8 @@ task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
       networkConfig,
     );
 
-    if (defiPassportImpl) {
-      console.log(
-        green(`DefiPassport implementation deployed at ${defiPassportImpl}`),
-      );
-    } else {
-      throw red(`DefiPassport implementation was not deployed!`);
-    }
-
+    await verifyContract(hre, defiPassportImpl);
     if (implementationOnly) {
-      await hre.run('verify:verify', {
-        address: defiPassportImpl,
-        constructorArguments: [],
-      });
       return;
     }
 
@@ -107,15 +101,13 @@ task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
     );
     console.log(green(`Init successfully called`));
 
-    console.log(yellow('Verifying contracts...'));
-    await hre.run('verify:verify', {
-      address: defiPassportImpl,
-      constructorArguments: [],
-    });
-    await hre.run('verify:verify', {
-      address: defiPassportProxy,
-      constructorArguments: [defiPassportImpl, await signer.getAddress(), []],
-    });
+    await verifyContract(
+      hre,
+      defiPassportProxy,
+      defiPassportImpl,
+      await signer.getAddress(),
+      [],
+    );
   });
 
 task(

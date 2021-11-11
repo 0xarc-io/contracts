@@ -26,8 +26,6 @@ type SkinAndTokenIdStatusRecord = {
   skinTokenIdStatuses: TokenIdStatus[];
 };
 
-const OTHER_PROTOCOL = 'defi.other';
-
 describe('DefiPassport', () => {
   let defiPassport: DefiPassport;
 
