@@ -51,14 +51,6 @@ task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
       networkConfig,
     );
 
-    if (defiPassportImpl) {
-      console.log(
-        green(`DefiPassport implementation deployed at ${defiPassportImpl}`),
-      );
-    } else {
-      throw red(`DefiPassport implementation was not deployed!`);
-    }
-
     await verifyContract(hre, defiPassportImpl);
     if (implementationOnly) {
       return;
