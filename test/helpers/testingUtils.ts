@@ -1,10 +1,9 @@
 // // Buidler automatically injects the waffle version into chai
+import { MockSapphirePassportScores, TestTokenFactory } from '@src/typings';
+import { asyncForEach, Token } from '@src/utils';
 import { BigNumberish, Signer } from 'ethers';
 import { ethers } from 'hardhat';
 import { EVM } from './EVM';
-import { asyncForEach, Token } from '@src/utils';
-import { TestTokenFactory } from '@src/typings';
-import { MockSapphirePassportScores } from '@src/typings/MockSapphirePassportScores';
 
 // And this is our test sandboxing. It snapshots and restores between each test.
 // Note: if a test suite uses fastForward at all, then it MUST also use these snapshots,
