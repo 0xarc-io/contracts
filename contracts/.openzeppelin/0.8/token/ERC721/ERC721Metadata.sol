@@ -105,12 +105,9 @@ contract ERC721Metadata is Context, ERC165, ERC721, IERC721Metadata {
      * @dev Internal function to burn a specific token.
      * Reverts if the token does not exist.
      * Deprecated, use _burn(uint256) instead.
-     * @param owner owner of the token to burn
      * @param tokenId uint256 ID of the token being burned by the msg.sender
      */
-    function _burn(address owner, uint256 tokenId) internal override virtual {
-        super._burn(owner, tokenId);
-
+    function _burn(address, uint256 tokenId) internal override virtual {
         // Clear metadata (if any)
         if (bytes(_tokenURIs[tokenId]).length != 0) {
             delete _tokenURIs[tokenId];

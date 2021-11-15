@@ -7,6 +7,7 @@ import {
   DefiPassportFactory,
   MintableNFT,
   MintableNFTFactory,
+  MockDefiPassportFactory,
 } from '@src/typings';
 import { DefaultPassportSkinFactory } from '@src/typings/DefaultPassportSkinFactory';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
@@ -952,5 +953,34 @@ describe('DefiPassport', () => {
         'DefiPassport: defi passports are not transferrable',
       );
     });
+  });
+
+  it('check burn implementation integrity', async () => {
+    const mockDefiPassport = await new MockDefiPassportFactory(owner).deploy();
+    const proxy = await new ArcProxyFactory(owner).deploy(
+      mockDefiPassport.address,
+      owner.address,
+      [],
+    );
+    const contract = MockDefiPassportFactory.connect(proxy.address, owner);
+    await contract.init('test', 'test', skinManager.address);
+
+    await contract
+      .connect(skinManager)
+      .setDefaultSkin(defaultSkinAddress, true);
+
+    await contract.mint(user.address, defaultSkinAddress, defaultSkinTokenId);
+
+    expect(await contract.balanceOf(user.address)).to.eq(1);
+    expect(await contract.tokenURI(1)).to.not.be.empty;
+
+    await contract.burn(1);
+
+    expect(await contract.balanceOf(user.address)).to.eq(0);
+
+    // ERC721Metadata.tookenURI() reverts if token does not exist
+    await expect(contract.tokenURI(1)).to.be.revertedWith(
+      'ERC721Metadata: URI query for nonexistent token',
+    );
   });
 });
