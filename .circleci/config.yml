@@ -3,12 +3,12 @@ version: 2.1
 workflows:
     build_and_test:
       jobs:
-        - build:
+        - build-test:
             context:
               - crypto
 
 jobs:
-  install-lint-build-test-publish:
+  build-test:
     working_directory: ~/contracts
     docker:
       - image: circleci/node:12.18.0
