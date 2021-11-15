@@ -103,7 +103,8 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.3.2",
-    "ethers": "5.0.2"
+    "ethers": "5.0.2",
+    "uuid": "^8.3.2"
   },
   "resolutions": {
     "ethereum-waffle/**/ethers": "5.0.2",
