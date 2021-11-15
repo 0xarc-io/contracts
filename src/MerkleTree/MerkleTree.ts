@@ -1,23 +1,32 @@
 import { utils } from 'ethers';
 
 export default class MerkleTree {
-  private readonly elements: string[];
   private readonly bufferElementPositionIndex: { [hexElement: string]: number };
   private readonly layers: string[][];
 
   constructor(elements: string[]) {
-    this.elements = [...elements];
-    this.elements.sort();
-    this.elements = MerkleTree.deduplicateSortedElements(this.elements);
-    this.bufferElementPositionIndex = this.elements.reduce<{ [hexElement: string]: number }>(
+    console.log(`2a. Creating Merkle Tree!\n`);
+    const start = new Date().getTime();
+    let now = start
+    console.log(`2b. Saving elements took ${(new Date().getTime() - now)/1000} secs !\n`);
+    now = new Date().getTime()
+    elements.sort();
+    console.log(`2b. Sorting tree took ${(new Date().getTime() - now)/1000} secs !\n`);
+    now = new Date().getTime()
+    elements = MerkleTree.deduplicateSortedElements(elements);
+    console.log(`2c. Deduplicating tree took ${(new Date().getTime() - now)/1000} secs !\n`);
+    now = new Date().getTime()
+    this.bufferElementPositionIndex = elements.reduce<{ [hexElement: string]: number }>(
       (memo, el, index) => {
         memo[el] = index;
         return memo;
       },
       {},
     );
-
-    this.layers = this.getLayers(this.elements);
+    console.log(`2d. Creating buffer took ${(new Date().getTime() - now)/1000} secs !\n`);
+    now = new Date().getTime()
+    this.layers = this.getLayers(elements);
+    console.log(`2e. Creating layers took ${(new Date().getTime() - now)/1000} secs !\n`);
   }
 
   getLayers(elements: string[]): string[][] {

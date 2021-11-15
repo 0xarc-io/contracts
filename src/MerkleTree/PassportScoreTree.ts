@@ -1,13 +1,18 @@
-import MerkleTree from './MerkleTree';
-import { utils } from 'ethers';
 import { PassportScore } from '@arc-types/sapphireCore';
-import _ from 'lodash';
+import { utils } from 'ethers';
+import MerkleTree from './MerkleTree';
 
 export class PassportScoreTree {
   private readonly tree: MerkleTree;
   constructor(creditScores: PassportScore[]) {
+    const start = new Date().getTime();
+    let now = start
+    console.log(`1. Creating Tree ! \n`);
     this.ensureUniqueAccounts(creditScores);
+    console.log(`2. Uniqueness check done. Took ${(new Date().getTime() - now)/1000} secs !\n`);
+    now = new Date().getTime() 
     this.tree = new MerkleTree(creditScores.map(PassportScoreTree.toNode));
+    console.log(`3. Merkle tree done. Took ${(new Date().getTime() - now)/1000} secs !!\n`);
   }
 
   public static verifyProof(
@@ -42,24 +47,20 @@ export class PassportScoreTree {
    * Ensure an account does not have multiple scores for the same protocol
    */
   private ensureUniqueAccounts(passportScores: PassportScore[]) {
-    const groupedScores = _.groupBy(passportScores, 'protocol');
+    const uniqueMap = {}
 
-    Object.keys(groupedScores).map((protocol) => {
-      const scores = groupedScores[protocol];
-
-      scores.map((passScore) => {
-        const nbScoresSameProtocol = scores.filter(
-          ({ account }) => account === passScore.account,
-        ).length;
-
-        if (nbScoresSameProtocol > 1) {
-          throw Error(
-            `There are more than 1 score for the protocol ${utils.parseBytes32String(
-              protocol,
-            )} for user ${passScore.account}`,
-          );
-        }
-      });
-    });
+    for(const score of passportScores) {
+      const key = `${score.account}-${score.protocol}`;
+      if(!uniqueMap[key]) {
+       
+        uniqueMap[key] = key // Value never used
+      }else {
+        throw Error(
+          `There are more than 1 score for the protocol ${utils.parseBytes32String(
+            score.protocol,
+          )} for user ${score.account}`,
+        );
+      }
+    }
   }
 }

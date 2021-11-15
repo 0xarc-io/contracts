@@ -5,13 +5,13 @@ import {
   ArcProxyFactory,
   MockSapphirePassportScores,
   MockSapphirePassportScoresFactory,
-  SapphirePassportScoresFactory,
+  SapphirePassportScoresFactory
 } from '@src/typings';
 import { getScoreProof } from '@src/utils';
 import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
 import {
   addSnapshotBeforeRestoreAfterEach,
-  advanceEpoch,
+  advanceEpoch
 } from '@test/helpers/testingUtils';
 import chai, { expect } from 'chai';
 import { solidity } from 'ethereum-waffle';
