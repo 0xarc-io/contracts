@@ -1,23 +1,20 @@
 import { utils } from 'ethers';
 
 export default class MerkleTree {
-  private readonly elements: string[];
   private readonly bufferElementPositionIndex: { [hexElement: string]: number };
   private readonly layers: string[][];
 
   constructor(elements: string[]) {
-    this.elements = [...elements];
-    this.elements.sort();
-    this.elements = MerkleTree.deduplicateSortedElements(this.elements);
-    this.bufferElementPositionIndex = this.elements.reduce<{ [hexElement: string]: number }>(
+    elements.sort();
+    elements = MerkleTree.deduplicateSortedElements(elements);
+    this.bufferElementPositionIndex = elements.reduce<{ [hexElement: string]: number }>(
       (memo, el, index) => {
         memo[el] = index;
         return memo;
       },
       {},
     );
-
-    this.layers = this.getLayers(this.elements);
+    this.layers = this.getLayers(elements);
   }
 
   getLayers(elements: string[]): string[][] {

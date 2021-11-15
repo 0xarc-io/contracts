@@ -1,7 +1,6 @@
-import MerkleTree from './MerkleTree';
-import { utils } from 'ethers';
 import { PassportScore } from '@arc-types/sapphireCore';
-import _ from 'lodash';
+import { utils } from 'ethers';
+import MerkleTree from './MerkleTree';
 
 export class PassportScoreTree {
   private readonly tree: MerkleTree;
@@ -42,24 +41,20 @@ export class PassportScoreTree {
    * Ensure an account does not have multiple scores for the same protocol
    */
   private ensureUniqueAccounts(passportScores: PassportScore[]) {
-    const groupedScores = _.groupBy(passportScores, 'protocol');
+    const uniqueMap = {}
 
-    Object.keys(groupedScores).map((protocol) => {
-      const scores = groupedScores[protocol];
-
-      scores.map((passScore) => {
-        const nbScoresSameProtocol = scores.filter(
-          ({ account }) => account === passScore.account,
-        ).length;
-
-        if (nbScoresSameProtocol > 1) {
-          throw Error(
-            `There are more than 1 score for the protocol ${utils.parseBytes32String(
-              protocol,
-            )} for user ${passScore.account}`,
-          );
-        }
-      });
-    });
+    for(const score of passportScores) {
+      const key = `${score.account}-${score.protocol}`;
+      if(!uniqueMap[key]) {
+       
+        uniqueMap[key] = key // Value never used
+      }else {
+        throw Error(
+          `There are more than 1 score for the protocol ${utils.parseBytes32String(
+            score.protocol,
+          )} for user ${score.account}`,
+        );
+      }
+    }
   }
 }
