@@ -8,7 +8,7 @@ workflows:
               - crypto
 
 jobs:
-  build:
+  install-lint-build-test-publish:
     working_directory: ~/contracts
     docker:
       - image: circleci/node:12.18.0
