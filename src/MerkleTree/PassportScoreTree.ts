@@ -5,14 +5,8 @@ import MerkleTree from './MerkleTree';
 export class PassportScoreTree {
   private readonly tree: MerkleTree;
   constructor(creditScores: PassportScore[]) {
-    const start = new Date().getTime();
-    let now = start
-    console.log(`1. Creating Tree ! \n`);
     this.ensureUniqueAccounts(creditScores);
-    console.log(`2. Uniqueness check done. Took ${(new Date().getTime() - now)/1000} secs !\n`);
-    now = new Date().getTime() 
     this.tree = new MerkleTree(creditScores.map(PassportScoreTree.toNode));
-    console.log(`3. Merkle tree done. Took ${(new Date().getTime() - now)/1000} secs !!\n`);
   }
 
   public static verifyProof(
