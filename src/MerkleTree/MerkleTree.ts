@@ -5,17 +5,8 @@ export default class MerkleTree {
   private readonly layers: string[][];
 
   constructor(elements: string[]) {
-    console.log(`2a. Creating Merkle Tree!\n`);
-    const start = new Date().getTime();
-    let now = start
-    console.log(`2b. Saving elements took ${(new Date().getTime() - now)/1000} secs !\n`);
-    now = new Date().getTime()
     elements.sort();
-    console.log(`2b. Sorting tree took ${(new Date().getTime() - now)/1000} secs !\n`);
-    now = new Date().getTime()
     elements = MerkleTree.deduplicateSortedElements(elements);
-    console.log(`2c. Deduplicating tree took ${(new Date().getTime() - now)/1000} secs !\n`);
-    now = new Date().getTime()
     this.bufferElementPositionIndex = elements.reduce<{ [hexElement: string]: number }>(
       (memo, el, index) => {
         memo[el] = index;
@@ -23,10 +14,7 @@ export default class MerkleTree {
       },
       {},
     );
-    console.log(`2d. Creating buffer took ${(new Date().getTime() - now)/1000} secs !\n`);
-    now = new Date().getTime()
     this.layers = this.getLayers(elements);
-    console.log(`2e. Creating layers took ${(new Date().getTime() - now)/1000} secs !\n`);
   }
 
   getLayers(elements: string[]): string[][] {
