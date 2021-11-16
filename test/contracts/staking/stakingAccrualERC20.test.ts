@@ -40,7 +40,7 @@ describe('StakingAccrualERC20', () => {
 
   let user1starcx: MockStakingAccrualERC20;
   let user2starcx: MockStakingAccrualERC20;
-  
+
   let sablierContract: MockSablier;
   
   let defiPassportContract: DefiPassport;
