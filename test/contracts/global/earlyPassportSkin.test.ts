@@ -1,0 +1,160 @@
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
+import {
+  ArcProxyFactory,
+  DefaultPassportSkin,
+  DefaultPassportSkinFactory,
+  DefiPassport,
+  DefiPassportFactory,
+  EarlyPassportSkin,
+  EarlyPassportSkinFactory,
+} from '@src/typings';
+import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
+
+const BASE_URI = 'https://example.com/';
+
+describe('EarlyPassportSkin', () => {
+  let skinContract: EarlyPassportSkin;
+
+  let defiPassport: DefiPassport;
+  let defaultPassportSkin: DefaultPassportSkin;
+  const defaultSkinId = '1';
+
+  let owner: SignerWithAddress;
+  let user: SignerWithAddress;
+
+  before(async () => {
+    const signers = await ethers.getSigners();
+    owner = signers[0];
+    user = signers[1];
+
+    const defiPassportImpl = await new DefiPassportFactory(owner).deploy();
+    const proxy = await new ArcProxyFactory(owner).deploy(
+      defiPassportImpl.address,
+      owner.address,
+      [],
+    );
+    defiPassport = DefiPassportFactory.connect(proxy.address, owner);
+    await defiPassport.init('DefiPassport', 'DFP', owner.address);
+
+    defaultPassportSkin = await new DefaultPassportSkinFactory(owner).deploy(
+      'Default skin NFT',
+      'DPS',
+    );
+    await defaultPassportSkin.mint(owner.address, '');
+
+    await defiPassport.setDefaultSkin(defaultPassportSkin.address, true);
+
+    skinContract = await new EarlyPassportSkinFactory(owner).deploy(
+      defiPassport.address,
+    );
+    skinContract.setBaseURI(BASE_URI);
+  });
+
+  addSnapshotBeforeRestoreAfterEach();
+
+  describe('#safeMint', () => {
+    it('reverts if user has no passport', async () => {
+      await expect(skinContract.safeMint(user.address)).to.be.revertedWith(
+        'EarlyPassportSkin: user does not have a passport',
+      );
+    });
+
+    it('mints the skin NFT to the user', async () => {
+      await skinContract.setPassportIdThreshold(1);
+      await defiPassport.mint(
+        user.address,
+        defaultPassportSkin.address,
+        defaultSkinId,
+      );
+
+      expect(await skinContract.balanceOf(user.address)).to.eq(0);
+
+      await skinContract.safeMint(user.address);
+
+      expect(await skinContract.balanceOf(user.address)).to.eq(1);
+    });
+
+    it('reverts if user has a passport ID greater than the threshold', async () => {
+      await skinContract.setPassportIdThreshold(1);
+
+      await defiPassport.mint(
+        owner.address,
+        defaultPassportSkin.address,
+        defaultSkinId,
+      );
+      await defiPassport.mint(
+        user.address,
+        defaultPassportSkin.address,
+        defaultSkinId,
+      );
+
+      await skinContract.safeMint(owner.address);
+
+      await expect(skinContract.safeMint(user.address)).to.be.revertedWith(
+        'EarlyPassportSkin: user has a passport ID greater than the threshold',
+      );
+    });
+
+    it('sets the tokenURL', async () => {
+      await skinContract.setPassportIdThreshold(1);
+      await defiPassport.mint(
+        user.address,
+        defaultPassportSkin.address,
+        defaultSkinId,
+      );
+
+      await expect(skinContract.tokenURI(1)).to.be.revertedWith(
+        'ERC721Metadata: token does not exist',
+      );
+
+      await skinContract.safeMint(user.address);
+
+      expect(await skinContract.tokenURI(1)).to.eq(BASE_URI + 1);
+    });
+
+    it('reverts if user already has an early passport skin minted', async () => {
+      await skinContract.setPassportIdThreshold(1);
+      await defiPassport.mint(
+        user.address,
+        defaultPassportSkin.address,
+        defaultSkinId,
+      );
+
+      await skinContract.safeMint(user.address);
+
+      await expect(skinContract.safeMint(user.address)).to.be.revertedWith(
+        'EarlyPassportSkin: user already has a skin',
+      );
+    });
+  });
+
+  describe('#setPassportIdThreshold', () => {
+    it('reverts if called by non-owner', async () => {
+      await expect(
+        skinContract.connect(user).setPassportIdThreshold(1),
+      ).to.be.revertedWith('Ownable: caller is not the owner');
+    });
+
+    it('sets the passport id threshold', async () => {
+      await skinContract.setPassportIdThreshold(21);
+
+      expect(await skinContract.passportIdThreshold()).to.eq(21);
+    });
+  });
+
+  describe('#setBaseURI', () => {
+    it('reverts if called by non-owner', async () => {
+      await expect(
+        skinContract.connect(user).setBaseURI('test'),
+      ).to.be.revertedWith('Ownable: caller is not the owner');
+    });
+
+    it('sets the base URL', async () => {
+      await skinContract.setBaseURI('test');
+
+      expect(await skinContract.baseURI()).to.equal('test');
+    });
+  });
+});
