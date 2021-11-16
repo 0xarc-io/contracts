@@ -49,7 +49,7 @@ describe('EarlyPassportSkin', () => {
     skinContract = await new EarlyPassportSkinFactory(owner).deploy(
       defiPassport.address,
     );
-    skinContract.setBaseURI(BASE_URI);
+    await skinContract.setBaseURI(BASE_URI);
   });
 
   addSnapshotBeforeRestoreAfterEach();
