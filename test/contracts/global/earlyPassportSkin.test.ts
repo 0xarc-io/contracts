@@ -57,7 +57,7 @@ describe('EarlyPassportSkin', () => {
   describe('#safeMint', () => {
     it('reverts if user has no passport', async () => {
       await expect(skinContract.safeMint(user.address)).to.be.revertedWith(
-        'EarlyPassportSkin: user does not have a passport',
+        'ERC721Enumerable: owner index out of bounds',
       );
     });
 
@@ -93,11 +93,11 @@ describe('EarlyPassportSkin', () => {
       await skinContract.safeMint(owner.address);
 
       await expect(skinContract.safeMint(user.address)).to.be.revertedWith(
-        'EarlyPassportSkin: user has a passport ID greater than the threshold',
+        'EarlyPassportSkin: passport ID is too high',
       );
     });
 
-    it('sets the tokenURL', async () => {
+    it('sets the tokenURI', async () => {
       await skinContract.setPassportIdThreshold(1);
       await defiPassport.mint(
         user.address,
@@ -105,13 +105,13 @@ describe('EarlyPassportSkin', () => {
         defaultSkinId,
       );
 
-      await expect(skinContract.tokenURI(1)).to.be.revertedWith(
-        'ERC721Metadata: token does not exist',
+      await expect(skinContract.tokenURI(0)).to.be.revertedWith(
+        'ERC721Metadata: URI query for nonexistent token',
       );
 
       await skinContract.safeMint(user.address);
 
-      expect(await skinContract.tokenURI(1)).to.eq(BASE_URI + 1);
+      expect(await skinContract.tokenURI(0)).to.eq(BASE_URI + 0);
     });
 
     it('reverts if user already has an early passport skin minted', async () => {
