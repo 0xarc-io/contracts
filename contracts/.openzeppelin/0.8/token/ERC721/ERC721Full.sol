@@ -41,8 +41,9 @@ contract ERC721Full is ERC721, ERC721Enumerable, ERC721Metadata {
         internal
         override(ERC721, ERC721Enumerable, ERC721Metadata)
     {
+        // Burn implementation of Metadata
         ERC721._burn(owner, tokenId);
-        ERC721Enumerable._burn(owner, tokenId);
         ERC721Metadata._burn(owner, tokenId);
+        ERC721Enumerable._burn(owner, tokenId);
     }
 }
