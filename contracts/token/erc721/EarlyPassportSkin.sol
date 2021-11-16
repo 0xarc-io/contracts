@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.4;
 
-import {IERC721} from "../../.openzeppelin/4.x/token/ERC721/IERC721.sol";
+import {IERC721Enumerable} from "../../.openzeppelin/2.x/token/ERC721/IERC721Enumerable.sol";
 import {ERC721} from "../../.openzeppelin/4.x/token/ERC721/ERC721.sol";
 import {Ownable} from "../../lib/Ownable.sol";
 import {Counters} from "../../.openzeppelin/4.x/utils/Counters.sol";
@@ -23,7 +23,7 @@ contract EarlyPassportSkin is ERC721, Ownable {
 
     uint256 public passportIdThreshold;
 
-    IERC721 public defiPassport;
+    IERC721Enumerable public defiPassport;
 
     /* ========== Constructor ========== */
 
@@ -32,7 +32,7 @@ contract EarlyPassportSkin is ERC721, Ownable {
     ) 
         ERC721("EarlyPassportSkin", "EPS") 
     {
-        defiPassport = IERC721(_defiPassport);
+        defiPassport = IERC721Enumerable(_defiPassport);
     }
 
 
@@ -57,11 +57,35 @@ contract EarlyPassportSkin is ERC721, Ownable {
     
     /* ========== Public functions ========== */
 
-    function safeMint(address to) 
+    function safeMint(address _to) 
         public 
     {
+        require (
+            balanceOf(_to) == 0,
+            "EarlyPassportSkin: user already has a skin"
+        );
+        
+        // The call to tokenOfOwnerByIndex will revert if the user does not have a token
+        uint256 passportId = defiPassport.tokenOfOwnerByIndex(_to, 0);
+
+        require (
+            passportId <= passportIdThreshold,
+            "EarlyPassportSkin: passport ID is too high"
+        );
+
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
-        _safeMint(to, tokenId);
+        _safeMint(_to, tokenId);
+    }
+
+    /* ========== Private functions ========== */
+
+    function _baseURI()
+        internal
+        view
+        override
+        returns (string memory)
+    {
+        return baseURI;
     }
 }
