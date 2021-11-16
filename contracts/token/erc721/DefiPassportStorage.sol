@@ -25,8 +25,7 @@ contract DefiPassportStorage {
         TokenIdStatus[] skinTokenIdStatuses;
     }
 
-    /* ========== Public Variables ========== */
-
+    // Made these internal because the getters override these variables (because this is an upgrade)
     string internal _name;
     string internal _symbol;
 
@@ -34,6 +33,8 @@ contract DefiPassportStorage {
      * @notice The credit score contract used by the passport
      */
     ISapphirePassportScores private passportScoresContract;
+
+    /* ========== Public Variables ========== */
 
     /**
      * @notice Records the whitelisted skins. All tokens minted by these contracts

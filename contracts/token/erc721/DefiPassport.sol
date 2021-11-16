@@ -6,7 +6,7 @@ import {ERC721Full} from "../../.openzeppelin/0.8/token/ERC721/ERC721Full.sol";
 import {Counters} from "../../.openzeppelin/0.8/drafts/Counters.sol";
 import {IERC721} from "../../.openzeppelin/0.8/token/ERC721/IERC721.sol";
 
-import {Address} from "../../lib/Address.sol";
+import {Address} from "../../.openzeppelin/0.8/utils/Address.sol";
 import {Bytes32} from "../../lib/Bytes32.sol";
 import {Adminable} from "../../lib/Adminable.sol";
 import {Initializable} from "../../lib/Initializable.sol";

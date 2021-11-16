@@ -99,8 +99,6 @@ contract ERC721Enumerable is Context, ERC165, ERC721, IERC721Enumerable {
      * @param tokenId uint256 ID of the token being burned
      */
     function _burn(address owner, uint256 tokenId) internal override virtual {
-        super._burn(owner, tokenId);
-
         _removeTokenFromOwnerEnumeration(owner, tokenId);
         // Since tokenId will be deleted, we can clear its slot in _ownedTokensIndex to trigger a gas refund
         _ownedTokensIndex[tokenId] = 0;

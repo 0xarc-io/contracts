@@ -661,8 +661,8 @@
   {
     "name": "DefiPassport",
     "source": "DefiPassport",
-    "address": "0xacDC36414A406707DD781bed8EF6ad26122748Ad",
-    "txn": "0xee31ff873bde281762b1bd036a6c2a3d552e78d151e5a1534430591afcfc8fcd",
+    "address": "0xa1964Eddb1dfD6e760e9A17118114a18c94fFF2B",
+    "txn": "0x5375fa750e1052fc74e297447ff42a9e459a9801fc77516d021f20962ff7d0a1",
     "network": "rinkeby",
     "version": 4,
     "type": "global",
