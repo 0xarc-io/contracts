@@ -2,11 +2,10 @@
 pragma solidity ^0.8.0;
 
 import "../../GSN/Context.sol";
-import "./IERC721.sol";
-import "./IERC721Receiver.sol";
-import "../../math/SafeMath.sol";
-import "../../utils/Address.sol";
-import "../../drafts/Counters.sol";
+import "../../../4.x/token/ERC721/IERC721.sol";
+import "../../../4.x/token/ERC721/IERC721Receiver.sol";
+import "../../../../lib/Address.sol";
+import "../../../4.x/utils/Counters.sol";
 import "../../introspection/ERC165.sol";
 
 /**
@@ -14,7 +13,6 @@ import "../../introspection/ERC165.sol";
  * @dev see https://eips.ethereum.org/EIPS/eip-721
  */
 contract ERC721 is Context, ERC165, IERC721 {
-    using SafeMath for uint256;
     using Address for address;
     using Counters for Counters.Counter;
 
