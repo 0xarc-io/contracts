@@ -28,7 +28,7 @@ const COOLDOWN_DURATION = 60;
 const INITIAL_BALANCE = STAKE_AMOUNT.mul('10');
 const STREAM_DURATION = 10;
 
-describe.only('StakingAccrualERC20', () => {
+describe('StakingAccrualERC20', () => {
   let starcx: MockStakingAccrualERC20;
   let stakingToken: TestToken;
 
