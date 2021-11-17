@@ -15,6 +15,7 @@ import {BaseERC20} from "../token/BaseERC20.sol";
 import {IPermittableERC20} from "../token/IPermittableERC20.sol";
 import {SapphireTypes} from "../sapphire/SapphireTypes.sol";
 import {ISapphirePassportScores} from "../sapphire/ISapphirePassportScores.sol";
+import {IERC721} from "../.openzeppelin/0.8/token/ERC721/IERC721.sol";
 
 /**
  * @notice An ERC20 that allows users to deposit a given token, where their
@@ -53,6 +54,8 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
 
     mapping (address => uint256) public cooldowns;
 
+    IERC721 public defiPassportContract;
+
     /* ========== Events ========== */
 
     event ExitCooldownDurationSet(uint256 _duration);
@@ -71,7 +74,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
 
     event FundsWithdrawnFromSablier(uint256 _streamId, uint256 _amount);
 
-    event PassportScoresContractSet(address _passportScoresContract);
+    event DefiPassportContractSet(address _defiPassportContract);
 
     event ProofProtocolSet(string _protocol);
 
@@ -89,7 +92,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
         uint8 __decimals,
         address _stakingToken,
         uint256 _exitCooldownDuration,
-        address _passportScoresContract,
+        address _defiPassportContract,
         address _sablierContract
     )
         external
@@ -107,7 +110,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
         );
 
         require (
-            _passportScoresContract.isContract(),
+            _defiPassportContract.isContract(),
             "StakingAccrualERC20: the passport scores contract is invalid"
         );
 
@@ -122,7 +125,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
         );
 
         stakingToken = IPermittableERC20(_stakingToken);
-        passportScoresContract = ISapphirePassportScores(_passportScoresContract);
+        defiPassportContract = IERC721(_defiPassportContract);
         sablierContract = ISablier(_sablierContract);
     }
 
@@ -170,25 +173,25 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
         );
     }
 
-    function setPassportScoreContract(
-        address _passportScoresContract
+    function setDefiPassportContract(
+        address _defiPassportContract
     )
         external
         onlyAdmin
     {
         require(
-            address(passportScoresContract) != _passportScoresContract,
-            "StakingAccrualERC20: the same passport scores address is already set"
+            address(defiPassportContract) != _defiPassportContract,
+            "StakingAccrualERC20: the same defi passport address is already set"
         );
 
         require(
-            _passportScoresContract.isContract(),
+            _defiPassportContract.isContract(),
             "StakingAccrualERC20: the given address is not a contract"
         );
 
-        passportScoresContract = ISapphirePassportScores(_passportScoresContract);
+        defiPassportContract = IERC721(_defiPassportContract);
 
-        emit PassportScoresContractSet(_passportScoresContract);
+        emit DefiPassportContractSet(_defiPassportContract);
     }
 
     /**
@@ -250,17 +253,10 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
     /* ========== Mutative Functions ========== */
 
     function stake(
-        uint256 _amount,
-        SapphireTypes.ScoreProof memory _scoreProof
+        uint256 _amount
     )
         public
-        checkScoreProof(_scoreProof, true, true)
     {
-        require (
-            _scoreProof.protocol == _proofProtocol,
-            "StakingAccrualERC20: wrong protocol in proof"
-        );
-
         claimStreamFunds();
 
         uint256 cooldownTimestamp = cooldowns[msg.sender];
@@ -268,6 +264,11 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
         require (
             cooldownTimestamp == 0,
             "StakingAccrualERC20: cannot stake during cooldown period"
+        );
+
+       require(
+            defiPassportContract.balanceOf(msg.sender) > 0,
+            "StakingAccrualERC20: user has to have passport"
         );
 
         // Gets the amount of the staking token locked in the contract
@@ -294,8 +295,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
         uint256 _deadline,
         uint8 _v,
         bytes32 _r,
-        bytes32 _s,
-        SapphireTypes.ScoreProof memory _scoreProof
+        bytes32 _s
     )
         public
     {
@@ -308,7 +308,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
             _r,
             _s
         );
-        stake(_amount, _scoreProof);
+        stake(_amount);
     }
 
     /**

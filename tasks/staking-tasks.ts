@@ -439,17 +439,17 @@ task(
   'deploy-staking-accrual',
   'Deploy the StakingAccrual ERC20 staking contract, with 18 decimals',
 )
-  .addParam('name', 'Name of the ERC20')
-  .addParam('symbol', 'Symbol of the ERC20')
-  .addParam('stakingtoken', 'Address of the Token which will be staked')
-  .addParam(
+  .addOptionalParam('name', 'Name of the ERC20')
+  .addOptionalParam('symbol', 'Symbol of the ERC20')
+  .addOptionalParam('stakingtoken', 'Address of the Token which will be staked')
+  .addOptionalParam(
     'exitcooldownduration',
     'Minimal duration of withdrawing staking token from staking accrual contract',
   )
-  .addParam('creditscore', 'Address of the credit score contract')
-  .addParam('sablier', 'Address of the Sablier contract to use')
-  .addFlag('implementationonly', 'Only deploy implementation')
+  .addOptionalParam('defipassport', 'Address of the defi passport contract')
+  .addOptionalParam('sablier', 'Address of the Sablier contract to use')
   .addOptionalParam('ver', 'Version of the implementation contract')
+  .addFlag('implementationonly', 'Only deploy implementation')
   .setAction(async (taskArgs, hre) => {
     const {
       name,
@@ -457,12 +457,25 @@ task(
       stakingtoken: stakingToken,
       exitcooldownduration: exitCoolDownDuration,
       implementationonly: implementationOnly,
-      creditscore: creditScoreContract,
+      defipassport: defiPassport,
       sablier,
       ver: version,
     } = taskArgs;
 
     const { network, signer, networkConfig } = await loadDetails(hre);
+
+    if (
+      !implementationOnly &&
+      (!name ||
+        !symbol ||
+        !stakingToken ||
+        !exitCoolDownDuration ||
+        !defiPassport)
+    ) {
+      throw red(
+        'Name, symbol, staking token, exit cooldown duration or the defi passport address are missing',
+      );
+    }
 
     await pruneDeployments(network, signer.provider);
 
@@ -536,7 +549,7 @@ task(
       decimals: ${decimals},
       stakingToken: ${stakingToken},
       exitCoolDownDuration: ${exitCoolDownDuration},
-      creditScoreContract: ${creditScoreContract},
+      defiPassport: ${defiPassport},
       sablier: ${sablier}
     })...`),
     );
@@ -546,7 +559,7 @@ task(
       decimals,
       stakingToken,
       exitCoolDownDuration,
-      creditScoreContract,
+      defiPassport,
       sablier,
     );
     console.log(green(`Init successfully called`));
