@@ -15,7 +15,7 @@ import {BaseERC20} from "../token/BaseERC20.sol";
 import {IPermittableERC20} from "../token/IPermittableERC20.sol";
 import {SapphireTypes} from "../sapphire/SapphireTypes.sol";
 import {ISapphirePassportScores} from "../sapphire/ISapphirePassportScores.sol";
-import {DefiPassport} from "../token/erc721/DefiPassport.sol";
+import {IERC721} from "../.openzeppelin/0.8/token/ERC721/IERC721.sol";
 
 /**
  * @notice An ERC20 that allows users to deposit a given token, where their
@@ -54,7 +54,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
 
     mapping (address => uint256) public cooldowns;
 
-    DefiPassport public defiPassportContract;
+    IERC721 public defiPassportContract;
 
     /* ========== Events ========== */
 
@@ -125,7 +125,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
         );
 
         stakingToken = IPermittableERC20(_stakingToken);
-        defiPassportContract = DefiPassport(_defiPassportContract);
+        defiPassportContract = IERC721(_defiPassportContract);
         sablierContract = ISablier(_sablierContract);
     }
 
@@ -189,7 +189,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
             "StakingAccrualERC20: the given address is not a contract"
         );
 
-        defiPassportContract = DefiPassport(_defiPassportContract);
+        defiPassportContract = IERC721(_defiPassportContract);
 
         emit DefiPassportContractSet(_defiPassportContract);
     }
