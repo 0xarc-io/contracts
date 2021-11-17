@@ -181,7 +181,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
     {
         require(
             address(defiPassportContract) != _defiPassportContract,
-            "StakingAccrualERC20: the same passport scores address is already set"
+            "StakingAccrualERC20: the same defi passport address is already set"
         );
 
         require(
