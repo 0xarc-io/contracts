@@ -25,6 +25,8 @@ contract EarlyPassportSkin is ERC721, Ownable {
 
     IERC721Enumerable public defiPassport;
 
+    mapping (address => bool) public usersAlreadyMinted;
+
     /* ========== Constructor ========== */
 
     constructor(
@@ -38,7 +40,7 @@ contract EarlyPassportSkin is ERC721, Ownable {
 
     /* ========== Restricted functions ========== */
 
-    function setBaseURI (string memory _uri) 
+    function setBaseURI(string memory _uri) 
         external
         onlyOwner
     {
@@ -46,7 +48,7 @@ contract EarlyPassportSkin is ERC721, Ownable {
         emit BaseURISet(_uri);
     }
 
-    function setPassportIdThreshold (uint256 _threshold) 
+    function setPassportIdThreshold(uint256 _threshold) 
         external
         onlyOwner
     {
@@ -61,8 +63,8 @@ contract EarlyPassportSkin is ERC721, Ownable {
         public 
     {
         require (
-            balanceOf(_to) == 0,
-            "EarlyPassportSkin: user already has a skin"
+            !usersAlreadyMinted[_to],
+            "EarlyPassportSkin: user has already minted the skin"
         );
         
         // The call to tokenOfOwnerByIndex will revert if the user does not have a token
@@ -75,6 +77,7 @@ contract EarlyPassportSkin is ERC721, Ownable {
 
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
+        usersAlreadyMinted[_to] = true;
         _safeMint(_to, tokenId);
     }
 

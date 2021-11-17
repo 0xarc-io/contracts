@@ -125,7 +125,26 @@ describe('EarlyPassportSkin', () => {
       await skinContract.safeMint(user.address);
 
       await expect(skinContract.safeMint(user.address)).to.be.revertedWith(
-        'EarlyPassportSkin: user already has a skin',
+        'EarlyPassportSkin: user has already minted the skin',
+      );
+    });
+
+    it('reverts if user mints, transfers, then mints again', async () => {
+      await skinContract.setPassportIdThreshold(1);
+      await defiPassport.mint(
+        user.address,
+        defaultPassportSkin.address,
+        defaultSkinId,
+      );
+
+      await skinContract.safeMint(user.address);
+
+      await skinContract
+        .connect(user)
+        .transferFrom(user.address, owner.address, 0);
+
+      await expect(skinContract.safeMint(user.address)).to.be.revertedWith(
+        'EarlyPassportSkin: user has already minted the skin',
       );
     });
   });
