@@ -380,6 +380,15 @@ describe('StakingAccrualERC20', () => {
         ).to.be.revertedWith('Adminable: caller is not admin');
       });
 
+      it('reverts if called with set address', async () => {
+        const newCs = await new SapphirePassportScoresFactory(admin).deploy();
+        await starcx.setDefiPassportContract(newCs.address);
+
+        await expect(
+          starcx.setDefiPassportContract(newCs.address),
+        ).to.be.revertedWith('StakingAccrualERC20: the same defi passport address is already set');
+      });
+
       it('sets a new defi passport contract', async () => {
         const newCs = await new SapphirePassportScoresFactory(admin).deploy();
         expect(await starcx.defiPassportContract()).to.eq(
