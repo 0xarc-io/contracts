@@ -667,5 +667,15 @@
     "version": 4,
     "type": "global",
     "group": "DefiPassport"
+  },
+  {
+    "name": "StakingAccrualERC20",
+    "source": "StakingAccrualERC20",
+    "address": "0xBC4587A15a53aCF051d4Fb973F6D727e722E9e73",
+    "txn": "0xf152939c9f24d0f03b52113c466db773f531618feae44f4968a5579fcd5b5c16",
+    "network": "rinkeby",
+    "version": 4,
+    "type": "global",
+    "group": "StakingAccrualERC20"
   }
 ]
