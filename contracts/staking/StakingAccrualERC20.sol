@@ -15,7 +15,7 @@ import {BaseERC20} from "../token/BaseERC20.sol";
 import {IPermittableERC20} from "../token/IPermittableERC20.sol";
 import {SapphireTypes} from "../sapphire/SapphireTypes.sol";
 import {ISapphirePassportScores} from "../sapphire/ISapphirePassportScores.sol";
-import {IERC721} from "../.openzeppelin/0.8/token/ERC721/IERC721.sol";
+import {IERC721} from "../.openzeppelin/4.x/token/ERC721/IERC721.sol";
 
 /**
  * @notice An ERC20 that allows users to deposit a given token, where their
