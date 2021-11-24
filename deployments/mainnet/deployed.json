@@ -777,5 +777,15 @@
     "version": 3,
     "type": "global",
     "group": "StakingAccrualERC20"
+  },
+  {
+    "name": "EarlyPassportSkin",
+    "source": "EarlyPassportSkin",
+    "address": "0x477740a17Ee61359b88BD9f5204D2397f10b6D72",
+    "txn": "0xde8ff567a638df4aa3d0bfaeb8c7f07592d641446653c4a2d855519b0ae50cc4",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global",
+    "group": ""
   }
 ]
