@@ -677,5 +677,15 @@
     "version": 4,
     "type": "global",
     "group": "StakingAccrualERC20"
+  },
+  {
+    "name": "EarlyPassportSkin",
+    "source": "EarlyPassportSkin",
+    "address": "0xF00696067c7E4Fb038AE886039651E849822C8ca",
+    "txn": "0x39af964d5ef52e87fd5bb6b848983ce46d52d9258f5961f475981cc6154ebdd9",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": ""
   }
 ]
