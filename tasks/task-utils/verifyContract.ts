@@ -2,7 +2,7 @@ import { green, yellow } from 'chalk';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 const ETHERSCAN_APY_SUPPORTED_NETWORKS = [
-  'ethereum',
+  'mainnet',
   'rinkeby',
   'polygon',
   'mumbai',

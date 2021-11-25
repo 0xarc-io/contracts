@@ -176,4 +176,25 @@ describe('EarlyPassportSkin', () => {
       expect(await skinContract.baseURI()).to.equal('test');
     });
   });
+
+  it('is applicable on the DefiPassport', async () => {
+    await skinContract.setPassportIdThreshold(1);
+    await defiPassport.mint(
+      user.address,
+      defaultPassportSkin.address,
+      defaultSkinId,
+    );
+    await defiPassport.setWhitelistedSkin(skinContract.address, true);
+
+    await skinContract.safeMint(user.address);
+
+    let activeSkin = await defiPassport.getActiveSkin(1);
+    expect(activeSkin.skin).to.eq(defaultPassportSkin.address);
+
+    await defiPassport.connect(user).setActiveSkin(skinContract.address, 0);
+
+    activeSkin = await defiPassport.getActiveSkin(1);
+    expect(activeSkin.skin).to.eq(skinContract.address);
+    expect(activeSkin.skinTokenId).to.eq(0);
+  });
 });
