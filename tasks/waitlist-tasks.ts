@@ -1,7 +1,7 @@
 import { DeploymentType } from '../deployments/types';
-import { WaitlistBatchFactory } from '@src/typings';
+import { DefiPassportFactory, WaitlistBatchFactory } from '@src/typings';
 import { PassportWaitlistFactory } from '@src/typings/PassportWaitlistFactory';
-import { utils } from 'ethers';
+import { utils, BigNumber } from 'ethers';
 import { task } from 'hardhat/config';
 import {
   deployContract,
@@ -12,7 +12,7 @@ import {
 import { verifyContract } from './task-utils';
 import { id } from '@ethersproject/hash';
 import { createArrayCsvWriter } from 'csv-writer';
-import { green } from 'chalk';
+import { green, yellow } from 'chalk';
 import { formatEther } from '@ethersproject/units';
 
 task('deploy-waitlist-batch', 'Deploy the WaitlistBatch contract')
@@ -93,6 +93,13 @@ task(
     path: csvFileName,
   });
 
+  const defiPassportAddress = loadContract({
+    network,
+    name: 'DefiPassportProxy',
+  }).address;
+  const defiPassport = DefiPassportFactory.connect(defiPassportAddress, signer);
+  let biggestPassportId = BigNumber.from(0);
+
   // Get applicants from waitlist
   const waitlistDetails = await loadContract({
     network,
@@ -110,13 +117,35 @@ task(
   const parsedLogs = applicantsLogs.map((log) =>
     waitlistBatch.interface.parseLog(log),
   );
-  const applicants: [string, string][] = parsedLogs.map((log) => [
-    log.args.user as string,
-    formatEther(log.args.amount).toString(),
-  ]);
-  console.log({ applicants });
+  const applicants: [string, string][] = [];
+
+  console.log(
+    yellow(
+      'Finding the passport IDs of the applicants and constructing the csv file...',
+    ),
+  );
+  let usersWithoutPassport = 0;
+  for (const log of parsedLogs) {
+    console.log(`querying user nr ${applicants.length}`);
+    const user = log.args.user as string;
+
+    try {
+      const passportId = await defiPassport.tokenOfOwnerByIndex(user, 0);
+      if (passportId.gt(biggestPassportId)) {
+        biggestPassportId = passportId;
+      }
+    } catch (e) {
+      usersWithoutPassport += 1;
+    }
+
+    applicants.push([user, formatEther(log.args.amount).toString()]);
+  }
 
   // Save applicants to csv
   await csvWriter.writeRecords(applicants);
   console.log(green(`All applicants have been saved to ${csvFileName}`));
+  console.log(yellow(`${usersWithoutPassport} have no passport`));
+  console.log(
+    green(`The higest passport ID is ${biggestPassportId.toString()}`),
+  );
 });

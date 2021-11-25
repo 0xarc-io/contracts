@@ -2,12 +2,14 @@ import {
   ArcProxyFactory,
   DefaultPassportSkinFactory,
   DefiPassportFactory,
+  EarlyPassportSkinFactory,
 } from '@src/typings';
 import { green, red, yellow } from 'chalk';
 import {
   pruneDeployments,
   loadDetails,
   deployContract,
+  loadContract,
 } from '../deployments/src';
 import { task } from 'hardhat/config';
 import { DeploymentType } from '../deployments/types';
@@ -472,3 +474,30 @@ task(
     await tx.wait();
     console.log(green(`Transaction completed.`));
   });
+
+task('deploy-early-skin', 'Deploys the EarlyPassportSkin NFT').setAction(
+  async (_taskArgs, hre) => {
+    const { network, signer, networkConfig } = await loadDetails(hre);
+
+    const defiPassportAddress = loadContract({
+      network,
+      name: 'DefiPassportProxy',
+    }).address;
+
+    const earlyPassportAddr = await deployContract(
+      {
+        name: 'EarlyPassportSkin',
+        source: 'EarlyPassportSkin',
+        data: new EarlyPassportSkinFactory(signer).getDeployTransaction(
+          defiPassportAddress,
+        ),
+        version: 1,
+        type: DeploymentType.global,
+        group: undefined,
+      },
+      networkConfig,
+    );
+
+    await verifyContract(hre, earlyPassportAddr, defiPassportAddress);
+  },
+);
