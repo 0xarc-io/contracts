@@ -1,17 +1,20 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import {
   ArcProxyFactory,
+  DefaultPassportSkin,
   DefaultPassportSkinFactory,
+  DefiPassport,
   MockSablierFactory,
+  MockStakingAccrualERC20V4,
+  MockStakingAccrualERC20V4Factory,
   StakingAccrualERC20,
   StakingAccrualERC20Factory,
-  StakingAccrualERC20V4,
-  StakingAccrualERC20V4Factory,
   TestToken,
   TestTokenFactory,
 } from '@src/typings';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
-import { utils } from 'ethers';
+import { expect } from 'chai';
+import { utils, BigNumber } from 'ethers';
 import { ethers } from 'hardhat';
 import { deployDefiPassport } from '../deployers';
 
@@ -20,7 +23,7 @@ const STAKE_AMOUNT = utils.parseEther('100');
 const INITIAL_BALANCE = STAKE_AMOUNT.mul('10');
 
 describe('StakingAccrualERC20V4', () => {
-  let contract: StakingAccrualERC20V4;
+  let contract: MockStakingAccrualERC20V4;
 
   let stakingToken: TestToken;
 
@@ -28,51 +31,12 @@ describe('StakingAccrualERC20V4', () => {
   let user1: SignerWithAddress;
   let user2: SignerWithAddress;
 
-  async function _baseContractSetup(): Promise<StakingAccrualERC20> {
-    let baseContract = await new StakingAccrualERC20Factory(admin).deploy();
-    const proxy = await new ArcProxyFactory(admin).deploy(
-      baseContract.address,
-      admin.address,
-      [],
-    );
-
-    // Set up defi passport
-    const defiPassportContract = await deployDefiPassport(admin);
-    await defiPassportContract.init(
-      'Defi Passport',
-      'DefiPassport',
-      admin.address,
-    );
-
-    const sablierContract = await new MockSablierFactory(admin).deploy();
-
-    baseContract = StakingAccrualERC20Factory.connect(proxy.address, admin);
-    await baseContract.init(
-      'stARCx',
-      'stARCx',
-      18,
-      stakingToken.address,
-      COOLDOWN_DURATION,
-      defiPassportContract.address,
-      sablierContract.address,
-    );
-
-    // Setup default skin for defi passport
-    const defaultPassportSkinContract = await new DefaultPassportSkinFactory(
-      admin,
-    ).deploy('Default passport skin nft', 'DPS');
-
-    await defaultPassportSkinContract.mint(admin.address, '');
-    const defaultSkinTokenId = await defaultPassportSkinContract.tokenOfOwnerByIndex(
-      admin.address,
-      0,
-    );
-
-    await defiPassportContract.setDefaultSkin(
-      defaultPassportSkinContract.address,
-      true,
-    );
-
+  async function _setupUsers(
+    baseContract: StakingAccrualERC20,
+    defiPassportContract: DefiPassport,
+    defaultPassportSkinContract: DefaultPassportSkin,
+    defaultSkinTokenId: BigNumber,
+  ) {
     // Mint test tokens to users
     const user1starcx = baseContract.connect(user1);
     const user2starcx = baseContract.connect(user2);
@@ -106,6 +70,74 @@ describe('StakingAccrualERC20V4', () => {
     // Two users stake
     await user1starcx.stake(STAKE_AMOUNT);
     await user2starcx.stake(STAKE_AMOUNT);
+  }
+
+  async function _setupDefiPassport() {
+    const defiPassportContract = await deployDefiPassport(admin);
+    await defiPassportContract.init(
+      'Defi Passport',
+      'DefiPassport',
+      admin.address,
+    );
+
+    const sablierContract = await new MockSablierFactory(admin).deploy();
+
+    // Setup default skin for defi passport
+    const defaultPassportSkinContract = await new DefaultPassportSkinFactory(
+      admin,
+    ).deploy('Default passport skin nft', 'DPS');
+
+    await defaultPassportSkinContract.mint(admin.address, '');
+    const defaultSkinTokenId = await defaultPassportSkinContract.tokenOfOwnerByIndex(
+      admin.address,
+      0,
+    );
+
+    await defiPassportContract.setDefaultSkin(
+      defaultPassportSkinContract.address,
+      true,
+    );
+
+    return {
+      defiPassportContract,
+      sablierContract,
+      defaultPassportSkinContract,
+      defaultSkinTokenId,
+    };
+  }
+
+  async function _baseContractSetup(): Promise<StakingAccrualERC20> {
+    let baseContract = await new StakingAccrualERC20Factory(admin).deploy();
+    const proxy = await new ArcProxyFactory(admin).deploy(
+      baseContract.address,
+      admin.address,
+      [],
+    );
+
+    const {
+      defiPassportContract,
+      sablierContract,
+      defaultPassportSkinContract,
+      defaultSkinTokenId,
+    } = await _setupDefiPassport();
+
+    baseContract = StakingAccrualERC20Factory.connect(proxy.address, admin);
+    await baseContract.init(
+      'stARCx',
+      'stARCx',
+      18,
+      stakingToken.address,
+      COOLDOWN_DURATION,
+      defiPassportContract.address,
+      sablierContract.address,
+    );
+
+    await _setupUsers(
+      baseContract,
+      defiPassportContract,
+      defaultPassportSkinContract,
+      defaultSkinTokenId,
+    );
 
     return baseContract;
   }
@@ -113,6 +145,8 @@ describe('StakingAccrualERC20V4', () => {
   before(async () => {
     const signers = await ethers.getSigners();
     admin = signers[0];
+    user1 = signers[1];
+    user2 = signers[2];
 
     stakingToken = await new TestTokenFactory(admin).deploy(
       'Staking Token',
@@ -127,18 +161,44 @@ describe('StakingAccrualERC20V4', () => {
     await stakingToken.mintShare(baseContract.address, STAKE_AMOUNT);
 
     // contract is upgraded
-    const v4Impl = await new StakingAccrualERC20V4Factory(admin).deploy();
+    const v4Impl = await new MockStakingAccrualERC20V4Factory(admin).deploy();
     const proxy = ArcProxyFactory.connect(baseContract.address, admin);
     await proxy.upgradeTo(v4Impl.address);
-    contract = StakingAccrualERC20V4Factory.connect(proxy.address, admin);
+    contract = MockStakingAccrualERC20V4Factory.connect(proxy.address, admin);
   });
 
   addSnapshotBeforeRestoreAfterEach();
 
   describe('Upgradability', () => {
-    it('ensures starcx balances are unchanged');
+    it('ensures starcx balances are unchanged', async () => {
+      expect(await contract.balanceOf(user1.address)).to.eq(STAKE_AMOUNT);
+      expect(await contract.balanceOf(user2.address)).to.eq(STAKE_AMOUNT);
+    });
 
-    it('ensures users can exit');
+    it('ensures users can exit', async () => {
+      const remainingAmt = INITIAL_BALANCE.sub(STAKE_AMOUNT);
+      // We are adding an extra STAKE_AMOUNT on top of what's staked to simulate
+      // rewards flowing into the contract. For this reason, the users end up with an
+      // additional STAKE_AMOUNT/2 in their wallet after exit.
+      const expectedExitAmt = INITIAL_BALANCE.add(STAKE_AMOUNT.div(2));
+
+      expect(await stakingToken.balanceOf(user1.address)).to.eq(remainingAmt);
+      expect(await stakingToken.balanceOf(user2.address)).to.eq(remainingAmt);
+
+      await contract.connect(user1).startExitCooldown();
+      await contract.setCurrentTimestamp(COOLDOWN_DURATION + 1);
+      await contract.connect(user1).exit();
+      expect(await stakingToken.balanceOf(user1.address)).to.eq(
+        expectedExitAmt,
+      );
+
+      await contract.connect(user2).startExitCooldown();
+      await contract.setCurrentTimestamp(COOLDOWN_DURATION * 2 + 1);
+      await contract.connect(user2).exit();
+      expect(await stakingToken.balanceOf(user2.address)).to.eq(
+        expectedExitAmt,
+      );
+    });
   });
 
   describe('#stake', () => {
