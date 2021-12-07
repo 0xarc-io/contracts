@@ -46,7 +46,7 @@ contract StakingAccrualERC20V4 is BaseERC20, PassportScoreVerifiable, Adminable,
     ISablier public sablierContract;
     uint256 public sablierStreamId;
 
-    bytes32 private _proofProtocol;
+    bytes32 public proofProtocol;
 
     /**
      * @notice Cooldown duration to be elapsed for users to exit
@@ -245,17 +245,23 @@ contract StakingAccrualERC20V4 is BaseERC20, PassportScoreVerifiable, Adminable,
         external
         onlyAdmin
     {
-        _proofProtocol = _protocol;
+        proofProtocol = _protocol;
 
-        emit ProofProtocolSet(_proofProtocol.toString());
+        emit ProofProtocolSet(proofProtocol.toString());
     }
 
     /* ========== Mutative Functions ========== */
 
     function stake(
-        uint256 _amount
+        uint256 _amount,
+        SapphireTypes.ScoreProof memory _proof
     )
         public
+        checkScoreProof(
+            _proof,
+            proofProtocol != bytes32(0),
+            true
+        )
     {
         claimStreamFunds();
 
@@ -295,7 +301,8 @@ contract StakingAccrualERC20V4 is BaseERC20, PassportScoreVerifiable, Adminable,
         uint256 _deadline,
         uint8 _v,
         bytes32 _r,
-        bytes32 _s
+        bytes32 _s,
+        SapphireTypes.ScoreProof memory _proof
     )
         public
     {
@@ -308,7 +315,7 @@ contract StakingAccrualERC20V4 is BaseERC20, PassportScoreVerifiable, Adminable,
             _r,
             _s
         );
-        stake(_amount);
+        stake(_amount, _proof);
     }
 
     /**
@@ -440,6 +447,6 @@ contract StakingAccrualERC20V4 is BaseERC20, PassportScoreVerifiable, Adminable,
         view
         returns (string memory)
     {
-        return _proofProtocol.toString();
+        return proofProtocol.toString();
     }
 }
