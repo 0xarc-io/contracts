@@ -1,4 +1,6 @@
+import { PassportScoreProof } from '@arc-types/sapphireCore';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
+import { PassportScoreTree } from '@src/MerkleTree';
 import {
   ArcProxyFactory,
   DefaultPassportSkin,
@@ -12,13 +14,14 @@ import {
   TestToken,
   TestTokenFactory,
 } from '@src/typings';
-import { getEmptyScoreProof } from '@src/utils';
+import { getEmptyScoreProof, getScoreProof } from '@src/utils';
 import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { utils, BigNumber } from 'ethers';
-import { ethers } from 'hardhat';
+import { generateContext, ITestContext } from '../context';
 import { deployDefiPassport } from '../deployers';
+import { sapphireFixture } from '../fixtures';
 
 const COOLDOWN_DURATION = 60;
 const DEFAULT_SCORE_THRESHOLD = 500;
@@ -29,10 +32,13 @@ describe('StakingAccrualERC20V4', () => {
   let contract: MockStakingAccrualERC20V4;
 
   let stakingToken: TestToken;
+  let tree: PassportScoreTree;
 
   let admin: SignerWithAddress;
   let user1: SignerWithAddress;
   let user2: SignerWithAddress;
+  let scoreProof1: PassportScoreProof;
+  let scoreProof2: PassportScoreProof;
 
   async function _setupUsers(
     baseContract: StakingAccrualERC20,
@@ -145,11 +151,10 @@ describe('StakingAccrualERC20V4', () => {
     return baseContract;
   }
 
-  before(async () => {
-    const signers = await ethers.getSigners();
-    admin = signers[0];
-    user1 = signers[1];
-    user2 = signers[2];
+  async function init(ctx: ITestContext) {
+    admin = ctx.signers.admin;
+    user1 = ctx.signers.scoredMinter;
+    user2 = ctx.signers.staker;
 
     stakingToken = await new TestTokenFactory(admin).deploy(
       'Staking Token',
@@ -168,6 +173,26 @@ describe('StakingAccrualERC20V4', () => {
     const proxy = ArcProxyFactory.connect(baseContract.address, admin);
     await proxy.upgradeTo(v4Impl.address);
     contract = MockStakingAccrualERC20V4Factory.connect(proxy.address, admin);
+  }
+
+  before(async () => {
+    await generateContext(sapphireFixture, init);
+
+    const score1 = {
+      account: user1.address,
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      score: BigNumber.from(DEFAULT_SCORE_THRESHOLD),
+    };
+    const score2 = {
+      account: user2.address,
+      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      score: BigNumber.from(DEFAULT_SCORE_THRESHOLD),
+    };
+
+    tree = new PassportScoreTree([score1, score2]);
+
+    scoreProof1 = getScoreProof(score1, tree);
+    scoreProof2 = getScoreProof(score2, tree);
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -205,12 +230,14 @@ describe('StakingAccrualERC20V4', () => {
   });
 
   describe('#stake', () => {
-    it('reverts if proof is set and no proof is provided', async () => {
+    beforeEach(async () => {
       await contract.setProofProtocol(
         utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       );
       await contract.setScoreThreshold(DEFAULT_SCORE_THRESHOLD);
+    });
 
+    it('reverts if proof is set and no proof is provided', async () => {
       expect(contract.getProofProtocol()).to.eq(DEFAULT_PROOF_PROTOCOL);
       expect(contract.getScoreThreshold()).to.eq(DEFAULT_SCORE_THRESHOLD);
 
@@ -224,7 +251,13 @@ describe('StakingAccrualERC20V4', () => {
       );
     });
 
-    it('reverts if proof is set and the wrong proof is passed');
+    it('reverts if proof is set and the wrong proof is passed', async () => {
+      await expect(
+        contract.connect(user1).stake(STAKE_AMOUNT, scoreProof2),
+      ).to.be.revertedWith(
+        'PassportScoreVerifiable: proof does not belong to the caller',
+      );
+    });
 
     it('reverts if proof is set and the score is smaller than the threshold');
 
