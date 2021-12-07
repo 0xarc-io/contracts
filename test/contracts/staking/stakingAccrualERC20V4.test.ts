@@ -12,6 +12,8 @@ import {
   TestToken,
   TestTokenFactory,
 } from '@src/typings';
+import { getEmptyScoreProof } from '@src/utils';
+import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { utils, BigNumber } from 'ethers';
@@ -19,6 +21,7 @@ import { ethers } from 'hardhat';
 import { deployDefiPassport } from '../deployers';
 
 const COOLDOWN_DURATION = 60;
+const DEFAULT_SCORE_THRESHOLD = 500;
 const STAKE_AMOUNT = utils.parseEther('100');
 const INITIAL_BALANCE = STAKE_AMOUNT.mul('10');
 
@@ -202,7 +205,24 @@ describe('StakingAccrualERC20V4', () => {
   });
 
   describe('#stake', () => {
-    it('reverts if proof is set and no proof is provided');
+    it('reverts if proof is set and no proof is provided', async () => {
+      await contract.setProofProtocol(
+        utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      );
+      await contract.setScoreThreshold(DEFAULT_SCORE_THRESHOLD);
+
+      expect(contract.getProofProtocol()).to.eq(DEFAULT_PROOF_PROTOCOL);
+      expect(contract.getScoreThreshold()).to.eq(DEFAULT_SCORE_THRESHOLD);
+
+      await expect(
+        contract.stake(
+          STAKE_AMOUNT,
+          getEmptyScoreProof(user1.address, DEFAULT_PROOF_PROTOCOL),
+        ),
+      ).to.be.revertedWith(
+        'PassportScoreVerifiable: proof does not belong to the caller',
+      );
+    });
 
     it('reverts if proof is set and the wrong proof is passed');
 
@@ -218,6 +238,12 @@ describe('StakingAccrualERC20V4', () => {
   describe('#setProofProtocol', () => {
     it('reverts if called by non-admin');
 
-    it('sets the proof protocol and the score threshold');
+    it('sets the proof protocol');
+  });
+
+  describe('#setScoreThreshold', () => {
+    it('reverts if called by non-admin');
+
+    it('sets the score threshold');
   });
 });
