@@ -2,20 +2,20 @@
 
 pragma solidity 0.8.4;
 
-import {Adminable} from "../lib/Adminable.sol";
-import {Initializable} from "../lib/Initializable.sol";
-import {Address} from "../lib/Address.sol";
-import {SafeERC20} from "../lib/SafeERC20.sol";
-import {SafeMath} from "../lib/SafeMath.sol";
-import {PassportScoreVerifiable} from "../lib/PassportScoreVerifiable.sol";
-import {Bytes32} from "../lib/Bytes32.sol";
+import {Adminable} from "../../lib/Adminable.sol";
+import {Initializable} from "../../lib/Initializable.sol";
+import {Address} from "../../lib/Address.sol";
+import {SafeERC20} from "../../lib/SafeERC20.sol";
+import {SafeMath} from "../../lib/SafeMath.sol";
+import {PassportScoreVerifiable} from "../../lib/PassportScoreVerifiable.sol";
+import {Bytes32} from "../../lib/Bytes32.sol";
 
-import {ISablier} from "../global/ISablier.sol";
-import {BaseERC20} from "../token/BaseERC20.sol";
-import {IPermittableERC20} from "../token/IPermittableERC20.sol";
-import {SapphireTypes} from "../sapphire/SapphireTypes.sol";
-import {ISapphirePassportScores} from "../sapphire/ISapphirePassportScores.sol";
-import {IERC721} from "../.openzeppelin/4.x/token/ERC721/IERC721.sol";
+import {ISablier} from "../../global/ISablier.sol";
+import {BaseERC20} from "../../token/BaseERC20.sol";
+import {IPermittableERC20} from "../../token/IPermittableERC20.sol";
+import {SapphireTypes} from "../../sapphire/SapphireTypes.sol";
+import {ISapphirePassportScores} from "../../sapphire/ISapphirePassportScores.sol";
+import {IERC721} from "../../.openzeppelin/4.x/token/ERC721/IERC721.sol";
 
 /**
  * @notice An ERC20 that allows users to deposit a given token, where their
@@ -26,7 +26,7 @@ import {IERC721} from "../.openzeppelin/4.x/token/ERC721/IERC721.sol";
  *         intent, which will trigger a cooldown after which they will be able
  *         to reclaim their share.
  */
-contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, Initializable {
+contract StakingAccrualERC20V4 is BaseERC20, PassportScoreVerifiable, Adminable, Initializable {
 
     /* ========== Libraries ========== */
 
