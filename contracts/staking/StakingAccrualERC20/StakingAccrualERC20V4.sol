@@ -56,6 +56,8 @@ contract StakingAccrualERC20V4 is BaseERC20, PassportScoreVerifiable, Adminable,
 
     IERC721 public defiPassportContract;
 
+    uint256 public scoreThreshold;
+
     /* ========== Events ========== */
 
     event ExitCooldownDurationSet(uint256 _duration);
@@ -77,6 +79,10 @@ contract StakingAccrualERC20V4 is BaseERC20, PassportScoreVerifiable, Adminable,
     event DefiPassportContractSet(address _defiPassportContract);
 
     event ProofProtocolSet(string _protocol);
+
+    event PassportScoresContractSet(address _passportScoresContract);
+
+    event ScoreThresholdSet(uint256 _threshold);
 
     /* ========== Constructor (ignore) ========== */
 
@@ -250,6 +256,33 @@ contract StakingAccrualERC20V4 is BaseERC20, PassportScoreVerifiable, Adminable,
         emit ProofProtocolSet(proofProtocol.toString());
     }
 
+    function setPassportScoresContract(
+        address _passportScoresContract
+    )
+        external
+        onlyAdmin
+    {
+        require (
+            _passportScoresContract.isContract(),
+            "StakingAccrualERC20: address is not a contract"
+        );
+
+        passportScoresContract = ISapphirePassportScores(_passportScoresContract);
+
+        emit PassportScoresContractSet(_passportScoresContract);
+    }
+
+    function setScoreThreshold(
+        uint256 _threshold
+    )
+        external
+        onlyAdmin
+    {
+        scoreThreshold = _threshold;
+
+        emit ScoreThresholdSet(_threshold);
+    }
+
     /* ========== Mutative Functions ========== */
 
     function stake(
@@ -263,8 +296,6 @@ contract StakingAccrualERC20V4 is BaseERC20, PassportScoreVerifiable, Adminable,
             true
         )
     {
-        claimStreamFunds();
-
         uint256 cooldownTimestamp = cooldowns[msg.sender];
 
         require (
@@ -276,6 +307,15 @@ contract StakingAccrualERC20V4 is BaseERC20, PassportScoreVerifiable, Adminable,
             defiPassportContract.balanceOf(msg.sender) > 0,
             "StakingAccrualERC20: user has to have passport"
         );
+
+        if (proofProtocol != bytes32(0)) {
+            require(
+                _proof.score >= scoreThreshold,
+                "StakingAccrualERC20V4: score is below threshold"
+            );
+        }
+
+        claimStreamFunds();
 
         // Gets the amount of the staking token locked in the contract
         uint256 totalStakingToken = stakingToken.balanceOf(address(this));
