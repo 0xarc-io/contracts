@@ -13,15 +13,13 @@ import {
 import { MockStakingAccrualERC20 } from '@src/typings/MockStakingAccrualERC20';
 import { MockStakingAccrualERC20Factory } from '@src/typings/MockStakingAccrualERC20Factory';
 import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
-import {
-  addSnapshotBeforeRestoreAfterEach,
-} from '@test/helpers/testingUtils';
+import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { constants, utils } from 'ethers';
 import { ethers } from 'hardhat';
-import { generateContext } from '../context';
-import { deployDefiPassport } from '../deployers';
-import { sapphireFixture } from '../fixtures';
+import { generateContext } from '../../context';
+import { deployDefiPassport } from '../../deployers';
+import { sapphireFixture } from '../../fixtures';
 
 const STAKE_AMOUNT = utils.parseEther('100');
 const COOLDOWN_DURATION = 60;
@@ -42,7 +40,7 @@ describe('StakingAccrualERC20', () => {
   let user2starcx: MockStakingAccrualERC20;
 
   let sablierContract: MockSablier;
-  
+
   let defiPassportContract: DefiPassport;
 
   async function createStream(setStreamId = false) {
@@ -106,7 +104,7 @@ describe('StakingAccrualERC20', () => {
     user2 = signers[2];
     skinManager = signers[3];
     userWithoutPassport = signers[4];
-    
+
     defiPassportContract = await deployDefiPassport(admin);
     await defiPassportContract.init(
       'Defi Passport',
@@ -131,20 +129,35 @@ describe('StakingAccrualERC20', () => {
     await stakingToken.connect(user2).approve(starcx.address, INITIAL_BALANCE);
 
     // Setup default skin for defi passport
-    const defaultPassportSkinContract = await new DefaultPassportSkinFactory(admin)
-      .deploy('Default passport skin nft', 'DPS');
-      
+    const defaultPassportSkinContract = await new DefaultPassportSkinFactory(
+      admin,
+    ).deploy('Default passport skin nft', 'DPS');
+
     await defaultPassportSkinContract.mint(admin.address, '');
-    const defaultSkinTokenId = await defaultPassportSkinContract
-      .tokenOfOwnerByIndex(admin.address, 0);
+    const defaultSkinTokenId = await defaultPassportSkinContract.tokenOfOwnerByIndex(
+      admin.address,
+      0,
+    );
 
     await defiPassportContract
-        .connect(skinManager)
-        .setDefaultSkin(defaultPassportSkinContract.address, true);
+      .connect(skinManager)
+      .setDefaultSkin(defaultPassportSkinContract.address, true);
 
     // Create a passport for users
-    await defiPassportContract.connect(admin).mint(user1.address, defaultPassportSkinContract.address, defaultSkinTokenId)
-    await defiPassportContract.connect(admin).mint(user2.address, defaultPassportSkinContract.address, defaultSkinTokenId)
+    await defiPassportContract
+      .connect(admin)
+      .mint(
+        user1.address,
+        defaultPassportSkinContract.address,
+        defaultSkinTokenId,
+      );
+    await defiPassportContract
+      .connect(admin)
+      .mint(
+        user2.address,
+        defaultPassportSkinContract.address,
+        defaultSkinTokenId,
+      );
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -386,7 +399,9 @@ describe('StakingAccrualERC20', () => {
 
         await expect(
           starcx.setDefiPassportContract(newCs.address),
-        ).to.be.revertedWith('StakingAccrualERC20: the same defi passport address is already set');
+        ).to.be.revertedWith(
+          'StakingAccrualERC20: the same defi passport address is already set',
+        );
       });
 
       it('sets a new defi passport contract', async () => {
@@ -405,7 +420,9 @@ describe('StakingAccrualERC20', () => {
   describe('Mutating functions', () => {
     describe('#stake', () => {
       it('reverts if user does not have a passport', async () => {
-        expect(await defiPassportContract.balanceOf(userWithoutPassport.address)).eq(0)
+        expect(
+          await defiPassportContract.balanceOf(userWithoutPassport.address),
+        ).eq(0);
         await expect(
           starcx.connect(userWithoutPassport).stake(STAKE_AMOUNT),
         ).to.be.revertedWith('StakingAccrualERC20: user has to have passport');
@@ -413,9 +430,9 @@ describe('StakingAccrualERC20', () => {
 
       it('reverts if staking more than balance', async () => {
         const balance = await stakingToken.balanceOf(user1.address);
-        await expect(
-          user1starcx.stake(balance.add(1)),
-        ).to.be.revertedWith('SafeERC20: TRANSFER_FROM_FAILED');
+        await expect(user1starcx.stake(balance.add(1))).to.be.revertedWith(
+          'SafeERC20: TRANSFER_FROM_FAILED',
+        );
       });
 
       it(`reverts if the user's cooldown timestamp is > 0`, async () => {
@@ -423,9 +440,7 @@ describe('StakingAccrualERC20', () => {
 
         await user1starcx.startExitCooldown();
 
-        await expect(
-          user1starcx.stake(STAKE_AMOUNT),
-        ).to.be.revertedWith(
+        await expect(user1starcx.stake(STAKE_AMOUNT)).to.be.revertedWith(
           'StakingAccrualERC20: cannot stake during cooldown period',
         );
       });
