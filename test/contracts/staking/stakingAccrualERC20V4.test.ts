@@ -7,6 +7,7 @@ import {
   DefaultPassportSkinFactory,
   DefiPassport,
   MockSablierFactory,
+  MockSapphirePassportScores,
   MockStakingAccrualERC20V4,
   MockStakingAccrualERC20V4Factory,
   StakingAccrualERC20,
@@ -18,7 +19,7 @@ import { getEmptyScoreProof, getScoreProof } from '@src/utils';
 import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
-import { utils, BigNumber } from 'ethers';
+import { utils, BigNumber, constants } from 'ethers';
 import { generateContext, ITestContext } from '../context';
 import { deployDefiPassport } from '../deployers';
 import { sapphireFixture } from '../fixtures';
@@ -33,6 +34,7 @@ describe('StakingAccrualERC20V4', () => {
 
   let stakingToken: TestToken;
   let tree: PassportScoreTree;
+  let passportScores: MockSapphirePassportScores;
 
   let admin: SignerWithAddress;
   let user1: SignerWithAddress;
@@ -176,7 +178,8 @@ describe('StakingAccrualERC20V4', () => {
   }
 
   before(async () => {
-    await generateContext(sapphireFixture, init);
+    const ctx = await generateContext(sapphireFixture, init);
+    passportScores = ctx.contracts.sapphire.passportScores;
 
     const score1 = {
       account: user1.address,
@@ -193,6 +196,8 @@ describe('StakingAccrualERC20V4', () => {
 
     scoreProof1 = getScoreProof(score1, tree);
     scoreProof2 = getScoreProof(score2, tree);
+
+    await contract.setPassportScoresContract(passportScores.address);
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -259,24 +264,87 @@ describe('StakingAccrualERC20V4', () => {
       );
     });
 
-    it('reverts if proof is set and the score is smaller than the threshold');
+    it('reverts if proof is set and the score is smaller than the threshold', async () => {
+      await contract.setScoreThreshold(DEFAULT_SCORE_THRESHOLD + 1);
+      await expect(
+        contract.connect(user1).stake(STAKE_AMOUNT, scoreProof1),
+      ).to.be.revertedWith('StakingAccrualERC20V4: score is below threshold');
+    });
 
-    it(
-      'stakes if proof is set and score is greater than or equal to the threshold',
-    );
+    it('stakes if proof is set and score is greater than or equal to the threshold', async () => {
+      expect(await contract.balanceOf(user1.address)).to.eq(STAKE_AMOUNT);
 
-    it('stakes if no proof is passed');
+      await contract.connect(user1).stake(STAKE_AMOUNT, scoreProof1);
+
+      expect(await contract.balanceOf(user1.address)).to.eq(
+        STAKE_AMOUNT.mul(2),
+      );
+    });
+
+    it('stakes if no proof is passed', async () => {
+      await contract.setProofProtocol(constants.HashZero);
+
+      expect(await contract.balanceOf(user1.address)).to.eq(STAKE_AMOUNT);
+
+      await contract
+        .connect(user1)
+        .stake(STAKE_AMOUNT, getEmptyScoreProof(user1.address));
+
+      expect(await contract.balanceOf(user1.address)).to.eq(
+        STAKE_AMOUNT.mul(2),
+      );
+    });
   });
 
   describe('#setProofProtocol', () => {
-    it('reverts if called by non-admin');
+    it('reverts if called by non-admin', async () => {
+      await expect(
+        contract.connect(user1).setProofProtocol(utils.formatBytes32String('')),
+      ).to.be.revertedWith('StakingAccrualERC20V4: caller is not admin');
+    });
 
-    it('sets the proof protocol');
+    it('sets the proof protocol', async () => {
+      expect(await contract.getProofProtocol()).to.eq(DEFAULT_PROOF_PROTOCOL);
+
+      await contract.setProofProtocol(utils.formatBytes32String('test'));
+
+      expect(await contract.getProofProtocol()).to.eq('test');
+    });
   });
 
   describe('#setScoreThreshold', () => {
-    it('reverts if called by non-admin');
+    it('reverts if called by non-admin', async () => {
+      await expect(
+        contract.connect(user1).setScoreThreshold(21),
+      ).to.be.revertedWith('StakingAccrualERC20V4: caller is not admin');
+    });
 
-    it('sets the score threshold');
+    it('sets the score threshold', async () => {
+      expect(await contract.scoreThreshold()).to.eq(DEFAULT_SCORE_THRESHOLD);
+
+      await contract.setScoreThreshold(DEFAULT_SCORE_THRESHOLD + 1);
+
+      expect(await contract.scoreThreshold()).to.eq(
+        DEFAULT_SCORE_THRESHOLD + 1,
+      );
+    });
+  });
+
+  describe('#setPassportScoresContract', () => {
+    it('reverts if called by non-admin', async () => {
+      await expect(
+        contract.connect(user1).setPassportScoresContract(contract.address),
+      ).to.be.revertedWith('StakingAccrualERC20V4: caller is not admin');
+    });
+
+    it('sets the passport scores contract', async () => {
+      expect(await contract.passportScoresContract()).to.eq(
+        passportScores.address,
+      );
+
+      await contract.setPassportScoresContract(contract.address);
+
+      expect(await contract.passportScoresContract()).to.eq(contract.address);
+    });
   });
 });
