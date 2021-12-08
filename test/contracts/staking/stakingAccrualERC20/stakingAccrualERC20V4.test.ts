@@ -23,9 +23,9 @@ import {
 } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { utils, BigNumber, constants } from 'ethers';
-import { generateContext, ITestContext } from '../context';
-import { deployDefiPassport } from '../deployers';
-import { sapphireFixture } from '../fixtures';
+import { generateContext, ITestContext } from '../../context';
+import { deployDefiPassport } from '../../deployers';
+import { sapphireFixture } from '../../fixtures';
 
 const COOLDOWN_DURATION = 60;
 const DEFAULT_SCORE_THRESHOLD = 500;
