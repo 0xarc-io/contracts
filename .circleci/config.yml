@@ -36,8 +36,10 @@ jobs:
           command: |
             circleci tests glob "**.test.ts" | circleci tests split --split-by=timings
             yarn test
+          environment:
+            MOCHA_FILE: ~/mocha/test-results.xml
       - run:
           name: Publish release
           command: yarn semantic-release
       - store_test_results:
-          path: test-results
+          path: ~/mocha
