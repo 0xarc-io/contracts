@@ -32,12 +32,16 @@ jobs:
           name: Transpile Typescript
           command: yarn tsc
       - run:
+          name: Create test report folder
+          command: mkdir ~/mocha
+      - run:
           name: Test Contracts
           command: |
-            circleci tests glob "**.test.ts" | circleci tests split --split-by=timings
-            yarn test
+            circleci tests glob "**.test.ts" | circleci tests split --split-by=timings > /tmp/tests-to-run
+            yarn test:ci --reporter mocha-junit-reporter $(cat /tmp/tests-to-run)
           environment:
             MOCHA_FILE: ~/mocha/test-results.xml
+          when: always
       - run:
           name: Publish release
           command: yarn semantic-release
