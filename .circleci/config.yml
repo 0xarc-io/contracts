@@ -14,7 +14,7 @@ jobs:
       - image: circleci/node:12.18.0
       - image: trufflesuite/ganache-cli:v6.9.1
         command: ganache-cli --networkId 50 --accounts 20 -l 19000000 -e 10000000000 -m 'concert load couple harbor equip island argue ramp clarify fence smart topic' -h 0.0.0.0
-    parallelism: 4
+    parallelism: 10
     steps:
       - checkout
       - restore_cache:
@@ -39,11 +39,9 @@ jobs:
           command: |
             circleci tests glob "test/**/*.test.ts" | circleci tests split --split-by=timings > /tmp/tests-to-run
             yarn test:ci --file "$(sed ':a; N; $!ba; s/\n/,/g' /tmp/tests-to-run)"
-          environment:
-            MOCHA_FILE: ~/mocha/test-results.xml
           when: always
       - run:
           name: Publish release
           command: yarn semantic-release
       - store_test_results:
-          path: ~/mocha
+          path: tests-results.xml
