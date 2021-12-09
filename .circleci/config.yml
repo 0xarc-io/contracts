@@ -38,7 +38,7 @@ jobs:
           name: Test Contracts
           command: |
             circleci tests glob "test/**/*.test.ts" | circleci tests split --split-by=timings > /tmp/tests-to-run
-            yarn test:ci $(cat /tmp/tests-to-run)
+            yarn test:ci --file (readarray -t ARRAY < /tmp/tests-to-run; IFS=' --file '; echo "${ARRAY[*]}")
           environment:
             MOCHA_FILE: ~/mocha/test-results.xml
           when: always
