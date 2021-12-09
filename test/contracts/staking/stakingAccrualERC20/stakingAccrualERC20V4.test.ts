@@ -13,10 +13,11 @@ import {
   MockStakingAccrualERC20V4Factory,
   StakingAccrualERC20,
   StakingAccrualERC20Factory,
+  StakingAccrualERC20V4,
   TestToken,
   TestTokenFactory,
 } from '@src/typings';
-import { getEmptyScoreProof, getScoreProof } from '@src/utils';
+import { approve, getEmptyScoreProof, getScoreProof } from '@src/utils';
 import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
 import {
   addSnapshotBeforeRestoreAfterEach,
@@ -37,6 +38,13 @@ const DEFAULT_SCORE_THRESHOLD = 500;
 const STAKE_AMOUNT = utils.parseEther('100');
 const INITIAL_BALANCE = STAKE_AMOUNT.mul('10');
 
+interface IDPDetails {
+  defiPassportContract: DefiPassport;
+  sablierContract: MockSablier;
+  defaultPassportSkinContract: DefaultPassportSkin;
+  defaultSkinTokenId: BigNumber;
+}
+
 describe('StakingAccrualERC20V4', () => {
   let contract: MockStakingAccrualERC20V4;
 
@@ -44,6 +52,7 @@ describe('StakingAccrualERC20V4', () => {
   let tree: PassportScoreTree;
   let passportScores: MockSapphirePassportScores;
   let sablierContract: MockSablier;
+  let defiPassportDetails: IDPDetails;
 
   let admin: SignerWithAddress;
   let user1: SignerWithAddress;
@@ -51,45 +60,17 @@ describe('StakingAccrualERC20V4', () => {
   let scoreProof1: PassportScoreProof;
   let scoreProof2: PassportScoreProof;
 
-  async function _setupUsers(
-    baseContract: StakingAccrualERC20,
-    defiPassportContract: DefiPassport,
-    defaultPassportSkinContract: DefaultPassportSkin,
-    defaultSkinTokenId: BigNumber,
-  ) {
-    // Mint test tokens to users
-    // const contract.connect(user1) = baseContract.connect(user1);
-    // const contract.connect(user2) = baseContract.connect(user2);
-
+  async function _setupUserBalances() {
     await stakingToken.mintShare(user1.address, INITIAL_BALANCE);
     await stakingToken.mintShare(user2.address, INITIAL_BALANCE);
 
     // Mint DefiPassports to users
     await stakingToken
       .connect(user1)
-      .approve(baseContract.address, INITIAL_BALANCE);
+      .approve(contract.address, INITIAL_BALANCE);
     await stakingToken
       .connect(user2)
-      .approve(baseContract.address, INITIAL_BALANCE);
-
-    await defiPassportContract
-      .connect(admin)
-      .mint(
-        user1.address,
-        defaultPassportSkinContract.address,
-        defaultSkinTokenId,
-      );
-    await defiPassportContract
-      .connect(admin)
-      .mint(
-        user2.address,
-        defaultPassportSkinContract.address,
-        defaultSkinTokenId,
-      );
-
-    // Two users stake
-    // await contract.connect(user1).stake(STAKE_AMOUNT);
-    // await contract.connect(user2).stake(STAKE_AMOUNT);
+      .approve(contract.address, INITIAL_BALANCE);
   }
 
   async function _setupDefiPassport() {
@@ -118,7 +99,23 @@ describe('StakingAccrualERC20V4', () => {
       true,
     );
 
-    return {
+    // Mint defi passport to users
+    await defiPassportContract
+      .connect(admin)
+      .mint(
+        user1.address,
+        defaultPassportSkinContract.address,
+        defaultSkinTokenId,
+      );
+    await defiPassportContract
+      .connect(admin)
+      .mint(
+        user2.address,
+        defaultPassportSkinContract.address,
+        defaultSkinTokenId,
+      );
+
+    defiPassportDetails = {
       defiPassportContract,
       sablierContract,
       defaultPassportSkinContract,
@@ -134,12 +131,7 @@ describe('StakingAccrualERC20V4', () => {
       [],
     );
 
-    const {
-      defiPassportContract,
-      sablierContract,
-      defaultPassportSkinContract,
-      defaultSkinTokenId,
-    } = await _setupDefiPassport();
+    const { defiPassportContract } = defiPassportDetails;
 
     baseContract = StakingAccrualERC20Factory.connect(proxy.address, admin);
     await baseContract.init(
@@ -152,13 +144,6 @@ describe('StakingAccrualERC20V4', () => {
       sablierContract.address,
     );
 
-    await _setupUsers(
-      baseContract,
-      defiPassportContract,
-      defaultPassportSkinContract,
-      defaultSkinTokenId,
-    );
-
     return baseContract;
   }
 
@@ -167,6 +152,8 @@ describe('StakingAccrualERC20V4', () => {
     user1 = ctx.signers.scoredMinter;
     user2 = ctx.signers.staker;
 
+    await _setupDefiPassport();
+
     stakingToken = await new TestTokenFactory(admin).deploy(
       'Staking Token',
       'STK',
@@ -174,16 +161,29 @@ describe('StakingAccrualERC20V4', () => {
     );
 
     // set up base contract with two DefiPassport owners who are also stakers
-    const baseContract = await _baseContractSetup();
+    // const baseContract = await _baseContractSetup();
 
     // top up some tokens on the contract
     // await stakingToken.mintShare(baseContract.address, STAKE_AMOUNT);
 
     // contract is upgraded
     const v4Impl = await new MockStakingAccrualERC20V4Factory(admin).deploy();
-    const proxy = ArcProxyFactory.connect(baseContract.address, admin);
+    const proxy = await new ArcProxyFactory(admin).deploy(
+      v4Impl.address,
+      admin.address,
+      [],
+    );
     await proxy.upgradeTo(v4Impl.address);
     contract = MockStakingAccrualERC20V4Factory.connect(proxy.address, admin);
+
+    await contract.init(
+      'stARCx',
+      'stARCx',
+      18,
+      stakingToken.address,
+      COOLDOWN_DURATION,
+      defiPassportDetails.sablierContract.address,
+    );
   }
 
   before(async () => {
@@ -211,6 +211,8 @@ describe('StakingAccrualERC20V4', () => {
       passportScores.connect(ctx.signers.interestSetter),
       tree.getHexRoot(),
     );
+
+    await _setupUserBalances();
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -918,11 +920,48 @@ describe('StakingAccrualERC20V4', () => {
     });
   });
 
-  describe.skip('Upgrade specific tests', () => {
+  describe('Upgrade specific tests', () => {
+    let upgradedContract: StakingAccrualERC20V4;
+
+    before(async () => {
+      const baseContract = await _baseContractSetup();
+
+      // Have two users stake on the base contract
+      await approve(
+        STAKE_AMOUNT.mul(2),
+        stakingToken.address,
+        baseContract.address,
+        user1,
+      );
+      await approve(
+        STAKE_AMOUNT.mul(2),
+        stakingToken.address,
+        baseContract.address,
+        user2,
+      );
+      await baseContract.connect(user1).stake(STAKE_AMOUNT);
+      await baseContract.connect(user2).stake(STAKE_AMOUNT);
+      // Top up contract to simulate added rewards
+      await stakingToken.mintShare(baseContract.address, STAKE_AMOUNT);
+
+      // Upgrade contract
+      const v4Impl = await new MockStakingAccrualERC20V4Factory(admin).deploy();
+      const proxy = ArcProxyFactory.connect(baseContract.address, admin);
+      await proxy.upgradeTo(v4Impl.address);
+      upgradedContract = MockStakingAccrualERC20V4Factory.connect(
+        proxy.address,
+        admin,
+      );
+    });
+
     describe('Upgradability', () => {
       it('ensures starcx balances are unchanged', async () => {
-        expect(await contract.balanceOf(user1.address)).to.eq(STAKE_AMOUNT);
-        expect(await contract.balanceOf(user2.address)).to.eq(STAKE_AMOUNT);
+        expect(await upgradedContract.balanceOf(user1.address)).to.eq(
+          STAKE_AMOUNT,
+        );
+        expect(await upgradedContract.balanceOf(user2.address)).to.eq(
+          STAKE_AMOUNT,
+        );
       });
 
       it('ensures users can exit', async () => {
@@ -935,16 +974,16 @@ describe('StakingAccrualERC20V4', () => {
         expect(await stakingToken.balanceOf(user1.address)).to.eq(remainingAmt);
         expect(await stakingToken.balanceOf(user2.address)).to.eq(remainingAmt);
 
-        await contract.connect(user1).startExitCooldown();
-        await contract.setCurrentTimestamp(COOLDOWN_DURATION + 1);
-        await contract.connect(user1).exit();
+        await upgradedContract.connect(user1).startExitCooldown();
+        await upgradedContract.setCurrentTimestamp(COOLDOWN_DURATION + 1);
+        await upgradedContract.connect(user1).exit();
         expect(await stakingToken.balanceOf(user1.address)).to.eq(
           expectedExitAmt,
         );
 
-        await contract.connect(user2).startExitCooldown();
-        await contract.setCurrentTimestamp(COOLDOWN_DURATION * 2 + 1);
-        await contract.connect(user2).exit();
+        await upgradedContract.connect(user2).startExitCooldown();
+        await upgradedContract.setCurrentTimestamp(COOLDOWN_DURATION * 2 + 1);
+        await upgradedContract.connect(user2).exit();
         expect(await stakingToken.balanceOf(user2.address)).to.eq(
           expectedExitAmt,
         );
@@ -953,22 +992,30 @@ describe('StakingAccrualERC20V4', () => {
 
     describe('#stake', () => {
       beforeEach(async () => {
-        expect(await contract.passportScoresContract()).to.eq(
+        await upgradedContract.setPassportScoresContract(
           passportScores.address,
         );
 
-        await contract.setProofProtocol(
+        expect(await upgradedContract.passportScoresContract()).to.eq(
+          passportScores.address,
+        );
+
+        await upgradedContract.setProofProtocol(
           utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
         );
-        await contract.setScoreThreshold(DEFAULT_SCORE_THRESHOLD);
+        await upgradedContract.setScoreThreshold(DEFAULT_SCORE_THRESHOLD);
       });
 
       it('reverts if proof is set and no proof is provided', async () => {
-        expect(await contract.getProofProtocol()).to.eq(DEFAULT_PROOF_PROTOCOL);
-        expect(await contract.scoreThreshold()).to.eq(DEFAULT_SCORE_THRESHOLD);
+        expect(await upgradedContract.getProofProtocol()).to.eq(
+          DEFAULT_PROOF_PROTOCOL,
+        );
+        expect(await upgradedContract.scoreThreshold()).to.eq(
+          DEFAULT_SCORE_THRESHOLD,
+        );
 
         await expect(
-          contract.stake(
+          upgradedContract.stake(
             STAKE_AMOUNT,
             getEmptyScoreProof(
               user1.address,
@@ -982,32 +1029,38 @@ describe('StakingAccrualERC20V4', () => {
 
       it('reverts if proof is set and the wrong proof is passed', async () => {
         await expect(
-          contract.connect(user1).stake(STAKE_AMOUNT, scoreProof2),
+          upgradedContract.connect(user1).stake(STAKE_AMOUNT, scoreProof2),
         ).to.be.revertedWith(
           'PassportScoreVerifiable: proof does not belong to the caller',
         );
       });
 
       it('reverts if proof is set and the score is smaller than the threshold', async () => {
-        await contract.setScoreThreshold(DEFAULT_SCORE_THRESHOLD + 1);
+        await upgradedContract.setScoreThreshold(DEFAULT_SCORE_THRESHOLD + 1);
         await expect(
-          contract.connect(user1).stake(STAKE_AMOUNT, scoreProof1),
+          upgradedContract.connect(user1).stake(STAKE_AMOUNT, scoreProof1),
         ).to.be.revertedWith('StakingAccrualERC20V4: score is below threshold');
       });
 
       it('stakes if proof is set and score is greater than or equal to the threshold', async () => {
-        expect(await contract.getProofProtocol()).to.eq(DEFAULT_PROOF_PROTOCOL);
-        expect(await contract.scoreThreshold()).to.eq(DEFAULT_SCORE_THRESHOLD);
-
-        expect(await contract.balanceOf(user1.address)).to.eq(STAKE_AMOUNT);
-
-        await contract.connect(user1).stake(STAKE_AMOUNT, scoreProof1);
-
-        const totalShares = await contract.totalSupply();
-        const totalStakingToken = await stakingToken.balanceOf(
-          contract.address,
+        expect(await upgradedContract.getProofProtocol()).to.eq(
+          DEFAULT_PROOF_PROTOCOL,
         );
-        expect(await contract.balanceOf(user1.address)).to.eq(
+        expect(await upgradedContract.scoreThreshold()).to.eq(
+          DEFAULT_SCORE_THRESHOLD,
+        );
+
+        expect(await upgradedContract.balanceOf(user1.address)).to.eq(
+          STAKE_AMOUNT,
+        );
+
+        await upgradedContract.connect(user1).stake(STAKE_AMOUNT, scoreProof1);
+
+        const totalShares = await upgradedContract.totalSupply();
+        const totalStakingToken = await stakingToken.balanceOf(
+          upgradedContract.address,
+        );
+        expect(await upgradedContract.balanceOf(user1.address)).to.eq(
           STAKE_AMOUNT.add(
             STAKE_AMOUNT.mul(totalShares).div(totalStakingToken),
           ),
@@ -1015,19 +1068,21 @@ describe('StakingAccrualERC20V4', () => {
       });
 
       it('stakes if no proof is passed', async () => {
-        await contract.setProofProtocol(constants.HashZero);
+        await upgradedContract.setProofProtocol(constants.HashZero);
 
-        expect(await contract.balanceOf(user1.address)).to.eq(STAKE_AMOUNT);
+        expect(await upgradedContract.balanceOf(user1.address)).to.eq(
+          STAKE_AMOUNT,
+        );
 
-        await contract
+        await upgradedContract
           .connect(user1)
           .stake(STAKE_AMOUNT, getEmptyScoreProof(user1.address));
 
-        const totalShares = await contract.totalSupply();
+        const totalShares = await upgradedContract.totalSupply();
         const totalStakingToken = await stakingToken.balanceOf(
-          contract.address,
+          upgradedContract.address,
         );
-        expect(await contract.balanceOf(user1.address)).to.eq(
+        expect(await upgradedContract.balanceOf(user1.address)).to.eq(
           STAKE_AMOUNT.add(
             STAKE_AMOUNT.mul(totalShares).div(totalStakingToken),
           ),
@@ -1038,52 +1093,62 @@ describe('StakingAccrualERC20V4', () => {
     describe('#setProofProtocol', () => {
       it('reverts if called by non-admin', async () => {
         await expect(
-          contract
+          upgradedContract
             .connect(user1)
             .setProofProtocol(utils.formatBytes32String('')),
         ).to.be.revertedWith('Adminable: caller is not admin');
       });
 
       it('sets the proof protocol', async () => {
-        expect(await contract.getProofProtocol()).to.eq('');
+        expect(await upgradedContract.getProofProtocol()).to.eq('');
 
-        await contract.setProofProtocol(utils.formatBytes32String('test'));
+        await upgradedContract.setProofProtocol(
+          utils.formatBytes32String('test'),
+        );
 
-        expect(await contract.getProofProtocol()).to.eq('test');
+        expect(await upgradedContract.getProofProtocol()).to.eq('test');
       });
     });
 
     describe('#setScoreThreshold', () => {
       it('reverts if called by non-admin', async () => {
         await expect(
-          contract.connect(user1).setScoreThreshold(21),
+          upgradedContract.connect(user1).setScoreThreshold(21),
         ).to.be.revertedWith('Adminable: caller is not admin');
       });
 
       it('sets the score threshold', async () => {
-        expect(await contract.scoreThreshold()).to.eq(0);
+        expect(await upgradedContract.scoreThreshold()).to.eq(0);
 
-        await contract.setScoreThreshold(DEFAULT_SCORE_THRESHOLD);
+        await upgradedContract.setScoreThreshold(DEFAULT_SCORE_THRESHOLD);
 
-        expect(await contract.scoreThreshold()).to.eq(DEFAULT_SCORE_THRESHOLD);
+        expect(await upgradedContract.scoreThreshold()).to.eq(
+          DEFAULT_SCORE_THRESHOLD,
+        );
       });
     });
 
     describe('#setPassportScoresContract', () => {
       it('reverts if called by non-admin', async () => {
         await expect(
-          contract.connect(user1).setPassportScoresContract(contract.address),
+          upgradedContract
+            .connect(user1)
+            .setPassportScoresContract(upgradedContract.address),
         ).to.be.revertedWith('Adminable: caller is not admin');
       });
 
       it('sets the passport scores contract', async () => {
-        expect(await contract.passportScoresContract()).to.eq(
+        expect(await upgradedContract.passportScoresContract()).to.eq(
+          constants.AddressZero,
+        );
+
+        await upgradedContract.setPassportScoresContract(
           passportScores.address,
         );
 
-        await contract.setPassportScoresContract(contract.address);
-
-        expect(await contract.passportScoresContract()).to.eq(contract.address);
+        expect(await upgradedContract.passportScoresContract()).to.eq(
+          passportScores.address,
+        );
       });
     });
   });
