@@ -27,7 +27,9 @@ import { utils, BigNumber, constants } from 'ethers';
 import { generateContext, ITestContext } from '../../context';
 import { deployDefiPassport } from '../../deployers';
 import { sapphireFixture } from '../../fixtures';
+import checkUser from './checkUserBalance';
 import createStream from './createSablierStream';
+import waitCooldown from './waitCooldown';
 
 const COOLDOWN_DURATION = 60;
 const STREAM_DURATION = 10;
@@ -56,8 +58,8 @@ describe('StakingAccrualERC20V4', () => {
     defaultSkinTokenId: BigNumber,
   ) {
     // Mint test tokens to users
-    // const user1starcx = baseContract.connect(user1);
-    // const user2starcx = baseContract.connect(user2);
+    // const contract.connect(user1) = baseContract.connect(user1);
+    // const contract.connect(user2) = baseContract.connect(user2);
 
     await stakingToken.mintShare(user1.address, INITIAL_BALANCE);
     await stakingToken.mintShare(user2.address, INITIAL_BALANCE);
@@ -86,8 +88,8 @@ describe('StakingAccrualERC20V4', () => {
       );
 
     // Two users stake
-    // await user1starcx.stake(STAKE_AMOUNT);
-    // await user2starcx.stake(STAKE_AMOUNT);
+    // await contract.connect(user1).stake(STAKE_AMOUNT);
+    // await contract.connect(user2).stake(STAKE_AMOUNT);
   }
 
   async function _setupDefiPassport() {
@@ -480,6 +482,438 @@ describe('StakingAccrualERC20V4', () => {
             STAKE_AMOUNT.div(10).mul(2),
           );
         });
+      });
+    });
+
+    describe('Mutating functions', () => {
+      describe('#stake', () => {
+        it('reverts if staking more than balance', async () => {
+          const balance = await stakingToken.balanceOf(user1.address);
+          await expect(
+            contract.connect(user1).stake(balance.add(1), scoreProof1),
+          ).to.be.revertedWith('SafeERC20: TRANSFER_FROM_FAILED');
+        });
+
+        it(`reverts if the user's cooldown timestamp is > 0`, async () => {
+          await contract.connect(user1).stake(STAKE_AMOUNT, scoreProof1);
+
+          await contract.connect(user1).startExitCooldown();
+
+          await expect(
+            contract.connect(user1).stake(STAKE_AMOUNT, scoreProof1),
+          ).to.be.revertedWith(
+            'StakingAccrualERC20V4: cannot stake during cooldown period',
+          );
+        });
+
+        it('stakes the staking token and mints an equal amount of stARCx, with a proof', async () => {
+          expect(await contract.balanceOf(user1.address)).to.eq(0);
+
+          await contract.connect(user1).stake(STAKE_AMOUNT, scoreProof1);
+
+          expect(await contract.balanceOf(user1.address)).to.eq(STAKE_AMOUNT);
+        });
+
+        it('withdraws from the sablier stream', async () => {
+          expect(await stakingToken.balanceOf(contract.address)).to.eq(0);
+
+          // Setup sablier stream by the admin to the starcx contract
+          await sablierContract.setCurrentTimestamp(0);
+          await createStream(
+            sablierContract,
+            stakingToken,
+            contract,
+            STAKE_AMOUNT,
+            STREAM_DURATION,
+            true,
+          );
+
+          await sablierContract.setCurrentTimestamp(1);
+          expect(await stakingToken.balanceOf(contract.address)).to.eq(0);
+          await contract.connect(user1).stake(STAKE_AMOUNT, scoreProof1);
+
+          expect(await stakingToken.balanceOf(contract.address)).to.eq(
+            STAKE_AMOUNT.add(STAKE_AMOUNT.div(10)),
+          );
+        });
+      });
+
+      describe('#startExitCooldown', () => {
+        it('reverts if user has 0 balance', async () => {
+          await expect(
+            contract.connect(user1).startExitCooldown(),
+          ).to.be.revertedWith('StakingAccrualERC20V4: user has 0 balance');
+        });
+
+        it('starts the exit cooldown', async () => {
+          let cooldownTimestamp = await contract.cooldowns(user1.address);
+          expect(cooldownTimestamp).to.eq(0);
+
+          await contract.setCurrentTimestamp(10);
+          await contract.connect(user1).stake(STAKE_AMOUNT, scoreProof1);
+
+          await contract.connect(user1).startExitCooldown();
+
+          cooldownTimestamp = await contract.cooldowns(user1.address);
+          expect(cooldownTimestamp).to.eq(COOLDOWN_DURATION + 10);
+        });
+
+        it('reverts if the exit cooldown is > 0', async () => {
+          await contract.setCurrentTimestamp(10);
+          await contract.connect(user1).stake(STAKE_AMOUNT, scoreProof1);
+          await contract.connect(user1).startExitCooldown();
+
+          await expect(
+            contract.connect(user1).startExitCooldown(),
+          ).to.be.revertedWith(
+            'StakingAccrualERC20V4: exit cooldown already started',
+          );
+        });
+      });
+
+      describe('#exit', () => {
+        it('reverts if user has 0 balance', async () => {
+          expect(await contract.connect(user1).balanceOf(user1.address)).eq(0);
+          await expect(contract.connect(user1).exit()).to.be.revertedWith(
+            'StakingAccrualERC20V4: user has 0 balance',
+          );
+        });
+
+        it('reverts if the cooldown timestamp is not passed', async () => {
+          await contract.connect(user1).stake(STAKE_AMOUNT, scoreProof1);
+          await contract.connect(user1).startExitCooldown();
+
+          await expect(contract.connect(user1).exit()).to.be.revertedWith(
+            'StakingAccrualERC20V4: exit cooldown not elapsed',
+          );
+        });
+
+        it('reverts if the startExitCooldown was not initiated', async () => {
+          await contract.connect(user1).stake(STAKE_AMOUNT, scoreProof1);
+
+          await expect(contract.connect(user1).exit()).to.be.revertedWith(
+            'StakingAccrualERC20V4: exit cooldown was not initiated',
+          );
+        });
+
+        /**
+         * It reduces the user's balance to 0, burns the respective stARCx amount
+         * from the user and returns the original ARCx balance
+         */
+        it(`exits from the fund`, async () => {
+          await contract.connect(user1).stake(STAKE_AMOUNT, scoreProof1);
+          await contract.connect(user1).startExitCooldown();
+
+          await waitCooldown(contract, COOLDOWN_DURATION);
+
+          let cooldownTimestamp = await contract.cooldowns(user1.address);
+          expect(cooldownTimestamp).to.eq(COOLDOWN_DURATION);
+          expect(await contract.balanceOf(user1.address)).to.eq(STAKE_AMOUNT);
+          expect(await stakingToken.balanceOf(user1.address)).to.eq(
+            INITIAL_BALANCE.sub(STAKE_AMOUNT),
+          );
+          await contract.connect(user1).exit();
+
+          cooldownTimestamp = await contract.cooldowns(user1.address);
+          expect(cooldownTimestamp).to.eq(0);
+          expect(await contract.balanceOf(user1.address)).to.eq(0);
+          expect(await stakingToken.balanceOf(user1.address)).to.eq(
+            INITIAL_BALANCE,
+          );
+        });
+
+        it('withdraws from the sablier stream', async () => {
+          await contract.connect(user1).stake(STAKE_AMOUNT, scoreProof1);
+          await contract.connect(user1).startExitCooldown();
+
+          await waitCooldown(contract, COOLDOWN_DURATION);
+
+          expect(await stakingToken.balanceOf(user1.address)).to.eq(
+            INITIAL_BALANCE.sub(STAKE_AMOUNT),
+          );
+
+          // Setup sablier stream by the admin to the starcx contract
+          await sablierContract.setCurrentTimestamp(0);
+          await createStream(
+            sablierContract,
+            stakingToken,
+            contract,
+            STAKE_AMOUNT,
+            STREAM_DURATION,
+            true,
+          );
+
+          await sablierContract.setCurrentTimestamp(1);
+          await contract.connect(user1).exit();
+
+          expect(await stakingToken.balanceOf(user1.address)).to.eq(
+            INITIAL_BALANCE.add(STAKE_AMOUNT.div(10)),
+          );
+        });
+
+        it('exits with MORE ARCx than initially if the contract has accumulated more tokens', async () => {
+          await contract.connect(user1).stake(STAKE_AMOUNT, scoreProof1);
+          await contract.connect(user2).stake(STAKE_AMOUNT, scoreProof2);
+
+          await contract.connect(user1).startExitCooldown();
+          await waitCooldown(contract, COOLDOWN_DURATION);
+
+          await stakingToken.mintShare(contract.address, STAKE_AMOUNT);
+
+          await contract.connect(user1).exit();
+
+          expect(await contract.balanceOf(user1.address)).to.eq(0);
+          expect(await stakingToken.balanceOf(user1.address)).to.eq(
+            INITIAL_BALANCE.add(STAKE_AMOUNT.div('2')),
+          );
+        });
+
+        it('exits with LESS ARCx than initially if the admin had removed tokens', async () => {
+          await contract.connect(user1).stake(STAKE_AMOUNT, scoreProof1);
+          await contract.connect(user2).stake(STAKE_AMOUNT, scoreProof2);
+
+          await contract.connect(user1).startExitCooldown();
+          await waitCooldown(contract, COOLDOWN_DURATION);
+
+          await contract.recoverTokens(STAKE_AMOUNT);
+
+          await contract.connect(user1).exit();
+
+          expect(await contract.balanceOf(user1.address)).to.eq(0);
+          expect(await stakingToken.balanceOf(user1.address)).to.eq(
+            INITIAL_BALANCE.sub(STAKE_AMOUNT.div(2)),
+          );
+        });
+
+        it('exits at the end of the sablier stream', async () => {
+          await sablierContract.setCurrentTimestamp(0);
+          await contract.setCurrentTimestamp(0);
+
+          await createStream(
+            sablierContract,
+            stakingToken,
+            contract,
+            STAKE_AMOUNT,
+            STREAM_DURATION,
+            true,
+          );
+
+          await sablierContract.setCurrentTimestamp(1);
+
+          await contract.connect(user1).stake(STAKE_AMOUNT, scoreProof1);
+
+          await contract.connect(user1).startExitCooldown();
+
+          await sablierContract.setCurrentTimestamp(COOLDOWN_DURATION);
+          await contract.setCurrentTimestamp(COOLDOWN_DURATION);
+
+          await contract.claimStreamFunds();
+
+          await contract.connect(user1).exit();
+
+          expect(await stakingToken.balanceOf(user1.address)).to.eq(
+            INITIAL_BALANCE.add(STAKE_AMOUNT),
+          );
+        });
+      });
+
+      describe('#getExchangeRate', () => {
+        it('updates total supply and exchange rate depends on staking and minting shares', async () => {
+          expect(await contract.toStakingToken(200)).to.eq(0);
+          expect(await contract.toStakedToken(100)).to.eq(0);
+          expect(await contract.getExchangeRate()).to.eq(0);
+          expect(await contract.totalSupply()).to.eq(0);
+
+          await contract.connect(user1).stake(STAKE_AMOUNT, scoreProof1);
+
+          expect(await contract.getExchangeRate()).to.eq(utils.parseEther('1'));
+          expect(await contract.totalSupply()).to.eq(STAKE_AMOUNT);
+
+          await contract.connect(user2).stake(STAKE_AMOUNT, scoreProof2);
+
+          expect(await contract.getExchangeRate()).to.eq(utils.parseEther('1'));
+          expect(await contract.totalSupply()).to.eq(STAKE_AMOUNT.mul(2));
+
+          await stakingToken.mintShare(contract.address, STAKE_AMOUNT);
+
+          expect(await contract.getExchangeRate()).to.eq(
+            utils.parseEther('1.5'),
+          );
+          expect(await contract.totalSupply()).to.eq(STAKE_AMOUNT.mul(2));
+        });
+      });
+    });
+
+    describe('Scenarios', () => {
+      async function checkState(
+        exchangeRate: string,
+        shareTotalSupply: string,
+        balanceOfStarcx: string,
+      ) {
+        expect(await contract.getExchangeRate()).to.eq(
+          utils.parseEther(exchangeRate),
+          'getExchangeRate',
+        );
+        expect(await contract.totalSupply()).to.eq(
+          utils.parseEther(shareTotalSupply),
+          'totalSupply',
+        );
+        expect(await stakingToken.balanceOf(contract.address)).to.eq(
+          utils.parseEther(balanceOfStarcx),
+          'balance of starcx contract',
+        );
+      }
+
+      it('Two players with admin', async () => {
+        await checkState('0', '0', '0');
+
+        await contract
+          .connect(user1)
+          .stake(utils.parseEther('100'), scoreProof1);
+
+        await checkState('1', '100', '100');
+
+        await contract
+          .connect(user2)
+          .stake(utils.parseEther('200'), scoreProof2);
+
+        await checkState('1', '300', '300');
+
+        await stakingToken.mintShare(contract.address, utils.parseEther('300'));
+
+        await checkState('2', '300', '600');
+
+        await stakingToken.mintShare(contract.address, utils.parseEther('300'));
+
+        await checkState('3', '300', '900');
+
+        await contract.recoverTokens(utils.parseEther('450'));
+
+        await checkState('1.5', '300', '450');
+
+        await checkUser(contract, user1);
+      });
+
+      it('Two players without admin', async () => {
+        await checkState('0', '0', '0');
+
+        await contract
+          .connect(user1)
+          .stake(utils.parseEther('100'), scoreProof1);
+
+        await checkState('1', '100', '100');
+
+        await contract
+          .connect(user2)
+          .stake(utils.parseEther('200'), scoreProof2);
+
+        await checkState('1', '300', '300');
+
+        await contract
+          .connect(user1)
+          .stake(utils.parseEther('200'), scoreProof1);
+
+        await checkState('1', '500', '500');
+
+        await checkUser(contract, user1);
+
+        await contract.connect(user1).startExitCooldown();
+        await waitCooldown(contract, COOLDOWN_DURATION);
+        await contract.connect(user1).exit();
+
+        await checkState('1', '200', '200');
+
+        await contract.connect(user2).startExitCooldown();
+        await waitCooldown(contract, COOLDOWN_DURATION);
+        await contract.connect(user2).exit();
+
+        await checkState('0', '0', '0');
+      });
+
+      it('Complex scenario', async () => {
+        await checkState('0', '0', '0');
+
+        await contract
+          .connect(user1)
+          .stake(utils.parseEther('100'), scoreProof1);
+
+        await checkState('1', '100', '100');
+
+        await contract
+          .connect(user2)
+          .stake(utils.parseEther('200'), scoreProof2);
+
+        await checkState('1', '300', '300');
+        await checkUser(contract, user1);
+        await checkUser(contract, user2);
+
+        await contract
+          .connect(user2)
+          .stake(utils.parseEther('50'), scoreProof2);
+
+        await checkState('1', '350', '350');
+
+        await stakingToken.mintShare(contract.address, utils.parseEther('350'));
+
+        await checkState('2', '350', '700');
+        await checkUser(contract, user1);
+        await checkUser(contract, user2);
+
+        await contract.connect(user2).startExitCooldown();
+        await waitCooldown(contract, COOLDOWN_DURATION);
+        await contract.connect(user2).exit();
+
+        await checkState('2', '100', '200');
+
+        await stakingToken.mintShare(contract.address, utils.parseEther('50'));
+
+        await checkState('2.5', '100', '250');
+
+        await contract.connect(user1).startExitCooldown();
+        await waitCooldown(contract, COOLDOWN_DURATION);
+        await contract.connect(user1).exit();
+
+        await checkState('0', '0', '0');
+
+        await stakingToken.mintShare(contract.address, utils.parseEther('200'));
+
+        await checkState('0', '0', '200');
+
+        await contract
+          .connect(user1)
+          .stake(utils.parseEther('50'), scoreProof1);
+
+        await checkState('1', '250', '250');
+
+        await stakingToken.mintShare(contract.address, utils.parseEther('125'));
+
+        await checkState('1.5', '250', '375');
+
+        await contract
+          .connect(user2)
+          .stake(utils.parseEther('150'), scoreProof2);
+
+        await checkState('1.5', '350', '525');
+
+        await stakingToken.mintShare(contract.address, utils.parseEther('175'));
+
+        await checkState('2', '350', '700');
+
+        await contract.connect(user1).startExitCooldown();
+        await waitCooldown(contract, COOLDOWN_DURATION);
+        await contract.connect(user1).exit();
+
+        await checkState('2', '100', '200');
+
+        await contract.recoverTokens(utils.parseEther('50'));
+
+        await checkState('1.5', '100', '150');
+
+        await contract.connect(user2).startExitCooldown();
+        await waitCooldown(contract, COOLDOWN_DURATION);
+        await contract.connect(user2).exit();
+
+        await checkState('0', '0', '0');
       });
     });
   });
