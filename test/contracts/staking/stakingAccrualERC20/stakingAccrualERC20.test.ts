@@ -20,6 +20,7 @@ import { ethers } from 'hardhat';
 import { generateContext } from '../../context';
 import { deployDefiPassport } from '../../deployers';
 import { sapphireFixture } from '../../fixtures';
+import createStream from './createSablierStream';
 
 const STAKE_AMOUNT = utils.parseEther('100');
 const COOLDOWN_DURATION = 60;
@@ -42,25 +43,6 @@ describe('StakingAccrualERC20', () => {
   let sablierContract: MockSablier;
 
   let defiPassportContract: DefiPassport;
-
-  async function createStream(setStreamId = false) {
-    const sablierId = await sablierContract.nextStreamId();
-    await stakingToken.mintShare(admin.address, STAKE_AMOUNT);
-    await stakingToken.approve(sablierContract.address, STAKE_AMOUNT);
-    await sablierContract.createStream(
-      starcx.address,
-      STAKE_AMOUNT,
-      stakingToken.address,
-      0,
-      STREAM_DURATION,
-    );
-
-    if (setStreamId) {
-      await starcx.setSablierStreamId(sablierId);
-    }
-
-    return sablierId;
-  }
 
   async function waitCooldown() {
     const currentTimestamp = await starcx.currentTimestamp();
@@ -335,7 +317,13 @@ describe('StakingAccrualERC20', () => {
         // In reality it will not be like that, since we will first create the stream, then set the stream ID
         expect(await starcx.sablierStreamId()).to.eq(0);
 
-        const sablierId = await createStream();
+        const sablierId = await createStream(
+          sablierContract,
+          stakingToken,
+          starcx,
+          STAKE_AMOUNT,
+          STREAM_DURATION,
+        );
         await starcx.setSablierStreamId(sablierId);
 
         expect(await starcx.sablierStreamId()).to.eq(sablierId);
@@ -368,7 +356,14 @@ describe('StakingAccrualERC20', () => {
 
         // Setup sablier stream by the admin to the starcx contract
         await sablierContract.setCurrentTimestamp(0);
-        await createStream(true);
+        await createStream(
+          sablierContract,
+          stakingToken,
+          starcx,
+          STAKE_AMOUNT,
+          STREAM_DURATION,
+          true,
+        );
 
         await sablierContract.setCurrentTimestamp(1);
         await starcx.claimStreamFunds();
@@ -458,7 +453,14 @@ describe('StakingAccrualERC20', () => {
 
         // Setup sablier stream by the admin to the starcx contract
         await sablierContract.setCurrentTimestamp(0);
-        await createStream(true);
+        await createStream(
+          sablierContract,
+          stakingToken,
+          starcx,
+          STAKE_AMOUNT,
+          STREAM_DURATION,
+          true,
+        );
 
         await sablierContract.setCurrentTimestamp(1);
         expect(await stakingToken.balanceOf(starcx.address)).to.eq(0);
@@ -567,7 +569,14 @@ describe('StakingAccrualERC20', () => {
 
         // Setup sablier stream by the admin to the starcx contract
         await sablierContract.setCurrentTimestamp(0);
-        await createStream(true);
+        await createStream(
+          sablierContract,
+          stakingToken,
+          starcx,
+          STAKE_AMOUNT,
+          STREAM_DURATION,
+          true,
+        );
 
         await sablierContract.setCurrentTimestamp(1);
         await user1starcx.exit();
@@ -615,7 +624,14 @@ describe('StakingAccrualERC20', () => {
         await sablierContract.setCurrentTimestamp(0);
         await starcx.setCurrentTimestamp(0);
 
-        await createStream(true);
+        await createStream(
+          sablierContract,
+          stakingToken,
+          starcx,
+          STAKE_AMOUNT,
+          STREAM_DURATION,
+          true,
+        );
 
         await sablierContract.setCurrentTimestamp(1);
 
