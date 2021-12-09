@@ -1,11 +1,11 @@
 version: 2.1
 
 workflows:
-    build_and_test:
-      jobs:
-        - build:
-            context:
-              - crypto
+  build_and_test:
+    jobs:
+      - build:
+          context:
+            - crypto
 
 jobs:
   build:
@@ -32,7 +32,7 @@ jobs:
           command: yarn tsc
       - run:
           name: Test Contracts
-          command: yarn test
+          command: yarn test:parallel
       - run:
           name: Publish release
           command: yarn semantic-release
