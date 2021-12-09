@@ -1,5 +1,4 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { BASE } from '@src/constants';
 import {
   ArcProxyFactory,
   DefaultPassportSkinFactory,
@@ -20,7 +19,9 @@ import { ethers } from 'hardhat';
 import { generateContext } from '../../context';
 import { deployDefiPassport } from '../../deployers';
 import { sapphireFixture } from '../../fixtures';
+import checkUser from './checkUserBalance';
 import createStream from './createSablierStream';
+import waitCooldown from './waitCooldown';
 
 const STAKE_AMOUNT = utils.parseEther('100');
 const COOLDOWN_DURATION = 60;
@@ -43,11 +44,6 @@ describe('StakingAccrualERC20', () => {
   let sablierContract: MockSablier;
 
   let defiPassportContract: DefiPassport;
-
-  async function waitCooldown() {
-    const currentTimestamp = await starcx.currentTimestamp();
-    await starcx.setCurrentTimestamp(currentTimestamp.add(COOLDOWN_DURATION));
-  }
 
   async function _deployStakingContract() {
     if (starcx) {
@@ -539,7 +535,7 @@ describe('StakingAccrualERC20', () => {
         await user1starcx.stake(STAKE_AMOUNT);
         await user1starcx.startExitCooldown();
 
-        await waitCooldown();
+        await waitCooldown(starcx, COOLDOWN_DURATION);
 
         let cooldownTimestamp = await starcx.cooldowns(user1.address);
         expect(cooldownTimestamp).to.eq(COOLDOWN_DURATION);
@@ -561,7 +557,7 @@ describe('StakingAccrualERC20', () => {
         await user1starcx.stake(STAKE_AMOUNT);
         await user1starcx.startExitCooldown();
 
-        await waitCooldown();
+        await waitCooldown(starcx, COOLDOWN_DURATION);
 
         expect(await stakingToken.balanceOf(user1.address)).to.eq(
           INITIAL_BALANCE.sub(STAKE_AMOUNT),
@@ -591,7 +587,7 @@ describe('StakingAccrualERC20', () => {
         await user2starcx.stake(STAKE_AMOUNT);
 
         await user1starcx.startExitCooldown();
-        await waitCooldown();
+        await waitCooldown(starcx, COOLDOWN_DURATION);
 
         await stakingToken.mintShare(starcx.address, STAKE_AMOUNT);
 
@@ -608,7 +604,7 @@ describe('StakingAccrualERC20', () => {
         await user2starcx.stake(STAKE_AMOUNT);
 
         await user1starcx.startExitCooldown();
-        await waitCooldown();
+        await waitCooldown(starcx, COOLDOWN_DURATION);
 
         await starcx.recoverTokens(STAKE_AMOUNT);
 
@@ -742,13 +738,13 @@ describe('StakingAccrualERC20', () => {
       await checkUser(starcx, user1);
 
       await user1starcx.startExitCooldown();
-      await waitCooldown();
+      await waitCooldown(starcx, COOLDOWN_DURATION);
       await user1starcx.exit();
 
       await checkState('1', '200', '200');
 
       await user2starcx.startExitCooldown();
-      await waitCooldown();
+      await waitCooldown(starcx, COOLDOWN_DURATION);
       await user2starcx.exit();
 
       await checkState('0', '0', '0');
@@ -778,7 +774,7 @@ describe('StakingAccrualERC20', () => {
       await checkUser(starcx, user2);
 
       await user2starcx.startExitCooldown();
-      await waitCooldown();
+      await waitCooldown(starcx, COOLDOWN_DURATION);
       await user2starcx.exit();
 
       await checkState('2', '100', '200');
@@ -788,7 +784,7 @@ describe('StakingAccrualERC20', () => {
       await checkState('2.5', '100', '250');
 
       await user1starcx.startExitCooldown();
-      await waitCooldown();
+      await waitCooldown(starcx, COOLDOWN_DURATION);
       await user1starcx.exit();
 
       await checkState('0', '0', '0');
@@ -814,7 +810,7 @@ describe('StakingAccrualERC20', () => {
       await checkState('2', '350', '700');
 
       await user1starcx.startExitCooldown();
-      await waitCooldown();
+      await waitCooldown(starcx, COOLDOWN_DURATION);
       await user1starcx.exit();
 
       await checkState('2', '100', '200');
@@ -824,22 +820,10 @@ describe('StakingAccrualERC20', () => {
       await checkState('1.5', '100', '150');
 
       await user2starcx.startExitCooldown();
-      await waitCooldown();
+      await waitCooldown(starcx, COOLDOWN_DURATION);
       await user2starcx.exit();
 
       await checkState('0', '0', '0');
     });
   });
 });
-
-async function checkUser(
-  starcx: MockStakingAccrualERC20,
-  user: SignerWithAddress,
-) {
-  const stArcxBalance = await starcx.balanceOf(user.address);
-  const arcAmount = await starcx.toStakingToken(stArcxBalance);
-  expect(arcAmount).eq(
-    stArcxBalance.mul(await starcx.getExchangeRate()).div(BASE),
-  );
-  expect(await starcx.toStakedToken(arcAmount)).eq(stArcxBalance);
-}
