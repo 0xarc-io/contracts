@@ -35,7 +35,7 @@ jobs:
           name: Test Contracts
           command: |
             circleci tests glob "**.test.ts" | circleci tests split --split-by=timings
-            yarn test:parallel
+            yarn test
       - run:
           name: Publish release
           command: yarn semantic-release
