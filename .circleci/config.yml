@@ -37,7 +37,7 @@ jobs:
       - run:
           name: Test Contracts
           command: |
-            circleci tests glob "test/**.test.ts" | circleci tests split --split-by=timings > /tmp/tests-to-run
+            circleci tests glob "test/**/*.test.ts" | circleci tests split --split-by=timings > /tmp/tests-to-run
             yarn test:ci $(cat /tmp/tests-to-run)
           environment:
             MOCHA_FILE: ~/mocha/test-results.xml
