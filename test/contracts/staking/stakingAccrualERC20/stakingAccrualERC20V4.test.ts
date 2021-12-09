@@ -9,11 +9,11 @@ import {
   MockSablier,
   MockSablierFactory,
   MockSapphirePassportScores,
-  MockStakingAccrualERC20V4,
-  MockStakingAccrualERC20V4Factory,
+  MockStakingAccrualERC20V5,
+  MockStakingAccrualERC20V5Factory,
   StakingAccrualERC20,
   StakingAccrualERC20Factory,
-  StakingAccrualERC20V4,
+  StakingAccrualERC20V5,
   TestToken,
   TestTokenFactory,
 } from '@src/typings';
@@ -45,8 +45,8 @@ interface IDPDetails {
   defaultSkinTokenId: BigNumber;
 }
 
-describe('StakingAccrualERC20V4', () => {
-  let contract: MockStakingAccrualERC20V4;
+describe('StakingAccrualERC20V5', () => {
+  let contract: MockStakingAccrualERC20V5;
 
   let stakingToken: TestToken;
   let tree: PassportScoreTree;
@@ -167,14 +167,14 @@ describe('StakingAccrualERC20V4', () => {
     // await stakingToken.mintShare(baseContract.address, STAKE_AMOUNT);
 
     // contract is upgraded
-    const v4Impl = await new MockStakingAccrualERC20V4Factory(admin).deploy();
+    const v4Impl = await new MockStakingAccrualERC20V5Factory(admin).deploy();
     const proxy = await new ArcProxyFactory(admin).deploy(
       v4Impl.address,
       admin.address,
       [],
     );
     await proxy.upgradeTo(v4Impl.address);
-    contract = MockStakingAccrualERC20V4Factory.connect(proxy.address, admin);
+    contract = MockStakingAccrualERC20V5Factory.connect(proxy.address, admin);
 
     await contract.init(
       'stARCx',
@@ -219,10 +219,10 @@ describe('StakingAccrualERC20V4', () => {
 
   describe('Base functionality tests', () => {
     describe('Admin functions', () => {
-      let uninitializedContract: MockStakingAccrualERC20V4;
+      let uninitializedContract: MockStakingAccrualERC20V5;
 
       before(async () => {
-        const uninitializedContractImpl = await new MockStakingAccrualERC20V4Factory(
+        const uninitializedContractImpl = await new MockStakingAccrualERC20V5Factory(
           admin,
         ).deploy();
         const proxy = await new ArcProxyFactory(admin).deploy(
@@ -230,7 +230,7 @@ describe('StakingAccrualERC20V4', () => {
           admin.address,
           [],
         );
-        uninitializedContract = MockStakingAccrualERC20V4Factory.connect(
+        uninitializedContract = MockStakingAccrualERC20V5Factory.connect(
           proxy.address,
           admin,
         );
@@ -287,7 +287,7 @@ describe('StakingAccrualERC20V4', () => {
               sablierContract.address,
             ),
           ).to.be.revertedWith(
-            'StakingAccrualERC20V4: staking token is not a contract',
+            'StakingAccrualERC20V5: staking token is not a contract',
           );
           await expect(
             uninitializedContract.init(
@@ -299,7 +299,7 @@ describe('StakingAccrualERC20V4', () => {
               sablierContract.address,
             ),
           ).to.be.revertedWith(
-            'StakingAccrualERC20V4: staking token is not a contract',
+            'StakingAccrualERC20V5: staking token is not a contract',
           );
         });
 
@@ -363,7 +363,7 @@ describe('StakingAccrualERC20V4', () => {
           await expect(
             contract.recoverTokens(STAKE_AMOUNT.add(1)),
           ).to.be.revertedWith(
-            'StakingAccrualERC20V4: cannot recover more than the balance',
+            'StakingAccrualERC20V5: cannot recover more than the balance',
           );
         });
 
@@ -504,7 +504,7 @@ describe('StakingAccrualERC20V4', () => {
           await expect(
             contract.connect(user1).stake(STAKE_AMOUNT, scoreProof1),
           ).to.be.revertedWith(
-            'StakingAccrualERC20V4: cannot stake during cooldown period',
+            'StakingAccrualERC20V5: cannot stake during cooldown period',
           );
         });
 
@@ -544,7 +544,7 @@ describe('StakingAccrualERC20V4', () => {
         it('reverts if user has 0 balance', async () => {
           await expect(
             contract.connect(user1).startExitCooldown(),
-          ).to.be.revertedWith('StakingAccrualERC20V4: user has 0 balance');
+          ).to.be.revertedWith('StakingAccrualERC20V5: user has 0 balance');
         });
 
         it('starts the exit cooldown', async () => {
@@ -568,7 +568,7 @@ describe('StakingAccrualERC20V4', () => {
           await expect(
             contract.connect(user1).startExitCooldown(),
           ).to.be.revertedWith(
-            'StakingAccrualERC20V4: exit cooldown already started',
+            'StakingAccrualERC20V5: exit cooldown already started',
           );
         });
       });
@@ -577,7 +577,7 @@ describe('StakingAccrualERC20V4', () => {
         it('reverts if user has 0 balance', async () => {
           expect(await contract.connect(user1).balanceOf(user1.address)).eq(0);
           await expect(contract.connect(user1).exit()).to.be.revertedWith(
-            'StakingAccrualERC20V4: user has 0 balance',
+            'StakingAccrualERC20V5: user has 0 balance',
           );
         });
 
@@ -586,7 +586,7 @@ describe('StakingAccrualERC20V4', () => {
           await contract.connect(user1).startExitCooldown();
 
           await expect(contract.connect(user1).exit()).to.be.revertedWith(
-            'StakingAccrualERC20V4: exit cooldown not elapsed',
+            'StakingAccrualERC20V5: exit cooldown not elapsed',
           );
         });
 
@@ -594,7 +594,7 @@ describe('StakingAccrualERC20V4', () => {
           await contract.connect(user1).stake(STAKE_AMOUNT, scoreProof1);
 
           await expect(contract.connect(user1).exit()).to.be.revertedWith(
-            'StakingAccrualERC20V4: exit cooldown was not initiated',
+            'StakingAccrualERC20V5: exit cooldown was not initiated',
           );
         });
 
@@ -921,7 +921,7 @@ describe('StakingAccrualERC20V4', () => {
   });
 
   describe('Upgrade specific tests', () => {
-    let upgradedContract: StakingAccrualERC20V4;
+    let upgradedContract: StakingAccrualERC20V5;
 
     before(async () => {
       const baseContract = await _baseContractSetup();
@@ -945,10 +945,10 @@ describe('StakingAccrualERC20V4', () => {
       await stakingToken.mintShare(baseContract.address, STAKE_AMOUNT);
 
       // Upgrade contract
-      const v4Impl = await new MockStakingAccrualERC20V4Factory(admin).deploy();
+      const v4Impl = await new MockStakingAccrualERC20V5Factory(admin).deploy();
       const proxy = ArcProxyFactory.connect(baseContract.address, admin);
       await proxy.upgradeTo(v4Impl.address);
-      upgradedContract = MockStakingAccrualERC20V4Factory.connect(
+      upgradedContract = MockStakingAccrualERC20V5Factory.connect(
         proxy.address,
         admin,
       );
@@ -1039,7 +1039,7 @@ describe('StakingAccrualERC20V4', () => {
         await upgradedContract.setScoreThreshold(DEFAULT_SCORE_THRESHOLD + 1);
         await expect(
           upgradedContract.connect(user1).stake(STAKE_AMOUNT, scoreProof1),
-        ).to.be.revertedWith('StakingAccrualERC20V4: score is below threshold');
+        ).to.be.revertedWith('StakingAccrualERC20V5: score is below threshold');
       });
 
       it('stakes if proof is set and score is greater than or equal to the threshold', async () => {

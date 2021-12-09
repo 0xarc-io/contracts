@@ -2,12 +2,12 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { BASE } from '@src/constants';
 import {
   MockStakingAccrualERC20,
-  MockStakingAccrualERC20V4,
+  MockStakingAccrualERC20V5,
 } from '@src/typings';
 import { expect } from 'chai';
 
 async function checkUser(
-  starcx: MockStakingAccrualERC20 | MockStakingAccrualERC20V4,
+  starcx: MockStakingAccrualERC20 | MockStakingAccrualERC20V5,
   user: SignerWithAddress,
 ) {
   const stArcxBalance = await starcx.balanceOf(user.address);
