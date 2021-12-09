@@ -1,5 +1,5 @@
 {
-  "require": ["@nomiclabs/hardhat/register"],
+  "require": ["hardhat/register"],
   "timeout": 20000,
   "recursive": "test",
   "extension": ["ts"]
