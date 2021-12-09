@@ -481,19 +481,22 @@ task(
     await pruneDeployments(network, signer.provider);
 
     let factory: StakingAccrualERC20Factory | StakingAccrualERC20V5Factory;
+    let source: string;
 
     switch (version) {
-      case 5:
+      case '5':
+        source = 'StakingAccrualERC20V5';
         factory = new StakingAccrualERC20V5Factory(signer);
         break;
       default:
+        source = 'StakingAccrualERC20';
         factory = new StakingAccrualERC20Factory(signer);
     }
 
     const contractImplementation = await deployContract(
       {
         name: 'StakingAccrualERC20',
-        source: factory.constructor.name,
+        source,
         data: factory.getDeployTransaction(),
         version: Number(version) || 1,
         type: DeploymentType.global,
