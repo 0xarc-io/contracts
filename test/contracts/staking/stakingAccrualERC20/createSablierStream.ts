@@ -2,14 +2,14 @@ import { BigNumberish } from '@ethersproject/bignumber';
 import {
   MockSablier,
   StakingAccrualERC20,
-  StakingAccrualERC20V4,
+  StakingAccrualERC20V5,
   TestToken,
 } from '@src/typings';
 
 async function createStream(
   sablierContract: MockSablier,
   stakingToken: TestToken,
-  starcx: StakingAccrualERC20 | StakingAccrualERC20V4,
+  starcx: StakingAccrualERC20 | StakingAccrualERC20V5,
   stakeAmount: BigNumberish,
   streamDuration: BigNumberish,
   setStreamId = false,

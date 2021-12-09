@@ -26,7 +26,7 @@ import {IERC721} from "../../.openzeppelin/4.x/token/ERC721/IERC721.sol";
  *         intent, which will trigger a cooldown after which they will be able
  *         to reclaim their share.
  */
-contract StakingAccrualERC20V4 is BaseERC20, PassportScoreVerifiable, Adminable, Initializable {
+contract StakingAccrualERC20V5 is BaseERC20, PassportScoreVerifiable, Adminable, Initializable {
 
     /* ========== Libraries ========== */
 
@@ -111,12 +111,12 @@ contract StakingAccrualERC20V4 is BaseERC20, PassportScoreVerifiable, Adminable,
 
         require (
             _stakingToken.isContract(),
-            "StakingAccrualERC20V4: staking token is not a contract"
+            "StakingAccrualERC20V5: staking token is not a contract"
         );
 
         require (
             _sablierContract.isContract(),
-            "StakingAccrualERC20V4: the sablier contract is invalid"
+            "StakingAccrualERC20V5: the sablier contract is invalid"
         );
 
         DOMAIN_SEPARATOR = _initDomainSeparator(
@@ -139,7 +139,7 @@ contract StakingAccrualERC20V4 is BaseERC20, PassportScoreVerifiable, Adminable,
     {
         require(
             exitCooldownDuration != _duration,
-            "StakingAccrualERC20V4: the same cooldown is already set"
+            "StakingAccrualERC20V5: the same cooldown is already set"
         );
 
         exitCooldownDuration = _duration;
@@ -161,7 +161,7 @@ contract StakingAccrualERC20V4 is BaseERC20, PassportScoreVerifiable, Adminable,
 
         require (
             _amount <= contractBalance,
-            "StakingAccrualERC20V4: cannot recover more than the balance"
+            "StakingAccrualERC20V5: cannot recover more than the balance"
         );
 
         emit TokensRecovered(_amount);
@@ -183,7 +183,7 @@ contract StakingAccrualERC20V4 is BaseERC20, PassportScoreVerifiable, Adminable,
     {
         require (
             _sablierContract.isContract(),
-            "StakingAccrualERC20V4: address is not a contract"
+            "StakingAccrualERC20V5: address is not a contract"
         );
 
         sablierContract = ISablier(_sablierContract);
@@ -202,14 +202,14 @@ contract StakingAccrualERC20V4 is BaseERC20, PassportScoreVerifiable, Adminable,
     {
         require (
             sablierStreamId != _sablierStreamId,
-            "StakingAccrualERC20V4: the same stream ID is already set"
+            "StakingAccrualERC20V5: the same stream ID is already set"
         );
 
         (, address recipient,,,,,,) = sablierContract.getStream(_sablierStreamId);
 
         require (
             recipient == address(this),
-            "StakingAccrualERC20V4: incorrect stream ID"
+            "StakingAccrualERC20V5: incorrect stream ID"
         );
 
         sablierStreamId = _sablierStreamId;
@@ -236,7 +236,7 @@ contract StakingAccrualERC20V4 is BaseERC20, PassportScoreVerifiable, Adminable,
     {
         require (
             _passportScoresContract.isContract(),
-            "StakingAccrualERC20V4: address is not a contract"
+            "StakingAccrualERC20V5: address is not a contract"
         );
 
         passportScoresContract = ISapphirePassportScores(_passportScoresContract);
@@ -272,13 +272,13 @@ contract StakingAccrualERC20V4 is BaseERC20, PassportScoreVerifiable, Adminable,
 
         require (
             cooldownTimestamp == 0,
-            "StakingAccrualERC20V4: cannot stake during cooldown period"
+            "StakingAccrualERC20V5: cannot stake during cooldown period"
         );
 
         if (proofProtocol != bytes32(0)) {
             require(
                 _proof.score >= scoreThreshold,
-                "StakingAccrualERC20V4: score is below threshold"
+                "StakingAccrualERC20V5: score is below threshold"
             );
         }
 
@@ -334,12 +334,12 @@ contract StakingAccrualERC20V4 is BaseERC20, PassportScoreVerifiable, Adminable,
     {
         require (
             balanceOf(msg.sender) > 0,
-            "StakingAccrualERC20V4: user has 0 balance"
+            "StakingAccrualERC20V5: user has 0 balance"
         );
 
         require (
             cooldowns[msg.sender] == 0,
-            "StakingAccrualERC20V4: exit cooldown already started"
+            "StakingAccrualERC20V5: exit cooldown already started"
         );
 
         cooldowns[msg.sender] = currentTimestamp().add(exitCooldownDuration);
@@ -365,16 +365,16 @@ contract StakingAccrualERC20V4 is BaseERC20, PassportScoreVerifiable, Adminable,
 
         require(
             _share > 0,
-            "StakingAccrualERC20V4: user has 0 balance"
+            "StakingAccrualERC20V5: user has 0 balance"
         );
 
         require(
             currentTimestamp() >= cooldownTimestamp,
-            "StakingAccrualERC20V4: exit cooldown not elapsed"
+            "StakingAccrualERC20V5: exit cooldown not elapsed"
         );
         require(
             cooldownTimestamp != 0,
-            "StakingAccrualERC20V4: exit cooldown was not initiated"
+            "StakingAccrualERC20V5: exit cooldown was not initiated"
         );
 
         // Calculates the amount of staking token the staked token is worth
