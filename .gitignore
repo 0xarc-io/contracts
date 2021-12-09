@@ -5,6 +5,7 @@ node_modules
 bin
 
 coverage
+coverage.json
 dist
 typechain
 typings
