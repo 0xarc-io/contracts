@@ -23,7 +23,7 @@
     "clean": "rm -rf build/compiled && rm -rf build/flattened && rm -rf src/typings && rm -rf dist && rm -rf artifacts && rm -rf cache",
     "chain": "ganache-cli --networkId 50 --accounts 20 -l 19000000 -e 10000000000 -m 'concert load couple harbor equip island argue ramp clarify fence smart topic' -h 0.0.0.0",
     "build": "yarn compile",
-    "coverage": "yarn run build && yarn hardhat coverage --testfiles test/contracts/ --temp artifacts --network coverage",
+    "coverage": "yarn run build && yarn hardhat coverage --testfiles test/contracts/ --temp artifacts",
     "test": "yarn hardhat test",
     "test:parallel": "yarn mocha --recursive --parallel --exit --extension ts",
     "graph:create": "graph create arcxgame/contracts --node https://api.thegraph.com/deploy/",
