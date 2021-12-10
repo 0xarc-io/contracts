@@ -19,7 +19,7 @@ import { ethers } from 'hardhat';
 import { generateContext } from '../../context';
 import { deployDefiPassport } from '../../deployers';
 import { sapphireFixture } from '../../fixtures';
-import checkUser from './checkUserBalance';
+import checkUserBalance from './checkUserBalance';
 import createStream from './createSablierStream';
 import waitCooldown from './waitCooldown';
 
@@ -717,7 +717,7 @@ describe('StakingAccrualERC20', () => {
 
       await checkState('1.5', '300', '450');
 
-      await checkUser(starcx, user1);
+      await checkUserBalance(starcx, user1);
     });
 
     it('Two players without admin', async () => {
@@ -735,7 +735,7 @@ describe('StakingAccrualERC20', () => {
 
       await checkState('1', '500', '500');
 
-      await checkUser(starcx, user1);
+      await checkUserBalance(starcx, user1);
 
       await user1starcx.startExitCooldown();
       await waitCooldown(starcx, COOLDOWN_DURATION);
@@ -760,8 +760,8 @@ describe('StakingAccrualERC20', () => {
       await user2starcx.stake(utils.parseEther('200'));
 
       await checkState('1', '300', '300');
-      await checkUser(starcx, user1);
-      await checkUser(starcx, user2);
+      await checkUserBalance(starcx, user1);
+      await checkUserBalance(starcx, user2);
 
       await user2starcx.stake(utils.parseEther('50'));
 
@@ -770,8 +770,8 @@ describe('StakingAccrualERC20', () => {
       await stakingToken.mintShare(starcx.address, utils.parseEther('350'));
 
       await checkState('2', '350', '700');
-      await checkUser(starcx, user1);
-      await checkUser(starcx, user2);
+      await checkUserBalance(starcx, user1);
+      await checkUserBalance(starcx, user2);
 
       await user2starcx.startExitCooldown();
       await waitCooldown(starcx, COOLDOWN_DURATION);
