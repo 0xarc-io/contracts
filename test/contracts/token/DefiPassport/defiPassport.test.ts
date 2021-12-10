@@ -15,7 +15,7 @@ import { expect } from 'chai';
 import { MockProvider } from 'ethereum-waffle';
 import { constants, utils } from 'ethers';
 import { ethers } from 'hardhat';
-import { deployDefiPassport } from '../deployers';
+import { deployDefiPassport } from '../../deployers';
 
 type TokenIdStatus = {
   tokenId: BigNumber;
