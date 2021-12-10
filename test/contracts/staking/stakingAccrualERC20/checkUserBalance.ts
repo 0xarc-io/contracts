@@ -6,7 +6,7 @@ import {
 } from '@src/typings';
 import { expect } from 'chai';
 
-async function checkUser(
+async function checkUserBalance(
   starcx: MockStakingAccrualERC20 | MockStakingAccrualERC20V5,
   user: SignerWithAddress,
 ) {
@@ -18,4 +18,4 @@ async function checkUser(
   expect(await starcx.toStakedToken(arcAmount)).eq(stArcxBalance);
 }
 
-export default checkUser;
+export default checkUserBalance;
