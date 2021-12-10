@@ -24,7 +24,7 @@
     "chain": "ganache-cli --networkId 50 --accounts 20 -l 19000000 -e 10000000000 -m 'concert load couple harbor equip island argue ramp clarify fence smart topic' -h 0.0.0.0",
     "build": "yarn compile",
     "coverage": "yarn run build && yarn hardhat coverage --testfiles test/contracts/ --temp artifacts",
-    "test": "npx mocha --require hardhat/register --recursive --exit --extension ts",
+    "test": "npx mocha --require hardhat/register --recursive --exit --extension ts --parallel",
     "test:ci": "npx mocha --reporter mocha-junit-reporter --require ts-node/register --require tsconfig-paths/register --require hardhat/register --exit",
     "test:parallel": "yarn mocha --recursive --parallel --exit --extension ts",
     "graph:create": "graph create arcxgame/contracts --node https://api.thegraph.com/deploy/",
