@@ -26,7 +26,6 @@
     "coverage": "yarn run build && yarn hardhat coverage --testfiles test/contracts/ --temp artifacts",
     "test": "npx mocha --require hardhat/register --recursive --exit --extension ts --parallel",
     "test:ci": "npx mocha --reporter mocha-junit-reporter --require ts-node/register --require tsconfig-paths/register --require hardhat/register --exit",
-    "test:parallel": "yarn mocha --recursive --parallel --exit --extension ts",
     "graph:create": "graph create arcxgame/contracts --node https://api.thegraph.com/deploy/",
     "graph:create-local": "graph create arcxgame/contracts --node http://127.0.0.1:8020",
     "graph:codegen": "graph codegen",
