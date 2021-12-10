@@ -29,6 +29,7 @@ export const params = {
   deploy_private_key: process.env.DEPLOY_PRIVATE_KEY || '',
   infura_key: process.env.INFURA_PROJECT_ID || '',
   etherscan_key: process.env.ETHERSCAN_KEY || '',
+  mainnet_alchemy_url: process.env.MAINNET_ALCHEMY || '',
 };
 
 export function getNetworkUrl(network: string) {
@@ -36,6 +37,8 @@ export function getNetworkUrl(network: string) {
 
   if (network === 'mumbai' || network === 'polygon') {
     prefix = 'polygon-';
+  } else if (network === 'mainnet') {
+    return params.mainnet_alchemy_url;
   }
 
   return `https://${prefix}${network}.infura.io/v3/${process.env.INFURA_PROJECT_ID}`;
@@ -116,7 +119,6 @@ const config: HardhatUserConfig = {
     mainnet: {
       url: getNetworkUrl('mainnet'),
       accounts: [params.deploy_private_key],
-      // gasPrice: 150 * 10 ** 9,
       users: {
         eoaOwner: '0x62f31e08e279f3091d9755a09914df97554eae0b',
         multisigOwner: '0x859a95b2b50c1fc25560a2c6dad5b3d0ba34b6e9',
