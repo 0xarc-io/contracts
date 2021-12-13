@@ -276,44 +276,6 @@ contract DefiPassportSkin is ERC721Full, Adminable, DefiPassportStorage, Initial
     /* ========== Public Functions ========== */
 
     /**
-     * @notice Mints a DeFi passport to the address specified by `_to`. Note:
-     *         - The `_passportSkin` must be an approved or default skin.
-     *         - The token URI will be composed by <baseURI> + `_to`,
-     *           without the "0x" in front
-     *
-     * @param _to The receiver of the defi passport
-     * @param _passportSkin The address of the skin NFT to be applied to the passport
-     * @param _skinTokenId The ID of the passport skin NFT, owned by the receiver
-     */
-    function mint(
-        address _to,
-        address _passportSkin,
-        uint256 _skinTokenId
-    )
-        external
-        returns (uint256)
-    {
-        require (
-            isSkinAvailable(_to, _passportSkin, _skinTokenId),
-            "DefiPassport: invalid skin"
-        );
-
-        // A user cannot have two passports
-        require(
-            balanceOf(_to) == 0,
-            "DefiPassport: user already has a defi passport"
-        );
-
-        _tokenIds.increment();
-
-        uint256 newTokenId = _tokenIds.current();
-        _mint(_to, newTokenId);
-        _setActiveSkin(newTokenId, SkinRecord(_to, _passportSkin, _skinTokenId));
-
-        return newTokenId;
-    }
-
-    /**
      * @notice Changes the passport skin of the caller's passport
      *
      * @param _skin The contract address to the skin NFT
