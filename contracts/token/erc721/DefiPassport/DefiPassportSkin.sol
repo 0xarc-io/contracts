@@ -5,12 +5,13 @@ pragma solidity 0.8.4;
 import {ERC721Full} from "../../../.openzeppelin/2.x/token/ERC721/ERC721Full.sol";
 import {Counters} from "../../../.openzeppelin/4.x/utils/Counters.sol";
 import {IERC721} from "../../../.openzeppelin/4.x/token/ERC721/IERC721.sol";
+import {Strings} from "../../../.openzeppelin/4.x/utils/Strings.sol";
 
 import {Address} from "../../../lib/Address.sol";
 import {Bytes32} from "../../../lib/Bytes32.sol";
 import {Adminable} from "../../../lib/Adminable.sol";
 import {Initializable} from "../../../lib/Initializable.sol";
-import {DefiPassportStorage} from ".././DefiPassportStorage.sol";
+import {DefiPassportStorageV1} from "./DefiPassportStorageV1.sol";
 import {ISapphirePassportScores} from "../../../sapphire/ISapphirePassportScores.sol";
 import {SapphireTypes} from "../../../sapphire/SapphireTypes.sol";
 
@@ -18,46 +19,20 @@ import {SapphireTypes} from "../../../sapphire/SapphireTypes.sol";
  * @title DefiPassportSkin
  * @dev An upgrade to DefiPassport.sol that transforms the DefiPassport into a skin.
  */
-contract DefiPassportSkin is ERC721Full, Adminable, DefiPassportStorage, Initializable {
+contract DefiPassportSkin is ERC721Full, Adminable, DefiPassportStorageV1, Initializable {
 
     /* ========== Libraries ========== */
 
     using Counters for Counters.Counter;
     using Address for address;
     using Bytes32 for bytes32;
+    using Strings for uint256;
 
     /* ========== Events ========== */
 
     event BaseURISet(string _baseURI);
 
-    event ApprovedSkinStatusChanged(
-        address _skin,
-        uint256 _skinTokenId,
-        bool _status
-    );
-
-    event ApprovedSkinsStatusesChanged(
-        SkinAndTokenIdStatusRecord[] _skinsRecords
-    );
-
-    event DefaultSkinStatusChanged(
-        address _skin,
-        bool _status
-    );
-
-    event DefaultActiveSkinChanged(
-        address _skin,
-        uint256 _skinTokenId
-    );
-
-    event ActiveSkinSet(
-        uint256 _tokenId,
-        SkinRecord _skinRecord
-    );
-
-    event SkinManagerSet(address _skinManager);
-
-    event WhitelistSkinSet(address _skin, bool _status);
+    event NameAndSymbolChanged(string _name, string _symbol);
 
     /* ========== Public variables ========== */
 
@@ -68,22 +43,11 @@ contract DefiPassportSkin is ERC721Full, Adminable, DefiPassportStorage, Initial
      */
     bytes32 private _proofProtocol;
 
-    /* ========== Modifier ========== */
-
-    modifier onlySkinManager () {
-        require(
-            msg.sender == skinManager,
-            "DefiPassport: caller is not skin manager"
-        );
-        _;
-    }
-
     /* ========== Restricted Functions ========== */
 
     function init(
         string calldata name_,
-        string calldata symbol_,
-        address _skinManager
+        string calldata symbol_
     )
         external
         onlyAdmin
@@ -91,7 +55,6 @@ contract DefiPassportSkin is ERC721Full, Adminable, DefiPassportStorage, Initial
     {
         _name = name_;
         _symbol = symbol_;
-        skinManager = _skinManager;
     }
 
     /**
@@ -104,261 +67,25 @@ contract DefiPassportSkin is ERC721Full, Adminable, DefiPassportStorage, Initial
         external
         onlyAdmin
     {
-        baseURI = _baseURI;
+        baseURI = _baseURI; 
         emit BaseURISet(_baseURI);
     }
 
     /**
-     * @dev Sets the address of the skin manager role
-     *
-     * @param _skinManager The new skin manager
+     * @dev Since this contract transforms the DefiPassport into a skin, we also need a
+     *      way to set the name and symbol to reflect the meaning of this contract.
      */
-    function setSkinManager(
-        address _skinManager
+    function setNameAndSymbol(
+        string calldata name_,
+        string calldata symbol_
     )
         external
         onlyAdmin
     {
-        require (
-            _skinManager != skinManager,
-            "DefiPassport: the same skin manager is already set"
-        );
+        _name = name_;
+        _symbol = symbol_;
 
-        skinManager = _skinManager;
-
-        emit SkinManagerSet(skinManager);
-    }
-
-    /**
-     * @notice Registers/unregisters a default skin
-     *
-     * @param _skin Address of the skin NFT
-     * @param _status Wether or not it should be considered as a default
-     *                skin or not
-     */
-    function setDefaultSkin(
-        address _skin,
-        bool _status
-    )
-        external
-        onlySkinManager
-    {
-        if (!_status) {
-            require(
-                defaultActiveSkin.skin != _skin,
-                "Defi Passport: cannot unregister the default active skin"
-            );
-        }
-
-        require(
-            defaultSkins[_skin] != _status,
-            "DefiPassport: skin already has the same status"
-        );
-
-        require(
-            _skin.isContract(),
-            "DefiPassport: the given skin is not a contract"
-        );
-
-        require (
-            IERC721(_skin).ownerOf(1) != address(0),
-            "DefiPassport: default skin must at least have tokenId eq 1"
-        );
-
-        if (defaultActiveSkin.skin == address(0)) {
-            defaultActiveSkin = SkinRecord(address(0), _skin, 1);
-        }
-
-        defaultSkins[_skin] = _status;
-
-        emit DefaultSkinStatusChanged(_skin, _status);
-    }
-
-    /**
-     * @dev    Set the default active skin, which will be used instead of
-     *         unavailable user's active one
-     * @notice Skin should be used as default one (with setDefaultSkin function)
-     *
-     * @param _skin        Address of the skin NFT
-     * @param _skinTokenId The NFT token ID
-     */
-    function setDefaultActiveSkin(
-        address _skin,
-        uint256 _skinTokenId
-    )
-        external
-        onlySkinManager
-    {
-        require(
-            defaultSkins[_skin],
-            "DefiPassport: the given skin is not registered as a default"
-        );
-
-        require(
-            defaultActiveSkin.skin != _skin ||
-                defaultActiveSkin.skinTokenId != _skinTokenId,
-            "DefiPassport: the skin is already set as default active"
-        );
-
-        defaultActiveSkin = SkinRecord(address(0), _skin, _skinTokenId);
-
-        emit DefaultActiveSkinChanged(_skin, _skinTokenId);
-    }
-
-    /**
-     * @notice Approves a passport skin.
-     *         Only callable by the skin manager
-     */
-    function setApprovedSkin(
-        address _skin,
-        uint256 _skinTokenId,
-        bool _status
-    )
-        external
-        onlySkinManager
-    {
-        approvedSkins[_skin][_skinTokenId] = _status;
-
-        emit ApprovedSkinStatusChanged(_skin, _skinTokenId, _status);
-    }
-
-    /**
-     * @notice Sets the approved status for all skin contracts and their
-     *         token IDs passed into this function.
-     */
-    function setApprovedSkins(
-        SkinAndTokenIdStatusRecord[] memory _skinsToApprove
-    )
-        public
-        onlySkinManager
-    {
-        for (uint256 i = 0; i < _skinsToApprove.length; i++) {
-            TokenIdStatus[] memory tokensAndStatuses = _skinsToApprove[i].skinTokenIdStatuses;
-
-            for (uint256 j = 0; j < tokensAndStatuses.length; j ++) {
-                TokenIdStatus memory tokenStatusPair = tokensAndStatuses[j];
-
-                approvedSkins[_skinsToApprove[i].skin][tokenStatusPair.tokenId] = tokenStatusPair.status;
-            }
-        }
-
-        emit ApprovedSkinsStatusesChanged(_skinsToApprove);
-    }
-
-    /**
-     * @notice Adds or removes a skin contract to the whitelist.
-     *         The Defi Passport considers all skins minted by whitelisted contracts
-     *         to be valid skins for applying them on to the passport.
-     *         The user applying the skins must still be their owner though.
-     */
-    function setWhitelistedSkin(
-        address _skinContract,
-        bool _status
-    )
-        external
-        onlySkinManager
-    {
-        require (
-            _skinContract.isContract(),
-            "DefiPassport: address is not a contract"
-        );
-
-        require (
-            whitelistedSkins[_skinContract] != _status,
-            "DefiPassport: the skin already has the same whitelist status"
-        );
-
-        whitelistedSkins[_skinContract] = _status;
-
-        emit WhitelistSkinSet(_skinContract, _status);
-    }
-
-    /* ========== Public Functions ========== */
-
-    /**
-     * @notice Changes the passport skin of the caller's passport
-     *
-     * @param _skin The contract address to the skin NFT
-     * @param _skinTokenId The ID of the skin NFT
-     */
-    function setActiveSkin(
-        address _skin,
-        uint256 _skinTokenId
-    )
-        external
-    {
-        require(
-            balanceOf(msg.sender) > 0,
-            "DefiPassport: caller has no passport"
-        );
-
-        require(
-            isSkinAvailable(msg.sender, _skin, _skinTokenId),
-            "DefiPassport: invalid skin"
-        );
-
-        uint256 tokenId = tokenOfOwnerByIndex(msg.sender, 0);
-
-        _setActiveSkin(tokenId, SkinRecord(msg.sender, _skin, _skinTokenId));
-    }
-
-    function approve(
-        address,
-        uint256
-    )
-        public
-        pure
-        override
-    {
-        revert("DefiPassport: defi passports are not transferrable");
-    }
-
-    function setApprovalForAll(
-        address,
-        bool
-    )
-        public
-        pure
-        override
-    {
-        revert("DefiPassport: defi passports are not transferrable");
-    }
-
-    function safeTransferFrom(
-        address,
-        address,
-        uint256
-    )
-        public
-        pure
-        override
-    {
-        revert("DefiPassport: defi passports are not transferrable");
-    }
-
-    function safeTransferFrom(
-        address,
-        address,
-        uint256,
-        bytes memory
-    )
-        public
-        pure
-        override
-    {
-        revert("DefiPassport: defi passports are not transferrable");
-    }
-
-    function transferFrom(
-        address,
-        address,
-        uint256
-    )
-        public
-        pure
-        override
-    {
-        revert("DefiPassport: defi passports are not transferrable");
+        emit NameAndSymbolChanged(name_, symbol_);
     }
 
     /* ========== Public View Functions ========== */
@@ -381,168 +108,14 @@ contract DefiPassportSkin is ERC721Full, Adminable, DefiPassportStorage, Initial
         return _symbol;
     }
 
-    /**
-     * @notice Returns whether a certain skin can be applied to the specified
-     *         user's passport.
-     *
-     * @param _user The user for whom to check
-     * @param _skinContract The address of the skin NFT
-     * @param _skinTokenId The NFT token ID
-     */
-    function isSkinAvailable(
-        address _user,
-        address _skinContract,
-        uint256 _skinTokenId
-    )
-        public
-        view
-        returns (bool)
-    {
-        if (defaultSkins[_skinContract]) {
-            return IERC721(_skinContract).ownerOf(_skinTokenId) != address(0);
-        } else if (
-            whitelistedSkins[_skinContract] ||
-            approvedSkins[_skinContract][_skinTokenId]
-        ) {
-            return _isSkinOwner(_user, _skinContract, _skinTokenId);
-        }
-
-        return false;
-    }
-
-    /**
-     * @notice Returns the active skin of the given passport ID
-     *
-     * @param _tokenId Passport ID
-     */
-    function getActiveSkin(
-        uint256 _tokenId
-    )
-        public
-        view
-        returns (SkinRecord memory)
-    {
-        SkinRecord memory _activeSkin = _activeSkins[_tokenId];
-
-        if (isSkinAvailable(_activeSkin.owner, _activeSkin.skin, _activeSkin.skinTokenId)) {
-            return _activeSkin;
-        } else {
-            return defaultActiveSkin;
-        }
-    }
-
-    /**
-     * @dev Returns the URI for a given token ID. May return an empty string.
-     *
-     * Reverts if the token ID does not exist.
-     */
     function tokenURI(
         uint256 tokenId
     )
-        public
-        view
+        external
         override
+        view 
         returns (string memory)
     {
-        require(
-            _exists(tokenId),
-            "ERC721Metadata: URI query for nonexistent token"
-        );
-
-        address owner = ownerOf(tokenId);
-
-        return string(abi.encodePacked(baseURI, "0x", _toAsciiString(owner)));
-    }
-
-    /* ========== Private Functions ========== */
-
-    /**
-     * @dev Converts the given address to string. Used when minting new
-     *      passports.
-     */
-    function _toAsciiString(
-        address _address
-    )
-        private
-        pure
-        returns (string memory)
-    {
-        bytes memory s = new bytes(40);
-        for (uint i = 0; i < 20; i++) {
-            bytes1 b = bytes1(uint8(uint(uint160(_address)) / (2**(8*(19 - i)))));
-            bytes1 hi = bytes1(uint8(b) / 16);
-            bytes1 lo = bytes1(uint8(b) - 16 * uint8(hi));
-            s[2*i] = _char(hi);
-            s[2*i+1] = _char(lo);
-        }
-        return string(s);
-    }
-
-    function _char(
-        bytes1 b
-    )
-        private
-        pure
-        returns (bytes1 c)
-    {
-        if (uint8(b) < 10) return bytes1(uint8(b) + 0x30);
-        else return bytes1(uint8(b) + 0x57);
-    }
-
-    /**
-     * @dev Ensures that the user is the owner of the skin NFT
-     */
-    function _isSkinOwner(
-        address _user,
-        address _skin,
-        uint256 _tokenId
-    )
-        internal
-        view
-        returns (bool)
-    {
-        /**
-         * It is not sure if the skin contract implements the ERC721 or ERC1155 standard,
-         * so we must do the check.
-         */
-        bytes memory payload = abi.encodeWithSignature("ownerOf(uint256)", _tokenId);
-        (bool success, bytes memory returnData) = _skin.staticcall(payload);
-
-        if (success) {
-            (address owner) = abi.decode(returnData, (address));
-
-            return owner == _user;
-        } else {
-            // The skin contract might be an ERC1155 (like OpenSea)
-            payload = abi.encodeWithSignature("balanceOf(address,uint256)", _user, _tokenId);
-            (success, returnData) = _skin.staticcall(payload);
-
-            if (success) {
-                (uint256 balance) = abi.decode(returnData, (uint256));
-
-                return balance > 0;
-            }
-        }
-
-        return false;
-    }
-
-    function _setActiveSkin(
-        uint256 _tokenId,
-        SkinRecord memory _skinRecord
-    )
-        private
-    {
-        SkinRecord memory currentSkin = _activeSkins[_tokenId];
-
-        require(
-            currentSkin.skin != _skinRecord.skin ||
-                currentSkin.skinTokenId != _skinRecord.skinTokenId,
-            "DefiPassport: the same skin is already active"
-        );
-
-        _activeSkins[_tokenId] = _skinRecord;
-
-        emit ActiveSkinSet(_tokenId, _skinRecord);
+        return string(abi.encodePacked(baseURI, tokenId.toString()));
     }
 }
