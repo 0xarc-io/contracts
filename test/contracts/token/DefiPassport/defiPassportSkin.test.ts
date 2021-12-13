@@ -3,6 +3,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import {
   ArcProxyFactory,
   DefaultPassportSkin,
+  DefiPassport,
   MockDefiPassportFactory,
 } from '@src/typings';
 import { constants, utils } from 'ethers';
@@ -16,9 +17,10 @@ import { DefiPassportSkin } from '@src/typings/DefiPassportSkin';
 
 const DEFAULT_NAME = 'Defi Passport';
 const DEFAULT_SYMBOL = 'DFP';
+const DEFAULT_BASE_URI = 'https://default.base.uri/';
 
 describe('DefiPassport', () => {
-  let defiPassport: DefiPassportSkin;
+  let defiPassportSkin: DefiPassportSkin;
 
   let admin: SignerWithAddress;
   let user1: SignerWithAddress;
@@ -43,7 +45,10 @@ describe('DefiPassport', () => {
   /**
    * Helper function that mints a passport to a given user
    */
-  async function mintUserPassport(user: SignerWithAddress) {
+  async function mintUserPassport(
+    defiPassport: DefiPassport,
+    user: SignerWithAddress,
+  ) {
     await defiPassport.mint(
       user.address,
       defaultPassportSkin.address,
@@ -61,81 +66,86 @@ describe('DefiPassport', () => {
 
     await _setupSkins();
 
-    defiPassport = await deployDefiPassport(admin);
+    const defiPassport = await deployDefiPassport(admin);
     await defiPassport.init('Defi Passport', 'DefiPassport', admin.address);
 
     // Register default skin
     await defiPassport.setDefaultSkin(defaultPassportSkin.address, true);
 
     // Mint 2 defi passports
-    await mintUserPassport(user1);
-    user2PassportTokenId = await mintUserPassport(user2);
+    await mintUserPassport(defiPassport, user1);
+    user2PassportTokenId = await mintUserPassport(defiPassport, user2);
+
+    await defiPassport.setBaseURI(DEFAULT_BASE_URI);
 
     // Upgrade contract
     const upgradeImpl = await new DefiPassportSkinFactory(admin).deploy();
     const proxy = ArcProxyFactory.connect(defiPassport.address, admin);
     await proxy.upgradeTo(upgradeImpl.address);
-    defiPassport = DefiPassportSkinFactory.connect(proxy.address, admin);
+    defiPassportSkin = DefiPassportSkinFactory.connect(proxy.address, admin);
   });
 
   addSnapshotBeforeRestoreAfterEach();
 
   describe('Upgrade related tests', () => {
     describe('Confirm removal of functions', () => {
-      it('reverts if mint is called', async () => {
-        await expect(
-          defiPassport.mint(
+      it('reverts if mint is called', () => {
+        expect(() =>
+          defiPassportSkin.mint(
             user2.address,
             defaultPassportSkin.address,
             defaultSkinTokenId,
           ),
-        ).to.be.revertedWith('Function not supported');
+        ).to.throw('defiPassportSkin.mint is not a function');
       });
 
-      it('reverts if setActiveSkin is called', async () => {
-        await expect(
-          defiPassport.setActiveSkin(
+      it('reverts if setActiveSkin is called', () => {
+        expect(() =>
+          defiPassportSkin.setActiveSkin(
             defaultPassportSkin.address,
             defaultSkinTokenId,
           ),
-        ).to.be.revertedWith('Function not supported');
+        ).to.throw('defiPassportSkin.setActiveSkin is not a function');
       });
 
-      it('reverts if isSkinAvailable is called', async () => {
-        await expect(
-          defiPassport.isSkinAvailable(
+      it('reverts if isSkinAvailable is called', () => {
+        expect(() =>
+          defiPassportSkin.isSkinAvailable(
             user1.address,
             defaultPassportSkin.address,
             defaultSkinTokenId,
           ),
-        ).to.be.revertedWith('Function not supported');
+        ).to.throw('defiPassportSkin.isSkinAvailable is not a function');
       });
 
-      it('reverts if setSkinManager are called', async () => {
-        await expect(
-          defiPassport.setSkinManager(admin.address),
-        ).to.be.revertedWith('Function not supported');
+      it('reverts if setSkinManager are called', () => {
+        expect(() => defiPassportSkin.setSkinManager(admin.address)).to.throw(
+          'defiPassportSkin.setSkinManager is not a function',
+        );
       });
 
-      it('reverts if setWhitelistedSkin is called', async () => {
-        await expect(
-          defiPassport.setWhitelistedSkin(defaultPassportSkin.address, true),
-        ).to.be.revertedWith('Function not supported');
+      it('reverts if setWhitelistedSkin is called', () => {
+        expect(() =>
+          defiPassportSkin.setWhitelistedSkin(
+            defaultPassportSkin.address,
+            true,
+          ),
+        ).to.throw('defiPassportSkin.setWhitelistedSkin is not a function');
       });
 
-      it('reverts if setApprovedSkin is called', async () => {
-        await expect(
-          defiPassport.setApprovedSkin(
+      it('reverts if setApprovedSkin is called', () => {
+        expect(() =>
+          defiPassportSkin.setApprovedSkin(
             defaultPassportSkin.address,
             defaultSkinTokenId,
             true,
           ),
-        ).to.be.revertedWith('Function not supported');
+        ).to.throw('defiPassportSkin.setApprovedSkin is not a function');
       });
 
-      it('reverts if setApprovedSkins or approvedSkins are called', async () => {
-        await expect(
-          defiPassport.setApprovedSkins([
+      it('reverts if setApprovedSkins or approvedSkins are called', () => {
+        expect(() =>
+          defiPassportSkin.setApprovedSkins([
             {
               skin: defaultPassportSkin.address,
               skinTokenIdStatuses: [
@@ -146,57 +156,57 @@ describe('DefiPassport', () => {
               ],
             },
           ]),
-        ).to.be.revertedWith('Function not supported');
+        ).to.throw('defiPassportSkin.setApprovedSkins is not a function');
 
-        await expect(
-          defiPassport.approvedSkins(
+        expect(() =>
+          defiPassportSkin.approvedSkins(
             defaultPassportSkin.address,
             defaultSkinTokenId,
           ),
-        ).to.be.revertedWith('Function not supported');
+        ).to.throw('defiPassportSkin.approvedSkins is not a function');
       });
 
-      it('reverts if setDefaultSkin or defaultSkins are called', async () => {
-        await expect(
-          defiPassport.setDefaultSkin(defaultPassportSkin.address, true),
-        ).to.be.revertedWith('Function not supported');
+      it('reverts if setDefaultSkin or defaultSkins are called', () => {
+        expect(() =>
+          defiPassportSkin.setDefaultSkin(defaultPassportSkin.address, true),
+        ).to.throw('defiPassportSkin.setDefaultSkin is not a function');
 
-        await expect(
-          defiPassport.defaultSkins(defaultPassportSkin.address),
-        ).to.be.revertedWith('Function not supported');
+        expect(() =>
+          defiPassportSkin.defaultSkins(defaultPassportSkin.address),
+        ).to.throw('defiPassportSkin.defaultSkins is not a function');
       });
 
-      it('reverts if setActiveDefaultSkin or defaultActiveSkin are called', async () => {
-        await expect(
-          defiPassport.setActiveDefaultSkin(defaultPassportSkin.address),
-        ).to.be.revertedWith('Function not supported');
+      it('reverts if setActiveDefaultSkin or defaultActiveSkin are called', () => {
+        expect(() =>
+          defiPassportSkin.setActiveDefaultSkin(defaultPassportSkin.address),
+        ).to.throw('defiPassportSkin.setActiveDefaultSkin is not a function');
 
-        await expect(defiPassport.defaultActiveSkin()).to.be.revertedWith(
-          'Function not supported',
+        expect(() => defiPassportSkin.defaultActiveSkin()).to.throw(
+          'defiPassportSkin.defaultActiveSkin is not a function',
         );
       });
     });
 
     describe('#balanceOf', () => {
       it('preserves the balance of the users after upgrade', async () => {
-        expect(await defiPassport.balanceOf(user1.address)).to.eq(1);
+        expect(await defiPassportSkin.balanceOf(user1.address)).to.eq(1);
 
-        expect(await defiPassport.balanceOf(user2.address)).to.eq(1);
+        expect(await defiPassportSkin.balanceOf(user2.address)).to.eq(1);
       });
     });
 
     describe('#tokenOfOwnerByIndex', () => {
       it('preserves the token id of an user after upgrade', async () => {
-        expect(await defiPassport.tokenOfOwnerByIndex(user2.address, 0)).to.eq(
-          user2PassportTokenId,
-        );
+        expect(
+          await defiPassportSkin.tokenOfOwnerByIndex(user2.address, 0),
+        ).to.eq(user2PassportTokenId);
       });
     });
 
     describe('#approve', () => {
       it('reverts if the the caller is not the admin of the token', async () => {
         await expect(
-          defiPassport.approve(user1.address, user2PassportTokenId),
+          defiPassportSkin.approve(user1.address, user2PassportTokenId),
         ).to.be.revertedWith(
           'ERC721: approve caller is not owner nor approved for all',
         );
@@ -204,31 +214,31 @@ describe('DefiPassport', () => {
 
       it('reverts if the token does not exist', async () => {
         await expect(
-          defiPassport.connect(user2).approve(user1.address, 999),
+          defiPassportSkin.connect(user2).approve(user1.address, 999),
         ).to.be.revertedWith('ERC721: owner query for nonexistent token');
       });
 
       it('approves the token & transfers', async () => {
-        await defiPassport
+        await defiPassportSkin
           .connect(user2)
           .approve(user1.address, user2PassportTokenId);
 
-        expect(await defiPassport.balanceOf(user1.address)).to.eq(1);
-        expect(await defiPassport.balanceOf(user2.address)).to.eq(1);
+        expect(await defiPassportSkin.balanceOf(user1.address)).to.eq(1);
+        expect(await defiPassportSkin.balanceOf(user2.address)).to.eq(1);
 
-        await defiPassport
+        await defiPassportSkin
           .connect(user1)
           .transferFrom(user2.address, user1.address, user2PassportTokenId);
 
-        expect(await defiPassport.balanceOf(user1.address)).to.eq(2);
-        expect(await defiPassport.balanceOf(user2.address)).to.eq(0);
+        expect(await defiPassportSkin.balanceOf(user1.address)).to.eq(2);
+        expect(await defiPassportSkin.balanceOf(user2.address)).to.eq(0);
       });
     });
 
     describe('#transferFrom', () => {
       it('reverts if caller is not `from` and the token is not approved for `from`', async () => {
         await expect(
-          defiPassport.transferFrom(
+          defiPassportSkin.transferFrom(
             user2.address,
             admin.address,
             user2PassportTokenId,
@@ -237,12 +247,12 @@ describe('DefiPassport', () => {
           'ERC721: transfer caller is not owner nor approved',
         );
 
-        await defiPassport
+        await defiPassportSkin
           .connect(user2)
           .approve(user1.address, user2PassportTokenId);
 
         await expect(
-          defiPassport.transferFrom(
+          defiPassportSkin.transferFrom(
             user2.address,
             admin.address,
             user2PassportTokenId,
@@ -254,7 +264,7 @@ describe('DefiPassport', () => {
 
       it('reverts if `to` is the zero address', async () => {
         await expect(
-          defiPassport
+          defiPassportSkin
             .connect(user2)
             .transferFrom(
               user2.address,
@@ -267,17 +277,19 @@ describe('DefiPassport', () => {
 
     describe('#safeTransferFrom(from, to, tokenId)', () => {
       it('runs `_safeTransferFrom`', async () => {
-        expect(await defiPassport.ownerOf(user2PassportTokenId)).to.eq(
+        expect(await defiPassportSkin.ownerOf(user2PassportTokenId)).to.eq(
           user2.address,
         );
 
-        await defiPassport.safeTransferFrom(
-          user2.address,
-          user1.address,
-          user2PassportTokenId,
-        );
+        await defiPassportSkin
+          .connect(user2)
+          ['safeTransferFrom(address,address,uint256)'](
+            user2.address,
+            user1.address,
+            user2PassportTokenId,
+          );
 
-        expect(await defiPassport.ownerOf(user2PassportTokenId)).to.eq(
+        expect(await defiPassportSkin.ownerOf(user2PassportTokenId)).to.eq(
           user1.address,
         );
       });
@@ -285,18 +297,20 @@ describe('DefiPassport', () => {
 
     describe('safeTransferFrom(from, to, tokenId, _data)', () => {
       it('runs `_safeTransferFrom`', async () => {
-        expect(await defiPassport.ownerOf(user2PassportTokenId)).to.eq(
+        expect(await defiPassportSkin.ownerOf(user2PassportTokenId)).to.eq(
           user2.address,
         );
 
-        await defiPassport.safeTransferFrom(
-          user2.address,
-          user1.address,
-          user2PassportTokenId,
-          [],
-        );
+        await defiPassportSkin
+          .connect(user2)
+          ['safeTransferFrom(address,address,uint256,bytes)'](
+            user2.address,
+            user1.address,
+            user2PassportTokenId,
+            [],
+          );
 
-        expect(await defiPassport.ownerOf(user2PassportTokenId)).to.eq(
+        expect(await defiPassportSkin.ownerOf(user2PassportTokenId)).to.eq(
           user1.address,
         );
       });
@@ -304,18 +318,18 @@ describe('DefiPassport', () => {
 
     describe('#setApprovalForAll', () => {
       it('runs  `setApprovalForAll` from ERC721', async () => {
-        expect(await defiPassport.ownerOf(user2PassportTokenId)).to.eq(
+        expect(await defiPassportSkin.ownerOf(user2PassportTokenId)).to.eq(
           user2.address,
         );
 
-        await defiPassport
+        await defiPassportSkin
           .connect(user2)
           .setApprovalForAll(user1.address, true);
-        await defiPassport
+        await defiPassportSkin
           .connect(user1)
           .transferFrom(user2.address, user1.address, user2PassportTokenId);
 
-        expect(await defiPassport.ownerOf(user2PassportTokenId)).to.eq(
+        expect(await defiPassportSkin.ownerOf(user2PassportTokenId)).to.eq(
           user1.address,
         );
       });
@@ -324,18 +338,33 @@ describe('DefiPassport', () => {
     describe('setNameAndSymbol', () => {
       it('reverts if the caller by non-admin', async () => {
         await expect(
-          defiPassport.connect(user1).setNameAndSymbol('test', 'test'),
+          defiPassportSkin.connect(user1).setNameAndSymbol('test', 'test'),
         ).to.be.revertedWith('Adminable: caller is not admin');
       });
 
-      it('sets a new name and symbol', async () => {
-        expect(defiPassport.name()).to.eq(DEFAULT_NAME);
-        expect(defiPassport.symbol()).to.eq(DEFAULT_SYMBOL);
+      it.only('sets a new name and symbol', async () => {
+        expect(defiPassportSkin.name()).to.eq(DEFAULT_NAME);
+        expect(defiPassportSkin.symbol()).to.eq(DEFAULT_SYMBOL);
 
-        await defiPassport.setNameAndSymbol('test', 'TEST');
+        await defiPassportSkin.setNameAndSymbol('test', 'TEST');
 
-        expect(defiPassport.name()).to.eq('test');
-        expect(defiPassport.symbol()).to.eq('TEST');
+        expect(defiPassportSkin.name()).to.eq('test');
+        expect(defiPassportSkin.symbol()).to.eq('TEST');
+      });
+    });
+
+    describe('#tokenURI', () => {
+      it('returns the correct token URI', async () => {
+        expect(await defiPassportSkin.baseURI()).to.eq(DEFAULT_BASE_URI);
+        expect(await defiPassportSkin.tokenURI(user2PassportTokenId)).to.eq(
+          `${DEFAULT_BASE_URI}${user2PassportTokenId}`,
+        );
+
+        const tokenUriPrefix = 'https://test/';
+
+        expect(await defiPassportSkin.tokenURI(user2PassportTokenId)).to.eq(
+          `${tokenUriPrefix}${user2PassportTokenId}`,
+        );
       });
     });
   });
@@ -344,7 +373,7 @@ describe('DefiPassport', () => {
     describe('#init', () => {
       it('reverts if called by non-admin', async () => {
         await expect(
-          defiPassport.connect(user1).init('a', 'b', admin.address),
+          defiPassportSkin.connect(user1).init('a', 'b'),
         ).to.be.revertedWith('Adminable: caller is not admin');
       });
 
@@ -361,16 +390,16 @@ describe('DefiPassport', () => {
       });
 
       it('reverts if called a second time', async () => {
-        await expect(
-          defiPassport.init('a', 'b', admin.address),
-        ).to.be.revertedWith('Initializable: contract is already initialized');
+        await expect(defiPassportSkin.init('a', 'b')).to.be.revertedWith(
+          'Initializable: contract is already initialized',
+        );
       });
     });
 
     describe('#setBaseURI', () => {
       it('reverts if called by non-admin', async () => {
         await expect(
-          defiPassport
+          defiPassportSkin
             .connect(user1)
             .setBaseURI(utils.formatBytes32String('test')),
         ).to.be.revertedWith('Adminable: caller is not admin');
@@ -379,24 +408,22 @@ describe('DefiPassport', () => {
       it('sets the base URI of tokens', async () => {
         const uri = 'https://test.com/defipassport';
 
-        await defiPassport.setBaseURI(uri);
+        await defiPassportSkin.setBaseURI(uri);
 
-        expect(await defiPassport.baseURI()).to.eq(uri);
+        expect(await defiPassportSkin.baseURI()).to.eq(uri);
       });
 
       it('it is included in the token URI', async () => {
         const uri = 'https://test.com/defipassport/';
 
-        await defiPassport.setBaseURI(uri);
+        await defiPassportSkin.setBaseURI(uri);
 
-        const tokenId = await defiPassport.tokenOfOwnerByIndex(
+        const tokenId = await defiPassportSkin.tokenOfOwnerByIndex(
           user1.address,
           0,
         );
 
-        expect(await defiPassport.tokenURI(tokenId)).to.eq(
-          uri + user1.address.toLowerCase(),
-        );
+        expect(await defiPassportSkin.tokenURI(tokenId)).to.eq(uri + tokenId);
       });
     });
 

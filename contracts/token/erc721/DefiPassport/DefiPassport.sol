@@ -10,7 +10,7 @@ import {Address} from "../../../lib/Address.sol";
 import {Bytes32} from "../../../lib/Bytes32.sol";
 import {Adminable} from "../../../lib/Adminable.sol";
 import {Initializable} from "../../../lib/Initializable.sol";
-import {DefiPassportStorage} from ".././DefiPassportStorage.sol";
+import {DefiPassportStorage} from "./DefiPassportStorage.sol";
 import {ISapphirePassportScores} from "../../../sapphire/ISapphirePassportScores.sol";
 import {SapphireTypes} from "../../../sapphire/SapphireTypes.sol";
 
