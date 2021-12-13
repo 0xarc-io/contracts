@@ -5,7 +5,7 @@ import {
   DefaultPassportSkin,
   MockDefiPassportFactory,
 } from '@src/typings';
-import { utils } from 'ethers';
+import { constants, utils } from 'ethers';
 import { DefaultPassportSkinFactory } from '@src/typings/DefaultPassportSkinFactory';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
@@ -13,6 +13,9 @@ import { ethers } from 'hardhat';
 import { deployDefiPassport } from '../../deployers';
 import { DefiPassportSkinFactory } from '@src/typings/DefiPassportSkinFactory';
 import { DefiPassportSkin } from '@src/typings/DefiPassportSkin';
+
+const DEFAULT_NAME = 'Defi Passport';
+const DEFAULT_SYMBOL = 'DFP';
 
 describe('DefiPassport', () => {
   let defiPassport: DefiPassportSkin;
@@ -205,7 +208,7 @@ describe('DefiPassport', () => {
         ).to.be.revertedWith('ERC721: owner query for nonexistent token');
       });
 
-      it('approves the token for transfer if called by the admin', async () => {
+      it('approves the token & transfers', async () => {
         await defiPassport
           .connect(user2)
           .approve(user1.address, user2PassportTokenId);
@@ -223,35 +226,117 @@ describe('DefiPassport', () => {
     });
 
     describe('#transferFrom', () => {
-      it(
-        'reverts if caller is not `from` and the token is not approved for `from`',
-      );
+      it('reverts if caller is not `from` and the token is not approved for `from`', async () => {
+        await expect(
+          defiPassport.transferFrom(
+            user2.address,
+            admin.address,
+            user2PassportTokenId,
+          ),
+        ).to.be.revertedWith(
+          'ERC721: transfer caller is not owner nor approved',
+        );
 
-      it('reverts if `from` is the zero addres');
+        await defiPassport
+          .connect(user2)
+          .approve(user1.address, user2PassportTokenId);
 
-      it('reverts if `to` is the zero address');
+        await expect(
+          defiPassport.transferFrom(
+            user2.address,
+            admin.address,
+            user2PassportTokenId,
+          ),
+        ).to.be.revertedWith(
+          'ERC721: transfer caller is not owner nor approved',
+        );
+      });
 
-      it('transfers the token to the receiver if token is approved');
-
-      it('transfers the token to the if `from` is the admin');
+      it('reverts if `to` is the zero address', async () => {
+        await expect(
+          defiPassport
+            .connect(user2)
+            .transferFrom(
+              user2.address,
+              constants.AddressZero,
+              user2PassportTokenId,
+            ),
+        ).to.be.revertedWith('ERC721: transfer to the zero address');
+      });
     });
 
     describe('#safeTransferFrom(from, to, tokenId)', () => {
-      it('runs `_safeTransferFrom`');
+      it('runs `_safeTransferFrom`', async () => {
+        expect(await defiPassport.ownerOf(user2PassportTokenId)).to.eq(
+          user2.address,
+        );
+
+        await defiPassport.safeTransferFrom(
+          user2.address,
+          user1.address,
+          user2PassportTokenId,
+        );
+
+        expect(await defiPassport.ownerOf(user2PassportTokenId)).to.eq(
+          user1.address,
+        );
+      });
     });
 
     describe('safeTransferFrom(from, to, tokenId, _data)', () => {
-      it('runs `_safeTransferFrom`');
+      it('runs `_safeTransferFrom`', async () => {
+        expect(await defiPassport.ownerOf(user2PassportTokenId)).to.eq(
+          user2.address,
+        );
+
+        await defiPassport.safeTransferFrom(
+          user2.address,
+          user1.address,
+          user2PassportTokenId,
+          [],
+        );
+
+        expect(await defiPassport.ownerOf(user2PassportTokenId)).to.eq(
+          user1.address,
+        );
+      });
     });
 
     describe('#setApprovalForAll', () => {
-      it('runs  `setApprovalForAll` from ERC721');
+      it('runs  `setApprovalForAll` from ERC721', async () => {
+        expect(await defiPassport.ownerOf(user2PassportTokenId)).to.eq(
+          user2.address,
+        );
+
+        await defiPassport
+          .connect(user2)
+          .setApprovalForAll(user1.address, true);
+        await defiPassport
+          .connect(user1)
+          .transferFrom(user2.address, user1.address, user2PassportTokenId);
+
+        expect(await defiPassport.ownerOf(user2PassportTokenId)).to.eq(
+          user1.address,
+        );
+      });
     });
 
     describe('setNameAndSymbol', () => {
-      it('reverts if the caller by non-admin');
+      it('reverts if the caller by non-admin', async () => {
+        await expect(
+          defiPassport.connect(user1).setNameAndSymbol('test', 'test'),
+        ).to.be.revertedWith('Adminable: caller is not admin');
+      });
 
-      it('sets a new name and symbol');
+      it('sets a new name and symbol', async () => {
+        expect(defiPassport.name()).to.eq(DEFAULT_NAME);
+        expect(defiPassport.symbol()).to.eq(DEFAULT_SYMBOL);
+
+        await defiPassport.setNameAndSymbol('test', 'TEST');
+
+        expect(defiPassport.name()).to.eq('test');
+        expect(defiPassport.symbol()).to.eq('TEST');
+      });
     });
   });
 
