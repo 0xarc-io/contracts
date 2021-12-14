@@ -2,6 +2,7 @@ import {
   ArcProxyFactory,
   DefaultPassportSkinFactory,
   DefiPassportFactory,
+  DefiPassportSkinFactory,
   EarlyPassportSkinFactory,
 } from '@src/typings';
 import { green, red, yellow } from 'chalk';
@@ -147,11 +148,7 @@ task(
       green(`Default passport skin NFT deployed at ${defaultPassportSkinNft}`),
     );
 
-    console.log(yellow(`Verifying contract...`));
-    await hre.run('verify:verify', {
-      address: defaultPassportSkinNft,
-      constructorArguments: [name, symbol],
-    });
+    await verifyContract(hre, defaultPassportSkinNft, name, symbol);
 
     const nftContract = DefaultPassportSkinFactory.connect(
       defaultPassportSkinNft,
@@ -176,6 +173,29 @@ task(
       console.log(green(`The default skins were successfully minted`));
     }
   });
+
+task(
+  'deploy-defi-passport-skin',
+  'Deploy the Defi Passport Skin ERC721 contract',
+).setAction(async (_taskArgs, hre) => {
+  const { network, signer, networkConfig } = await loadDetails(hre);
+
+  await pruneDeployments(network, signer.provider);
+
+  const defiPassportSkinAddress = await deployContract(
+    {
+      name: 'DefiPassportSkin',
+      source: 'DefiPassportSkin',
+      data: new DefiPassportSkinFactory(signer).getDeployTransaction(),
+      version: 1,
+      type: DeploymentType.global,
+      group: 'DefiPassport',
+    },
+    networkConfig,
+  );
+
+  await verifyContract(hre, defiPassportSkinAddress);
+});
 
 task(
   'approve-multiple-skins',
