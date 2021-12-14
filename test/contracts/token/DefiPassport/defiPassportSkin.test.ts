@@ -67,7 +67,7 @@ describe('DefiPassport', () => {
     await _setupSkins();
 
     const defiPassport = await deployDefiPassport(admin);
-    await defiPassport.init('Defi Passport', 'DefiPassport', admin.address);
+    await defiPassport.init(DEFAULT_NAME, DEFAULT_SYMBOL, admin.address);
 
     // Register default skin
     await defiPassport.setDefaultSkin(defaultPassportSkin.address, true);
@@ -78,11 +78,19 @@ describe('DefiPassport', () => {
 
     await defiPassport.setBaseURI(DEFAULT_BASE_URI);
 
+    console.log(
+      `pre name and symbol: ${await defiPassport.name()} ${await defiPassport.symbol()}`,
+    );
+
     // Upgrade contract
     const upgradeImpl = await new DefiPassportSkinFactory(admin).deploy();
     const proxy = ArcProxyFactory.connect(defiPassport.address, admin);
     await proxy.upgradeTo(upgradeImpl.address);
     defiPassportSkin = DefiPassportSkinFactory.connect(proxy.address, admin);
+
+    console.log(
+      `post name and symbol: ${await defiPassportSkin.name()} ${await defiPassportSkin.symbol()}`,
+    );
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -281,13 +289,10 @@ describe('DefiPassport', () => {
           user2.address,
         );
 
-        await defiPassportSkin
-          .connect(user2)
-          ['safeTransferFrom(address,address,uint256)'](
-            user2.address,
-            user1.address,
-            user2PassportTokenId,
-          );
+        await defiPassportSkin.connect(user2)[
+          // eslint-disable-next-line no-unexpected-multiline
+          'safeTransferFrom(address,address,uint256)'
+        ](user2.address, user1.address, user2PassportTokenId);
 
         expect(await defiPassportSkin.ownerOf(user2PassportTokenId)).to.eq(
           user1.address,
@@ -301,14 +306,10 @@ describe('DefiPassport', () => {
           user2.address,
         );
 
-        await defiPassportSkin
-          .connect(user2)
-          ['safeTransferFrom(address,address,uint256,bytes)'](
-            user2.address,
-            user1.address,
-            user2PassportTokenId,
-            [],
-          );
+        await defiPassportSkin.connect(user2)[
+          // eslint-disable-next-line no-unexpected-multiline
+          'safeTransferFrom(address,address,uint256,bytes)'
+        ](user2.address, user1.address, user2PassportTokenId, []);
 
         expect(await defiPassportSkin.ownerOf(user2PassportTokenId)).to.eq(
           user1.address,
@@ -342,14 +343,14 @@ describe('DefiPassport', () => {
         ).to.be.revertedWith('Adminable: caller is not admin');
       });
 
-      it.only('sets a new name and symbol', async () => {
-        expect(defiPassportSkin.name()).to.eq(DEFAULT_NAME);
-        expect(defiPassportSkin.symbol()).to.eq(DEFAULT_SYMBOL);
+      it('sets a new name and symbol', async () => {
+        expect(await defiPassportSkin.name()).to.eq(DEFAULT_NAME);
+        expect(await defiPassportSkin.symbol()).to.eq(DEFAULT_SYMBOL);
 
         await defiPassportSkin.setNameAndSymbol('test', 'TEST');
 
-        expect(defiPassportSkin.name()).to.eq('test');
-        expect(defiPassportSkin.symbol()).to.eq('TEST');
+        expect(await defiPassportSkin.name()).to.eq('test');
+        expect(await defiPassportSkin.symbol()).to.eq('TEST');
       });
     });
 
@@ -360,10 +361,8 @@ describe('DefiPassport', () => {
           `${DEFAULT_BASE_URI}${user2PassportTokenId}`,
         );
 
-        const tokenUriPrefix = 'https://test/';
-
         expect(await defiPassportSkin.tokenURI(user2PassportTokenId)).to.eq(
-          `${tokenUriPrefix}${user2PassportTokenId}`,
+          `${DEFAULT_BASE_URI}${user2PassportTokenId}`,
         );
       });
     });
