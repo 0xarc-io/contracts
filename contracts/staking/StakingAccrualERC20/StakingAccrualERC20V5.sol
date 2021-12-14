@@ -294,8 +294,8 @@ contract StakingAccrualERC20V5 is BaseERC20, PassportScoreVerifiable, Adminable,
         }
         // Calculate and mint the amount of stToken the Token is worth. The ratio will change overtime, as stToken is burned/minted and Token deposited + gained from fees / withdrawn.
         else {
-            uint256 what = _amount.mul(totalShares).div(totalStakingToken);
-            _mint(msg.sender, what);
+            uint256 tokensToMint = _amount.mul(totalShares).div(totalStakingToken);
+            _mint(msg.sender, tokensToMint);
         }
         // Lock the staking token in the contract
         stakingToken.safeTransferFrom(msg.sender, address(this), _amount);
@@ -378,11 +378,11 @@ contract StakingAccrualERC20V5 is BaseERC20, PassportScoreVerifiable, Adminable,
         );
 
         // Calculates the amount of staking token the staked token is worth
-        uint256 what = _share.mul(stakingToken.balanceOf(address(this))).div(totalShares);
+        uint256 tokensToTransfer = _share.mul(stakingToken.balanceOf(address(this))).div(totalShares);
         _burn(msg.sender, _share);
         cooldowns[msg.sender] = 0;
-        emit Exited(msg.sender, what);
-        stakingToken.safeTransfer(msg.sender, what);
+        emit Exited(msg.sender, tokensToTransfer);
+        stakingToken.safeTransfer(msg.sender, tokensToTransfer);
     }
 
     /**
