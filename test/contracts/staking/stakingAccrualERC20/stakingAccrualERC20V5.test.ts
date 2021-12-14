@@ -24,11 +24,12 @@ import {
   immediatelyUpdateMerkleRoot,
 } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
+
 import { utils, BigNumber, constants } from 'ethers';
 import { generateContext, ITestContext } from '../../context';
 import { deployDefiPassport } from '../../deployers';
 import { sapphireFixture } from '../../fixtures';
-import checkUserBalance from './checkUserBalance';
+import checkStakedBalance from './checkStakedBalance';
 import createStream from './createSablierStream';
 import waitCooldown from './waitCooldown';
 
@@ -793,7 +794,7 @@ describe('StakingAccrualERC20V5', () => {
 
         await checkState('1.5', '300', '450');
 
-        await checkUserBalance(contract, user1);
+        await checkStakedBalance(contract, user1);
       });
 
       it('Two players without admin', async () => {
@@ -817,7 +818,7 @@ describe('StakingAccrualERC20V5', () => {
 
         await checkState('1', '500', '500');
 
-        await checkUserBalance(contract, user1);
+        await checkStakedBalance(contract, user1);
 
         await contract.connect(user1).startExitCooldown();
         await waitCooldown(contract, COOLDOWN_DURATION);
@@ -846,8 +847,8 @@ describe('StakingAccrualERC20V5', () => {
           .stake(utils.parseEther('200'), scoreProof2);
 
         await checkState('1', '300', '300');
-        await checkUserBalance(contract, user1);
-        await checkUserBalance(contract, user2);
+        await checkStakedBalance(contract, user1);
+        await checkStakedBalance(contract, user2);
 
         await contract
           .connect(user2)
@@ -858,8 +859,8 @@ describe('StakingAccrualERC20V5', () => {
         await stakingToken.mintShare(contract.address, utils.parseEther('350'));
 
         await checkState('2', '350', '700');
-        await checkUserBalance(contract, user1);
-        await checkUserBalance(contract, user2);
+        await checkStakedBalance(contract, user1);
+        await checkStakedBalance(contract, user2);
 
         await contract.connect(user2).startExitCooldown();
         await waitCooldown(contract, COOLDOWN_DURATION);

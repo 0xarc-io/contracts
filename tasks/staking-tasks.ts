@@ -484,13 +484,17 @@ task(
     let source: string;
 
     switch (version) {
-      case '5':
-        source = 'StakingAccrualERC20V5';
-        factory = new StakingAccrualERC20V5Factory(signer);
-        break;
-      default:
+      case '1':
+      case '2':
+      case '3':
+      case '4':
         source = 'StakingAccrualERC20';
         factory = new StakingAccrualERC20Factory(signer);
+        break;
+      case '5':
+      default:
+        source = 'StakingAccrualERC20V5';
+        factory = new StakingAccrualERC20V5Factory(signer);
     }
 
     const contractImplementation = await deployContract(
