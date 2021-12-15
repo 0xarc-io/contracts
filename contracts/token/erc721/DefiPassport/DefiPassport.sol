@@ -2,17 +2,17 @@
 
 pragma solidity 0.8.4;
 
-import {ERC721Full} from "../../.openzeppelin/2.x/token/ERC721/ERC721Full.sol";
-import {Counters} from "../../.openzeppelin/4.x/utils/Counters.sol";
-import {IERC721} from "../../.openzeppelin/4.x/token/ERC721/IERC721.sol";
+import {ERC721Full} from "../../../.openzeppelin/2.x/token/ERC721/ERC721Full.sol";
+import {Counters} from "../../../.openzeppelin/4.x/utils/Counters.sol";
+import {IERC721} from "../../../.openzeppelin/4.x/token/ERC721/IERC721.sol";
 
-import {Address} from "../../lib/Address.sol";
-import {Bytes32} from "../../lib/Bytes32.sol";
-import {Adminable} from "../../lib/Adminable.sol";
-import {Initializable} from "../../lib/Initializable.sol";
+import {Address} from "../../../lib/Address.sol";
+import {Bytes32} from "../../../lib/Bytes32.sol";
+import {Adminable} from "../../../lib/Adminable.sol";
+import {Initializable} from "../../../lib/Initializable.sol";
 import {DefiPassportStorage} from "./DefiPassportStorage.sol";
-import {ISapphirePassportScores} from "../../sapphire/ISapphirePassportScores.sol";
-import {SapphireTypes} from "../../sapphire/SapphireTypes.sol";
+import {ISapphirePassportScores} from "../../../sapphire/ISapphirePassportScores.sol";
+import {SapphireTypes} from "../../../sapphire/SapphireTypes.sol";
 
 contract DefiPassport is ERC721Full, Adminable, DefiPassportStorage, Initializable {
 

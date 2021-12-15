@@ -687,5 +687,15 @@
     "version": 1,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "DefiPassportSkin",
+    "source": "DefiPassportSkin",
+    "address": "0x123d5dc0FAD036b621384A952c51097221E7f223",
+    "txn": "0x74df472d87d1b6219b5b72acec3d1d18273357d9f1d7deb18b1815b7d061b18b",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": "DefiPassport"
   }
 ]
