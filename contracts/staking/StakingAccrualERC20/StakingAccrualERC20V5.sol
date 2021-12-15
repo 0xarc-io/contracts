@@ -2,20 +2,20 @@
 
 pragma solidity 0.8.4;
 
-import {Adminable} from "../lib/Adminable.sol";
-import {Initializable} from "../lib/Initializable.sol";
-import {Address} from "../lib/Address.sol";
-import {SafeERC20} from "../lib/SafeERC20.sol";
-import {SafeMath} from "../lib/SafeMath.sol";
-import {PassportScoreVerifiable} from "../lib/PassportScoreVerifiable.sol";
-import {Bytes32} from "../lib/Bytes32.sol";
+import {Adminable} from "../../lib/Adminable.sol";
+import {Initializable} from "../../lib/Initializable.sol";
+import {Address} from "../../lib/Address.sol";
+import {SafeERC20} from "../../lib/SafeERC20.sol";
+import {SafeMath} from "../../lib/SafeMath.sol";
+import {PassportScoreVerifiable} from "../../lib/PassportScoreVerifiable.sol";
+import {Bytes32} from "../../lib/Bytes32.sol";
 
-import {ISablier} from "../global/ISablier.sol";
-import {BaseERC20} from "../token/BaseERC20.sol";
-import {IPermittableERC20} from "../token/IPermittableERC20.sol";
-import {SapphireTypes} from "../sapphire/SapphireTypes.sol";
-import {ISapphirePassportScores} from "../sapphire/ISapphirePassportScores.sol";
-import {IERC721} from "../.openzeppelin/4.x/token/ERC721/IERC721.sol";
+import {ISablier} from "../../global/ISablier.sol";
+import {BaseERC20} from "../../token/BaseERC20.sol";
+import {IPermittableERC20} from "../../token/IPermittableERC20.sol";
+import {SapphireTypes} from "../../sapphire/SapphireTypes.sol";
+import {ISapphirePassportScores} from "../../sapphire/ISapphirePassportScores.sol";
+import {IERC721} from "../../.openzeppelin/4.x/token/ERC721/IERC721.sol";
 
 /**
  * @notice An ERC20 that allows users to deposit a given token, where their
@@ -26,7 +26,7 @@ import {IERC721} from "../.openzeppelin/4.x/token/ERC721/IERC721.sol";
  *         intent, which will trigger a cooldown after which they will be able
  *         to reclaim their share.
  */
-contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, Initializable {
+contract StakingAccrualERC20V5 is BaseERC20, PassportScoreVerifiable, Adminable, Initializable {
 
     /* ========== Libraries ========== */
 
@@ -46,7 +46,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
     ISablier public sablierContract;
     uint256 public sablierStreamId;
 
-    bytes32 private _proofProtocol;
+    bytes32 public proofProtocol;
 
     /**
      * @notice Cooldown duration to be elapsed for users to exit
@@ -54,7 +54,9 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
 
     mapping (address => uint256) public cooldowns;
 
-    IERC721 public defiPassportContract;
+    IERC721 private _defiPassportContract;
+
+    uint256 public scoreThreshold;
 
     /* ========== Events ========== */
 
@@ -78,6 +80,10 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
 
     event ProofProtocolSet(string _protocol);
 
+    event PassportScoresContractSet(address _passportScoresContract);
+
+    event ScoreThresholdSet(uint256 _threshold);
+
     /* ========== Constructor (ignore) ========== */
 
     constructor ()
@@ -92,7 +98,6 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
         uint8 __decimals,
         address _stakingToken,
         uint256 _exitCooldownDuration,
-        address _defiPassportContract,
         address _sablierContract
     )
         external
@@ -106,17 +111,12 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
 
         require (
             _stakingToken.isContract(),
-            "StakingAccrualERC20: staking token is not a contract"
-        );
-
-        require (
-            _defiPassportContract.isContract(),
-            "StakingAccrualERC20: the passport scores contract is invalid"
+            "StakingAccrualERC20V5: staking token is not a contract"
         );
 
         require (
             _sablierContract.isContract(),
-            "StakingAccrualERC20: the sablier contract is invalid"
+            "StakingAccrualERC20V5: the sablier contract is invalid"
         );
 
         DOMAIN_SEPARATOR = _initDomainSeparator(
@@ -125,7 +125,6 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
         );
 
         stakingToken = IPermittableERC20(_stakingToken);
-        defiPassportContract = IERC721(_defiPassportContract);
         sablierContract = ISablier(_sablierContract);
     }
 
@@ -140,7 +139,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
     {
         require(
             exitCooldownDuration != _duration,
-            "StakingAccrualERC20: the same cooldown is already set"
+            "StakingAccrualERC20V5: the same cooldown is already set"
         );
 
         exitCooldownDuration = _duration;
@@ -162,7 +161,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
 
         require (
             _amount <= contractBalance,
-            "StakingAccrualERC20: cannot recover more than the balance"
+            "StakingAccrualERC20V5: cannot recover more than the balance"
         );
 
         emit TokensRecovered(_amount);
@@ -171,27 +170,6 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
             getAdmin(),
             _amount
         );
-    }
-
-    function setDefiPassportContract(
-        address _defiPassportContract
-    )
-        external
-        onlyAdmin
-    {
-        require(
-            address(defiPassportContract) != _defiPassportContract,
-            "StakingAccrualERC20: the same defi passport address is already set"
-        );
-
-        require(
-            _defiPassportContract.isContract(),
-            "StakingAccrualERC20: the given address is not a contract"
-        );
-
-        defiPassportContract = IERC721(_defiPassportContract);
-
-        emit DefiPassportContractSet(_defiPassportContract);
     }
 
     /**
@@ -205,7 +183,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
     {
         require (
             _sablierContract.isContract(),
-            "StakingAccrualERC20: address is not a contract"
+            "StakingAccrualERC20V5: address is not a contract"
         );
 
         sablierContract = ISablier(_sablierContract);
@@ -224,14 +202,14 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
     {
         require (
             sablierStreamId != _sablierStreamId,
-            "StakingAccrualERC20: the same stream ID is already set"
+            "StakingAccrualERC20V5: the same stream ID is already set"
         );
 
         (, address recipient,,,,,,) = sablierContract.getStream(_sablierStreamId);
 
         require (
             recipient == address(this),
-            "StakingAccrualERC20: incorrect stream ID"
+            "StakingAccrualERC20V5: incorrect stream ID"
         );
 
         sablierStreamId = _sablierStreamId;
@@ -245,31 +223,66 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
         external
         onlyAdmin
     {
-        _proofProtocol = _protocol;
+        proofProtocol = _protocol;
 
-        emit ProofProtocolSet(_proofProtocol.toString());
+        emit ProofProtocolSet(proofProtocol.toString());
+    }
+
+    function setPassportScoresContract(
+        address _passportScoresContract
+    )
+        external
+        onlyAdmin
+    {
+        require (
+            _passportScoresContract.isContract(),
+            "StakingAccrualERC20V5: address is not a contract"
+        );
+
+        passportScoresContract = ISapphirePassportScores(_passportScoresContract);
+
+        emit PassportScoresContractSet(_passportScoresContract);
+    }
+
+    function setScoreThreshold(
+        uint256 _threshold
+    )
+        external
+        onlyAdmin
+    {
+        scoreThreshold = _threshold;
+
+        emit ScoreThresholdSet(_threshold);
     }
 
     /* ========== Mutative Functions ========== */
 
     function stake(
-        uint256 _amount
+        uint256 _amount,
+        SapphireTypes.ScoreProof memory _proof
     )
         public
+        checkScoreProof(
+            _proof,
+            proofProtocol != bytes32(0),
+            true
+        )
     {
-        claimStreamFunds();
-
         uint256 cooldownTimestamp = cooldowns[msg.sender];
 
         require (
             cooldownTimestamp == 0,
-            "StakingAccrualERC20: cannot stake during cooldown period"
+            "StakingAccrualERC20V5: cannot stake during cooldown period"
         );
 
-       require(
-            defiPassportContract.balanceOf(msg.sender) > 0,
-            "StakingAccrualERC20: user has to have passport"
-        );
+        if (proofProtocol != bytes32(0)) {
+            require(
+                _proof.score >= scoreThreshold,
+                "StakingAccrualERC20V5: score is below threshold"
+            );
+        }
+
+        claimStreamFunds();
 
         // Gets the amount of the staking token locked in the contract
         uint256 totalStakingToken = stakingToken.balanceOf(address(this));
@@ -281,8 +294,8 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
         }
         // Calculate and mint the amount of stToken the Token is worth. The ratio will change overtime, as stToken is burned/minted and Token deposited + gained from fees / withdrawn.
         else {
-            uint256 what = _amount.mul(totalShares).div(totalStakingToken);
-            _mint(msg.sender, what);
+            uint256 tokensToMint = _amount.mul(totalShares).div(totalStakingToken);
+            _mint(msg.sender, tokensToMint);
         }
         // Lock the staking token in the contract
         stakingToken.safeTransferFrom(msg.sender, address(this), _amount);
@@ -295,7 +308,8 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
         uint256 _deadline,
         uint8 _v,
         bytes32 _r,
-        bytes32 _s
+        bytes32 _s,
+        SapphireTypes.ScoreProof memory _proof
     )
         public
     {
@@ -308,7 +322,7 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
             _r,
             _s
         );
-        stake(_amount);
+        stake(_amount, _proof);
     }
 
     /**
@@ -320,12 +334,12 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
     {
         require (
             balanceOf(msg.sender) > 0,
-            "StakingAccrualERC20: user has 0 balance"
+            "StakingAccrualERC20V5: user has 0 balance"
         );
 
         require (
             cooldowns[msg.sender] == 0,
-            "StakingAccrualERC20: exit cooldown already started"
+            "StakingAccrualERC20V5: exit cooldown already started"
         );
 
         cooldowns[msg.sender] = currentTimestamp().add(exitCooldownDuration);
@@ -351,24 +365,24 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
 
         require(
             _share > 0,
-            "StakingAccrualERC20: user has 0 balance"
+            "StakingAccrualERC20V5: user has 0 balance"
         );
 
         require(
             currentTimestamp() >= cooldownTimestamp,
-            "StakingAccrualERC20: exit cooldown not elapsed"
+            "StakingAccrualERC20V5: exit cooldown not elapsed"
         );
         require(
             cooldownTimestamp != 0,
-            "StakingAccrualERC20: exit cooldown was not initiated"
+            "StakingAccrualERC20V5: exit cooldown was not initiated"
         );
 
         // Calculates the amount of staking token the staked token is worth
-        uint256 what = _share.mul(stakingToken.balanceOf(address(this))).div(totalShares);
+        uint256 tokensToTransfer = _share.mul(stakingToken.balanceOf(address(this))).div(totalShares);
         _burn(msg.sender, _share);
         cooldowns[msg.sender] = 0;
-        emit Exited(msg.sender, what);
-        stakingToken.safeTransfer(msg.sender, what);
+        emit Exited(msg.sender, tokensToTransfer);
+        stakingToken.safeTransfer(msg.sender, tokensToTransfer);
     }
 
     /**
@@ -440,6 +454,6 @@ contract StakingAccrualERC20 is BaseERC20, PassportScoreVerifiable, Adminable, I
         view
         returns (string memory)
     {
-        return _proofProtocol.toString();
+        return proofProtocol.toString();
     }
 }
