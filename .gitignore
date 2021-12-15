@@ -5,6 +5,7 @@ node_modules
 bin
 
 coverage
+coverage.json
 dist
 typechain
 typings
@@ -14,6 +15,7 @@ generated
 .env
 .coverage_contracts
 subgraph.yaml
+test-results.xml
 
 solc-input-*.json
 

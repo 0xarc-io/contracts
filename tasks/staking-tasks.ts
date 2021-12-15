@@ -2,6 +2,7 @@ import {
   ArcProxyFactory,
   JointPassportCampaignFactory,
   StakingAccrualERC20Factory,
+  StakingAccrualERC20V5Factory,
   TestTokenFactory,
 } from '@src/typings';
 import { green, red, yellow } from 'chalk';
@@ -479,11 +480,28 @@ task(
 
     await pruneDeployments(network, signer.provider);
 
+    let factory: StakingAccrualERC20Factory | StakingAccrualERC20V5Factory;
+    let source: string;
+
+    switch (version) {
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+        source = 'StakingAccrualERC20';
+        factory = new StakingAccrualERC20Factory(signer);
+        break;
+      case '5':
+      default:
+        source = 'StakingAccrualERC20V5';
+        factory = new StakingAccrualERC20V5Factory(signer);
+    }
+
     const contractImplementation = await deployContract(
       {
         name: 'StakingAccrualERC20',
-        source: 'StakingAccrualERC20',
-        data: new StakingAccrualERC20Factory(signer).getDeployTransaction(),
+        source,
+        data: factory.getDeployTransaction(),
         version: Number(version) || 1,
         type: DeploymentType.global,
         group: 'StakingAccrualERC20',

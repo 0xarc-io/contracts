@@ -80,9 +80,6 @@ const config: HardhatUserConfig = {
         eoaOwner: '0xAF36712cb4ebD3BD706E898F5703ce3Ca96E8982',
       },
     },
-    coverage: {
-      url: 'http://127.0.0.1:8555', // Coverage launches its own ganache-cli client
-    },
     rinkeby: {
       url: getNetworkUrl('rinkeby'),
       accounts: [params.testnet_private_key],

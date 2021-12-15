@@ -1,5 +1,4 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { BASE } from '@src/constants';
 import {
   ArcProxyFactory,
   DefaultPassportSkinFactory,
@@ -13,15 +12,16 @@ import {
 import { MockStakingAccrualERC20 } from '@src/typings/MockStakingAccrualERC20';
 import { MockStakingAccrualERC20Factory } from '@src/typings/MockStakingAccrualERC20Factory';
 import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
-import {
-  addSnapshotBeforeRestoreAfterEach,
-} from '@test/helpers/testingUtils';
+import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { constants, utils } from 'ethers';
 import { ethers } from 'hardhat';
-import { generateContext } from '../context';
-import { deployDefiPassport } from '../deployers';
-import { sapphireFixture } from '../fixtures';
+import { generateContext } from '../../context';
+import { deployDefiPassport } from '../../deployers';
+import { sapphireFixture } from '../../fixtures';
+import checkStakedBalance from './checkStakedBalance';
+import createStream from './createSablierStream';
+import waitCooldown from './waitCooldown';
 
 const STAKE_AMOUNT = utils.parseEther('100');
 const COOLDOWN_DURATION = 60;
@@ -42,32 +42,8 @@ describe('StakingAccrualERC20', () => {
   let user2starcx: MockStakingAccrualERC20;
 
   let sablierContract: MockSablier;
-  
+
   let defiPassportContract: DefiPassport;
-
-  async function createStream(setStreamId = false) {
-    const sablierId = await sablierContract.nextStreamId();
-    await stakingToken.mintShare(admin.address, STAKE_AMOUNT);
-    await stakingToken.approve(sablierContract.address, STAKE_AMOUNT);
-    await sablierContract.createStream(
-      starcx.address,
-      STAKE_AMOUNT,
-      stakingToken.address,
-      0,
-      STREAM_DURATION,
-    );
-
-    if (setStreamId) {
-      await starcx.setSablierStreamId(sablierId);
-    }
-
-    return sablierId;
-  }
-
-  async function waitCooldown() {
-    const currentTimestamp = await starcx.currentTimestamp();
-    await starcx.setCurrentTimestamp(currentTimestamp.add(COOLDOWN_DURATION));
-  }
 
   async function _deployStakingContract() {
     if (starcx) {
@@ -106,7 +82,7 @@ describe('StakingAccrualERC20', () => {
     user2 = signers[2];
     skinManager = signers[3];
     userWithoutPassport = signers[4];
-    
+
     defiPassportContract = await deployDefiPassport(admin);
     await defiPassportContract.init(
       'Defi Passport',
@@ -131,20 +107,35 @@ describe('StakingAccrualERC20', () => {
     await stakingToken.connect(user2).approve(starcx.address, INITIAL_BALANCE);
 
     // Setup default skin for defi passport
-    const defaultPassportSkinContract = await new DefaultPassportSkinFactory(admin)
-      .deploy('Default passport skin nft', 'DPS');
-      
+    const defaultPassportSkinContract = await new DefaultPassportSkinFactory(
+      admin,
+    ).deploy('Default passport skin nft', 'DPS');
+
     await defaultPassportSkinContract.mint(admin.address, '');
-    const defaultSkinTokenId = await defaultPassportSkinContract
-      .tokenOfOwnerByIndex(admin.address, 0);
+    const defaultSkinTokenId = await defaultPassportSkinContract.tokenOfOwnerByIndex(
+      admin.address,
+      0,
+    );
 
     await defiPassportContract
-        .connect(skinManager)
-        .setDefaultSkin(defaultPassportSkinContract.address, true);
+      .connect(skinManager)
+      .setDefaultSkin(defaultPassportSkinContract.address, true);
 
     // Create a passport for users
-    await defiPassportContract.connect(admin).mint(user1.address, defaultPassportSkinContract.address, defaultSkinTokenId)
-    await defiPassportContract.connect(admin).mint(user2.address, defaultPassportSkinContract.address, defaultSkinTokenId)
+    await defiPassportContract
+      .connect(admin)
+      .mint(
+        user1.address,
+        defaultPassportSkinContract.address,
+        defaultSkinTokenId,
+      );
+    await defiPassportContract
+      .connect(admin)
+      .mint(
+        user2.address,
+        defaultPassportSkinContract.address,
+        defaultSkinTokenId,
+      );
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -322,7 +313,13 @@ describe('StakingAccrualERC20', () => {
         // In reality it will not be like that, since we will first create the stream, then set the stream ID
         expect(await starcx.sablierStreamId()).to.eq(0);
 
-        const sablierId = await createStream();
+        const sablierId = await createStream(
+          sablierContract,
+          stakingToken,
+          starcx,
+          STAKE_AMOUNT,
+          STREAM_DURATION,
+        );
         await starcx.setSablierStreamId(sablierId);
 
         expect(await starcx.sablierStreamId()).to.eq(sablierId);
@@ -355,7 +352,14 @@ describe('StakingAccrualERC20', () => {
 
         // Setup sablier stream by the admin to the starcx contract
         await sablierContract.setCurrentTimestamp(0);
-        await createStream(true);
+        await createStream(
+          sablierContract,
+          stakingToken,
+          starcx,
+          STAKE_AMOUNT,
+          STREAM_DURATION,
+          true,
+        );
 
         await sablierContract.setCurrentTimestamp(1);
         await starcx.claimStreamFunds();
@@ -386,7 +390,9 @@ describe('StakingAccrualERC20', () => {
 
         await expect(
           starcx.setDefiPassportContract(newCs.address),
-        ).to.be.revertedWith('StakingAccrualERC20: the same defi passport address is already set');
+        ).to.be.revertedWith(
+          'StakingAccrualERC20: the same defi passport address is already set',
+        );
       });
 
       it('sets a new defi passport contract', async () => {
@@ -405,7 +411,9 @@ describe('StakingAccrualERC20', () => {
   describe('Mutating functions', () => {
     describe('#stake', () => {
       it('reverts if user does not have a passport', async () => {
-        expect(await defiPassportContract.balanceOf(userWithoutPassport.address)).eq(0)
+        expect(
+          await defiPassportContract.balanceOf(userWithoutPassport.address),
+        ).eq(0);
         await expect(
           starcx.connect(userWithoutPassport).stake(STAKE_AMOUNT),
         ).to.be.revertedWith('StakingAccrualERC20: user has to have passport');
@@ -413,9 +421,9 @@ describe('StakingAccrualERC20', () => {
 
       it('reverts if staking more than balance', async () => {
         const balance = await stakingToken.balanceOf(user1.address);
-        await expect(
-          user1starcx.stake(balance.add(1)),
-        ).to.be.revertedWith('SafeERC20: TRANSFER_FROM_FAILED');
+        await expect(user1starcx.stake(balance.add(1))).to.be.revertedWith(
+          'SafeERC20: TRANSFER_FROM_FAILED',
+        );
       });
 
       it(`reverts if the user's cooldown timestamp is > 0`, async () => {
@@ -423,9 +431,7 @@ describe('StakingAccrualERC20', () => {
 
         await user1starcx.startExitCooldown();
 
-        await expect(
-          user1starcx.stake(STAKE_AMOUNT),
-        ).to.be.revertedWith(
+        await expect(user1starcx.stake(STAKE_AMOUNT)).to.be.revertedWith(
           'StakingAccrualERC20: cannot stake during cooldown period',
         );
       });
@@ -443,7 +449,14 @@ describe('StakingAccrualERC20', () => {
 
         // Setup sablier stream by the admin to the starcx contract
         await sablierContract.setCurrentTimestamp(0);
-        await createStream(true);
+        await createStream(
+          sablierContract,
+          stakingToken,
+          starcx,
+          STAKE_AMOUNT,
+          STREAM_DURATION,
+          true,
+        );
 
         await sablierContract.setCurrentTimestamp(1);
         expect(await stakingToken.balanceOf(starcx.address)).to.eq(0);
@@ -522,7 +535,7 @@ describe('StakingAccrualERC20', () => {
         await user1starcx.stake(STAKE_AMOUNT);
         await user1starcx.startExitCooldown();
 
-        await waitCooldown();
+        await waitCooldown(starcx, COOLDOWN_DURATION);
 
         let cooldownTimestamp = await starcx.cooldowns(user1.address);
         expect(cooldownTimestamp).to.eq(COOLDOWN_DURATION);
@@ -544,7 +557,7 @@ describe('StakingAccrualERC20', () => {
         await user1starcx.stake(STAKE_AMOUNT);
         await user1starcx.startExitCooldown();
 
-        await waitCooldown();
+        await waitCooldown(starcx, COOLDOWN_DURATION);
 
         expect(await stakingToken.balanceOf(user1.address)).to.eq(
           INITIAL_BALANCE.sub(STAKE_AMOUNT),
@@ -552,7 +565,14 @@ describe('StakingAccrualERC20', () => {
 
         // Setup sablier stream by the admin to the starcx contract
         await sablierContract.setCurrentTimestamp(0);
-        await createStream(true);
+        await createStream(
+          sablierContract,
+          stakingToken,
+          starcx,
+          STAKE_AMOUNT,
+          STREAM_DURATION,
+          true,
+        );
 
         await sablierContract.setCurrentTimestamp(1);
         await user1starcx.exit();
@@ -567,7 +587,7 @@ describe('StakingAccrualERC20', () => {
         await user2starcx.stake(STAKE_AMOUNT);
 
         await user1starcx.startExitCooldown();
-        await waitCooldown();
+        await waitCooldown(starcx, COOLDOWN_DURATION);
 
         await stakingToken.mintShare(starcx.address, STAKE_AMOUNT);
 
@@ -584,7 +604,7 @@ describe('StakingAccrualERC20', () => {
         await user2starcx.stake(STAKE_AMOUNT);
 
         await user1starcx.startExitCooldown();
-        await waitCooldown();
+        await waitCooldown(starcx, COOLDOWN_DURATION);
 
         await starcx.recoverTokens(STAKE_AMOUNT);
 
@@ -600,7 +620,14 @@ describe('StakingAccrualERC20', () => {
         await sablierContract.setCurrentTimestamp(0);
         await starcx.setCurrentTimestamp(0);
 
-        await createStream(true);
+        await createStream(
+          sablierContract,
+          stakingToken,
+          starcx,
+          STAKE_AMOUNT,
+          STREAM_DURATION,
+          true,
+        );
 
         await sablierContract.setCurrentTimestamp(1);
 
@@ -690,7 +717,7 @@ describe('StakingAccrualERC20', () => {
 
       await checkState('1.5', '300', '450');
 
-      await checkUser(starcx, user1);
+      await checkStakedBalance(starcx, user1);
     });
 
     it('Two players without admin', async () => {
@@ -708,16 +735,16 @@ describe('StakingAccrualERC20', () => {
 
       await checkState('1', '500', '500');
 
-      await checkUser(starcx, user1);
+      await checkStakedBalance(starcx, user1);
 
       await user1starcx.startExitCooldown();
-      await waitCooldown();
+      await waitCooldown(starcx, COOLDOWN_DURATION);
       await user1starcx.exit();
 
       await checkState('1', '200', '200');
 
       await user2starcx.startExitCooldown();
-      await waitCooldown();
+      await waitCooldown(starcx, COOLDOWN_DURATION);
       await user2starcx.exit();
 
       await checkState('0', '0', '0');
@@ -733,8 +760,8 @@ describe('StakingAccrualERC20', () => {
       await user2starcx.stake(utils.parseEther('200'));
 
       await checkState('1', '300', '300');
-      await checkUser(starcx, user1);
-      await checkUser(starcx, user2);
+      await checkStakedBalance(starcx, user1);
+      await checkStakedBalance(starcx, user2);
 
       await user2starcx.stake(utils.parseEther('50'));
 
@@ -743,11 +770,11 @@ describe('StakingAccrualERC20', () => {
       await stakingToken.mintShare(starcx.address, utils.parseEther('350'));
 
       await checkState('2', '350', '700');
-      await checkUser(starcx, user1);
-      await checkUser(starcx, user2);
+      await checkStakedBalance(starcx, user1);
+      await checkStakedBalance(starcx, user2);
 
       await user2starcx.startExitCooldown();
-      await waitCooldown();
+      await waitCooldown(starcx, COOLDOWN_DURATION);
       await user2starcx.exit();
 
       await checkState('2', '100', '200');
@@ -757,7 +784,7 @@ describe('StakingAccrualERC20', () => {
       await checkState('2.5', '100', '250');
 
       await user1starcx.startExitCooldown();
-      await waitCooldown();
+      await waitCooldown(starcx, COOLDOWN_DURATION);
       await user1starcx.exit();
 
       await checkState('0', '0', '0');
@@ -783,7 +810,7 @@ describe('StakingAccrualERC20', () => {
       await checkState('2', '350', '700');
 
       await user1starcx.startExitCooldown();
-      await waitCooldown();
+      await waitCooldown(starcx, COOLDOWN_DURATION);
       await user1starcx.exit();
 
       await checkState('2', '100', '200');
@@ -793,22 +820,10 @@ describe('StakingAccrualERC20', () => {
       await checkState('1.5', '100', '150');
 
       await user2starcx.startExitCooldown();
-      await waitCooldown();
+      await waitCooldown(starcx, COOLDOWN_DURATION);
       await user2starcx.exit();
 
       await checkState('0', '0', '0');
     });
   });
 });
-
-async function checkUser(
-  starcx: MockStakingAccrualERC20,
-  user: SignerWithAddress,
-) {
-  const stArcxBalance = await starcx.balanceOf(user.address);
-  const arcAmount = await starcx.toStakingToken(stArcxBalance);
-  expect(arcAmount).eq(
-    stArcxBalance.mul(await starcx.getExchangeRate()).div(BASE),
-  );
-  expect(await starcx.toStakedToken(arcAmount)).eq(stArcxBalance);
-}
