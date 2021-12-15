@@ -380,6 +380,18 @@ describe('StakingAccrualERC20V5', () => {
           expect(await stakingToken.balanceOf(admin.address)).to.eq(
             STAKE_AMOUNT,
           );
+
+          expect(await stakingToken.balanceOf(contract.address)).to.eq(0);
+
+          await contract.connect(user1).startExitCooldown();
+          const now = await contract.currentTimestamp();
+          await contract.setCurrentTimestamp(now.add(COOLDOWN_DURATION));
+
+          const prevBalance = await stakingToken.balanceOf(user1.address);
+          await contract.connect(user1).exit();
+          expect(await stakingToken.balanceOf(user1.address)).to.eq(
+            prevBalance,
+          );
         });
       });
 
