@@ -14,7 +14,7 @@ import { ethers } from 'hardhat';
 import { generateContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 
-describe('KermanRewards', () => {
+describe.only('KermanRewards', () => {
   let kermanRewards: KermanRewards;
   let sablierContract: MockSablier;
   let admin: SignerWithAddress;
