@@ -2,10 +2,9 @@ import {Address} from "../lib/Address.sol";
 import {Adminable} from "../lib/Adminable.sol";
 import {Initializable} from "../lib/Initializable.sol";
 import {IPermittableERC20} from "../token/IPermittableERC20.sol";
-import {BaseERC20} from "../token/BaseERC20.sol";
 import {ISablier} from "../global/ISablier.sol";
 
-contract KermanRewards is BaseERC20, Adminable, Initializable {
+contract KermanRewards is Adminable, Initializable {
     /* ========== Libraries ========== */
 
     using Address for address;
@@ -17,12 +16,6 @@ contract KermanRewards is BaseERC20, Adminable, Initializable {
     ISablier public sablierContract;
     uint256 public sablierStreamId;
 
-    /* ========== Constructor (ignore) ========== */
-
-    constructor()
-        BaseERC20("", "", 18)
-    {} // solhint-disable-line
-
     /* ========== Restricted Functions ========== */
 
     function init(
@@ -33,7 +26,7 @@ contract KermanRewards is BaseERC20, Adminable, Initializable {
         onlyAdmin
         initializer 
     {
-  require (
+        require (
             _stakingToken.isContract(),
             "KermanRewards: staking token is not a contract"
         );
