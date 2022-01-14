@@ -1,18 +1,16 @@
 import { BigNumberish } from '@ethersproject/bignumber';
 import {
+  MockKermanSocialMoney,
   MockSablier,
-  StakingAccrualERC20,
-  StakingAccrualERC20V5,
   TestToken,
 } from '@src/typings';
 
-async function createStream(
+export async function createStream(
   sablierContract: MockSablier,
-  stakingToken: TestToken,
-  starcx: StakingAccrualERC20 | StakingAccrualERC20V5,
+  stakingToken: TestToken | MockKermanSocialMoney,
+  contractAddress: string,
   stakeAmount: BigNumberish,
   streamDuration: BigNumberish,
-  setStreamId = false,
 ) {
   const sablierId = await sablierContract.nextStreamId();
   await stakingToken.mintShare(
@@ -21,16 +19,12 @@ async function createStream(
   );
   await stakingToken.approve(sablierContract.address, stakeAmount);
   await sablierContract.createStream(
-    starcx.address,
+    contractAddress,
     stakeAmount,
     stakingToken.address,
     0,
     streamDuration,
   );
-
-  if (setStreamId) {
-    await starcx.setSablierStreamId(sablierId);
-  }
 
   return sablierId;
 }
