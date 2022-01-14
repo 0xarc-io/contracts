@@ -36,7 +36,8 @@ contract KermanRewards is Adminable, Initializable {
 
     function init(
         address _sablierContract, 
-        address _stakingToken
+        address _stakingToken,
+        uint256 _endDate
     )
         external
         onlyAdmin
@@ -53,6 +54,7 @@ contract KermanRewards is Adminable, Initializable {
         );
         stakingToken = IKermanERC20(_stakingToken);
         sablierContract = ISablier(_sablierContract);
+        endDate  = _endDate;
     }
 
 
@@ -120,9 +122,25 @@ contract KermanRewards is Adminable, Initializable {
             "KermanRewards: balance of staking token is 0"
         );
 
+        require(
+            currentTimestamp() < endDate,
+            "KermanRewards: period of staking finished"
+        );
+
         stakingToken.burnFrom(msg.sender, userBalance);
     }
 
     function claim() external {
+    }
+
+    /* ========== View Functions ========== */
+
+    function currentTimestamp()
+        public
+        virtual
+        view
+        returns (uint256)
+    {
+        return block.timestamp;
     }
 }
