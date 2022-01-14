@@ -145,8 +145,8 @@ contract KermanERC20 is IKermanERC20 {
     * @param value The amount to be transferred.
     */
     function transfer(address to, uint256 value) public override returns (bool) {
-        require(value <= _balances[msg.sender]);
-        require(to != address(0));
+        require(value <= _balances[msg.sender], "");
+        require(to != address(0), "");
 
         _balances[msg.sender] = _balances[msg.sender].sub(value);
         _balances[to] = _balances[to].add(value);
@@ -164,7 +164,7 @@ contract KermanERC20 is IKermanERC20 {
     * @param value The amount of tokens to be spent.
     */
     function approve(address spender, uint256 value) public override returns (bool) {
-        require(spender != address(0));
+        require(spender != address(0), "");
 
         _allowed[msg.sender][spender] = value;
         emit Approval(msg.sender, spender, value);
@@ -186,9 +186,9 @@ contract KermanERC20 is IKermanERC20 {
         override
         returns (bool)
     {
-        require(value <= _balances[from]);
-        require(value <= _allowed[from][msg.sender]);
-        require(to != address(0));
+        require(value <= _balances[from], "");
+        require(value <= _allowed[from][msg.sender], "");
+        require(to != address(0), "");
 
         _balances[from] = _balances[from].sub(value);
         _balances[to] = _balances[to].add(value);
@@ -213,7 +213,7 @@ contract KermanERC20 is IKermanERC20 {
         public
         returns (bool)
     {
-        require(spender != address(0));
+        require(spender != address(0), "");
 
         _allowed[msg.sender][spender] = (
         _allowed[msg.sender][spender].add(addedValue));
@@ -237,7 +237,7 @@ contract KermanERC20 is IKermanERC20 {
         public
         returns (bool)
     {
-        require(spender != address(0));
+        require(spender != address(0), "");
 
         _allowed[msg.sender][spender] = (
         _allowed[msg.sender][spender].sub(subtractedValue));
@@ -253,7 +253,7 @@ contract KermanERC20 is IKermanERC20 {
     * @param amount The amount that will be created.
     */
     function _mint(address account, uint256 amount) internal {
-        require(account != address(0));
+        require(account != address(0), "");
         _totalSupply = _totalSupply.add(amount);
         _balances[account] = _balances[account].add(amount);
         emit Transfer(address(0), account, amount);
@@ -266,8 +266,8 @@ contract KermanERC20 is IKermanERC20 {
     * @param amount The amount that will be burnt.
     */
     function _burn(address account, uint256 amount) internal {
-        require(account != address(0));
-        require(amount <= _balances[account]);
+        require(account != address(0), "");
+        require(amount <= _balances[account], "");
 
         _totalSupply = _totalSupply.sub(amount);
         _balances[account] = _balances[account].sub(amount);
@@ -282,7 +282,7 @@ contract KermanERC20 is IKermanERC20 {
     * @param amount The amount that will be burnt.
     */
     function _burnFrom(address account, uint256 amount) internal {
-        require(amount <= _allowed[account][msg.sender]);
+        require(amount <= _allowed[account][msg.sender], "");
 
         // Should https://github.com/OpenZeppelin/zeppelin-solidity/issues/707 be accepted,
         // this function needs to emit an event with the updated approval.
