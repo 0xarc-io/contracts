@@ -1,8 +1,8 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import {
   ArcProxyFactory,
-  KermanRewards,
-  KermanRewardsFactory,
+  MockKermanRewards,
+  MockKermanRewardsFactory,
   MockSablier,
   MockSablierFactory,
   MockKermanSocialMoney,
@@ -19,9 +19,10 @@ import { approve } from '@src/utils';
 
 const STAKE_AMOUNT = utils.parseEther('100');
 const STREAM_DURATION = 10;
+const INITIAL_END_DATE = 10;
 
 describe.only('KermanRewards', () => {
-  let kermanRewards: KermanRewards;
+  let kermanRewards: MockKermanRewards;
   let sablierContract: MockSablier;
   let admin: SignerWithAddress;
   let user1: SignerWithAddress;
@@ -46,16 +47,24 @@ describe.only('KermanRewards', () => {
     sablierContract = await new MockSablierFactory(admin).deploy();
 
     // deploy KermanRewards contract
-    const kermanRewardsImpl = await new KermanRewardsFactory(admin).deploy();
+    const kermanRewardsImpl = await new MockKermanRewardsFactory(admin).deploy();
     const proxy = await new ArcProxyFactory(admin).deploy(
       kermanRewardsImpl.address,
       admin.address,
       [],
     );
-    kermanRewards = KermanRewardsFactory.connect(proxy.address, admin);
+    kermanRewards = MockKermanRewardsFactory.connect(proxy.address, admin);
     await kermanRewards
       .connect(admin)
-      .init(sablierContract.address, stakingToken.address);
+      .init(sablierContract.address, stakingToken.address, INITIAL_END_DATE);
+    await sablierContract.setCurrentTimestamp(0);
+
+    await approve(
+      STAKE_AMOUNT,
+      stakingToken.address,
+      kermanRewards.address,
+      user1,
+    );
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -66,20 +75,20 @@ describe.only('KermanRewards', () => {
         await expect(
           kermanRewards
             .connect(user1)
-            .init(sablierContract.address, stakingToken.address),
+            .init(sablierContract.address, stakingToken.address, INITIAL_END_DATE),
         ).to.be.revertedWith('Adminable: caller is not admin');
       });
 
       it('reverts if called twice', async () => {
         await expect(
-          kermanRewards.init(sablierContract.address, stakingToken.address),
+          kermanRewards.init(sablierContract.address, stakingToken.address, INITIAL_END_DATE),
         ).to.be.revertedWith('Initializable: contract is already initialized');
       });
 
       describe('reverts if the staking token is not contract', async () => {
-        let notInitalizedKermanRewards: KermanRewards;
+        let notInitalizedKermanRewards: MockKermanRewards;
         before(async () => {
-          const kermanRewardsImpl = await new KermanRewardsFactory(
+          const kermanRewardsImpl = await new MockKermanRewardsFactory(
             admin,
           ).deploy();
           const proxy = await new ArcProxyFactory(admin).deploy(
@@ -87,7 +96,7 @@ describe.only('KermanRewards', () => {
             admin.address,
             [],
           );
-          notInitalizedKermanRewards = KermanRewardsFactory.connect(
+          notInitalizedKermanRewards = MockKermanRewardsFactory.connect(
             proxy.address,
             admin,
           );
@@ -97,7 +106,7 @@ describe.only('KermanRewards', () => {
           await expect(
             notInitalizedKermanRewards
               .connect(admin)
-              .init(sablierContract.address, constants.AddressZero),
+              .init(sablierContract.address, constants.AddressZero, INITIAL_END_DATE),
           ).to.be.revertedWith(
             'KermanRewards: staking token is not a contract',
           );
@@ -107,7 +116,7 @@ describe.only('KermanRewards', () => {
           await expect(
             notInitalizedKermanRewards
               .connect(admin)
-              .init(sablierContract.address, user1.address),
+              .init(sablierContract.address, user1.address, INITIAL_END_DATE),
           ).to.be.revertedWith(
             'KermanRewards: staking token is not a contract',
           );
@@ -158,7 +167,7 @@ describe.only('KermanRewards', () => {
       });
 
       it('sets the end date if called the admin', async () => {
-        expect(await kermanRewards.endDate()).to.eq(0);
+        expect(await kermanRewards.endDate()).to.eq(INITIAL_END_DATE);
 
         await kermanRewards.setEndDate(11);
 
@@ -220,24 +229,23 @@ describe.only('KermanRewards', () => {
   });
 
   describe('#stake', async () => {
-    it('reject if user do not have Staking Token', async () => {
+    it('revert if user do not have Staking Token', async () => {
       await expect(kermanRewards.connect(user1).stake()).revertedWith(
         'KermanRewards: balance of staking token is 0',
       );
     });
 
-    it('reject if stake after end date')
+    it('revert if stake after end date', async () => {
+      await stakingToken.mintShare(user1.address, STAKE_AMOUNT);
 
-    it('withdraws from the sablier stream')
+      await kermanRewards.setCurrentTimestamp(INITIAL_END_DATE + 1)
+      await expect(kermanRewards.connect(user1).stake()).to.be.revertedWith('KermanRewards: period of staking finished')
+    })
+
+    it('withdraw from the sablier stream')
 
     it('staking tokens are burned', async () => {
       await stakingToken.mintShare(user1.address, STAKE_AMOUNT);
-      await approve(
-        STAKE_AMOUNT,
-        stakingToken.address,
-        kermanRewards.address,
-        user1,
-      );
 
       const stakingSupply = await stakingToken.totalSupply();
       await kermanRewards.connect(user1).stake();
@@ -249,7 +257,7 @@ describe.only('KermanRewards', () => {
   });
 
   describe('#claim', async () => {
-    it('reject if user did not stake', async () => {
+    it('revert if user did not stake', async () => {
       await expect(kermanRewards.connect(user1).claim()).revertedWith(
         'KermanRewards: user does not have staked balance',
       );
@@ -264,5 +272,5 @@ describe.only('KermanRewards', () => {
     it('claim at the end of the sablier stream')
   });
 
-  describe('Scenarios')
+  it('Scenarios')
 });
