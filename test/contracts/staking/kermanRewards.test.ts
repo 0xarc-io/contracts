@@ -226,6 +226,10 @@ describe.only('KermanRewards', () => {
       );
     });
 
+    it('reject if stake after end date')
+
+    it('withdraws from the sablier stream')
+
     it('staking tokens are burned', async () => {
       await stakingToken.mintShare(user1.address, STAKE_AMOUNT);
       await approve(
@@ -244,11 +248,21 @@ describe.only('KermanRewards', () => {
     });
   });
 
-  describe('#exit', async () => {
-    it('reject if user do not have staked tokens', async () => {
+  describe('#claim', async () => {
+    it('reject if user did not stake', async () => {
       await expect(kermanRewards.connect(user1).claim()).revertedWith(
         'KermanRewards: user does not have staked balance',
       );
     });
+
+    it('claim the funds')
+
+    it('claim from the sablier stream')
+
+    it('claim accumulated tokens')
+
+    it('claim at the end of the sablier stream')
   });
+
+  describe('Scenarios')
 });
