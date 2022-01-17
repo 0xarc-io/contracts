@@ -200,7 +200,7 @@ describe.only('KermanRewards', () => {
 
         await kermanRewards.setClaimDeadline(300);
 
-        expect(await kermanRewards.stakeDeadline()).to.eq(300);
+        expect(await kermanRewards.claimDeadline()).to.eq(300);
       });
     });
 
@@ -294,9 +294,25 @@ describe.only('KermanRewards', () => {
       );
     });
 
-    it('reverts if stake period is not finished')
+    it('reverts if stake period is not finished', async () => {
+      await stakingToken.mintShare(user1.address, STAKE_AMOUNT);
+      await kermanRewards.connect(user1).stake();
 
-    it('reverts if claim period is not finished')
+      await expect(kermanRewards.connect(user1).claim()).revertedWith(
+        'KermanRewards: stake period is not finished',
+      );
+    })
+
+    it('reverts if claim period is finished', async () => {
+      await stakingToken.mintShare(user1.address, STAKE_AMOUNT);
+      await kermanRewards.connect(user1).stake();
+
+      await kermanRewards.setCurrentTimestamp(INITIAL_CLAIM_DEADLINE + 1);
+
+      await expect(kermanRewards.connect(user1).claim()).revertedWith(
+        'KermanRewards: claim period is finished',
+      );
+    })
 
     it('claim the funds')
 
