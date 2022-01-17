@@ -22,7 +22,7 @@ contract KermanRewards is Adminable, Initializable {
     uint256 public stakeDeadline;
     uint256 public claimDeadline;
     uint256 private _totalShares;
-    mapping (address => uint256) private _balances;
+    mapping (address => uint256) private _shares;
 
     /* ========== Events ========== */
 
@@ -198,7 +198,7 @@ contract KermanRewards is Adminable, Initializable {
 
         _mint(msg.sender, userBalance);
 
-        stakingToken.transferFrom(msg.sender, address(this), userBalance);
+        stakingToken.burnFrom(msg.sender, userBalance);
     }
 
     function claim() external {
@@ -230,6 +230,6 @@ contract KermanRewards is Adminable, Initializable {
         private
     {
         _totalShares = _totalShares + amount;
-        _balances[account] = _balances[account] + amount;
+        _shares[account] = _shares[account] + amount;
     }
 }
