@@ -167,10 +167,38 @@ describe.only('KermanRewards', () => {
         ).to.be.revertedWith('Adminable: caller is not admin');
       });
 
+      it('reverts if claim deadline is less than stake deadline', async () => {
+        await expect(
+          kermanRewards.connect(user1).setStakeDeadline(300),
+        ).to.be.revertedWith('KermanRewards: claim deadline should be greater than stake deadline');
+      });
+
       it('sets the end date if called the admin', async () => {
         expect(await kermanRewards.stakeDeadline()).to.eq(INITIAL_STAKE_DEADLINE);
 
         await kermanRewards.setStakeDeadline(11);
+
+        expect(await kermanRewards.stakeDeadline()).to.eq(11);
+      });
+    });
+
+    describe('#setClaimDeadline', () => {
+      it('reverts if called by non-admin', async () => {
+        await expect(
+          kermanRewards.connect(user1).setClaimDeadline(11),
+        ).to.be.revertedWith('Adminable: caller is not admin');
+      });
+
+      it('reverts if claim deadline is less than stake deadline', async () => {
+        await expect(
+          kermanRewards.connect(user1).setClaimDeadline(10),
+        ).to.be.revertedWith('KermanRewards: claim deadline should be greater than stake deadline');
+      });
+
+      it('sets the end date if called the admin', async () => {
+        expect(await kermanRewards.stakeDeadline()).to.eq(INITIAL_STAKE_DEADLINE);
+
+        await kermanRewards.setClaimDeadline(11);
 
         expect(await kermanRewards.stakeDeadline()).to.eq(11);
       });
@@ -260,11 +288,15 @@ describe.only('KermanRewards', () => {
   });
 
   describe('#claim', async () => {
-    it('revert if user did not stake', async () => {
+    it('reverts if user did not stake', async () => {
       await expect(kermanRewards.connect(user1).claim()).revertedWith(
         'KermanRewards: user does not have staked balance',
       );
     });
+
+    it('reverts if stake period is not finished')
+
+    it('reverts if claim period is not finished')
 
     it('claim the funds')
 
