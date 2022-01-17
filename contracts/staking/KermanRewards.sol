@@ -5,22 +5,23 @@ import {Adminable} from "../lib/Adminable.sol";
 import {Initializable} from "../lib/Initializable.sol";
 import {SafeERC20} from "../lib/SafeERC20.sol";
 import {IKermanERC20} from "../token/KermanERC20.sol";
+import {IERC20} from "../token/IERC20.sol";
 import {ISablier} from "../global/ISablier.sol";
 
 contract KermanRewards is Adminable, Initializable {
     /* ========== Libraries ========== */
 
     using Address for address;
-    using SafeERC20 for IKermanERC20;
+    using SafeERC20 for IERC20;
 
     /* ========== Variables ========== */
 
     IKermanERC20 public stakingToken;
+    IERC20 public rewardsToken;
 
     ISablier public sablierContract;
     uint256 public sablierStreamId;
     uint256 public stakeDeadline;
-    uint256 public claimDeadline;
     uint256 private _totalShares;
     mapping (address => uint256) private _shares;
 
@@ -35,7 +36,6 @@ contract KermanRewards is Adminable, Initializable {
     event SablierStreamIdSet(uint256 _streamId);
 
     event StakeDeadlineSet(uint256 _stakeDeadline);
-    event ClaimDeadlineSet(uint256 _claimDeadline);
 
     event FundsWithdrawnFromSablier(uint256 _streamId, uint256 _amount);
 
@@ -44,13 +44,18 @@ contract KermanRewards is Adminable, Initializable {
     function init(
         address _sablierContract, 
         address _stakingToken,
-        uint256 _stakeDeadline,
-        uint256 _claimDeadline
+        address _rewardsToken,
+        uint256 _stakeDeadline
     )
         external
         onlyAdmin
         initializer 
     {
+        require (
+            _rewardsToken.isContract(),
+            "KermanRewards: rewards token is not a contract"
+        );
+
         require (
             _stakingToken.isContract(),
             "KermanRewards: staking token is not a contract"
@@ -61,9 +66,9 @@ contract KermanRewards is Adminable, Initializable {
             "KermanRewards: the sablier contract is invalid"
         );
         stakingToken = IKermanERC20(_stakingToken);
+        rewardsToken = IERC20(_rewardsToken);
         sablierContract = ISablier(_sablierContract);
         stakeDeadline  = _stakeDeadline;
-        claimDeadline  = _claimDeadline;
     }
 
 
@@ -100,11 +105,16 @@ contract KermanRewards is Adminable, Initializable {
             "KermanRewards: the same stream ID is already set"
         );
 
-        (, address recipient,,,,,,) = sablierContract.getStream(_sablierStreamId);
+        (, address recipient,,address tokenAddress,,,,) = sablierContract.getStream(_sablierStreamId);
+
+        require(
+            tokenAddress == address(rewardsToken),
+            "KermanRewards: token of the stream is not current rewardsToken"
+        );
 
         require (
             recipient == address(this),
-            "KermanRewards: reciepient of stream is not current contract"
+            "KermanRewards: recipient of stream is not current contract"
         );
 
         sablierStreamId = _sablierStreamId;
@@ -116,27 +126,9 @@ contract KermanRewards is Adminable, Initializable {
             external
         onlyAdmin
     {
-        require(
-            _stakeDeadline < claimDeadline,
-            "KermanRewards: stake deadline should be less than claim deadline"
-        );
         stakeDeadline = _stakeDeadline;
 
         emit StakeDeadlineSet(stakeDeadline);
-    }
-
-    function setClaimDeadline(uint256 _claimDeadline)
-        external
-        onlyAdmin
-    {
-        require(
-            stakeDeadline < _claimDeadline,
-            "KermanRewards: claim deadline should be greater than stake deadline"
-        );
-
-        claimDeadline = _claimDeadline;
-
-        emit ClaimDeadlineSet(claimDeadline);
     }
 
     /* ========== Public Functions ========== */
@@ -149,7 +141,21 @@ contract KermanRewards is Adminable, Initializable {
         view
         returns (uint256)
     {
-        return 0;
+        (,,,,,uint256 stopTime,,uint256 ratePerSecond) = sablierContract.getStream(sablierStreamId);
+        uint256 timestamp = currentTimestamp();
+
+        if (timestamp > stakeDeadline) {
+            uint256 claimDuration;
+            if (stopTime < timestamp) {
+                claimDuration = stopTime - stakeDeadline;
+            } else {
+                claimDuration = timestamp - stakeDeadline;
+            }
+        
+            return _shares[msg.sender] * ratePerSecond * claimDuration / _totalShares;
+        } else {
+            return 0;
+        }
     }
 
     /**
@@ -208,17 +214,19 @@ contract KermanRewards is Adminable, Initializable {
         );
 
         uint256 timestamp = currentTimestamp();
-
         require(
             timestamp > stakeDeadline,
             "KermanRewards: stake period is not finished"
         );
 
-        require(
-            timestamp < claimDeadline,
-            "KermanRewards: claim period is finished"
+        claimStreamFunds();
+
+        rewardsToken.safeTransfer(
+            msg.sender,
+            _shares[msg.sender] * rewardsToken.balanceOf(address(this)) / _totalShares
         );
-        // transfer msg.sender's ARCx
+        _burn(msg.sender);
+        //TODO: emit Event
     }
 
     /* ========== View Functions ========== */
@@ -233,7 +241,6 @@ contract KermanRewards is Adminable, Initializable {
     }
 
     /* ========== Private Functions ========== */
-
     
     /** @dev Creates `amount` tokens and assigns them to `account`, increasing
      * the total supply.
@@ -246,5 +253,16 @@ contract KermanRewards is Adminable, Initializable {
     {
         _totalShares = _totalShares + amount;
         _shares[account] = _shares[account] + amount;
+    }
+
+    /** @dev Burns all shares of user, decreasing the total supply.
+     */
+    function _burn(
+        address account
+    )
+        private
+    {
+        _totalShares = _totalShares - _shares[account];
+        _shares[account] = 0;
     }
 }
