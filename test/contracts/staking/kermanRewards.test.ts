@@ -167,10 +167,10 @@ describe.only('KermanRewards', () => {
         ).to.be.revertedWith('Adminable: caller is not admin');
       });
 
-      it('reverts if claim deadline is less than stake deadline', async () => {
+      it('reverts if stake deadline is greater than claim deadline', async () => {
         await expect(
-          kermanRewards.connect(user1).setStakeDeadline(300),
-        ).to.be.revertedWith('KermanRewards: claim deadline should be greater than stake deadline');
+          kermanRewards.setStakeDeadline(300),
+        ).to.be.revertedWith('KermanRewards: stake deadline should be less than claim deadline');
       });
 
       it('sets the end date if called the admin', async () => {
@@ -191,16 +191,16 @@ describe.only('KermanRewards', () => {
 
       it('reverts if claim deadline is less than stake deadline', async () => {
         await expect(
-          kermanRewards.connect(user1).setClaimDeadline(10),
+          kermanRewards.setClaimDeadline(10),
         ).to.be.revertedWith('KermanRewards: claim deadline should be greater than stake deadline');
       });
 
       it('sets the end date if called the admin', async () => {
         expect(await kermanRewards.stakeDeadline()).to.eq(INITIAL_STAKE_DEADLINE);
 
-        await kermanRewards.setClaimDeadline(11);
+        await kermanRewards.setClaimDeadline(300);
 
-        expect(await kermanRewards.stakeDeadline()).to.eq(11);
+        expect(await kermanRewards.stakeDeadline()).to.eq(300);
       });
     });
 
@@ -276,13 +276,13 @@ describe.only('KermanRewards', () => {
     it('staking tokens are transfered to kermansRewards', async () => {
       await stakingToken.mintShare(user1.address, STAKE_AMOUNT);
 
-      // const stakingSupply = await stakingToken.totalSupply();
+      const stakingSupply = await stakingToken.totalSupply();
       await kermanRewards.connect(user1).stake();
-      // expect(await stakingToken.totalSupply()).eq(
-      //   stakingSupply.sub(STAKE_AMOUNT),
-      // );
+      expect(await stakingToken.totalSupply()).eq(
+        stakingSupply.sub(STAKE_AMOUNT),
+      );
       expect(await stakingToken.balanceOf(user1.address)).eq(0);
-      expect(await stakingToken.balanceOf(kermanRewards.address)).eq(STAKE_AMOUNT);
+      expect(await stakingToken.balanceOf(kermanRewards.address)).eq(0);
       expect(await kermanRewards.connect(user1).earned()).eq(0)
     });
   });
