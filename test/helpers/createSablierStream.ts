@@ -4,6 +4,7 @@ import {
   MockSablier,
   TestToken,
 } from '@src/typings';
+import { BigNumber } from 'ethers';
 
 export async function createStream(
   sablierContract: MockSablier,
@@ -11,6 +12,7 @@ export async function createStream(
   contractAddress: string,
   stakeAmount: BigNumberish,
   streamDuration: BigNumberish,
+  startTime: BigNumberish = 0,
 ) {
   const sablierId = await sablierContract.nextStreamId();
   await stakingToken.mintShare(
@@ -22,8 +24,8 @@ export async function createStream(
     contractAddress,
     stakeAmount,
     stakingToken.address,
-    0,
-    streamDuration,
+    startTime,
+    BigNumber.from(startTime).add(streamDuration),
   );
 
   return sablierId;
