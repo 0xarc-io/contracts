@@ -19,7 +19,8 @@ import { approve } from '@src/utils';
 
 const STAKE_AMOUNT = utils.parseEther('100');
 const STREAM_DURATION = 10;
-const INITIAL_END_DATE = 10;
+const INITIAL_STAKE_DEADLINE = 100;
+const INITIAL_CLAIM_DEADLINE = 200;
 
 describe.only('KermanRewards', () => {
   let kermanRewards: MockKermanRewards;
@@ -56,7 +57,7 @@ describe.only('KermanRewards', () => {
     kermanRewards = MockKermanRewardsFactory.connect(proxy.address, admin);
     await kermanRewards
       .connect(admin)
-      .init(sablierContract.address, stakingToken.address, INITIAL_END_DATE);
+      .init(sablierContract.address, stakingToken.address, INITIAL_STAKE_DEADLINE, INITIAL_CLAIM_DEADLINE);
     await sablierContract.setCurrentTimestamp(0);
 
     await approve(
@@ -75,13 +76,13 @@ describe.only('KermanRewards', () => {
         await expect(
           kermanRewards
             .connect(user1)
-            .init(sablierContract.address, stakingToken.address, INITIAL_END_DATE),
+            .init(sablierContract.address, stakingToken.address, INITIAL_STAKE_DEADLINE, INITIAL_CLAIM_DEADLINE),
         ).to.be.revertedWith('Adminable: caller is not admin');
       });
 
       it('reverts if called twice', async () => {
         await expect(
-          kermanRewards.init(sablierContract.address, stakingToken.address, INITIAL_END_DATE),
+          kermanRewards.init(sablierContract.address, stakingToken.address, INITIAL_STAKE_DEADLINE, INITIAL_CLAIM_DEADLINE),
         ).to.be.revertedWith('Initializable: contract is already initialized');
       });
 
@@ -106,7 +107,7 @@ describe.only('KermanRewards', () => {
           await expect(
             notInitalizedKermanRewards
               .connect(admin)
-              .init(sablierContract.address, constants.AddressZero, INITIAL_END_DATE),
+              .init(sablierContract.address, constants.AddressZero, INITIAL_STAKE_DEADLINE, INITIAL_CLAIM_DEADLINE),
           ).to.be.revertedWith(
             'KermanRewards: staking token is not a contract',
           );
@@ -116,7 +117,7 @@ describe.only('KermanRewards', () => {
           await expect(
             notInitalizedKermanRewards
               .connect(admin)
-              .init(sablierContract.address, user1.address, INITIAL_END_DATE),
+              .init(sablierContract.address, user1.address, INITIAL_STAKE_DEADLINE, INITIAL_CLAIM_DEADLINE),
           ).to.be.revertedWith(
             'KermanRewards: staking token is not a contract',
           );
@@ -159,19 +160,19 @@ describe.only('KermanRewards', () => {
       });
     });
 
-    describe('#setEndDate', () => {
+    describe('#setStakeDeadline', () => {
       it('reverts if called by non-admin', async () => {
         await expect(
-          kermanRewards.connect(user1).setEndDate(11),
+          kermanRewards.connect(user1).setStakeDeadline(11),
         ).to.be.revertedWith('Adminable: caller is not admin');
       });
 
       it('sets the end date if called the admin', async () => {
-        expect(await kermanRewards.endDate()).to.eq(INITIAL_END_DATE);
+        expect(await kermanRewards.stakeDeadline()).to.eq(INITIAL_STAKE_DEADLINE);
 
-        await kermanRewards.setEndDate(11);
+        await kermanRewards.setStakeDeadline(11);
 
-        expect(await kermanRewards.endDate()).to.eq(11);
+        expect(await kermanRewards.stakeDeadline()).to.eq(11);
       });
     });
 
@@ -238,21 +239,23 @@ describe.only('KermanRewards', () => {
     it('revert if stake after end date', async () => {
       await stakingToken.mintShare(user1.address, STAKE_AMOUNT);
 
-      await kermanRewards.setCurrentTimestamp(INITIAL_END_DATE + 1)
+      await kermanRewards.setCurrentTimestamp(INITIAL_STAKE_DEADLINE + 1)
       await expect(kermanRewards.connect(user1).stake()).to.be.revertedWith('KermanRewards: period of staking finished')
     })
 
     it('withdraw from the sablier stream')
 
-    it('staking tokens are burned', async () => {
+    it('staking tokens are transfered to kermansRewards', async () => {
       await stakingToken.mintShare(user1.address, STAKE_AMOUNT);
 
-      const stakingSupply = await stakingToken.totalSupply();
+      // const stakingSupply = await stakingToken.totalSupply();
       await kermanRewards.connect(user1).stake();
-      expect(await stakingToken.totalSupply()).eq(
-        stakingSupply.sub(STAKE_AMOUNT),
-      );
+      // expect(await stakingToken.totalSupply()).eq(
+      //   stakingSupply.sub(STAKE_AMOUNT),
+      // );
       expect(await stakingToken.balanceOf(user1.address)).eq(0);
+      expect(await stakingToken.balanceOf(kermanRewards.address)).eq(STAKE_AMOUNT);
+      expect(await kermanRewards.connect(user1).earned()).eq(0)
     });
   });
 
