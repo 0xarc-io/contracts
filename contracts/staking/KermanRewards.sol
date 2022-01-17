@@ -202,7 +202,22 @@ contract KermanRewards is Adminable, Initializable {
     }
 
     function claim() external {
-        // burn msg.sender's Kerman tokens 
+        require(
+            _shares[msg.sender] > 0,
+            "KermanRewards: user does not have staked balance"
+        );
+
+        uint256 timestamp = currentTimestamp();
+
+        require(
+            timestamp > stakeDeadline,
+            "KermanRewards: stake period is not finished"
+        );
+
+        require(
+            timestamp < claimDeadline,
+            "KermanRewards: claim period is finished"
+        );
         // transfer msg.sender's ARCx
     }
 
