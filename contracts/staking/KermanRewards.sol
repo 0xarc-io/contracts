@@ -116,15 +116,24 @@ contract KermanRewards is Adminable, Initializable {
             external
         onlyAdmin
     {
+        require(
+            _stakeDeadline < claimDeadline,
+            "KermanRewards: stake deadline should be less than claim deadline"
+        );
         stakeDeadline = _stakeDeadline;
 
-        emit StakeDeadlineSet(claimDeadline);
+        emit StakeDeadlineSet(stakeDeadline);
     }
 
     function setClaimDeadline(uint256 _claimDeadline)
         external
         onlyAdmin
     {
+        require(
+            stakeDeadline < _claimDeadline,
+            "KermanRewards: claim deadline should be greater than stake deadline"
+        );
+
         claimDeadline = _claimDeadline;
 
         emit ClaimDeadlineSet(claimDeadline);
@@ -187,16 +196,7 @@ contract KermanRewards is Adminable, Initializable {
             "KermanRewards: period of staking finished"
         );
 
-        // Gets the amount of the staking token locked in the contract
-        uint256 totalStakingToken = stakingToken.balanceOf(address(this));
-
-        if (totalStakingToken == 0 && _totalShares == 0) {
-            _mint(msg.sender, userBalance);
-        } else {
-            // add to private shares proporpotionally based on userBalance
-            uint256 what = userBalance * _totalShares / totalStakingToken;
-            _mint(msg.sender, what);
-        }
+        _mint(msg.sender, userBalance);
 
         stakingToken.transferFrom(msg.sender, address(this), userBalance);
     }
