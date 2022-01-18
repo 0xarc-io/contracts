@@ -27,9 +27,9 @@ contract KermanRewards is Adminable, Initializable {
 
     /* ========== Events ========== */
 
-    event Staked(address indexed _user);
+    event Staked(address indexed _user, uint256 _amount);
 
-    event Exited(address indexed _user);
+    event Claimed(address indexed _user, uint256 _amount);
 
     event SablierContractSet(address _sablierContract);
 
@@ -205,6 +205,8 @@ contract KermanRewards is Adminable, Initializable {
         _mint(msg.sender, userBalance);
 
         stakingToken.burnFrom(msg.sender, userBalance);
+
+        emit Staked(msg.sender, userBalance);
     }
 
     function claim() external {
@@ -221,12 +223,14 @@ contract KermanRewards is Adminable, Initializable {
 
         claimStreamFunds();
 
+        uint256 _amount = _shares[msg.sender] * rewardsToken.balanceOf(address(this)) / _totalShares;
         rewardsToken.safeTransfer(
             msg.sender,
-            _shares[msg.sender] * rewardsToken.balanceOf(address(this)) / _totalShares
+            _amount
         );
         _burn(msg.sender);
-        //TODO: emit Event
+
+        emit Claimed(msg.sender, _amount);
     }
 
     /* ========== View Functions ========== */
