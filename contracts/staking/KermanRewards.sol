@@ -134,31 +134,6 @@ contract KermanRewards is Adminable, Initializable {
     /* ========== Public Functions ========== */
 
     /**
-     * @notice Show the amount of tokens from sablier stream
-     */
-    function earned()
-        external
-        view
-        returns (uint256)
-    {
-        (,,,,,uint256 stopTime,,uint256 ratePerSecond) = sablierContract.getStream(sablierStreamId);
-        uint256 timestamp = currentTimestamp();
-
-        if (timestamp > stakeDeadline) {
-            uint256 claimDuration;
-            if (stopTime < timestamp) {
-                claimDuration = stopTime - stakeDeadline;
-            } else {
-                claimDuration = timestamp - stakeDeadline;
-            }
-        
-            return _shares[msg.sender] * ratePerSecond * claimDuration / _totalShares;
-        } else {
-            return 0;
-        }
-    }
-
-    /**
      * @notice Withdraws from the sablier stream if possible
      */
     function claimStreamFunds()
@@ -234,6 +209,31 @@ contract KermanRewards is Adminable, Initializable {
     }
 
     /* ========== View Functions ========== */
+
+    /**
+     * @notice Show the amount of tokens from sablier stream
+     */
+    function earned()
+        external
+        view
+        returns (uint256)
+    {
+        (,,,,,uint256 stopTime,,uint256 ratePerSecond) = sablierContract.getStream(sablierStreamId);
+        uint256 timestamp = currentTimestamp();
+
+        if (timestamp > stakeDeadline) {
+            uint256 claimDuration;
+            if (stopTime < timestamp) {
+                claimDuration = stopTime - stakeDeadline;
+            } else {
+                claimDuration = timestamp - stakeDeadline;
+            }
+        
+            return _shares[msg.sender] * ratePerSecond * claimDuration / _totalShares;
+        } else {
+            return 0;
+        }
+    }
 
     function currentTimestamp()
         public
