@@ -807,5 +807,25 @@
     "version": 4,
     "type": "global",
     "group": "StakingAccrualERC20"
+  },
+  {
+    "name": "StakingAccrualERC20",
+    "source": "StakingAccrualERC20V5",
+    "address": "0x5a35C5A4d28FA2cb33EBa3de485083b739dF63Bb",
+    "txn": "0x0276276aacb6b3d87428d0c0daadf6231bd170f087b537a6bfbb398aa159f770",
+    "network": "mainnet",
+    "version": 5,
+    "type": "global",
+    "group": "StakingAccrualERC20"
+  },
+  {
+    "name": "DefiPassportSkin",
+    "source": "DefiPassportSkin",
+    "address": "0x6eF122CACBa6EEFE4f5331424eb3A0D94D310433",
+    "txn": "0x8012da9a2ea1aaacb17b5dd30104c9d3786c14f2b303b96078657edcf4165c08",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global",
+    "group": "DefiPassport"
   }
 ]
