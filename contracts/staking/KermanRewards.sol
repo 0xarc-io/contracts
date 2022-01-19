@@ -175,7 +175,7 @@ contract KermanRewards is Adminable, Initializable {
 
         require(
             currentTimestamp() < stakeDeadline,
-            "KermanRewards: period of staking finished"
+            "KermanRewards: staking period finished"
         );
 
         _mint(msg.sender, userBalance);
