@@ -124,7 +124,7 @@ contract KermanRewards is Adminable, Initializable {
     }
 
     function setStakeDeadline(uint256 _stakeDeadline)
-            external
+        external
         onlyAdmin
     {
         stakeDeadline = _stakeDeadline;
