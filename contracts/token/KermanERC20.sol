@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 /**
  *Submitted for verification at Etherscan.io on 2020-08-27
 */
@@ -326,9 +327,7 @@ contract KermanSocialMoney is KermanERC20 {
         address _vestingBeneficiary,
         address _platformWallet,
         address _tokenVestingInstance
-    )
-    public
-    {
+    ) {
         name = _name;
         symbol = _symbol;
         decimals = _decimals;
