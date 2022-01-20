@@ -400,6 +400,7 @@ describe.only('KermanRewards', () => {
 
       await kermanRewards.connect(user1).claim();
       expect(await rewardsToken.balanceOf(user1.address)).eq(expectedRewards);
+      expect(await kermanRewards.earned(user1.address)).eq(0);
     });
   });
 
