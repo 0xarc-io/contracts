@@ -295,7 +295,7 @@ describe.only('KermanRewards', () => {
 
       await kermanRewards.setCurrentTimestamp(INITIAL_STAKE_DEADLINE + 1);
       await expect(kermanRewards.connect(user1).stake()).to.be.revertedWith(
-        'KermanRewards: period of staking finished',
+        'KermanRewards: staking period finished',
       );
     });
 
@@ -381,6 +381,7 @@ describe.only('KermanRewards', () => {
       expect(
         await sablierContract.balanceOf(sablierId, kermanRewards.address),
       ).eq(0);
+      expect(await kermanRewards.connect(user1).earned()).eq(0)
     });
 
     it('how to get back money if everybody exited before farm');

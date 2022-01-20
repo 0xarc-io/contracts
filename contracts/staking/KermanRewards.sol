@@ -223,7 +223,7 @@ contract KermanRewards is Adminable, Initializable {
         (,,,,,uint256 stopTime,,uint256 ratePerSecond) = sablierContract.getStream(sablierStreamId);
         uint256 timestamp = currentTimestamp();
 
-        if (timestamp > stakeDeadline) {
+        if (timestamp > stakeDeadline && _totalShares > 0) {
             uint256 claimDuration;
             if (stopTime < timestamp) {
                 claimDuration = stopTime - stakeDeadline;
