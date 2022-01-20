@@ -26,6 +26,9 @@ contract KermanRewards is Adminable, Initializable {
 
     uint256 private _totalShares;
     mapping (address => uint256) private _shares;
+    uint256 _sablierStartTime;
+    uint256 _sablierStopTime;
+    uint256 _sablierRatePerSecond;
 
     /* ========== Events ========== */
 
@@ -107,7 +110,7 @@ contract KermanRewards is Adminable, Initializable {
             "KermanRewards: the same stream ID is already set"
         );
 
-        (, address recipient,,address tokenAddress,,,,) = sablierContract.getStream(_sablierStreamId);
+        (, address recipient,,address tokenAddress, uint256 startTime, uint256 stopTime,,uint256 ratePerSecond) = sablierContract.getStream(_sablierStreamId);
 
         require(
             tokenAddress == address(rewardsToken),
@@ -118,6 +121,10 @@ contract KermanRewards is Adminable, Initializable {
             recipient == address(this),
             "KermanRewards: recipient of stream is not current contract"
         );
+
+        _sablierStartTime = startTime;
+        _sablierStopTime = stopTime; 
+        _sablierRatePerSecond = ratePerSecond;
 
         sablierStreamId = _sablierStreamId;
 
@@ -209,18 +216,17 @@ contract KermanRewards is Adminable, Initializable {
         view
         returns (uint256)
     {
-        (,,,,,uint256 stopTime,,uint256 ratePerSecond) = sablierContract.getStream(sablierStreamId);
         uint256 timestamp = currentTimestamp();
 
-        if (timestamp > stakeDeadline && _totalShares > 0) {
+        if (timestamp > stakeDeadline && timestamp > _sablierStartTime && _totalShares > 0) {
             uint256 claimDuration;
-            if (stopTime < timestamp) {
-                claimDuration = stopTime - stakeDeadline;
+            if (_sablierStopTime < timestamp) {
+                claimDuration = _sablierStopTime - _sablierStartTime;
             } else {
-                claimDuration = timestamp - stakeDeadline;
+                claimDuration = timestamp - _sablierStartTime;
             }
         
-            return _shares[_user] * ratePerSecond * claimDuration / _totalShares;
+            return _shares[_user] * _sablierRatePerSecond * claimDuration / _totalShares;
         } else {
             return 0;
         }
