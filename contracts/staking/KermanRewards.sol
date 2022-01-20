@@ -145,25 +145,14 @@ contract KermanRewards is Adminable, Initializable {
             return;
         }
 
-        // Get the balance of the stream. If the stream is complete, .balanceOf() will
-        // throw. For that reason, we will use .staticcall() to check the balance.
-        bytes memory payload = abi.encodeWithSignature(
-            "balanceOf(uint256,address)",
-            sablierStreamId,
-            address(this)
-        );
-        (bool success, bytes memory returnData) = address(sablierContract).staticcall(payload);
+        try sablierContract.balanceOf(sablierStreamId, address(this)) returns (uint256 availableBalance) {
+            sablierContract.withdrawFromStream(sablierStreamId, availableBalance);
 
-        if (!success) {
-            // The stream is finished
+            emit FundsWithdrawnFromSablier(sablierStreamId, availableBalance);
+        } catch (bytes memory) {
             return;
         }
 
-        (uint256 availableBalance) = abi.decode(returnData, (uint256));
-
-        sablierContract.withdrawFromStream(sablierStreamId, availableBalance);
-
-        emit FundsWithdrawnFromSablier(sablierStreamId, availableBalance);
     }
 
     function stake() external {

@@ -384,8 +384,6 @@ describe.only('KermanRewards', () => {
       expect(await kermanRewards.earned(user1.address)).eq(0)
     });
 
-    it('how to get back money if everybody exited before farm');
-
     it('claim at the end of the sablier stream', async () => {
       await stakingToken.mintShare(user1.address, STAKE_AMOUNT);
       await kermanRewards.connect(user1).stake();
@@ -413,7 +411,8 @@ describe.only('KermanRewards', () => {
       await stakingToken.mintShare(user2.address, STAKE_AMOUNT.mul(2));
       await kermanRewards.connect(user2).stake();
 
-    })
+    });
+
     it('2 users participate for whole period of farm', async () => {
       await kermanRewards.setCurrentTimestamp(
         INITIAL_STAKE_DEADLINE + STREAM_DURATION + 1,
