@@ -215,7 +215,7 @@ contract KermanRewards is Adminable, Initializable {
     /**
      * @notice Show the amount of tokens from sablier stream
      */
-    function earned()
+    function earned(address _user)
         external
         view
         returns (uint256)
@@ -231,7 +231,7 @@ contract KermanRewards is Adminable, Initializable {
                 claimDuration = timestamp - stakeDeadline;
             }
         
-            return _shares[msg.sender] * ratePerSecond * claimDuration / _totalShares;
+            return _shares[_user] * ratePerSecond * claimDuration / _totalShares;
         } else {
             return 0;
         }
