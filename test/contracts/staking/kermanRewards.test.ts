@@ -189,7 +189,7 @@ describe.only('KermanRewards', () => {
     describe('#setSablierContract', () => {
       let otherSablier: MockSablier;
 
-      beforeEach(async () => {
+      before(async () => {
         otherSablier = await new MockSablierFactory(user1).deploy();
       });
 
