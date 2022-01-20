@@ -309,7 +309,7 @@ describe.only('KermanRewards', () => {
       );
       expect(await stakingToken.balanceOf(user1.address)).eq(0);
       expect(await stakingToken.balanceOf(kermanRewards.address)).eq(0);
-      expect(await kermanRewards.connect(user1).earned()).eq(0);
+      expect(await kermanRewards.earned(user1.address)).eq(0);
     });
   });
 
@@ -372,7 +372,7 @@ describe.only('KermanRewards', () => {
         await sablierContract.balanceOf(sablierId, kermanRewards.address),
       ).eq(REWARDS_AMOUNT.div(2));
 
-      const expectedRewards = await kermanRewards.connect(user1).earned();
+      const expectedRewards = await kermanRewards.earned(user1.address);
       expect(expectedRewards).eq(REWARDS_AMOUNT.div(2));
 
       await kermanRewards.connect(user1).claim();
@@ -381,7 +381,7 @@ describe.only('KermanRewards', () => {
       expect(
         await sablierContract.balanceOf(sablierId, kermanRewards.address),
       ).eq(0);
-      expect(await kermanRewards.connect(user1).earned()).eq(0)
+      expect(await kermanRewards.earned(user1.address)).eq(0)
     });
 
     it('how to get back money if everybody exited before farm');
@@ -397,7 +397,7 @@ describe.only('KermanRewards', () => {
         INITIAL_STAKE_DEADLINE + STREAM_DURATION + 1,
       );
 
-      const expectedRewards = await kermanRewards.connect(user1).earned();
+      const expectedRewards = await kermanRewards.earned(user1.address);
       expect(expectedRewards).eq(REWARDS_AMOUNT);
 
       await kermanRewards.connect(user1).claim();
@@ -422,12 +422,11 @@ describe.only('KermanRewards', () => {
         INITIAL_STAKE_DEADLINE + STREAM_DURATION + 1,
       );
 
-      const expectedRewards = await kermanRewards.connect(user1).earned();
+      const expectedRewards = await kermanRewards.earned(user1.address);
       expect(expectedRewards).eq(REWARDS_AMOUNT.div(3));
 
       const expectedRewardsForSecondUser = await kermanRewards
-        .connect(user2)
-        .earned();
+        .earned(user2.address);
       expect(expectedRewardsForSecondUser).eq(REWARDS_AMOUNT.div(3).mul(2));
 
       await kermanRewards.connect(user1).claim();
@@ -447,12 +446,11 @@ describe.only('KermanRewards', () => {
         INITIAL_STAKE_DEADLINE + (STREAM_DURATION / 10) * 9,
       );
 
-      const expectedRewards = await kermanRewards.connect(user1).earned();
+      const expectedRewards = await kermanRewards.earned(user1.address);
       expect(expectedRewards).eq(REWARDS_AMOUNT.div(10).mul(9).div(3));
 
       const expectedRewardsForSecondUser = await kermanRewards
-        .connect(user2)
-        .earned();
+        .earned(user2.address);
       expect(expectedRewardsForSecondUser).eq(
         REWARDS_AMOUNT.div(10).mul(9).div(3).mul(2),
       );
