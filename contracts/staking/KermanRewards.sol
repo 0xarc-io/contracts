@@ -23,6 +23,7 @@ contract KermanRewards is Adminable, Initializable {
     ISablier public sablierContract;
     uint256 public sablierStreamId;
     uint256 public stakeDeadline;
+
     uint256 private _totalShares;
     mapping (address => uint256) private _shares;
 
