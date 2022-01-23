@@ -464,6 +464,11 @@ describe.only('KermanRewards', () => {
       expect(await rewardsToken.balanceOf(user1.address)).eq(
         REWARDS_AMOUNT.div(3),
       );
+
+      await kermanRewards.connect(user2).claim();
+      expect(await rewardsToken.balanceOf(user2.address)).eq(
+        REWARDS_AMOUNT.div(3).mul(2),
+      );
     });
   });
 });
