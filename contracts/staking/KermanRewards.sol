@@ -8,6 +8,7 @@ import {SafeERC20} from "../lib/SafeERC20.sol";
 import {IKermanERC20} from "../token/KermanERC20.sol";
 import {IERC20} from "../token/IERC20.sol";
 import {ISablier} from "../global/ISablier.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract KermanRewards is Adminable, Initializable {
     /* ========== Libraries ========== */
@@ -24,17 +25,20 @@ contract KermanRewards is Adminable, Initializable {
     uint256 public sablierStreamId;
     uint256 public stakeDeadline;
 
-    uint256 private _totalShares;
-    mapping (address => uint256) private _shares;
-    uint256 _sablierStartTime;
-    uint256 _sablierStopTime;
-    uint256 _sablierRatePerSecond;
+    uint256 private _totalStaked;
+    mapping (address => uint256) private _staked;
+    mapping (address => uint256) private _claimed;
+    uint256 public _sablierStartTime;
+    uint256 public _sablierStopTime;
+    uint256 public _sablierRatePerSecond;
 
     /* ========== Events ========== */
 
     event Staked(address indexed _user, uint256 _amount);
 
     event Claimed(address indexed _user, uint256 _amount);
+
+    event Burnt(address indexed _user, uint256 _amount);
 
     event SablierContractSet(address _sablierContract);
 
@@ -110,7 +114,7 @@ contract KermanRewards is Adminable, Initializable {
             "KermanRewards: the same stream ID is already set"
         );
 
-        (, address recipient,,address tokenAddress, uint256 startTime, uint256 stopTime,,uint256 ratePerSecond) = sablierContract.getStream(_sablierStreamId);
+        (, address recipient,, address tokenAddress, uint256 startTime, uint256 stopTime,, uint256 ratePerSecond) = sablierContract.getStream(_sablierStreamId);
 
         require(
             tokenAddress == address(rewardsToken),
@@ -153,10 +157,11 @@ contract KermanRewards is Adminable, Initializable {
         }
 
         try sablierContract.balanceOf(sablierStreamId, address(this)) returns (uint256 availableBalance) {
-            sablierContract.withdrawFromStream(sablierStreamId, availableBalance);
 
+            sablierContract.withdrawFromStream(sablierStreamId, availableBalance);
             emit FundsWithdrawnFromSablier(sablierStreamId, availableBalance);
-        } catch (bytes memory) {
+
+        } catch {
             return;
         }
 
@@ -184,7 +189,7 @@ contract KermanRewards is Adminable, Initializable {
 
     function claim() external {
         require(
-            _shares[msg.sender] > 0,
+            _staked[msg.sender] > 0,
             "KermanRewards: user does not have staked balance"
         );
 
@@ -196,13 +201,21 @@ contract KermanRewards is Adminable, Initializable {
 
         claimStreamFunds();
 
-        uint256 _amount = _shares[msg.sender] * rewardsToken.balanceOf(address(this)) / _totalShares;
+        uint256 _amount = earned(msg.sender);
+        
+        require(
+            _amount > 0,
+            "KermanRewards: User has not rewards to claim"
+        );
+
+        require(_claimed[msg.sender] <= _amount, Strings.toString(_amount));
+
         rewardsToken.safeTransfer(
             msg.sender,
             _amount
         );
-        _burn(msg.sender);
 
+        _claimed[msg.sender] = _claimed[msg.sender] + _amount;
         emit Claimed(msg.sender, _amount);
     }
 
@@ -212,21 +225,18 @@ contract KermanRewards is Adminable, Initializable {
      * @notice Show the amount of tokens from sablier stream
      */
     function earned(address _user)
-        external
+        public
         view
         returns (uint256)
     {
         uint256 timestamp = currentTimestamp();
 
-        if (timestamp > stakeDeadline && timestamp > _sablierStartTime && _totalShares > 0) {
-            uint256 claimDuration;
-            if (_sablierStopTime < timestamp) {
-                claimDuration = _sablierStopTime - _sablierStartTime;
-            } else {
-                claimDuration = timestamp - _sablierStartTime;
-            }
-        
-            return _shares[_user] * _sablierRatePerSecond * claimDuration / _totalShares;
+        if (timestamp > stakeDeadline && timestamp >= _sablierStartTime && _totalStaked > 0 && _staked[_user] > 0) {
+            uint256 claimDuration= _getStopTime(timestamp) - _sablierStartTime;
+            
+
+            return _staked[_user] * _sablierRatePerSecond * claimDuration / _totalStaked - _claimed[_user];
+        // uint256 _staked[msg.sender] * _sablierRatePerSecond * (_stopTime - _sablierStartTime)  / _totalStaked;
         } else {
             return 0;
         }
@@ -252,18 +262,21 @@ contract KermanRewards is Adminable, Initializable {
     )
         private
     {
-        _totalShares = _totalShares + amount;
-        _shares[account] = _shares[account] + amount;
+        _totalStaked = _totalStaked + amount;
+        _staked[account] = _staked[account] + amount;
     }
 
-    /** @dev Burns all shares of user, decreasing the total supply.
-     */
-    function _burn(
-        address account
+    function _getStopTime(
+        uint256 timestamp
     )
         private
+        view
+        returns (uint256)
     {
-        _totalShares = _totalShares - _shares[account];
-        _shares[account] = 0;
+         if( _sablierStopTime < timestamp) {
+            return _sablierStopTime;
+        } else {
+            return timestamp;
+        }
     }
 }

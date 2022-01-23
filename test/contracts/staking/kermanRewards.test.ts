@@ -355,9 +355,23 @@ describe.only('KermanRewards', () => {
       expect(
         await sablierContract.balanceOf(sablierId, kermanRewards.address),
       ).eq(0);
+
+      await kermanRewards.setCurrentTimestamp(
+        INITIAL_STAKE_DEADLINE + STREAM_DURATION,
+      );
+      await sablierContract.setCurrentTimestamp(
+        INITIAL_STAKE_DEADLINE + STREAM_DURATION,
+      );
+
+      expect(
+        await sablierContract.balanceOf(sablierId, kermanRewards.address),
+      ).eq(REWARDS_AMOUNT.div(10).mul(9));
+
+      await kermanRewards.claimStreamFunds();
+      await expect(kermanRewards.claimStreamFunds()).not.to.be.reverted;
     });
 
-    it('claim accumulated tokens', async () => {
+    it('claim accumulated tokens in two steps', async () => {
       await stakingToken.mintShare(user1.address, STAKE_AMOUNT);
       await kermanRewards.connect(user1).stake();
 
@@ -378,10 +392,23 @@ describe.only('KermanRewards', () => {
       await kermanRewards.connect(user1).claim();
       expect(await rewardsToken.balanceOf(user1.address)).eq(expectedRewards);
 
+      expect(await kermanRewards.earned(user1.address)).eq(0);
+
+      await kermanRewards.setCurrentTimestamp(
+        INITIAL_STAKE_DEADLINE + STREAM_DURATION,
+      );
+      await sablierContract.setCurrentTimestamp(
+        INITIAL_STAKE_DEADLINE + STREAM_DURATION,
+      );
       expect(
         await sablierContract.balanceOf(sablierId, kermanRewards.address),
-      ).eq(0);
-      expect(await kermanRewards.earned(user1.address)).eq(0)
+      ).eq(REWARDS_AMOUNT.div(2));
+      expect(await kermanRewards.earned(user1.address)).eq(
+        REWARDS_AMOUNT.div(2),
+      );
+      await kermanRewards.connect(user1).claim();
+      expect(await rewardsToken.balanceOf(user1.address)).eq(REWARDS_AMOUNT);
+      expect(await kermanRewards.earned(user1.address)).eq(0);
     });
 
     it('claim at the end of the sablier stream', async () => {
@@ -411,7 +438,6 @@ describe.only('KermanRewards', () => {
 
       await stakingToken.mintShare(user2.address, STAKE_AMOUNT.mul(2));
       await kermanRewards.connect(user2).stake();
-
     });
 
     it('2 users participate for whole period of farm', async () => {
@@ -425,8 +451,9 @@ describe.only('KermanRewards', () => {
       const expectedRewards = await kermanRewards.earned(user1.address);
       expect(expectedRewards).eq(REWARDS_AMOUNT.div(3));
 
-      const expectedRewardsForSecondUser = await kermanRewards
-        .earned(user2.address);
+      const expectedRewardsForSecondUser = await kermanRewards.earned(
+        user2.address,
+      );
       expect(expectedRewardsForSecondUser).eq(REWARDS_AMOUNT.div(3).mul(2));
 
       await kermanRewards.connect(user1).claim();
@@ -449,12 +476,12 @@ describe.only('KermanRewards', () => {
       const expectedRewards = await kermanRewards.earned(user1.address);
       expect(expectedRewards).eq(REWARDS_AMOUNT.div(10).mul(9).div(3));
 
-      const expectedRewardsForSecondUser = await kermanRewards
-        .earned(user2.address);
+      const expectedRewardsForSecondUser = await kermanRewards.earned(
+        user2.address,
+      );
       expect(expectedRewardsForSecondUser).eq(
         REWARDS_AMOUNT.div(10).mul(9).div(3).mul(2),
       );
-
       await kermanRewards.connect(user2).claim();
       expect(await rewardsToken.balanceOf(user2.address)).eq(
         expectedRewardsForSecondUser,
@@ -469,7 +496,7 @@ describe.only('KermanRewards', () => {
 
       await kermanRewards.connect(user1).claim();
       expect(await rewardsToken.balanceOf(user1.address)).eq(
-        REWARDS_AMOUNT.div(10).mul(9).div(3).add(REWARDS_AMOUNT.div(10)),
+        REWARDS_AMOUNT.div(3),
       );
     });
   });
