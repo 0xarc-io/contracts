@@ -24,7 +24,7 @@ const REWARDS_AMOUNT = utils.parseEther('300');
 const STREAM_DURATION = 100;
 const INITIAL_STAKE_DEADLINE = 100;
 
-describe.only('KermanRewards', () => {
+describe('KermanRewards', () => {
   let kermanRewards: MockKermanRewards;
   let sablierContract: MockSablier;
   let admin: SignerWithAddress;
