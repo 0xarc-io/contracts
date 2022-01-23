@@ -512,5 +512,37 @@ describe.only('KermanRewards', () => {
         REWARDS_AMOUNT.div(3).mul(2),
       );
     });
+
+    it('Rewards are not divided by 3', async () => {
+      const REWARDS_AMOUNT = utils.parseEther('200');
+      const sablierId = await createStream(
+        sablierContract,
+        rewardsToken,
+        kermanRewards.address,
+        REWARDS_AMOUNT,
+        STREAM_DURATION,
+        INITIAL_STAKE_DEADLINE,
+      );
+      await kermanRewards.setSablierStreamId(sablierId);
+      
+      await setTimestamp(INITIAL_STAKE_DEADLINE + STREAM_DURATION + 1);
+
+      const expectedRewards = await kermanRewards.earned(user1.address);
+      expect(expectedRewards).eq(REWARDS_AMOUNT.div(3));
+
+      const expectedRewardsForSecondUser = await kermanRewards.earned(
+        user2.address,
+        );
+
+      expect(expectedRewardsForSecondUser).eq(REWARDS_AMOUNT.mul(2).div(3));
+
+      await kermanRewards.connect(user1).claim();
+      expect(await rewardsToken.balanceOf(user1.address)).eq(expectedRewards);
+      
+      await kermanRewards.connect(user2).claim();
+      expect(await rewardsToken.balanceOf(user2.address)).eq(
+        expectedRewardsForSecondUser,
+      );
+    });
   });
 });
