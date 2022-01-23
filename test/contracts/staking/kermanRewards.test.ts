@@ -370,7 +370,7 @@ describe.only('KermanRewards', () => {
       await stakingToken.mintShare(user1.address, STAKE_AMOUNT);
       await kermanRewards.connect(user1).stake();
 
-      await setTimestamp(INITIAL_STAKE_DEADLINE + STREAM_DURATION / 2)
+      await setTimestamp(INITIAL_STAKE_DEADLINE + STREAM_DURATION / 2);
 
       expect(
         await sablierContract.balanceOf(sablierId, kermanRewards.address),
@@ -459,6 +459,48 @@ describe.only('KermanRewards', () => {
       );
 
       await setTimestamp(INITIAL_STAKE_DEADLINE + STREAM_DURATION + 1);
+
+      await kermanRewards.connect(user1).claim();
+      expect(await rewardsToken.balanceOf(user1.address)).eq(
+        REWARDS_AMOUNT.div(3),
+      );
+
+      await kermanRewards.connect(user2).claim();
+      expect(await rewardsToken.balanceOf(user2.address)).eq(
+        REWARDS_AMOUNT.div(3).mul(2),
+      );
+    });
+
+    it('Sablier starts after stake deadline with delay. One participate whole time, the second one 1/10 of the farm duration', async () => {
+      const DELAY = 100;
+      const sablierId = await createStream(
+        sablierContract,
+        rewardsToken,
+        kermanRewards.address,
+        REWARDS_AMOUNT,
+        STREAM_DURATION,
+        INITIAL_STAKE_DEADLINE + DELAY,
+      );
+      await kermanRewards.setSablierStreamId(sablierId);
+      await setTimestamp(
+        INITIAL_STAKE_DEADLINE + DELAY + (STREAM_DURATION / 10) * 9,
+      );
+
+      const expectedRewards = await kermanRewards.earned(user1.address);
+      expect(expectedRewards).eq(REWARDS_AMOUNT.div(10).mul(9).div(3));
+
+      const expectedRewardsForSecondUser = await kermanRewards.earned(
+        user2.address,
+      );
+      expect(expectedRewardsForSecondUser).eq(
+        REWARDS_AMOUNT.div(10).mul(9).div(3).mul(2),
+      );
+      await kermanRewards.connect(user2).claim();
+      expect(await rewardsToken.balanceOf(user2.address)).eq(
+        expectedRewardsForSecondUser,
+      );
+
+      await setTimestamp(INITIAL_STAKE_DEADLINE + DELAY + STREAM_DURATION + 1);
 
       await kermanRewards.connect(user1).claim();
       expect(await rewardsToken.balanceOf(user1.address)).eq(
