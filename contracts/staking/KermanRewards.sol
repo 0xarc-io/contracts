@@ -8,7 +8,6 @@ import {SafeERC20} from "../lib/SafeERC20.sol";
 import {IKermanERC20} from "../token/KermanERC20.sol";
 import {IERC20} from "../token/IERC20.sol";
 import {ISablier} from "../global/ISablier.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract KermanRewards is Adminable, Initializable {
     /* ========== Libraries ========== */
@@ -207,8 +206,6 @@ contract KermanRewards is Adminable, Initializable {
             _amount > 0,
             "KermanRewards: User has not rewards to claim"
         );
-
-        require(_claimed[msg.sender] <= _amount, Strings.toString(_amount));
 
         rewardsToken.safeTransfer(
             msg.sender,
