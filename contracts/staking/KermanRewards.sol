@@ -28,9 +28,9 @@ contract KermanRewards is Adminable, Initializable {
     uint256 public sablierStopTime;
     uint256 public sablierRatePerSecond;
 
-    uint256 private _totalStaked;
-    mapping (address => uint256) private _staked;
-    mapping (address => uint256) private _claimed;
+    uint256 public totalStaked;
+    mapping (address => uint256) public staked;
+    mapping (address => uint256) public claimed;
 
     /* ========== Events ========== */
 
@@ -44,7 +44,7 @@ contract KermanRewards is Adminable, Initializable {
 
     event SablierStreamIdSet(uint256 _streamId);
 
-    event StakeDeadlineSet(uint256 _stakeDeadline);
+    event StakeDeadlineSet(uint256 stakeDeadline);
 
     /* ========== Restricted Functions ========== */
 
@@ -52,7 +52,7 @@ contract KermanRewards is Adminable, Initializable {
         address _sablierContract, 
         address _stakingToken,
         address _rewardsToken,
-        uint256 _stakeDeadline
+        uint256 stakeDeadline
     )
         external
         onlyAdmin
@@ -75,7 +75,7 @@ contract KermanRewards is Adminable, Initializable {
         stakingToken = IKermanERC20(_stakingToken);
         rewardsToken = IERC20(_rewardsToken);
         sablierContract = ISablier(_sablierContract);
-        stakeDeadline  = _stakeDeadline;
+        stakeDeadline  = stakeDeadline;
     }
 
 
@@ -133,11 +133,11 @@ contract KermanRewards is Adminable, Initializable {
         emit SablierStreamIdSet(sablierStreamId);
     }
 
-    function setStakeDeadline(uint256 _stakeDeadline)
+    function setStakeDeadline(uint256 stakeDeadline)
         external
         onlyAdmin
     {
-        stakeDeadline = _stakeDeadline;
+        stakeDeadline = stakeDeadline;
 
         emit StakeDeadlineSet(stakeDeadline);
     }
@@ -184,7 +184,7 @@ contract KermanRewards is Adminable, Initializable {
 
     function claim() external {
         require(
-            _staked[msg.sender] > 0,
+            staked[msg.sender] > 0,
             "KermanRewards: user does not have staked balance"
         );
 
@@ -202,7 +202,7 @@ contract KermanRewards is Adminable, Initializable {
             "KermanRewards: User has not rewards to claim"
         );
 
-        _claimed[msg.sender] = _claimed[msg.sender] + _amount;
+        claimed[msg.sender] = claimed[msg.sender] + _amount;
 
         rewardsToken.safeTransfer(
             msg.sender,
@@ -227,13 +227,13 @@ contract KermanRewards is Adminable, Initializable {
         if (
             timestamp > stakeDeadline &&
             timestamp >= sablierStartTime &&
-            _staked[_user] > 0
+            staked[_user] > 0
         ) {
             uint256 claimDuration = _getStopTime(timestamp) - sablierStartTime;
-            return _staked[_user] *
+            return staked[_user] *
                 sablierRatePerSecond *
-                claimDuration / _totalStaked
-                - _claimed[_user];
+                claimDuration / totalStaked
+                - claimed[_user];
         } else {
             return 0;
         }
@@ -259,8 +259,8 @@ contract KermanRewards is Adminable, Initializable {
     )
         private
     {
-        _totalStaked = _totalStaked + amount;
-        _staked[account] = _staked[account] + amount;
+        totalStaked = totalStaked + amount;
+        staked[account] = staked[account] + amount;
     }
 
     function _getStopTime(
