@@ -24,12 +24,13 @@ contract KermanRewards is Adminable, Initializable {
     uint256 public sablierStreamId;
     uint256 public stakeDeadline;
 
+    uint256 public sablierStartTime;
+    uint256 public sablierStopTime;
+    uint256 public sablierRatePerSecond;
+
     uint256 private _totalStaked;
     mapping (address => uint256) private _staked;
     mapping (address => uint256) private _claimed;
-    uint256 public _sablierStartTime;
-    uint256 public _sablierStopTime;
-    uint256 public _sablierRatePerSecond;
 
     /* ========== Events ========== */
 
@@ -123,9 +124,9 @@ contract KermanRewards is Adminable, Initializable {
             "KermanRewards: recipient of stream is not current contract"
         );
 
-        _sablierStartTime = startTime;
-        _sablierStopTime = stopTime; 
-        _sablierRatePerSecond = ratePerSecond;
+        sablierStartTime = startTime;
+        sablierStopTime = stopTime; 
+        sablierRatePerSecond = ratePerSecond;
 
         sablierStreamId = _sablierStreamId;
 
@@ -225,12 +226,12 @@ contract KermanRewards is Adminable, Initializable {
 
         if (
             timestamp > stakeDeadline &&
-            timestamp >= _sablierStartTime &&
+            timestamp >= sablierStartTime &&
             _staked[_user] > 0
         ) {
-            uint256 claimDuration = _getStopTime(timestamp) - _sablierStartTime;
+            uint256 claimDuration = _getStopTime(timestamp) - sablierStartTime;
             return _staked[_user] *
-                _sablierRatePerSecond *
+                sablierRatePerSecond *
                 claimDuration / _totalStaked
                 - _claimed[_user];
         } else {
@@ -269,8 +270,8 @@ contract KermanRewards is Adminable, Initializable {
         view
         returns (uint256)
     {
-         if( _sablierStopTime < timestamp) {
-            return _sablierStopTime;
+         if( sablierStopTime < timestamp) {
+            return sablierStopTime;
         } else {
             return timestamp;
         }
