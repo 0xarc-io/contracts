@@ -187,9 +187,8 @@ contract KermanRewards is Adminable, Initializable {
             "KermanRewards: user does not have staked balance"
         );
 
-        uint256 timestamp = currentTimestamp();
         require(
-            timestamp > stakeDeadline,
+            currentTimestamp() > stakeDeadline,
             "KermanRewards: stake period is not finished"
         );
 
