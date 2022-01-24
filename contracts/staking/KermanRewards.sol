@@ -45,8 +45,6 @@ contract KermanRewards is Adminable, Initializable {
 
     event StakeDeadlineSet(uint256 _stakeDeadline);
 
-    event FundsWithdrawnFromSablier(uint256 _streamId, uint256 _amount);
-
     /* ========== Restricted Functions ========== */
 
     function init(
@@ -156,10 +154,7 @@ contract KermanRewards is Adminable, Initializable {
         }
 
         try sablierContract.balanceOf(sablierStreamId, address(this)) returns (uint256 availableBalance) {
-
             sablierContract.withdrawFromStream(sablierStreamId, availableBalance);
-            emit FundsWithdrawnFromSablier(sablierStreamId, availableBalance);
-
         } catch {
             return;
         }
