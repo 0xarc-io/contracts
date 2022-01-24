@@ -223,9 +223,16 @@ contract KermanRewards is Adminable, Initializable {
     {
         uint256 timestamp = currentTimestamp();
 
-        if (timestamp > stakeDeadline && timestamp >= _sablierStartTime && _totalStaked > 0 && _staked[_user] > 0) {
-            uint256 claimDuration= _getStopTime(timestamp) - _sablierStartTime;
-            return _staked[_user] * _sablierRatePerSecond * claimDuration / _totalStaked - _claimed[_user];
+        if (
+            timestamp > stakeDeadline &&
+            timestamp >= _sablierStartTime &&
+            _staked[_user] > 0
+        ) {
+            uint256 claimDuration = _getStopTime(timestamp) - _sablierStartTime;
+            return _staked[_user] *
+                _sablierRatePerSecond *
+                claimDuration / _totalStaked
+                - _claimed[_user];
         } else {
             return 0;
         }
