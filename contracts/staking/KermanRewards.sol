@@ -179,7 +179,7 @@ contract KermanRewards is Adminable, Initializable {
             "KermanRewards: staking period finished"
         );
 
-        _mint(msg.sender, userBalance);
+        _mintShares(msg.sender, userBalance);
 
         stakingToken.burnFrom(msg.sender, userBalance);
 
@@ -250,7 +250,7 @@ contract KermanRewards is Adminable, Initializable {
     /** @dev Creates `amount` tokens and assigns them to `account`, increasing
      * the total supply.
      */
-    function _mint(
+    function _mintShares(
         address account,
         uint256 amount
     )
