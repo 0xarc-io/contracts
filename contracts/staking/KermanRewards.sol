@@ -193,8 +193,6 @@ contract KermanRewards is Adminable, Initializable {
             "KermanRewards: stake period is not finished"
         );
 
-        claimStreamFunds();
-
         uint256 _amount = rewardsAvailable(msg.sender);
         
         require(
@@ -203,6 +201,8 @@ contract KermanRewards is Adminable, Initializable {
         );
 
         claimed[msg.sender] = claimed[msg.sender] + _amount;
+
+        claimStreamFunds();
 
         rewardsToken.safeTransfer(
             msg.sender,
