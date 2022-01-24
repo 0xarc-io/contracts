@@ -52,7 +52,7 @@ contract KermanRewards is Adminable, Initializable {
         address _sablierContract, 
         address _stakingToken,
         address _rewardsToken,
-        uint256 stakeDeadline
+        uint256 _stakeDeadline
     )
         external
         onlyAdmin
@@ -75,7 +75,7 @@ contract KermanRewards is Adminable, Initializable {
         stakingToken = IKermanERC20(_stakingToken);
         rewardsToken = IERC20(_rewardsToken);
         sablierContract = ISablier(_sablierContract);
-        stakeDeadline  = stakeDeadline;
+        stakeDeadline = _stakeDeadline;
     }
 
 
@@ -133,11 +133,11 @@ contract KermanRewards is Adminable, Initializable {
         emit SablierStreamIdSet(sablierStreamId);
     }
 
-    function setStakeDeadline(uint256 stakeDeadline)
+    function setStakeDeadline(uint256 _stakeDeadline)
         external
         onlyAdmin
     {
-        stakeDeadline = stakeDeadline;
+        stakeDeadline = _stakeDeadline;
 
         emit StakeDeadlineSet(stakeDeadline);
     }
