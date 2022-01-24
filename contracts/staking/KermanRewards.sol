@@ -195,7 +195,7 @@ contract KermanRewards is Adminable, Initializable {
 
         claimStreamFunds();
 
-        uint256 _amount = earned(msg.sender);
+        uint256 _amount = rewardsAvailable(msg.sender);
         
         require(
             _amount > 0,
@@ -217,7 +217,7 @@ contract KermanRewards is Adminable, Initializable {
     /**
      * @notice Show the amount of tokens from sablier stream
      */
-    function earned(address _user)
+    function rewardsAvailable(address _user)
         public
         view
         returns (uint256)
