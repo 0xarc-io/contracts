@@ -201,12 +201,13 @@ contract KermanRewards is Adminable, Initializable {
             "KermanRewards: User has not rewards to claim"
         );
 
+        _claimed[msg.sender] = _claimed[msg.sender] + _amount;
+
         rewardsToken.safeTransfer(
             msg.sender,
             _amount
         );
 
-        _claimed[msg.sender] = _claimed[msg.sender] + _amount;
         emit Claimed(msg.sender, _amount);
     }
 
