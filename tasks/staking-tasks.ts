@@ -599,10 +599,7 @@ task(
     });
   });
 
-task(
-  'deploy-kerman-rewards',
-  'Deploy the KermanRewards staking contract',
-)
+task('deploy-kerman-rewards', 'Deploy the KermanRewards staking contract')
   .addOptionalParam('stakingtoken', 'Address of the Token which will be staked')
   .addOptionalParam(
     'rewardstoken',
@@ -634,7 +631,7 @@ task(
 
     await pruneDeployments(network, signer.provider);
 
-    let factory: KermanRewardsFactory;
+    const factory = new KermanRewardsFactory(signer);
 
     const contractImplementation = await deployContract(
       {
@@ -659,10 +656,7 @@ task(
     }
 
     if (implementationOnly) {
-      await hre.run('verify:verify', {
-        address: contractImplementation,
-        constructorArguments: [],
-      });
+      await verifyContract(hre, contractImplementation);
       return;
     }
 
@@ -671,7 +665,7 @@ task(
       'KermanRewards',
       contractImplementation,
       networkConfig,
-    )
+    );
 
     const kermanRewardsProxyContract = KermanRewardsFactory.connect(
       proxyAddress,
@@ -695,16 +689,12 @@ task(
     console.log(green(`Init successfully called`));
 
     console.log(yellow('Verifying contracts...'));
-    await hre.run('verify:verify', {
-      address: contractImplementation,
-      constructorArguments: [],
-    });
-    await hre.run('verify:verify', {
-      address: proxyAddress,
-      constructorArguments: [
-        contractImplementation,
-        await signer.getAddress(),
-        [],
-      ],
-    });
+    await verifyContract(hre, contractImplementation);
+    await verifyContract(
+      hre,
+      proxyAddress,
+      contractImplementation,
+      await signer.getAddress(),
+      [],
+    );
   });
