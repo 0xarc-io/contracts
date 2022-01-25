@@ -1,7 +1,0 @@
-{
-  "network": "mainnet",
-  "startBlock": 10812831,
-  "synthRegistry": "0x372a4D34e9E9d96656F101aFf06a4a455396C974",
-  "synthRegistryV2": "0xeB739e889E74383562695D94C495F5F69F9E2559",
-  "savingsRegistry": "0x2948Ddf33b00686D7E58D2Eb3AA2469A1b52C7e4"
-}
