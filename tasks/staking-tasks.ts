@@ -1,6 +1,7 @@
 import {
   ArcProxyFactory,
   JointPassportCampaignFactory,
+  KermanRewardsFactory,
   StakingAccrualERC20Factory,
   StakingAccrualERC20V5Factory,
   TestTokenFactory,
@@ -18,6 +19,7 @@ import { task } from 'hardhat/config';
 import getUltimateOwner from './task-utils/getUltimateOwner';
 import { verifyContract } from './task-utils';
 import { DeploymentType } from '../deployments/types';
+import { deployProxy } from './task-utils/deployProxy';
 
 task('deploy-staking', 'Deploy a staking/reward pool')
   .addParam('name', 'The name of the pool you would like to deploy')
@@ -579,6 +581,116 @@ task(
       exitCoolDownDuration,
       defiPassport,
       sablier,
+    );
+    console.log(green(`Init successfully called`));
+
+    console.log(yellow('Verifying contracts...'));
+    await hre.run('verify:verify', {
+      address: contractImplementation,
+      constructorArguments: [],
+    });
+    await hre.run('verify:verify', {
+      address: proxyAddress,
+      constructorArguments: [
+        contractImplementation,
+        await signer.getAddress(),
+        [],
+      ],
+    });
+  });
+
+task(
+  'deploy-kerman-rewards',
+  'Deploy the KermanRewards staking contract',
+)
+  .addOptionalParam('stakingtoken', 'Address of the Token which will be staked')
+  .addOptionalParam(
+    'rewardstoken',
+    'Address of the Token which will be used as rewards',
+  )
+  .addOptionalParam(
+    'stakedeadline',
+    'Deadline till which users can stake tokens',
+  )
+  .addOptionalParam('sablier', 'Address of the Sablier contract to use')
+  .addFlag('implementationonly', 'Only deploy implementation')
+  .setAction(async (taskArgs, hre) => {
+    const {
+      stakingtoken: stakingToken,
+      rewardstoken: rewardsToken,
+      stakedeadline: stakeDeadline,
+      sablier,
+      implementationonly: implementationOnly,
+    } = taskArgs;
+
+    const { network, signer, networkConfig } = await loadDetails(hre);
+
+    if (
+      !implementationOnly &&
+      (!stakingToken || !rewardsToken || !stakeDeadline)
+    ) {
+      throw red('Staking token, rewards token, stake deadline are missing');
+    }
+
+    await pruneDeployments(network, signer.provider);
+
+    let factory: KermanRewardsFactory;
+
+    const contractImplementation = await deployContract(
+      {
+        name: 'KermanRewards',
+        source: 'KermanRewards',
+        data: factory.getDeployTransaction(),
+        version: 1,
+        type: DeploymentType.global,
+        group: 'KermanRewards',
+      },
+      networkConfig,
+    );
+
+    if (contractImplementation) {
+      console.log(
+        green(
+          `KermanRewards implementation deployed at ${contractImplementation}`,
+        ),
+      );
+    } else {
+      throw red(`KermanRewards implementation was not deployed!`);
+    }
+
+    if (implementationOnly) {
+      await hre.run('verify:verify', {
+        address: contractImplementation,
+        constructorArguments: [],
+      });
+      return;
+    }
+
+    const proxyAddress = await deployProxy(
+      signer,
+      'KermanRewards',
+      contractImplementation,
+      networkConfig,
+    )
+
+    const kermanRewardsProxyContract = KermanRewardsFactory.connect(
+      proxyAddress,
+      signer,
+    );
+
+    console.log(
+      yellow(`Calling init({
+        stakingToken: ${stakingToken},
+        rewardsToken: ${rewardsToken},
+        stakeDeadline: ${stakeDeadline},
+        sablier: ${sablier}
+      })...`),
+    );
+    await kermanRewardsProxyContract.init(
+      sablier,
+      stakingToken,
+      rewardsToken,
+      stakeDeadline,
     );
     console.log(green(`Init successfully called`));
 
