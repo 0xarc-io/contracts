@@ -707,5 +707,25 @@
     "version": 5,
     "type": "global",
     "group": "StakingAccrualERC20"
+  },
+  {
+    "name": "KermanRewards",
+    "source": "KermanRewards",
+    "address": "0xAfbC32a169BA2d919B1BAcAD9DF6132feeC41f7B",
+    "txn": "0xefd13ccbab3c5799f1eff38c92be80d264b31db93324352d292626de5b053ce2",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": "KermanRewards"
+  },
+  {
+    "name": "KermanRewardsProxy",
+    "source": "ArcProxy",
+    "address": "0xb1d006F13616A74F91aa7fA007F98B1e26217825",
+    "txn": "0x81654e4489e13c479ab7a8ca7224d286d6a0409778cf6b8411d3cbdee10e306f",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "global",
+    "group": "KermanRewards"
   }
 ]
