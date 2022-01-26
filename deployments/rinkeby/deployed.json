@@ -709,10 +709,20 @@
     "group": "StakingAccrualERC20"
   },
   {
+    "name": "MockKermanSocialMoney",
+    "source": "MockKermanSocialMoney",
+    "address": "0xb525FB5025E40d271E7eAf9b6D72A456A830B487",
+    "txn": "0x5f28091e7569c3ebbdd8564c04361e22c75bd474b30d246a13a185d51bdd6380",
+    "network": "rinkeby",
+    "version": 1,
+    "type": "staking",
+    "group": "KermanRewards"
+  },
+  {
     "name": "KermanRewards",
     "source": "KermanRewards",
-    "address": "0xAfbC32a169BA2d919B1BAcAD9DF6132feeC41f7B",
-    "txn": "0xefd13ccbab3c5799f1eff38c92be80d264b31db93324352d292626de5b053ce2",
+    "address": "0x8486a57E4D98896C61f60D80EDD567BA5764D3C9",
+    "txn": "0xa498563640aded991724867f57b5593e9c11cb97bd274d8bdfd5199e8ca47205",
     "network": "rinkeby",
     "version": 1,
     "type": "global",
@@ -721,8 +731,8 @@
   {
     "name": "KermanRewardsProxy",
     "source": "ArcProxy",
-    "address": "0xb1d006F13616A74F91aa7fA007F98B1e26217825",
-    "txn": "0x81654e4489e13c479ab7a8ca7224d286d6a0409778cf6b8411d3cbdee10e306f",
+    "address": "0x50A2ed2139BCA2742eE87674fB9b230506180c1F",
+    "txn": "0x091f2f040c0f1332fae92ac96159fb3def33bb7bd2b16348e4ac569d0b92a34f",
     "network": "rinkeby",
     "version": 1,
     "type": "global",
