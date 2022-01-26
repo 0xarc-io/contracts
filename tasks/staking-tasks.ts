@@ -2,6 +2,7 @@ import {
   ArcProxyFactory,
   JointPassportCampaignFactory,
   KermanRewardsFactory,
+  MockKermanSocialMoneyFactory,
   StakingAccrualERC20Factory,
   StakingAccrualERC20V5Factory,
   TestTokenFactory,
@@ -613,7 +614,7 @@ task('deploy-kerman-rewards', 'Deploy the KermanRewards staking contract')
   .addFlag('implementationonly', 'Only deploy implementation')
   .setAction(async (taskArgs, hre) => {
     const {
-      stakingtoken: stakingToken,
+      stakingtoken,
       rewardstoken: rewardsToken,
       stakedeadline: stakeDeadline,
       sablier,
@@ -621,6 +622,25 @@ task('deploy-kerman-rewards', 'Deploy the KermanRewards staking contract')
     } = taskArgs;
 
     const { network, signer, networkConfig } = await loadDetails(hre);
+
+    const stakingToken =
+      stakingtoken ||
+      (await deployContract(
+        {
+          name: 'MockKermanSocialMoney',
+          source: 'MockKermanSocialMoney',
+          data: new MockKermanSocialMoneyFactory(signer).getDeployTransaction(
+            `MockKermanSocialMoney`,
+            '$Kerman',
+            18,
+            signer.address,
+          ),
+          version: 1,
+          type: DeploymentType.staking,
+          group: 'KermanRewards',
+        },
+        networkConfig,
+      ));
 
     if (
       !implementationOnly &&
