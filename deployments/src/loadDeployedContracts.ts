@@ -10,7 +10,7 @@ export function getDeploymentsFilePath(network: string): string {
   return getPathToNetwork(network, constants.DEPLOYMENT_FILENAME);
 }
 
-export function loadDeployedContracts(network: string): Array<any> {
+export function loadDeployedContracts(network: string): Array<unknown> {
   const deploymentsFile = getDeploymentsFilePath(network);
   fs.ensureFileSync(deploymentsFile);
   const deployments = fs.readJSONSync(deploymentsFile, { throws: false }) || [];
