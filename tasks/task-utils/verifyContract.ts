@@ -11,7 +11,7 @@ const ETHERSCAN_APY_SUPPORTED_NETWORKS = [
 export async function verifyContract(
   hre: HardhatRuntimeEnvironment,
   contractAddress: string,
-  ...contractArgs: any[]
+  ...contractArgs: unknown[]
 ) {
   const { network } = hre.hardhatArguments;
   if (!ETHERSCAN_APY_SUPPORTED_NETWORKS.includes(network)) {
