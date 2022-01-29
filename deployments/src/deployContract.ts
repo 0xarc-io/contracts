@@ -44,7 +44,7 @@ export async function deployContract(
     const receipt = await signedTx.wait(confirmations);
     console.log(green(`Deployed: ${details}\n`));
 
-    await writeToDeployments({
+    writeToDeployments({
       name: deployParams.name,
       source: deployParams.source,
       address: receipt.contractAddress,
