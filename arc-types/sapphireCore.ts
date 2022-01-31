@@ -11,6 +11,7 @@ export enum Operation {
 export type Vault = {
   collateralAmount: BigNumber;
   borrowedAmount: BigNumber;
+  principal: BigNumber;
 };
 
 export type PassportScore = {

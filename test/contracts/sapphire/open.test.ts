@@ -87,6 +87,7 @@ describe('SapphireCore.open()', () => {
 
       // Ensure the function returned correct information
       expect(vault.borrowedAmount).eq(BORROW_AMOUNT);
+      expect(vault.principal).eq(BORROW_AMOUNT);
       expect(vault.collateralAmount).eq(COLLATERAL_AMOUNT);
 
       // Check total collateral and borrowed values
@@ -99,7 +100,7 @@ describe('SapphireCore.open()', () => {
     });
 
     it('open above the c-ratio', async () => {
-      const { borrowedAmount, collateralAmount } = await arc.open(
+      const { borrowedAmount, collateralAmount, principal } = await arc.open(
         COLLATERAL_AMOUNT.mul(2),
         BORROW_AMOUNT,
         undefined,
@@ -108,6 +109,7 @@ describe('SapphireCore.open()', () => {
       );
 
       expect(collateralAmount).eq(COLLATERAL_AMOUNT.mul(2));
+      expect(principal).eq(BORROW_AMOUNT);
       expect(borrowedAmount).eq(BORROW_AMOUNT);
     });
 
@@ -187,7 +189,7 @@ describe('SapphireCore.open()', () => {
     });
 
     it('open at the exact default c-ratio', async () => {
-      const { borrowedAmount, collateralAmount } = await arc.open(
+      const { borrowedAmount, collateralAmount, principal } = await arc.open(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
         creditScoreProof,
@@ -197,6 +199,7 @@ describe('SapphireCore.open()', () => {
 
       // Check created vault
       expect(borrowedAmount).eq(BORROW_AMOUNT);
+      expect(principal).eq(BORROW_AMOUNT);
       expect(collateralAmount).eq(COLLATERAL_AMOUNT);
 
       // Check total collateral and borrowed values
@@ -217,10 +220,11 @@ describe('SapphireCore.open()', () => {
         scoredMinter,
       );
 
-      const { borrowedAmount, collateralAmount } = await arc.getVault(
+      const { borrowedAmount, collateralAmount, principal } = await arc.getVault(
         scoredMinter.address,
       );
       expect(collateralAmount).eq(COLLATERAL_AMOUNT.mul(2));
+      expect(principal).eq(BORROW_AMOUNT);
       expect(borrowedAmount).eq(BORROW_AMOUNT);
     });
 
@@ -233,11 +237,12 @@ describe('SapphireCore.open()', () => {
         scoredMinter,
       );
 
-      const { borrowedAmount, collateralAmount } = await arc.getVault(
+      const { borrowedAmount, collateralAmount, principal } = await arc.getVault(
         scoredMinter.address,
       );
       expect(collateralAmount).eq(COLLATERAL_AMOUNT.sub(1));
       expect(borrowedAmount).eq(BORROW_AMOUNT);
+      expect(principal).eq(BORROW_AMOUNT);
     });
 
     it('open at the c-ratio based on credit score', async () => {
@@ -256,11 +261,12 @@ describe('SapphireCore.open()', () => {
         scoredMinter,
       );
 
-      const { borrowedAmount, collateralAmount } = await arc.getVault(
+      const { borrowedAmount, collateralAmount, principal } = await arc.getVault(
         scoredMinter.address,
       );
       expect(collateralAmount).eq(COLLATERAL_AMOUNT);
       expect(borrowedAmount).eq(MAX_BORROW_AMOUNT);
+      expect(principal).eq(MAX_BORROW_AMOUNT);
     });
 
     it('revert if opened below c-ratio based on credit score', async () => {

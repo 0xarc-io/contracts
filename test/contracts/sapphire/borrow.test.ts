@@ -152,22 +152,25 @@ describe('SapphireCore.borrow()', () => {
       scoredMinter,
     );
 
-    const { collateralAmount, borrowedAmount } = await arc.getVault(
+    const { collateralAmount, borrowedAmount, principal } = await arc.getVault(
       scoredMinter.address,
     );
 
     expect(collateralAmount, 'collateral amt').eq(COLLATERAL_AMOUNT);
     expect(borrowedAmount, 'borrow amt').eq(BORROW_AMOUNT_500_SCORE);
+    expect(principal, 'principal').eq(BORROW_AMOUNT_500_SCORE);
   });
 
   it('borrows with the highest c-ratio if proof is not provided', async () => {
     let vault = await arc.getVault(scoredMinter.address);
     expect(vault.borrowedAmount).to.eq(0);
+    expect(vault.principal).to.eq(0);
 
     await arc.borrow(BORROW_AMOUNT, undefined, undefined, scoredMinter);
 
     vault = await arc.getVault(scoredMinter.address);
     expect(vault.borrowedAmount).to.eq(BORROW_AMOUNT);
+    expect(vault.principal).to.eq(BORROW_AMOUNT);
 
     await expect(
       arc.borrow(BigNumber.from(1), undefined, undefined, scoredMinter),
@@ -178,8 +181,9 @@ describe('SapphireCore.borrow()', () => {
 
   it('borrows with exact c-ratio', async () => {
     await arc.borrow(BORROW_AMOUNT, undefined, undefined, minter);
-    const { borrowedAmount } = await arc.getVault(minter.address);
+    const { borrowedAmount, principal } = await arc.getVault(minter.address);
     expect(borrowedAmount).eq(BORROW_AMOUNT);
+    expect(principal).eq(BORROW_AMOUNT);
   });
 
   it('reverts if the proof protocol does not match the one registered', async () => {
@@ -194,11 +198,12 @@ describe('SapphireCore.borrow()', () => {
   });
 
   it('reverts if borrower cross the c-ratio', async () => {
-    const { borrowedAmount, collateralAmount } = await arc.getVault(
+    const { borrowedAmount, collateralAmount, principal } = await arc.getVault(
       minter.address,
     );
 
     expect(borrowedAmount).eq(0);
+    expect(principal).eq(0);
     expect(collateralAmount).eq(COLLATERAL_AMOUNT);
 
     await expect(
@@ -210,8 +215,9 @@ describe('SapphireCore.borrow()', () => {
 
   it('borrows more if more collateral is provided', async () => {
     await arc.borrow(BORROW_AMOUNT, undefined, undefined, minter);
-    const { borrowedAmount } = await arc.getVault(minter.address);
+    const { borrowedAmount, principal } = await arc.getVault(minter.address);
 
+    expect(principal).eq(BORROW_AMOUNT);
     expect(borrowedAmount).eq(BORROW_AMOUNT);
     await expect(arc.borrow(BORROW_AMOUNT, undefined, undefined, minter)).to.be
       .reverted;
@@ -225,11 +231,12 @@ describe('SapphireCore.borrow()', () => {
      * be reverted
      */
     await arc.borrow(BORROW_AMOUNT, undefined, undefined, minter);
-    const { borrowedAmount: updatedBorrowedAmount } = await arc.getVault(
+    const { borrowedAmount: updatedBorrowedAmount, principal: updatedPrincipal } = await arc.getVault(
       minter.address,
     );
 
     expect(updatedBorrowedAmount).eq(BORROW_AMOUNT.mul(2));
+    expect(updatedPrincipal).eq(BORROW_AMOUNT.mul(2));
   });
 
   it('borrows more if a valid score proof is provided', async () => {
@@ -241,9 +248,10 @@ describe('SapphireCore.borrow()', () => {
       scoredMinter,
     );
 
-    const { borrowedAmount } = await arc.getVault(scoredMinter.address);
+    const { borrowedAmount, principal } = await arc.getVault(scoredMinter.address);
 
     expect(borrowedAmount).eq(BORROW_AMOUNT_500_SCORE);
+    expect(principal).eq(BORROW_AMOUNT_500_SCORE);
   });
 
   it('borrows more if the credit score increases', async () => {
@@ -294,7 +302,7 @@ describe('SapphireCore.borrow()', () => {
       scoredMinter,
     );
 
-    const { borrowedAmount: vaultBorrowAmount } = await arc.getVault(
+    const { borrowedAmount: vaultBorrowAmount, principal } = await arc.getVault(
       scoredMinter.address,
     );
     const expectedVaultBorrowAmt = await convertPrincipal(
@@ -303,6 +311,7 @@ describe('SapphireCore.borrow()', () => {
       ),
     );
     expect(vaultBorrowAmount).eq(expectedVaultBorrowAmt);
+    expect(principal).eq(BORROW_AMOUNT_500_SCORE.add(additionalBorrowAmount));
   });
 
   it('borrows less if the credit score decreases', async () => {
@@ -442,8 +451,9 @@ describe('SapphireCore.borrow()', () => {
       undefined,
       scoredMinter,
     );
-    const { borrowedAmount } = await arc.getVault(scoredMinter.address);
+    const { borrowedAmount, principal } = await arc.getVault(scoredMinter.address);
     expect(borrowedAmount).eq(firstBorrowAmount);
+    expect(principal).eq(firstBorrowAmount);
 
     const currentTimeStamp = await arc.core().currentTimestamp();
     await arc

@@ -144,7 +144,9 @@ describe('borrow index (integration)', () => {
         ONE_YEAR_IN_SECONDS.mul(INTEREST_RATE).add(BASE),
       );
       await arc.core().updateIndex();
-      expect(await getVaultBorrowAmount(minter1)).eq(BORROW_AMOUNT);
+      const { borrowedAmount, principal } = await arc.getVault(minter1.address);
+      expect(borrowedAmount).eq(BORROW_AMOUNT);
+      expect(principal).eq(BORROW_AMOUNT);
     });
 
     it('for one and half years', async () => {
@@ -156,7 +158,9 @@ describe('borrow index (integration)', () => {
       );
       await arc.core().updateIndex();
 
-      expect(await getVaultBorrowAmount(minter1)).eq(BORROW_AMOUNT);
+      const { borrowedAmount, principal } = await arc.getVault(minter1.address);
+      expect(borrowedAmount).eq(BORROW_AMOUNT);
+      expect(principal).eq(BORROW_AMOUNT);
     });
 
     it('for two years', async () => {
@@ -168,7 +172,9 @@ describe('borrow index (integration)', () => {
       );
       await arc.core().updateIndex();
 
-      expect(await getVaultBorrowAmount(minter1)).eq(BORROW_AMOUNT);
+      const { borrowedAmount, principal } = await arc.getVault(minter1.address);
+      expect(borrowedAmount).eq(BORROW_AMOUNT);
+      expect(principal).eq(BORROW_AMOUNT);
     });
   });
 
@@ -188,9 +194,11 @@ describe('borrow index (integration)', () => {
         .div(borrowIndex6)
         .mul(borrowIndex6)
         .div(BASE);
-      expect(await getVaultBorrowAmount(minter2)).eq(
-        roundUpDiv(BORROW_AMOUNT, borrowIndex6),
-      );
+
+      const { borrowedAmount, principal } = await arc.getVault(minter2.address);
+      expect(borrowedAmount).eq(roundUpDiv(BORROW_AMOUNT, borrowIndex6));
+      expect(principal).eq(BORROW_AMOUNT);
+
       // actual borrowed amount is different than requested BORROW_AMOUNT
       expect(actualBorrowedAmountByMinter2).eq(BORROW_AMOUNT.sub(1));
       await advanceNMonths(6);
@@ -201,10 +209,16 @@ describe('borrow index (integration)', () => {
       expect(borrowIndex12).eq(
         await getBorrowIndex(indexLastUpdate, borrowIndex6, INTEREST_RATE),
       );
-      expect(await getVaultBorrowAmount(minter1)).eq(BORROW_AMOUNT);
-      expect(await getVaultBorrowAmount(minter2)).eq(
+      
+      const vault1 = await arc.getVault(minter1.address);
+      expect(vault1.borrowedAmount).eq(BORROW_AMOUNT);
+      expect(vault1.principal).eq(BORROW_AMOUNT);
+
+      const vault2 = await arc.getVault(minter2.address);
+      expect(vault2.borrowedAmount).eq(
         roundUpDiv(BORROW_AMOUNT, borrowIndex6),
       );
+      expect(vault2.principal).eq(BORROW_AMOUNT);
     });
 
     it('the first for one and a half years, the second for 3 months', async () => {
@@ -229,7 +243,9 @@ describe('borrow index (integration)', () => {
 
       expect(await getVaultBorrowAmount(minter1)).eq(BORROW_AMOUNT);
 
-      expect(await getVaultBorrowAmount(minter2)).eq(normalizedBorrowAmount2);
+      const { borrowedAmount, principal } = await arc.getVault(minter2.address);
+      expect(borrowedAmount).eq(normalizedBorrowAmount2);
+      expect(principal).eq(BORROW_AMOUNT);
     });
 
     it('the first for two years, the second for one and half years', async () => {
