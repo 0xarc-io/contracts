@@ -10,7 +10,7 @@ import {
  * Write To Deployments
  */
 
-export async function writeToDeployments(params: WriteToDeploymentsParams) {
+export function writeToDeployments(params: WriteToDeploymentsParams) {
   const contracts = loadDeployedContracts(params.network);
   contracts.push({
     ...params,
@@ -18,5 +18,5 @@ export async function writeToDeployments(params: WriteToDeploymentsParams) {
   });
 
   const deploymentsPath = getDeploymentsFilePath(params.network);
-  await fs.writeFileSync(deploymentsPath, JSON.stringify(contracts, null, 2));
+  fs.writeFileSync(deploymentsPath, JSON.stringify(contracts, null, 2));
 }

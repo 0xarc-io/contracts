@@ -1,4 +1,4 @@
-import { BigNumberish, Signer } from 'ethers';
+import { BigNumberish, BytesLike, Signer } from 'ethers';
 import { ethers } from 'hardhat';
 
 import { TestTokenFactory } from '@src/typings/TestTokenFactory';
@@ -61,7 +61,7 @@ export async function deployArcProxy(
   deployer: Signer,
   logic: string,
   admin: string,
-  data: any[],
+  data: BytesLike,
 ) {
   const arcProxy = await new ArcProxyFactory(deployer).deploy(
     logic,

@@ -58,7 +58,7 @@ export class EVM {
     return this.callJsonrpcMethod('evm_increaseTime', [duration]);
   }
 
-  public async callJsonrpcMethod(method: string, params: any[] = []) {
+  public async callJsonrpcMethod(method: string, params: unknown[] = []) {
     return await this.provider.send(method, params);
   }
 
