@@ -269,6 +269,10 @@ describe('SapphireCore.liquidate()', () => {
       expect(postLiquidationVault.borrowedAmount, '9').to.eq(
         BORROW_AMOUNT.sub(ArcNumber.new(475)),
       );
+
+      expect(postLiquidationVault.principal, '10').to.eq(
+        BORROW_AMOUNT.sub(ArcNumber.new(475))
+      );
     });
 
     // Test 2 in https://docs.google.com/spreadsheets/d/1rmFbUxnM4gyi1xhcYKBwcdadvXrHBPKbeX7DLk8KQgE/edit?usp=sharing
@@ -358,6 +362,7 @@ describe('SapphireCore.liquidate()', () => {
 
       // The vault debt amount has decreased
       expect(postLiquidationVault.borrowedAmount).to.eq(0);
+      expect(postLiquidationVault.principal).to.eq(0);
     });
 
     it.skip('liquidates if interest accumulates (1 day)', async () => {
@@ -917,6 +922,7 @@ describe('SapphireCore.liquidate()', () => {
       );
 
       expect(postLiquidationVault.borrowedAmount).to.eq(0);
+      expect(postLiquidationVault.principal).to.eq(0);
     });
 
     it('Scenario 2: The borrow amount is greater than the collateral value and a liquidation occurs', async () => {
@@ -992,9 +998,10 @@ describe('SapphireCore.liquidate()', () => {
         signers.scoredMinter.address,
       );
       expect(postLiquidationVault.collateralAmount).to.eq(0);
+      expect(postLiquidationVault.principal).to.eq(utils.parseEther('72.5'));
 
       const outstandingDebt = postLiquidationVault.borrowedAmount;
-
+      
       // User shouldn't be able borrow and withdraw when vault is under collateralized and borrow amount is 0
       await expect(
         arc.borrow(
@@ -1029,6 +1036,7 @@ describe('SapphireCore.liquidate()', () => {
       const redeemedVault = await arc.getVault(signers.scoredMinter.address);
       expect(redeemedVault.collateralAmount).to.eq(0);
       expect(redeemedVault.borrowedAmount).to.eq(0);
+      expect(redeemedVault.principal).to.eq(0);
     });
 
     it('Scenario 3: the user changes their vault, then their credit score decreases and liquidation occurs', async () => {
@@ -1047,13 +1055,15 @@ describe('SapphireCore.liquidate()', () => {
       const synthContract = arc.synthetic().connect(signers.scoredMinter);
       await synthContract.approve(arc.coreAddress(), utils.parseEther('150'));
 
+      const repayedAmount = utils.parseEther('150');
       await arc.repay(
-        utils.parseEther('150'),
+        repayedAmount,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.scoredMinter,
       );
-
+      
+      expect((await arc.getVault(signers.scoredMinter.address)).principal).to.eq(BORROW_AMOUNT.sub(repayedAmount))
       // The collateral price drops to $0.54
       await arc.updatePrice(utils.parseEther('0.54'));
 
@@ -1125,6 +1135,7 @@ describe('SapphireCore.liquidate()', () => {
 
       // The vault debt amount has been paid off
       expect(postLiquidationVault.borrowedAmount).to.eq(0);
+      expect(postLiquidationVault.principal).to.eq(0);
     });
 
     it('Scenario 4: the user changes their vault, then their credit score increases which protects him from liquidation. Then the price drops and gets liquidated', async () => {

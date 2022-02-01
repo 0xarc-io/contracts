@@ -909,6 +909,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         // Record borrow amount (update vault and total amount)
         totalBorrowed = totalBorrowed.sub(vault.borrowedAmount).add(_newNormalizedVaultBorrowAmount);
         vault.borrowedAmount = _newNormalizedVaultBorrowAmount;
+        vault.principal = vault.principal + _amount;
 
         // Do not borrow more than the maximum vault borrow amount
         require(
@@ -967,6 +968,11 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
         // Update vault
         vault.borrowedAmount = _newBorrowAmount;
+
+        uint256 interest = actualVaultBorrowAmount - vault.principal;
+        if(_amount >= interest) {
+            vault.principal = vault.principal - (_amount - interest);
+        }
 
         // Transfer tokens to the core
         ISyntheticTokenV2(syntheticAsset).transferFrom(
