@@ -304,10 +304,12 @@ describe('borrow index (integration)', () => {
       const expectedNormalizedAmountInVault = await convertPrincipal(
         (await denormalizeBorrowAmount(originalAmtInVault)).add(BORROW_AMOUNT),
       );
-
-      expect(await getVaultBorrowAmount(minter1)).eq(
+      BORROW_AMOUNT
+      const {borrowedAmount, principal} = await arc.getVault(minter1.address);
+      expect(borrowedAmount).eq(
         expectedNormalizedAmountInVault,
       );
+      expect(principal).eq(BORROW_AMOUNT.mul(2));
       expect(await arc.core().totalBorrowed()).to.eq(
         expectedNormalizedAmountInVault,
       );
@@ -354,6 +356,16 @@ describe('borrow index (integration)', () => {
       );
       // repay a half accumulated debt
       await arc.repay(repayAmount, undefined, undefined, minter1);
+      const borrowIndexAfterRepay = await arc.core().currentBorrowIndex();
+
+      const {principal: principalRightAfterRepay} = await arc.getVault(minter1.address);
+
+      const actualBorrowedAmountAfterRepay = BORROW_AMOUNT.mul(borrowIndexAfterRepay).div(BASE);
+      const expectedPrincipal = actualBorrowedAmountAfterRepay.sub(repayAmount);
+      // check if repayed amount repays not only interest
+      expect(expectedPrincipal).lt(BORROW_AMOUNT);
+      // should repay accumulated interest first
+      expect(principalRightAfterRepay).eq(expectedPrincipal);
 
       const indexLastUpdate = await arc.core().indexLastUpdate();
       await advanceNMonths(12);
@@ -369,7 +381,10 @@ describe('borrow index (integration)', () => {
       );
 
       const accumulatedBorrowAmount = BORROW_AMOUNT.div(2);
-      expect(await getVaultBorrowAmount(minter1)).eq(accumulatedBorrowAmount);
+      const {borrowedAmount, principal} = await arc.getVault(minter1.address);
+      // principal shouldn't change, if there is no borrow/repay actions durring accumulating period
+      expect(principal).eq(expectedPrincipal);
+      expect(borrowedAmount).eq(accumulatedBorrowAmount);
       expect(await arc.core().totalBorrowed()).eq(BORROW_AMOUNT.div(2));
     });
 
