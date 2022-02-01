@@ -26,6 +26,7 @@ import { DEFAULT_MAX_CREDIT_SCORE } from '@test/helpers/sapphireDefaults';
 import { constants } from 'ethers';
 import { verifyContract } from './task-utils';
 import { DeploymentType, NetworkParams } from '../deployments/types';
+import { TransactionRequest } from '@ethersproject/providers';
 
 task(
   'deploy-sapphire-synth',
@@ -511,7 +512,13 @@ function _deployTestCollateral(
 
 async function _deployOracle(
   collatName: string,
-  collatConfig: any,
+  collatConfig: {
+    oracle?: {
+      source?: string;
+      getDeployTx: (SignerWithAddress) => TransactionRequest;
+      constructorArguments: unknown[];
+    };
+  },
   networkConfig: NetworkParams,
   signer: SignerWithAddress,
   hre: HardhatRuntimeEnvironment,
