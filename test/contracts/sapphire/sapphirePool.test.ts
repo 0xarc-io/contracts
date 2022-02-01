@@ -22,11 +22,6 @@ describe('SapphirePool', () => {
       );
     });
 
-    describe('#setOracle', () => {
-      it('reverts if called by non-admin');
-
-      it('sets the oracle address');
-    });
 
     describe('#swap', () => {
       it('reverts if called by a non-approved core');
@@ -35,7 +30,6 @@ describe('SapphirePool', () => {
 
       it('swaps the correct amount if the requested token is 1:1 with the CR');
 
-      it('swaps the correct amount if the requested token is 1:2 with the CR');
     });
   });
 
@@ -46,9 +40,6 @@ describe('SapphirePool', () => {
       );
     });
 
-    describe('#oracles', () => {
-      it('returns the oracle address for the given token');
-    });
 
     describe('#totalSupply', () => {
       it('returns the total supply of the LP token');
