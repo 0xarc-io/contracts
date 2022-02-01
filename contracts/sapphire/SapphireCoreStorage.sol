@@ -137,6 +137,11 @@ contract SapphireCoreStorageV1 {
      */
     uint256 public vaultBorrowMaximum;
 
+    /**
+     * @dev The list of supported tokens.
+     */
+    mapping(address => bool) public supportedAssets;
+
     /* ========== Internal Variables ========== */
 
     /**

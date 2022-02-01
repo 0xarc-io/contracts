@@ -499,6 +499,7 @@ describe('SapphireCore.liquidate()', () => {
 
       await arc.borrow(
         maxBorrowAmount,
+        arc.syntheticAddress(),
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.scoredMinter,
@@ -858,6 +859,7 @@ describe('SapphireCore.liquidate()', () => {
       // User increases his borrow amount by $500
       await arc.borrow(
         utils.parseEther('500'),
+        arc.syntheticAddress(),
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.scoredMinter,
@@ -1006,6 +1008,7 @@ describe('SapphireCore.liquidate()', () => {
       await expect(
         arc.borrow(
           constants.One,
+          arc.syntheticAddress(),
           getScoreProof(minterCreditScore, creditScoreTree),
           undefined,
           signers.scoredMinter,
@@ -1150,6 +1153,7 @@ describe('SapphireCore.liquidate()', () => {
       // User borrows close to the maximum amount. The min c-ratio is 132.5% so user $245 more
       await arc.borrow(
         utils.parseEther('245'),
+        arc.syntheticAddress(),
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.scoredMinter,

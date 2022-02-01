@@ -80,6 +80,7 @@ describe('SapphireCore.open()', () => {
       const vault = await arc.open(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
+        arc.syntheticAddress(),
         undefined,
         undefined,
         ctx.signers.minter,
@@ -103,6 +104,7 @@ describe('SapphireCore.open()', () => {
       const { borrowedAmount, collateralAmount, principal } = await arc.open(
         COLLATERAL_AMOUNT.mul(2),
         BORROW_AMOUNT,
+        arc.syntheticAddress(),
         undefined,
         undefined,
         ctx.signers.minter,
@@ -119,6 +121,7 @@ describe('SapphireCore.open()', () => {
         arc.open(
           COLLATERAL_AMOUNT,
           BORROW_AMOUNT.add(change),
+          arc.syntheticAddress(),
           undefined,
           undefined,
           ctx.signers.minter,
@@ -131,6 +134,7 @@ describe('SapphireCore.open()', () => {
         arc.open(
           COLLATERAL_AMOUNT.sub(change),
           BORROW_AMOUNT,
+          arc.syntheticAddress(),
           undefined,
           undefined,
           ctx.signers.minter,
@@ -153,6 +157,7 @@ describe('SapphireCore.open()', () => {
         arc.open(
           COLLATERAL_AMOUNT,
           BORROW_AMOUNT,
+          arc.syntheticAddress(),
           undefined,
           undefined,
           ctx.signers.minter,
@@ -170,6 +175,7 @@ describe('SapphireCore.open()', () => {
         arc.open(
           COLLATERAL_AMOUNT,
           BORROW_AMOUNT,
+          arc.syntheticAddress(),
           undefined,
           undefined,
           ctx.signers.minter,
@@ -192,6 +198,7 @@ describe('SapphireCore.open()', () => {
       const { borrowedAmount, collateralAmount, principal } = await arc.open(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
+        arc.syntheticAddress(),
         creditScoreProof,
         undefined,
         scoredMinter,
@@ -215,6 +222,7 @@ describe('SapphireCore.open()', () => {
       await arc.open(
         COLLATERAL_AMOUNT.mul(2),
         BORROW_AMOUNT,
+        arc.syntheticAddress(),
         creditScoreProof,
         undefined,
         scoredMinter,
@@ -232,6 +240,7 @@ describe('SapphireCore.open()', () => {
       await arc.open(
         COLLATERAL_AMOUNT.sub(1),
         BORROW_AMOUNT,
+        arc.syntheticAddress(),
         creditScoreProof,
         undefined,
         scoredMinter,
@@ -256,6 +265,7 @@ describe('SapphireCore.open()', () => {
       await arc.open(
         COLLATERAL_AMOUNT,
         MAX_BORROW_AMOUNT,
+        arc.syntheticAddress(),
         creditScoreProof,
         undefined,
         scoredMinter,
@@ -274,6 +284,7 @@ describe('SapphireCore.open()', () => {
         arc.open(
           constants.One,
           BORROW_AMOUNT,
+          arc.syntheticAddress(),
           creditScoreProof,
           undefined,
           scoredMinter,
@@ -295,6 +306,7 @@ describe('SapphireCore.open()', () => {
         arc.open(
           COLLATERAL_AMOUNT,
           BORROW_AMOUNT,
+          arc.syntheticAddress(),
           creditScoreProof,
           undefined,
           scoredMinter,
@@ -312,6 +324,7 @@ describe('SapphireCore.open()', () => {
         arc.open(
           COLLATERAL_AMOUNT,
           BORROW_AMOUNT,
+          arc.syntheticAddress(),
           creditScoreProof,
           undefined,
           scoredMinter,
@@ -333,6 +346,7 @@ describe('SapphireCore.open()', () => {
       await arc.open(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT.div(2),
+        arc.syntheticAddress(),
         getScoreProof(creditScore2, creditScoreTree),
         undefined,
         ctx.signers.interestSetter,
@@ -343,6 +357,7 @@ describe('SapphireCore.open()', () => {
         arc.open(
           COLLATERAL_AMOUNT,
           BORROW_AMOUNT.div(2).add(1),
+          arc.syntheticAddress(),
           creditScoreProof,
           undefined,
           scoredMinter,

@@ -27,6 +27,7 @@ export async function setupBaseVault(
   await arc.open(
     collateralAmount,
     borrowAmount,
+    arc.syntheticAddress(),
     scoreProof ??
       getEmptyScoreProof(
         undefined,

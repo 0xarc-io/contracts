@@ -469,6 +469,7 @@ describe('borrow index (integration)', () => {
       // Borrow $100 more
       await arc.borrow(
         utils.parseEther('100'),
+        arc.syntheticAddress(),
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.scoredMinter,
