@@ -108,6 +108,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     function init(
         address _collateralAddress,
         address _syntheticAddress,
+        address _supportedBorrowAddress,
         address _oracleAddress,
         address _interestSetter,
         address _pauseOperator,
@@ -151,7 +152,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         pauseOperator   = _pauseOperator;
         feeCollector    = _feeCollector;
         _proofProtocol   = "arcx.creditScore";
-
         IERC20Metadata collateral   = IERC20Metadata(collateralAsset);
         uint8 collateralDecimals    = collateral.decimals();
 
@@ -162,6 +162,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
         precisionScalar = 10 ** (18 - uint256(collateralDecimals));
 
+        setSupportedBorrowAsset(_supportedBorrowAddress, true);
         setAssessor(_assessorAddress);
         setOracle(_oracleAddress);
         setCollateralRatios(_lowCollateralRatio, _highCollateralRatio);
@@ -435,15 +436,51 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         address _supportedBorrowAsset,
         bool _isSupported
     )
-        external
+        public
         onlyAdmin
     {
+
+        require(
+            _supportedBorrowAsset != address(0),
+            "SapphireCoreV1: supported borrow asset is required"
+        );
+
+        require(
+            _supportedBorrowAsset.isContract(),
+            "SapphireCoreV1: supported borrow asset is not contract"
+        );
+
         if(_isSupported) {
-            supportedBorrowAssetsIndexes[_supportedBorrowAsset] = supportedBorrowAssets.length;
-            supportedBorrowAssets.push(_supportedBorrowAsset);
+
+            require(
+                !_isSupportedBorrowAssets[_supportedBorrowAsset],
+                "SapphireCoreV1: supported borrow asset is already exist"
+            );
+
+            _isSupportedBorrowAssets[_supportedBorrowAsset] = true;
+            _supportedBorrowAssets.push(_supportedBorrowAsset);
+
         } else {
-            delete supportedBorrowAssets[supportedBorrowAssetsIndexes[_supportedBorrowAsset]];
-            delete supportedBorrowAssetsIndexes[_supportedBorrowAsset];
+
+            require(
+                _isSupportedBorrowAssets[_supportedBorrowAsset],
+                "SapphireCoreV1: removed borrow asset is not supported"
+            );
+
+            require(
+                _supportedBorrowAssets.length > 1,
+                "SapphireCoreV1: cannot remove the only supported borrow asset address"
+            );
+
+            delete _isSupportedBorrowAssets[_supportedBorrowAsset];
+
+            for (uint256 i=0; i<_supportedBorrowAssets.length; i++) {
+                if(_supportedBorrowAssets[i] == _supportedBorrowAsset) {
+                    _supportedBorrowAssets[i] = _supportedBorrowAssets[_supportedBorrowAssets.length -1];
+                    break;
+                }
+            }
+            _supportedBorrowAssets.pop();
         }
         emit SupportedBorrowAssetSet(_supportedBorrowAsset, _isSupported);
     }
@@ -705,7 +742,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         view
         returns (address[] memory) 
     {
-        return supportedBorrowAssets;
+        return _supportedBorrowAssets;
     }
 
     /**
@@ -921,7 +958,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     {
 
         require(
-            supportedBorrowAssets[supportedBorrowAssetsIndexes[_borrowedAssetAddress]] == _borrowedAssetAddress,
+            _isSupportedBorrowAssets[_borrowedAssetAddress],
             "SapphireCoreV1: the token address should be one of the supported tokens"
         );
 

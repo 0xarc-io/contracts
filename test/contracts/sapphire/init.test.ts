@@ -44,7 +44,14 @@ export async function setup([deployer, unauthorized]: Wallet[]): Promise<any> {
     'STKN',
   );
 
-  return { sapphireCore, deployer, unauthorized, collateral, synthetic };
+  const stableCoin = await deployTestToken(
+    deployer,
+    'Test stablecoin',
+    'TEST_USDC',
+    6,
+  );
+
+  return { sapphireCore, deployer, unauthorized, collateral, synthetic, stableCoin };
 }
 
 describe('SapphireCore.init', () => {
@@ -53,6 +60,7 @@ describe('SapphireCore.init', () => {
   let unauthorized: Wallet;
   let collateral: TestToken;
   let synthetic: TestToken;
+  let stableCoin: TestToken;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let init: (overrides?: any) => unknown;
 
@@ -65,6 +73,7 @@ describe('SapphireCore.init', () => {
       unauthorized,
       collateral,
       synthetic,
+      stableCoin
     } = await createFixtureLoader(provider.getWallets())(setup));
 
     const oracle = await new MockSapphireOracleFactory(deployer).deploy();
@@ -85,6 +94,7 @@ describe('SapphireCore.init', () => {
     defaultOptions = {
       collateralAddress: collateral.address,
       syntheticAddress: synthetic.address,
+      stableCoinAddress: stableCoin.address,
       oracle: oracle.address,
       interestSetter: Wallet.createRandom().address,
       assessor: assessor.address,
@@ -108,6 +118,7 @@ describe('SapphireCore.init', () => {
         .init(
           options.collateralAddress,
           options.syntheticAddress,
+          options.stableCoinAddress,
           options.oracle,
           options.interestSetter,
           options.pauseOperator,
@@ -216,6 +227,12 @@ describe('SapphireCore.init', () => {
     expect(await sapphireCore.borrowIndex()).eq(
       constants.WeiPerEther,
       'borrowIndex',
+    );
+    expect(await sapphireCore.getSupportedBorrowAssets()).deep.eq(
+      [
+        defaultOptions.stableCoinAddress,
+      ],
+      'supportedBorrowAssets',
     );
   });
 

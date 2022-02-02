@@ -114,6 +114,7 @@ export async function sapphireFixture(
   await ctx.contracts.sapphire.core.init(
     ctx.contracts.collateral.address,
     ctx.contracts.synthetic.tokenV2.address,
+    ctx.contracts.stableCoin.address,
     ctx.contracts.sapphire.oracle.address,
     ctx.signers.interestSetter.address,
     ctx.signers.pauseOperator.address,
@@ -124,8 +125,6 @@ export async function sapphireFixture(
     0,
     0,
   );
-
-  await ctx.contracts.sapphire.core.setSupportedBorrowAsset(ctx.contracts.stableCoin.address, true);
 
   await tokenV2.addMinter(ctx.contracts.sapphire.core.address, MAX_UINT256);
 

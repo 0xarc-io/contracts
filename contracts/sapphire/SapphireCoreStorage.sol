@@ -145,10 +145,14 @@ contract SapphireCoreStorageV1 {
     bytes32 internal _proofProtocol;
 
     /**
-     * @dev The list of supported tokens.
+     * @dev The list of supported tokens for read purpose.
      */
-    mapping(address => uint256) internal supportedBorrowAssetsIndexes;
-    address[] internal supportedBorrowAssets;
+    address[] internal _supportedBorrowAssets;
+
+    /**
+     * @dev The mapping of supported tokens for efficient checks purpose.
+     */
+    mapping(address => bool) internal _isSupportedBorrowAssets;
 }
 
 // solhint-disable-next-line no-empty-blocks
