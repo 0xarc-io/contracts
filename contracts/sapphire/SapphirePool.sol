@@ -16,6 +16,17 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     
     /* ========== Variables ========== */
 
+    /**
+     * @notice The limits of all the cores, indicating how many Creds they can swap for stables.
+     */
+    mapping (address => uint256) public override coreSwapLimits;
+
+    /* ========== Events ========== */
+
+    event CoreSwapLimitSet(address _core, uint256 _limit);
+
+    /* ========== Restricted functions ========== */
+
     function init(
         string memory name_,
         string memory symbol_,
@@ -27,18 +38,18 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     {
         _init(name_, symbol_, decimals_);
     }
-    
-    /* ========== Restricted functions ========== */
 
-    function approveCoreVaults(
-        address _coreVault, 
+    function setCoreSwapLimit(
+        address _coreAddress, 
         uint256 _amount
     ) 
         external
         override
         onlyAdmin
     {
-        revert("Not Implemented");
+        coreSwapLimits[_coreAddress] = _amount;
+
+        emit CoreSwapLimitSet(_coreAddress, _amount);
     }
 
     function setTokenLimit(

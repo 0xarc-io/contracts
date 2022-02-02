@@ -4,9 +4,10 @@ import {
   SapphirePool,
   SapphirePoolFactory,
 } from '@src/typings';
+import { ADMINABLE_ERROR } from '@test/helpers/contractErrors';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
-import { generateContext } from '../context';
+import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 
 describe('SapphirePool', () => {
@@ -14,9 +15,10 @@ describe('SapphirePool', () => {
 
   let admin: SignerWithAddress;
   let unauthorized: SignerWithAddress;
+  let ctx: ITestContext;
 
   before(async () => {
-    const ctx = await generateContext(sapphireFixture);
+    ctx = await generateContext(sapphireFixture);
     admin = ctx.signers.admin;
     unauthorized = ctx.signers.unauthorized;
 
@@ -46,7 +48,7 @@ describe('SapphirePool', () => {
         const _pool = SapphirePoolFactory.connect(proxy.address, unauthorized);
 
         await expect(_pool.init('Sapphire Pool', 'SAP', 18)).to.be.revertedWith(
-          'Adminable: caller is not admin',
+          ADMINABLE_ERROR,
         );
       });
 
@@ -57,10 +59,26 @@ describe('SapphirePool', () => {
       });
     });
 
-    describe('#approveCoreVaults', () => {
-      it('reverts if set by non-admin');
+    describe('#setCoreSwapLimit', () => {
+      it('reverts if set by non-admin', async () => {
+        await expect(
+          pool
+            .connect(unauthorized)
+            .setCoreSwapLimit(ctx.contracts.sapphire.core.address, 1000),
+        ).to.be.revertedWith(ADMINABLE_ERROR);
+      });
 
-      it('sets the limit for how many CR can be swapped in for tokens');
+      it('sets the limit for how many CR can be swapped in for tokens', async () => {
+        expect(
+          await pool.coreSwapLimits(ctx.contracts.sapphire.core.address),
+        ).to.eq(0);
+
+        await pool.setCoreSwapLimit(ctx.contracts.sapphire.core.address, 1000);
+
+        expect(
+          await pool.coreSwapLimits(ctx.contracts.sapphire.core.address),
+        ).to.eq(1000);
+      });
     });
 
     describe('#setTokenLimit', () => {
