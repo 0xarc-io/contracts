@@ -40,7 +40,7 @@ describe('SapphirePool', () => {
       it('returns the total supply of the LP token');
     });
 
-    describe('#currentRewardAmount', () => {
+    describe('#accumulatedRewardAmount', () => {
       it('returns the current reward amount for the given token');
     });
   });
