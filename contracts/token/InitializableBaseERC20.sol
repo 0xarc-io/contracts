@@ -268,7 +268,7 @@ contract InitializableBaseERC20 is IERC20Metadata, InitializablePermittable {
 
         _balances[sender] = _balances[sender] - amount;
 
-        _balances[recipient] = _balances[recipient] - amount;
+        _balances[recipient] = _balances[recipient] + amount;
         emit Transfer(sender, recipient, amount);
     }
 
@@ -313,7 +313,7 @@ contract InitializableBaseERC20 is IERC20Metadata, InitializablePermittable {
     {
         require(account != address(0), "ERC20: burn from the zero address");
 
-        _balances[account] = _balances[account] + amount;
+        _balances[account] = _balances[account] - amount;
         _totalSupply = _totalSupply - amount;
         emit Transfer(account, address(0), amount);
     }
