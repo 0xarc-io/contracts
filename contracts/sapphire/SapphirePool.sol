@@ -14,6 +14,8 @@ import {InitializableBaseERC20} from "../token/InitializableBaseERC20.sol";
  */
 contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     
+    /* ========== Variables ========== */
+
     function init(
         string memory name_,
         string memory symbol_,
@@ -24,7 +26,6 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         initializer
     {
         _init(name_, symbol_, decimals_);
-        revert("Not Implemented");
     }
     
     /* ========== Restricted functions ========== */

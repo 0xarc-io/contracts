@@ -1,5 +1,65 @@
+import { TestingSigners } from '@arc-types/testing';
+import {
+  ArcProxyFactory,
+  SapphirePool,
+  SapphirePoolFactory,
+} from '@src/typings';
+import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
+import { expect } from 'chai';
+import { generateContext } from '../context';
+import { sapphireFixture } from '../fixtures';
+
 describe('SapphirePool', () => {
+  let pool: SapphirePool;
+
+  let signers: TestingSigners;
+
+  before(async () => {
+    const ctx = await generateContext(sapphireFixture);
+    signers = ctx.signers;
+
+    const sapphirePoolImpl = await new SapphirePoolFactory(
+      signers.admin,
+    ).deploy();
+
+    const proxy = await new ArcProxyFactory(signers.admin).deploy(
+      sapphirePoolImpl.address,
+      signers.admin.address,
+      [],
+    );
+    pool = SapphirePoolFactory.connect(proxy.address, signers.admin);
+
+    await pool.init('Sapphire Pool', 'SAP', 18);
+  });
+
+  addSnapshotBeforeRestoreAfterEach();
+
   describe('Restricted functions', () => {
+    describe('#init', () => {
+      it('reverts if called by non-admin', async () => {
+        const poolImpl = await new SapphirePoolFactory(signers.admin).deploy();
+        const proxy = await new ArcProxyFactory(signers.admin).deploy(
+          poolImpl.address,
+          signers.admin.address,
+          [],
+        );
+        const _pool = SapphirePoolFactory.connect(
+          proxy.address,
+          signers.unauthorized,
+        );
+
+        await expect(_pool.init('Sapphire Pool', 'SAP', 18)).to.be.revertedWith(
+          'Adminable: caller is not admin',
+        );
+      });
+
+      it('sets the name, symbol and decimals', async () => {
+        expect(await pool.name()).to.equal('Sapphire Pool');
+        expect(await pool.symbol()).to.equal('SAP');
+        expect(await pool.decimals()).to.equal(18);
+      });
+    });
+
     describe('#approveCoreVaults', () => {
       it('reverts if set by non-admin');
 
