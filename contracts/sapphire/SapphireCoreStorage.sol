@@ -137,18 +137,18 @@ contract SapphireCoreStorageV1 {
      */
     uint256 public vaultBorrowMaximum;
 
-    /**
-     * @dev The list of supported tokens.
-     */
-    mapping(address => uint256) internal supportedBorrowAssetsIndexes;
-    address[] internal supportedBorrowAssets;
-
     /* ========== Internal Variables ========== */
 
     /**
      * @dev The protocol value to be used in the score proofs
      */
     bytes32 internal _proofProtocol;
+
+    /**
+     * @dev The list of supported tokens.
+     */
+    mapping(address => uint256) internal supportedBorrowAssetsIndexes;
+    address[] internal supportedBorrowAssets;
 }
 
 // solhint-disable-next-line no-empty-blocks
