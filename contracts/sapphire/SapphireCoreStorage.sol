@@ -140,7 +140,8 @@ contract SapphireCoreStorageV1 {
     /**
      * @dev The list of supported tokens.
      */
-    mapping(address => bool) public supportedAssets;
+    mapping(address => uint256) internal supportedBorrowAssetsIndexes;
+    address[] internal supportedBorrowAssets;
 
     /* ========== Internal Variables ========== */
 

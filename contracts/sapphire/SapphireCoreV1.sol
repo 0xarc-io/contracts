@@ -80,7 +80,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
     event ProofProtocolSet(string _protocol);
 
-    event SupportedBorrowedAssetSet(
+    event SupportedBorrowAssetSet(
         address _supportedBorrowedAddress,
         bool _isSupported
     );
@@ -147,7 +147,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         indexLastUpdate = currentTimestamp();
         collateralAsset = _collateralAddress;
         syntheticAsset  = _syntheticAddress;
-        supportedAssets[_syntheticAddress]  = true;
         interestSetter  = _interestSetter;
         pauseOperator   = _pauseOperator;
         feeCollector    = _feeCollector;
@@ -432,16 +431,21 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         emit ProofProtocolSet(_proofProtocol.toString());
     }
 
-    function setSupportedAsset(
-        address _supportedAsset,
+    function setSupportedBorrowAsset(
+        address _supportedBorrowAsset,
         bool _isSupported
     )
         external
         onlyAdmin
     {
-        supportedAssets[_supportedAsset] = _isSupported;
-
-        emit SupportedBorrowedAssetSet(_supportedAsset, _isSupported);
+        if(_isSupported) {
+            supportedBorrowAssetsIndexes[_supportedBorrowAsset] = supportedBorrowAssets.length;
+            supportedBorrowAssets.push(_supportedBorrowAsset);
+        } else {
+            delete supportedBorrowAssets[supportedBorrowAssetsIndexes[_supportedBorrowAsset]];
+            delete supportedBorrowAssetsIndexes[_supportedBorrowAsset];
+        }
+        emit SupportedBorrowAssetSet(_supportedBorrowAsset, _isSupported);
     }
 
     /* ========== Public Functions ========== */
@@ -696,6 +700,14 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         return _proofProtocol.toString();
     }
 
+    function getSupportedBorrowAssets()
+        external
+        view
+        returns (address[] memory) 
+    {
+        return supportedBorrowAssets;
+    }
+
     /**
      * @dev Check if the vault is collateralized or not
      *
@@ -909,7 +921,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     {
 
         require(
-            supportedAssets[_borrowedAssetAddress],
+            supportedBorrowAssets[supportedBorrowAssetsIndexes[_borrowedAssetAddress]] == _borrowedAssetAddress,
             "SapphireCoreV1: the token address should be one of the supported tokens"
         );
 

@@ -23,11 +23,12 @@ export async function setupBaseVault(
 ) {
   await mintApprovedCollateral(arc, caller, collateralAmount);
 
+  const supportedBorrowAsset = (await arc.synth().core.getSupportedBorrowAssets())[0];
   // Open vault and mint debt
   await arc.open(
     collateralAmount,
     borrowAmount,
-    arc.syntheticAddress(),
+    supportedBorrowAsset,
     scoreProof ??
       getEmptyScoreProof(
         undefined,

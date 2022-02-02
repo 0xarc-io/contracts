@@ -48,6 +48,13 @@ export async function sapphireFixture(
     args?.decimals ?? DEFAULT_COLLATERAL_DECIMALS,
   );
 
+  ctx.contracts.stableCoin = await deployTestToken(
+    deployer,
+    'Test stablecoin',
+    'TEST_USDC',
+    DEFAULT_COLLATERAL_DECIMALS,
+  );
+
   ctx.contracts.sapphire.oracle = await deployMockSapphireOracle(deployer);
 
   const coreImp = await deployMockSapphireCoreV1(deployer);
@@ -117,6 +124,8 @@ export async function sapphireFixture(
     0,
     0,
   );
+
+  await ctx.contracts.sapphire.core.setSupportedBorrowAsset(ctx.contracts.stableCoin.address, true);
 
   await tokenV2.addMinter(ctx.contracts.sapphire.core.address, MAX_UINT256);
 

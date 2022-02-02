@@ -14,6 +14,7 @@ import {
   MockSapphirePassportScores,
   SapphireMapperLinear,
   SyntheticTokenV2Factory,
+  TestToken,
 } from '@src/typings';
 import chai, { expect } from 'chai';
 import { solidity } from 'ethereum-waffle';
@@ -56,6 +57,7 @@ describe('SapphireCore.liquidate()', () => {
   let mapper: SapphireMapperLinear;
   let minterCreditScore: PassportScore;
   let liquidatorCreditScore: PassportScore;
+  let stableCoin: TestToken;
 
   /**
    * Returns useful balances to use when validating numbers before and after
@@ -127,6 +129,7 @@ describe('SapphireCore.liquidate()', () => {
     arc = ctx.sdks.sapphire;
     creditScoreContract = ctx.contracts.sapphire.passportScores;
     mapper = ctx.contracts.sapphire.linearMapper;
+    stableCoin = ctx.contracts.stableCoin;
 
     await setupSapphire(ctx, {
       limits: {
@@ -499,7 +502,7 @@ describe('SapphireCore.liquidate()', () => {
 
       await arc.borrow(
         maxBorrowAmount,
-        arc.syntheticAddress(),
+        stableCoin.address,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.scoredMinter,
@@ -859,7 +862,7 @@ describe('SapphireCore.liquidate()', () => {
       // User increases his borrow amount by $500
       await arc.borrow(
         utils.parseEther('500'),
-        arc.syntheticAddress(),
+        stableCoin.address,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.scoredMinter,
@@ -1008,7 +1011,7 @@ describe('SapphireCore.liquidate()', () => {
       await expect(
         arc.borrow(
           constants.One,
-          arc.syntheticAddress(),
+          stableCoin.address,
           getScoreProof(minterCreditScore, creditScoreTree),
           undefined,
           signers.scoredMinter,
@@ -1153,7 +1156,7 @@ describe('SapphireCore.liquidate()', () => {
       // User borrows close to the maximum amount. The min c-ratio is 132.5% so user $245 more
       await arc.borrow(
         utils.parseEther('245'),
-        arc.syntheticAddress(),
+        stableCoin.address,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.scoredMinter,
