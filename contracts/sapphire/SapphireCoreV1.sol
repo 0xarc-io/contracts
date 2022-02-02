@@ -963,7 +963,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         );
 
         // Mint tokens
-        ISyntheticTokenV2(_tokenAddress).mint(
+        ISyntheticTokenV2(syntheticAsset).mint(
             msg.sender,
             _amount
         );
@@ -1009,7 +1009,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         }
 
         // Transfer tokens to the core
-        IERC20(syntheticAsset).transferFrom(
+        ISyntheticTokenV2(syntheticAsset).transferFrom(
             _repayer,
             address(this),
             _amount
