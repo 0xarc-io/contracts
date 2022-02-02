@@ -9,8 +9,6 @@ describe('SapphirePool', () => {
     describe('#setTokenLimit', () => {
       it('reverts if called by non-admin');
 
-      it('reverts if an oracle is not set for the given token');
-
       it('sets the limit for how many stablecoins can be deposited');
 
       it(
@@ -27,7 +25,7 @@ describe('SapphirePool', () => {
 
       it('reverts if there are not enough requested coins');
 
-      it('swaps the correct amount if the requested token is 1:1 with the CR');
+      it('swaps the correct amount of requested tokens in exchange of CR');
     });
   });
 
@@ -42,8 +40,8 @@ describe('SapphirePool', () => {
       it('returns the total supply of the LP token');
     });
 
-    describe('#rewardAvailable', () => {
-      it('returns the amount of reward available to be claimed');
+    describe('#currentRewardAmount', () => {
+      it('returns the current reward amount for the given token');
     });
   });
 
@@ -53,8 +51,12 @@ describe('SapphirePool', () => {
 
       it('reverts if trying to deposit more than the limit');
 
+      it('does not mint LP if the caller is an approved core');
+
+      it('increases the current reward amount for the given token');
+
       it(
-        'deposits the correct amount of tokens and mints the correct amount of stablecoins',
+        'deposits the correct amount of tokens and mints the correct amount of LP tokens',
       );
     });
 
