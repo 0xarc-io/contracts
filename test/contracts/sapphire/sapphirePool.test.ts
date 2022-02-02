@@ -22,14 +22,12 @@ describe('SapphirePool', () => {
       );
     });
 
-
     describe('#swap', () => {
       it('reverts if called by a non-approved core');
 
       it('reverts if there are not enough requested coins');
 
       it('swaps the correct amount if the requested token is 1:1 with the CR');
-
     });
   });
 
@@ -39,7 +37,6 @@ describe('SapphirePool', () => {
         'returns the token utilization (amt deposited and limit) for the given token',
       );
     });
-
 
     describe('#totalSupply', () => {
       it('returns the total supply of the LP token');
@@ -70,5 +67,13 @@ describe('SapphirePool', () => {
         'withdraws the correct amount of tokens, in addition to the proportional reward',
       );
     });
+  });
+
+  describe('Scenarios', () => {
+    it(
+      '2 LPs deposit and withdraw at different times, while rewards are being added',
+    );
+
+    it('2 LPs with 2 cores interact with the pool');
   });
 });
