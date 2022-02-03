@@ -75,15 +75,17 @@ describe('SapphirePool', () => {
       });
 
       it('sets the limit for how many CR can be swapped in for tokens', async () => {
-        expect(
-          await pool.coreSwapLimits(ctx.contracts.sapphire.core.address),
-        ).to.eq(0);
+        let utilization = await pool.coreSwapUtilization(
+          ctx.contracts.sapphire.core.address,
+        );
+        expect(utilization.limit).to.eq(0);
 
         await pool.setCoreSwapLimit(ctx.contracts.sapphire.core.address, 1000);
 
-        expect(
-          await pool.coreSwapLimits(ctx.contracts.sapphire.core.address),
-        ).to.eq(1000);
+        utilization = await pool.coreSwapUtilization(
+          ctx.contracts.sapphire.core.address,
+        );
+        expect(utilization.limit).to.eq(1000);
       });
     });
 
