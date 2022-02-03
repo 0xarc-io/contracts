@@ -3,6 +3,8 @@ import {
   ArcProxyFactory,
   SapphirePool,
   SapphirePoolFactory,
+  TestToken,
+  TestTokenFactory,
 } from '@src/typings';
 import { ADMINABLE_ERROR } from '@test/helpers/contractErrors';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
@@ -12,6 +14,8 @@ import { sapphireFixture } from '../fixtures';
 
 describe('SapphirePool', () => {
   let pool: SapphirePool;
+
+  let testDai: TestToken;
 
   let admin: SignerWithAddress;
   let unauthorized: SignerWithAddress;
@@ -32,6 +36,8 @@ describe('SapphirePool', () => {
     pool = SapphirePoolFactory.connect(proxy.address, admin);
 
     await pool.init('Sapphire Pool', 'SAP', 18);
+
+    testDai = await new TestTokenFactory(admin).deploy('TestDAI', 'TDAI', 18);
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -81,18 +87,67 @@ describe('SapphirePool', () => {
       });
     });
 
-    describe('#setTokenLimit', () => {
-      it('reverts if called by non-admin');
+    describe('#setDepositLimit', () => {
+      it('reverts if called by non-admin', async () => {
+        await expect(
+          pool.connect(unauthorized).setDepositLimit(testDai.address, 1000),
+        ).to.be.revertedWith(ADMINABLE_ERROR);
+      });
 
-      it('sets the limit for how many stablecoins can be deposited');
+      it('sets the limit for how many stablecoins can be deposited', async () => {
+        let utilization = await pool.assetsUtilization(testDai.address);
+        expect(utilization.amountUsed).to.deep.eq(0);
+        expect(utilization.limit).to.deep.eq(0);
 
-      it(
-        'if limit is > 0, adds the token to the list of tokens that can be deposited',
-      );
+        await pool.setDepositLimit(testDai.address, 1000);
 
-      it(
-        'if limit is 0, removes the token from the list of tokens that can be deposited',
-      );
+        utilization = await pool.assetsUtilization(testDai.address);
+        expect(utilization.amountUsed).to.eq(0);
+        expect(utilization.limit).to.eq(1000);
+      });
+
+      it('if limit is > 0, adds the token to the list of tokens that can be deposited', async () => {
+        expect(await pool.getDepositAssets()).to.be.empty;
+
+        await pool.setDepositLimit(testDai.address, 1000);
+
+        expect(await pool.getDepositAssets()).to.deep.eq([testDai.address]);
+      });
+
+      it('if limit is 0, removes the token from the list of tokens that can be deposited', async () => {
+        await pool.setDepositLimit(testDai.address, 1000);
+        expect(await pool.getDepositAssets()).to.deep.eq([testDai.address]);
+
+        await pool.setDepositLimit(testDai.address, 0);
+        expect(await pool.getDepositAssets()).to.be.empty;
+      });
+
+      it('does not add a supported asset twice to the supported assets array', async () => {
+        expect(await pool.getDepositAssets()).to.be.empty;
+
+        await pool.setDepositLimit(testDai.address, 100);
+        await pool.setDepositLimit(testDai.address, 420);
+
+        expect(await pool.getDepositAssets()).to.deep.eq([testDai.address]);
+      });
+
+      it('adds 2 assets to the supported assets list', async () => {
+        expect(await pool.getDepositAssets()).to.be.empty;
+
+        const testUsdc = await new TestTokenFactory(admin).deploy(
+          'TestUSDC',
+          'TUSDC',
+          6,
+        );
+
+        await pool.setDepositLimit(testDai.address, 100);
+        await pool.setDepositLimit(testUsdc.address, 100);
+
+        expect(await pool.getDepositAssets()).to.deep.eq([
+          testDai.address,
+          testUsdc.address,
+        ]);
+      });
     });
 
     describe('#swap', () => {
@@ -103,20 +158,20 @@ describe('SapphirePool', () => {
       it('reverts if core tries to swap more than its limit');
 
       it('swaps the correct amount of requested tokens in exchange of CR');
+
+      it('correctly swaps assets that do not have the same decimals');
+
+      it(
+        'increases the token utilization borrow amount when swapping creds for tokens',
+      );
+
+      it(
+        'decreases the token utilization borrow amount when swapping tokens for creds',
+      );
     });
   });
 
   describe('View functions', () => {
-    describe('#getTokenUtilization', () => {
-      it(
-        'returns the token utilization (amt deposited and limit) for the given token',
-      );
-    });
-
-    describe('#totalSupply', () => {
-      it('returns the total supply of the LP token');
-    });
-
     describe('#accumulatedRewardAmount', () => {
       it('returns the current reward amount for the given token');
     });
@@ -135,6 +190,8 @@ describe('SapphirePool', () => {
       it(
         'deposits the correct amount of tokens and mints the correct amount of LP tokens',
       );
+
+      it('increases the total supply of the LP token');
     });
 
     describe('#withdraw', () => {
@@ -155,6 +212,8 @@ describe('SapphirePool', () => {
       it(
         'withdraws the proportional amount of reward in the selected currency (2 currencies available)',
       );
+
+      it('decreases the total supply of the LP token');
     });
 
     describe('#transferRewards', () => {
