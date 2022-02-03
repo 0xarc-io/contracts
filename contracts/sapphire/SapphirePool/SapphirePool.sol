@@ -4,6 +4,7 @@ pragma solidity 0.8.4;
 
 import {ISapphirePool} from "./ISapphirePool.sol";
 
+import {SafeERC20} from "../../lib/SafeERC20.sol";
 import {Adminable} from "../../lib/Adminable.sol";
 import {Address} from "../../lib/Address.sol";
 import {IERC20} from "../../token/IERC20.sol";
@@ -46,6 +47,8 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
      * @notice Stores the assets that can be deposited by LPs and swapped by cores for Creds.
      */
     address[] public supportedDepositAssets;
+
+    mapping (address => uint8) internal _tokenScalars;
 
     /* ========== Events ========== */
 
@@ -135,6 +138,10 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
 
     /* ========== Public functions ========== */
 
+    /**
+     * @notice Deposits the given amount of tokens into the pool. The token must be a supported
+     * deposit asset.
+     */
     function deposit(
         address _token,
         uint256 _amount
@@ -142,7 +149,23 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         external
         override
     {
-        revert("Not Implemented");
+        AssetUtilization storage assetUtilization = assetsUtilization[_token];
+
+        require(
+            assetUtilization.amountUsed + _amount <= assetUtilization.limit,
+            "SapphirePool: cannot deposit more than the limit"
+        );
+
+        assetUtilization.amountUsed += _amount;
+
+        _mint(msg.sender, _amount);
+
+        SafeERC20.safeTransferFrom(
+            IERC20(_token), 
+            msg.sender, 
+            address(this), 
+            _amount
+        );
     }
 
     function withdraw(

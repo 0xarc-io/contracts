@@ -1,14 +1,15 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import {
   ArcProxyFactory,
-  SapphirePool,
-  SapphirePoolFactory,
+  MockSapphirePool,
+  MockSapphirePoolFactory,
   TestToken,
   TestTokenFactory,
 } from '@src/typings';
 import {
   ADMINABLE_ERROR,
   ARITHMETIC_ERROR,
+  TRANSFER_FROM_FAILED,
 } from '@test/helpers/contractErrors';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
@@ -19,7 +20,7 @@ import { sapphireFixture } from '../fixtures';
 const DEPOSIT_AMOUNT = utils.parseEther('100');
 
 describe('SapphirePool', () => {
-  let pool: SapphirePool;
+  let pool: MockSapphirePool;
 
   let stablecoin: TestToken;
   let creds: TestToken;
@@ -36,13 +37,13 @@ describe('SapphirePool', () => {
 
     creds = await new TestTokenFactory(admin).deploy('Creds', 'CREDS', 18);
 
-    const sapphirePoolImpl = await new SapphirePoolFactory(admin).deploy();
+    const sapphirePoolImpl = await new MockSapphirePoolFactory(admin).deploy();
     const proxy = await new ArcProxyFactory(admin).deploy(
       sapphirePoolImpl.address,
       admin.address,
       [],
     );
-    pool = SapphirePoolFactory.connect(proxy.address, admin);
+    pool = MockSapphirePoolFactory.connect(proxy.address, admin);
 
     await pool.init('Sapphire Pool', 'SAP', 18, creds.address);
 
@@ -54,13 +55,13 @@ describe('SapphirePool', () => {
   describe('Restricted functions', () => {
     describe('#init', () => {
       it('reverts if called by non-admin', async () => {
-        const poolImpl = await new SapphirePoolFactory(admin).deploy();
+        const poolImpl = await new MockSapphirePoolFactory(admin).deploy();
         const proxy = await new ArcProxyFactory(admin).deploy(
           poolImpl.address,
           admin.address,
           [],
         );
-        const _pool = SapphirePoolFactory.connect(proxy.address, depositor);
+        const _pool = MockSapphirePoolFactory.connect(proxy.address, depositor);
 
         await expect(
           _pool.init('Sapphire Pool', 'SAP', 18, creds.address),
@@ -86,6 +87,8 @@ describe('SapphirePool', () => {
             .setCoreSwapLimit(ctx.contracts.sapphire.core.address, 1000),
         ).to.be.revertedWith(ADMINABLE_ERROR);
       });
+
+      it('reverts if the token has a deposit limit of 0');
 
       it('sets the limit for how many CR can be swapped in for tokens', async () => {
         let utilization = await pool.coreSwapUtilization(
@@ -119,6 +122,36 @@ describe('SapphirePool', () => {
 
         utilization = await pool.assetsUtilization(stablecoin.address);
         expect(utilization.amountUsed).to.eq(0);
+        expect(utilization.limit).to.eq(1000);
+      });
+
+      it(
+        'sets the correct token scalar of the given token, if previous limit was 0',
+      );
+
+      it('if limit is > 0, adds the token to the list of tokens that can be deposited', async () => {
+        expect(await pool.getDepositAssets()).to.be.empty;
+
+        await pool.setDepositLimit(stablecoin.address, 1000);
+
+        expect(await pool.getDepositAssets()).to.deep.eq([stablecoin.address]);
+      });
+
+      it('if limit is 0, removes the token from the list of tokens that can be deposited', async () => {
+        await pool.setDepositLimit(stablecoin.address, 1000);
+        expect(await pool.getDepositAssets()).to.deep.eq([stablecoin.address]);
+
+        await pool.setDepositLimit(stablecoin.address, 0);
+        expect(await pool.getDepositAssets()).to.be.empty;
+      });
+
+      it('does not add a supported asset twice to the supported assets array', async () => {
+        expect(await pool.getDepositAssets()).to.be.empty;
+
+        await pool.setDepositLimit(stablecoin.address, 100);
+        await pool.setDepositLimit(stablecoin.address, 420);
+
+        expect(await pool.getDepositAssets()).to.deep.eq([stablecoin.address]);
       });
 
       describe('#setDepositLimit', () => {
@@ -227,7 +260,7 @@ describe('SapphirePool', () => {
   });
 
   describe('Public functions', () => {
-    describe.skip('#deposit', () => {
+    describe.only('#deposit', () => {
       beforeEach(async () => {
         await pool.setDepositLimit(stablecoin.address, DEPOSIT_AMOUNT.mul(2));
         await stablecoin
@@ -235,7 +268,7 @@ describe('SapphirePool', () => {
           .approve(pool.address, DEPOSIT_AMOUNT);
       });
 
-      it('reverts user has not enough tokens', async () => {
+      it('reverts if user has not enough tokens', async () => {
         const utilization = await pool.assetsUtilization(stablecoin.address);
         expect(utilization.limit).to.eq(DEPOSIT_AMOUNT.mul(2));
 
@@ -243,7 +276,7 @@ describe('SapphirePool', () => {
           pool
             .connect(depositor)
             .deposit(stablecoin.address, DEPOSIT_AMOUNT.add(1)),
-        ).to.be.revertedWith(ARITHMETIC_ERROR);
+        ).to.be.revertedWith(TRANSFER_FROM_FAILED);
       });
 
       it('reverts if trying to deposit more than the limit', async () => {
@@ -267,7 +300,7 @@ describe('SapphirePool', () => {
         expect(await stablecoin.balanceOf(depositor.address)).to.eq(0);
       });
 
-      it('mints an equal amount of LP tokens when the deposit token has 6 decimals', async () => {
+      xit('mints an equal amount of LP tokens when the deposit token has 6 decimals', async () => {
         const testUsdc = await new TestTokenFactory(admin).deploy(
           'TestUSDC',
           'TUSDC',
