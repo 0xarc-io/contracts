@@ -559,6 +559,24 @@ describe('SapphireCore.liquidate()', () => {
       );
     });
 
+    it('reverts if used unsupported address', async () => {
+      // Sets up a basic vault
+      await setupBaseVault();
+
+      // Drop the price by half to make the vault under-collateralized
+      const newPrice = COLLATERAL_PRICE.div(2);
+      await arc.updatePrice(newPrice);
+
+      // Liquidate vault
+      await expect(arc.liquidate(
+        signers.scoredMinter.address,
+        arc.collateral().address,
+        getScoreProof(minterCreditScore, creditScoreTree),
+        undefined,
+        signers.liquidator,
+      )).to.be.revertedWith('SapphireCoreV1: the token address should be one of the supported tokens');
+    });
+
     it('reverts if proof is not for the correct protocol', async () => {
       await setupBaseVault();
 

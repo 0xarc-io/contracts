@@ -200,6 +200,18 @@ describe('SapphireCore.borrow()', () => {
     ).to.be.revertedWith('SapphireCoreV1: incorrect proof protocol');
   });
 
+  it('reverts if not supported asset address', async () => {
+    await expect(
+      arc.borrow(
+        BORROW_AMOUNT,
+        arc.collateral().address,
+        undefined,
+        undefined,
+        scoredMinter,
+      ),
+    ).to.be.revertedWith('SapphireCoreV1: the token address should be one of the supported tokens');
+  });
+
   it('reverts if borrower cross the c-ratio', async () => {
     const { borrowedAmount, collateralAmount, principal } = await arc.getVault(
       minter.address,

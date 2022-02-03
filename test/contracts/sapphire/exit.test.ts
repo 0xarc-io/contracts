@@ -156,6 +156,30 @@ describe('SapphireCore.exit()', () => {
     expect(synthBalance).to.eq(0);
   });
 
+  it('reverts if exit with unsupported token', async () => {
+    await setupBaseVault(
+      arc,
+      signers.scoredMinter,
+      COLLATERAL_AMOUNT,
+      BORROW_AMOUNT, // -1 for rounding
+      getScoreProof(scoredMinterCreditScore, creditScoreTree),
+    );
+
+    // Approve repay amount
+    await approve(
+      BORROW_AMOUNT,
+      arc.syntheticAddress(),
+      arc.coreAddress(),
+      signers.scoredMinter,
+    );
+
+    await expect(
+      arc.exit(arc.coreAddress(), undefined, undefined, signers.scoredMinter),
+    ).to.be.revertedWith(
+      'SapphireCoreV1: the token address should be one of the supported tokens',
+    );
+  });
+
   it('repays all the debt + accrued interest and returns collateral to the user', async () => {
     // set interest rate of 5%
     await arc.updateTime(1);
