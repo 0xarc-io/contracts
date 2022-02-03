@@ -1,4 +1,4 @@
-import { TestingSigners } from '@arc-types/testing';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import {
   ArcProxyFactory,
   SapphirePool,
@@ -12,22 +12,22 @@ import { sapphireFixture } from '../fixtures';
 describe('SapphirePool', () => {
   let pool: SapphirePool;
 
-  let signers: TestingSigners;
+  let admin: SignerWithAddress;
+  let unauthorized: SignerWithAddress;
 
   before(async () => {
     const ctx = await generateContext(sapphireFixture);
-    signers = ctx.signers;
+    admin = ctx.signers.admin;
+    unauthorized = ctx.signers.unauthorized;
 
-    const sapphirePoolImpl = await new SapphirePoolFactory(
-      signers.admin,
-    ).deploy();
+    const sapphirePoolImpl = await new SapphirePoolFactory(admin).deploy();
 
-    const proxy = await new ArcProxyFactory(signers.admin).deploy(
+    const proxy = await new ArcProxyFactory(admin).deploy(
       sapphirePoolImpl.address,
-      signers.admin.address,
+      admin.address,
       [],
     );
-    pool = SapphirePoolFactory.connect(proxy.address, signers.admin);
+    pool = SapphirePoolFactory.connect(proxy.address, admin);
 
     await pool.init('Sapphire Pool', 'SAP', 18);
   });
@@ -37,16 +37,13 @@ describe('SapphirePool', () => {
   describe('Restricted functions', () => {
     describe('#init', () => {
       it('reverts if called by non-admin', async () => {
-        const poolImpl = await new SapphirePoolFactory(signers.admin).deploy();
-        const proxy = await new ArcProxyFactory(signers.admin).deploy(
+        const poolImpl = await new SapphirePoolFactory(admin).deploy();
+        const proxy = await new ArcProxyFactory(admin).deploy(
           poolImpl.address,
-          signers.admin.address,
+          admin.address,
           [],
         );
-        const _pool = SapphirePoolFactory.connect(
-          proxy.address,
-          signers.unauthorized,
-        );
+        const _pool = SapphirePoolFactory.connect(proxy.address, unauthorized);
 
         await expect(_pool.init('Sapphire Pool', 'SAP', 18)).to.be.revertedWith(
           'Adminable: caller is not admin',
