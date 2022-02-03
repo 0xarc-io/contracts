@@ -12,6 +12,7 @@ import {
   TRANSFER_FROM_FAILED,
 } from '@test/helpers/contractErrors';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
+import { fail } from 'assert';
 import { expect } from 'chai';
 import { utils } from 'ethers';
 import { generateContext, ITestContext } from '../context';
@@ -126,12 +127,12 @@ describe('SapphirePool', () => {
       });
 
       it('sets the correct token scalar of the given token, if previous limit was 0', async () => {
-        expect(await pool.tokenDecimals(testDai.address)).to.eq(0);
+        expect(await pool.tokenDecimals(stablecoin.address)).to.eq(0);
 
-        await pool.setDepositLimit(testDai.address, 1000);
+        await pool.setDepositLimit(stablecoin.address, 1000);
 
-        expect(await pool.tokenDecimals(testDai.address)).to.eq(
-          await testDai.decimals(),
+        expect(await pool.tokenDecimals(stablecoin.address)).to.eq(
+          await stablecoin.decimals(),
         );
       });
 
@@ -141,14 +142,6 @@ describe('SapphirePool', () => {
         await pool.setDepositLimit(stablecoin.address, 1000);
 
         expect(await pool.getDepositAssets()).to.deep.eq([stablecoin.address]);
-      });
-
-      it('if limit is 0, removes the token from the list of tokens that can be deposited', async () => {
-        await pool.setDepositLimit(stablecoin.address, 1000);
-        expect(await pool.getDepositAssets()).to.deep.eq([stablecoin.address]);
-
-        await pool.setDepositLimit(stablecoin.address, 0);
-        expect(await pool.getDepositAssets()).to.be.empty;
       });
 
       it('does not add a supported asset twice to the supported assets array', async () => {
@@ -263,6 +256,12 @@ describe('SapphirePool', () => {
     describe('#accumulatedRewardAmount', () => {
       it('returns the current reward amount for the given token');
     });
+
+    describe('#getDepositAssets', () => {
+      it('returns the deposit assets array');
+
+      it('excludes the assets that have a deposit limit of 0');
+    });
   });
 
   describe('Public functions', () => {
@@ -364,25 +363,138 @@ describe('SapphirePool', () => {
     });
 
     describe('#withdraw', () => {
-      it(
-        'reverts if trying to withdraw more than the amount available for the given token',
-      );
+      beforeEach(async () => {
+        await pool.setDepositLimit(stablecoin.address, DEPOSIT_AMOUNT.mul(2));
+        await stablecoin
+          .connect(depositor)
+          .approve(pool.address, DEPOSIT_AMOUNT);
+        await pool
+          .connect(depositor)
+          .deposit(stablecoin.address, DEPOSIT_AMOUNT);
+      });
 
-      it('withdraws the correct amount of tokens');
+      it("reverts if trying to convert more LP tokens that the user's balance", async () => {
+        await expect(
+          pool
+            .connect(depositor)
+            .withdraw(stablecoin.address, DEPOSIT_AMOUNT.add(1)),
+        ).to.be.revertedWith(TRANSFER_FROM_FAILED);
+      });
 
-      it(
-        'decreases the reward amount for the given token in the core swap utilization mapping',
-      );
+      it('withdraws the correct amount of tokens with 18 decimals', async () => {
+        expect(await stablecoin.balanceOf(depositor.address)).to.eq(0);
+        expect(await pool.balanceOf(depositor.address)).to.eq(DEPOSIT_AMOUNT);
 
-      it(
-        'withdraws the proportional amount of reward in the selected currency (1 currency available)',
-      );
+        await pool
+          .connect(depositor)
+          .withdraw(stablecoin.address, DEPOSIT_AMOUNT);
 
-      it(
-        'withdraws the proportional amount of reward in the selected currency (2 currencies available)',
-      );
+        expect(await stablecoin.balanceOf(depositor.address)).to.eq(
+          DEPOSIT_AMOUNT,
+        );
+        expect(await pool.balanceOf(depositor.address)).to.eq(0);
+      });
 
-      it('decreases the total supply of the LP token');
+      it('reverts if withdrawing more than the available balance on the contract', () => {
+        fail('need swap');
+      });
+
+      it('reverts if withdrawing for tokens that are not supported', async () => {
+        const testUsdc = await new TestTokenFactory(admin).deploy(
+          'TestUSDC',
+          'TUSDC',
+          6,
+        );
+        await testUsdc.mintShare(pool.address, utils.parseUnits('100', 6));
+
+        await expect(
+          pool
+            .connect(depositor)
+            .withdraw(testUsdc.address, utils.parseUnits('100', 6)),
+        ).to.be.revertedWith('SapphirePool: cannot withdraw unsupported token');
+      });
+
+      it('withdraws token with 6 decimals', async () => {
+        const testUsdc = await new TestTokenFactory(admin).deploy(
+          'TestUSDC',
+          'TUSDC',
+          6,
+        );
+        const usdcDepositAmt = utils.parseUnits('100', 6);
+        await testUsdc.mintShare(depositor.address, usdcDepositAmt);
+        await testUsdc.connect(depositor).approve(pool.address, usdcDepositAmt);
+
+        await pool.setDepositLimit(testUsdc.address, usdcDepositAmt.mul(2));
+
+        // The user already deposited DEPOSIT_AMOUNT in TDAI from the beforeEach()
+        expect(await pool.balanceOf(depositor.address)).to.eq(DEPOSIT_AMOUNT);
+
+        await pool.connect(depositor).deposit(testUsdc.address, usdcDepositAmt);
+
+        expect(await pool.balanceOf(depositor.address)).to.eq(
+          DEPOSIT_AMOUNT.mul(2),
+        );
+
+        await pool.withdraw(testUsdc.address, usdcDepositAmt);
+
+        expect(await pool.balanceOf(depositor.address)).to.eq(DEPOSIT_AMOUNT); // 100 * 10^18
+        expect(await pool.totalSupply()).to.eq(DEPOSIT_AMOUNT);
+        expect(await testUsdc.balanceOf(depositor.address)).to.eq(0);
+      });
+
+      it('withdraws token with 20 decimals', async () => {
+        const testUsdc = await new TestTokenFactory(admin).deploy(
+          'TestUSDC',
+          'TUSDC',
+          20,
+        );
+        const usdcDepositAmt = utils.parseUnits('100', 20);
+        await testUsdc.mintShare(depositor.address, usdcDepositAmt);
+        await testUsdc.connect(depositor).approve(pool.address, usdcDepositAmt);
+
+        await pool.setDepositLimit(testUsdc.address, usdcDepositAmt.mul(2));
+
+        // The user already deposited DEPOSIT_AMOUNT in TDAI from the beforeEach()
+        expect(await pool.balanceOf(depositor.address)).to.eq(DEPOSIT_AMOUNT);
+
+        await pool.connect(depositor).deposit(testUsdc.address, usdcDepositAmt);
+
+        expect(await pool.balanceOf(depositor.address)).to.eq(
+          DEPOSIT_AMOUNT.mul(2),
+        );
+
+        await pool.withdraw(testUsdc.address, usdcDepositAmt);
+
+        expect(await pool.balanceOf(depositor.address)).to.eq(DEPOSIT_AMOUNT); // 100 * 10^18
+        expect(await pool.totalSupply()).to.eq(DEPOSIT_AMOUNT);
+        expect(await testUsdc.balanceOf(depositor.address)).to.eq(0);
+      });
+
+      it('decreases the reward amount for the given token in the core swap utilization mapping', () => {
+        fail('need swap');
+      });
+
+      it('withdraws the proportional amount of reward in the selected currency (1 currency available)', () => {
+        fail('need swap');
+      });
+
+      it('withdraws the proportional amount of reward in the selected currency (2 currencies available)', () => {
+        fail('need swap');
+      });
+
+      it('decreases the total supply of the LP token', async () => {
+        expect(await pool.totalSupply()).to.eq(DEPOSIT_AMOUNT);
+
+        await pool
+          .connect(depositor)
+          .withdraw(stablecoin.address, DEPOSIT_AMOUNT.div(2));
+        expect(await pool.totalSupply()).to.eq(DEPOSIT_AMOUNT.div(2));
+
+        await pool
+          .connect(depositor)
+          .withdraw(stablecoin.address, DEPOSIT_AMOUNT.div(2));
+        expect(await pool.totalSupply()).to.eq(0);
+      });
     });
 
     describe('#transferRewards', () => {
