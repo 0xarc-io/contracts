@@ -7,7 +7,7 @@ import {ISapphirePool} from "./ISapphirePool.sol";
 import {SafeERC20} from "../../lib/SafeERC20.sol";
 import {Adminable} from "../../lib/Adminable.sol";
 import {Address} from "../../lib/Address.sol";
-import {IERC20} from "../../token/IERC20.sol";
+import {IERC20Metadata} from "../../token/IERC20Metadata.sol";
 import {InitializableBaseERC20} from "../../token/InitializableBaseERC20.sol";
 
 /**
@@ -30,7 +30,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     
     /* ========== Variables ========== */
 
-    IERC20 public credsToken;
+    IERC20Metadata public credsToken;
 
     /**
      * @notice Determines the amount of creds the core can swap in.
@@ -48,7 +48,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
      */
     address[] public supportedDepositAssets;
 
-    mapping (address => uint8) internal _tokenScalars;
+    mapping (address => uint8) internal _tokenDecimals;
 
     /* ========== Events ========== */
 
@@ -61,20 +61,19 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     function init(
         string memory name_,
         string memory symbol_,
-        uint8 decimals_,
         address _credsToken
     ) 
         external 
         onlyAdmin 
         initializer
     {
-        _init(name_, symbol_, decimals_);
+        _init(name_, symbol_, 18);
 
         require (
             _credsToken.isContract(),
             "SapphirePool: Creds address is not a contract"
         );
-        credsToken = IERC20(_credsToken);
+        credsToken = IERC20Metadata(_credsToken);
     }
 
     /**
@@ -118,6 +117,9 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         // Add the token to the supported assets array if limit is > 0, or remove it otherwise.
         if (_limit > 0 && !isSupportedAsset) {
             supportedDepositAssets.push(_tokenAddress);
+
+            // Save token decimals to later compute the token scalar
+            _tokenDecimals[_tokenAddress] = IERC20Metadata(_tokenAddress).decimals();
         } else if (_limit == 0 && isSupportedAsset) {
             _rmFromDepositAssets(_tokenAddress);
         }
@@ -156,12 +158,18 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
             "SapphirePool: cannot deposit more than the limit"
         );
 
+        require(
+            _tokenDecimals[_token] > 0,
+            "SapphirePool: the given lp token has a scalar of 0"
+        );
+
         assetUtilization.amountUsed += _amount;
 
-        _mint(msg.sender, _amount);
+        uint256 lpToMint = _getScaledAmount(_amount, _tokenDecimals[_token], _decimals);
+        _mint(msg.sender, lpToMint);
 
         SafeERC20.safeTransferFrom(
-            IERC20(_token), 
+            IERC20Metadata(_token), 
             msg.sender, 
             address(this), 
             _amount
@@ -229,6 +237,29 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
                 ];
                 supportedDepositAssets.pop();
             }
+        }
+    }
+
+    /**
+     * @dev Used to compute the amount of LP tokens to mint 
+     */
+    function _getScaledAmount(
+        uint256 _amount,
+        uint8 _decimalsIn,
+        uint8 _decimalsOut
+    ) 
+        internal
+        pure
+        returns (uint256)
+    {
+        if (_decimalsIn == _decimalsOut) {
+            return _amount;
+        }
+
+        if (_decimalsIn > _decimalsOut) {
+            return _amount / 10 ** (_decimalsIn - _decimalsOut);
+        } else {
+            return _amount * 10 ** (_decimalsOut - _decimalsIn);
         }
     }
 }

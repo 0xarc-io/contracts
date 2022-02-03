@@ -45,7 +45,7 @@ describe('SapphirePool', () => {
     );
     pool = MockSapphirePoolFactory.connect(proxy.address, admin);
 
-    await pool.init('Sapphire Pool', 'SAP', 18, creds.address);
+    await pool.init('Sapphire Pool', 'SAP', creds.address);
 
     await stablecoin.mintShare(depositor.address, DEPOSIT_AMOUNT);
   });
@@ -64,7 +64,7 @@ describe('SapphirePool', () => {
         const _pool = MockSapphirePoolFactory.connect(proxy.address, depositor);
 
         await expect(
-          _pool.init('Sapphire Pool', 'SAP', 18, creds.address),
+          _pool.init('Sapphire Pool', 'SAP', creds.address),
         ).to.be.revertedWith(ADMINABLE_ERROR);
       });
 
@@ -125,9 +125,15 @@ describe('SapphirePool', () => {
         expect(utilization.limit).to.eq(1000);
       });
 
-      it(
-        'sets the correct token scalar of the given token, if previous limit was 0',
-      );
+      it('sets the correct token scalar of the given token, if previous limit was 0', async () => {
+        expect(await pool.tokenDecimals(testDai.address)).to.eq(0);
+
+        await pool.setDepositLimit(testDai.address, 1000);
+
+        expect(await pool.tokenDecimals(testDai.address)).to.eq(
+          await testDai.decimals(),
+        );
+      });
 
       it('if limit is > 0, adds the token to the list of tokens that can be deposited', async () => {
         expect(await pool.getDepositAssets()).to.be.empty;
@@ -260,7 +266,7 @@ describe('SapphirePool', () => {
   });
 
   describe('Public functions', () => {
-    describe.only('#deposit', () => {
+    describe('#deposit', () => {
       beforeEach(async () => {
         await pool.setDepositLimit(stablecoin.address, DEPOSIT_AMOUNT.mul(2));
         await stablecoin
@@ -300,13 +306,34 @@ describe('SapphirePool', () => {
         expect(await stablecoin.balanceOf(depositor.address)).to.eq(0);
       });
 
-      xit('mints an equal amount of LP tokens when the deposit token has 6 decimals', async () => {
+      it('mints an equal amount of LP tokens when the deposit token has 6 decimals', async () => {
         const testUsdc = await new TestTokenFactory(admin).deploy(
           'TestUSDC',
           'TUSDC',
           6,
         );
         const usdcDepositAmt = utils.parseUnits('100', 6);
+        await testUsdc.mintShare(depositor.address, usdcDepositAmt);
+        await testUsdc.connect(depositor).approve(pool.address, usdcDepositAmt);
+
+        await pool.setDepositLimit(testUsdc.address, usdcDepositAmt.mul(2));
+
+        expect(await pool.balanceOf(depositor.address)).to.eq(0);
+
+        await pool.connect(depositor).deposit(testUsdc.address, usdcDepositAmt);
+
+        expect(await pool.balanceOf(depositor.address)).to.eq(DEPOSIT_AMOUNT); // 100 * 10^18
+        expect(await pool.totalSupply()).to.eq(DEPOSIT_AMOUNT);
+        expect(await testUsdc.balanceOf(depositor.address)).to.eq(0);
+      });
+
+      it('mints an equal amount of LP tokens when the deposit token has 20 decimals', async () => {
+        const testUsdc = await new TestTokenFactory(admin).deploy(
+          'TestUSDC',
+          'TUSDC',
+          20,
+        );
+        const usdcDepositAmt = utils.parseUnits('100', 20);
         await testUsdc.mintShare(depositor.address, usdcDepositAmt);
         await testUsdc.connect(depositor).approve(pool.address, usdcDepositAmt);
 
