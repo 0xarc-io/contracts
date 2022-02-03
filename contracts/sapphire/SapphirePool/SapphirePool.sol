@@ -114,14 +114,12 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         
         assetsUtilization[_tokenAddress].limit = _limit;
 
-        // Add the token to the supported assets array if limit is > 0, or remove it otherwise.
+        // Add the token to the supported assets array if limit is > 0
         if (_limit > 0 && !isSupportedAsset) {
             supportedDepositAssets.push(_tokenAddress);
 
             // Save token decimals to later compute the token scalar
             _tokenDecimals[_tokenAddress] = IERC20Metadata(_tokenAddress).decimals();
-        } else if (_limit == 0 && isSupportedAsset) {
-            _rmFromDepositAssets(_tokenAddress);
         }
 
         emit DepositLimitSet(_tokenAddress, _limit);
