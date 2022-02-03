@@ -110,6 +110,7 @@ export class SapphireArc {
    * Runs repay and withdraw with full amounts at the given core.
    */
   async exit(
+    borrowedAssetAddress: string,
     passportScoreProof?: PassportScoreProof,
     synthName = this.getSynthNames()[0],
     caller = this.signer,
@@ -118,6 +119,7 @@ export class SapphireArc {
     const core = this._getCore(synthName, caller);
 
     return core.exit(
+      borrowedAssetAddress,
       passportScoreProof ??
         getEmptyScoreProof(
           undefined,
@@ -129,6 +131,7 @@ export class SapphireArc {
 
   async liquidate(
     owner: string,
+    borrowedAssetAddress: string,
     passportScoreProof?: PassportScoreProof,
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
@@ -138,6 +141,7 @@ export class SapphireArc {
 
     return core.liquidate(
       owner,
+      borrowedAssetAddress,
       passportScoreProof ??
         getEmptyScoreProof(
           undefined,
@@ -197,6 +201,7 @@ export class SapphireArc {
 
   async repay(
     amount: BigNumber,
+    borrowedAssetAddress: string,
     passportScoreProof?: PassportScoreProof,
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
@@ -206,6 +211,7 @@ export class SapphireArc {
 
     return core.repay(
       amount,
+      borrowedAssetAddress,
       passportScoreProof ??
         getEmptyScoreProof(
           undefined,

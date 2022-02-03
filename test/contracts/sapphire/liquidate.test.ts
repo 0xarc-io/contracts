@@ -220,6 +220,7 @@ describe('SapphireCore.liquidate()', () => {
       // Liquidate vault
       await arc.liquidate(
         signers.scoredMinter.address,
+        stableCoin.address,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.liquidator,
@@ -321,6 +322,7 @@ describe('SapphireCore.liquidate()', () => {
       // The liquidator submits the user's credit score and is then able to liquidate
       await arc.liquidate(
         signers.scoredMinter.address,
+        stableCoin.address,
         getScoreProof(newMinterCreditScore, newCreditTree),
         undefined,
         signers.liquidator,
@@ -389,6 +391,7 @@ describe('SapphireCore.liquidate()', () => {
 
       await arc.liquidate(
         signers.scoredMinter.address,
+        stableCoin.address,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.liquidator,
@@ -428,6 +431,7 @@ describe('SapphireCore.liquidate()', () => {
 
       await arc.liquidate(
         signers.scoredMinter.address,
+        stableCoin.address,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.liquidator,
@@ -466,6 +470,7 @@ describe('SapphireCore.liquidate()', () => {
       // Liquidate
       await arc.liquidate(
         signers.scoredMinter.address,
+        stableCoin.address,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.liquidator,
@@ -522,6 +527,7 @@ describe('SapphireCore.liquidate()', () => {
       // Liquidate again
       await arc.liquidate(
         signers.scoredMinter.address,
+        stableCoin.address,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.liquidator,
@@ -580,6 +586,7 @@ describe('SapphireCore.liquidate()', () => {
       await expect(
         arc.liquidate(
           signers.scoredMinter.address,
+          stableCoin.address,
           getScoreProof(newMinterCreditScore, newCreditTree),
           undefined,
           signers.liquidator,
@@ -593,6 +600,7 @@ describe('SapphireCore.liquidate()', () => {
       await expect(
         arc.liquidate(
           signers.scoredMinter.address,
+          stableCoin.address,
           getEmptyScoreProof(
             undefined,
             utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
@@ -611,6 +619,7 @@ describe('SapphireCore.liquidate()', () => {
       await expect(
         arc.liquidate(
           signers.scoredMinter.address,
+          stableCoin.address,
           getScoreProof(minterCreditScore, creditScoreTree),
           undefined,
           signers.liquidator,
@@ -649,6 +658,7 @@ describe('SapphireCore.liquidate()', () => {
       await expect(
         arc.liquidate(
           signers.scoredMinter.address,
+          stableCoin.address,
           getScoreProof(zeroCreditScore, newCreditTree),
           undefined,
           signers.liquidator,
@@ -714,6 +724,7 @@ describe('SapphireCore.liquidate()', () => {
       await expect(
         arc.liquidate(
           signers.scoredMinter.address,
+          stableCoin.address,
           getScoreProof(newMinterCreditScore, newCreditTree),
         ),
       ).to.be.revertedWith('SapphireCoreV1: vault is collateralized');
@@ -735,6 +746,7 @@ describe('SapphireCore.liquidate()', () => {
       await expect(
         arc.liquidate(
           signers.scoredMinter.address,
+          stableCoin.address,
           getScoreProof(minterCreditScore, creditScoreTree),
           undefined,
           signers.liquidator,
@@ -757,6 +769,7 @@ describe('SapphireCore.liquidate()', () => {
       await expect(
         arc.liquidate(
           signers.scoredMinter.address,
+          stableCoin.address,
           getScoreProof(minterCreditScore, creditScoreTree),
         ),
       ).to.be.revertedWith('SapphireCoreV1: vault is collateralized');
@@ -776,6 +789,7 @@ describe('SapphireCore.liquidate()', () => {
       // Liquidate vault
       await arc.liquidate(
         signers.scoredMinter.address,
+        stableCoin.address,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.liquidator,
@@ -785,6 +799,7 @@ describe('SapphireCore.liquidate()', () => {
       await expect(
         arc.liquidate(
           signers.scoredMinter.address,
+          stableCoin.address,
           getScoreProof(minterCreditScore, creditScoreTree),
           undefined,
           signers.liquidator,
@@ -795,6 +810,7 @@ describe('SapphireCore.liquidate()', () => {
       await expect(
         arc.liquidate(
           signers.scoredMinter.address,
+          stableCoin.address,
           getScoreProof(minterCreditScore, creditScoreTree),
           undefined,
           signers.liquidator,
@@ -813,6 +829,7 @@ describe('SapphireCore.liquidate()', () => {
       await expect(
         arc.liquidate(
           signers.scoredMinter.address,
+          stableCoin.address,
           getScoreProof(minterCreditScore, creditScoreTree),
           undefined,
           signers.liquidator,
@@ -837,6 +854,7 @@ describe('SapphireCore.liquidate()', () => {
       await expect(
         arc.liquidate(
           signers.scoredMinter.address,
+          stableCoin.address,
           getScoreProof(minterCreditScore, creditScoreTree),
           undefined,
           signers.liquidator,
@@ -883,6 +901,7 @@ describe('SapphireCore.liquidate()', () => {
       // Liquidate vault
       await arc.liquidate(
         signers.scoredMinter.address,
+        stableCoin.address,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.liquidator,
@@ -963,6 +982,7 @@ describe('SapphireCore.liquidate()', () => {
       // Liquidate vault
       await arc.liquidate(
         signers.scoredMinter.address,
+        stableCoin.address,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.liquidator,
@@ -1035,6 +1055,7 @@ describe('SapphireCore.liquidate()', () => {
 
       await arc.repay(
         outstandingDebt,
+        stableCoin.address,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.scoredMinter,
@@ -1064,6 +1085,7 @@ describe('SapphireCore.liquidate()', () => {
       const repayedAmount = utils.parseEther('150');
       await arc.repay(
         repayedAmount,
+        stableCoin.address,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.scoredMinter,
@@ -1098,6 +1120,7 @@ describe('SapphireCore.liquidate()', () => {
       // Liquidation occurs
       await arc.liquidate(
         signers.scoredMinter.address,
+        stableCoin.address,
         getScoreProof(newMinterCreditScore, newCreditTree),
         undefined,
         signers.liquidator,
@@ -1185,6 +1208,7 @@ describe('SapphireCore.liquidate()', () => {
       await expect(
         arc.liquidate(
           signers.scoredMinter.address,
+          stableCoin.address,
           getScoreProof(newMinterCreditScore, newCreditTree),
           undefined,
           signers.liquidator,
@@ -1204,6 +1228,7 @@ describe('SapphireCore.liquidate()', () => {
       // Liquidation occurs
       await arc.liquidate(
         signers.scoredMinter.address,
+        stableCoin.address,
         getScoreProof(newMinterCreditScore, newCreditTree),
         undefined,
         signers.liquidator,
