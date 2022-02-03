@@ -124,9 +124,31 @@ describe('SapphirePool', () => {
         'reverts if trying to withdraw more than the amount available for the given token',
       );
 
+      it('withdraws the correct amount of tokens');
+
       it(
-        'withdraws the correct amount of tokens, in addition to the proportional reward',
+        'decreases the reward amount for the given token in the core swap utilization mapping',
       );
+
+      it(
+        'withdraws the proportional amount of reward in the selected currency (1 currency available)',
+      );
+
+      it(
+        'withdraws the proportional amount of reward in the selected currency (2 currencies available)',
+      );
+    });
+
+    describe('#transferRewards', () => {
+      it(
+        'reverts if the reward token is not in the core swap utilization mapping',
+      );
+
+      it(
+        'increases the reward amount for the given token in the core swap utilization mapping',
+      );
+
+      it('does not mint LP tokens for the transferred rewards');
     });
   });
 
