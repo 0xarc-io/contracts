@@ -1,5 +1,62 @@
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
+import {
+  ArcProxyFactory,
+  SapphirePool,
+  SapphirePoolFactory,
+} from '@src/typings';
+import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
+import { expect } from 'chai';
+import { generateContext } from '../context';
+import { sapphireFixture } from '../fixtures';
+
 describe('SapphirePool', () => {
+  let pool: SapphirePool;
+
+  let admin: SignerWithAddress;
+  let unauthorized: SignerWithAddress;
+
+  before(async () => {
+    const ctx = await generateContext(sapphireFixture);
+    admin = ctx.signers.admin;
+    unauthorized = ctx.signers.unauthorized;
+
+    const sapphirePoolImpl = await new SapphirePoolFactory(admin).deploy();
+
+    const proxy = await new ArcProxyFactory(admin).deploy(
+      sapphirePoolImpl.address,
+      admin.address,
+      [],
+    );
+    pool = SapphirePoolFactory.connect(proxy.address, admin);
+
+    await pool.init('Sapphire Pool', 'SAP', 18);
+  });
+
+  addSnapshotBeforeRestoreAfterEach();
+
   describe('Restricted functions', () => {
+    describe('#init', () => {
+      it('reverts if called by non-admin', async () => {
+        const poolImpl = await new SapphirePoolFactory(admin).deploy();
+        const proxy = await new ArcProxyFactory(admin).deploy(
+          poolImpl.address,
+          admin.address,
+          [],
+        );
+        const _pool = SapphirePoolFactory.connect(proxy.address, unauthorized);
+
+        await expect(_pool.init('Sapphire Pool', 'SAP', 18)).to.be.revertedWith(
+          'Adminable: caller is not admin',
+        );
+      });
+
+      it('sets the name, symbol and decimals', async () => {
+        expect(await pool.name()).to.equal('Sapphire Pool');
+        expect(await pool.symbol()).to.equal('SAP');
+        expect(await pool.decimals()).to.equal(18);
+      });
+    });
+
     describe('#approveCoreVaults', () => {
       it('reverts if set by non-admin');
 
@@ -8,8 +65,6 @@ describe('SapphirePool', () => {
 
     describe('#setTokenLimit', () => {
       it('reverts if called by non-admin');
-
-      it('reverts if an oracle is not set for the given token');
 
       it('sets the limit for how many stablecoins can be deposited');
 
@@ -27,7 +82,9 @@ describe('SapphirePool', () => {
 
       it('reverts if there are not enough requested coins');
 
-      it('swaps the correct amount if the requested token is 1:1 with the CR');
+      it('reverts if core tries to swap more than its limit');
+
+      it('swaps the correct amount of requested tokens in exchange of CR');
     });
   });
 
@@ -42,8 +99,8 @@ describe('SapphirePool', () => {
       it('returns the total supply of the LP token');
     });
 
-    describe('#rewardAvailable', () => {
-      it('returns the amount of reward available to be claimed');
+    describe('#accumulatedRewardAmount', () => {
+      it('returns the current reward amount for the given token');
     });
   });
 
@@ -53,8 +110,12 @@ describe('SapphirePool', () => {
 
       it('reverts if trying to deposit more than the limit');
 
+      it('does not mint LP if the caller is an approved core');
+
+      it('increases the current reward amount for the given token');
+
       it(
-        'deposits the correct amount of tokens and mints the correct amount of stablecoins',
+        'deposits the correct amount of tokens and mints the correct amount of LP tokens',
       );
     });
 
@@ -63,9 +124,31 @@ describe('SapphirePool', () => {
         'reverts if trying to withdraw more than the amount available for the given token',
       );
 
+      it('withdraws the correct amount of tokens');
+
       it(
-        'withdraws the correct amount of tokens, in addition to the proportional reward',
+        'decreases the reward amount for the given token in the core swap utilization mapping',
       );
+
+      it(
+        'withdraws the proportional amount of reward in the selected currency (1 currency available)',
+      );
+
+      it(
+        'withdraws the proportional amount of reward in the selected currency (2 currencies available)',
+      );
+    });
+
+    describe('#transferRewards', () => {
+      it(
+        'reverts if the reward token is not in the core swap utilization mapping',
+      );
+
+      it(
+        'increases the reward amount for the given token in the core swap utilization mapping',
+      );
+
+      it('does not mint LP tokens for the transferred rewards');
     });
   });
 
