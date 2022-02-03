@@ -2,7 +2,6 @@ import fs from 'fs';
 
 import { HardhatUserConfig } from 'hardhat/config';
 import { BigNumber } from 'ethers';
-import { privateKeys } from './test/helpers/generatedWallets';
 
 import 'hardhat-preprocessor';
 import 'hardhat-spdx-license-identifier';
@@ -64,16 +63,7 @@ const config: HardhatUserConfig = {
     artifacts: './artifacts',
   },
   networks: {
-    hardhat: {
-      hardfork: 'istanbul',
-      blockGasLimit: 12500000,
-      accounts: privateKeys.map((key) => {
-        return {
-          privateKey: key,
-          balance: HUNDRED_THOUSAND_ETH,
-        };
-      }),
-    },
+    hardhat: {},
     local: {
       url: 'http://127.0.0.1:8545',
       users: {

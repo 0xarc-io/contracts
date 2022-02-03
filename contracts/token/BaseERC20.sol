@@ -2,8 +2,6 @@
 
 pragma solidity ^0.8.4;
 
-import {SafeMath} from "../lib/SafeMath.sol";
-
 import {IERC20Metadata} from "./IERC20Metadata.sol";
 import {Permittable} from "./Permittable.sol";
 
@@ -13,8 +11,6 @@ import {Permittable} from "./Permittable.sol";
  * Basic ERC20 Implementation
  */
 contract BaseERC20 is IERC20Metadata, Permittable {
-
-    using SafeMath for uint256;
 
     mapping (address => uint256) private _balances;
 
@@ -199,7 +195,7 @@ contract BaseERC20 is IERC20Metadata, Permittable {
         _approve(
             sender,
             msg.sender,
-            _allowances[sender][msg.sender].sub(amount)
+            _allowances[sender][msg.sender] - amount
         );
 
         return true;
@@ -267,9 +263,9 @@ contract BaseERC20 is IERC20Metadata, Permittable {
             "ERC20: transfer to the zero address"
         );
 
-        _balances[sender] = _balances[sender].sub(amount);
+        _balances[sender] = _balances[sender] - amount;
 
-        _balances[recipient] = _balances[recipient].add(amount);
+        _balances[recipient] = _balances[recipient] + amount;
         emit Transfer(sender, recipient, amount);
     }
 
@@ -290,8 +286,8 @@ contract BaseERC20 is IERC20Metadata, Permittable {
     {
         require(account != address(0), "ERC20: mint to the zero address");
 
-        _totalSupply = _totalSupply.add(amount);
-        _balances[account] = _balances[account].add(amount);
+        _totalSupply = _totalSupply + amount;
+        _balances[account] = _balances[account] + amount;
         emit Transfer(address(0), account, amount);
     }
 
@@ -314,8 +310,8 @@ contract BaseERC20 is IERC20Metadata, Permittable {
     {
         require(account != address(0), "ERC20: burn from the zero address");
 
-        _balances[account] = _balances[account].sub(amount);
-        _totalSupply = _totalSupply.sub(amount);
+        _balances[account] = _balances[account] - amount;
+        _totalSupply = _totalSupply - amount;
         emit Transfer(account, address(0), amount);
     }
 
