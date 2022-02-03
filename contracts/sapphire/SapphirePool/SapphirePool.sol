@@ -5,6 +5,8 @@ pragma solidity 0.8.4;
 import {ISapphirePool} from "./ISapphirePool.sol";
 
 import {Adminable} from "../../lib/Adminable.sol";
+import {Address} from "../../lib/Address.sol";
+import {IERC20} from "../../token/IERC20.sol";
 import {InitializableBaseERC20} from "../../token/InitializableBaseERC20.sol";
 
 /**
@@ -14,6 +16,10 @@ import {InitializableBaseERC20} from "../../token/InitializableBaseERC20.sol";
  */
 contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     
+    /* ========== Libraries ========== */
+
+    using Address for address;
+    
     /* ========== Structs ========== */
 
     struct AssetUtilization {
@@ -22,6 +28,8 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     }
     
     /* ========== Variables ========== */
+
+    IERC20 public credsToken;
 
     /**
      * @notice Determines the amount of creds the core can swap in.
@@ -50,15 +58,25 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     function init(
         string memory name_,
         string memory symbol_,
-        uint8 decimals_
+        uint8 decimals_,
+        address _credsToken
     ) 
         external 
         onlyAdmin 
         initializer
     {
         _init(name_, symbol_, decimals_);
+
+        require (
+            _credsToken.isContract(),
+            "SapphirePool: Creds address is not a contract"
+        );
+        credsToken = IERC20(_credsToken);
     }
 
+    /**
+     * @notice Sets the limit for how many Creds can be swapped in by a Core.
+     */
     function setCoreSwapLimit(
         address _coreAddress, 
         uint256 _limit

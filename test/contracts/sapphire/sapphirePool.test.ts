@@ -22,6 +22,7 @@ describe('SapphirePool', () => {
   let pool: SapphirePool;
 
   let stablecoin: TestToken;
+  let creds: TestToken;
 
   let admin: SignerWithAddress;
   let depositor: SignerWithAddress;
@@ -33,8 +34,9 @@ describe('SapphirePool', () => {
     depositor = ctx.signers.unauthorized;
     stablecoin = ctx.contracts.stableCoin;
 
-    const sapphirePoolImpl = await new SapphirePoolFactory(admin).deploy();
+    creds = await new TestTokenFactory(admin).deploy('Creds', 'CREDS', 18);
 
+    const sapphirePoolImpl = await new SapphirePoolFactory(admin).deploy();
     const proxy = await new ArcProxyFactory(admin).deploy(
       sapphirePoolImpl.address,
       admin.address,
@@ -42,7 +44,7 @@ describe('SapphirePool', () => {
     );
     pool = SapphirePoolFactory.connect(proxy.address, admin);
 
-    await pool.init('Sapphire Pool', 'SAP', 18);
+    await pool.init('Sapphire Pool', 'SAP', 18, creds.address);
 
     await stablecoin.mintShare(depositor.address, DEPOSIT_AMOUNT);
   });
@@ -60,15 +62,19 @@ describe('SapphirePool', () => {
         );
         const _pool = SapphirePoolFactory.connect(proxy.address, depositor);
 
-        await expect(_pool.init('Sapphire Pool', 'SAP', 18)).to.be.revertedWith(
-          ADMINABLE_ERROR,
-        );
+        await expect(
+          _pool.init('Sapphire Pool', 'SAP', 18, creds.address),
+        ).to.be.revertedWith(ADMINABLE_ERROR);
       });
 
       it('sets the name, symbol and decimals', async () => {
         expect(await pool.name()).to.equal('Sapphire Pool');
         expect(await pool.symbol()).to.equal('SAP');
         expect(await pool.decimals()).to.equal(18);
+      });
+
+      it('sets the address of the creds token', async () => {
+        expect(await pool.credsToken()).to.equal(creds.address);
       });
     });
 
@@ -221,7 +227,7 @@ describe('SapphirePool', () => {
   });
 
   describe('Public functions', () => {
-    describe.only('#deposit', () => {
+    describe.skip('#deposit', () => {
       beforeEach(async () => {
         await pool.setDepositLimit(stablecoin.address, DEPOSIT_AMOUNT.mul(2));
         await stablecoin
