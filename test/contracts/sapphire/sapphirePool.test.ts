@@ -82,6 +82,8 @@ describe('SapphirePool', () => {
 
       it('reverts if there are not enough requested coins');
 
+      it('reverts if core tries to swap more than its limit');
+
       it('swaps the correct amount of requested tokens in exchange of CR');
     });
   });
