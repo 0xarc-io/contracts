@@ -89,8 +89,6 @@ describe('SapphirePool', () => {
         ).to.be.revertedWith(ADMINABLE_ERROR);
       });
 
-      it('reverts if the token has a deposit limit of 0');
-
       it('sets the limit for how many CR can be swapped in for tokens', async () => {
         let utilization = await pool.coreSwapUtilization(
           ctx.contracts.sapphire.core.address,
@@ -377,8 +375,8 @@ describe('SapphirePool', () => {
         await expect(
           pool
             .connect(depositor)
-            .withdraw(stablecoin.address, DEPOSIT_AMOUNT.add(1)),
-        ).to.be.revertedWith(TRANSFER_FROM_FAILED);
+            .withdraw(DEPOSIT_AMOUNT.add(1), stablecoin.address),
+        ).to.be.revertedWith(ARITHMETIC_ERROR);
       });
 
       it('withdraws the correct amount of tokens with 18 decimals', async () => {
@@ -387,7 +385,7 @@ describe('SapphirePool', () => {
 
         await pool
           .connect(depositor)
-          .withdraw(stablecoin.address, DEPOSIT_AMOUNT);
+          .withdraw(DEPOSIT_AMOUNT, stablecoin.address);
 
         expect(await stablecoin.balanceOf(depositor.address)).to.eq(
           DEPOSIT_AMOUNT,
@@ -395,7 +393,7 @@ describe('SapphirePool', () => {
         expect(await pool.balanceOf(depositor.address)).to.eq(0);
       });
 
-      it('reverts if withdrawing more than the available balance on the contract', () => {
+      xit('reverts if withdrawing more than the available balance on the contract', () => {
         fail('need swap');
       });
 
@@ -410,8 +408,8 @@ describe('SapphirePool', () => {
         await expect(
           pool
             .connect(depositor)
-            .withdraw(testUsdc.address, utils.parseUnits('100', 6)),
-        ).to.be.revertedWith('SapphirePool: cannot withdraw unsupported token');
+            .withdraw(utils.parseUnits('100', 6), testUsdc.address),
+        ).to.be.revertedWith('SapphirePool: unsupported withdraw token');
       });
 
       it('withdraws token with 6 decimals', async () => {
@@ -435,11 +433,15 @@ describe('SapphirePool', () => {
           DEPOSIT_AMOUNT.mul(2),
         );
 
-        await pool.withdraw(testUsdc.address, usdcDepositAmt);
+        await pool
+          .connect(depositor)
+          .withdraw(DEPOSIT_AMOUNT, testUsdc.address);
 
         expect(await pool.balanceOf(depositor.address)).to.eq(DEPOSIT_AMOUNT); // 100 * 10^18
         expect(await pool.totalSupply()).to.eq(DEPOSIT_AMOUNT);
-        expect(await testUsdc.balanceOf(depositor.address)).to.eq(0);
+        expect(await testUsdc.balanceOf(depositor.address)).to.eq(
+          usdcDepositAmt,
+        );
       });
 
       it('withdraws token with 20 decimals', async () => {
@@ -462,23 +464,28 @@ describe('SapphirePool', () => {
         expect(await pool.balanceOf(depositor.address)).to.eq(
           DEPOSIT_AMOUNT.mul(2),
         );
+        expect(await pool.totalSupply()).to.eq(DEPOSIT_AMOUNT.mul(2));
 
-        await pool.withdraw(testUsdc.address, usdcDepositAmt);
+        await pool
+          .connect(depositor)
+          .withdraw(DEPOSIT_AMOUNT, testUsdc.address);
 
         expect(await pool.balanceOf(depositor.address)).to.eq(DEPOSIT_AMOUNT); // 100 * 10^18
         expect(await pool.totalSupply()).to.eq(DEPOSIT_AMOUNT);
-        expect(await testUsdc.balanceOf(depositor.address)).to.eq(0);
+        expect(await testUsdc.balanceOf(depositor.address)).to.eq(
+          usdcDepositAmt,
+        );
       });
 
-      it('decreases the reward amount for the given token in the core swap utilization mapping', () => {
+      xit('decreases the reward amount for the given token in the core swap utilization mapping', () => {
         fail('need swap');
       });
 
-      it('withdraws the proportional amount of reward in the selected currency (1 currency available)', () => {
+      xit('withdraws the proportional amount of reward in the selected currency (1 currency available)', () => {
         fail('need swap');
       });
 
-      it('withdraws the proportional amount of reward in the selected currency (2 currencies available)', () => {
+      xit('withdraws the proportional amount of reward in the selected currency (2 currencies available)', () => {
         fail('need swap');
       });
 
@@ -487,12 +494,12 @@ describe('SapphirePool', () => {
 
         await pool
           .connect(depositor)
-          .withdraw(stablecoin.address, DEPOSIT_AMOUNT.div(2));
+          .withdraw(DEPOSIT_AMOUNT.div(2), stablecoin.address);
         expect(await pool.totalSupply()).to.eq(DEPOSIT_AMOUNT.div(2));
 
         await pool
           .connect(depositor)
-          .withdraw(stablecoin.address, DEPOSIT_AMOUNT.div(2));
+          .withdraw(DEPOSIT_AMOUNT.div(2), stablecoin.address);
         expect(await pool.totalSupply()).to.eq(0);
       });
     });

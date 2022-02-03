@@ -9,11 +9,15 @@ interface ISapphirePool {
 
     function setDepositLimit(address _tokenAddress, uint256 _limit) external;
 
-    function swap(address _tokenIn, address _tokenOut, uint256 _amountIn) external;
+    function swap(
+        address _tokenIn, 
+        address _tokenOut, 
+        uint256 _amountIn
+    ) external;
 
     function deposit(address _token, uint256 _amount) external;
 
-    function withdraw(address _token, uint256 _amount) external;
+    function withdraw(uint256 _amount, address _outToken) external;
 
     /* ========== View Functions ========== */
 

@@ -56,6 +56,20 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
 
     event DepositLimitSet(address _asset, uint256 _limit);
 
+    event TokensDeposited(
+        address _user,
+        address _token,
+        uint256 _depositAmount,
+        uint256 _lpTokensAmount
+    );
+
+    event TokensWithdrawn(
+        address _user, 
+        address _token, 
+        uint256 _credsAmount, 
+        uint256 _withdrawAmount
+    );
+
     /* ========== Restricted functions ========== */
 
     function init(
@@ -172,16 +186,55 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
             address(this), 
             _amount
         );
+
+        emit TokensDeposited(
+            msg.sender,
+            _token,
+            _amount,
+            lpToMint
+        );
     }
 
+    /**
+     * @notice Exchanges the give amount of Creds for the equivalent amount of the given token,
+     * plus the proportional rewards. The Creds exchanged are burned.
+     * @param _amount The amount of Creds to exchange.
+     * @param _outToken The token to exchange for.
+     */
     function withdraw(
-        address _token, 
-        uint256 _amount
+        uint256 _amount,
+        address _outToken 
     ) 
         external
         override
     {
-        revert("Not Implemented");
+        // When we add a new supporting token, we set its decimals to this mapping.
+        // So we can check with O(1) if it's a supported token by checking if its decimals are set.
+        require(
+            _tokenDecimals[_outToken] > 0,
+            "SapphirePool: unsupported withdraw token"
+        );   
+
+        uint256 amountToWithdraw = _getScaledAmount(
+            _amount,  
+            _decimals,
+            _tokenDecimals[_outToken]
+        );
+
+        _burn(msg.sender, _amount);
+
+        SafeERC20.safeTransfer(
+            IERC20Metadata(_outToken), 
+            msg.sender, 
+            amountToWithdraw
+        );
+
+        emit TokensWithdrawn(
+            msg.sender, 
+            _outToken, 
+            _amount, 
+            amountToWithdraw
+        );
     }
 
     /* ========== View functions ========== */
