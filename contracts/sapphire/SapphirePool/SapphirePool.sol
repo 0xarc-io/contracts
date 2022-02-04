@@ -80,7 +80,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     function setDepositLimit(
         address _tokenAddress, 
         uint256 _limit
-    ) 
+    )
         external
         override
         onlyAdmin
@@ -89,7 +89,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
 
         require(
             _limit > 0 || isSupportedAsset,
-            "SapphirePool: the limit must be > 0 or the asset must be already supported"
+            "SapphirePool: cannot set the limit of an unsupported asset to 0"
         );
         
         assetsUtilization[_tokenAddress].limit = _limit;

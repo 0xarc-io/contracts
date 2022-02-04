@@ -100,7 +100,7 @@ describe('SapphirePool', () => {
         await expect(
           pool.setDepositLimit(testDai.address, 0),
         ).to.be.revertedWith(
-          'SapphirePool: the limit must be > 0 or the asset must be already supported',
+          'SapphirePool: cannot set the limit of an unsupported asset to 0',
         );
       });
 
