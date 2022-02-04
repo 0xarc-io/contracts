@@ -174,7 +174,7 @@ describe('SapphireCore.exit()', () => {
     );
 
     await expect(
-      arc.exit(arc.coreAddress(), undefined, undefined, signers.scoredMinter),
+      arc.exit(arc.collateral().address, undefined, undefined, signers.scoredMinter),
     ).to.be.revertedWith(
       'SapphireCoreV1: the token address should be one of the supported tokens',
     );
