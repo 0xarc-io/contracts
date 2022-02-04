@@ -96,6 +96,14 @@ describe('SapphirePool', () => {
         ).to.be.revertedWith(ADMINABLE_ERROR);
       });
 
+      it('reverts if setting the limit to 0 and the token is not previously supported', async () => {
+        await expect(
+          pool.setDepositLimit(testDai.address, 0),
+        ).to.be.revertedWith(
+          'SapphirePool: the limit must be > 0 or the asset must be already supported',
+        );
+      });
+
       it('sets the limit for how many stablecoins can be deposited', async () => {
         let utilization = await pool.assetsUtilization(testDai.address);
         expect(utilization.amountUsed).to.deep.eq(0);

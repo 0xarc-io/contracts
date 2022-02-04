@@ -86,6 +86,11 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         onlyAdmin
     {
         bool isSupportedAsset = assetsUtilization[_tokenAddress].limit > 0;
+
+        require(
+            _limit > 0 || isSupportedAsset,
+            "SapphirePool: the limit must be > 0 or the asset must be already supported"
+        );
         
         assetsUtilization[_tokenAddress].limit = _limit;
 
