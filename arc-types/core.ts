@@ -58,7 +58,7 @@ export type Int = {
 export type Position = {
   owner: string;
   collateralAmount: Int;
-  borrowedAmount: Int;
+  normalizedBorrowedAmount: Int;
 };
 
 export type OperationParams = {
@@ -80,8 +80,8 @@ export type GraphPosition = {
   synth: string;
   collateralAmountSign: boolean;
   collateralAmountValue: BigNumberish;
-  borrowedAmountSign: boolean;
-  borrowedAmountValue: BigNumberish;
+  normalizedBorrowedAmountSign: boolean;
+  normalizedBorrowedAmountValue: BigNumberish;
 };
 
 export type MarketParams = {

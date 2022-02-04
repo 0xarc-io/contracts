@@ -86,7 +86,7 @@ describe('SapphireCore.withdraw()', () => {
     );
     let vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.collateralAmount).to.eq(COLLATERAL_AMOUNT);
-    expect(vault.borrowedAmount).to.eq(0);
+    expect(vault.normalizedBorrowedAmount).to.eq(0);
 
     const preBalance = await arc
       .collateral()

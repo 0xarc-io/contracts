@@ -118,7 +118,7 @@ describe('SapphireCore.repay()', () => {
     let cRatio = vault.collateralAmount
       .mul(PRECISION_SCALAR)
       .mul(COLLATERAL_PRICE)
-      .div(vault.borrowedAmount);
+      .div(vault.normalizedBorrowedAmount);
     expect(cRatio).to.eq(constants.WeiPerEther.mul(2));
 
     const preStablexBalance = await arc
@@ -139,7 +139,7 @@ describe('SapphireCore.repay()', () => {
     // Ensure that collateral amount didn't change
     expect(vault.collateralAmount).to.eq(COLLATERAL_AMOUNT);
 
-    expect(vault.borrowedAmount).to.eq(BORROW_AMOUNT.div(2));
+    expect(vault.normalizedBorrowedAmount).to.eq(BORROW_AMOUNT.div(2));
     expect(vault.principal).to.eq(BORROW_AMOUNT.div(2));
     /**
      * Collateral = 1000
@@ -149,7 +149,7 @@ describe('SapphireCore.repay()', () => {
     cRatio = vault.collateralAmount
       .mul(PRECISION_SCALAR)
       .mul(COLLATERAL_PRICE)
-      .div(vault.borrowedAmount);
+      .div(vault.normalizedBorrowedAmount);
     expect(cRatio).to.eq(constants.WeiPerEther.mul(4));
   });
 
@@ -173,13 +173,13 @@ describe('SapphireCore.repay()', () => {
     // Repay to make the position collateralized
     await repay(BORROW_AMOUNT.div(2), signers.scoredMinter);
 
-    const { collateralAmount, borrowedAmount } = await arc.getVault(
+    const { collateralAmount, normalizedBorrowedAmount } = await arc.getVault(
       signers.scoredMinter.address,
     );
     cRatio = collateralAmount
       .mul(PRECISION_SCALAR)
       .mul(newPrice)
-      .div(borrowedAmount);
+      .div(normalizedBorrowedAmount);
 
     expect(cRatio).to.eq(utils.parseEther('1.8'));
   });
@@ -187,12 +187,12 @@ describe('SapphireCore.repay()', () => {
   it('repays without a score proof even if one exists on-chain', async () => {
     // Do two repays. One with credit score and one without. Both should pass
     let vault = await arc.getVault(signers.scoredMinter.address);
-    expect(vault.borrowedAmount).to.eq(BORROW_AMOUNT);
+    expect(vault.normalizedBorrowedAmount).to.eq(BORROW_AMOUNT);
 
     await repay(constants.WeiPerEther, signers.scoredMinter);
 
     vault = await arc.getVault(signers.scoredMinter.address);
-    expect(vault.borrowedAmount).to.eq(
+    expect(vault.normalizedBorrowedAmount).to.eq(
       BORROW_AMOUNT.sub(constants.WeiPerEther),
     );
     expect(vault.principal).to.eq(BORROW_AMOUNT.sub(constants.WeiPerEther));
@@ -204,7 +204,7 @@ describe('SapphireCore.repay()', () => {
     );
 
     vault = await arc.getVault(signers.scoredMinter.address);
-    expect(vault.borrowedAmount).to.eq(
+    expect(vault.normalizedBorrowedAmount).to.eq(
       BORROW_AMOUNT.sub(constants.WeiPerEther.mul(2)),
     );
     expect(vault.principal).to.eq(BORROW_AMOUNT.sub(constants.WeiPerEther.mul(2)));
@@ -221,14 +221,14 @@ describe('SapphireCore.repay()', () => {
   it('updates the vault borrow amount', async () => {
     let vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.collateralAmount).to.eq(COLLATERAL_AMOUNT);
-    expect(vault.borrowedAmount).to.eq(BORROW_AMOUNT);
+    expect(vault.normalizedBorrowedAmount).to.eq(BORROW_AMOUNT);
     expect(vault.principal).to.eq(BORROW_AMOUNT);
 
     await repay(BORROW_AMOUNT.div(2), signers.scoredMinter);
 
     vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.collateralAmount).to.eq(COLLATERAL_AMOUNT);
-    expect(vault.borrowedAmount).to.eq(BORROW_AMOUNT.div(2));
+    expect(vault.normalizedBorrowedAmount).to.eq(BORROW_AMOUNT.div(2));
     expect(vault.principal).to.eq(BORROW_AMOUNT.div(2));
   });
 
