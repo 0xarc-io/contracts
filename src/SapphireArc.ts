@@ -73,7 +73,7 @@ export class SapphireArc {
   async open(
     collateralAmount: BigNumberish,
     borrowAmount: BigNumber,
-    borrowedAssetAddress: string,
+    borrowAssetAddress: string,
     passportScoreProof?: PassportScoreProof,
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
@@ -82,7 +82,7 @@ export class SapphireArc {
     const actions: Action[] = [
       {
         operation: Operation.Deposit,
-        borrowedAssetAddress: constants.AddressZero,
+        borrowAssetAddress: constants.AddressZero,
         amount: collateralAmount,
         userToLiquidate: constants.AddressZero,
       },
@@ -91,7 +91,7 @@ export class SapphireArc {
     if (!borrowAmount.isZero()) {
       actions.push({
         operation: Operation.Borrow,
-        borrowedAssetAddress,
+        borrowAssetAddress,
         amount: borrowAmount,
         userToLiquidate: constants.AddressZero,
       });
@@ -110,7 +110,7 @@ export class SapphireArc {
    * Runs repay and withdraw with full amounts at the given core.
    */
   async exit(
-    borrowedAssetAddress: string,
+    borrowAssetAddress: string,
     passportScoreProof?: PassportScoreProof,
     synthName = this.getSynthNames()[0],
     caller = this.signer,
@@ -119,7 +119,7 @@ export class SapphireArc {
     const core = this._getCore(synthName, caller);
 
     return core.exit(
-      borrowedAssetAddress,
+      borrowAssetAddress,
       passportScoreProof ??
         getEmptyScoreProof(
           undefined,
@@ -131,7 +131,7 @@ export class SapphireArc {
 
   async liquidate(
     owner: string,
-    borrowedAssetAddress: string,
+    borrowAssetAddress: string,
     passportScoreProof?: PassportScoreProof,
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
@@ -141,7 +141,7 @@ export class SapphireArc {
 
     return core.liquidate(
       owner,
-      borrowedAssetAddress,
+      borrowAssetAddress,
       passportScoreProof ??
         getEmptyScoreProof(
           undefined,
@@ -179,7 +179,7 @@ export class SapphireArc {
 
   async borrow(
     amount: BigNumber,
-    borrowedAssetAddress: string,
+    borrowAssetAddress: string,
     passportScoreProof?: PassportScoreProof,
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
@@ -189,7 +189,7 @@ export class SapphireArc {
 
     return core.borrow(
       amount,
-      borrowedAssetAddress,
+      borrowAssetAddress,
       passportScoreProof ??
         getEmptyScoreProof(
           undefined,
@@ -201,7 +201,7 @@ export class SapphireArc {
 
   async repay(
     amount: BigNumber,
-    borrowedAssetAddress: string,
+    borrowAssetAddress: string,
     passportScoreProof?: PassportScoreProof,
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
@@ -211,7 +211,7 @@ export class SapphireArc {
 
     return core.repay(
       amount,
-      borrowedAssetAddress,
+      borrowAssetAddress,
       passportScoreProof ??
         getEmptyScoreProof(
           undefined,
