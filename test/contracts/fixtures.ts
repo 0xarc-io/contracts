@@ -52,7 +52,7 @@ export async function sapphireFixture(
     deployer,
     'Test stablecoin',
     'TEST_USDC',
-    DEFAULT_COLLATERAL_DECIMALS,
+    6,
   );
 
   ctx.contracts.sapphire.oracle = await deployMockSapphireOracle(deployer);
