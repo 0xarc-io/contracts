@@ -6,7 +6,6 @@ import {BaseERC20} from "../token/BaseERC20.sol";
 import {IERC20} from "../token/IERC20.sol";
 import {IERC20Metadata} from "../token/IERC20Metadata.sol";
 import {SafeERC20} from "../lib/SafeERC20.sol";
-import {SafeMath} from "../lib/SafeMath.sol";
 import {Math} from "../lib/Math.sol";
 import {Adminable} from "../lib/Adminable.sol";
 import {Address} from "../lib/Address.sol";
@@ -23,7 +22,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
     /* ========== Libraries ========== */
 
-    using SafeMath for uint256;
     using Address for address;
     using Bytes32 for bytes32;
 
@@ -723,7 +721,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         view
         returns (uint256)
     {
-        return interestRate.mul(currentTimestamp().sub(indexLastUpdate));
+        return interestRate * (currentTimestamp() - indexLastUpdate);
     }
 
     function currentBorrowIndex()
@@ -731,7 +729,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         view
         returns (uint256)
     {
-        return borrowIndex.mul(accumulatedInterest()).div(BASE).add(borrowIndex);
+        return borrowIndex * accumulatedInterest() / BASE + borrowIndex;
     }
 
     function getProofProtocol()
@@ -815,10 +813,10 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         view
         returns (uint256)
     {
-        return _collateralAmount
-            .mul(precisionScalar)
-            .mul(_collateralPrice)
-            .div(_normalizedBorrowedAmount);
+        return _collateralAmount *
+            precisionScalar *
+            _collateralPrice /
+            _normalizedBorrowedAmount;
     }
 
     /* ========== Private Functions ========== */
@@ -844,9 +842,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             return Math.roundUpDiv(_amount, currentBIndex);
         }
 
-        return _amount
-            .mul(BASE)
-            .div(currentBIndex);
+        return _amount * BASE / currentBIndex;
     }
 
     /**
@@ -867,9 +863,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             return Math.roundUpMul(_amount, currentBorrowIndex());
         }
 
-        return _amount
-            .mul(currentBorrowIndex())
-            .div(BASE);
+        return _amount * currentBorrowIndex() / BASE;
     }
 
     /**
@@ -887,9 +881,9 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             return;
         }
 
-        vault.collateralAmount = vault.collateralAmount.add(_amount);
+        vault.collateralAmount = vault.collateralAmount + _amount;
 
-        totalCollateral = totalCollateral.add(_amount);
+        totalCollateral = totalCollateral + _amount;
 
         // Execute transfer
         IERC20 collateralAsset = IERC20(collateralAsset);
@@ -921,7 +915,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             "SapphireCoreV1: cannot withdraw more collateral than the vault balance"
         );
 
-        vault.collateralAmount = vault.collateralAmount.sub(_amount);
+        vault.collateralAmount = vault.collateralAmount - _amount;
 
         // if we don't have debt we can withdraw as much as we want.
         if (vault.normalizedBorrowedAmount > 0) {
@@ -938,7 +932,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         }
 
         // Change total collateral amount
-        totalCollateral = totalCollateral.sub(_amount);
+        totalCollateral = totalCollateral - _amount;
 
         // Execute transfer
         IERC20 collateralAsset = IERC20(collateralAsset);
@@ -975,8 +969,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
         // Ensure the vault is collateralized if the borrow action succeeds
         uint256 collateralRatio = calculateCollateralRatio(
-            denormalizedBorrowAmount
-                .add(_amount),
+            denormalizedBorrowAmount + _amount,
             vault.collateralAmount,
             _collateralPrice
         );
@@ -990,13 +983,13 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         uint256 actualVaultBorrowAmount = denormalizedBorrowAmount;
 
         // Calculate new actual vault borrow amount
-        uint256 _newActualVaultBorrowAmount = actualVaultBorrowAmount.add(_amount);
+        uint256 _newActualVaultBorrowAmount = actualVaultBorrowAmount + _amount;
 
         // Calculate new normalized vault borrow amount
         uint256 _newNormalizedVaultBorrowAmount = _normalizeBorrowAmount(_newActualVaultBorrowAmount, true);
 
         // Record borrow amount (update vault and total amount)
-        totalBorrowed = totalBorrowed.sub(vault.normalizedBorrowedAmount).add(_newNormalizedVaultBorrowAmount);
+        totalBorrowed = totalBorrowed - vault.normalizedBorrowedAmount + _newNormalizedVaultBorrowAmount;
         vault.normalizedBorrowedAmount = _newNormalizedVaultBorrowAmount;
         vault.principal = vault.principal + _amount;
 
@@ -1058,10 +1051,10 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         );
 
         // Calculate new vault's borrowed amount
-        uint256 _newBorrowAmount = _normalizeBorrowAmount(actualVaultBorrowAmount.sub(_amount), true);
+        uint256 _newBorrowAmount = _normalizeBorrowAmount(actualVaultBorrowAmount - _amount, true);
 
         // Update total borrow amount
-        totalBorrowed = totalBorrowed.sub(vault.normalizedBorrowedAmount).add(_newBorrowAmount);
+        totalBorrowed = totalBorrowed - vault.normalizedBorrowedAmount + _newBorrowAmount;
 
         // Update vault
         vault.normalizedBorrowedAmount = _newBorrowAmount;
@@ -1132,7 +1125,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         // --- EFFECTS ---
 
         // Get the liquidation price of the asset (discount for liquidator)
-        uint256 liquidationPriceRatio = BASE.sub(liquidationUserRatio);
+        uint256 liquidationPriceRatio = BASE - liquidationUserRatio;
         uint256 liquidationPrice = Math.roundUpMul(_currentPrice, liquidationPriceRatio);
 
         // Calculate the amount of collateral to be sold based on the entire debt
@@ -1141,42 +1134,31 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
         // Do a rounded up operation of
         // debtToRepay / LiquidationFee / precisionScalar
-        uint256 collateralToSell = Math.roundUpDiv(debtToRepay, liquidationPrice)
-            .add(precisionScalar.sub(1))
-            .div(precisionScalar);
+        uint256 collateralToSell = (Math.roundUpDiv(debtToRepay, liquidationPrice) + precisionScalar - 1)
+            / precisionScalar;
 
         // If the discounted collateral is more than the amount in the vault, limit
         // the sale to that amount
         if (collateralToSell > vault.collateralAmount) {
             collateralToSell = vault.collateralAmount;
             // Calculate the new debt to repay
-            debtToRepay = collateralToSell
-                .mul(precisionScalar)
-                .mul(liquidationPrice)
-                .div(BASE);
+            debtToRepay = collateralToSell * precisionScalar * liquidationPrice / BASE;
         }
 
         // Calculate the profit made in USD
-        uint256 valueCollateralSold = collateralToSell
-            .mul(precisionScalar)
-            .mul(_currentPrice)
-            .div(BASE);
+        uint256 valueCollateralSold = collateralToSell * precisionScalar * _currentPrice / BASE;
 
         // Total profit in dollar amount
-        uint256 profit = valueCollateralSold.sub(debtToRepay);
+        uint256 profit = valueCollateralSold - debtToRepay;
 
         // Calculate the ARC share
-        uint256 arcShare = profit
-            .mul(liquidationArcRatio)
-            .div(liquidationPrice)
-            .div(precisionScalar);
+        uint256 arcShare = profit * liquidationArcRatio / liquidationPrice / precisionScalar;
 
         // Calculate liquidator's share
-        uint256 liquidatorCollateralShare = collateralToSell.sub(arcShare);
+        uint256 liquidatorCollateralShare = collateralToSell - arcShare;
 
         // Update owner's vault
-        vault.collateralAmount = vault.collateralAmount
-            .sub(collateralToSell);
+        vault.collateralAmount = vault.collateralAmount - collateralToSell;
 
         // --- INTEGRATIONS ---
 
@@ -1332,6 +1314,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         view
         returns (bool)
     {
-        return _oracleTimestamp >= currentTimestamp().sub(60 * 60 * 12);
+        return _oracleTimestamp >= currentTimestamp() - 60 * 60 * 12;
     }
 }
