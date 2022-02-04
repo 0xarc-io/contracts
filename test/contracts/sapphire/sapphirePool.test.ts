@@ -84,7 +84,10 @@ describe('SapphirePool', () => {
         utilization = await pool.coreSwapUtilization(
           ctx.contracts.sapphire.core.address,
         );
-        expect(utilization.limit).to.eq(1000);
+        expect(utilization).to.deep.eq({
+            limit: BigNumber.from('1000'),
+            amountUsed: constants.Zero,
+        ;
       });
     });
 
