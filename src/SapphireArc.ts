@@ -82,7 +82,7 @@ export class SapphireArc {
     const actions: Action[] = [
       {
         operation: Operation.Deposit,
-        borrowedAssetAddress,
+        borrowedAssetAddress: constants.AddressZero,
         amount: collateralAmount,
         userToLiquidate: constants.AddressZero,
       },
