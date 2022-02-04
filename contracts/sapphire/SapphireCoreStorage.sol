@@ -143,6 +143,16 @@ contract SapphireCoreStorageV1 {
      * @dev The protocol value to be used in the score proofs
      */
     bytes32 internal _proofProtocol;
+
+    /**
+     * @dev The list of supported tokens for read purpose.
+     */
+    address[] internal _supportedBorrowAssets;
+
+    /**
+     * @dev The mapping of supported tokens for efficient checks purpose.
+     */
+    mapping(address => bool) internal _isSupportedBorrowAssets;
 }
 
 // solhint-disable-next-line no-empty-blocks

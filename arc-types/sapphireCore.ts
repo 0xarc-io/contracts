@@ -29,6 +29,7 @@ export interface PassportScoreProof {
 
 export type Action = {
   operation: Operation;
+  borrowedAssetAddress: string;
   amount: BigNumberish;
   userToLiquidate: string;
 };

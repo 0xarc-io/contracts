@@ -80,6 +80,11 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
     event ProofProtocolSet(string _protocol);
 
+    event SupportedBorrowAssetSet(
+        address _supportedBorrowedAddress,
+        bool _isSupported
+    );
+
     /* ========== Admin Setters ========== */
 
     /**
@@ -103,6 +108,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     function init(
         address _collateralAddress,
         address _syntheticAddress,
+        address _supportedBorrowAddress,
         address _oracleAddress,
         address _interestSetter,
         address _pauseOperator,
@@ -146,7 +152,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         pauseOperator   = _pauseOperator;
         feeCollector    = _feeCollector;
         _proofProtocol   = "arcx.creditScore";
-
         IERC20Metadata collateral   = IERC20Metadata(collateralAsset);
         uint8 collateralDecimals    = collateral.decimals();
 
@@ -157,6 +162,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
         precisionScalar = 10 ** (18 - uint256(collateralDecimals));
 
+        setSupportedBorrowAsset(_supportedBorrowAddress, true);
         setAssessor(_assessorAddress);
         setOracle(_oracleAddress);
         setCollateralRatios(_lowCollateralRatio, _highCollateralRatio);
@@ -426,6 +432,59 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         emit ProofProtocolSet(_proofProtocol.toString());
     }
 
+    function setSupportedBorrowAsset(
+        address _supportedBorrowAsset,
+        bool _isSupported
+    )
+        public
+        onlyAdmin
+    {
+
+        require(
+            _supportedBorrowAsset != address(0),
+            "SapphireCoreV1: supported borrow asset is required"
+        );
+
+        require(
+            _supportedBorrowAsset.isContract(),
+            "SapphireCoreV1: supported borrow asset is not contract"
+        );
+
+        if(_isSupported) {
+
+            require(
+                !_isSupportedBorrowAssets[_supportedBorrowAsset],
+                "SapphireCoreV1: supported borrow asset is already exist"
+            );
+
+            _isSupportedBorrowAssets[_supportedBorrowAsset] = true;
+            _supportedBorrowAssets.push(_supportedBorrowAsset);
+
+        } else {
+
+            require(
+                _isSupportedBorrowAssets[_supportedBorrowAsset],
+                "SapphireCoreV1: removed borrow asset is not supported"
+            );
+
+            require(
+                _supportedBorrowAssets.length > 1,
+                "SapphireCoreV1: cannot remove the only supported borrow asset address"
+            );
+
+            delete _isSupportedBorrowAssets[_supportedBorrowAsset];
+
+            for (uint256 i=0; i<_supportedBorrowAssets.length; i++) {
+                if(_supportedBorrowAssets[i] == _supportedBorrowAsset) {
+                    _supportedBorrowAssets[i] = _supportedBorrowAssets[_supportedBorrowAssets.length -1];
+                    break;
+                }
+            }
+            _supportedBorrowAssets.pop();
+        }
+        emit SupportedBorrowAssetSet(_supportedBorrowAsset, _isSupported);
+    }
+
     /* ========== Public Functions ========== */
 
     /**
@@ -443,6 +502,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
         actions[0] = SapphireTypes.Action(
             _amount,
+            address(0),
             SapphireTypes.Operation.Deposit,
             address(0)
         );
@@ -459,6 +519,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
         actions[0] = SapphireTypes.Action(
             _amount,
+            address(0),
             SapphireTypes.Operation.Withdraw,
             address(0)
         );
@@ -470,10 +531,12 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      * @dev Borrow against an existing position
      *
      * @param _amount The amount of synthetic to borrow
+     * @param _borrowedAssetAddress The address of token to borrow
      * @param _scoreProof The credit score proof - mandatory
      */
     function borrow(
         uint256 _amount,
+        address _borrowedAssetAddress,
         SapphireTypes.ScoreProof memory _scoreProof
     )
         public
@@ -481,6 +544,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
         actions[0] = SapphireTypes.Action(
             _amount,
+            _borrowedAssetAddress,
             SapphireTypes.Operation.Borrow,
             address(0)
         );
@@ -497,6 +561,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
         actions[0] = SapphireTypes.Action(
             _amount,
+            address(0),
             SapphireTypes.Operation.Repay,
             address(0)
         );
@@ -522,6 +587,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         // Repay outstanding debt
         actions[0] = SapphireTypes.Action(
             repayAmount,
+            address(0),
             SapphireTypes.Operation.Repay,
             address(0)
         );
@@ -529,6 +595,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         // Withdraw all collateral
         actions[1] = SapphireTypes.Action(
             vault.collateralAmount,
+            address(0),
             SapphireTypes.Operation.Withdraw,
             address(0)
         );
@@ -553,6 +620,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
         actions[0] = SapphireTypes.Action(
             0,
+            address(0),
             SapphireTypes.Operation.Liquidate,
             _owner
         );
@@ -610,7 +678,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
                 _withdraw(action.amount, assessedCRatio, currentPrice);
 
             } else if (action.operation == SapphireTypes.Operation.Borrow) {
-                _borrow(action.amount, assessedCRatio, currentPrice);
+                _borrow(action.amount, action.borrowedAssetAddress, assessedCRatio, currentPrice);
 
             }  else if (action.operation == SapphireTypes.Operation.Repay) {
                 _repay(msg.sender, msg.sender, action.amount);
@@ -667,6 +735,14 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         returns (string memory)
     {
         return _proofProtocol.toString();
+    }
+
+    function getSupportedBorrowAssets()
+        external
+        view
+        returns (address[] memory) 
+    {
+        return _supportedBorrowAssets;
     }
 
     /**
@@ -874,11 +950,18 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      */
     function _borrow(
         uint256 _amount,
+        address _borrowedAssetAddress,
         uint256 _assessedCRatio,
         uint256 _collateralPrice
     )
         private
     {
+
+        require(
+            _isSupportedBorrowAssets[_borrowedAssetAddress],
+            "SapphireCoreV1: the token address should be one of the supported tokens"
+        );
+
         // Get the user's vault
         SapphireTypes.Vault storage vault = vaults[msg.sender];
 

@@ -73,6 +73,7 @@ export class SapphireArc {
   async open(
     collateralAmount: BigNumberish,
     borrowAmount: BigNumber,
+    borrowedAssetAddress: string,
     passportScoreProof?: PassportScoreProof,
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
@@ -81,6 +82,7 @@ export class SapphireArc {
     const actions: Action[] = [
       {
         operation: Operation.Deposit,
+        borrowedAssetAddress: constants.AddressZero,
         amount: collateralAmount,
         userToLiquidate: constants.AddressZero,
       },
@@ -89,6 +91,7 @@ export class SapphireArc {
     if (!borrowAmount.isZero()) {
       actions.push({
         operation: Operation.Borrow,
+        borrowedAssetAddress,
         amount: borrowAmount,
         userToLiquidate: constants.AddressZero,
       });
@@ -172,6 +175,7 @@ export class SapphireArc {
 
   async borrow(
     amount: BigNumber,
+    borrowedAssetAddress: string,
     passportScoreProof?: PassportScoreProof,
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
@@ -181,6 +185,7 @@ export class SapphireArc {
 
     return core.borrow(
       amount,
+      borrowedAssetAddress,
       passportScoreProof ??
         getEmptyScoreProof(
           undefined,

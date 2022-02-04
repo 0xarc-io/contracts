@@ -47,6 +47,7 @@ export interface Contracts {
   staking: {
     addressAccrual: AddressAccrual;
   };
+  stableCoin: TestToken;
   collateral: TestToken;
 }
 

@@ -18,6 +18,7 @@ import { BASE } from '@src/constants';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
 import { PassportScoreTree } from '@src/MerkleTree';
+import { TestToken } from '@src/typings';
 
 chai.use(solidity);
 
@@ -39,6 +40,7 @@ describe('SapphireCore.open()', () => {
   let creditScore1: PassportScore;
   let creditScore2: PassportScore;
   let creditScoreTree: PassportScoreTree;
+  let stableCoin: TestToken;
 
   async function init(ctx: ITestContext): Promise<void> {
     creditScore1 = {
@@ -71,6 +73,7 @@ describe('SapphireCore.open()', () => {
   before(async () => {
     ctx = await generateContext(sapphireFixture, init);
     arc = ctx.sdks.sapphire;
+    stableCoin = ctx.contracts.stableCoin;
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -80,6 +83,7 @@ describe('SapphireCore.open()', () => {
       const vault = await arc.open(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
+        stableCoin.address,
         undefined,
         undefined,
         ctx.signers.minter,
@@ -103,6 +107,7 @@ describe('SapphireCore.open()', () => {
       const { borrowedAmount, collateralAmount, principal } = await arc.open(
         COLLATERAL_AMOUNT.mul(2),
         BORROW_AMOUNT,
+        stableCoin.address,
         undefined,
         undefined,
         ctx.signers.minter,
@@ -119,6 +124,7 @@ describe('SapphireCore.open()', () => {
         arc.open(
           COLLATERAL_AMOUNT,
           BORROW_AMOUNT.add(change),
+          stableCoin.address,
           undefined,
           undefined,
           ctx.signers.minter,
@@ -131,6 +137,7 @@ describe('SapphireCore.open()', () => {
         arc.open(
           COLLATERAL_AMOUNT.sub(change),
           BORROW_AMOUNT,
+          stableCoin.address,
           undefined,
           undefined,
           ctx.signers.minter,
@@ -153,6 +160,7 @@ describe('SapphireCore.open()', () => {
         arc.open(
           COLLATERAL_AMOUNT,
           BORROW_AMOUNT,
+          stableCoin.address,
           undefined,
           undefined,
           ctx.signers.minter,
@@ -170,6 +178,7 @@ describe('SapphireCore.open()', () => {
         arc.open(
           COLLATERAL_AMOUNT,
           BORROW_AMOUNT,
+          stableCoin.address,
           undefined,
           undefined,
           ctx.signers.minter,
@@ -192,6 +201,7 @@ describe('SapphireCore.open()', () => {
       const { borrowedAmount, collateralAmount, principal } = await arc.open(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
+        stableCoin.address,
         creditScoreProof,
         undefined,
         scoredMinter,
@@ -215,6 +225,7 @@ describe('SapphireCore.open()', () => {
       await arc.open(
         COLLATERAL_AMOUNT.mul(2),
         BORROW_AMOUNT,
+        stableCoin.address,
         creditScoreProof,
         undefined,
         scoredMinter,
@@ -232,6 +243,7 @@ describe('SapphireCore.open()', () => {
       await arc.open(
         COLLATERAL_AMOUNT.sub(1),
         BORROW_AMOUNT,
+        stableCoin.address,
         creditScoreProof,
         undefined,
         scoredMinter,
@@ -256,6 +268,7 @@ describe('SapphireCore.open()', () => {
       await arc.open(
         COLLATERAL_AMOUNT,
         MAX_BORROW_AMOUNT,
+        stableCoin.address,
         creditScoreProof,
         undefined,
         scoredMinter,
@@ -274,6 +287,7 @@ describe('SapphireCore.open()', () => {
         arc.open(
           constants.One,
           BORROW_AMOUNT,
+          stableCoin.address,
           creditScoreProof,
           undefined,
           scoredMinter,
@@ -295,6 +309,7 @@ describe('SapphireCore.open()', () => {
         arc.open(
           COLLATERAL_AMOUNT,
           BORROW_AMOUNT,
+          stableCoin.address,
           creditScoreProof,
           undefined,
           scoredMinter,
@@ -312,6 +327,7 @@ describe('SapphireCore.open()', () => {
         arc.open(
           COLLATERAL_AMOUNT,
           BORROW_AMOUNT,
+          stableCoin.address,
           creditScoreProof,
           undefined,
           scoredMinter,
@@ -333,6 +349,7 @@ describe('SapphireCore.open()', () => {
       await arc.open(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT.div(2),
+        stableCoin.address,
         getScoreProof(creditScore2, creditScoreTree),
         undefined,
         ctx.signers.interestSetter,
@@ -343,6 +360,7 @@ describe('SapphireCore.open()', () => {
         arc.open(
           COLLATERAL_AMOUNT,
           BORROW_AMOUNT.div(2).add(1),
+          stableCoin.address,
           creditScoreProof,
           undefined,
           scoredMinter,

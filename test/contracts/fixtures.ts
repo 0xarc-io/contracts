@@ -48,6 +48,13 @@ export async function sapphireFixture(
     args?.decimals ?? DEFAULT_COLLATERAL_DECIMALS,
   );
 
+  ctx.contracts.stableCoin = await deployTestToken(
+    deployer,
+    'Test stablecoin',
+    'TEST_USDC',
+    6,
+  );
+
   ctx.contracts.sapphire.oracle = await deployMockSapphireOracle(deployer);
 
   const coreImp = await deployMockSapphireCoreV1(deployer);
@@ -107,6 +114,7 @@ export async function sapphireFixture(
   await ctx.contracts.sapphire.core.init(
     ctx.contracts.collateral.address,
     ctx.contracts.synthetic.tokenV2.address,
+    ctx.contracts.stableCoin.address,
     ctx.contracts.sapphire.oracle.address,
     ctx.signers.interestSetter.address,
     ctx.signers.pauseOperator.address,

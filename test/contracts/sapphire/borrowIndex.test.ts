@@ -25,6 +25,7 @@ import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 import { roundUpDiv, roundUpMul } from '@test/helpers/roundUpOperations';
+import { TestToken } from '@src/typings';
 
 const COLLATERAL_AMOUNT = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS);
 const BORROW_AMOUNT = utils.parseEther('500');
@@ -42,6 +43,7 @@ describe('borrow index (integration)', () => {
   let creditScoreTree: PassportScoreTree;
   let minter1: SignerWithAddress;
   let minter2: SignerWithAddress;
+  let stableCoin: TestToken;
 
   async function init(ctx: ITestContext): Promise<void> {
     minterCreditScore = {
@@ -129,6 +131,7 @@ describe('borrow index (integration)', () => {
     arc = ctx.sdks.sapphire;
     minter1 = signers.minter;
     minter2 = signers.scoredMinter;
+    stableCoin = ctx.contracts.stableCoin;
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -469,6 +472,7 @@ describe('borrow index (integration)', () => {
       // Borrow $100 more
       await arc.borrow(
         utils.parseEther('100'),
+        stableCoin.address,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.scoredMinter,

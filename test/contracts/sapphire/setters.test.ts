@@ -360,4 +360,82 @@ describe('SapphireCore.setters', () => {
       expect(await sapphireCore.getProofProtocol()).to.eq('test');
     });
   });
+
+  describe('#setSupportedBorrowAsset', () => {
+    it('reverts if called by non-owner', async () => {
+      await expect(
+        sapphireCore
+          .connect(ctx.signers.unauthorized)
+          .setSupportedBorrowAsset(ctx.contracts.stableCoin.address, true),
+      ).to.be.revertedWith('Adminable: caller is not admin');
+    });
+
+    it('reverts if asset is not a contract', async () => {
+      await expect(
+        sapphireCore.setSupportedBorrowAsset(ctx.signers.admin.address, true),
+      ).to.be.revertedWith(
+        'SapphireCoreV1: supported borrow asset is not contract',
+      );
+    });
+
+    it('reverts if asset is address zero', async () => {
+      await expect(
+        sapphireCore.setSupportedBorrowAsset(constants.AddressZero, true),
+      ).to.be.revertedWith(
+        'SapphireCoreV1: supported borrow asset is required',
+      );
+    });
+
+    it('reverts if delete address which not exists', async () => {
+      await sapphireCore.setSupportedBorrowAsset(
+        ctx.contracts.collateral.address,
+        true,
+      );
+
+      await expect(
+        sapphireCore.setSupportedBorrowAsset(
+          ctx.contracts.synthetic.tokenV2.address,
+          false,
+        ),
+      ).to.be.revertedWith(
+        'SapphireCoreV1: removed borrow asset is not supported',
+      );
+    });
+
+    it('reverts if deleted address is the only one', async () => {
+      await expect(
+        sapphireCore.setSupportedBorrowAsset(
+          ctx.contracts.stableCoin.address,
+          false,
+        ),
+      ).to.be.revertedWith(
+        'SapphireCoreV1: cannot remove the only supported borrow asset address',
+      );
+    });
+
+    it('sets the borrow asset address', async () => {
+      expect(await sapphireCore.getSupportedBorrowAssets()).to.deep.eq([
+        ctx.contracts.stableCoin.address,
+      ]);
+
+      await sapphireCore.setSupportedBorrowAsset(
+        ctx.contracts.collateral.address,
+        true,
+      );
+
+      expect(await sapphireCore.getSupportedBorrowAssets()).to.deep.eq([
+        ctx.contracts.stableCoin.address,
+        ctx.contracts.collateral.address,
+      ]);
+
+      await sapphireCore.setSupportedBorrowAsset(
+        ctx.contracts.stableCoin.address,
+        false,
+      );
+
+      expect(await sapphireCore.getSupportedBorrowAssets()).to.deep.eq([
+        ctx.contracts.collateral.address,
+      ]);
+    });
+  });
 });

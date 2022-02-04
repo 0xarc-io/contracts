@@ -299,8 +299,10 @@ task('deploy-assessor', 'Deploy the Sapphire Assessor').setAction(
 
 task('deploy-sapphire', 'Deploy a Sapphire core')
   .addParam('collateral', 'The collateral name to register the core with')
+  .addParam('supportedborrowaddress', 'The supported borrow address')
   .setAction(async (taskArgs, hre) => {
     const collatName = taskArgs.collateral;
+    const supportedBorrowAssetAddress = taskArgs.supportedborrowaddress;
 
     const {
       network,
@@ -404,6 +406,7 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
         `Please ensure the following details are correct:\n
           Collateral Address: ${collateralAddress}\n
           Synthetic Address: ${syntheticProxyAddress}\n
+          Supported Borrow Address: ${supportedBorrowAssetAddress}\n
           Oracle Address: ${oracleAddress}\n
           Interest Rate Setter: ${
             collatConfig.params.interestSetter || ultimateOwner
@@ -425,6 +428,7 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
     await core.init(
       collateralAddress,
       syntheticProxyAddress,
+      supportedBorrowAssetAddress,
       oracleAddress,
       collatConfig.params.interestSetter || ultimateOwner,
       collatConfig.params.pauseOperator || ultimateOwner,
