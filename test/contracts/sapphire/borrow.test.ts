@@ -154,24 +154,24 @@ describe('SapphireCore.borrow()', () => {
       scoredMinter,
     );
 
-    const { collateralAmount, borrowedAmount, principal } = await arc.getVault(
+    const { collateralAmount, normalizedBorrowedAmount, principal } = await arc.getVault(
       scoredMinter.address,
     );
 
     expect(collateralAmount, 'collateral amt').eq(COLLATERAL_AMOUNT);
-    expect(borrowedAmount, 'borrow amt').eq(BORROW_AMOUNT_500_SCORE);
+    expect(normalizedBorrowedAmount, 'borrow amt').eq(BORROW_AMOUNT_500_SCORE);
     expect(principal, 'principal').eq(BORROW_AMOUNT_500_SCORE);
   });
 
   it('borrows with the highest c-ratio if proof is not provided', async () => {
     let vault = await arc.getVault(scoredMinter.address);
-    expect(vault.borrowedAmount).to.eq(0);
+    expect(vault.normalizedBorrowedAmount).to.eq(0);
     expect(vault.principal).to.eq(0);
 
     await arc.borrow(BORROW_AMOUNT, stableCoin.address, undefined, undefined, scoredMinter);
 
     vault = await arc.getVault(scoredMinter.address);
-    expect(vault.borrowedAmount).to.eq(BORROW_AMOUNT);
+    expect(vault.normalizedBorrowedAmount).to.eq(BORROW_AMOUNT);
     expect(vault.principal).to.eq(BORROW_AMOUNT);
 
     await expect(
@@ -183,8 +183,8 @@ describe('SapphireCore.borrow()', () => {
 
   it('borrows with exact c-ratio', async () => {
     await arc.borrow(BORROW_AMOUNT, stableCoin.address, undefined, undefined, minter);
-    const { borrowedAmount, principal } = await arc.getVault(minter.address);
-    expect(borrowedAmount).eq(BORROW_AMOUNT);
+    const { normalizedBorrowedAmount, principal } = await arc.getVault(minter.address);
+    expect(normalizedBorrowedAmount).eq(BORROW_AMOUNT);
     expect(principal).eq(BORROW_AMOUNT);
   });
 
@@ -213,11 +213,11 @@ describe('SapphireCore.borrow()', () => {
   });
 
   it('reverts if borrower cross the c-ratio', async () => {
-    const { borrowedAmount, collateralAmount, principal } = await arc.getVault(
+    const { normalizedBorrowedAmount, collateralAmount, principal } = await arc.getVault(
       minter.address,
     );
 
-    expect(borrowedAmount).eq(0);
+    expect(normalizedBorrowedAmount).eq(0);
     expect(principal).eq(0);
     expect(collateralAmount).eq(COLLATERAL_AMOUNT);
 
@@ -230,10 +230,10 @@ describe('SapphireCore.borrow()', () => {
 
   it('borrows more if more collateral is provided', async () => {
     await arc.borrow(BORROW_AMOUNT, stableCoin.address, undefined, undefined, minter);
-    const { borrowedAmount, principal } = await arc.getVault(minter.address);
+    const { normalizedBorrowedAmount, principal } = await arc.getVault(minter.address);
 
     expect(principal).eq(BORROW_AMOUNT);
-    expect(borrowedAmount).eq(BORROW_AMOUNT);
+    expect(normalizedBorrowedAmount).eq(BORROW_AMOUNT);
     await expect(arc.borrow(BORROW_AMOUNT, stableCoin.address, undefined, undefined, minter)).to.be
       .reverted;
 
@@ -246,7 +246,7 @@ describe('SapphireCore.borrow()', () => {
      * be reverted
      */
     await arc.borrow(BORROW_AMOUNT, stableCoin.address, undefined, undefined, minter);
-    const { borrowedAmount: updatedBorrowedAmount, principal: updatedPrincipal } = await arc.getVault(
+    const { normalizedBorrowedAmount: updatedBorrowedAmount, principal: updatedPrincipal } = await arc.getVault(
       minter.address,
     );
 
@@ -264,9 +264,9 @@ describe('SapphireCore.borrow()', () => {
       scoredMinter,
     );
 
-    const { borrowedAmount, principal } = await arc.getVault(scoredMinter.address);
+    const { normalizedBorrowedAmount, principal } = await arc.getVault(scoredMinter.address);
 
-    expect(borrowedAmount).eq(BORROW_AMOUNT_500_SCORE);
+    expect(normalizedBorrowedAmount).eq(BORROW_AMOUNT_500_SCORE);
     expect(principal).eq(BORROW_AMOUNT_500_SCORE);
   });
 
@@ -321,7 +321,7 @@ describe('SapphireCore.borrow()', () => {
       scoredMinter,
     );
 
-    const { borrowedAmount: vaultBorrowAmount, principal } = await arc.getVault(
+    const { normalizedBorrowedAmount: vaultBorrowAmount, principal } = await arc.getVault(
       scoredMinter.address,
     );
     const expectedVaultBorrowAmt = await convertPrincipal(
@@ -374,9 +374,9 @@ describe('SapphireCore.borrow()', () => {
       scoredMinter,
     );
 
-    const { borrowedAmount } = await arc.getVault(scoredMinter.address);
+    const { normalizedBorrowedAmount } = await arc.getVault(scoredMinter.address);
 
-    expect(borrowedAmount).eq(BORROW_AMOUNT_500_SCORE);
+    expect(normalizedBorrowedAmount).eq(BORROW_AMOUNT_500_SCORE);
     expect(await ctx.contracts.sapphire.core.totalBorrowed()).eq(
       BORROW_AMOUNT_500_SCORE,
     );
@@ -403,8 +403,8 @@ describe('SapphireCore.borrow()', () => {
 
   it('should not borrow more if the c-ratio is at the minimum', async () => {
     await arc.borrow(BORROW_AMOUNT, stableCoin.address, undefined, undefined, minter);
-    const { borrowedAmount } = await arc.getVault(minter.address);
-    expect(borrowedAmount).eq(BORROW_AMOUNT);
+    const { normalizedBorrowedAmount } = await arc.getVault(minter.address);
+    expect(normalizedBorrowedAmount).eq(BORROW_AMOUNT);
     await expect(
       arc.borrow(utils.parseEther('0.01'), stableCoin.address, undefined, undefined, minter),
     ).to.be.revertedWith(
@@ -478,8 +478,8 @@ describe('SapphireCore.borrow()', () => {
       undefined,
       scoredMinter,
     );
-    const { borrowedAmount, principal } = await arc.getVault(scoredMinter.address);
-    expect(borrowedAmount).eq(firstBorrowAmount);
+    const { normalizedBorrowedAmount, principal } = await arc.getVault(scoredMinter.address);
+    expect(normalizedBorrowedAmount).eq(firstBorrowAmount);
     expect(principal).eq(firstBorrowAmount);
 
     const currentTimeStamp = await arc.core().currentTimestamp();

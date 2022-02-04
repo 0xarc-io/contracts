@@ -585,7 +585,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](2);
         SapphireTypes.Vault memory vault = vaults[msg.sender];
 
-        uint256 repayAmount = _denormalizeBorrowAmount(vault.borrowedAmount, true);
+        uint256 repayAmount = _denormalizeBorrowAmount(vault.normalizedBorrowedAmount, true);
 
         // Repay outstanding debt
         actions[0] = SapphireTypes.Action(
@@ -768,12 +768,12 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     {
         SapphireTypes.Vault memory vault = vaults[_owner];
 
-        if (vault.borrowedAmount == 0) {
+        if (vault.normalizedBorrowedAmount == 0) {
             return true;
         }
 
         uint256 currentCRatio = calculateCollateralRatio(
-            vault.borrowedAmount,
+            vault.normalizedBorrowedAmount,
             vault.collateralAmount,
             _currentPrice
         );
@@ -801,13 +801,13 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      * @dev Calculate how much collateralRatio you would have
      *      with a certain borrow and collateral amount
      *
-     * @param _borrowedAmount   The borrowed amount expressed as a uint256 (NOT principal)
+     * @param _normalizedBorrowedAmount   The borrowed amount expressed as a uint256 (NOT principal)
      * @param _collateralAmount The amount of collateral, in its original decimals
      * @param _collateralPrice  What price do you want to calculate the inverse at
      * @return                  The calculated c-ratio
      */
     function calculateCollateralRatio(
-        uint256 _borrowedAmount,
+        uint256 _normalizedBorrowedAmount,
         uint256 _collateralAmount,
         uint256 _collateralPrice
     )
@@ -818,7 +818,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         return _collateralAmount
             .mul(precisionScalar)
             .mul(_collateralPrice)
-            .div(_borrowedAmount);
+            .div(_normalizedBorrowedAmount);
     }
 
     /* ========== Private Functions ========== */
@@ -924,9 +924,9 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         vault.collateralAmount = vault.collateralAmount.sub(_amount);
 
         // if we don't have debt we can withdraw as much as we want.
-        if (vault.borrowedAmount > 0) {
+        if (vault.normalizedBorrowedAmount > 0) {
             uint256 collateralRatio = calculateCollateralRatio(
-                _denormalizeBorrowAmount(vault.borrowedAmount, true),
+                _denormalizeBorrowAmount(vault.normalizedBorrowedAmount, true),
                 vault.collateralAmount,
                 _collateralPrice
             );
@@ -971,7 +971,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         // Get the user's vault
         SapphireTypes.Vault storage vault = vaults[msg.sender];
 
-        uint256 denormalizedBorrowAmount = _denormalizeBorrowAmount(vault.borrowedAmount, true);
+        uint256 denormalizedBorrowAmount = _denormalizeBorrowAmount(vault.normalizedBorrowedAmount, true);
 
         // Ensure the vault is collateralized if the borrow action succeeds
         uint256 collateralRatio = calculateCollateralRatio(
@@ -996,8 +996,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         uint256 _newNormalizedVaultBorrowAmount = _normalizeBorrowAmount(_newActualVaultBorrowAmount, true);
 
         // Record borrow amount (update vault and total amount)
-        totalBorrowed = totalBorrowed.sub(vault.borrowedAmount).add(_newNormalizedVaultBorrowAmount);
-        vault.borrowedAmount = _newNormalizedVaultBorrowAmount;
+        totalBorrowed = totalBorrowed.sub(vault.normalizedBorrowedAmount).add(_newNormalizedVaultBorrowAmount);
+        vault.normalizedBorrowedAmount = _newNormalizedVaultBorrowAmount;
         vault.principal = vault.principal + _amount;
 
         // Do not borrow more than the maximum vault borrow amount
@@ -1050,7 +1050,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         SapphireTypes.Vault storage vault = vaults[_owner];
 
         // Calculate actual vault borrow amount
-        uint256 actualVaultBorrowAmount = _denormalizeBorrowAmount(vault.borrowedAmount, true);
+        uint256 actualVaultBorrowAmount = _denormalizeBorrowAmount(vault.normalizedBorrowedAmount, true);
 
         require(
             _amount <= actualVaultBorrowAmount,
@@ -1061,10 +1061,10 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         uint256 _newBorrowAmount = _normalizeBorrowAmount(actualVaultBorrowAmount.sub(_amount), true);
 
         // Update total borrow amount
-        totalBorrowed = totalBorrowed.sub(vault.borrowedAmount).add(_newBorrowAmount);
+        totalBorrowed = totalBorrowed.sub(vault.normalizedBorrowedAmount).add(_newBorrowAmount);
 
         // Update vault
-        vault.borrowedAmount = _newBorrowAmount;
+        vault.normalizedBorrowedAmount = _newBorrowAmount;
 
         uint256 interest = actualVaultBorrowAmount - vault.principal;
         if(_amount >= interest) {
@@ -1137,7 +1137,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
         // Calculate the amount of collateral to be sold based on the entire debt
         // in the vault
-        uint256 debtToRepay = _denormalizeBorrowAmount(vault.borrowedAmount, true);
+        uint256 debtToRepay = _denormalizeBorrowAmount(vault.normalizedBorrowedAmount, true);
 
         // Do a rounded up operation of
         // debtToRepay / LiquidationFee / precisionScalar

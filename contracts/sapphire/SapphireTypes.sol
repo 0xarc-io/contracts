@@ -13,7 +13,7 @@ library SapphireTypes {
 
     struct Vault {
         uint256 collateralAmount;
-        uint256 borrowedAmount;
+        uint256 normalizedBorrowedAmount;
         uint256 principal;
     }
 

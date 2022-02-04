@@ -270,7 +270,7 @@ describe('SapphireCore.liquidate()', () => {
       expect(postLiquidationVault.collateralAmount, '8').to.eq(0);
 
       // The vault debt amount has decreased
-      expect(postLiquidationVault.borrowedAmount, '9').to.eq(
+      expect(postLiquidationVault.normalizedBorrowedAmount, '9').to.eq(
         BORROW_AMOUNT.sub(ArcNumber.new(475)),
       );
 
@@ -366,7 +366,7 @@ describe('SapphireCore.liquidate()', () => {
       );
 
       // The vault debt amount has decreased
-      expect(postLiquidationVault.borrowedAmount).to.eq(0);
+      expect(postLiquidationVault.normalizedBorrowedAmount).to.eq(0);
       expect(postLiquidationVault.principal).to.eq(0);
     });
 
@@ -399,7 +399,7 @@ describe('SapphireCore.liquidate()', () => {
 
       const vault = await arc.getVault(signers.scoredMinter.address);
 
-      expect(vault.borrowedAmount).to.eq(0);
+      expect(vault.normalizedBorrowedAmount).to.eq(0);
       expect(vault.collateralAmount).to.be.lt(COLLATERAL_AMOUNT);
       // Checking for "less than" because the interest had also been paid
       expect(
@@ -439,7 +439,7 @@ describe('SapphireCore.liquidate()', () => {
 
       const vault = await arc.getVault(signers.scoredMinter.address);
 
-      expect(vault.borrowedAmount).to.eq(0);
+      expect(vault.normalizedBorrowedAmount).to.eq(0);
       expect(vault.collateralAmount).to.be.lt(COLLATERAL_AMOUNT);
       // Checking for "less than" because the interest had also been paid
       expect(
@@ -963,7 +963,7 @@ describe('SapphireCore.liquidate()', () => {
         utils.parseUnits('92.558983', DEFAULT_COLLATERAL_DECIMALS),
       );
 
-      expect(postLiquidationVault.borrowedAmount).to.eq(0);
+      expect(postLiquidationVault.normalizedBorrowedAmount).to.eq(0);
       expect(postLiquidationVault.principal).to.eq(0);
     });
 
@@ -985,7 +985,7 @@ describe('SapphireCore.liquidate()', () => {
       // Ensure that vault is undercollateralized
       const cRatio = vault.collateralAmount
         .mul(newPrice)
-        .div(vault.borrowedAmount);
+        .div(vault.normalizedBorrowedAmount);
       expect(cRatio).to.be.lt(utils.parseEther('1'));
 
       // The liquidation occurs. The entire collateral is sold at discount and the user has an outstanding debt
@@ -1043,7 +1043,7 @@ describe('SapphireCore.liquidate()', () => {
       expect(postLiquidationVault.collateralAmount).to.eq(0);
       expect(postLiquidationVault.principal).to.eq(utils.parseEther('72.5'));
 
-      const outstandingDebt = postLiquidationVault.borrowedAmount;
+      const outstandingDebt = postLiquidationVault.normalizedBorrowedAmount;
       
       // User shouldn't be able borrow and withdraw when vault is under collateralized and borrow amount is 0
       await expect(
@@ -1080,7 +1080,7 @@ describe('SapphireCore.liquidate()', () => {
       );
       const redeemedVault = await arc.getVault(signers.scoredMinter.address);
       expect(redeemedVault.collateralAmount).to.eq(0);
-      expect(redeemedVault.borrowedAmount).to.eq(0);
+      expect(redeemedVault.normalizedBorrowedAmount).to.eq(0);
       expect(redeemedVault.principal).to.eq(0);
     });
 
@@ -1181,7 +1181,7 @@ describe('SapphireCore.liquidate()', () => {
       );
 
       // The vault debt amount has been paid off
-      expect(postLiquidationVault.borrowedAmount).to.eq(0);
+      expect(postLiquidationVault.normalizedBorrowedAmount).to.eq(0);
       expect(postLiquidationVault.principal).to.eq(0);
     });
 
@@ -1294,7 +1294,7 @@ describe('SapphireCore.liquidate()', () => {
 
       // The vault debt amount has been paid off
       expect(
-        postLiquidationVault.borrowedAmount,
+        postLiquidationVault.normalizedBorrowedAmount,
         'vault borrowed amount',
       ).to.eq(0);
     });

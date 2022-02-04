@@ -93,7 +93,7 @@ describe('SapphireCore.exit()', () => {
 
     const vault = await arc.getVault(signers.scoredMinter.address);
     const remainingDebt = roundUpMul(
-      vault.borrowedAmount,
+      vault.normalizedBorrowedAmount,
       await arc.core().currentBorrowIndex(),
     );
 
@@ -126,7 +126,7 @@ describe('SapphireCore.exit()', () => {
     let synthBalance = await getSynthBalance(signers.scoredMinter);
 
     expect(vault.collateralAmount).to.eq(COLLATERAL_AMOUNT);
-    expect(vault.borrowedAmount).to.eq(BORROW_AMOUNT);
+    expect(vault.normalizedBorrowedAmount).to.eq(BORROW_AMOUNT);
     expect(collateralBalance).to.eq(0);
     expect(synthBalance).to.eq(BORROW_AMOUNT);
 
@@ -151,7 +151,7 @@ describe('SapphireCore.exit()', () => {
     synthBalance = await getSynthBalance(signers.scoredMinter);
 
     expect(vault.collateralAmount).to.eq(0);
-    expect(vault.borrowedAmount).to.eq(0);
+    expect(vault.normalizedBorrowedAmount).to.eq(0);
     expect(collateralBalance).to.eq(COLLATERAL_AMOUNT);
     expect(synthBalance).to.eq(0);
   });
@@ -203,7 +203,7 @@ describe('SapphireCore.exit()', () => {
     let vault = await arc.getVault(signers.scoredMinter.address);
     // Get borrow index, which will be used to calculate actual borrow amount in the core contract
     const borrowIndex = await arc.core().currentBorrowIndex();
-    const actualBorrowAmount = roundUpMul(vault.borrowedAmount, borrowIndex);
+    const actualBorrowAmount = roundUpMul(vault.normalizedBorrowedAmount, borrowIndex);
     // Check actual borrowed amount, not principal one
     expect(actualBorrowAmount).to.be.gt(BORROW_AMOUNT);
 
@@ -232,6 +232,6 @@ describe('SapphireCore.exit()', () => {
 
     vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.collateralAmount).to.eq(0);
-    expect(vault.borrowedAmount).to.eq(0);
+    expect(vault.normalizedBorrowedAmount).to.eq(0);
   });
 });
