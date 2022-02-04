@@ -15,7 +15,7 @@ import { sapphireFixture } from '../fixtures';
 describe('SapphirePool', () => {
   let pool: SapphirePool;
 
-  let testDai: TestToken;
+  let stablecoin: TestToken;
 
   let admin: SignerWithAddress;
   let unauthorized: SignerWithAddress;
@@ -25,6 +25,7 @@ describe('SapphirePool', () => {
     ctx = await generateContext(sapphireFixture);
     admin = ctx.signers.admin;
     unauthorized = ctx.signers.unauthorized;
+    stablecoin = ctx.contracts.stableCoin;
 
     const sapphirePoolImpl = await new SapphirePoolFactory(admin).deploy();
 
@@ -36,8 +37,6 @@ describe('SapphirePool', () => {
     pool = SapphirePoolFactory.connect(proxy.address, admin);
 
     await pool.init('Sapphire Pool', 'SAP', 18);
-
-    testDai = await new TestTokenFactory(admin).deploy('TestDAI', 'TDAI', 18);
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -92,26 +91,26 @@ describe('SapphirePool', () => {
     describe('#setDepositLimit', () => {
       it('reverts if called by non-admin', async () => {
         await expect(
-          pool.connect(unauthorized).setDepositLimit(testDai.address, 1000),
+          pool.connect(unauthorized).setDepositLimit(stablecoin.address, 1000),
         ).to.be.revertedWith(ADMINABLE_ERROR);
       });
 
       it('reverts if setting the limit to 0 and the token is not previously supported', async () => {
         await expect(
-          pool.setDepositLimit(testDai.address, 0),
+          pool.setDepositLimit(stablecoin.address, 0),
         ).to.be.revertedWith(
           'SapphirePool: cannot set the limit of an unsupported asset to 0',
         );
       });
 
       it('sets the limit for how many stablecoins can be deposited', async () => {
-        let utilization = await pool.assetsUtilization(testDai.address);
+        let utilization = await pool.assetsUtilization(stablecoin.address);
         expect(utilization.amountUsed).to.deep.eq(0);
         expect(utilization.limit).to.deep.eq(0);
 
-        await pool.setDepositLimit(testDai.address, 1000);
+        await pool.setDepositLimit(stablecoin.address, 1000);
 
-        utilization = await pool.assetsUtilization(testDai.address);
+        utilization = await pool.assetsUtilization(stablecoin.address);
         expect(utilization.amountUsed).to.eq(0);
         expect(utilization.limit).to.eq(1000);
       });
@@ -119,26 +118,26 @@ describe('SapphirePool', () => {
       it('if limit is > 0, adds the token to the list of tokens that can be deposited', async () => {
         expect(await pool.getDepositAssets()).to.be.empty;
 
-        await pool.setDepositLimit(testDai.address, 1000);
+        await pool.setDepositLimit(stablecoin.address, 1000);
 
-        expect(await pool.getDepositAssets()).to.deep.eq([testDai.address]);
+        expect(await pool.getDepositAssets()).to.deep.eq([stablecoin.address]);
       });
 
       it('if limit is 0, removes the token from the list of tokens that can be deposited', async () => {
-        await pool.setDepositLimit(testDai.address, 1000);
-        expect(await pool.getDepositAssets()).to.deep.eq([testDai.address]);
+        await pool.setDepositLimit(stablecoin.address, 1000);
+        expect(await pool.getDepositAssets()).to.deep.eq([stablecoin.address]);
 
-        await pool.setDepositLimit(testDai.address, 0);
+        await pool.setDepositLimit(stablecoin.address, 0);
         expect(await pool.getDepositAssets()).to.be.empty;
       });
 
       it('does not add a supported asset twice to the supported assets array', async () => {
         expect(await pool.getDepositAssets()).to.be.empty;
 
-        await pool.setDepositLimit(testDai.address, 100);
-        await pool.setDepositLimit(testDai.address, 420);
+        await pool.setDepositLimit(stablecoin.address, 100);
+        await pool.setDepositLimit(stablecoin.address, 420);
 
-        expect(await pool.getDepositAssets()).to.deep.eq([testDai.address]);
+        expect(await pool.getDepositAssets()).to.deep.eq([stablecoin.address]);
       });
 
       it('adds 2 assets to the supported assets list', async () => {
@@ -150,11 +149,11 @@ describe('SapphirePool', () => {
           6,
         );
 
-        await pool.setDepositLimit(testDai.address, 100);
+        await pool.setDepositLimit(stablecoin.address, 100);
         await pool.setDepositLimit(testUsdc.address, 100);
 
         expect(await pool.getDepositAssets()).to.deep.eq([
-          testDai.address,
+          stablecoin.address,
           testUsdc.address,
         ]);
       });
