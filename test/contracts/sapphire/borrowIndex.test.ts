@@ -358,7 +358,7 @@ describe('borrow index (integration)', () => {
         minter1,
       );
       // repay a half accumulated debt
-      await arc.repay(repayAmount, undefined, undefined, minter1);
+      await arc.repay(repayAmount, stableCoin.address, undefined, undefined, minter1);
       const borrowIndexAfterRepay = await arc.core().currentBorrowIndex();
 
       const {principal: principalRightAfterRepay} = await arc.getVault(minter1.address);
@@ -414,7 +414,7 @@ describe('borrow index (integration)', () => {
       );
 
       // repay a whole accumulated debt
-      await arc.repay(borrowedAmount, undefined, undefined, minter1);
+      await arc.repay(borrowedAmount, stableCoin.address, undefined, undefined, minter1);
       expect(await arc.core().totalBorrowed()).eq(0);
 
       await advanceNMonths(12);
@@ -512,6 +512,7 @@ describe('borrow index (integration)', () => {
       );
       await arc.repay(
         repayAmount,
+        stableCoin.address,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.scoredMinter,
@@ -560,6 +561,7 @@ describe('borrow index (integration)', () => {
       );
       await arc.repay(
         outstandingRepayAmt,
+        stableCoin.address,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.scoredMinter,
@@ -656,6 +658,7 @@ describe('borrow index (integration)', () => {
       );
       await arc.repay(
         BORROW_AMOUNT,
+        stableCoin.address,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.scoredMinter,
@@ -708,7 +711,7 @@ describe('borrow index (integration)', () => {
         arc.coreAddress(),
         signers.minter,
       );
-      await arc.repay(outstandingBalance, undefined, undefined, signers.minter);
+      await arc.repay(outstandingBalance, stableCoin.address, undefined, undefined, signers.minter);
 
       expect(await getVaultBorrowAmount(signers.scoredMinter)).eq(
         normalizedVaultABorrowedAfterRepay,

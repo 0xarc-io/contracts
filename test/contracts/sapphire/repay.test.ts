@@ -4,7 +4,7 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { PassportScoreTree } from '@src/MerkleTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
-import { SyntheticTokenV2Factory } from '@src/typings';
+import { SyntheticTokenV2Factory, TestToken } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import {
   DEFAULT_COLLATERAL_DECIMALS,
@@ -41,6 +41,7 @@ describe('SapphireCore.repay()', () => {
   let signers: TestingSigners;
   let minterCreditScore: PassportScore;
   let creditScoreTree: PassportScoreTree;
+  let stableCoin: TestToken;
 
   // /**
   //  * Returns the converted principal, as calculated by the smart contract:
@@ -72,7 +73,7 @@ describe('SapphireCore.repay()', () => {
 
     await senderContract.approve(arc.coreAddress(), amount);
 
-    return arc.repay(amount, scoreProof, undefined, caller);
+    return arc.repay(amount, stableCoin.address, scoreProof, undefined, caller);
   }
 
   async function init(ctx: ITestContext) {
@@ -98,6 +99,7 @@ describe('SapphireCore.repay()', () => {
     const ctx = await generateContext(sapphireFixture, init);
     signers = ctx.signers;
     arc = ctx.sdks.sapphire;
+    stableCoin = ctx.contracts.stableCoin;
 
     await setupBaseVault(
       ctx.sdks.sapphire,
@@ -258,12 +260,27 @@ describe('SapphireCore.repay()', () => {
     await expect(
       arc.repay(
         BORROW_AMOUNT.div(2),
+        stableCoin.address,
         undefined,
         undefined,
         signers.scoredMinter,
       ),
     ).to.be.revertedWith(
       'SyntheticTokenV2: the amount has not been approved for this spender',
+    );
+  });
+
+  it('should not repay if asset is not supported', async () => {
+    await expect(
+      arc.repay(
+        BORROW_AMOUNT.div(2),
+        arc.collateral().address,
+        undefined,
+        undefined,
+        signers.scoredMinter,
+      ),
+    ).to.be.revertedWith(
+      'SapphireCoreV1: the token address should be one of the supported tokens',
     );
   });
 

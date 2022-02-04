@@ -531,12 +531,12 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      * @dev Borrow against an existing position
      *
      * @param _amount The amount of synthetic to borrow
-     * @param _borrowedAssetAddress The address of token to borrow
+     * @param _borrowAssetAddress The address of token to borrow
      * @param _scoreProof The credit score proof - mandatory
      */
     function borrow(
         uint256 _amount,
-        address _borrowedAssetAddress,
+        address _borrowAssetAddress,
         SapphireTypes.ScoreProof memory _scoreProof
     )
         public
@@ -544,7 +544,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
         actions[0] = SapphireTypes.Action(
             _amount,
-            _borrowedAssetAddress,
+            _borrowAssetAddress,
             SapphireTypes.Operation.Borrow,
             address(0)
         );
@@ -554,6 +554,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
     function repay(
         uint256 _amount,
+        address _borrowAssetAddress,
         SapphireTypes.ScoreProof memory _scoreProof
     )
         public
@@ -561,7 +562,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
         actions[0] = SapphireTypes.Action(
             _amount,
-            address(0),
+            _borrowAssetAddress,
             SapphireTypes.Operation.Repay,
             address(0)
         );
@@ -572,9 +573,11 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     /**
      * @dev Repays the entire debt and withdraws the all the collateral
      *
-     * @param _scoreProof The credit score proof - optional
+     * @param _borrowAssetAddress The address of token to repay
+     * @param _scoreProof           The credit score proof - optional
      */
     function exit(
+        address _borrowAssetAddress,
         SapphireTypes.ScoreProof memory _scoreProof
     )
         public
@@ -587,7 +590,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         // Repay outstanding debt
         actions[0] = SapphireTypes.Action(
             repayAmount,
-            address(0),
+            _borrowAssetAddress,
             SapphireTypes.Operation.Repay,
             address(0)
         );
@@ -609,10 +612,12 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      *      they have deposited inside their vault.
      *
      * @param _owner the owner of the vault to liquidate
+     * @param _borrowAssetAddress The address of token to repay
      * @param _scoreProof The credit score proof (optional)
      */
     function liquidate(
         address _owner,
+        address _borrowAssetAddress,
         SapphireTypes.ScoreProof memory _scoreProof
     )
         public
@@ -620,7 +625,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         SapphireTypes.Action[] memory actions = new SapphireTypes.Action[](1);
         actions[0] = SapphireTypes.Action(
             0,
-            address(0),
+            _borrowAssetAddress,
             SapphireTypes.Operation.Liquidate,
             _owner
         );
@@ -678,13 +683,13 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
                 _withdraw(action.amount, assessedCRatio, currentPrice);
 
             } else if (action.operation == SapphireTypes.Operation.Borrow) {
-                _borrow(action.amount, action.borrowedAssetAddress, assessedCRatio, currentPrice);
+                _borrow(action.amount, action.borrowAssetAddress, assessedCRatio, currentPrice);
 
             }  else if (action.operation == SapphireTypes.Operation.Repay) {
-                _repay(msg.sender, msg.sender, action.amount);
+                _repay(msg.sender, msg.sender, action.amount, action.borrowAssetAddress);
 
             } else if (action.operation == SapphireTypes.Operation.Liquidate) {
-                _liquidate(action.userToLiquidate, currentPrice, assessedCRatio);
+                _liquidate(action.userToLiquidate, currentPrice, assessedCRatio, action.borrowAssetAddress);
             }
         }
 
@@ -944,13 +949,14 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      * @dev Borrows synthetic against the user's vault. It ensures the vault
      *      still maintains the required collateral ratio
      *
-     * @param _amount           The amount of synthetic to borrow, in 18 decimals
-     * @param _assessedCRatio   The assessed c-ratio for user's credit score
-     * @param _collateralPrice  The current collateral price
+     * @param _amount               The amount of synthetic to borrow, in 18 decimals
+     * @param _borrowAssetAddress The address of token to borrow
+     * @param _assessedCRatio       The assessed c-ratio for user's credit score
+     * @param _collateralPrice      The current collateral price
      */
     function _borrow(
         uint256 _amount,
-        address _borrowedAssetAddress,
+        address _borrowAssetAddress,
         uint256 _assessedCRatio,
         uint256 _collateralPrice
     )
@@ -958,7 +964,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     {
 
         require(
-            _isSupportedBorrowAssets[_borrowedAssetAddress],
+            _isSupportedBorrowAssets[_borrowAssetAddress],
             "SapphireCoreV1: the token address should be one of the supported tokens"
         );
 
@@ -1024,14 +1030,22 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      * @param _owner The owner of the vault
      * @param _repayer The person who repays the debt
      * @param _amount The amount to repay
+     * @param _borrowAssetAddress The address of token to repay
      */
     function _repay(
         address _owner,
         address _repayer,
-        uint256 _amount
+        uint256 _amount,
+        address _borrowAssetAddress
     )
         private
     {
+
+        require(
+            _isSupportedBorrowAssets[_borrowAssetAddress],
+            "SapphireCoreV1: the token address should be one of the supported tokens"
+        );
+
         // Get the user's vault
         SapphireTypes.Vault storage vault = vaults[_owner];
 
@@ -1072,7 +1086,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     function _liquidate(
         address _owner,
         uint256 _currentPrice,
-        uint256 _assessedCRatio
+        uint256 _assessedCRatio,
+        address _borrowAssetAddress
     )
         private
     {
@@ -1169,7 +1184,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         _repay(
             _owner,
             msg.sender,
-            debtToRepay
+            debtToRepay,
+            _borrowAssetAddress
         );
 
         // Transfer user collateral

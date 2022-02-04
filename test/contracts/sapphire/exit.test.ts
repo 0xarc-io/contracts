@@ -17,6 +17,7 @@ import { setupSapphire } from '../setup';
 import { roundUpMul } from '@test/helpers/roundUpOperations';
 import { PassportScore } from '@arc-types/sapphireCore';
 import { PassportScoreTree } from '@src/MerkleTree';
+import { TestToken } from '@src/typings';
 
 const COLLATERAL_AMOUNT = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS);
 const BORROW_AMOUNT = utils.parseEther('500');
@@ -27,6 +28,7 @@ describe('SapphireCore.exit()', () => {
 
   let arc: SapphireTestArc;
   let signers: TestingSigners;
+  let stableCoin: TestToken;
 
   let scoredMinterCreditScore: PassportScore;
   let creditScoreTree: PassportScoreTree;
@@ -62,6 +64,7 @@ describe('SapphireCore.exit()', () => {
     ctx = await generateContext(sapphireFixture, init);
     signers = ctx.signers;
     arc = ctx.sdks.sapphire;
+    stableCoin = ctx.contracts.stableCoin;
 
     await setupSapphire(ctx, {
       merkleRoot: creditScoreTree.getHexRoot(),
@@ -103,7 +106,7 @@ describe('SapphireCore.exit()', () => {
     );
 
     await expect(
-      arc.exit(undefined, undefined, signers.scoredMinter),
+      arc.exit(stableCoin.address, undefined, undefined, signers.scoredMinter),
     ).to.be.revertedWith(
       'SyntheticTokenV2: sender does not have enough balance',
     );
@@ -137,6 +140,7 @@ describe('SapphireCore.exit()', () => {
     // await ctx.contracts.synthetic.tokenV2.mint(signers.scoredMinter.address, 1); // Mint 1, to account for rounding
 
     await arc.exit(
+      stableCoin.address,
       getScoreProof(scoredMinterCreditScore, creditScoreTree),
       undefined,
       signers.scoredMinter,
@@ -150,6 +154,30 @@ describe('SapphireCore.exit()', () => {
     expect(vault.borrowedAmount).to.eq(0);
     expect(collateralBalance).to.eq(COLLATERAL_AMOUNT);
     expect(synthBalance).to.eq(0);
+  });
+
+  it('reverts if exit with unsupported token', async () => {
+    await setupBaseVault(
+      arc,
+      signers.scoredMinter,
+      COLLATERAL_AMOUNT,
+      BORROW_AMOUNT, // -1 for rounding
+      getScoreProof(scoredMinterCreditScore, creditScoreTree),
+    );
+
+    // Approve repay amount
+    await approve(
+      BORROW_AMOUNT,
+      arc.syntheticAddress(),
+      arc.coreAddress(),
+      signers.scoredMinter,
+    );
+
+    await expect(
+      arc.exit(arc.collateral().address, undefined, undefined, signers.scoredMinter),
+    ).to.be.revertedWith(
+      'SapphireCoreV1: the token address should be one of the supported tokens',
+    );
   });
 
   it('repays all the debt + accrued interest and returns collateral to the user', async () => {
@@ -189,7 +217,7 @@ describe('SapphireCore.exit()', () => {
     // Try to exit but fail because user does not have enough balance due to
     // the accrued interest
     await expect(
-      arc.exit(undefined, undefined, signers.scoredMinter),
+      arc.exit(stableCoin.address, undefined, undefined, signers.scoredMinter),
     ).to.be.revertedWith(
       'SyntheticTokenV2: sender does not have enough balance',
     );
@@ -200,7 +228,7 @@ describe('SapphireCore.exit()', () => {
       .connect(signers.admin)
       .mint(signers.scoredMinter.address, accruedInterest);
 
-    await arc.exit(undefined, undefined, signers.scoredMinter);
+    await arc.exit(stableCoin.address, undefined, undefined, signers.scoredMinter);
 
     vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.collateralAmount).to.eq(0);

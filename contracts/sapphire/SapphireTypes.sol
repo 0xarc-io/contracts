@@ -32,7 +32,7 @@ library SapphireTypes {
 
     struct Action {
         uint256 amount;
-        address borrowedAssetAddress;
+        address borrowAssetAddress;
         Operation operation;
         address userToLiquidate;
     }
