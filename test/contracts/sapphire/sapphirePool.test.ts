@@ -9,7 +9,6 @@ import {
 import { ADMINABLE_ERROR } from '@test/helpers/contractErrors';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
-import { BigNumber, constants } from 'ethers';
 import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 
@@ -85,10 +84,8 @@ describe('SapphirePool', () => {
         utilization = await pool.coreSwapUtilization(
           ctx.contracts.sapphire.core.address,
         );
-        expect(utilization).to.deep.eq({
-          limit: BigNumber.from('1000'),
-          amountUsed: constants.Zero,
-        });
+        expect(utilization.limit).to.eq(1000);
+        expect(utilization.amountUsed).to.eq(0);
       });
 
       describe('#setDepositLimit', () => {
