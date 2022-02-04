@@ -5,7 +5,6 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { PassportScoreTree } from '@src/MerkleTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { SyntheticTokenV2Factory, TestToken } from '@src/typings';
-import { approve } from '@src/utils';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import {
   DEFAULT_COLLATERAL_DECIMALS,
@@ -272,13 +271,9 @@ describe('SapphireCore.repay()', () => {
   });
 
   it('should not repay if asset is not supported', async () => {
-    const amount = BORROW_AMOUNT.div(2);
-
-    await approve(amount, arc.syntheticAddress(), arc.coreAddress(), signers.scoredMinter)
-
     await expect(
       arc.repay(
-        amount,
+        BORROW_AMOUNT.div(2),
         arc.collateral().address,
         undefined,
         undefined,
