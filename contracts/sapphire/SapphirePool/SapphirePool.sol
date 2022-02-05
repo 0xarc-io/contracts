@@ -257,16 +257,31 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         revert("Not Implemented");
     }
 
-    function accumulatedRewardAmount(
-        address _token, 
-        address _user
-    ) 
+    /**
+     * @notice Returns the rewards accumulated into the pool
+     */
+    function accumulatedRewardAmount() 
         external
         override 
         view 
         returns (uint256)
     {
-        revert("Not Implemented");
+        uint256 poolValue = getPoolValue();
+
+        uint256 depositValue;
+
+        for (uint8 i = 0; i < supportedDepositAssets.length; i++) {
+            address token = supportedDepositAssets[i];
+            AssetUtilization storage assetUtilization = assetsUtilization[token];
+
+            depositValue += _getScaledAmount(
+                assetUtilization.amountUsed, 
+                _tokenDecimals[token], 
+                18
+            );
+        }
+
+        return poolValue - depositValue;
     }
 
     /**

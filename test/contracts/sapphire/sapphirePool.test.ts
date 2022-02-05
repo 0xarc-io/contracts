@@ -6,6 +6,7 @@ import {
   TestToken,
   TestTokenFactory,
 } from '@src/typings';
+import { approve } from '@src/utils';
 import {
   ADMINABLE_ERROR,
   ARITHMETIC_ERROR,
@@ -214,7 +215,27 @@ describe('SapphirePool', () => {
 
   describe('View functions', () => {
     describe('#accumulatedRewardAmount', () => {
-      it('returns the current reward amount for the given token');
+      it('returns the current reward amount for the given token', async () => {
+        expect(await stablecoin.balanceOf(pool.address)).to.eq(0);
+
+        await pool.setDepositLimit(stablecoin.address, depositAmount.mul(2));
+
+        await approve(
+          depositAmount,
+          stablecoin.address,
+          pool.address,
+          depositor,
+        );
+        await pool
+          .connect(depositor)
+          .deposit(stablecoin.address, depositAmount);
+
+        await stablecoin.mintShare(pool.address, depositAmount);
+
+        expect(await pool.accumulatedRewardAmount()).to.eq(
+          depositAmount.mul(stablecoinScalar),
+        );
+      });
     });
 
     describe('#getDepositAssets', () => {
@@ -345,7 +366,7 @@ describe('SapphirePool', () => {
       );
     });
 
-    describe.only('#withdraw', () => {
+    describe('#withdraw', () => {
       beforeEach(async () => {
         await pool.setDepositLimit(stablecoin.address, depositAmount.mul(2));
         await stablecoin
@@ -516,18 +537,6 @@ describe('SapphirePool', () => {
           );
         expect(await pool.totalSupply()).to.eq(0);
       });
-    });
-
-    describe('#transferRewards', () => {
-      it(
-        'reverts if the reward token is not in the core swap utilization mapping',
-      );
-
-      it(
-        'increases the reward amount for the given token in the core swap utilization mapping',
-      );
-
-      it('does not mint LP tokens for the transferred rewards');
     });
   });
 
