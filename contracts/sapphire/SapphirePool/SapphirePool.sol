@@ -165,12 +165,6 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
 
         assetsUtilization[_tokenAddress].limit = _limit;
 
-        uint256 scaledLimit = _getScaledAmount(
-            _limit, 
-            _tokenDecimals[_tokenAddress], 
-            18
-        );
-
         (
             uint256 sumOfDepositLimits,
             uint256 sumOfCoreLimits,
