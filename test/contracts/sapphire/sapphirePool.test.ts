@@ -222,6 +222,12 @@ describe('SapphirePool', () => {
 
       it('excludes the assets that have a deposit limit of 0');
     });
+
+    describe('#getPoolValue', () => {
+      it('returns the current value of the pool with 1 stablecoin');
+      it('returns the current value of the pool with 2 stablecoins');
+      it('returns the current value of the pool with 2 stablecoins and CRs');
+    });
   });
 
   describe('Public functions', () => {

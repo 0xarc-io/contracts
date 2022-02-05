@@ -177,7 +177,17 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
 
         assetUtilization.amountUsed += _amount;
 
-        uint256 lpToMint = _getScaledAmount(_amount, _tokenDecimals[_token], _decimals);
+        uint256 scaledAmount = _getScaledAmount(_amount, _tokenDecimals[_token], _decimals);
+
+        uint256 poolValue = getPoolValue();
+        uint256 lpToMint;
+        
+        if (poolValue > 0) {
+            lpToMint = scaledAmount * totalSupply() / poolValue;
+        } else {
+            lpToMint = scaledAmount;
+        }
+        
         _mint(msg.sender, lpToMint);
 
         SafeERC20.safeTransferFrom(
@@ -291,6 +301,33 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
                 result[i] = token;
             }
         }
+
+        return result;
+    }
+
+    /**
+     * @notice Returns the value of the pool in terms of the deposited stablecoins and creds.
+     */
+    function getPoolValue() 
+        public 
+        view 
+        override
+        returns (uint256)
+    {
+        uint256 result;
+
+        for (uint8 i = 0; i < supportedDepositAssets.length; i++) {
+            address token = supportedDepositAssets[i];
+            uint8 decimals = _tokenDecimals[token];
+
+            result += _getScaledAmount(
+                IERC20Metadata(token).balanceOf(address(this)),
+                decimals,
+                18
+            );
+        }
+
+        result += credsToken.balanceOf(address(this));
 
         return result;
     }

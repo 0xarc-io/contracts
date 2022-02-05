@@ -30,4 +30,6 @@ interface ISapphirePool {
     function assetsUtilization(address _tokenAddress) external view returns (uint256, uint256);
 
     function getDepositAssets() external view returns (address[] memory);
+
+    function getPoolValue() external view returns (uint256);
 }
