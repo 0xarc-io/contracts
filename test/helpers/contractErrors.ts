@@ -10,3 +10,4 @@ export const LIQUIDATION_COLLATERALIZED_ERROR =
 
 export const ARITHMETIC_ERROR = '0x11'; // (Arithmetic operation underflowed or overflowed outside of an unchecked block)
 export const TRANSFER_FROM_FAILED = 'SafeERC20: TRANSFER_FROM_FAILED';
+export const TRANSFER_FAILED = 'SafeERC20: TRANSFER_FAILED';

@@ -70,6 +70,14 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         uint256 _withdrawAmount
     );
 
+    event TokensSwapped(
+        address _user, 
+        address _tokenIn, 
+        address _tokenOut, 
+        uint256 _amountIn,
+        uint256 _amountOut
+    );
+
     /* ========== Restricted functions ========== */
 
     function init(
@@ -139,6 +147,10 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         emit DepositLimitSet(_tokenAddress, _limit);
     }
 
+    /**
+     * @notice Performs a swap between the specified tokens, for the given amount. Assumes
+     * a 1:1 conversion.
+     */
     function swap(
         address _tokenIn, 
         address _tokenOut, 
@@ -147,7 +159,36 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         external
         override
     {
-        revert("Not Implemented");
+        uint256 amountOut;
+
+        require(
+            _tokenIn != _tokenOut && (
+                _tokenIn == address(credsToken) ||
+                _tokenOut == address(credsToken)
+            ),
+            "SapphirePool: invalid swap tokens"
+        );
+
+        if (_tokenIn == address(credsToken)) {
+            // Swapping creds for stables
+            amountOut = _swapCredsForStables(
+                _tokenOut,
+                _amountIn
+            );
+        } else {
+            amountOut = _swapStablesForCreds(
+                _tokenIn,
+                _amountIn
+            );
+        }
+        
+        emit TokensSwapped(
+            msg.sender,
+            _tokenIn,
+            _tokenOut,
+            _amountIn,
+            amountOut
+        );
     }
 
     /* ========== Public functions ========== */
@@ -356,5 +397,91 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         } else {
             return _amount * 10 ** (_decimalsOut - _decimalsIn);
         }
+    }
+
+    function _swapCredsForStables(
+        address _tokenOut,
+        uint256 _credsAmount
+    )
+        private
+        returns (uint256)
+    {
+        AssetUtilization storage utilization = coreSwapUtilization[msg.sender];
+
+        require(
+            utilization.amountUsed + _credsAmount <= utilization.limit,
+            "SapphirePool: core swap limit exceeded"
+        );
+
+        // Ensure out token is supported. All supported tokens should have their decimals saved
+        uint8 decimalsOut = _tokenDecimals[_tokenOut];
+        require(
+            decimalsOut > 0,
+            "SapphirePool: unsupported out token"
+        );
+
+        uint256 expectedOutAmount = _getScaledAmount(
+            _credsAmount,
+            _decimals,
+            decimalsOut
+        );
+
+        // Increase core utilization
+        utilization.amountUsed += _credsAmount;
+
+        SafeERC20.safeTransferFrom(
+            IERC20Metadata(credsToken), 
+            msg.sender, 
+            address(this), 
+            _credsAmount
+        );
+
+        SafeERC20.safeTransfer(
+            IERC20Metadata(_tokenOut), 
+            msg.sender, 
+            expectedOutAmount
+        );
+
+        return expectedOutAmount;
+    }
+
+    function _swapStablesForCreds(
+        address _tokenIn,
+        uint256 _stablesAmount
+    )
+        private
+        returns (uint256)
+    {
+        AssetUtilization storage utilization = coreSwapUtilization[msg.sender];
+
+        // Ensure out token is supported. All supported tokens should have their decimals saved
+        uint8 stableDecimals = _tokenDecimals[_tokenIn];
+        require(
+            _tokenDecimals[_tokenIn] > 0,
+            "SapphirePool: unsupported in token"
+        );
+
+        uint256 credsOutAmount = _getScaledAmount(
+            _stablesAmount,
+            stableDecimals,
+            _decimals
+        );
+
+        utilization.amountUsed -= credsOutAmount;
+
+        SafeERC20.safeTransferFrom(
+            IERC20Metadata(_tokenIn), 
+            msg.sender, 
+            address(this),
+            _stablesAmount
+        );
+
+        SafeERC20.safeTransfer(
+            IERC20Metadata(credsToken), 
+            msg.sender, 
+            credsOutAmount
+        );
+
+        return credsOutAmount;
     }
 }
