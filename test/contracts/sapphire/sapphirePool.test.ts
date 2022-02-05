@@ -14,7 +14,6 @@ import {
   TRANSFER_FROM_FAILED,
 } from '@test/helpers/contractErrors';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
-import { fail } from 'assert';
 import { expect } from 'chai';
 import { BigNumber, BigNumberish, utils } from 'ethers';
 import { generateContext, ITestContext } from '../context';
@@ -98,6 +97,18 @@ describe('SapphirePool', () => {
         ).to.be.revertedWith(ADMINABLE_ERROR);
       });
 
+      xit('reverts if setting limit that makes the sum of the limits of the cores greater than than the sum of the deposit limits', async () => {
+        await pool.setDepositLimit(stablecoin.address, depositAmount);
+        await pool.setDepositLimit(creds.address, scaledDepositAmount);
+
+        await pool.setCoreSwapLimit(admin.address, scaledDepositAmount);
+        await expect(
+          pool.setCoreSwapLimit(depositor.address, scaledDepositAmount.add(1)),
+        ).to.be.revertedWith(
+          'SapphirePool: swap limit is greater than the sum of the deposit limits',
+        );
+      });
+
       it('sets the limit for how many CR can be swapped in for tokens', async () => {
         let utilization = await pool.coreSwapUtilization(
           ctx.contracts.sapphire.core.address,
@@ -165,6 +176,20 @@ describe('SapphirePool', () => {
           pool.setDepositLimit(stablecoin.address, 0),
         ).to.be.revertedWith(
           'SapphirePool: cannot set the limit of an unsupported asset to 0',
+        );
+      });
+
+      xit('reverts if setting a limit that makes the sum of the deposit limits smaller than than the sum of the swap limits', async () => {
+        await pool.setDepositLimit(stablecoin.address, depositAmount);
+        await pool.setDepositLimit(creds.address, scaledDepositAmount);
+
+        await pool.setCoreSwapLimit(admin.address, scaledDepositAmount);
+        await pool.setCoreSwapLimit(depositor.address, scaledDepositAmount);
+
+        await expect(
+          pool.setDepositLimit(stablecoin.address, depositAmount.sub(1)),
+        ).to.be.revertedWith(
+          'SapphirePool: sum of deposit limits is smaller than the sum of the swap limits',
         );
       });
 
@@ -431,9 +456,19 @@ describe('SapphirePool', () => {
     });
 
     describe('#getDepositAssets', () => {
-      it('returns the deposit assets array');
+      it('returns the correct deposit assets array', async () => {
+        await pool.setDepositLimit(stablecoin.address, depositAmount);
+        await pool.setDepositLimit(creds.address, depositAmount);
 
-      it('excludes the assets that have a deposit limit of 0');
+        expect(await pool.getDepositAssets()).to.deep.eq([
+          stablecoin.address,
+          creds.address,
+        ]);
+
+        await pool.setDepositLimit(creds.address, 0);
+
+        expect(await pool.getDepositAssets()).to.deep.eq([stablecoin.address]);
+      });
     });
 
     describe('#getPoolValue', () => {
@@ -482,7 +517,54 @@ describe('SapphirePool', () => {
 
         expect(await pool.getPoolValue()).to.eq(scaledDepositAmount.mul(2));
       });
-      it('returns the current value of the pool with 2 stablecoins and CRs');
+
+      it('returns the current value of the pool with 2 stablecoins, creds and rewards', async () => {
+        const testDai = await new TestTokenFactory(admin).deploy(
+          'TestDAI',
+          'TDAI',
+          18,
+        );
+
+        await pool.setDepositLimit(stablecoin.address, depositAmount);
+        await pool.setDepositLimit(testDai.address, scaledDepositAmount);
+        await pool.setCoreSwapLimit(admin.address, scaledDepositAmount);
+
+        await approve(
+          depositAmount,
+          stablecoin.address,
+          pool.address,
+          depositor,
+        );
+        await pool
+          .connect(depositor)
+          .deposit(stablecoin.address, depositAmount);
+
+        await testDai.mintShare(depositor.address, scaledDepositAmount);
+        await approve(
+          scaledDepositAmount,
+          testDai.address,
+          pool.address,
+          depositor,
+        );
+        await pool
+          .connect(depositor)
+          .deposit(testDai.address, scaledDepositAmount);
+
+        await creds.mintShare(admin.address, scaledDepositAmount);
+        await approve(scaledDepositAmount, creds.address, pool.address, admin);
+        await pool.swap(
+          creds.address,
+          stablecoin.address,
+          scaledDepositAmount.div(2),
+        );
+
+        // Deposit 100 rewards
+        await stablecoin.mintShare(pool.address, depositAmount);
+
+        // The pool should have 100 stablecoin + 50 testDai + 50 cr + 100 stablecoin rewards
+        // = 300
+        expect(await pool.getPoolValue()).to.eq(utils.parseEther('300'));
+      });
     });
   });
 
@@ -592,9 +674,32 @@ describe('SapphirePool', () => {
         expect(await pool.totalSupply()).to.eq(scaledDepositAmount);
       });
 
-      it(
-        'mints a proportional amount of LP tokens after some rewards were already deposited',
-      );
+      it('mints a proportional amount of LP tokens after some rewards were already deposited', async () => {
+        await pool
+          .connect(depositor)
+          .deposit(stablecoin.address, depositAmount.div(2));
+
+        expect(await pool.balanceOf(depositor.address)).to.eq(
+          scaledDepositAmount.div(2),
+        );
+
+        // 100 rewards come into the pool
+        await stablecoin.mintShare(pool.address, depositAmount);
+
+        await pool
+          .connect(depositor)
+          .deposit(stablecoin.address, depositAmount.div(2));
+
+        const expectedAdditionalLpTokens = scaledDepositAmount
+          .div(2)
+          .mul(scaledDepositAmount.div(2))
+          .div(scaledDepositAmount.div(2).add(scaledDepositAmount));
+
+        expect(
+          await pool.balanceOf(depositor.address),
+          'final lp balance',
+        ).to.eq(scaledDepositAmount.div(2).add(expectedAdditionalLpTokens));
+      });
     });
 
     describe('#withdraw', () => {
@@ -632,8 +737,18 @@ describe('SapphirePool', () => {
         expect(await pool.balanceOf(depositor.address)).to.eq(0);
       });
 
-      xit('reverts if withdrawing more than the available balance on the contract', () => {
-        fail('need swap');
+      it('reverts if withdrawing more than the available balance on the contract', async () => {
+        await pool.setCoreSwapLimit(admin.address, scaledDepositAmount);
+
+        await creds.mintShare(admin.address, scaledDepositAmount);
+        await approve(scaledDepositAmount, creds.address, pool.address, admin);
+
+        await pool.swap(creds.address, stablecoin.address, scaledDepositAmount),
+          await expect(
+            pool
+              .connect(depositor)
+              .withdraw(scaledDepositAmount, stablecoin.address),
+          ).to.be.revertedWith(TRANSFER_FAILED);
       });
 
       it('reverts if withdrawing for tokens that are not supported', async () => {
@@ -726,16 +841,37 @@ describe('SapphirePool', () => {
         );
       });
 
-      xit('decreases the reward amount for the given token in the core swap utilization mapping', () => {
-        fail('need swap');
+      it('withdraws the proportional amount of reward in the selected currency (1 currency available)', async () => {
+        await stablecoin.mintShare(pool.address, depositAmount);
+
+        expect(await stablecoin.balanceOf(depositor.address)).to.eq(0);
+
+        await pool
+          .connect(depositor)
+          .withdraw(scaledDepositAmount, stablecoin.address);
+        expect(await stablecoin.balanceOf(depositor.address)).to.eq(
+          depositAmount.mul(2),
+        );
       });
 
-      xit('withdraws the proportional amount of reward in the selected currency (1 currency available)', () => {
-        fail('need swap');
-      });
+      it('withdraws the proportional amount of reward in the selected currency (2 currencies available)', async () => {
+        const testDai = await new TestTokenFactory(admin).deploy(
+          'TestDAI',
+          'TDAI',
+          18,
+        );
 
-      xit('withdraws the proportional amount of reward in the selected currency (2 currencies available)', () => {
-        fail('need swap');
+        await pool.setDepositLimit(testDai.address, scaledDepositAmount);
+        await testDai.mintShare(pool.address, scaledDepositAmount);
+
+        expect(await testDai.balanceOf(depositor.address)).to.eq(0);
+
+        await pool
+          .connect(depositor)
+          .withdraw(scaledDepositAmount.div(2), testDai.address);
+        expect(await testDai.balanceOf(depositor.address)).to.eq(
+          scaledDepositAmount,
+        );
       });
 
       it('decreases the total supply of the LP token', async () => {
