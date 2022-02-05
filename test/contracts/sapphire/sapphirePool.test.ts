@@ -14,17 +14,18 @@ import {
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { fail } from 'assert';
 import { expect } from 'chai';
-import { utils } from 'ethers';
+import { BigNumber, BigNumberish, utils } from 'ethers';
 import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
-
-const DEPOSIT_AMOUNT = utils.parseEther('100');
 
 describe('SapphirePool', () => {
   let pool: MockSapphirePool;
 
   let stablecoin: TestToken;
   let creds: TestToken;
+
+  let depositAmount: BigNumber;
+  let stablecoinScalar: BigNumberish;
 
   let admin: SignerWithAddress;
   let depositor: SignerWithAddress;
@@ -48,7 +49,10 @@ describe('SapphirePool', () => {
 
     await pool.init('Sapphire Pool', 'SAP', creds.address);
 
-    await stablecoin.mintShare(depositor.address, DEPOSIT_AMOUNT);
+    const stablecoinDecimals = await stablecoin.decimals();
+    depositAmount = utils.parseUnits('100', stablecoinDecimals);
+    stablecoinScalar = 10 ** (18 - stablecoinDecimals);
+    await stablecoin.mintShare(depositor.address, depositAmount);
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -223,28 +227,28 @@ describe('SapphirePool', () => {
   describe('Public functions', () => {
     describe('#deposit', () => {
       beforeEach(async () => {
-        await pool.setDepositLimit(stablecoin.address, DEPOSIT_AMOUNT.mul(2));
+        await pool.setDepositLimit(stablecoin.address, depositAmount.mul(2));
         await stablecoin
           .connect(depositor)
-          .approve(pool.address, DEPOSIT_AMOUNT);
+          .approve(pool.address, depositAmount);
       });
 
       it('reverts if user has not enough tokens', async () => {
         const utilization = await pool.assetsUtilization(stablecoin.address);
-        expect(utilization.limit).to.eq(DEPOSIT_AMOUNT.mul(2));
+        expect(utilization.limit).to.eq(depositAmount.mul(2));
 
         await expect(
           pool
             .connect(depositor)
-            .deposit(stablecoin.address, DEPOSIT_AMOUNT.add(1)),
+            .deposit(stablecoin.address, depositAmount.add(1)),
         ).to.be.revertedWith(TRANSFER_FROM_FAILED);
       });
 
       it('reverts if trying to deposit more than the limit', async () => {
-        await pool.setDepositLimit(stablecoin.address, DEPOSIT_AMOUNT.sub(1));
+        await pool.setDepositLimit(stablecoin.address, depositAmount.sub(1));
 
         await expect(
-          pool.connect(depositor).deposit(stablecoin.address, DEPOSIT_AMOUNT),
+          pool.connect(depositor).deposit(stablecoin.address, depositAmount),
         ).to.be.revertedWith(
           'SapphirePool: cannot deposit more than the limit',
         );
@@ -256,9 +260,11 @@ describe('SapphirePool', () => {
 
         await pool
           .connect(depositor)
-          .deposit(stablecoin.address, DEPOSIT_AMOUNT);
+          .deposit(stablecoin.address, depositAmount);
 
-        expect(await pool.balanceOf(depositor.address)).to.eq(DEPOSIT_AMOUNT);
+        expect(await pool.balanceOf(depositor.address)).to.eq(
+          depositAmount.mul(stablecoinScalar),
+        );
         expect(await stablecoin.balanceOf(depositor.address)).to.eq(0);
       });
 
@@ -278,8 +284,12 @@ describe('SapphirePool', () => {
 
         await pool.connect(depositor).deposit(testUsdc.address, usdcDepositAmt);
 
-        expect(await pool.balanceOf(depositor.address)).to.eq(DEPOSIT_AMOUNT); // 100 * 10^18
-        expect(await pool.totalSupply()).to.eq(DEPOSIT_AMOUNT);
+        expect(await pool.balanceOf(depositor.address)).to.eq(
+          depositAmount.mul(stablecoinScalar),
+        ); // 100 * 10^18
+        expect(await pool.totalSupply()).to.eq(
+          depositAmount.mul(stablecoinScalar),
+        );
         expect(await testUsdc.balanceOf(depositor.address)).to.eq(0);
       });
 
@@ -299,8 +309,10 @@ describe('SapphirePool', () => {
 
         await pool.connect(depositor).deposit(testUsdc.address, usdcDepositAmt);
 
-        expect(await pool.balanceOf(depositor.address)).to.eq(DEPOSIT_AMOUNT); // 100 * 10^18
-        expect(await pool.totalSupply()).to.eq(DEPOSIT_AMOUNT);
+        expect(await pool.balanceOf(depositor.address)).to.eq(
+          utils.parseEther('100'),
+        ); // 100 * 10^18
+        expect(await pool.totalSupply()).to.eq(utils.parseEther('100'));
         expect(await testUsdc.balanceOf(depositor.address)).to.eq(0);
       });
 
@@ -309,13 +321,17 @@ describe('SapphirePool', () => {
 
         await pool
           .connect(depositor)
-          .deposit(stablecoin.address, DEPOSIT_AMOUNT.div(2));
-        expect(await pool.totalSupply()).to.eq(DEPOSIT_AMOUNT.div(2));
+          .deposit(stablecoin.address, depositAmount.div(2));
+        expect(await pool.totalSupply()).to.eq(
+          depositAmount.div(2).mul(stablecoinScalar),
+        );
 
         await pool
           .connect(depositor)
-          .deposit(stablecoin.address, DEPOSIT_AMOUNT.div(2));
-        expect(await pool.totalSupply()).to.eq(DEPOSIT_AMOUNT);
+          .deposit(stablecoin.address, depositAmount.div(2));
+        expect(await pool.totalSupply()).to.eq(
+          depositAmount.mul(stablecoinScalar),
+        );
       });
 
       it(
@@ -325,33 +341,33 @@ describe('SapphirePool', () => {
 
     describe('#withdraw', () => {
       beforeEach(async () => {
-        await pool.setDepositLimit(stablecoin.address, DEPOSIT_AMOUNT.mul(2));
+        await pool.setDepositLimit(stablecoin.address, depositAmount.mul(2));
         await stablecoin
           .connect(depositor)
-          .approve(pool.address, DEPOSIT_AMOUNT);
+          .approve(pool.address, depositAmount);
         await pool
           .connect(depositor)
-          .deposit(stablecoin.address, DEPOSIT_AMOUNT);
+          .deposit(stablecoin.address, depositAmount);
       });
 
       it("reverts if trying to convert more LP tokens that the user's balance", async () => {
         await expect(
           pool
             .connect(depositor)
-            .withdraw(DEPOSIT_AMOUNT.add(1), stablecoin.address),
+            .withdraw(depositAmount.add(1), stablecoin.address),
         ).to.be.revertedWith(ARITHMETIC_ERROR);
       });
 
       it('withdraws the correct amount of tokens with 18 decimals', async () => {
         expect(await stablecoin.balanceOf(depositor.address)).to.eq(0);
-        expect(await pool.balanceOf(depositor.address)).to.eq(DEPOSIT_AMOUNT);
+        expect(await pool.balanceOf(depositor.address)).to.eq(depositAmount);
 
         await pool
           .connect(depositor)
-          .withdraw(DEPOSIT_AMOUNT, stablecoin.address);
+          .withdraw(depositAmount, stablecoin.address);
 
         expect(await stablecoin.balanceOf(depositor.address)).to.eq(
-          DEPOSIT_AMOUNT,
+          depositAmount,
         );
         expect(await pool.balanceOf(depositor.address)).to.eq(0);
       });
@@ -387,21 +403,19 @@ describe('SapphirePool', () => {
 
         await pool.setDepositLimit(testUsdc.address, usdcDepositAmt.mul(2));
 
-        // The user already deposited DEPOSIT_AMOUNT in TDAI from the beforeEach()
-        expect(await pool.balanceOf(depositor.address)).to.eq(DEPOSIT_AMOUNT);
+        // The user already deposited depositAmount in TDAI from the beforeEach()
+        expect(await pool.balanceOf(depositor.address)).to.eq(depositAmount);
 
         await pool.connect(depositor).deposit(testUsdc.address, usdcDepositAmt);
 
         expect(await pool.balanceOf(depositor.address)).to.eq(
-          DEPOSIT_AMOUNT.mul(2),
+          depositAmount.mul(2),
         );
 
-        await pool
-          .connect(depositor)
-          .withdraw(DEPOSIT_AMOUNT, testUsdc.address);
+        await pool.connect(depositor).withdraw(depositAmount, testUsdc.address);
 
-        expect(await pool.balanceOf(depositor.address)).to.eq(DEPOSIT_AMOUNT); // 100 * 10^18
-        expect(await pool.totalSupply()).to.eq(DEPOSIT_AMOUNT);
+        expect(await pool.balanceOf(depositor.address)).to.eq(depositAmount); // 100 * 10^18
+        expect(await pool.totalSupply()).to.eq(depositAmount);
         expect(await testUsdc.balanceOf(depositor.address)).to.eq(
           usdcDepositAmt,
         );
@@ -419,22 +433,20 @@ describe('SapphirePool', () => {
 
         await pool.setDepositLimit(testUsdc.address, usdcDepositAmt.mul(2));
 
-        // The user already deposited DEPOSIT_AMOUNT in TDAI from the beforeEach()
-        expect(await pool.balanceOf(depositor.address)).to.eq(DEPOSIT_AMOUNT);
+        // The user already deposited depositAmount in TDAI from the beforeEach()
+        expect(await pool.balanceOf(depositor.address)).to.eq(depositAmount);
 
         await pool.connect(depositor).deposit(testUsdc.address, usdcDepositAmt);
 
         expect(await pool.balanceOf(depositor.address)).to.eq(
-          DEPOSIT_AMOUNT.mul(2),
+          depositAmount.mul(2),
         );
-        expect(await pool.totalSupply()).to.eq(DEPOSIT_AMOUNT.mul(2));
+        expect(await pool.totalSupply()).to.eq(depositAmount.mul(2));
 
-        await pool
-          .connect(depositor)
-          .withdraw(DEPOSIT_AMOUNT, testUsdc.address);
+        await pool.connect(depositor).withdraw(depositAmount, testUsdc.address);
 
-        expect(await pool.balanceOf(depositor.address)).to.eq(DEPOSIT_AMOUNT); // 100 * 10^18
-        expect(await pool.totalSupply()).to.eq(DEPOSIT_AMOUNT);
+        expect(await pool.balanceOf(depositor.address)).to.eq(depositAmount); // 100 * 10^18
+        expect(await pool.totalSupply()).to.eq(depositAmount);
         expect(await testUsdc.balanceOf(depositor.address)).to.eq(
           usdcDepositAmt,
         );
@@ -453,16 +465,16 @@ describe('SapphirePool', () => {
       });
 
       it('decreases the total supply of the LP token', async () => {
-        expect(await pool.totalSupply()).to.eq(DEPOSIT_AMOUNT);
+        expect(await pool.totalSupply()).to.eq(depositAmount);
 
         await pool
           .connect(depositor)
-          .withdraw(DEPOSIT_AMOUNT.div(2), stablecoin.address);
-        expect(await pool.totalSupply()).to.eq(DEPOSIT_AMOUNT.div(2));
+          .withdraw(depositAmount.div(2), stablecoin.address);
+        expect(await pool.totalSupply()).to.eq(depositAmount.div(2));
 
         await pool
           .connect(depositor)
-          .withdraw(DEPOSIT_AMOUNT.div(2), stablecoin.address);
+          .withdraw(depositAmount.div(2), stablecoin.address);
         expect(await pool.totalSupply()).to.eq(0);
       });
     });
