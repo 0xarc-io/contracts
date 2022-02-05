@@ -264,6 +264,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
 
     /**
      * @notice Returns the list of the supported assets for depositing by LPs and swapping by Cores.
+     * If an asset has a limit of 0, it will be excluded from the list.
      */
     function getDepositAssets() 
         external 
@@ -271,25 +272,30 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         override
         returns (address[] memory)
     {
-        return supportedDepositAssets;
+        uint8 validAssetCount = 0;
+
+        for (uint8 i = 0; i < supportedDepositAssets.length; i++) {
+            address token = supportedDepositAssets[i];
+
+            if (assetsUtilization[token].limit > 0) {
+                validAssetCount++;
+            }
+        }
+
+        address[] memory result = new address[](validAssetCount);
+
+        for (uint8 i = 0; i < validAssetCount; i++) {
+            address token = supportedDepositAssets[i];
+
+            if (assetsUtilization[token].limit > 0) {
+                result[i] = token;
+            }
+        }
+
+        return result;
     }
 
     /* ========== Private functions ========== */
-
-    function _rmFromDepositAssets(
-        address _asset
-    )
-        private
-    {
-        for (uint8 i = 0; i < supportedDepositAssets.length; i++) {
-            if (supportedDepositAssets[i] == _asset) {
-                supportedDepositAssets[i] = supportedDepositAssets[
-                    supportedDepositAssets.length - 1
-                ];
-                supportedDepositAssets.pop();
-            }
-        }
-    }
 
     /**
      * @dev Used to compute the amount of LP tokens to mint 

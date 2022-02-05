@@ -151,81 +151,39 @@ describe('SapphirePool', () => {
         expect(await pool.getDepositAssets()).to.deep.eq([stablecoin.address]);
       });
 
-      describe('#setDepositLimit', () => {
-        it('reverts if called by non-admin', async () => {
-          await expect(
-            pool.connect(depositor).setDepositLimit(stablecoin.address, 1000),
-          ).to.be.revertedWith(ADMINABLE_ERROR);
-        });
+      it('reverts if setting the limit to 0 and the token is not previously supported', async () => {
+        await expect(
+          pool.setDepositLimit(stablecoin.address, 0),
+        ).to.be.revertedWith(
+          'SapphirePool: cannot set the limit of an unsupported asset to 0',
+        );
+      });
 
-        it('reverts if setting the limit to 0 and the token is not previously supported', async () => {
-          await expect(
-            pool.setDepositLimit(stablecoin.address, 0),
-          ).to.be.revertedWith(
-            'SapphirePool: cannot set the limit of an unsupported asset to 0',
-          );
-        });
+      it('if limit is 0, removes the token from the list of tokens that can be deposited', async () => {
+        await pool.setDepositLimit(stablecoin.address, 1000);
+        expect(await pool.getDepositAssets()).to.deep.eq([stablecoin.address]);
 
-        it('sets the limit for how many stablecoins can be deposited', async () => {
-          let utilization = await pool.assetsUtilization(stablecoin.address);
-          expect(utilization.amountUsed).to.deep.eq(0);
-          expect(utilization.limit).to.deep.eq(0);
+        await pool.setDepositLimit(stablecoin.address, 0);
 
-          await pool.setDepositLimit(stablecoin.address, 1000);
+        expect(await pool.getDepositAssets()).to.be.empty;
+      });
 
-          utilization = await pool.assetsUtilization(stablecoin.address);
-          expect(utilization.amountUsed).to.eq(0);
-          expect(utilization.limit).to.eq(1000);
-        });
+      it('adds 2 assets to the supported assets list', async () => {
+        expect(await pool.getDepositAssets()).to.be.empty;
 
-        it('if limit is > 0, adds the token to the list of tokens that can be deposited', async () => {
-          expect(await pool.getDepositAssets()).to.be.empty;
+        const testUsdc = await new TestTokenFactory(admin).deploy(
+          'TestUSDC',
+          'TUSDC',
+          6,
+        );
 
-          await pool.setDepositLimit(stablecoin.address, 1000);
+        await pool.setDepositLimit(stablecoin.address, 100);
+        await pool.setDepositLimit(testUsdc.address, 100);
 
-          expect(await pool.getDepositAssets()).to.deep.eq([
-            stablecoin.address,
-          ]);
-        });
-
-        it('if limit is 0, removes the token from the list of tokens that can be deposited', async () => {
-          await pool.setDepositLimit(stablecoin.address, 1000);
-          expect(await pool.getDepositAssets()).to.deep.eq([
-            stablecoin.address,
-          ]);
-
-          await pool.setDepositLimit(stablecoin.address, 0);
-          expect(await pool.getDepositAssets()).to.be.empty;
-        });
-
-        it('does not add a supported asset twice to the supported assets array', async () => {
-          expect(await pool.getDepositAssets()).to.be.empty;
-
-          await pool.setDepositLimit(stablecoin.address, 100);
-          await pool.setDepositLimit(stablecoin.address, 420);
-
-          expect(await pool.getDepositAssets()).to.deep.eq([
-            stablecoin.address,
-          ]);
-        });
-
-        it('adds 2 assets to the supported assets list', async () => {
-          expect(await pool.getDepositAssets()).to.be.empty;
-
-          const testUsdc = await new TestTokenFactory(admin).deploy(
-            'TestUSDC',
-            'TUSDC',
-            6,
-          );
-
-          await pool.setDepositLimit(stablecoin.address, 100);
-          await pool.setDepositLimit(testUsdc.address, 100);
-
-          expect(await pool.getDepositAssets()).to.deep.eq([
-            stablecoin.address,
-            testUsdc.address,
-          ]);
-        });
+        expect(await pool.getDepositAssets()).to.deep.eq([
+          stablecoin.address,
+          testUsdc.address,
+        ]);
       });
     });
 
@@ -293,6 +251,7 @@ describe('SapphirePool', () => {
       });
 
       it('deposits the correct amount of tokens and mints an equal amount amount of LP tokens', async () => {
+        // Mints an equal amount of LP tokens because the pool is empty
         expect(await pool.balanceOf(depositor.address)).to.eq(0);
 
         await pool
@@ -358,6 +317,10 @@ describe('SapphirePool', () => {
           .deposit(stablecoin.address, DEPOSIT_AMOUNT.div(2));
         expect(await pool.totalSupply()).to.eq(DEPOSIT_AMOUNT);
       });
+
+      it(
+        'mints a proportional amount of LP tokens after some rewards were already deposited',
+      );
     });
 
     describe('#withdraw', () => {
