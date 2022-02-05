@@ -27,10 +27,10 @@ describe('SapphirePool', () => {
 
   let depositAmount: BigNumber;
   let stablecoinScalar: BigNumberish;
+  let ctx: ITestContext;
 
   let admin: SignerWithAddress;
   let depositor: SignerWithAddress;
-  let ctx: ITestContext;
 
   before(async () => {
     ctx = await generateContext(sapphireFixture);
@@ -192,24 +192,180 @@ describe('SapphirePool', () => {
       });
     });
 
-    describe('#swap', () => {
-      it('reverts if called by a non-approved core');
+    describe.only('#swap', () => {
+      beforeEach(async () => {
+        await pool.setDepositLimit(stablecoin.address, depositAmount.mul(2));
+        await pool.setCoreSwapLimit(
+          admin.address,
+          depositAmount.mul(stablecoinScalar),
+        );
 
-      it('reverts if there are not enough requested coins');
+        await approve(
+          depositAmount,
+          stablecoin.address,
+          pool.address,
+          depositor,
+        );
+        await pool
+          .connect(depositor)
+          .deposit(stablecoin.address, depositAmount);
 
-      it('reverts if core tries to swap more than its limit');
+        await creds.mintShare(admin.address, depositAmount);
+      });
 
-      it('swaps the correct amount of requested tokens in exchange of CR');
+      it('reverts if called by a non-approved core', async () => {
+        await expect(
+          pool
+            .connect(depositor)
+            .swap(
+              creds.address,
+              stablecoin.address,
+              depositAmount.mul(stablecoinScalar).div(2),
+            ),
+        ).to.be.revertedWith('SapphirePool: unapproved core');
+      });
 
-      it('correctly swaps assets that do not have the same decimals');
+      it('reverts if there are not enough requested coins', async () => {
+        await pool
+          .connect(depositor)
+          .withdraw(
+            depositAmount.mul(stablecoinScalar).div(2),
+            stablecoin.address,
+          );
 
-      it(
-        'increases the token utilization borrow amount when swapping creds for tokens',
-      );
+        expect(await stablecoin.balanceOf(pool.address)).to.eq(
+          depositAmount.div(2),
+        );
 
-      it(
-        'decreases the token utilization borrow amount when swapping tokens for creds',
-      );
+        await expect(
+          pool.swap(
+            creds.address,
+            stablecoin.address,
+            depositAmount.mul(stablecoinScalar).div(2).add(1),
+          ),
+        ).to.be.revertedWith(TRANSFER_FROM_FAILED);
+      });
+
+      it('reverts if core tries to swap more than its limit', async () => {
+        await pool.setCoreSwapLimit(
+          admin.address,
+          depositAmount.mul(stablecoinScalar).sub(1),
+        );
+
+        await expect(
+          pool.swap(
+            creds.address,
+            stablecoin.address,
+            depositAmount.mul(stablecoinScalar),
+          ),
+        ).to.be.revertedWith(TRANSFER_FROM_FAILED);
+      });
+
+      it('swaps the correct amount of requested tokens in exchange of CR', async () => {
+        expect(await stablecoin.balanceOf(admin.address)).to.eq(0);
+
+        await pool.swap(
+          creds.address,
+          stablecoin.address,
+          depositAmount.mul(stablecoinScalar),
+        );
+
+        expect(await stablecoin.balanceOf(admin.address)).to.eq(depositAmount);
+        expect(await creds.balanceOf(admin.address)).to.eq(0);
+
+        await pool.swap(
+          stablecoin.address,
+          creds.address,
+          depositAmount.mul(stablecoinScalar).div(2),
+        );
+
+        expect(await stablecoin.balanceOf(admin.address)).to.eq(
+          depositAmount.div(2),
+        );
+        expect(await creds.balanceOf(admin.address)).to.eq(
+          depositAmount.mul(stablecoinScalar).div(2),
+        );
+      });
+
+      it('correctly swaps assets that have 18 decimals', async () => {
+        const daiDepositAmount = depositAmount.mul(stablecoinScalar);
+        const testDai = await new TestTokenFactory(admin).deploy(
+          'TestDAI',
+          'TDAI',
+          18,
+        );
+        await testDai.mintShare(depositor.address, daiDepositAmount);
+        await pool.setDepositLimit(testDai.address, daiDepositAmount);
+        await pool.setCoreSwapLimit(admin.address, daiDepositAmount);
+
+        await approve(
+          daiDepositAmount,
+          testDai.address,
+          pool.address,
+          depositor,
+        );
+        await pool
+          .connect(depositor)
+          .deposit(testDai.address, daiDepositAmount);
+
+        expect(await testDai.balanceOf(admin.address)).to.eq(0);
+
+        await pool.swap(creds.address, testDai.address, daiDepositAmount);
+        expect(await testDai.balanceOf(admin.address)).to.eq(daiDepositAmount);
+      });
+
+      it('increases the token utilization borrow amount when swapping creds for tokens', async () => {
+        let utilization = await pool.coreSwapUtilization(admin.address);
+        expect(utilization.amountUsed).to.eq(0);
+
+        await pool.swap(
+          creds.address,
+          stablecoin.address,
+          depositAmount.mul(stablecoinScalar).div(2),
+        );
+
+        utilization = await pool.coreSwapUtilization(admin.address);
+        expect(utilization.amountUsed).to.eq(
+          depositAmount.mul(stablecoinScalar).div(2),
+        );
+
+        await pool.swap(
+          creds.address,
+          stablecoin.address,
+          depositAmount.mul(stablecoinScalar).div(2),
+        );
+
+        utilization = await pool.coreSwapUtilization(admin.address);
+        expect(utilization.amountUsed).to.eq(
+          depositAmount.mul(stablecoinScalar),
+        );
+      });
+
+      it('decreases the token utilization borrow amount when swapping tokens for creds', async () => {
+        let utilization = await pool.coreSwapUtilization(admin.address);
+        expect(utilization.amountUsed).to.eq(0);
+
+        await pool.swap(
+          creds.address,
+          stablecoin.address,
+          depositAmount.mul(stablecoinScalar),
+        );
+
+        utilization = await pool.coreSwapUtilization(admin.address);
+        expect(utilization.amountUsed).to.eq(
+          depositAmount.mul(stablecoinScalar),
+        );
+
+        await pool.swap(
+          stablecoin.address,
+          creds.address,
+          depositAmount.div(2),
+        );
+        utilization = await pool.coreSwapUtilization(admin.address);
+        expect(utilization.amountUsed).to.eq(
+          depositAmount.mul(stablecoinScalar).div(2),
+        );
+      });
     });
   });
 

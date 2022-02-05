@@ -21,8 +21,6 @@ interface ISapphirePool {
 
     /* ========== View Functions ========== */
 
-    function getTokenUtilization(address _tokenAddress) external view returns (uint256, uint256);
-
     function accumulatedRewardAmount() external view returns (uint256);
 
     function coreSwapUtilization(address _coreAddress) external view returns (uint256, uint256);

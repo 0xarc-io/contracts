@@ -246,17 +246,6 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
 
     /* ========== View functions ========== */
 
-    function getTokenUtilization(
-        address _tokenAddress
-    ) 
-        external
-        override 
-        view 
-        returns (uint256, uint256)
-    {
-        revert("Not Implemented");
-    }
-
     /**
      * @notice Returns the rewards accumulated into the pool
      */
