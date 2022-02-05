@@ -245,8 +245,58 @@ describe('SapphirePool', () => {
     });
 
     describe('#getPoolValue', () => {
-      it('returns the current value of the pool with 1 stablecoin');
-      it('returns the current value of the pool with 2 stablecoins');
+      it('returns the current value of the pool with 1 stablecoin', async () => {
+        await pool.setDepositLimit(stablecoin.address, depositAmount.mul(2));
+        await stablecoin
+          .connect(depositor)
+          .approve(pool.address, depositAmount);
+        await pool
+          .connect(depositor)
+          .deposit(stablecoin.address, depositAmount);
+
+        expect(await pool.getPoolValue()).to.eq(
+          depositAmount.mul(stablecoinScalar),
+        );
+      });
+
+      it('returns the current value of the pool with 2 stablecoins', async () => {
+        const testDai = await new TestTokenFactory(admin).deploy(
+          'TestDAI',
+          'TDAI',
+          18,
+        );
+
+        await pool.setDepositLimit(stablecoin.address, depositAmount.mul(2));
+        await pool.setDepositLimit(
+          testDai.address,
+          depositAmount.mul(2).mul(stablecoinScalar),
+        );
+
+        await stablecoin
+          .connect(depositor)
+          .approve(pool.address, depositAmount);
+        await testDai
+          .connect(depositor)
+          .approve(pool.address, depositAmount.mul(stablecoinScalar));
+
+        await testDai.mintShare(
+          depositor.address,
+          depositAmount.mul(stablecoinScalar),
+        );
+
+        expect(await pool.getPoolValue()).to.eq(0);
+
+        await pool
+          .connect(depositor)
+          .deposit(stablecoin.address, depositAmount);
+        await pool
+          .connect(depositor)
+          .deposit(testDai.address, depositAmount.mul(stablecoinScalar));
+
+        expect(await pool.getPoolValue()).to.eq(
+          depositAmount.mul(stablecoinScalar).mul(2),
+        );
+      });
       it('returns the current value of the pool with 2 stablecoins and CRs');
     });
   });
