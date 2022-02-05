@@ -223,13 +223,10 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         require(
             _tokenDecimals[_outToken] > 0,
             "SapphirePool: unsupported withdraw token"
-        );   
-
-        uint256 amountToWithdraw = _getScaledAmount(
-            _amount,  
-            _decimals,
-            _tokenDecimals[_outToken]
         );
+
+        uint256 scaledAmount = _getScaledAmount(_amount, _decimals, _tokenDecimals[_outToken]);
+        uint256 amountToWithdraw = scaledAmount * getPoolValue() / totalSupply();
 
         _burn(msg.sender, _amount);
 

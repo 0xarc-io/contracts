@@ -345,7 +345,7 @@ describe('SapphirePool', () => {
       );
     });
 
-    describe('#withdraw', () => {
+    describe.only('#withdraw', () => {
       beforeEach(async () => {
         await pool.setDepositLimit(stablecoin.address, depositAmount.mul(2));
         await stablecoin
@@ -360,17 +360,22 @@ describe('SapphirePool', () => {
         await expect(
           pool
             .connect(depositor)
-            .withdraw(depositAmount.add(1), stablecoin.address),
+            .withdraw(
+              depositAmount.mul(stablecoinScalar).add(1),
+              stablecoin.address,
+            ),
         ).to.be.revertedWith(ARITHMETIC_ERROR);
       });
 
       it('withdraws the correct amount of tokens with 18 decimals', async () => {
         expect(await stablecoin.balanceOf(depositor.address)).to.eq(0);
-        expect(await pool.balanceOf(depositor.address)).to.eq(depositAmount);
+        expect(await pool.balanceOf(depositor.address)).to.eq(
+          depositAmount.mul(stablecoinScalar),
+        );
 
         await pool
           .connect(depositor)
-          .withdraw(depositAmount, stablecoin.address);
+          .withdraw(depositAmount.mul(stablecoinScalar), stablecoin.address);
 
         expect(await stablecoin.balanceOf(depositor.address)).to.eq(
           depositAmount,
@@ -410,18 +415,26 @@ describe('SapphirePool', () => {
         await pool.setDepositLimit(testUsdc.address, usdcDepositAmt.mul(2));
 
         // The user already deposited depositAmount in TDAI from the beforeEach()
-        expect(await pool.balanceOf(depositor.address)).to.eq(depositAmount);
+        expect(await pool.balanceOf(depositor.address)).to.eq(
+          depositAmount.mul(stablecoinScalar),
+        );
 
         await pool.connect(depositor).deposit(testUsdc.address, usdcDepositAmt);
 
         expect(await pool.balanceOf(depositor.address)).to.eq(
-          depositAmount.mul(2),
+          depositAmount.mul(2).mul(stablecoinScalar),
         );
 
-        await pool.connect(depositor).withdraw(depositAmount, testUsdc.address);
+        await pool
+          .connect(depositor)
+          .withdraw(depositAmount.mul(stablecoinScalar), testUsdc.address);
 
-        expect(await pool.balanceOf(depositor.address)).to.eq(depositAmount); // 100 * 10^18
-        expect(await pool.totalSupply()).to.eq(depositAmount);
+        expect(await pool.balanceOf(depositor.address)).to.eq(
+          depositAmount.mul(stablecoinScalar),
+        ); // 100 * 10^18
+        expect(await pool.totalSupply()).to.eq(
+          depositAmount.mul(stablecoinScalar),
+        );
         expect(await testUsdc.balanceOf(depositor.address)).to.eq(
           usdcDepositAmt,
         );
@@ -440,19 +453,29 @@ describe('SapphirePool', () => {
         await pool.setDepositLimit(testUsdc.address, usdcDepositAmt.mul(2));
 
         // The user already deposited depositAmount in TDAI from the beforeEach()
-        expect(await pool.balanceOf(depositor.address)).to.eq(depositAmount);
+        expect(await pool.balanceOf(depositor.address)).to.eq(
+          depositAmount.mul(stablecoinScalar),
+        );
 
         await pool.connect(depositor).deposit(testUsdc.address, usdcDepositAmt);
 
         expect(await pool.balanceOf(depositor.address)).to.eq(
-          depositAmount.mul(2),
+          depositAmount.mul(2).mul(stablecoinScalar),
         );
-        expect(await pool.totalSupply()).to.eq(depositAmount.mul(2));
+        expect(await pool.totalSupply()).to.eq(
+          depositAmount.mul(2).mul(stablecoinScalar),
+        );
 
-        await pool.connect(depositor).withdraw(depositAmount, testUsdc.address);
+        await pool
+          .connect(depositor)
+          .withdraw(depositAmount.mul(stablecoinScalar), testUsdc.address);
 
-        expect(await pool.balanceOf(depositor.address)).to.eq(depositAmount); // 100 * 10^18
-        expect(await pool.totalSupply()).to.eq(depositAmount);
+        expect(await pool.balanceOf(depositor.address)).to.eq(
+          depositAmount.mul(stablecoinScalar),
+        ); // 100 * 10^18
+        expect(await pool.totalSupply()).to.eq(
+          depositAmount.mul(stablecoinScalar),
+        );
         expect(await testUsdc.balanceOf(depositor.address)).to.eq(
           usdcDepositAmt,
         );
@@ -471,16 +494,26 @@ describe('SapphirePool', () => {
       });
 
       it('decreases the total supply of the LP token', async () => {
-        expect(await pool.totalSupply()).to.eq(depositAmount);
+        expect(await pool.totalSupply()).to.eq(
+          depositAmount.mul(stablecoinScalar),
+        );
 
         await pool
           .connect(depositor)
-          .withdraw(depositAmount.div(2), stablecoin.address);
-        expect(await pool.totalSupply()).to.eq(depositAmount.div(2));
+          .withdraw(
+            depositAmount.div(2).mul(stablecoinScalar),
+            stablecoin.address,
+          );
+        expect(await pool.totalSupply()).to.eq(
+          depositAmount.div(2).mul(stablecoinScalar),
+        );
 
         await pool
           .connect(depositor)
-          .withdraw(depositAmount.div(2), stablecoin.address);
+          .withdraw(
+            depositAmount.div(2).mul(stablecoinScalar),
+            stablecoin.address,
+          );
         expect(await pool.totalSupply()).to.eq(0);
       });
     });
