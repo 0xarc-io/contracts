@@ -97,7 +97,7 @@ describe('SapphirePool', () => {
         ).to.be.revertedWith(ADMINABLE_ERROR);
       });
 
-      xit('reverts if setting limit that makes the sum of the limits of the cores greater than than the sum of the deposit limits', async () => {
+      it('reverts if setting limit that makes the sum of the limits of the cores greater than than the sum of the deposit limits', async () => {
         await pool.setDepositLimit(stablecoin.address, depositAmount);
         await pool.setDepositLimit(creds.address, scaledDepositAmount);
 
@@ -115,6 +115,7 @@ describe('SapphirePool', () => {
         );
         expect(utilization.limit).to.eq(0);
 
+        await pool.setDepositLimit(stablecoin.address, depositAmount);
         await pool.setCoreSwapLimit(ctx.contracts.sapphire.core.address, 1000);
 
         utilization = await pool.coreSwapUtilization(
@@ -179,7 +180,7 @@ describe('SapphirePool', () => {
         );
       });
 
-      xit('reverts if setting a limit that makes the sum of the deposit limits smaller than than the sum of the swap limits', async () => {
+      it('reverts if setting a limit that makes the sum of the deposit limits smaller than than the sum of the swap limits', async () => {
         await pool.setDepositLimit(stablecoin.address, depositAmount);
         await pool.setDepositLimit(creds.address, scaledDepositAmount);
 
@@ -187,9 +188,9 @@ describe('SapphirePool', () => {
         await pool.setCoreSwapLimit(depositor.address, scaledDepositAmount);
 
         await expect(
-          pool.setDepositLimit(stablecoin.address, depositAmount.sub(1)),
+          pool.setDepositLimit(stablecoin.address, depositAmount.mul(2).div(3)),
         ).to.be.revertedWith(
-          'SapphirePool: sum of deposit limits is smaller than the sum of the swap limits',
+          'SapphirePool: sum of deposit limits smaller than the sum of the swap limits',
         );
       });
 

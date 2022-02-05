@@ -44,9 +44,14 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     mapping (address => AssetUtilization) public override assetsUtilization;
 
     /**
-     * @notice Stores the assets that can be deposited by LPs and swapped by cores for Creds.
+     * @dev Stores the assets that have been historically allowed to be deposited.
      */
-    address[] public supportedDepositAssets;
+    address[] internal supportedDepositAssets;
+
+    /**
+     * @dev Stores the cores that have historically been approved to swap in assets.
+     */
+    address[] internal supportedCores;
 
     mapping (address => uint8) internal _tokenDecimals;
 
@@ -100,6 +105,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
 
     /**
      * @notice Sets the limit for how many Creds can be swapped in by a Core.
+     * The sum of the core limits cannot be greater than the sum of the deposit limits.
      */
     function setCoreSwapLimit(
         address _coreAddress, 
@@ -109,6 +115,21 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         override
         onlyAdmin
     {
+        (
+            uint256 sumOfDepositLimits,
+            uint256 sumOfCoreLimits,
+            bool isCoreSupported
+        ) = _getSumOfLimits(_coreAddress);
+
+        require(
+            sumOfCoreLimits + _limit <= sumOfDepositLimits,
+            "SapphirePool: swap limit is greater than the sum of the deposit limits"
+        );
+
+        if (!isCoreSupported) {
+            supportedCores.push(_coreAddress);
+        }
+
         coreSwapUtilization[_coreAddress].limit = _limit;
 
         emit CoreSwapLimitSet(_coreAddress, _limit);
@@ -118,6 +139,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
      * @notice Sets the limit for the deposit token. If the limit is > 0, the token is added to
      * the list of the supported deposit assets. These assets also become available for being
      * swapped by the Cores.
+     * The sum of the deposit limits cannot be smaller than the sum of the core limits.
      */
     function setDepositLimit(
         address _tokenAddress, 
@@ -127,14 +149,11 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         override
         onlyAdmin
     {
-        bool isSupportedAsset = assetsUtilization[_tokenAddress].limit > 0;
-
+        bool isSupportedAsset = _tokenDecimals[_tokenAddress] > 0;
         require(
             _limit > 0 || isSupportedAsset,
             "SapphirePool: cannot set the limit of an unsupported asset to 0"
         );
-        
-        assetsUtilization[_tokenAddress].limit = _limit;
 
         // Add the token to the supported assets array if limit is > 0
         if (_limit > 0 && !isSupportedAsset) {
@@ -143,6 +162,24 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
             // Save token decimals to later compute the token scalar
             _tokenDecimals[_tokenAddress] = IERC20Metadata(_tokenAddress).decimals();
         }
+
+        assetsUtilization[_tokenAddress].limit = _limit;
+
+        uint256 scaledLimit = _getScaledAmount(
+            _limit, 
+            _tokenDecimals[_tokenAddress], 
+            18
+        );
+
+        (
+            uint256 sumOfDepositLimits,
+            uint256 sumOfCoreLimits,
+        ) = _getSumOfLimits(address(0));
+
+        require(
+            sumOfDepositLimits >= sumOfCoreLimits,
+            "SapphirePool: sum of deposit limits smaller than the sum of the swap limits"
+        );
 
         emit DepositLimitSet(_tokenAddress, _limit);
     }
@@ -170,7 +207,6 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         );
 
         if (_tokenIn == address(credsToken)) {
-            // Swapping creds for stables
             amountOut = _swapCredsForStables(
                 _tokenOut,
                 _amountIn
@@ -483,5 +519,45 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         );
 
         return credsOutAmount;
+    }
+
+    /**
+     * @dev Returns the sum of the deposit limits and the sum of the core swap limits
+     * Optionally, accepts an address of a core and returns if that core is already supported
+     */
+    function _getSumOfLimits(
+        address _optionalCoreCheck
+    )
+        private
+        view
+        returns (uint256, uint256, bool)
+    {
+        uint256 sumOfDepositLimits;
+        uint256 sumOfCoreLimits;
+        bool isCoreSupported;
+        uint8 decimals;
+
+        for (uint8 i = 0; i < supportedDepositAssets.length; i++) {
+            address token = supportedDepositAssets[i];
+            decimals = _tokenDecimals[token];
+            
+            sumOfDepositLimits += _getScaledAmount(
+                assetsUtilization[token].limit, 
+                decimals, 
+                18
+            );
+        }
+
+        for (uint8 i = 0; i < supportedCores.length; i++) {
+            address core = supportedCores[i];
+            
+            sumOfCoreLimits += coreSwapUtilization[core].limit;
+
+            if (core == _optionalCoreCheck) {
+                isCoreSupported = true;
+            }
+        }
+
+        return (sumOfDepositLimits, sumOfCoreLimits, isCoreSupported);
     }
 }
