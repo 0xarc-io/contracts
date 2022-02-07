@@ -991,7 +991,7 @@ describe('SapphirePool', () => {
       );
     });
 
-    it.only('2 LPs with 2 cores interact with the pool', async () => {
+    it('2 LPs with 2 cores interact with the pool', async () => {
       const core = ctx.signers.scoredMinter;
 
       // Initial state (A 1000, B 500)
@@ -1044,10 +1044,10 @@ describe('SapphirePool', () => {
         stablecoinScalar,
       );
 
-      const initialUtilization = await pool.assetsUtilization(
+      const preWithdrawUtilization = await pool.assetsUtilization(
         stablecoin.address,
       );
-      expect(initialUtilization.amountUsed).to.eq(depositAmount.mul(15));
+      expect(preWithdrawUtilization.amountUsed).to.eq(depositAmount.mul(15));
       await pool
         .connect(userB)
         .withdraw(scaledDepositAmount, stablecoin.address);
@@ -1055,7 +1055,9 @@ describe('SapphirePool', () => {
       const postWithdrawUtilization = await pool.assetsUtilization(
         stablecoin.address,
       );
-      expect(postWithdrawUtilization.amountUsed).to.eq(depositAmount.mul(14));
+      expect(postWithdrawUtilization.amountUsed).to.eq(
+        depositAmount.mul(15).sub(expectedWithdraw),
+      );
       expect(await stablecoin.balanceOf(userB.address)).to.eq(expectedWithdraw);
       expect(await stablecoin.balanceOf(pool.address)).to.eq(
         depositAmount.mul(15).sub(expectedWithdraw),
@@ -1069,15 +1071,6 @@ describe('SapphirePool', () => {
       const initialStableUserBBalance = await stablecoin.balanceOf(
         userB.address,
       );
-
-      // utilization = await pool.assetsUtilization(stablecoin.address);
-      // console.log({
-      //   utilization: {
-      //     limit: utils.formatUnits(utilization.limit, 6),
-      //     utilization: utils.formatUnits(utilization.amountUsed, 6),
-      //   },
-      // });
-
       await pool.connect(userB).deposit(stablecoin.address, depositAmount);
       const earnedLP = (await pool.balanceOf(userB.address)).sub(
         userBlpBalance,
@@ -1087,7 +1080,7 @@ describe('SapphirePool', () => {
       await pool.connect(userB).withdraw(earnedLP, stablecoin.address);
       expect(await pool.balanceOf(userB.address)).to.eq(userBlpBalance);
       expect(await stablecoin.balanceOf(userB.address)).to.eq(
-        initialStableUserBBalance,
+        initialStableUserBBalance.sub(2), // yields in 106666664 (instead of 106666666) due to rounding
       );
     });
   });
