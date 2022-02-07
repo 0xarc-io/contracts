@@ -304,6 +304,9 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         uint256 scaledAmount = _getScaledAmount(_amount, _decimals, _tokenDecimals[_outToken]);
         uint256 amountToWithdraw = scaledAmount * getPoolValue() / totalSupply();
 
+        AssetUtilization storage utilization = assetsUtilization[_outToken];
+        utilization.amountUsed -= amountToWithdraw;
+
         _burn(msg.sender, _amount);
 
         SafeERC20.safeTransfer(

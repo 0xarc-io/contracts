@@ -906,6 +906,18 @@ describe('SapphirePool', () => {
           );
         expect(await pool.totalSupply()).to.eq(0);
       });
+
+      it('decreases the asset utilization', async () => {
+        let utilization = await pool.assetsUtilization(stablecoin.address);
+        expect(utilization.amountUsed).to.eq(depositAmount);
+
+        await pool
+          .connect(depositor)
+          .withdraw(scaledDepositAmount, stablecoin.address);
+
+        utilization = await pool.assetsUtilization(stablecoin.address);
+        expect(utilization.amountUsed).to.eq(0);
+      });
     });
   });
 
@@ -919,13 +931,24 @@ describe('SapphirePool', () => {
       userA = depositor;
       userB = ctx.signers.staker;
 
-      await pool.setDepositLimit(stablecoin.address, depositAmount.mul(2));
-      await stablecoin.mintShare(userB.address, depositAmount);
-      await approve(depositAmount, stablecoin.address, pool.address, userA);
-      await approve(depositAmount, stablecoin.address, pool.address, userB);
+      await approve(
+        depositAmount.mul(10),
+        stablecoin.address,
+        pool.address,
+        userA,
+      );
+      await approve(
+        depositAmount.mul(10),
+        stablecoin.address,
+        pool.address,
+        userB,
+      );
     });
 
-    it.only('2 LPs deposit and withdraw at different times, while rewards are being added', async () => {
+    it('2 LPs deposit and withdraw at different times, while rewards are being added', async () => {
+      await pool.setDepositLimit(stablecoin.address, depositAmount.mul(2));
+      await stablecoin.mintShare(userB.address, depositAmount);
+
       // User A deposits
       await pool.connect(userA).deposit(stablecoin.address, depositAmount);
       expect(await pool.balanceOf(userA.address)).to.eq(scaledDepositAmount);
@@ -968,6 +991,104 @@ describe('SapphirePool', () => {
       );
     });
 
-    it('2 LPs with 2 cores interact with the pool');
+    it.only('2 LPs with 2 cores interact with the pool', async () => {
+      const core = ctx.signers.scoredMinter;
+
+      // Initial state (A 1000, B 500)
+      await stablecoin.mintShare(userA.address, depositAmount.mul(9)); // User A already has 100
+      await stablecoin.mintShare(userB.address, depositAmount.mul(5));
+      await pool.setDepositLimit(stablecoin.address, depositAmount.mul(15));
+
+      await creds.mintShare(core.address, scaledDepositAmount);
+      await pool.setCoreSwapLimit(core.address, scaledDepositAmount);
+
+      // User A stakes 1000 USDC
+      await pool
+        .connect(userA)
+        .deposit(stablecoin.address, depositAmount.mul(10));
+      expect(await pool.balanceOf(userA.address)).to.eq(
+        scaledDepositAmount.mul(10),
+      );
+
+      // User B stakes 500 USDC
+      await pool
+        .connect(userB)
+        .deposit(stablecoin.address, depositAmount.mul(5));
+      expect(await pool.balanceOf(userB.address)).to.eq(
+        scaledDepositAmount.mul(5),
+      );
+
+      // Core swaps 100 CR for 100 USDC
+      await approve(scaledDepositAmount, creds.address, pool.address, core);
+
+      await pool
+        .connect(core)
+        .swap(creds.address, stablecoin.address, scaledDepositAmount);
+      expect(await creds.balanceOf(pool.address)).to.eq(scaledDepositAmount);
+      expect(await stablecoin.balanceOf(pool.address)).to.eq(
+        depositAmount.mul(14),
+      );
+      expect(await creds.balanceOf(core.address)).to.eq(0);
+
+      // 100 USDC rewards are added
+      await stablecoin.mintShare(pool.address, depositAmount);
+
+      // User B withdraws 100 LP
+      const poolValue = await pool.getPoolValue();
+      const totalSupply = await pool.totalSupply();
+      let expectedWithdraw = scaledDepositAmount
+        .mul(poolValue)
+        .div(totalSupply);
+      expectedWithdraw = expectedWithdraw.div(
+        // Convert from 18 decimals to 6
+        stablecoinScalar,
+      );
+
+      const initialUtilization = await pool.assetsUtilization(
+        stablecoin.address,
+      );
+      expect(initialUtilization.amountUsed).to.eq(depositAmount.mul(15));
+      await pool
+        .connect(userB)
+        .withdraw(scaledDepositAmount, stablecoin.address);
+
+      const postWithdrawUtilization = await pool.assetsUtilization(
+        stablecoin.address,
+      );
+      expect(postWithdrawUtilization.amountUsed).to.eq(depositAmount.mul(14));
+      expect(await stablecoin.balanceOf(userB.address)).to.eq(expectedWithdraw);
+      expect(await stablecoin.balanceOf(pool.address)).to.eq(
+        depositAmount.mul(15).sub(expectedWithdraw),
+      );
+      expect(await pool.getPoolValue()).to.eq(
+        scaledDepositAmount.mul(16).sub(expectedWithdraw.mul(stablecoinScalar)),
+      );
+
+      // User B stakes 100 USDC for x LP
+      const userBlpBalance = await pool.balanceOf(userB.address);
+      const initialStableUserBBalance = await stablecoin.balanceOf(
+        userB.address,
+      );
+
+      // utilization = await pool.assetsUtilization(stablecoin.address);
+      // console.log({
+      //   utilization: {
+      //     limit: utils.formatUnits(utilization.limit, 6),
+      //     utilization: utils.formatUnits(utilization.amountUsed, 6),
+      //   },
+      // });
+
+      await pool.connect(userB).deposit(stablecoin.address, depositAmount);
+      const earnedLP = (await pool.balanceOf(userB.address)).sub(
+        userBlpBalance,
+      );
+
+      // User B withdraws x LP - expect that the user does not end up with more than what he staked above
+      await pool.connect(userB).withdraw(earnedLP, stablecoin.address);
+      expect(await pool.balanceOf(userB.address)).to.eq(userBlpBalance);
+      expect(await stablecoin.balanceOf(userB.address)).to.eq(
+        initialStableUserBBalance,
+      );
+    });
   });
 });
