@@ -180,7 +180,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
 
     /**
      * @notice Performs a swap between the specified tokens, for the given amount. Assumes
-     * a 1:1 conversion.
+     * a 1:1 conversion. Only approved cores have permission to swap.
      */
     function swap(
         address _tokenIn, 
@@ -191,6 +191,11 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         override
     {
         uint256 amountOut;
+
+        require(
+            coreSwapUtilization[msg.sender].limit > 0,
+            "SapphirePool: caller is not an approved core"
+        );
 
         require(
             _tokenIn != _tokenOut && (
