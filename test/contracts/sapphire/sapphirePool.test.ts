@@ -909,10 +909,64 @@ describe('SapphirePool', () => {
     });
   });
 
+  // Spreadsheets for these scenarios:
+  // https://docs.google.com/spreadsheets/d/1N55ls2dfFIqXVVEEAF6Iq6SoxcCrslcXn5N4e_L5fNo/edit#gid=163017817
   describe('Scenarios', () => {
-    it(
-      '2 LPs deposit and withdraw at different times, while rewards are being added',
-    );
+    let userA: SignerWithAddress;
+    let userB: SignerWithAddress;
+
+    beforeEach(async () => {
+      userA = depositor;
+      userB = ctx.signers.staker;
+
+      await pool.setDepositLimit(stablecoin.address, depositAmount.mul(2));
+      await stablecoin.mintShare(userB.address, depositAmount);
+      await approve(depositAmount, stablecoin.address, pool.address, userA);
+      await approve(depositAmount, stablecoin.address, pool.address, userB);
+    });
+
+    it.only('2 LPs deposit and withdraw at different times, while rewards are being added', async () => {
+      // User A deposits
+      await pool.connect(userA).deposit(stablecoin.address, depositAmount);
+      expect(await pool.balanceOf(userA.address)).to.eq(scaledDepositAmount);
+
+      // 100 rewards are added
+      await stablecoin.mintShare(pool.address, depositAmount);
+
+      // User B deposits
+      await pool.connect(userB).deposit(stablecoin.address, depositAmount);
+      expect(await pool.balanceOf(userB.address)).to.eq(utils.parseEther('50'));
+
+      // 300 usdc rewards are added
+      await stablecoin.mintShare(pool.address, depositAmount.mul(3));
+
+      // User A withdraws half
+      const withdrawAmount = (await pool.balanceOf(userA.address)).div(2);
+      await pool.connect(userA).withdraw(withdrawAmount, stablecoin.address);
+
+      expect(await pool.balanceOf(userA.address)).to.eq(utils.parseEther('50'));
+      expect(await stablecoin.balanceOf(userA.address)).to.eq(
+        depositAmount.mul(2), // 200
+      );
+
+      // User B exits
+      await pool
+        .connect(userB)
+        .withdraw(utils.parseEther('50'), stablecoin.address);
+      expect(await pool.balanceOf(userB.address)).to.eq(0);
+      expect(await stablecoin.balanceOf(userB.address)).to.eq(
+        depositAmount.mul(2),
+      );
+
+      // User A exits
+      await pool
+        .connect(userA)
+        .withdraw(utils.parseEther('50'), stablecoin.address);
+      expect(await pool.balanceOf(userA.address)).to.eq(0);
+      expect(await stablecoin.balanceOf(userA.address)).to.eq(
+        depositAmount.mul(4),
+      );
+    });
 
     it('2 LPs with 2 cores interact with the pool');
   });
