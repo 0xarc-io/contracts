@@ -134,13 +134,15 @@ describe('SapphirePool', () => {
       });
 
       it('sets the limit for how many stablecoins can be deposited', async () => {
-        let utilization = await pool.assetsUtilization(stablecoin.address);
+        let utilization = await pool.assetDepositUtilization(
+          stablecoin.address,
+        );
         expect(utilization.amountUsed).to.deep.eq(0);
         expect(utilization.limit).to.deep.eq(0);
 
         await pool.setDepositLimit(stablecoin.address, 1000);
 
-        utilization = await pool.assetsUtilization(stablecoin.address);
+        utilization = await pool.assetDepositUtilization(stablecoin.address);
         expect(utilization.amountUsed).to.eq(0);
         expect(utilization.limit).to.eq(1000);
       });
@@ -589,7 +591,9 @@ describe('SapphirePool', () => {
       });
 
       it('reverts if user has not enough tokens', async () => {
-        const utilization = await pool.assetsUtilization(stablecoin.address);
+        const utilization = await pool.assetDepositUtilization(
+          stablecoin.address,
+        );
         expect(utilization.limit).to.eq(depositAmount.mul(2));
 
         await expect(
@@ -683,6 +687,26 @@ describe('SapphirePool', () => {
           .connect(depositor)
           .deposit(stablecoin.address, depositAmount.div(2));
         expect(await pool.totalSupply()).to.eq(scaledDepositAmount);
+      });
+
+      it("increases the user's deposit amount", async () => {
+        expect(await pool.userDepositAmounts(depositor.address)).to.eq(0);
+
+        await pool
+          .connect(depositor)
+          .deposit(stablecoin.address, depositAmount.div(2));
+
+        expect(await pool.userDepositAmounts(depositor.address)).to.eq(
+          scaledDepositAmount.div(2),
+        );
+
+        await pool
+          .connect(depositor)
+          .deposit(stablecoin.address, depositAmount.div(2));
+
+        expect(await pool.userDepositAmounts(depositor.address)).to.eq(
+          scaledDepositAmount,
+        );
       });
 
       it('mints a proportional amount of LP tokens after some rewards were already deposited', async () => {
@@ -907,15 +931,37 @@ describe('SapphirePool', () => {
         expect(await pool.totalSupply()).to.eq(0);
       });
 
+      it('decreases the user deposit amount', async () => {
+        expect(await pool.userDepositAmounts(depositor.address)).to.eq(
+          scaledDepositAmount,
+        );
+
+        await pool
+          .connect(depositor)
+          .withdraw(scaledDepositAmount.div(2), stablecoin.address);
+
+        expect(await pool.userDepositAmounts(depositor.address)).to.eq(
+          scaledDepositAmount.div(2),
+        );
+
+        await pool
+          .connect(depositor)
+          .withdraw(scaledDepositAmount.div(2), stablecoin.address);
+
+        expect(await pool.userDepositAmounts(depositor.address)).to.eq(0);
+      });
+
       it('decreases the asset utilization', async () => {
-        let utilization = await pool.assetsUtilization(stablecoin.address);
+        let utilization = await pool.assetDepositUtilization(
+          stablecoin.address,
+        );
         expect(utilization.amountUsed).to.eq(depositAmount);
 
         await pool
           .connect(depositor)
           .withdraw(scaledDepositAmount, stablecoin.address);
 
-        utilization = await pool.assetsUtilization(stablecoin.address);
+        utilization = await pool.assetDepositUtilization(stablecoin.address);
         expect(utilization.amountUsed).to.eq(0);
       });
     });
@@ -945,25 +991,28 @@ describe('SapphirePool', () => {
       );
     });
 
-    it('2 LPs deposit and withdraw at different times, while rewards are being added', async () => {
+    it('Scenario 1: 2 LPs deposit and withdraw at different times, while rewards are being added', async () => {
       await pool.setDepositLimit(stablecoin.address, depositAmount.mul(2));
       await stablecoin.mintShare(userB.address, depositAmount);
 
-      // User A deposits
+      // User A deposits 100
       await pool.connect(userA).deposit(stablecoin.address, depositAmount);
       expect(await pool.balanceOf(userA.address)).to.eq(scaledDepositAmount);
+      expect(await pool.userDepositAmounts(userA.address)).to.eq(
+        scaledDepositAmount,
+      );
 
       // 100 rewards are added
       await stablecoin.mintShare(pool.address, depositAmount);
 
-      // User B deposits
+      // User B deposits 100
       await pool.connect(userB).deposit(stablecoin.address, depositAmount);
       expect(await pool.balanceOf(userB.address)).to.eq(utils.parseEther('50'));
 
       // 300 usdc rewards are added
       await stablecoin.mintShare(pool.address, depositAmount.mul(3));
 
-      // User A withdraws half
+      // User A withdraws half of its LPs
       const withdrawAmount = (await pool.balanceOf(userA.address)).div(2);
       await pool.connect(userA).withdraw(withdrawAmount, stablecoin.address);
 
@@ -971,6 +1020,7 @@ describe('SapphirePool', () => {
       expect(await stablecoin.balanceOf(userA.address)).to.eq(
         depositAmount.mul(2), // 200
       );
+      expect(await pool.userDepositAmounts(userA.address)).to.eq(0);
 
       // User B exits
       await pool
@@ -991,7 +1041,7 @@ describe('SapphirePool', () => {
       );
     });
 
-    it('2 LPs with 2 cores interact with the pool', async () => {
+    it('Scenario 2: 2 LPs with 2 cores interact with the pool', async () => {
       const core = ctx.signers.scoredMinter;
 
       // Initial state (A 1000, B 500)
@@ -1044,7 +1094,7 @@ describe('SapphirePool', () => {
         stablecoinScalar,
       );
 
-      const preWithdrawUtilization = await pool.assetsUtilization(
+      const preWithdrawUtilization = await pool.assetDepositUtilization(
         stablecoin.address,
       );
       expect(preWithdrawUtilization.amountUsed).to.eq(depositAmount.mul(15));
@@ -1052,7 +1102,7 @@ describe('SapphirePool', () => {
         .connect(userB)
         .withdraw(scaledDepositAmount, stablecoin.address);
 
-      const postWithdrawUtilization = await pool.assetsUtilization(
+      const postWithdrawUtilization = await pool.assetDepositUtilization(
         stablecoin.address,
       );
       expect(postWithdrawUtilization.amountUsed).to.eq(

@@ -25,7 +25,9 @@ interface ISapphirePool {
 
     function coreSwapUtilization(address _coreAddress) external view returns (uint256, uint256);
 
-    function assetsUtilization(address _tokenAddress) external view returns (uint256, uint256);
+    function assetDepositUtilization(address _tokenAddress) external view returns (uint256, uint256);
+
+    function userDepositAmounts(address _userAddress) external view returns (uint256);
 
     function getDepositAssets() external view returns (address[] memory);
 
