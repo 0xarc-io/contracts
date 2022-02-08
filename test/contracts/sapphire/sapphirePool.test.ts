@@ -1,4 +1,5 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
+import { BASE } from '@src/constants';
 import {
   ArcProxyFactory,
   MockSapphirePool,
@@ -13,6 +14,7 @@ import {
   TRANSFER_FAILED,
   TRANSFER_FROM_FAILED,
 } from '@test/helpers/contractErrors';
+import { roundUpDiv } from '@test/helpers/roundUpOperations';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { BigNumber, BigNumberish, utils } from 'ethers';
@@ -725,10 +727,10 @@ describe('SapphirePool', () => {
           .connect(depositor)
           .deposit(stablecoin.address, depositAmount.div(2));
 
-        const expectedAdditionalLpTokens = scaledDepositAmount
-          .div(2)
-          .mul(scaledDepositAmount.div(2))
-          .div(scaledDepositAmount.div(2).add(scaledDepositAmount));
+        const expectedAdditionalLpTokens = roundUpDiv(
+          scaledDepositAmount.div(2).mul(scaledDepositAmount.div(2)).div(BASE),
+          scaledDepositAmount.div(2).add(scaledDepositAmount),
+        );
 
         expect(
           await pool.balanceOf(depositor.address),
@@ -1098,16 +1100,21 @@ describe('SapphirePool', () => {
         stablecoin.address,
       );
       expect(preWithdrawUtilization.amountUsed).to.eq(depositAmount.mul(15));
+
       await pool
         .connect(userB)
         .withdraw(scaledDepositAmount, stablecoin.address);
+
+      const postWithdrawBalance = await stablecoin.balanceOf(userB.address);
+      expect(expectedWithdraw).to.eq(postWithdrawBalance);
 
       const postWithdrawUtilization = await pool.assetDepositUtilization(
         stablecoin.address,
       );
       expect(postWithdrawUtilization.amountUsed).to.eq(
-        depositAmount.mul(15).sub(expectedWithdraw),
+        preWithdrawUtilization.amountUsed.sub(expectedWithdraw),
       );
+
       expect(await stablecoin.balanceOf(userB.address)).to.eq(expectedWithdraw);
       expect(await stablecoin.balanceOf(pool.address)).to.eq(
         depositAmount.mul(15).sub(expectedWithdraw),
@@ -1130,7 +1137,7 @@ describe('SapphirePool', () => {
       await pool.connect(userB).withdraw(earnedLP, stablecoin.address);
       expect(await pool.balanceOf(userB.address)).to.eq(userBlpBalance);
       expect(await stablecoin.balanceOf(userB.address)).to.eq(
-        initialStableUserBBalance.sub(2), // yields in 106666664 (instead of 106666666) due to rounding
+        initialStableUserBBalance,
       );
     });
   });

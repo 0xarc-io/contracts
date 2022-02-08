@@ -7,10 +7,9 @@ import {ISapphirePool} from "./ISapphirePool.sol";
 import {SafeERC20} from "../../lib/SafeERC20.sol";
 import {Adminable} from "../../lib/Adminable.sol";
 import {Address} from "../../lib/Address.sol";
+import {Math} from "../../lib/Math.sol";
 import {IERC20Metadata} from "../../token/IERC20Metadata.sol";
 import {InitializableBaseERC20} from "../../token/InitializableBaseERC20.sol";
-
-import "hardhat/console.sol";
 
 /**
  * @notice A special AMM-like contract where swapping is permitted only by an approved
@@ -38,6 +37,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         uint256 scaledWithdrawAmt;
         uint256 totalWithdraw;
         uint256 userDeposit;
+        uint256 assetUtilization;
         uint256 userReward;
     }
     
@@ -278,7 +278,10 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         
         uint256 lpToMint;
         if (poolValue > 0) {
-            lpToMint = scaledAmount * totalSupply() / poolValue;
+            lpToMint = Math.roundUpDiv(
+                scaledAmount * totalSupply() / 10 ** _decimals, 
+                poolValue
+            );
         } else {
             lpToMint = scaledAmount;
         }
@@ -332,75 +335,6 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         assetDepositUtilization[_withdrawToken].amountUsed -= assetUtilizationReduceAmt;
         userDepositAmounts[msg.sender] -= userDepositReduceAmt;
 
-        // uint256 poolValue = getPoolValue();
-        // uint256 totalSupply = totalSupply();
-
-        // uint256 withdrawAmt = _amount * poolValue / totalSupply;
-        // uint256 scaledWithdrawAmt = _getScaledAmount(
-        //     withdrawAmt, 
-        //     _decimals, 
-        //     _tokenDecimals[_withdrawToken]
-        // );
-
-        // console.log("a");
-        // uint256 totalWithdraw = balanceOf(msg.sender) * poolValue / totalSupply;
-        // console.log("a1");
-        // uint256 userDeposit = userDepositAmounts[msg.sender];
-        // // Amount available for withdraw, excluding the deposited amount
-        // console.log("a2");
-        // console.log("totalWithdraw", totalWithdraw);
-        // console.log("userDeposit", userDeposit);
-        // uint256 userReward = totalWithdraw - userDeposit;
-
-        // console.log("a3");
-        // console.log("withdrawAmt", withdrawAmt);
-        // console.log("userReward", userReward);
-        // console.log("userDeposit", userDeposit);
-
-        // if (userReward == 0) {
-        //     console.log("a");
-        //     assetDepositUtilization[_withdrawToken].amountUsed -= scaledWithdrawAmt;
-        //     console.log("a4");
-        //     userDepositAmounts[msg.sender] -= withdrawAmt;
-        //     console.log("a5");
-        // } else {
-        //     console.log("a6");
-        //     console.log("withdrawAmt", withdrawAmt);
-        //     console.log("userReward", userReward);
-        //     uint256 reduceDeposit;// = withdrawAmt - userReward;
-
-        //     if (userReward > withdrawAmt) {
-        //         console.log("b");
-        //         if (userDeposit > withdrawAmt) {
-        //             console.log("b1");
-        //             reduceDeposit = withdrawAmt;
-        //         } else {
-        //             console.log("b2");
-        //             reduceDeposit = userDeposit;
-        //         }
-        //     } else {
-        //         console.log("b3");
-        //         reduceDeposit = withdrawAmt - userReward;
-        //     }
-
-        //     console.log("b4");
-        //     if (reduceDeposit > userDeposit) {
-        //         console.log("b5");
-        //         reduceDeposit = userDeposit;
-        //     }
-
-        //     console.log("a7");
-        //     assetDepositUtilization[_withdrawToken].amountUsed -= _getScaledAmount(
-        //         reduceDeposit,
-        //         _decimals,
-        //         _tokenDecimals[_withdrawToken]
-        //     );
-        //     console.log("a8");
-        //     userDepositAmounts[msg.sender] -= reduceDeposit;
-        //     console.log("a9");
-        // }
-        
-        // console.log("a10")`;
         _burn(msg.sender, _amount);
 
         SafeERC20.safeTransfer(
@@ -669,36 +603,36 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     {
         WithdrawAmountInfo memory info = _getWithdrawAmountsVars(_amount, _withdrawToken);
 
-        if (info.userReward == 0) {
-            return (
-                info.scaledWithdrawAmt,
-                info.withdrawAmt,
-                info.scaledWithdrawAmt
-            );
-        } else {
-            uint256 reduceDeposit;
-
-            if (info.userReward > info.withdrawAmt) {
-                if (info.userDeposit > info.withdrawAmt) {
-                    reduceDeposit = info.withdrawAmt;
-                } else {
-                    reduceDeposit = info.userDeposit;
-                }
+        if (info.userDeposit > 0) {
+            if (info.userDeposit > info.withdrawAmt) {
+                return (
+                    info.scaledWithdrawAmt,
+                    info.withdrawAmt,
+                    info.scaledWithdrawAmt
+                );
             } else {
-                reduceDeposit = info.withdrawAmt - info.userReward;
+                if (info.assetUtilization > info.userDeposit) {
+                    return (
+                        _getScaledAmount(
+                            info.userDeposit,
+                            _decimals,
+                            _tokenDecimals[_withdrawToken]
+                        ),
+                        info.userDeposit,
+                        info.scaledWithdrawAmt
+                    );
+                } else {
+                    return (
+                        info.assetUtilization,
+                        info.userDeposit,
+                        info.scaledWithdrawAmt
+                    );
+                }
             }
-
-            if (reduceDeposit > info.userDeposit) {
-                reduceDeposit = info.userDeposit;
-            }
-
+        } else {
             return (
-                _getScaledAmount(
-                    reduceDeposit,
-                    _decimals,
-                    _tokenDecimals[_withdrawToken]
-                ),
-                reduceDeposit,
+                0,
+                0,
                 info.scaledWithdrawAmt
             );
         }
@@ -725,9 +659,9 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         );
 
         info.totalWithdraw = balanceOf(msg.sender) * info.poolValue / info.totalSupply;
+        
         info.userDeposit = userDepositAmounts[msg.sender];
-        // Amount available for withdraw, excluding the deposited amount
-        info.userReward = info.totalWithdraw - info.userDeposit;
+        info.assetUtilization = assetDepositUtilization[_withdrawToken].amountUsed;
 
         return info;
     }
