@@ -29,7 +29,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
     event ActionsOperated(
         SapphireTypes.Action[] _actions,
-        SapphireTypes.ScoreProof _scoreProof,
+        SapphireTypes.ScoreProof[] _scoreProofs,
         address indexed _user
     );
 
@@ -488,12 +488,14 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     /**
      * @dev Deposits the given `_amount` of collateral to the `msg.sender`'s vault.
      *
-     * @param _amount The amount of collateral to deposit
-     * @param _scoreProof The credit score proof - optional
+     * @param _amount       The amount of collateral to deposit
+     * @param _scoreProofs  The passport score proof - optional
+     *                          0 - score proof
+     *                          1 - borrow limit proof
      */
     function deposit(
         uint256 _amount,
-        SapphireTypes.ScoreProof memory _scoreProof
+        SapphireTypes.ScoreProof[] memory _scoreProofs
     )
         public
     {
@@ -505,12 +507,12 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             address(0)
         );
 
-        executeActions(actions, _scoreProof);
+        executeActions(actions, _scoreProofs);
     }
 
     function withdraw(
         uint256 _amount,
-        SapphireTypes.ScoreProof memory _scoreProof
+        SapphireTypes.ScoreProof[] memory _scoreProofs
     )
         public
     {
@@ -522,7 +524,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             address(0)
         );
 
-        executeActions(actions, _scoreProof);
+        executeActions(actions, _scoreProofs);
     }
 
     /**
@@ -530,12 +532,14 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      *
      * @param _amount The amount of synthetic to borrow
      * @param _borrowAssetAddress The address of token to borrow
-     * @param _scoreProof The credit score proof - mandatory
+     * @param _scoreProofs The credit score proof - mandatory
+     *                      0 - score proof
+     *                      1 - borrow limit proof
      */
     function borrow(
         uint256 _amount,
         address _borrowAssetAddress,
-        SapphireTypes.ScoreProof memory _scoreProof
+        SapphireTypes.ScoreProof[] memory _scoreProofs
     )
         public
     {
@@ -547,13 +551,13 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             address(0)
         );
 
-        executeActions(actions, _scoreProof);
+        executeActions(actions, _scoreProofs);
     }
 
     function repay(
         uint256 _amount,
         address _borrowAssetAddress,
-        SapphireTypes.ScoreProof memory _scoreProof
+        SapphireTypes.ScoreProof[] memory _scoreProofs
     )
         public
     {
@@ -565,18 +569,20 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             address(0)
         );
 
-        executeActions(actions, _scoreProof);
+        executeActions(actions, _scoreProofs);
     }
 
     /**
      * @dev Repays the entire debt and withdraws the all the collateral
      *
      * @param _borrowAssetAddress The address of token to repay
-     * @param _scoreProof           The credit score proof - optional
+     * @param _scoreProofs        The passport score proof - optional
+     *                              0 - score proof
+     *                              1 - borrow limit proof
      */
     function exit(
         address _borrowAssetAddress,
-        SapphireTypes.ScoreProof memory _scoreProof
+        SapphireTypes.ScoreProof[] memory _scoreProofs
     )
         public
     {
@@ -601,7 +607,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             address(0)
         );
 
-        executeActions(actions, _scoreProof);
+        executeActions(actions, _scoreProofs);
     }
 
     /**
@@ -611,12 +617,14 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      *
      * @param _owner the owner of the vault to liquidate
      * @param _borrowAssetAddress The address of token to repay
-     * @param _scoreProof The credit score proof (optional)
+     * @param _scoreProofs        The passport score proof - optional
+     *                            0 - score proof
+     *                            1 - borrow limit proof
      */
     function liquidate(
         address _owner,
         address _borrowAssetAddress,
-        SapphireTypes.ScoreProof memory _scoreProof
+        SapphireTypes.ScoreProof[] memory _scoreProofs
     )
         public
     {
@@ -628,7 +636,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             _owner
         );
 
-        executeActions(actions, _scoreProof);
+        executeActions(actions, _scoreProofs);
     }
 
     /**
@@ -637,12 +645,13 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      *      actually executing the actions.
      *
      * @param _actions      An array of actions to execute
-     * @param _scoreProof   The credit score proof of the user that calls this
-     *                      function
+     * @param _scoreProofs  The passport score proof - optional
+     *                      0 - score proof
+     *                      1 - borrow limit proof
      */
     function executeActions(
         SapphireTypes.Action[] memory _actions,
-        SapphireTypes.ScoreProof memory _scoreProof
+        SapphireTypes.ScoreProof[] memory _scoreProofs
     )
         public
     {
@@ -657,7 +666,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         );
 
         require (
-            _scoreProof.protocol == _proofProtocol,
+            _scoreProofs[0].protocol == _proofProtocol,
             "SapphireCoreV1: incorrect proof protocol"
         );
 
@@ -669,7 +678,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         (
             uint256 assessedCRatio,
             uint256 currentPrice
-        ) = _getVariablesForActions(_actions, _scoreProof);
+        ) = _getVariablesForActions(_actions, _scoreProofs[0]);
 
         for (uint256 i = 0; i < _actions.length; i++) {
             SapphireTypes.Action memory action = _actions[i];
@@ -693,7 +702,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
         emit ActionsOperated(
             _actions,
-            _scoreProof,
+            _scoreProofs,
             msg.sender
         );
     }
