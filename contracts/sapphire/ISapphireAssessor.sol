@@ -13,4 +13,12 @@ interface ISapphireAssessor {
     )
         external
         returns (uint256);
+
+    function assessCreditLimit(
+        uint256 _borrowAmount,
+        uint256 _creditLimit,
+        SapphireTypes.ScoreProof calldata _scoreProof
+    )
+        external
+        returns (bool);
 }

@@ -34,6 +34,13 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
         uint256 _assessedValue
     );
 
+    event CreditLimitAssessed(
+        address _account,
+        uint256 _borrowAmount,
+        uint256 _creditLimit,
+        bool _isBorrowAmountValid
+    );
+
     event MaxScoreSet(uint16 _maxScore);
 
     /* ========== Constructor ========== */
@@ -108,6 +115,58 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
         emit Assessed(_scoreProof.account, result);
 
         return result;
+    }
+
+    function assessCreditLimit(
+        uint256 _borrowAmount,
+        uint256 _creditLimit,
+        SapphireTypes.ScoreProof calldata _scoreProof
+    )
+        public
+        override
+        checkScoreProof(_scoreProof, true, false)
+        returns (bool)
+    {
+
+        require(
+            _borrowAmount > 0,
+            "SapphireAssessor: The borrow amount cannot be zero"
+        );
+
+        require(
+            _creditLimit > 0,
+            "SapphireAssessor: The credit limit cannot be zero"
+        );
+
+        bool _isBorrowAmountValid = _borrowAmount <= _creditLimit;
+
+        emit CreditLimitAssessed(_scoreProof.account, _borrowAmount, _creditLimit, _isBorrowAmountValid);
+
+        return _isBorrowAmountValid;
+    }
+
+    function readAssessCreditLimit(
+        uint256 _borrowAmount,
+        uint256 _creditLimit,
+        SapphireTypes.ScoreProof calldata _scoreProof
+    )
+        public
+        view
+        checkScoreProof(_scoreProof, true, false)
+        returns (bool)
+    {
+
+        require(
+            _borrowAmount > 0,
+            "SapphireAssessor: The borrow amount cannot be zero"
+        );
+
+        require(
+            _creditLimit > 0,
+            "SapphireAssessor: The credit limit cannot be zero"
+        );
+
+        return _borrowAmount <= _creditLimit;
     }
 
     function setMapper(
