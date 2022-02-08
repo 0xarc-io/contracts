@@ -119,7 +119,6 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
 
     function assessCreditLimit(
         uint256 _borrowAmount,
-        uint256 _creditLimit,
         SapphireTypes.ScoreProof calldata _scoreProof
     )
         public
@@ -133,14 +132,9 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
             "SapphireAssessor: The borrow amount cannot be zero"
         );
 
-        require(
-            _creditLimit > 0,
-            "SapphireAssessor: The credit limit cannot be zero"
-        );
+        bool _isBorrowAmountValid = _borrowAmount <= _scoreProof.score;
 
-        bool _isBorrowAmountValid = _borrowAmount <= _creditLimit;
-
-        emit CreditLimitAssessed(_scoreProof.account, _borrowAmount, _creditLimit, _isBorrowAmountValid);
+        emit CreditLimitAssessed(_scoreProof.account, _borrowAmount, _scoreProof.score, _isBorrowAmountValid);
 
         return _isBorrowAmountValid;
     }

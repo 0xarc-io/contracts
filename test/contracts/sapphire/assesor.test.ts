@@ -428,21 +428,10 @@ describe('SapphireAssessor', () => {
   });
 
   describe('#assessCreditLimit', () => {
-    it('returns false if credit limit is 0', async () => {
-      await expect(
-        assessor.assessCreditLimit(
-          utils.parseEther('1'),
-          0,
-          getScoreProof(borrowLimitScore1, scoresTree),
-        ),
-      ).to.be.revertedWith('SapphireAssessor: The credit limit cannot be zero');
-    });
-
     it('reverts if borrow amount is 0', async () => {
       await expect(
         assessor.assessCreditLimit(
           0,
-          borrowLimitScore1.score,
           getScoreProof(borrowLimitScore1, scoresTree),
         ),
       ).to.be.revertedWith('SapphireAssessor: The borrow amount cannot be zero');
@@ -452,7 +441,6 @@ describe('SapphireAssessor', () => {
       await expect(
         assessor.assessCreditLimit(
           borrowLimitScore1.score.sub(1),
-          borrowLimitScore1.score,
           {
             ...getScoreProof(borrowLimitScore1, scoresTree),
             score: borrowLimitScore1.score.sub(1),
@@ -465,7 +453,6 @@ describe('SapphireAssessor', () => {
       await expect(
         assessor.assessCreditLimit(
           borrowLimitScore1.score.sub(1),
-          borrowLimitScore1.score,
           {
             account: user1.address,
             protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
@@ -479,7 +466,6 @@ describe('SapphireAssessor', () => {
     it('returns false if borrow value is greater then credit limit and has a valid proof', async () => {
       await expect(assessor.assessCreditLimit(
         borrowLimitScore1.score.add(1),
-        borrowLimitScore1.score,
         getScoreProof(borrowLimitScore1, scoresTree),
       )).to.emit(assessor, 'CreditLimitAssessed')
         .withArgs(user1.address, borrowLimitScore1.score.add(1), borrowLimitScore1.score, false);
@@ -487,7 +473,6 @@ describe('SapphireAssessor', () => {
 
     it('returns true if borrow value is equal credit limit and has a valid proof', async () => {
       await expect(assessor.assessCreditLimit(
-        borrowLimitScore1.score,
         borrowLimitScore1.score,
         getScoreProof(borrowLimitScore1, scoresTree),
       )).to.emit(assessor, 'CreditLimitAssessed')
