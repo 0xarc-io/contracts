@@ -117,13 +117,13 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
         return result;
     }
 
-    function assessCreditLimit(
+    function assessBorrowLimit(
         uint256 _borrowAmount,
-        SapphireTypes.ScoreProof calldata _scoreProof
+        SapphireTypes.ScoreProof calldata _borrowLimitProof
     )
         public
         override
-        checkScoreProof(_scoreProof, true, false)
+        checkScoreProof(_borrowLimitProof, true, false)
         returns (bool)
     {
 
@@ -132,35 +132,11 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
             "SapphireAssessor: The borrow amount cannot be zero"
         );
 
-        bool _isBorrowAmountValid = _borrowAmount <= _scoreProof.score;
+        bool _isBorrowAmountValid = _borrowAmount <= _borrowLimitProof.score;
 
-        emit CreditLimitAssessed(_scoreProof.account, _borrowAmount, _scoreProof.score, _isBorrowAmountValid);
+        emit CreditLimitAssessed(_borrowLimitProof.account, _borrowAmount, _borrowLimitProof.score, _isBorrowAmountValid);
 
         return _isBorrowAmountValid;
-    }
-
-    function readAssessCreditLimit(
-        uint256 _borrowAmount,
-        uint256 _creditLimit,
-        SapphireTypes.ScoreProof calldata _scoreProof
-    )
-        public
-        view
-        checkScoreProof(_scoreProof, true, false)
-        returns (bool)
-    {
-
-        require(
-            _borrowAmount > 0,
-            "SapphireAssessor: The borrow amount cannot be zero"
-        );
-
-        require(
-            _creditLimit > 0,
-            "SapphireAssessor: The credit limit cannot be zero"
-        );
-
-        return _borrowAmount <= _creditLimit;
     }
 
     function setMapper(

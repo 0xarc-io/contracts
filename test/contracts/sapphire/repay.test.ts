@@ -7,6 +7,7 @@ import { SapphireTestArc } from '@src/SapphireTestArc';
 import { SyntheticTokenV2Factory, TestToken } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import {
+  BORROW_LIMIT_PROOF_PROTOCOL,
   DEFAULT_COLLATERAL_DECIMALS,
   DEFAULT_HIGH_C_RATIO,
   DEFAULT_PROOF_PROTOCOL,
@@ -40,6 +41,7 @@ describe('SapphireCore.repay()', () => {
   let arc: SapphireTestArc;
   let signers: TestingSigners;
   let minterCreditScore: PassportScore;
+  let minterBorrowLimitScore: PassportScore;
   let creditScoreTree: PassportScoreTree;
   let stableCoin: TestToken;
 
@@ -87,7 +89,12 @@ describe('SapphireCore.repay()', () => {
       protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: BigNumber.from(20),
     };
-    creditScoreTree = new PassportScoreTree([minterCreditScore, creditScore2]);
+    minterBorrowLimitScore = {
+      account: ctx.signers.scoredMinter.address,
+      protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
+      score: BORROW_AMOUNT,
+    };
+    creditScoreTree = new PassportScoreTree([minterCreditScore, creditScore2, minterBorrowLimitScore]);
 
     await setupSapphire(ctx, {
       merkleRoot: creditScoreTree.getHexRoot(),
@@ -104,6 +111,7 @@ describe('SapphireCore.repay()', () => {
     await setupBaseVault(
       ctx.sdks.sapphire,
       ctx.signers.scoredMinter,
+      getScoreProof(minterBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
       getScoreProof(minterCreditScore, creditScoreTree),

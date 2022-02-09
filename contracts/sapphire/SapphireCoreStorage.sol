@@ -64,10 +64,10 @@ contract SapphireCoreStorageV1 {
     ISapphireOracle public oracle;
 
     /**
-     * @dev If a collateral asset is used that has less than 18 decimal places
+     * @dev If a erc20 asset is used that has less than 18 decimal places
      *      a precision scalar is required to calculate the correct values.
      */
-    uint256 public precisionScalar;
+    mapping(address => uint256) public precisionScalars;
 
     /**
      * @dev The actual address of the collateral used for this core system.
@@ -142,7 +142,12 @@ contract SapphireCoreStorageV1 {
     /**
      * @dev The protocol value to be used in the score proofs
      */
-    bytes32 internal _proofProtocol;
+    bytes32 internal _creditScoreProtocol;
+
+    /**
+     * @dev The protocol value to be used in the borrow limit proofs
+     */
+    bytes32 internal _borrowLimitProtocol;
 
     /**
      * @dev The list of supported tokens for read purpose.

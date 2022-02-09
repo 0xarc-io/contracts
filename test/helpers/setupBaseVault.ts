@@ -16,6 +16,7 @@ import { getEmptyScoreProof } from '@src/utils';
 export async function setupBaseVault(
   arc: SapphireTestArc,
   caller: SignerWithAddress,
+  borrowLimitProof: PassportScoreProof,
   collateralAmount = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS),
   borrowAmount = utils.parseEther('200'),
   scoreProof?: PassportScoreProof,
@@ -34,6 +35,7 @@ export async function setupBaseVault(
         undefined,
         utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       ),
+    borrowLimitProof,
     synthName,
     caller,
   );

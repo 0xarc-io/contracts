@@ -427,10 +427,10 @@ describe('SapphireAssessor', () => {
     });
   });
 
-  describe('#assessCreditLimit', () => {
+  describe('#assessBorrowLimit', () => {
     it('reverts if borrow amount is 0', async () => {
       await expect(
-        assessor.assessCreditLimit(
+        assessor.assessBorrowLimit(
           0,
           getScoreProof(borrowLimitScore1, scoresTree),
         ),
@@ -439,7 +439,7 @@ describe('SapphireAssessor', () => {
 
     it(`reverts if the proof is invalid`, async () => {
       await expect(
-        assessor.assessCreditLimit(
+        assessor.assessBorrowLimit(
           borrowLimitScore1.score.sub(1),
           {
             ...getScoreProof(borrowLimitScore1, scoresTree),
@@ -451,7 +451,7 @@ describe('SapphireAssessor', () => {
 
     it('reverts if score proof is empty', async () => {
       await expect(
-        assessor.assessCreditLimit(
+        assessor.assessBorrowLimit(
           borrowLimitScore1.score.sub(1),
           {
             account: user1.address,
@@ -464,7 +464,7 @@ describe('SapphireAssessor', () => {
     });
 
     it('returns false if borrow value is greater then credit limit and has a valid proof', async () => {
-      await expect(assessor.assessCreditLimit(
+      await expect(assessor.assessBorrowLimit(
         borrowLimitScore1.score.add(1),
         getScoreProof(borrowLimitScore1, scoresTree),
       )).to.emit(assessor, 'CreditLimitAssessed')
@@ -472,7 +472,7 @@ describe('SapphireAssessor', () => {
     });
 
     it('returns true if borrow value is equal credit limit and has a valid proof', async () => {
-      await expect(assessor.assessCreditLimit(
+      await expect(assessor.assessBorrowLimit(
         borrowLimitScore1.score,
         getScoreProof(borrowLimitScore1, scoresTree),
       )).to.emit(assessor, 'CreditLimitAssessed')

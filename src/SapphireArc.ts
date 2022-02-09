@@ -6,7 +6,7 @@ import {
   PassportScoreProof,
   Vault,
 } from '@arc-types/sapphireCore';
-import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
+import { BORROW_LIMIT_PROOF_PROTOCOL, DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
 import {
   BigNumber,
   BigNumberish,
@@ -78,6 +78,10 @@ export class SapphireArc {
           undefined,
           utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
         ),
+    minterBorrowLimitScore: PassportScoreProof = getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
+        ),
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
@@ -103,6 +107,7 @@ export class SapphireArc {
     return this.executeActions(
       actions,
       passportScoreProof,
+      minterBorrowLimitScore,
       synthName,
       caller,
       overrides,
@@ -158,6 +163,10 @@ export class SapphireArc {
           undefined,
           utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
         ),
+    passportBorrowLimitProof: PassportScoreProof = getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+        ),
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
@@ -166,7 +175,7 @@ export class SapphireArc {
 
     await core.executeActions(
       actions,
-      [passportScoreProof],
+      [passportScoreProof, passportBorrowLimitProof],
       overrides,
     );
 
@@ -184,6 +193,10 @@ export class SapphireArc {
           undefined,
           utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
         ),
+    borrowLimitProof: PassportScoreProof = getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
+        ),
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
@@ -193,7 +206,7 @@ export class SapphireArc {
     return core.borrow(
       amount,
       borrowAssetAddress,
-      [passportScoreProof],
+      [passportScoreProof, borrowLimitProof],
       overrides,
     );
   }
