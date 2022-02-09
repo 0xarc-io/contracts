@@ -17,11 +17,11 @@ import {InitializableBaseERC20} from "../../token/InitializableBaseERC20.sol";
  * into this contract, and shared among the LPs.
  */
 contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
-    
+
     /* ========== Libraries ========== */
 
     using Address for address;
-    
+
     /* ========== Structs ========== */
 
     struct AssetUtilization {
@@ -35,24 +35,23 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         uint256 totalSupply;
         uint256 withdrawAmt;
         uint256 scaledWithdrawAmt;
-        uint256 totalWithdraw;
         uint256 userDeposit;
         uint256 assetUtilization;
-        uint256 userReward;
+        uint256 scaledAssetUtilization;
     }
-    
+
     /* ========== Variables ========== */
 
     IERC20Metadata public credsToken;
 
     /**
-     * @notice Determines the amount of creds the core can swap in. The amounts are stored in 
+     * @notice Determines the amount of creds the core can swap in. The amounts are stored in
      * 18 decimals.
      */
     mapping (address => AssetUtilization) public override coreSwapUtilization;
 
     /**
-     * @notice Determines the amount of tokens that can be deposited by 
+     * @notice Determines the amount of tokens that can be deposited by
      * liquidity providers. The amounts are stored in the asset's native decimals.
      */
     mapping (address => AssetUtilization) public override assetDepositUtilization;
@@ -82,23 +81,23 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     event DepositLimitSet(address _asset, uint256 _limit);
 
     event TokensDeposited(
-        address _user,
-        address _token,
+        address indexed _user,
+        address indexed _token,
         uint256 _depositAmount,
         uint256 _lpTokensAmount
     );
 
     event TokensWithdrawn(
-        address _user, 
-        address _token, 
-        uint256 _credsAmount, 
+        address indexed _user,
+        address indexed _token,
+        uint256 _credsAmount,
         uint256 _withdrawAmount
     );
 
     event TokensSwapped(
-        address _user, 
-        address _tokenIn, 
-        address _tokenOut, 
+        address indexed _user,
+        address indexed _tokenIn,
+        address indexed _tokenOut,
         uint256 _amountIn,
         uint256 _amountOut
     );
@@ -109,9 +108,9 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         string memory name_,
         string memory symbol_,
         address _credsToken
-    ) 
-        external 
-        onlyAdmin 
+    )
+        external
+        onlyAdmin
         initializer
     {
         _init(name_, symbol_, 18);
@@ -128,9 +127,9 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
      * The sum of the core limits cannot be greater than the sum of the deposit limits.
      */
     function setCoreSwapLimit(
-        address _coreAddress, 
+        address _coreAddress,
         uint256 _limit
-    ) 
+    )
         external
         override
         onlyAdmin
@@ -164,7 +163,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
      * @param _limit The limit for the deposit token, in its own native decimals.
      */
     function setDepositLimit(
-        address _tokenAddress, 
+        address _tokenAddress,
         uint256 _limit
     )
         external
@@ -205,10 +204,10 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
      * a 1:1 conversion. Only approved cores have permission to swap.
      */
     function swap(
-        address _tokenIn, 
-        address _tokenOut, 
+        address _tokenIn,
+        address _tokenOut,
         uint256 _amountIn
-    ) 
+    )
         external
         override
     {
@@ -238,7 +237,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
                 _amountIn
             );
         }
-        
+
         emit TokensSwapped(
             msg.sender,
             _tokenIn,
@@ -257,7 +256,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     function deposit(
         address _token,
         uint256 _amount
-    ) 
+    )
         external
         override
     {
@@ -275,11 +274,11 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
 
         uint256 scaledAmount = _getScaledAmount(_amount, _tokenDecimals[_token], _decimals);
         uint256 poolValue = getPoolValue();
-        
+
         uint256 lpToMint;
         if (poolValue > 0) {
             lpToMint = Math.roundUpDiv(
-                scaledAmount * totalSupply() / 10 ** _decimals, 
+                scaledAmount * totalSupply() / 10 ** _decimals,
                 poolValue
             );
         } else {
@@ -288,13 +287,13 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
 
         utilization.amountUsed += _amount;
         userDepositAmounts[msg.sender] += scaledAmount;
-        
+
         _mint(msg.sender, lpToMint);
 
         SafeERC20.safeTransferFrom(
-            IERC20Metadata(_token), 
-            msg.sender, 
-            address(this), 
+            IERC20Metadata(_token),
+            msg.sender,
+            address(this),
             _amount
         );
 
@@ -314,8 +313,8 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
      */
     function withdraw(
         uint256 _amount,
-        address _withdrawToken 
-    ) 
+        address _withdrawToken
+    )
         external
         override
     {
@@ -338,15 +337,15 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         _burn(msg.sender, _amount);
 
         SafeERC20.safeTransfer(
-            IERC20Metadata(_withdrawToken), 
-            msg.sender, 
+            IERC20Metadata(_withdrawToken),
+            msg.sender,
             scaledWithdrawAmt
         );
 
         emit TokensWithdrawn(
-            msg.sender, 
-            _withdrawToken, 
-            _amount, 
+            msg.sender,
+            _withdrawToken,
+            _amount,
             scaledWithdrawAmt
         );
     }
@@ -356,10 +355,10 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     /**
      * @notice Returns the rewards accumulated into the pool
      */
-    function accumulatedRewardAmount() 
+    function accumulatedRewardAmount()
         external
-        override 
-        view 
+        override
+        view
         returns (uint256)
     {
         uint256 poolValue = getPoolValue();
@@ -369,8 +368,8 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         for (uint8 i = 0; i < supportedDepositAssets.length; i++) {
             address token = supportedDepositAssets[i];
             depositValue += _getScaledAmount(
-                assetDepositUtilization[token].amountUsed, 
-                _tokenDecimals[token], 
+                assetDepositUtilization[token].amountUsed,
+                _tokenDecimals[token],
                 18
             );
         }
@@ -382,9 +381,9 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
      * @notice Returns the list of the supported assets for depositing by LPs and swapping by Cores.
      * If an asset has a limit of 0, it will be excluded from the list.
      */
-    function getDepositAssets() 
-        external 
-        view 
+    function getDepositAssets()
+        external
+        view
         override
         returns (address[] memory)
     {
@@ -414,9 +413,9 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     /**
      * @notice Returns the value of the pool in terms of the deposited stablecoins and creds.
      */
-    function getPoolValue() 
-        public 
-        view 
+    function getPoolValue()
+        public
+        view
         override
         returns (uint256)
     {
@@ -441,13 +440,13 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     /* ========== Private functions ========== */
 
     /**
-     * @dev Used to compute the amount of LP tokens to mint 
+     * @dev Used to compute the amount of LP tokens to mint
      */
     function _getScaledAmount(
         uint256 _amount,
         uint8 _decimalsIn,
         uint8 _decimalsOut
-    ) 
+    )
         internal
         pure
         returns (uint256)
@@ -494,15 +493,15 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         utilization.amountUsed += _credsAmount;
 
         SafeERC20.safeTransferFrom(
-            IERC20Metadata(credsToken), 
-            msg.sender, 
-            address(this), 
+            IERC20Metadata(credsToken),
+            msg.sender,
+            address(this),
             _credsAmount
         );
 
         SafeERC20.safeTransfer(
-            IERC20Metadata(_tokenOut), 
-            msg.sender, 
+            IERC20Metadata(_tokenOut),
+            msg.sender,
             expectedOutAmount
         );
 
@@ -534,15 +533,15 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         utilization.amountUsed -= credsOutAmount;
 
         SafeERC20.safeTransferFrom(
-            IERC20Metadata(_tokenIn), 
-            msg.sender, 
+            IERC20Metadata(_tokenIn),
+            msg.sender,
             address(this),
             _stablesAmount
         );
 
         SafeERC20.safeTransfer(
-            IERC20Metadata(credsToken), 
-            msg.sender, 
+            IERC20Metadata(credsToken),
+            msg.sender,
             credsOutAmount
         );
 
@@ -568,17 +567,17 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         for (uint8 i = 0; i < supportedDepositAssets.length; i++) {
             address token = supportedDepositAssets[i];
             decimals = _tokenDecimals[token];
-            
+
             sumOfDepositLimits += _getScaledAmount(
-                assetDepositUtilization[token].limit, 
-                decimals, 
+                assetDepositUtilization[token].limit,
+                decimals,
                 18
             );
         }
 
         for (uint8 i = 0; i < supportedCores.length; i++) {
             address core = supportedCores[i];
-            
+
             sumOfCoreLimits += coreSwapUtilization[core].limit;
 
             if (core == _optionalCoreCheck) {
@@ -604,38 +603,51 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         WithdrawAmountInfo memory info = _getWithdrawAmountsVars(_amount, _withdrawToken);
 
         if (info.userDeposit > 0) {
+            // User didn't withdraw their initial deposit yet
             if (info.userDeposit > info.withdrawAmt) {
+                // Reduce the user's deposit amount and the asset utilization
+                // by the amount withdrawn
                 return (
                     info.scaledWithdrawAmt,
                     info.withdrawAmt,
                     info.scaledWithdrawAmt
                 );
-            } else {
-                if (info.assetUtilization > info.userDeposit) {
-                    return (
-                        _getScaledAmount(
-                            info.userDeposit,
-                            _decimals,
-                            _tokenDecimals[_withdrawToken]
-                        ),
-                        info.userDeposit,
-                        info.scaledWithdrawAmt
-                    );
-                } else {
-                    return (
-                        info.assetUtilization,
-                        info.userDeposit,
-                        info.scaledWithdrawAmt
-                    );
-                }
             }
-        } else {
+
+            // The withdraw amount is bigger than the user's initial deposit. This happens when the
+            // rewards claimable by the user are greater than the amount of tokens they have
+            // deposited.
+            if (info.assetUtilization > info.userDeposit) {
+                // There's more asset utilization than the user's initial deposit. Reduce it by
+                // the amount of the user's initial deposit.
+                return (
+                    _getScaledAmount(
+                        info.userDeposit,
+                        _decimals,
+                        _tokenDecimals[_withdrawToken]
+                    ),
+                    info.userDeposit,
+                    info.scaledWithdrawAmt
+                );
+            }
+
+            // The asset utilization is smaller or equal to the user's initial deposit.
+            // Set both to 0. The asset utilization can be smaller than the user's initial deposit
+            // in the scenario when the user deposited in one token, and withdraws in another.
             return (
-                0,
-                0,
+                info.assetUtilization,
+                info.userDeposit,
                 info.scaledWithdrawAmt
             );
         }
+
+        // User deposit is 0, meaning they have withdrawn their initial deposit, and now they're
+        // withdrawing pure profit.
+        return (
+            0,
+            0,
+            info.scaledWithdrawAmt
+        );
     }
 
     function _getWithdrawAmountsVars(
@@ -647,21 +659,24 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         returns (WithdrawAmountInfo memory)
     {
         WithdrawAmountInfo memory info;
-        
+
         info.poolValue = getPoolValue();
         info.totalSupply = totalSupply();
 
         info.withdrawAmt = _amount * info.poolValue / info.totalSupply;
         info.scaledWithdrawAmt = _getScaledAmount(
-            info.withdrawAmt, 
-            _decimals, 
+            info.withdrawAmt,
+            _decimals,
             _tokenDecimals[_withdrawToken]
         );
 
-        info.totalWithdraw = balanceOf(msg.sender) * info.poolValue / info.totalSupply;
-        
         info.userDeposit = userDepositAmounts[msg.sender];
         info.assetUtilization = assetDepositUtilization[_withdrawToken].amountUsed;
+        info.scaledAssetUtilization = _getScaledAmount(
+            info.assetUtilization,
+            _tokenDecimals[_withdrawToken],
+            _decimals
+        );
 
         return info;
     }

@@ -744,10 +744,14 @@ describe('SapphirePool', () => {
         await pool.setDepositLimit(stablecoin.address, depositAmount.mul(2));
         await stablecoin
           .connect(depositor)
-          .approve(pool.address, depositAmount);
+          .approve(pool.address, depositAmount.mul(2));
         await pool
           .connect(depositor)
           .deposit(stablecoin.address, depositAmount);
+
+        await creds
+          .connect(depositor)
+          .approve(pool.address, scaledDepositAmount.mul(2));
       });
 
       it("reverts if trying to convert more LP tokens that the user's balance", async () => {
@@ -804,38 +808,20 @@ describe('SapphirePool', () => {
       });
 
       it('withdraws token with 6 decimals', async () => {
-        const testUsdc = await new TestTokenFactory(admin).deploy(
-          'TestUSDC',
-          'TUSDC',
-          6,
-        );
-        const usdcDepositAmt = utils.parseUnits('100', 6);
-        await testUsdc.mintShare(depositor.address, usdcDepositAmt);
-        await testUsdc.connect(depositor).approve(pool.address, usdcDepositAmt);
-
-        await pool.setDepositLimit(testUsdc.address, usdcDepositAmt.mul(2));
-
-        // The user already deposited depositAmount in TDAI from the beforeEach()
+        expect(await stablecoin.decimals()).to.eq(6);
+        // The user already deposited depositAmount in beforeEach()
         expect(await pool.balanceOf(depositor.address)).to.eq(
           scaledDepositAmount,
-        );
-
-        await pool.connect(depositor).deposit(testUsdc.address, usdcDepositAmt);
-
-        expect(await pool.balanceOf(depositor.address)).to.eq(
-          depositAmount.mul(2).mul(stablecoinScalar),
         );
 
         await pool
           .connect(depositor)
-          .withdraw(scaledDepositAmount, testUsdc.address);
+          .withdraw(scaledDepositAmount, stablecoin.address);
 
-        expect(await pool.balanceOf(depositor.address)).to.eq(
-          scaledDepositAmount,
-        ); // 100 * 10^18
-        expect(await pool.totalSupply()).to.eq(scaledDepositAmount);
-        expect(await testUsdc.balanceOf(depositor.address)).to.eq(
-          usdcDepositAmt,
+        expect(await pool.balanceOf(depositor.address)).to.eq(0); // 100 * 10^18
+        expect(await pool.totalSupply()).to.eq(0);
+        expect(await stablecoin.balanceOf(depositor.address)).to.eq(
+          depositAmount,
         );
       });
 
