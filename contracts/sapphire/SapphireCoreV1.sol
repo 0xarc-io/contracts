@@ -1350,7 +1350,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
             require(
                 collateralDecimals <= 18,
-                "SapphireCoreV1: collateral has more than 18 decimals"
+                "SapphireCoreV1: used token has more than 18 decimals"
             );
 
             precisionScalars[collateralAsset] = 10 ** (18 - collateralDecimals);
