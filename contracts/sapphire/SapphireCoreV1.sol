@@ -152,7 +152,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         _creditScoreProtocol   = "arcx.creditScore";
         _borrowLimitProtocol   = "arcx.borrowLimit";
         
-        fetchPrecisionScalar(collateralAsset);
+        savePrecisionScalar(collateralAsset);
 
         setSupportedBorrowAsset(_supportedBorrowAddress, true);
         setAssessor(_assessorAddress);
@@ -814,7 +814,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         returns (uint256)
     {
         return _collateralAmount *
-            fetchPrecisionScalar(collateralAsset) *
+             precisionScalars[collateralAsset] *
             _collateralPrice /
             _normalizedBorrowedAmount;
     }
@@ -957,6 +957,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     )
         private
     {
+        // Save precision scalar if it doesn't exist
+        savePrecisionScalar(_borrowAssetAddress);
 
         require(
             _isSupportedBorrowAssets[_borrowAssetAddress],
@@ -1049,6 +1051,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     )
         private
     {
+        // Save precision scalar if it doesn't exist
+        savePrecisionScalar(_borrowAssetAddress);
 
         require(
             _isSupportedBorrowAssets[_borrowAssetAddress],
@@ -1148,7 +1152,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         // in the vault
         uint256 debtToRepay = _denormalizeBorrowAmount(vault.normalizedBorrowedAmount, true);
 
-        uint256 collateralPrecisionScalar = fetchPrecisionScalar(collateralAsset);
+        uint256 collateralPrecisionScalar = precisionScalars[collateralAsset];
         // Do a rounded up operation of
         // debtToRepay / LiquidationFee / collateralPrecisionScalar
         uint256 collateralToSell = (Math.roundUpDiv(debtToRepay, liquidationPrice) + collateralPrecisionScalar - 1)
@@ -1335,28 +1339,23 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     }
 
     /**
-     * @dev Gets the token's precision scalar. 
-     *      If it doesn't exist in the mapping, store it and return.
+     * @dev Saves the token's precision scalar, if it doesn't exist in the mapping. 
      */
-    function fetchPrecisionScalar(
+    function savePrecisionScalar(
         address _tokenAddress
     )
         internal
-        returns (uint256)
     {
-        if (precisionScalars[_tokenAddress] == 0) {
+        if (_tokenAddress != address(0) && precisionScalars[_tokenAddress] == 0) {
             IERC20Metadata token = IERC20Metadata(collateralAsset);
-            uint256 collateralDecimals = token.decimals();
+            uint256 tokenDecimals = token.decimals();
 
             require(
-                collateralDecimals <= 18,
+                tokenDecimals <= 18,
                 "SapphireCoreV1: used token has more than 18 decimals"
             );
 
-            precisionScalars[collateralAsset] = 10 ** (18 - collateralDecimals);
+            precisionScalars[_tokenAddress] = 10 ** (18 - tokenDecimals);
         }
-
-
-        return precisionScalars[_tokenAddress];
     }
 }
