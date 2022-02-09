@@ -179,7 +179,7 @@ describe('SapphireCore.init', () => {
     const decimals = await collateral.decimals();
     expect(decimals).eq(6);
 
-    expect(await sapphireCore.precisionScalar(), 'precisionScalar').eq(
+    expect(await sapphireCore.precisionScalars(defaultOptions.collateralAddress), 'precisionScalar').eq(
       utils.parseUnits('1', 18 - decimals),
     );
     expect(await sapphireCore.paused()).to.be.true;

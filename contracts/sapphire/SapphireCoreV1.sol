@@ -159,7 +159,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             "SapphireCoreV1: collateral has more than 18 decimals"
         );
 
-        precisionScalar = 10 ** (18 - uint256(collateralDecimals));
+        precisionScalars[collateralAsset] = 10 ** (18 - uint256(collateralDecimals));
 
         setSupportedBorrowAsset(_supportedBorrowAddress, true);
         setAssessor(_assessorAddress);
@@ -821,7 +821,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         returns (uint256)
     {
         return _collateralAmount *
-            precisionScalar *
+            precisionScalars[collateralAsset] *
             _collateralPrice /
             _normalizedBorrowedAmount;
     }
@@ -1156,26 +1156,26 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         uint256 debtToRepay = _denormalizeBorrowAmount(vault.normalizedBorrowedAmount, true);
 
         // Do a rounded up operation of
-        // debtToRepay / LiquidationFee / precisionScalar
-        uint256 collateralToSell = (Math.roundUpDiv(debtToRepay, liquidationPrice) + precisionScalar - 1)
-            / precisionScalar;
+        // debtToRepay / LiquidationFee / precisionScalars[collateralAsset]
+        uint256 collateralToSell = (Math.roundUpDiv(debtToRepay, liquidationPrice) + precisionScalars[collateralAsset] - 1)
+            / precisionScalars[collateralAsset];
 
         // If the discounted collateral is more than the amount in the vault, limit
         // the sale to that amount
         if (collateralToSell > vault.collateralAmount) {
             collateralToSell = vault.collateralAmount;
             // Calculate the new debt to repay
-            debtToRepay = collateralToSell * precisionScalar * liquidationPrice / BASE;
+            debtToRepay = collateralToSell * precisionScalars[collateralAsset] * liquidationPrice / BASE;
         }
 
         // Calculate the profit made in USD
-        uint256 valueCollateralSold = collateralToSell * precisionScalar * _currentPrice / BASE;
+        uint256 valueCollateralSold = collateralToSell * precisionScalars[collateralAsset] * _currentPrice / BASE;
 
         // Total profit in dollar amount
         uint256 profit = valueCollateralSold - debtToRepay;
 
         // Calculate the ARC share
-        uint256 arcShare = profit * liquidationArcRatio / liquidationPrice / precisionScalar;
+        uint256 arcShare = profit * liquidationArcRatio / liquidationPrice / precisionScalars[collateralAsset];
 
         // Calculate liquidator's share
         uint256 liquidatorCollateralShare = collateralToSell - arcShare;
