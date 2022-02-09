@@ -1000,7 +1000,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
         require(
             assessor.assessBorrowLimit(_newActualVaultBorrowAmount, _borrowLimitProof),
-            "SapphireCoreV1: borrow amount should not exceed borrow limit"
+            "SapphireCoreV1: total borrow amount should not exceed borrow limit"
         );
 
         // Calculate new normalized vault borrow amount

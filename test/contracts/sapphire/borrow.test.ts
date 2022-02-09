@@ -683,7 +683,7 @@ describe('SapphireCore.borrow()', () => {
         scoredMinter,
       ),
     ).to.be.revertedWith(
-      'SapphireCoreV1: borrow amount should not exceed borrow limit',
+      'SapphireCoreV1: total borrow amount should not exceed borrow limit',
     );
   });
 
