@@ -150,7 +150,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         pauseOperator   = _pauseOperator;
         feeCollector    = _feeCollector;
         _creditScoreProtocol   = "arcx.creditScore";
-        _borrowLimitProtocol   = "arcx.borrowLimit";
+        _borrowLimitProtocol   = "arcx.creditLimit";
         
         savePrecisionScalar(collateralAsset);
 
