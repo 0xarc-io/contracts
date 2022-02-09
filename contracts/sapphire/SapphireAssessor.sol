@@ -35,7 +35,7 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
     );
 
     event CreditLimitAssessed(
-        address _account,
+        address indexed _account,
         uint256 _borrowAmount,
         uint256 _creditLimit,
         bool _isBorrowAmountValid
