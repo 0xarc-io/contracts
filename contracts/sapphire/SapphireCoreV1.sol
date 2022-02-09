@@ -658,7 +658,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
         require (
             _passportProofs[0].protocol == _creditScoreProtocol,
-            "SapphireCoreV1: incorrect proof protocol"
+            "SapphireCoreV1: incorrect credit score protocol"
         );
 
         // Update the index to calculate how much interest has accrued

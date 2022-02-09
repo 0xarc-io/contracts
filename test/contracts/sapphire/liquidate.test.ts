@@ -626,7 +626,7 @@ describe('SapphireCore.liquidate()', () => {
           undefined,
           signers.liquidator,
         ),
-      ).to.be.revertedWith('SapphireCoreV1: incorrect proof protocol');
+      ).to.be.revertedWith('SapphireCoreV1: incorrect credit score protocol');
     });
 
     it('should not liquidate if proof is not provided', async () => {

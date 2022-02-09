@@ -263,7 +263,7 @@ describe('SapphireCore.borrow()', () => {
         undefined,
         scoredMinter,
       ),
-    ).to.be.revertedWith('SapphireCoreV1: incorrect proof protocol');
+    ).to.be.revertedWith('SapphireCoreV1: incorrect credit score protocol');
   });
 
   it('reverts if the borrow limit proof protocol does not match the one registered', async () => {
