@@ -664,6 +664,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         // Update the index to calculate how much interest has accrued
         updateIndex();
 
+        uint256 credsBalance = IERC20(syntheticAsset).balanceOf(address(this));
+
         // Get the c-ratio and current price if necessary. The current price only be >0 if
         // it's required by an action
         (
@@ -689,6 +691,12 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             } else if (action.operation == SapphireTypes.Operation.Liquidate) {
                 _liquidate(action.userToLiquidate, currentPrice, assessedCRatio, action.borrowAssetAddress);
             }
+
+            // The creds balance shouldn't have between the actions 
+            require(
+                credsBalance == IERC20(syntheticAsset).balanceOf(address(this)),
+                "SapphireCoreV1: the creds balance changed (forbidden)"
+            );
         }
 
         emit ActionsOperated(
