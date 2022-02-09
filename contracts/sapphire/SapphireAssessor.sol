@@ -134,7 +134,12 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
 
         bool _isBorrowAmountValid = _borrowAmount <= _borrowLimitProof.score;
 
-        emit CreditLimitAssessed(_borrowLimitProof.account, _borrowAmount, _borrowLimitProof.score, _isBorrowAmountValid);
+        emit CreditLimitAssessed(
+            _borrowLimitProof.account,
+            _borrowAmount,
+            _borrowLimitProof.score,
+            _isBorrowAmountValid
+        );
 
         return _isBorrowAmountValid;
     }
