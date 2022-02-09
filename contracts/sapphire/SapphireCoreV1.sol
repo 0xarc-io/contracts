@@ -151,15 +151,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         feeCollector    = _feeCollector;
         _creditScoreProtocol   = "arcx.creditScore";
         _borrowLimitProtocol   = "arcx.borrowLimit";
-        IERC20Metadata collateral   = IERC20Metadata(collateralAsset);
-        uint8 collateralDecimals    = collateral.decimals();
-
-        require(
-            collateralDecimals <= 18,
-            "SapphireCoreV1: collateral has more than 18 decimals"
-        );
-
-        precisionScalars[collateralAsset] = 10 ** (18 - uint256(collateralDecimals));
+        
+        fetchPrecisionScalar(collateralAsset);
 
         setSupportedBorrowAsset(_supportedBorrowAddress, true);
         setAssessor(_assessorAddress);
@@ -821,7 +814,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         returns (uint256)
     {
         return _collateralAmount *
-            precisionScalars[collateralAsset] *
+            fetchPrecisionScalar(collateralAsset) *
             _collateralPrice /
             _normalizedBorrowedAmount;
     }
@@ -1155,27 +1148,28 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         // in the vault
         uint256 debtToRepay = _denormalizeBorrowAmount(vault.normalizedBorrowedAmount, true);
 
+        uint256 collateralPrecisionScalar = fetchPrecisionScalar(collateralAsset);
         // Do a rounded up operation of
-        // debtToRepay / LiquidationFee / precisionScalars[collateralAsset]
-        uint256 collateralToSell = (Math.roundUpDiv(debtToRepay, liquidationPrice) + precisionScalars[collateralAsset] - 1)
-            / precisionScalars[collateralAsset];
+        // debtToRepay / LiquidationFee / collateralPrecisionScalar
+        uint256 collateralToSell = (Math.roundUpDiv(debtToRepay, liquidationPrice) + collateralPrecisionScalar - 1)
+            / collateralPrecisionScalar;
 
         // If the discounted collateral is more than the amount in the vault, limit
         // the sale to that amount
         if (collateralToSell > vault.collateralAmount) {
             collateralToSell = vault.collateralAmount;
             // Calculate the new debt to repay
-            debtToRepay = collateralToSell * precisionScalars[collateralAsset] * liquidationPrice / BASE;
+            debtToRepay = collateralToSell * collateralPrecisionScalar * liquidationPrice / BASE;
         }
 
         // Calculate the profit made in USD
-        uint256 valueCollateralSold = collateralToSell * precisionScalars[collateralAsset] * _currentPrice / BASE;
+        uint256 valueCollateralSold = collateralToSell * collateralPrecisionScalar * _currentPrice / BASE;
 
         // Total profit in dollar amount
         uint256 profit = valueCollateralSold - debtToRepay;
 
         // Calculate the ARC share
-        uint256 arcShare = profit * liquidationArcRatio / liquidationPrice / precisionScalars[collateralAsset];
+        uint256 arcShare = profit * liquidationArcRatio / liquidationPrice / collateralPrecisionScalar;
 
         // Calculate liquidator's share
         uint256 liquidatorCollateralShare = collateralToSell - arcShare;
@@ -1338,5 +1332,31 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         returns (bool)
     {
         return _oracleTimestamp >= currentTimestamp() - 60 * 60 * 12;
+    }
+
+    /**
+     * @dev Gets the token's precision scalar. 
+     *      If it doesn't exist in the mapping, store it and return.
+     */
+    function fetchPrecisionScalar(
+        address _tokenAddress
+    )
+        internal
+        returns (uint256)
+    {
+        if (precisionScalars[_tokenAddress] == 0) {
+            IERC20Metadata token = IERC20Metadata(collateralAsset);
+            uint256 collateralDecimals = token.decimals();
+
+            require(
+                collateralDecimals <= 18,
+                "SapphireCoreV1: collateral has more than 18 decimals"
+            );
+
+            precisionScalars[collateralAsset] = 10 ** (18 - collateralDecimals);
+        }
+
+
+        return precisionScalars[_tokenAddress];
     }
 }
