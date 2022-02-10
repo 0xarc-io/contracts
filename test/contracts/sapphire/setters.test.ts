@@ -279,7 +279,7 @@ describe('SapphireCore.setters', () => {
       await expect(
         sapphireCore
           .connect(ctx.signers.unauthorized)
-          .setFees(userFee, arcFee, borrowFee),
+          .setFees(userFee, arcFee, borrowFee, 0),
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
@@ -288,7 +288,7 @@ describe('SapphireCore.setters', () => {
       expect(await sapphireCore.liquidationArcRatio()).eq(0);
       expect(await sapphireCore.borrowFee()).eq(0);
 
-      await expect(sapphireCore.setFees(userFee, arcFee, borrowFee))
+      await expect(sapphireCore.setFees(userFee, arcFee, borrowFee, 0))
         .to.emit(sapphireCore, 'LiquidationFeesUpdated')
         .withArgs(userFee, arcFee, borrowFee);
       expect(await sapphireCore.liquidationUserRatio()).eq(userFee);

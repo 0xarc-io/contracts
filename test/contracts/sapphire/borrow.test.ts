@@ -264,6 +264,8 @@ describe('SapphireCore.borrow()', () => {
     );
   });
 
+  it('borrows twice with two different stablecoins');
+
   it('adds the borrow fee to an initial borrow amount', async () => {
     const borrowFee = utils.parseEther('0.1');
     await arc.core().setFees(0, 0, borrowFee);

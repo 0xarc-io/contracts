@@ -120,6 +120,12 @@ contract SapphireCoreStorageV1 {
     uint256 public interestRate;
 
     /**
+     * @notice Ratio determining the portion of the interest that is being distributed to the
+     * borrow pool. The remaining of the pool share will go to the feeCollector.
+     */
+    uint256 public poolInterestShare;
+
+    /**
      * @notice Which address can set interest rates for this contract
      */
     address public interestSetter;

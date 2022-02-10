@@ -4,8 +4,14 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { PassportScoreTree } from '@src/MerkleTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
-import { SyntheticTokenV2Factory, TestToken } from '@src/typings';
+import {
+  SapphirePool,
+  SyntheticTokenV2,
+  TestToken,
+  TestTokenFactory,
+} from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
+import { roundUpMul } from '@test/helpers/roundUpOperations';
 import {
   BORROW_LIMIT_PROOF_PROTOCOL,
   DEFAULT_COLLATERAL_DECIMALS,
@@ -39,11 +45,14 @@ const PRECISION_SCALAR = BigNumber.from(10).pow(
  */
 xdescribe('SapphireCore.repay()', () => {
   let arc: SapphireTestArc;
+  let pool: SapphirePool;
+  let creds: SyntheticTokenV2;
+  let stablecoin: TestToken;
+
   let signers: TestingSigners;
   let minterCreditScore: PassportScore;
   let minterBorrowLimitScore: PassportScore;
   let creditScoreTree: PassportScoreTree;
-  let stableCoin: TestToken;
 
   // /**
   //  * Returns the converted principal, as calculated by the smart contract:
@@ -66,16 +75,12 @@ xdescribe('SapphireCore.repay()', () => {
   async function repay(
     amount: BigNumber,
     caller: SignerWithAddress,
+    repayAsset = stablecoin,
     scoreProof?: PassportScoreProof,
   ) {
-    const senderContract = SyntheticTokenV2Factory.connect(
-      arc.syntheticAddress(),
-      caller,
-    );
+    await repayAsset.connect(caller).approve(arc.coreAddress(), amount);
 
-    await senderContract.approve(arc.coreAddress(), amount);
-
-    return arc.repay(amount, stableCoin.address, scoreProof, undefined, caller);
+    return arc.repay(amount, repayAsset.address, scoreProof, undefined, caller);
   }
 
   async function init(ctx: ITestContext) {
@@ -103,19 +108,19 @@ xdescribe('SapphireCore.repay()', () => {
     await setupSapphire(ctx, {
       merkleRoot: creditScoreTree.getHexRoot(),
       price: COLLATERAL_PRICE,
+      poolDepositSwapAmount: BORROW_AMOUNT.mul(3),
     });
   }
 
   before(async () => {
-    const ctx = await generateContext(sapphireFixture, init);
+    const ctx = await generateContext(sapphireFixture, init, {
+      stablecoinDecimals: 18,
+    });
     signers = ctx.signers;
     arc = ctx.sdks.sapphire;
-    stableCoin = ctx.contracts.stablecoin;
-
-    await ctx.contracts.sapphire.pool.setDepositLimit(
-      ctx.contracts.stablecoin.address,
-      BORROW_AMOUNT.mul(2),
-    );
+    stablecoin = ctx.contracts.stablecoin;
+    pool = ctx.contracts.sapphire.pool;
+    creds = ctx.contracts.synthetic.tokenV2;
 
     await setupBaseVault(
       ctx.sdks.sapphire,
@@ -138,18 +143,18 @@ xdescribe('SapphireCore.repay()', () => {
       .div(vault.normalizedBorrowedAmount);
     expect(cRatio).to.eq(constants.WeiPerEther.mul(2));
 
-    const preStablexBalance = await arc
-      .synthetic()
-      .balanceOf(signers.scoredMinter.address);
-    expect(preStablexBalance).to.eq(BORROW_AMOUNT);
+    const preStableBalance = await stablecoin.balanceOf(
+      signers.scoredMinter.address,
+    );
+    expect(preStableBalance).to.eq(BORROW_AMOUNT);
 
     // Repay half the amount
     await repay(BORROW_AMOUNT.div(2), signers.scoredMinter);
 
-    const postStablexBalance = await arc
-      .synthetic()
-      .balanceOf(signers.scoredMinter.address);
-    expect(postStablexBalance).to.eq(BORROW_AMOUNT.div(2));
+    const postStableBalance = await stablecoin.balanceOf(
+      signers.scoredMinter.address,
+    );
+    expect(postStableBalance).to.eq(BORROW_AMOUNT.div(2));
 
     vault = await arc.getVault(signers.scoredMinter.address);
 
@@ -170,7 +175,161 @@ xdescribe('SapphireCore.repay()', () => {
     expect(cRatio).to.eq(constants.WeiPerEther.mul(4));
   });
 
-  it('decreases the user principal by the repay amount');
+  it('repays twice with two different stablecoins', async () => {
+    const testDai = await new TestTokenFactory(signers.admin).deploy(
+      'TDAI',
+      'TDAI',
+      18,
+    );
+    await pool.setDepositLimit(testDai.address, BORROW_AMOUNT);
+    await testDai.mintShare(pool.address, BORROW_AMOUNT);
+
+    await testDai.mintShare(signers.scoredMinter.address, BORROW_AMOUNT);
+
+    let vault = await arc.getVault(signers.scoredMinter.address);
+    expect(vault.normalizedBorrowedAmount).eq(BORROW_AMOUNT);
+
+    await repay(BORROW_AMOUNT.div(2), signers.scoredMinter, stableCoin);
+
+    vault = await arc.getVault(signers.scoredMinter.address);
+    expect(vault.normalizedBorrowedAmount).eq(BORROW_AMOUNT.div(2));
+
+    await repay(BORROW_AMOUNT.div(2), signers.scoredMinter, testDai);
+
+    vault = await arc.getVault(signers.scoredMinter.address);
+    expect(vault.normalizedBorrowedAmount).eq(0);
+  });
+
+  xit('repays with 6 decimals stablecoin');
+
+  it('swaps stables for creds, then burns the creds, (no interest accumulated)', async () => {
+    expect(await creds.balanceOf(pool.address)).to.eq(BORROW_AMOUNT);
+
+    await expect(repay(BORROW_AMOUNT.div(2), signers.scoredMinter, stableCoin))
+      .to.emit(creds, 'Transfer')
+      .withArgs(
+        arc.core().address,
+        constants.AddressZero,
+        BORROW_AMOUNT.div(2),
+      );
+    expect(await creds.balanceOf(pool.address)).to.eq(BORROW_AMOUNT.div(2));
+
+    await expect(repay(BORROW_AMOUNT.div(2), signers.scoredMinter, stableCoin))
+      .to.emit(creds, 'Transfer')
+      .withArgs(
+        arc.core().address,
+        constants.AddressZero,
+        BORROW_AMOUNT.div(2),
+      );
+    expect(await creds.balanceOf(pool.address)).to.eq(0);
+  });
+
+  it('distributes the interest, without executing a swap, when only interest is paid', async () => {
+    const poolShare = utils.parseEther('0.4');
+    const borrowFee = utils.parseEther('0.1');
+
+    expect(await creds.balanceOf(pool.address)).eq(BORROW_AMOUNT);
+
+    await arc.core().setPoolInterestShare(poolShare);
+    await arc.core().setFees(0, 0, borrowFee);
+    await arc.core().setLimits(0, BORROW_AMOUNT, BORROW_AMOUNT);
+    await setupBaseVault(
+      arc,
+      signers.staker,
+      undefined,
+      COLLATERAL_AMOUNT,
+      BORROW_AMOUNT,
+      undefined,
+    );
+
+    // There is already one vault open by the scoredMinter
+    expect(await creds.balanceOf(pool.address)).eq(BORROW_AMOUNT.mul(2));
+    expect(await stableCoin.balanceOf(await arc.core().feeCollector())).eq(0);
+
+    const interest = roundUpMul(BORROW_AMOUNT, borrowFee);
+    let vault = await arc.getVault(signers.staker.address);
+    expect(vault.normalizedBorrowedAmount).eq(BORROW_AMOUNT.add(interest));
+    expect(vault.principal).eq(BORROW_AMOUNT);
+
+    // Pay only interest
+    const preRepayStablePoolBalance = await stableCoin.balanceOf(pool.address);
+    await repay(interest, signers.staker);
+
+    vault = await arc.getVault(signers.staker.address);
+    const expectedPoolProfit = roundUpMul(interest, poolShare);
+    const expectedArcProfit = interest.sub(expectedPoolProfit);
+
+    // Vault amount reduced by interest, principal remained unchanged
+    expect(vault.normalizedBorrowedAmount).eq(BORROW_AMOUNT);
+    expect(vault.principal).eq(BORROW_AMOUNT);
+    // The creds amount didn't change
+    expect(await creds.balanceOf(pool.address)).eq(BORROW_AMOUNT.mul(2));
+    expect(await stableCoin.balanceOf(pool.address)).eq(
+      preRepayStablePoolBalance.add(expectedPoolProfit),
+    );
+    expect(await stableCoin.balanceOf(await arc.core().feeCollector())).eq(
+      expectedArcProfit,
+    );
+  });
+
+  it('distributes the interest, then swaps stables for creds for the remaining amount', async () => {
+    const poolShare = utils.parseEther('0.4');
+    const borrowFee = utils.parseEther('0.1');
+    const interest = roundUpMul(BORROW_AMOUNT, borrowFee);
+
+    // there is already one opened vault
+    expect(await creds.balanceOf(pool.address)).eq(BORROW_AMOUNT);
+
+    await arc.core().setPoolInterestShare(poolShare);
+    await arc.core().setFees(0, 0, borrowFee);
+    await arc.core().setLimits(0, BORROW_AMOUNT, BORROW_AMOUNT);
+    await setupBaseVault(
+      arc,
+      signers.staker,
+      undefined,
+      COLLATERAL_AMOUNT,
+      BORROW_AMOUNT,
+      undefined,
+    );
+
+    let vault = await arc.getVault(signers.staker.address);
+    expect(vault.normalizedBorrowedAmount).eq(BORROW_AMOUNT.add(interest));
+    expect(vault.principal).eq(BORROW_AMOUNT);
+
+    const repayAmount = BORROW_AMOUNT.div(2);
+    const principalRepayed = repayAmount.sub(interest);
+    const totalAccumulatedDebt = BORROW_AMOUNT.add(interest);
+
+    expect(await creds.balanceOf(pool.address)).eq(BORROW_AMOUNT.mul(2));
+
+    await repay(repayAmount, signers.staker);
+
+    // Only the principal paid is swapped out for creds
+    expect(await creds.balanceOf(pool.address)).eq(
+      BORROW_AMOUNT.mul(2).sub(principalRepayed),
+    );
+
+    vault = await arc.getVault(signers.staker.address);
+    expect(vault.normalizedBorrowedAmount).eq(
+      totalAccumulatedDebt.sub(repayAmount),
+    );
+    expect(vault.principal).eq(BORROW_AMOUNT.sub(principalRepayed));
+  });
+
+  it('decreases the user principal by the repay amount', async () => {
+    let vault = await arc.getVault(signers.scoredMinter.address);
+    expect(vault.principal).eq(BORROW_AMOUNT);
+
+    await repay(BORROW_AMOUNT.div(2), signers.scoredMinter);
+
+    vault = await arc.getVault(signers.scoredMinter.address);
+    expect(vault.principal).eq(BORROW_AMOUNT.div(2));
+
+    await repay(BORROW_AMOUNT.div(2), signers.scoredMinter);
+
+    vault = await arc.getVault(signers.scoredMinter.address);
+    expect(vault.principal).eq(0);
+  });
 
   it('repays to make the position collateralized', async () => {
     /**
@@ -219,6 +378,7 @@ xdescribe('SapphireCore.repay()', () => {
     await repay(
       constants.WeiPerEther,
       signers.scoredMinter,
+      undefined,
       getScoreProof(minterCreditScore, creditScoreTree),
     );
 
@@ -254,55 +414,22 @@ xdescribe('SapphireCore.repay()', () => {
   });
 
   it('emits ActionsOperated event when a repay happens', async () => {
-    // Repay with score proof
     await expect(repay(BORROW_AMOUNT.div(2), signers.scoredMinter)).to.emit(
       arc.core(),
       'ActionsOperated',
     );
-    // .withArgs(
-    //   [[BORROW_AMOUNT.div(2), 3]],
-    //   getScoreProof(minterCreditScore, creditScoreTree),
-    //   signers.scoredMinter.address
-    // );
-
-    // Repay without score proof
-    await expect(repay(BORROW_AMOUNT.div(2), signers.scoredMinter)).to.emit(
-      arc.core(),
-      'ActionsOperated',
-    );
-    // .withArgs(
-    //   [[BORROW_AMOUNT.div(2), 3]],
-    //   getEmptyScoreProof(signers.scoredMinter),
-    //   signers.scoredMinter.address
-    // );
   });
 
   it('should not repay if user did not approve', async () => {
     await expect(
       arc.repay(
         BORROW_AMOUNT.div(2),
-        stableCoin.address,
+        stablecoin.address,
         undefined,
         undefined,
         signers.scoredMinter,
       ),
-    ).to.be.revertedWith(
-      'SyntheticTokenV2: the amount has not been approved for this spender',
-    );
-  });
-
-  xit('should not repay if asset is not supported', async () => {
-    await expect(
-      arc.repay(
-        BORROW_AMOUNT.div(2),
-        arc.collateral().address,
-        undefined,
-        undefined,
-        signers.scoredMinter,
-      ),
-    ).to.be.revertedWith(
-      'SapphireCoreV1: the token address should be one of the supported tokens',
-    );
+    ).to.be.revertedWith('SafeERC20: TRANSFER_FROM_FAILED');
   });
 
   it('should not repay to a vault that does not exist', async () => {
@@ -332,5 +459,16 @@ xdescribe('SapphireCore.repay()', () => {
     ).to.be.revertedWith('SapphireCoreV1: the contract is paused');
   });
 
-  it('should not repay in an unsupported token');
+  it('should not repay in an unsupported token', async () => {
+    const testDai = await new TestTokenFactory(signers.admin).deploy(
+      'TDAI',
+      'TDAI',
+      18,
+    );
+    await testDai.mintShare(signers.scoredMinter.address, BORROW_AMOUNT);
+
+    await expect(
+      repay(BORROW_AMOUNT, signers.scoredMinter, testDai),
+    ).to.be.revertedWith('SapphirePool: unknown token');
+  });
 });
