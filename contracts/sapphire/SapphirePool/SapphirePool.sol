@@ -138,7 +138,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
             uint256 sumOfDepositLimits,
             uint256 sumOfCoreLimits,
             bool isCoreSupported
-        ) = _getSumOfLimits(_coreAddress, _coreAddress);
+        ) = _getSumOfLimits(_coreAddress, _coreAddress, address(0));
 
         require(
             sumOfCoreLimits + _limit <= sumOfDepositLimits,
@@ -176,6 +176,16 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
             "SapphirePool: cannot set the limit of an unsupported asset to 0"
         );
 
+        (
+            uint256 sumOfDepositLimits,
+            uint256 sumOfCoreLimits,
+        ) = _getSumOfLimits(address(0), address(0), _tokenAddress);
+
+        require(
+            sumOfDepositLimits + _limit >= sumOfCoreLimits,
+            "SapphirePool: sum of deposit limits smaller than the sum of the swap limits"
+        );
+
         // Add the token to the supported assets array if limit is > 0
         if (_limit > 0 && !isSupportedAsset) {
             supportedDepositAssets.push(_tokenAddress);
@@ -185,16 +195,6 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         }
 
         assetDepositUtilization[_tokenAddress].limit = _limit;
-
-        (
-            uint256 sumOfDepositLimits,
-            uint256 sumOfCoreLimits,
-        ) = _getSumOfLimits(address(0), address(0));
-
-        require(
-            sumOfDepositLimits >= sumOfCoreLimits,
-            "SapphirePool: sum of deposit limits smaller than the sum of the swap limits"
-        );
 
         emit DepositLimitSet(_tokenAddress, _limit);
     }
@@ -552,10 +552,12 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
      * @dev Returns the sum of the deposit limits and the sum of the core swap limits
      * @param _optionalCoreCheck An optional parameter to check if the core has a swap limit > 0
      * @param _excludeCore An optional parameter to exclude the core from the sum
+     * @param _excludeDepositToken An optional parameter to exclude the deposit token from the sum
      */
     function _getSumOfLimits(
         address _optionalCoreCheck,
-        address _excludeCore
+        address _excludeCore,
+        address _excludeDepositToken
     )
         private
         view
@@ -568,6 +570,10 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
 
         for (uint8 i = 0; i < supportedDepositAssets.length; i++) {
             address token = supportedDepositAssets[i];
+            if (token == _excludeDepositToken) {
+                continue;
+            }
+            
             decimals = _tokenDecimals[token];
 
             sumOfDepositLimits += _getScaledAmount(
