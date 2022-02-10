@@ -8,20 +8,20 @@ export class SapphireTestArc extends SapphireArc {
     return new SapphireTestArc(signer);
   }
 
-  public synth() {
-    return this.getSynth(this.getSynthNames()[0]);
+  coreContracts() {
+    return this.getCoreContracts(this.getCoreNames()[0]);
   }
 
-  public async updatePrice(price: BigNumberish) {
+  async updatePrice(price: BigNumberish) {
     const mockOracle = new MockSapphireOracleFactory(this.signer).attach(
-      this.synth().oracle.address,
+      this.coreContracts().oracle.address,
     );
     await mockOracle.setPrice(price);
   }
 
-  public async updateTime(value: BigNumberish) {
+  async updateTime(value: BigNumberish) {
     const mockArc = new MockSapphireCoreV1Factory(this.signer).attach(
-      this.synth().core.address,
+      this.coreContracts().core.address,
     );
     await mockArc.setCurrentTimestamp(value);
 
@@ -29,34 +29,34 @@ export class SapphireTestArc extends SapphireArc {
     await this.setOracleTimestamp(value);
   }
 
-  public async setOracleTimestamp(value: BigNumberish) {
+  async setOracleTimestamp(value: BigNumberish) {
     const mockOracle = new MockSapphireOracleFactory(this.signer).attach(
-      await this.synth().core.oracle(),
+      await this.coreContracts().core.oracle(),
     );
     await mockOracle.setTimestamp(value);
   }
 
-  public getSynthTotals() {
-    return this.synth().core.getTotals();
+  core() {
+    return this.coreContracts().core;
   }
 
-  public core() {
-    return this.synth().core;
+  synthetic() {
+    return this.coreContracts().synthetic;
   }
 
-  public synthetic() {
-    return this.synth().synthetic;
+  pool() {
+    return this.coreContracts().pool;
   }
 
-  public collateral() {
-    return this.synth().collateral;
+  collateral() {
+    return this.coreContracts().collateral;
   }
 
-  public coreAddress() {
-    return this.synth().core.address;
+  coreAddress() {
+    return this.coreContracts().core.address;
   }
 
-  public syntheticAddress() {
-    return this.synth().synthetic.address;
+  syntheticAddress() {
+    return this.coreContracts().synthetic.address;
   }
 }

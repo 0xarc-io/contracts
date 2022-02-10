@@ -1,4 +1,4 @@
-import { Synth } from '@arc-types/core';
+import { CoreContracts } from '@arc-types/core';
 import { TransactionOverrides } from '@arc-types/ethereum';
 import {
   Action,
@@ -6,7 +6,10 @@ import {
   PassportScoreProof,
   Vault,
 } from '@arc-types/sapphireCore';
-import { BORROW_LIMIT_PROOF_PROTOCOL, DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
+import {
+  BORROW_LIMIT_PROOF_PROTOCOL,
+  DEFAULT_PROOF_PROTOCOL,
+} from '@test/helpers/sapphireDefaults';
 import {
   BigNumber,
   BigNumberish,
@@ -19,27 +22,28 @@ import {
   BaseERC20Factory,
   SapphireCoreV1,
   SapphireCoreV1Factory,
+  SapphirePoolFactory,
   SyntheticTokenV2Factory,
 } from './typings';
 import { IOracleFactory } from './typings/IOracleFactory';
 import { getEmptyScoreProof } from './utils/getScoreProof';
 
-export type SapphireSynth = Synth<SapphireCoreV1>;
+export type SapphireCoreContracts = CoreContracts<SapphireCoreV1>;
 
 export class SapphireArc {
-  public synths: Record<string, SapphireSynth | undefined> = {};
+  public cores: Record<string, SapphireCoreContracts | undefined> = {};
 
   constructor(public readonly signer: Signer) {}
   static new(signer: Signer): SapphireArc {
     return new SapphireArc(signer);
   }
 
-  public async addSynths(synths: Record<string, string | undefined>) {
-    const keys = Object.keys(synths);
+  public async addCores(coresDict: Record<string, string | undefined>) {
+    const keys = Object.keys(coresDict);
     for (const key of keys) {
-      const core = SapphireCoreV1Factory.connect(synths[key], this.signer);
+      const core = SapphireCoreV1Factory.connect(coresDict[key], this.signer);
 
-      this.synths[key] = {
+      this.cores[key] = {
         core,
         oracle: IOracleFactory.connect(await core.oracle(), this.signer),
         collateral: BaseERC20Factory.connect(
@@ -50,20 +54,21 @@ export class SapphireArc {
           await core.syntheticAsset(),
           this.signer,
         ),
+        pool: SapphirePoolFactory.connect(await core.borrowPool(), this.signer),
       };
     }
   }
 
-  getSynth(name: string): SapphireSynth {
-    const synth = this.synths[name];
-    if (!synth) {
-      throw Error(`Synth '${name}' is not found`);
+  getCoreContracts(name: string): SapphireCoreContracts {
+    const core = this.cores[name];
+    if (!core) {
+      throw Error(`Core '${name}' is not found`);
     }
-    return synth;
+    return core;
   }
 
-  getSynthNames() {
-    return Object.keys(this.synths);
+  getCoreNames() {
+    return Object.keys(this.cores);
   }
 
   /**
@@ -75,14 +80,14 @@ export class SapphireArc {
     borrowAmount: BigNumber,
     borrowAssetAddress: string,
     passportScoreProof: PassportScoreProof = getEmptyScoreProof(
-          undefined,
-          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
-        ),
+      undefined,
+      utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+    ),
     minterBorrowLimitScore: PassportScoreProof = getEmptyScoreProof(
-          undefined,
-          utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
-        ),
-    synthName: string = this.getSynthNames()[0],
+      undefined,
+      utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
+    ),
+    coreName: string = this.getCoreNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
   ): Promise<Vault> {
@@ -108,7 +113,7 @@ export class SapphireArc {
       actions,
       passportScoreProof,
       minterBorrowLimitScore,
-      synthName,
+      coreName,
       caller,
       overrides,
     );
@@ -120,34 +125,30 @@ export class SapphireArc {
   async exit(
     borrowAssetAddress: string,
     passportScoreProof: PassportScoreProof = getEmptyScoreProof(
-          undefined,
-          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
-        ),
-    synthName = this.getSynthNames()[0],
+      undefined,
+      utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+    ),
+    coreName = this.getCoreNames()[0],
     caller = this.signer,
     overrides: TransactionOverrides = {},
   ) {
-    const core = this._getCore(synthName, caller);
+    const core = this._getCore(coreName, caller);
 
-    return core.exit(
-      borrowAssetAddress,
-      [passportScoreProof],
-      overrides,
-    );
+    return core.exit(borrowAssetAddress, [passportScoreProof], overrides);
   }
 
   async liquidate(
     owner: string,
     borrowAssetAddress: string,
     passportScoreProof: PassportScoreProof = getEmptyScoreProof(
-          undefined,
-          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
-        ),
-    synthName: string = this.getSynthNames()[0],
+      undefined,
+      utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+    ),
+    coreName: string = this.getCoreNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
   ): Promise<ContractTransaction> {
-    const core = this._getCore(synthName, caller);
+    const core = this._getCore(coreName, caller);
 
     return core.liquidate(
       owner,
@@ -160,18 +161,18 @@ export class SapphireArc {
   async executeActions(
     actions: Action[],
     passportScoreProof: PassportScoreProof = getEmptyScoreProof(
-          undefined,
-          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
-        ),
+      undefined,
+      utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+    ),
     passportBorrowLimitProof: PassportScoreProof = getEmptyScoreProof(
-          undefined,
-          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
-        ),
-    synthName: string = this.getSynthNames()[0],
+      undefined,
+      utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+    ),
+    coreName: string = this.getCoreNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
   ): Promise<Vault> {
-    const core = this._getCore(synthName, caller);
+    const core = this._getCore(coreName, caller);
 
     await core.executeActions(
       actions,
@@ -190,18 +191,18 @@ export class SapphireArc {
     amount: BigNumber,
     borrowAssetAddress: string,
     passportScoreProof: PassportScoreProof = getEmptyScoreProof(
-          undefined,
-          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
-        ),
+      undefined,
+      utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+    ),
     borrowLimitProof: PassportScoreProof = getEmptyScoreProof(
-          undefined,
-          utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
-        ),
-    synthName: string = this.getSynthNames()[0],
+      undefined,
+      utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
+    ),
+    coreName: string = this.getCoreNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
   ): Promise<ContractTransaction> {
-    const core = this._getCore(synthName, caller);
+    const core = this._getCore(coreName, caller);
 
     return core.borrow(
       amount,
@@ -215,14 +216,14 @@ export class SapphireArc {
     amount: BigNumber,
     borrowAssetAddress: string,
     passportScoreProof: PassportScoreProof = getEmptyScoreProof(
-          undefined,
-          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
-        ),
-    synthName: string = this.getSynthNames()[0],
+      undefined,
+      utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+    ),
+    coreName: string = this.getCoreNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
   ): Promise<ContractTransaction> {
-    const core = this._getCore(synthName, caller);
+    const core = this._getCore(coreName, caller);
 
     return core.repay(
       amount,
@@ -237,50 +238,42 @@ export class SapphireArc {
   async deposit(
     amount: BigNumber,
     passportScoreProof: PassportScoreProof = getEmptyScoreProof(
-          undefined,
-          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
-        ),
-    synthName: string = this.getSynthNames()[0],
+      undefined,
+      utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+    ),
+    coreName: string = this.getCoreNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
   ): Promise<ContractTransaction> {
-    const core = this._getCore(synthName, caller);
+    const core = this._getCore(coreName, caller);
 
-    return core.deposit(
-      amount,
-      [passportScoreProof],
-      overrides,
-    );
+    return core.deposit(amount, [passportScoreProof], overrides);
   }
 
   async withdraw(
     amount: BigNumber,
     passportScoreProof: PassportScoreProof = getEmptyScoreProof(
-          undefined,
-          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
-        ),
-    synthName: string = this.getSynthNames()[0],
+      undefined,
+      utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+    ),
+    corename: string = this.getCoreNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
   ): Promise<ContractTransaction> {
-    const core = this._getCore(synthName, caller);
+    const core = this._getCore(corename, caller);
 
-    return core.withdraw(
-      amount,
-      [passportScoreProof],
-      overrides,
-    );
+    return core.withdraw(amount, [passportScoreProof], overrides);
   }
 
   getVault(
     userAddress: string,
-    synthName = this.getSynthNames()[0],
+    corename = this.getCoreNames()[0],
   ): Promise<Vault> {
-    const synth = this.getSynth(synthName);
-    return synth.core.vaults(userAddress);
+    const coreContracts = this.getCoreContracts(corename);
+    return coreContracts.core.vaults(userAddress);
   }
 
-  private _getCore(synthName: string, caller: Signer): SapphireCoreV1 {
-    return this.getSynth(synthName).core.connect(caller);
+  private _getCore(coreName: string, caller: Signer): SapphireCoreV1 {
+    return this.getCoreContracts(coreName).core.connect(caller);
   }
 }
