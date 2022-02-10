@@ -957,8 +957,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     )
         private
     {
-        // Save precision scalar if it doesn't exist
-        savePrecisionScalar(_borrowAssetAddress);
 
         require(
             _isSupportedBorrowAssets[_borrowAssetAddress],
@@ -974,6 +972,9 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             _borrowLimitProof.protocol == _borrowLimitProtocol,
             "SapphireCoreV1: incorrect borrow limit proof protocol"
         );
+
+        // Save precision scalar if it doesn't exist
+        savePrecisionScalar(_borrowAssetAddress);
 
         // Get the user's vault
         SapphireTypes.Vault storage vault = vaults[msg.sender];
@@ -1051,13 +1052,14 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     )
         private
     {
-        // Save precision scalar if it doesn't exist
-        savePrecisionScalar(_borrowAssetAddress);
 
         require(
             _isSupportedBorrowAssets[_borrowAssetAddress],
             "SapphireCoreV1: the token address should be one of the supported tokens"
         );
+
+        // Save precision scalar if it doesn't exist
+        savePrecisionScalar(_borrowAssetAddress);
 
         // Get the user's vault
         SapphireTypes.Vault storage vault = vaults[_owner];
