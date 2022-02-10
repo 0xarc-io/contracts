@@ -267,11 +267,6 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
             "SapphirePool: cannot deposit more than the limit"
         );
 
-        require(
-            _tokenDecimals[_token] > 0,
-            "SapphirePool: the given lp token has a scalar of 0"
-        );
-
         uint256 scaledAmount = _getScaledAmount(_amount, _tokenDecimals[_token], _decimals);
         uint256 poolValue = getPoolValue();
 
