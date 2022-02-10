@@ -146,6 +146,21 @@ describe('SapphirePool', () => {
           scaledDepositAmount.div(2),
         );
       });
+
+      it('reverts if setting limit to 0 and there are no other available borrowable assets', async () => {
+        await pool.setDepositLimit(stablecoin.address, depositAmount);
+
+        await pool.setCoreSwapLimit(ctx.contracts.sapphire.core.address, 1000);
+        await pool.setCoreSwapLimit(admin.address, 1000);
+
+        await pool.setCoreSwapLimit(ctx.contracts.sapphire.core.address, 0);
+
+        await expect(
+          pool.setCoreSwapLimit(admin.address, 0),
+        ).to.be.revertedWith(
+          'SapphirePool: at least one asset must have a positive swap limit',
+        );
+      });
     });
 
     describe('#setDepositLimit', () => {
@@ -493,6 +508,25 @@ describe('SapphirePool', () => {
 
         utilization = await pool.coreSwapUtilization(admin.address);
         expect(utilization.amountUsed).to.eq(scaledDepositAmount.div(2));
+      });
+
+      it('reverts if trying to swap stablecoin for creds if the limit for that stablecoin is 0', async () => {
+        const testDai = await new TestTokenFactory(admin).deploy(
+          'TestDAI',
+          'TDAI',
+          18,
+        );
+        await pool.setDepositLimit(testDai.address, scaledDepositAmount);
+        await testDai.mintShare(pool.address, scaledDepositAmount);
+
+        await pool.swap(creds.address, testDai.address, scaledDepositAmount);
+
+        await pool.setDepositLimit(testDai.address, 0);
+
+        await testDai.approve(pool.address, scaledDepositAmount);
+        await expect(
+          pool.swap(testDai.address, creds.address, scaledDepositAmount),
+        ).to.be.revertedWith('SapphirePool: cannot repay with the given token');
       });
     });
   });

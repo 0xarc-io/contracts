@@ -155,6 +155,11 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
             "SapphirePool: swap limit is greater than the sum of the deposit limits"
         );
 
+        require(
+            sumOfCoreLimits + _limit > 0,
+            "SapphirePool: at least one asset must have a positive swap limit"
+        );
+
         if (!isCoreSupported) {
             _supportedCores.push(_coreAddress);
         }
@@ -205,14 +210,12 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
             _decimals
         );
 
-        if (getDepositAssets().length > 0) {
-            // If there are any existing deposit assets, the new sum of deposit limits cannot
-            // be negative, otherwise the pool will become unusable (deposits will be disabled);
-            require(
-                sumOfDepositLimits + scaledNewLimit > 0,
-                "SapphirePool: at least 1 deposit asset must have a positive limit"
+        // The new sum of deposit limits cannot be zero, otherwise the pool will become 
+        // unusable (deposits will be disabled).
+        require(
+            sumOfDepositLimits + scaledNewLimit > 0,
+            "SapphirePool: at least 1 deposit asset must have a positive limit"
             );
-        }
 
 
         require(
@@ -527,6 +530,11 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         checkKnownToken(_tokenIn)
         returns (uint256)
     {
+        require(
+            assetDepositUtilization[_tokenIn].limit > 0,
+            "SapphirePool: cannot repay with the given token"
+        );
+        
         uint8 stableDecimals = _tokenDecimals[_tokenIn];
         uint256 credsOutAmount = _getScaledAmount(
             _stablesAmount,
