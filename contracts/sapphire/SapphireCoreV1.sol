@@ -484,7 +484,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      *
      * @param _amount           The amount of collateral to deposit
      * @param _passportProofs   The passport score proofs - optional
-     *                              0 - score proof
+     *                          Index 0 - score proof
      */
     function deposit(
         uint256 _amount,
@@ -526,8 +526,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      * @param _amount The amount of synthetic to borrow
      * @param _borrowAssetAddress The address of token to borrow
      * @param _passportProofs The passport score proofs - mandatory
-     *                          0 - score proof
-     *                          1 - borrow limit proof
+     *                        Index 0 - score proof
+     *                        Index 1 - borrow limit proof
      */
     function borrow(
         uint256 _amount,
@@ -570,7 +570,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      *
      * @param _borrowAssetAddress The address of token to repay
      * @param _passportProofs     The passport score proofs - optional
-     *                              0 - score proof
+     *                            Index 0 - score proof
      */
     function exit(
         address _borrowAssetAddress,
@@ -610,7 +610,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      * @param _owner the owner of the vault to liquidate
      * @param _borrowAssetAddress The address of token to repay
      * @param _passportProofs     The passport score proof - optional
-     *                              0 - score proof
+     *                            Index 0 - score proof
      */
     function liquidate(
         address _owner,
@@ -635,10 +635,10 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      *      passed actions. This function first updates the indexes before
      *      actually executing the actions.
      *
-     * @param _actions      An array of actions to execute
-     * @param _passportProofs  The passport score proof - optional
-     *                      0 - score proof
-     *                      1 - borrow limit proof
+     * @param _actions          An array of actions to execute
+     * @param _passportProofs   The passport score proof - optional
+     *                          Index 0 - score proof
+     *                          Index 1 - borrow limit proof
      */
     function executeActions(
         SapphireTypes.Action[] memory _actions,
