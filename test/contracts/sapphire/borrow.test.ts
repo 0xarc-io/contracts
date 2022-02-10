@@ -232,9 +232,20 @@ describe('SapphireCore.borrow()', () => {
         undefined,
         scoredMinter,
       ),
-    ).to.be.revertedWith(
-      'SapphireCoreV1: proof.account must match msg.sender',
-    );
+    ).to.be.revertedWith('SapphireCoreV1: proof.account must match msg.sender');
+  });
+
+  it('reverts if borrow limit proof account is not msg.sender', async () => {
+    await expect(
+      arc.borrow(
+        BORROW_AMOUNT,
+        stableCoin.address,
+        undefined,
+        getScoreProof(borrowLimitScore1, creditScoreTree),
+        undefined,
+        minter,
+      ),
+    ).to.be.revertedWith('SapphireCoreV1: proof.account must match msg.sender');
   });
 
   it('borrows with exact c-ratio', async () => {
@@ -251,6 +262,76 @@ describe('SapphireCore.borrow()', () => {
     );
     expect(normalizedBorrowedAmount).eq(BORROW_AMOUNT);
     expect(principal).eq(BORROW_AMOUNT);
+  });
+
+  it('borrows more if borrow limit is increased', async () => {
+    // The user's existing credit score is updated and increases letting them borrow more
+    await mintAndApproveCollateral(scoredMinter, COLLATERAL_AMOUNT.mul(2));
+    await arc.deposit(COLLATERAL_AMOUNT.mul(2), undefined, undefined, scoredMinter);
+    await arc.borrow(
+      borrowLimitScore1.score,
+      stableCoin.address,
+      creditScoreProof,
+      borrowLimitProof,
+      undefined,
+      scoredMinter,
+    );
+
+    const additionalBorrowAmount = utils.parseEther('0.01');
+
+    // Borrowing BASE rather than BigNumber.from(1), because that number is too small adn won't cause a reversal
+    // due to rounding margins
+    await expect(
+      arc.borrow(
+        additionalBorrowAmount,
+        stableCoin.address,
+        creditScoreProof,
+        borrowLimitProof,
+        undefined,
+        scoredMinter,
+      ),
+      'User should not be able to borrow more',
+    ).to.be.revertedWith(
+      'SapphireCoreV1: total borrow amount should not exceed borrow limit',
+    );
+
+    const borrowLimitScore = {
+      ...borrowLimitScore1,
+      score: borrowLimitScore1.score.add(additionalBorrowAmount),
+    }
+    const newPassportScoreTree = new PassportScoreTree([
+      creditScore1,
+      creditScore2,
+      borrowLimitScore,
+    ]);
+
+    await immediatelyUpdateMerkleRoot(
+      ctx.contracts.sapphire.passportScores.connect(ctx.signers.interestSetter),
+      newPassportScoreTree.getHexRoot(),
+    );
+
+    await arc.borrow(
+      additionalBorrowAmount,
+      stableCoin.address,
+      getScoreProof(creditScore1, newPassportScoreTree),
+      getScoreProof(borrowLimitScore, newPassportScoreTree),
+      undefined,
+      scoredMinter,
+    );
+
+    await expect(
+      arc.borrow(
+        additionalBorrowAmount,
+        stableCoin.address,
+        getScoreProof(creditScore1, newPassportScoreTree),
+        getScoreProof(borrowLimitScore, newPassportScoreTree),
+        undefined,
+        scoredMinter,
+      ),
+      'User should not be able to borrow more',
+    ).to.be.revertedWith(
+      'SapphireCoreV1: total borrow amount should not exceed borrow limit',
+    );
   });
 
   it('reverts if the credit proof protocol does not match the one registered', async () => {
