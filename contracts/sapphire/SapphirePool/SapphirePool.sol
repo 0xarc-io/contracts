@@ -60,7 +60,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
      * @notice Determines the amount of tokens deposited by liquidity providers. Stored in 18
      * decimals.
      */
-    mapping (address => uint256) public override userDepositAmounts;
+    mapping (address => uint256) public override deposits;
 
     /**
      * @dev Stores the assets that have been historically allowed to be deposited.
@@ -286,7 +286,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         }
 
         utilization.amountUsed += _amount;
-        userDepositAmounts[msg.sender] += scaledAmount;
+        deposits[msg.sender] += scaledAmount;
 
         _mint(msg.sender, lpToMint);
 
@@ -332,7 +332,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         ) = _getWithdrawAmounts(_amount, _withdrawToken);
 
         assetDepositUtilization[_withdrawToken].amountUsed -= assetUtilizationReduceAmt;
-        userDepositAmounts[msg.sender] -= userDepositReduceAmt;
+        deposits[msg.sender] -= userDepositReduceAmt;
 
         _burn(msg.sender, _amount);
 
@@ -670,7 +670,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
             _tokenDecimals[_withdrawToken]
         );
 
-        info.userDeposit = userDepositAmounts[msg.sender];
+        info.userDeposit = deposits[msg.sender];
         info.assetUtilization = assetDepositUtilization[_withdrawToken].amountUsed;
         info.scaledAssetUtilization = _getScaledAmount(
             info.assetUtilization,

@@ -692,13 +692,13 @@ describe('SapphirePool', () => {
       });
 
       it("increases the user's deposit amount", async () => {
-        expect(await pool.userDepositAmounts(depositor.address)).to.eq(0);
+        expect(await pool.deposits(depositor.address)).to.eq(0);
 
         await pool
           .connect(depositor)
           .deposit(stablecoin.address, depositAmount.div(2));
 
-        expect(await pool.userDepositAmounts(depositor.address)).to.eq(
+        expect(await pool.deposits(depositor.address)).to.eq(
           scaledDepositAmount.div(2),
         );
 
@@ -706,7 +706,7 @@ describe('SapphirePool', () => {
           .connect(depositor)
           .deposit(stablecoin.address, depositAmount.div(2));
 
-        expect(await pool.userDepositAmounts(depositor.address)).to.eq(
+        expect(await pool.deposits(depositor.address)).to.eq(
           scaledDepositAmount,
         );
       });
@@ -920,7 +920,7 @@ describe('SapphirePool', () => {
       });
 
       it('decreases the user deposit amount', async () => {
-        expect(await pool.userDepositAmounts(depositor.address)).to.eq(
+        expect(await pool.deposits(depositor.address)).to.eq(
           scaledDepositAmount,
         );
 
@@ -928,7 +928,7 @@ describe('SapphirePool', () => {
           .connect(depositor)
           .withdraw(scaledDepositAmount.div(2), stablecoin.address);
 
-        expect(await pool.userDepositAmounts(depositor.address)).to.eq(
+        expect(await pool.deposits(depositor.address)).to.eq(
           scaledDepositAmount.div(2),
         );
 
@@ -936,7 +936,7 @@ describe('SapphirePool', () => {
           .connect(depositor)
           .withdraw(scaledDepositAmount.div(2), stablecoin.address);
 
-        expect(await pool.userDepositAmounts(depositor.address)).to.eq(0);
+        expect(await pool.deposits(depositor.address)).to.eq(0);
       });
 
       it('decreases the asset utilization', async () => {
@@ -986,9 +986,7 @@ describe('SapphirePool', () => {
       // User A deposits 100
       await pool.connect(userA).deposit(stablecoin.address, depositAmount);
       expect(await pool.balanceOf(userA.address)).to.eq(scaledDepositAmount);
-      expect(await pool.userDepositAmounts(userA.address)).to.eq(
-        scaledDepositAmount,
-      );
+      expect(await pool.deposits(userA.address)).to.eq(scaledDepositAmount);
 
       // 100 rewards are added
       await stablecoin.mintShare(pool.address, depositAmount);
@@ -1008,7 +1006,7 @@ describe('SapphirePool', () => {
       expect(await stablecoin.balanceOf(userA.address)).to.eq(
         depositAmount.mul(2), // 200
       );
-      expect(await pool.userDepositAmounts(userA.address)).to.eq(0);
+      expect(await pool.deposits(userA.address)).to.eq(0);
 
       // User B exits
       await pool
