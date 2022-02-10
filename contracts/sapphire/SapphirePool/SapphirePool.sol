@@ -102,6 +102,16 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         uint256 _amountOut
     );
 
+    /* ========== Modifiers ========== */
+
+    modifier checkKnownToken (address _token) {
+        require(
+            _isKnownToken(_token),
+            "SapphirePool: unknown token"
+        );
+        _;
+    }
+    
     /* ========== Restricted functions ========== */
 
     function init(
@@ -156,8 +166,8 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
 
     /**
      * @notice Sets the limit for the deposit token. If the limit is > 0, the token is added to
-     * the list of the supported deposit assets. These assets also become available for being
-     * swapped by the Cores.
+     * the list of the known deposit assets. These assets also become available for being
+     * swapped by the Cores, unless their limit is set to 0 later on.
      * The sum of the deposit limits cannot be smaller than the sum of the core limits.
      * @param _tokenAddress The address of the deposit token.
      * @param _limit The limit for the deposit token, in its own native decimals.
@@ -170,10 +180,10 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         override
         onlyAdmin
     {
-        bool isSupportedAsset = _tokenDecimals[_tokenAddress] > 0;
+        bool isKnownToken = _isKnownToken(_tokenAddress);
         require(
-            _limit > 0 || isSupportedAsset,
-            "SapphirePool: cannot set the limit of an unsupported asset to 0"
+            _limit > 0 || isKnownToken,
+            "SapphirePool: cannot set the limit of an unknown asset to 0"
         );
 
         (
@@ -186,8 +196,8 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
             "SapphirePool: sum of deposit limits smaller than the sum of the swap limits"
         );
 
-        // Add the token to the supported assets array if limit is > 0
-        if (_limit > 0 && !isSupportedAsset) {
+        // Add the token to the known assets array if limit is > 0
+        if (_limit > 0 && !isKnownToken) {
             supportedDepositAssets.push(_tokenAddress);
 
             // Save token decimals to later compute the token scalar
@@ -250,8 +260,8 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     /* ========== Public functions ========== */
 
     /**
-     * @notice Deposits the given amount of tokens into the pool. The token must be a supported
-     * deposit asset.
+     * @notice Deposits the given amount of tokens into the pool. 
+     * The token must have a deposit limit > 0.
      */
     function deposit(
         address _token,
@@ -312,14 +322,8 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     )
         external
         override
+        checkKnownToken(_withdrawToken)
     {
-        // When we add a new supporting token, we set its decimals to this mapping.
-        // So we can check with O(1) if it's a supported token by checking if its decimals are set.
-        require(
-            _tokenDecimals[_withdrawToken] > 0,
-            "SapphirePool: unsupported withdraw token"
-        );
-
         (
             uint256 assetUtilizationReduceAmt,
             uint256 userDepositReduceAmt,
@@ -373,7 +377,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     }
 
     /**
-     * @notice Returns the list of the supported assets for depositing by LPs and swapping by Cores.
+     * @notice Returns the list of the available deposit and swap assets.
      * If an asset has a limit of 0, it will be excluded from the list.
      */
     function getDepositAssets()
@@ -462,6 +466,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         uint256 _credsAmount
     )
         private
+        checkKnownToken(_tokenOut)
         returns (uint256)
     {
         AssetUtilization storage utilization = coreSwapUtilization[msg.sender];
@@ -471,17 +476,10 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
             "SapphirePool: core swap limit exceeded"
         );
 
-        // Ensure out token is supported. All supported tokens should have their decimals saved
-        uint8 decimalsOut = _tokenDecimals[_tokenOut];
-        require(
-            decimalsOut > 0,
-            "SapphirePool: unsupported out token"
-        );
-
         uint256 expectedOutAmount = _getScaledAmount(
             _credsAmount,
             _decimals,
-            decimalsOut
+            _tokenDecimals[_tokenOut]
         );
 
         // Increase core utilization
@@ -508,22 +506,16 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         uint256 _stablesAmount
     )
         private
+        checkKnownToken(_tokenIn)
         returns (uint256)
     {
-        AssetUtilization storage utilization = coreSwapUtilization[msg.sender];
-
-        // Ensure out token is supported. All supported tokens should have their decimals saved
         uint8 stableDecimals = _tokenDecimals[_tokenIn];
-        require(
-            _tokenDecimals[_tokenIn] > 0,
-            "SapphirePool: unsupported in token"
-        );
-
         uint256 credsOutAmount = _getScaledAmount(
             _stablesAmount,
             stableDecimals,
             _decimals
         );
+        AssetUtilization storage utilization = coreSwapUtilization[msg.sender];
 
         utilization.amountUsed -= credsOutAmount;
 
@@ -685,5 +677,18 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         );
 
         return info;
+    }
+
+    /**
+     * @dev Returns true if the token was historically added as a deposit token
+     */
+    function _isKnownToken(
+        address _token
+    )
+        private
+        view
+        returns (bool)
+    {
+        return _tokenDecimals[_token] > 0;
     }
 }
