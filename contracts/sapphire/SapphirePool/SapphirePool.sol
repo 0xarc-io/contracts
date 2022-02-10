@@ -65,7 +65,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     /**
      * @dev Stores the assets that have been historically allowed to be deposited.
      */
-    address[] internal supportedDepositAssets;
+    address[] internal knownDepositAssets;
 
     /**
      * @dev Stores the cores that have historically been approved to swap in assets.
@@ -196,15 +196,15 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
             "SapphirePool: sum of deposit limits smaller than the sum of the swap limits"
         );
 
+        assetDepositUtilization[_tokenAddress].limit = _limit;
+
         // Add the token to the known assets array if limit is > 0
         if (_limit > 0 && !isKnownToken) {
-            supportedDepositAssets.push(_tokenAddress);
+            knownDepositAssets.push(_tokenAddress);
 
             // Save token decimals to later compute the token scalar
             _tokenDecimals[_tokenAddress] = IERC20Metadata(_tokenAddress).decimals();
         }
-
-        assetDepositUtilization[_tokenAddress].limit = _limit;
 
         emit DepositLimitSet(_tokenAddress, _limit);
     }
@@ -364,8 +364,8 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
 
         uint256 depositValue;
 
-        for (uint8 i = 0; i < supportedDepositAssets.length; i++) {
-            address token = supportedDepositAssets[i];
+        for (uint8 i = 0; i < knownDepositAssets.length; i++) {
+            address token = knownDepositAssets[i];
             depositValue += _getScaledAmount(
                 assetDepositUtilization[token].amountUsed,
                 _tokenDecimals[token],
@@ -388,8 +388,8 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     {
         uint8 validAssetCount = 0;
 
-        for (uint8 i = 0; i < supportedDepositAssets.length; i++) {
-            address token = supportedDepositAssets[i];
+        for (uint8 i = 0; i < knownDepositAssets.length; i++) {
+            address token = knownDepositAssets[i];
 
             if (assetDepositUtilization[token].limit > 0) {
                 validAssetCount++;
@@ -399,7 +399,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         address[] memory result = new address[](validAssetCount);
 
         for (uint8 i = 0; i < validAssetCount; i++) {
-            address token = supportedDepositAssets[i];
+            address token = knownDepositAssets[i];
 
             if (assetDepositUtilization[token].limit > 0) {
                 result[i] = token;
@@ -420,8 +420,8 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     {
         uint256 result;
 
-        for (uint8 i = 0; i < supportedDepositAssets.length; i++) {
-            address token = supportedDepositAssets[i];
+        for (uint8 i = 0; i < knownDepositAssets.length; i++) {
+            address token = knownDepositAssets[i];
             uint8 decimals = _tokenDecimals[token];
 
             result += _getScaledAmount(
@@ -555,8 +555,8 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         bool isCoreSupported;
         uint8 decimals;
 
-        for (uint8 i = 0; i < supportedDepositAssets.length; i++) {
-            address token = supportedDepositAssets[i];
+        for (uint8 i = 0; i < knownDepositAssets.length; i++) {
+            address token = knownDepositAssets[i];
             if (token == _excludeDepositToken) {
                 continue;
             }

@@ -200,7 +200,7 @@ describe('SapphirePool', () => {
         await expect(
           pool.setDepositLimit(stablecoin.address, 0),
         ).to.be.revertedWith(
-          'SapphirePool: cannot set the limit of an unsupported asset to 0',
+          'SapphirePool: cannot set the limit of an unknown asset to 0',
         );
       });
 
@@ -314,7 +314,7 @@ describe('SapphirePool', () => {
             ctx.contracts.collateral.address,
             scaledDepositAmount,
           ),
-        ).to.be.revertedWith('SapphirePool: unsupported out token');
+        ).to.be.revertedWith('SapphirePool: unknown token');
       });
 
       it('reverts if trying to swap an unsupported token for creds', async () => {
@@ -331,7 +331,7 @@ describe('SapphirePool', () => {
             creds.address,
             depositAmount,
           ),
-        ).to.be.revertedWith('SapphirePool: unsupported in token');
+        ).to.be.revertedWith('SapphirePool: unknown token');
       });
 
       it('reverts if trying to swap between two tokens where creds is not one of them', async () => {
@@ -824,7 +824,7 @@ describe('SapphirePool', () => {
           pool
             .connect(depositor)
             .withdraw(utils.parseUnits('100', 6), testUsdc.address),
-        ).to.be.revertedWith('SapphirePool: unsupported withdraw token');
+        ).to.be.revertedWith('SapphirePool: unknown token');
       });
 
       it('withdraws token with 6 decimals', async () => {
