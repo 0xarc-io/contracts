@@ -692,7 +692,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
                 _liquidate(action.userToLiquidate, currentPrice, assessedCRatio, action.borrowAssetAddress);
             }
 
-            // The creds balance shouldn't have between the actions 
+            // The creds balance shouldn't have changed between the actions 
             require(
                 credsBalance == IERC20(syntheticAsset).balanceOf(address(this)),
                 "SapphireCoreV1: the creds balance changed (forbidden)"
