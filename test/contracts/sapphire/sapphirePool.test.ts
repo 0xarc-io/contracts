@@ -126,6 +126,26 @@ describe('SapphirePool', () => {
         expect(utilization.limit).to.eq(1000);
         expect(utilization.amountUsed).to.eq(0);
       });
+
+      it('sets the limit to core when another one exists already', async () => {
+        await pool.setDepositLimit(stablecoin.address, depositAmount);
+
+        await pool.setCoreSwapLimit(
+          ctx.contracts.sapphire.core.address,
+          scaledDepositAmount.div(3),
+        );
+        await pool.setCoreSwapLimit(admin.address, scaledDepositAmount.div(3));
+
+        expect((await pool.coreSwapUtilization(admin.address)).limit).to.eq(
+          scaledDepositAmount.div(3),
+        );
+
+        await pool.setCoreSwapLimit(admin.address, scaledDepositAmount.div(2));
+
+        expect((await pool.coreSwapUtilization(admin.address)).limit).to.eq(
+          scaledDepositAmount.div(2),
+        );
+      });
     });
 
     describe('#setDepositLimit', () => {

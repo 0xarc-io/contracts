@@ -138,7 +138,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
             uint256 sumOfDepositLimits,
             uint256 sumOfCoreLimits,
             bool isCoreSupported
-        ) = _getSumOfLimits(_coreAddress);
+        ) = _getSumOfLimits(_coreAddress, _coreAddress);
 
         require(
             sumOfCoreLimits + _limit <= sumOfDepositLimits,
@@ -189,7 +189,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         (
             uint256 sumOfDepositLimits,
             uint256 sumOfCoreLimits,
-        ) = _getSumOfLimits(address(0));
+        ) = _getSumOfLimits(address(0), address(0));
 
         require(
             sumOfDepositLimits >= sumOfCoreLimits,
@@ -550,10 +550,12 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
 
     /**
      * @dev Returns the sum of the deposit limits and the sum of the core swap limits
-     * Optionally, accepts an address of a core and returns if that core is already supported
+     * @param _optionalCoreCheck An optional parameter to check if the core has a swap limit > 0
+     * @param _excludeCore An optional parameter to exclude the core from the sum
      */
     function _getSumOfLimits(
-        address _optionalCoreCheck
+        address _optionalCoreCheck,
+        address _excludeCore
     )
         private
         view
@@ -577,6 +579,9 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
 
         for (uint8 i = 0; i < supportedCores.length; i++) {
             address core = supportedCores[i];
+            if (core == _excludeCore) {
+                continue;
+            }
 
             sumOfCoreLimits += coreSwapUtilization[core].limit;
 
