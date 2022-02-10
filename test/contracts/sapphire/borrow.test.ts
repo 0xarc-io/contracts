@@ -24,6 +24,7 @@ import { getScoreProof } from '@src/utils/getScoreProof';
 import { roundUpDiv, roundUpMul } from '@test/helpers/roundUpOperations';
 import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
 import { PassportScoreTree } from '@src/MerkleTree';
+import { fail } from 'assert';
 
 /**
  * This is the most crucial function of the system as it's how users actually borrow from a vault.
@@ -161,7 +162,7 @@ describe('SapphireCore.borrow()', () => {
 
   addSnapshotBeforeRestoreAfterEach();
 
-  it('borrows the correct amount for collateral tokens that have other than 18 decimal places', async () => {
+  it('borrows the correct amount of the given stablecoin, having collateral tokens that have other than 18 decimal places', async () => {
     const collateralAddress = await arc.core().collateralAsset();
     const collateralContract = BaseERC20Factory.connect(
       collateralAddress,
@@ -188,7 +189,25 @@ describe('SapphireCore.borrow()', () => {
     expect(collateralAmount, 'collateral amt').eq(COLLATERAL_AMOUNT);
     expect(normalizedBorrowedAmount, 'borrow amt').eq(BORROW_AMOUNT_500_SCORE);
     expect(principal, 'principal').eq(BORROW_AMOUNT_500_SCORE);
+
+    fail('stablecoin not implemented');
   });
+
+  it('mints an equivalent amount of creds that are swapped in the pool');
+
+  it('transfers the stables from the pool to the user');
+
+  it('adds the borrow fee to an initial borrow amount');
+
+  it('adds the borrow fee to an existing borrow amount');
+
+  it(
+    'increases the user principal by the borrowed amount (6 decimal borrow asset)',
+  );
+
+  it(
+    'increases the user principal by the borrowed amount (18 decimal borrow asset)',
+  );
 
   it('borrows with the highest c-ratio if proof is not provided', async () => {
     let vault = await arc.getVault(scoredMinter.address);
@@ -221,6 +240,12 @@ describe('SapphireCore.borrow()', () => {
       'SapphireCoreV1: the vault will become undercollateralized',
     );
   });
+
+  it('reverts if borrowing more than the swap limit');
+
+  it('reverts if the borrow limit + borrow fee are < allowed c-ratio');
+
+  it('reverts if trying to borrow for an unsupported stablecoin');
 
   it('reverts if borrow limit proof is not provided', async () => {
     await expect(
@@ -266,7 +291,12 @@ describe('SapphireCore.borrow()', () => {
 
   it('borrows more if borrow limit is increased', async () => {
     await mintAndApproveCollateral(scoredMinter, COLLATERAL_AMOUNT.mul(2));
-    await arc.deposit(COLLATERAL_AMOUNT.mul(2), undefined, undefined, scoredMinter);
+    await arc.deposit(
+      COLLATERAL_AMOUNT.mul(2),
+      undefined,
+      undefined,
+      scoredMinter,
+    );
     await arc.borrow(
       borrowLimitScore1.score,
       stableCoin.address,
@@ -295,7 +325,7 @@ describe('SapphireCore.borrow()', () => {
     const borrowLimitScore = {
       ...borrowLimitScore1,
       score: borrowLimitScore1.score.add(additionalBorrowAmount),
-    }
+    };
     const newPassportScoreTree = new PassportScoreTree([
       creditScore1,
       creditScore2,
@@ -767,9 +797,7 @@ describe('SapphireCore.borrow()', () => {
 
   it('should not borrow less than the minimum borrow limit', async () => {
     const vaultBorrowMaximum = await arc.core().vaultBorrowMaximum();
-    await arc
-      .core()
-      .setLimits(BORROW_AMOUNT, vaultBorrowMaximum);
+    await arc.core().setLimits(BORROW_AMOUNT, vaultBorrowMaximum);
     await expect(
       arc.borrow(
         BORROW_AMOUNT.sub(10),
@@ -787,9 +815,7 @@ describe('SapphireCore.borrow()', () => {
   it('should not borrow more than the maximum amount', async () => {
     const vaultBorrowMinimum = await arc.core().vaultBorrowMinimum();
     // Only update the vault borrow maximum
-    await arc
-      .core()
-      .setLimits(vaultBorrowMinimum, BORROW_AMOUNT);
+    await arc.core().setLimits(vaultBorrowMinimum, BORROW_AMOUNT);
 
     await arc.borrow(
       BORROW_AMOUNT.div(2),
