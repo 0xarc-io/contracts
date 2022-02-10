@@ -471,7 +471,7 @@ describe('SapphireAssessor', () => {
         .withArgs(user1.address, borrowLimitScore1.score.add(1), borrowLimitScore1.score, false);
     });
 
-    it('throws if borrow value is equal credit limit and has a valid proof', async () => {
+    it('return true if borrow value is equal credit limit and has a valid proof', async () => {
       await expect(assessor.assessBorrowLimit(
         borrowLimitScore1.score,
         getScoreProof(borrowLimitScore1, scoresTree),
