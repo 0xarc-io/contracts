@@ -11,6 +11,7 @@ import {
 import { MockSapphirePassportScores } from '@src/typings/MockSapphirePassportScores';
 import { ArcNumber, getScoreProof } from '@src/utils';
 import {
+  BORROW_LIMIT_PROOF_PROTOCOL,
   DEFAULT_MAX_CREDIT_SCORE,
   DEFAULT_PROOF_PROTOCOL,
 } from '@test/helpers/sapphireDefaults';
@@ -29,6 +30,8 @@ describe('SapphireAssessor', () => {
   let passportScore1: PassportScore;
   let passportScore2: PassportScore;
   let passportScore3: PassportScore;
+  let borrowLimitScore1: PassportScore;
+  let borrowLimitScore2: PassportScore;
   let user1: SignerWithAddress;
   let user2: SignerWithAddress;
 
@@ -96,10 +99,22 @@ describe('SapphireAssessor', () => {
       score: BigNumber.from(600),
     };
 
+    borrowLimitScore1 = {
+      account: user1.address,
+      protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
+      score: utils.parseEther('100'),
+    };
+
     passportScore2 = {
       account: user2.address,
       protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: BigNumber.from(200),
+    };
+
+    borrowLimitScore2 = {
+      account: user2.address,
+      protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
+      score: utils.parseEther('200'),
     };
 
     passportScore3 = {
@@ -110,7 +125,9 @@ describe('SapphireAssessor', () => {
 
     scoresTree = new PassportScoreTree([
       passportScore1,
+      borrowLimitScore1,
       passportScore2,
+      borrowLimitScore2,
       passportScore3,
     ]);
 
@@ -407,6 +424,59 @@ describe('SapphireAssessor', () => {
       )
         .to.emit(assessor, 'Assessed')
         .withArgs(user1.address, ArcNumber.new(140));
+    });
+  });
+
+  describe('#assessBorrowLimit', () => {
+    it('reverts if borrow amount is 0', async () => {
+      await expect(
+        assessor.assessBorrowLimit(
+          0,
+          getScoreProof(borrowLimitScore1, scoresTree),
+        ),
+      ).to.be.revertedWith('SapphireAssessor: The borrow amount cannot be zero');
+    });
+
+    it(`reverts if the proof is invalid`, async () => {
+      await expect(
+        assessor.assessBorrowLimit(
+          borrowLimitScore1.score.sub(1),
+          {
+            ...getScoreProof(borrowLimitScore1, scoresTree),
+            score: borrowLimitScore1.score.sub(1),
+          },
+        ),
+      ).to.be.revertedWith('SapphirePassportScores: invalid proof');
+    });
+
+    it('reverts if score proof is empty', async () => {
+      await expect(
+        assessor.assessBorrowLimit(
+          borrowLimitScore1.score.sub(1),
+          {
+            account: user1.address,
+            protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
+            score: borrowLimitScore1.score,
+            merkleProof: [],
+          },
+        ),
+      ).to.be.revertedWith('SapphirePassportScores: invalid proof');
+    });
+
+    it('returns false if borrow value is greater then credit limit and has a valid proof', async () => {
+      await expect(assessor.assessBorrowLimit(
+        borrowLimitScore1.score.add(1),
+        getScoreProof(borrowLimitScore1, scoresTree),
+      )).to.emit(assessor, 'CreditLimitAssessed')
+        .withArgs(user1.address, borrowLimitScore1.score.add(1), borrowLimitScore1.score, false);
+    });
+
+    it('return true if borrow value is equal credit limit and has a valid proof', async () => {
+      await expect(assessor.assessBorrowLimit(
+        borrowLimitScore1.score,
+        getScoreProof(borrowLimitScore1, scoresTree),
+      )).to.emit(assessor, 'CreditLimitAssessed')
+        .withArgs(user1.address, borrowLimitScore1.score, borrowLimitScore1.score, true);
     });
   });
 

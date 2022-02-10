@@ -29,7 +29,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
     event ActionsOperated(
         SapphireTypes.Action[] _actions,
-        SapphireTypes.ScoreProof _scoreProof,
+        SapphireTypes.ScoreProof[] _passportProofs,
         address indexed _user
     );
 
@@ -149,16 +149,10 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         interestSetter  = _interestSetter;
         pauseOperator   = _pauseOperator;
         feeCollector    = _feeCollector;
-        _proofProtocol   = "arcx.creditScore";
-        IERC20Metadata collateral   = IERC20Metadata(collateralAsset);
-        uint8 collateralDecimals    = collateral.decimals();
-
-        require(
-            collateralDecimals <= 18,
-            "SapphireCoreV1: collateral has more than 18 decimals"
-        );
-
-        precisionScalar = 10 ** (18 - uint256(collateralDecimals));
+        _creditScoreProtocol   = "arcx.creditScore";
+        _borrowLimitProtocol   = "arcx.creditLimit";
+        
+        savePrecisionScalar(collateralAsset);
 
         setSupportedBorrowAsset(_supportedBorrowAddress, true);
         setAssessor(_assessorAddress);
@@ -425,9 +419,9 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         external
         onlyAdmin
     {
-        _proofProtocol = _protocol;
+        _creditScoreProtocol = _protocol;
 
-        emit ProofProtocolSet(_proofProtocol.toString());
+        emit ProofProtocolSet(_creditScoreProtocol.toString());
     }
 
     function setSupportedBorrowAsset(
@@ -488,12 +482,13 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     /**
      * @dev Deposits the given `_amount` of collateral to the `msg.sender`'s vault.
      *
-     * @param _amount The amount of collateral to deposit
-     * @param _scoreProof The credit score proof - optional
+     * @param _amount           The amount of collateral to deposit
+     * @param _passportProofs   The passport score proofs - optional
+     *                          Index 0 - score proof
      */
     function deposit(
         uint256 _amount,
-        SapphireTypes.ScoreProof memory _scoreProof
+        SapphireTypes.ScoreProof[] memory _passportProofs
     )
         public
     {
@@ -505,12 +500,12 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             address(0)
         );
 
-        executeActions(actions, _scoreProof);
+        executeActions(actions, _passportProofs);
     }
 
     function withdraw(
         uint256 _amount,
-        SapphireTypes.ScoreProof memory _scoreProof
+        SapphireTypes.ScoreProof[] memory _passportProofs
     )
         public
     {
@@ -522,7 +517,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             address(0)
         );
 
-        executeActions(actions, _scoreProof);
+        executeActions(actions, _passportProofs);
     }
 
     /**
@@ -530,12 +525,14 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      *
      * @param _amount The amount of synthetic to borrow
      * @param _borrowAssetAddress The address of token to borrow
-     * @param _scoreProof The credit score proof - mandatory
+     * @param _passportProofs The passport score proofs - mandatory
+     *                        Index 0 - score proof
+     *                        Index 1 - borrow limit proof
      */
     function borrow(
         uint256 _amount,
         address _borrowAssetAddress,
-        SapphireTypes.ScoreProof memory _scoreProof
+        SapphireTypes.ScoreProof[] memory _passportProofs
     )
         public
     {
@@ -547,13 +544,13 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             address(0)
         );
 
-        executeActions(actions, _scoreProof);
+        executeActions(actions, _passportProofs);
     }
 
     function repay(
         uint256 _amount,
         address _borrowAssetAddress,
-        SapphireTypes.ScoreProof memory _scoreProof
+        SapphireTypes.ScoreProof[] memory _passportProofs
     )
         public
     {
@@ -565,18 +562,19 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             address(0)
         );
 
-        executeActions(actions, _scoreProof);
+        executeActions(actions, _passportProofs);
     }
 
     /**
      * @dev Repays the entire debt and withdraws the all the collateral
      *
      * @param _borrowAssetAddress The address of token to repay
-     * @param _scoreProof           The credit score proof - optional
+     * @param _passportProofs     The passport score proofs - optional
+     *                            Index 0 - score proof
      */
     function exit(
         address _borrowAssetAddress,
-        SapphireTypes.ScoreProof memory _scoreProof
+        SapphireTypes.ScoreProof[] memory _passportProofs
     )
         public
     {
@@ -601,7 +599,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             address(0)
         );
 
-        executeActions(actions, _scoreProof);
+        executeActions(actions, _passportProofs);
     }
 
     /**
@@ -611,12 +609,13 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      *
      * @param _owner the owner of the vault to liquidate
      * @param _borrowAssetAddress The address of token to repay
-     * @param _scoreProof The credit score proof (optional)
+     * @param _passportProofs     The passport score proof - optional
+     *                            Index 0 - score proof
      */
     function liquidate(
         address _owner,
         address _borrowAssetAddress,
-        SapphireTypes.ScoreProof memory _scoreProof
+        SapphireTypes.ScoreProof[] memory _passportProofs
     )
         public
     {
@@ -628,7 +627,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             _owner
         );
 
-        executeActions(actions, _scoreProof);
+        executeActions(actions, _passportProofs);
     }
 
     /**
@@ -636,13 +635,14 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      *      passed actions. This function first updates the indexes before
      *      actually executing the actions.
      *
-     * @param _actions      An array of actions to execute
-     * @param _scoreProof   The credit score proof of the user that calls this
-     *                      function
+     * @param _actions          An array of actions to execute
+     * @param _passportProofs   The passport score proof - optional
+     *                          Index 0 - score proof
+     *                          Index 1 - borrow limit proof
      */
     function executeActions(
         SapphireTypes.Action[] memory _actions,
-        SapphireTypes.ScoreProof memory _scoreProof
+        SapphireTypes.ScoreProof[] memory _passportProofs
     )
         public
     {
@@ -657,8 +657,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         );
 
         require (
-            _scoreProof.protocol == _proofProtocol,
-            "SapphireCoreV1: incorrect proof protocol"
+            _passportProofs[0].protocol == _creditScoreProtocol,
+            "SapphireCoreV1: incorrect credit score protocol"
         );
 
         // Update the index to calculate how much interest has accrued
@@ -669,7 +669,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         (
             uint256 assessedCRatio,
             uint256 currentPrice
-        ) = _getVariablesForActions(_actions, _scoreProof);
+        ) = _getVariablesForActions(_actions, _passportProofs[0]);
 
         for (uint256 i = 0; i < _actions.length; i++) {
             SapphireTypes.Action memory action = _actions[i];
@@ -681,7 +681,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
                 _withdraw(action.amount, assessedCRatio, currentPrice);
 
             } else if (action.operation == SapphireTypes.Operation.Borrow) {
-                _borrow(action.amount, action.borrowAssetAddress, assessedCRatio, currentPrice);
+                _borrow(action.amount, action.borrowAssetAddress, assessedCRatio, currentPrice, _passportProofs[1]);
 
             }  else if (action.operation == SapphireTypes.Operation.Repay) {
                 _repay(msg.sender, msg.sender, action.amount, action.borrowAssetAddress);
@@ -693,7 +693,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
         emit ActionsOperated(
             _actions,
-            _scoreProof,
+            _passportProofs,
             msg.sender
         );
     }
@@ -737,7 +737,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         view
         returns (string memory)
     {
-        return _proofProtocol.toString();
+        return _creditScoreProtocol.toString();
     }
 
     function getSupportedBorrowAssets()
@@ -814,7 +814,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         returns (uint256)
     {
         return _collateralAmount *
-            precisionScalar *
+             precisionScalars[collateralAsset] *
             _collateralPrice /
             _normalizedBorrowedAmount;
     }
@@ -952,7 +952,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         uint256 _amount,
         address _borrowAssetAddress,
         uint256 _assessedCRatio,
-        uint256 _collateralPrice
+        uint256 _collateralPrice,
+        SapphireTypes.ScoreProof memory _borrowLimitProof
     )
         private
     {
@@ -961,6 +962,19 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             _isSupportedBorrowAssets[_borrowAssetAddress],
             "SapphireCoreV1: the token address should be one of the supported tokens"
         );
+
+        require(
+            _borrowLimitProof.account == msg.sender,
+            "SapphireCoreV1: proof.account must match msg.sender"
+        );
+
+        require(
+            _borrowLimitProof.protocol == _borrowLimitProtocol,
+            "SapphireCoreV1: incorrect borrow limit proof protocol"
+        );
+
+        // Save precision scalar if it doesn't exist
+        savePrecisionScalar(_borrowAssetAddress);
 
         // Get the user's vault
         SapphireTypes.Vault storage vault = vaults[msg.sender];
@@ -984,6 +998,11 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
         // Calculate new actual vault borrow amount
         uint256 _newActualVaultBorrowAmount = actualVaultBorrowAmount + _amount;
+
+        require(
+            assessor.assessBorrowLimit(_newActualVaultBorrowAmount, _borrowLimitProof),
+            "SapphireCoreV1: total borrow amount should not exceed borrow limit"
+        );
 
         // Calculate new normalized vault borrow amount
         uint256 _newNormalizedVaultBorrowAmount = _normalizeBorrowAmount(_newActualVaultBorrowAmount, true);
@@ -1038,6 +1057,9 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             _isSupportedBorrowAssets[_borrowAssetAddress],
             "SapphireCoreV1: the token address should be one of the supported tokens"
         );
+
+        // Save precision scalar if it doesn't exist
+        savePrecisionScalar(_borrowAssetAddress);
 
         // Get the user's vault
         SapphireTypes.Vault storage vault = vaults[_owner];
@@ -1132,27 +1154,28 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         // in the vault
         uint256 debtToRepay = _denormalizeBorrowAmount(vault.normalizedBorrowedAmount, true);
 
+        uint256 collateralPrecisionScalar = precisionScalars[collateralAsset];
         // Do a rounded up operation of
-        // debtToRepay / LiquidationFee / precisionScalar
-        uint256 collateralToSell = (Math.roundUpDiv(debtToRepay, liquidationPrice) + precisionScalar - 1)
-            / precisionScalar;
+        // debtToRepay / LiquidationFee / collateralPrecisionScalar
+        uint256 collateralToSell = (Math.roundUpDiv(debtToRepay, liquidationPrice) + collateralPrecisionScalar - 1)
+            / collateralPrecisionScalar;
 
         // If the discounted collateral is more than the amount in the vault, limit
         // the sale to that amount
         if (collateralToSell > vault.collateralAmount) {
             collateralToSell = vault.collateralAmount;
             // Calculate the new debt to repay
-            debtToRepay = collateralToSell * precisionScalar * liquidationPrice / BASE;
+            debtToRepay = collateralToSell * collateralPrecisionScalar * liquidationPrice / BASE;
         }
 
         // Calculate the profit made in USD
-        uint256 valueCollateralSold = collateralToSell * precisionScalar * _currentPrice / BASE;
+        uint256 valueCollateralSold = collateralToSell * collateralPrecisionScalar * _currentPrice / BASE;
 
         // Total profit in dollar amount
         uint256 profit = valueCollateralSold - debtToRepay;
 
         // Calculate the ARC share
-        uint256 arcShare = profit * liquidationArcRatio / liquidationPrice / precisionScalar;
+        uint256 arcShare = profit * liquidationArcRatio / liquidationPrice / collateralPrecisionScalar;
 
         // Calculate liquidator's share
         uint256 liquidatorCollateralShare = collateralToSell - arcShare;
@@ -1315,5 +1338,26 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         returns (bool)
     {
         return _oracleTimestamp >= currentTimestamp() - 60 * 60 * 12;
+    }
+
+    /**
+     * @dev Saves the token's precision scalar, if it doesn't exist in the mapping. 
+     */
+    function savePrecisionScalar(
+        address _tokenAddress
+    )
+        internal
+    {
+        if (_tokenAddress != address(0) && precisionScalars[_tokenAddress] == 0) {
+            IERC20Metadata token = IERC20Metadata(collateralAsset);
+            uint256 tokenDecimals = token.decimals();
+
+            require(
+                tokenDecimals <= 18,
+                "SapphireCoreV1: token has more than 18 decimals"
+            );
+
+            precisionScalars[_tokenAddress] = 10 ** (18 - tokenDecimals);
+        }
     }
 }

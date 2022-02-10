@@ -4,6 +4,7 @@ import { approve } from '@src/utils/approve';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import {
+  BORROW_LIMIT_PROOF_PROTOCOL,
   DEFAULT_COLLATERAL_DECIMALS,
   DEFAULT_PROOF_PROTOCOL,
 } from '@test/helpers/sapphireDefaults';
@@ -31,6 +32,7 @@ describe('SapphireCore.exit()', () => {
   let stableCoin: TestToken;
 
   let scoredMinterCreditScore: PassportScore;
+  let scoredMinterBorrowLimitScore: PassportScore;
   let creditScoreTree: PassportScoreTree;
 
   function getCollateralBalance(user: SignerWithAddress) {
@@ -48,15 +50,22 @@ describe('SapphireCore.exit()', () => {
       score: BigNumber.from(500),
     };
 
+    scoredMinterBorrowLimitScore = {
+      account: ctx.signers.scoredMinter.address,
+      protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
+      score: BORROW_AMOUNT.mul(2),
+    };
+
     const liquidatorCreditScore = {
       account: ctx.signers.liquidator.address,
       protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
-      score: BigNumber.from(500),
+      score: BORROW_AMOUNT.mul(2),
     };
 
     creditScoreTree = new PassportScoreTree([
       scoredMinterCreditScore,
       liquidatorCreditScore,
+      scoredMinterBorrowLimitScore,
     ]);
   }
 
@@ -79,6 +88,7 @@ describe('SapphireCore.exit()', () => {
     await setupBaseVault(
       arc,
       signers.scoredMinter,
+      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
       getScoreProof(scoredMinterCreditScore, creditScoreTree),
@@ -116,6 +126,7 @@ describe('SapphireCore.exit()', () => {
     await setupBaseVault(
       arc,
       signers.scoredMinter,
+      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT, // -1 for rounding
       getScoreProof(scoredMinterCreditScore, creditScoreTree),
@@ -160,6 +171,7 @@ describe('SapphireCore.exit()', () => {
     await setupBaseVault(
       arc,
       signers.scoredMinter,
+      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT, // -1 for rounding
       getScoreProof(scoredMinterCreditScore, creditScoreTree),
@@ -191,6 +203,7 @@ describe('SapphireCore.exit()', () => {
     await setupBaseVault(
       arc,
       signers.scoredMinter,
+      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
       getScoreProof(scoredMinterCreditScore, creditScoreTree),

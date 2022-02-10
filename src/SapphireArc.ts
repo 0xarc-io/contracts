@@ -6,7 +6,7 @@ import {
   PassportScoreProof,
   Vault,
 } from '@arc-types/sapphireCore';
-import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
+import { BORROW_LIMIT_PROOF_PROTOCOL, DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
 import {
   BigNumber,
   BigNumberish,
@@ -74,7 +74,14 @@ export class SapphireArc {
     collateralAmount: BigNumberish,
     borrowAmount: BigNumber,
     borrowAssetAddress: string,
-    passportScoreProof?: PassportScoreProof,
+    passportScoreProof: PassportScoreProof = getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+        ),
+    minterBorrowLimitScore: PassportScoreProof = getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
+        ),
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
@@ -100,6 +107,7 @@ export class SapphireArc {
     return this.executeActions(
       actions,
       passportScoreProof,
+      minterBorrowLimitScore,
       synthName,
       caller,
       overrides,
@@ -111,7 +119,10 @@ export class SapphireArc {
    */
   async exit(
     borrowAssetAddress: string,
-    passportScoreProof?: PassportScoreProof,
+    passportScoreProof: PassportScoreProof = getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+        ),
     synthName = this.getSynthNames()[0],
     caller = this.signer,
     overrides: TransactionOverrides = {},
@@ -120,11 +131,7 @@ export class SapphireArc {
 
     return core.exit(
       borrowAssetAddress,
-      passportScoreProof ??
-        getEmptyScoreProof(
-          undefined,
-          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
-        ),
+      [passportScoreProof],
       overrides,
     );
   }
@@ -132,7 +139,10 @@ export class SapphireArc {
   async liquidate(
     owner: string,
     borrowAssetAddress: string,
-    passportScoreProof?: PassportScoreProof,
+    passportScoreProof: PassportScoreProof = getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+        ),
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
@@ -142,18 +152,21 @@ export class SapphireArc {
     return core.liquidate(
       owner,
       borrowAssetAddress,
-      passportScoreProof ??
-        getEmptyScoreProof(
-          undefined,
-          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
-        ),
+      [passportScoreProof],
       overrides,
     );
   }
 
   async executeActions(
     actions: Action[],
-    passportScoreProof?: PassportScoreProof,
+    passportScoreProof: PassportScoreProof = getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+        ),
+    passportBorrowLimitProof: PassportScoreProof = getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+        ),
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
@@ -162,11 +175,7 @@ export class SapphireArc {
 
     await core.executeActions(
       actions,
-      passportScoreProof ??
-        getEmptyScoreProof(
-          undefined,
-          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
-        ),
+      [passportScoreProof, passportBorrowLimitProof],
       overrides,
     );
 
@@ -180,7 +189,14 @@ export class SapphireArc {
   async borrow(
     amount: BigNumber,
     borrowAssetAddress: string,
-    passportScoreProof?: PassportScoreProof,
+    passportScoreProof: PassportScoreProof = getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+        ),
+    borrowLimitProof: PassportScoreProof = getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
+        ),
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
@@ -190,11 +206,7 @@ export class SapphireArc {
     return core.borrow(
       amount,
       borrowAssetAddress,
-      passportScoreProof ??
-        getEmptyScoreProof(
-          undefined,
-          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
-        ),
+      [passportScoreProof, borrowLimitProof],
       overrides,
     );
   }
@@ -202,7 +214,10 @@ export class SapphireArc {
   async repay(
     amount: BigNumber,
     borrowAssetAddress: string,
-    passportScoreProof?: PassportScoreProof,
+    passportScoreProof: PassportScoreProof = getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+        ),
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
@@ -212,11 +227,7 @@ export class SapphireArc {
     return core.repay(
       amount,
       borrowAssetAddress,
-      passportScoreProof ??
-        getEmptyScoreProof(
-          undefined,
-          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
-        ),
+      [passportScoreProof],
       overrides,
     );
   }
@@ -225,7 +236,10 @@ export class SapphireArc {
 
   async deposit(
     amount: BigNumber,
-    passportScoreProof?: PassportScoreProof,
+    passportScoreProof: PassportScoreProof = getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+        ),
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
@@ -234,18 +248,17 @@ export class SapphireArc {
 
     return core.deposit(
       amount,
-      passportScoreProof ??
-        getEmptyScoreProof(
-          undefined,
-          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
-        ),
+      [passportScoreProof],
       overrides,
     );
   }
 
   async withdraw(
     amount: BigNumber,
-    passportScoreProof?: PassportScoreProof,
+    passportScoreProof: PassportScoreProof = getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+        ),
     synthName: string = this.getSynthNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
@@ -254,11 +267,7 @@ export class SapphireArc {
 
     return core.withdraw(
       amount,
-      passportScoreProof ??
-        getEmptyScoreProof(
-          undefined,
-          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
-        ),
+      [passportScoreProof],
       overrides,
     );
   }

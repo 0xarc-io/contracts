@@ -8,6 +8,7 @@ import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 import {
+  BORROW_LIMIT_PROOF_PROTOCOL,
   DEFAULT_COLLATERAL_DECIMALS,
   DEFAULT_PRICE,
   DEFAULT_PROOF_PROTOCOL,
@@ -39,6 +40,9 @@ describe('SapphireCore.open()', () => {
   let arc: SapphireTestArc;
   let creditScore1: PassportScore;
   let creditScore2: PassportScore;
+  let borrowLimitScore1: PassportScore;
+  let borrowLimitScore2: PassportScore;
+  let minterBorrowLimitScore: PassportScore;
   let creditScoreTree: PassportScoreTree;
   let stableCoin: TestToken;
 
@@ -53,7 +57,22 @@ describe('SapphireCore.open()', () => {
       protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: BigNumber.from(20),
     };
-    creditScoreTree = new PassportScoreTree([creditScore1, creditScore2]);
+    borrowLimitScore1 = {
+      account: ctx.signers.scoredMinter.address,
+      protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
+      score: BORROW_AMOUNT.mul(2),
+    };
+    borrowLimitScore2 = {
+      account: ctx.signers.interestSetter.address,
+      protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
+      score: BORROW_AMOUNT.mul(2),
+    };
+    minterBorrowLimitScore = {
+      account: ctx.signers.minter.address,
+      protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
+      score: BORROW_AMOUNT.mul(2),
+    };
+    creditScoreTree = new PassportScoreTree([creditScore1, creditScore2, borrowLimitScore1, borrowLimitScore2, minterBorrowLimitScore]);
     await setupSapphire(ctx, {
       merkleRoot: creditScoreTree.getHexRoot(),
     });
@@ -85,6 +104,7 @@ describe('SapphireCore.open()', () => {
         BORROW_AMOUNT,
         stableCoin.address,
         undefined,
+        getScoreProof(minterBorrowLimitScore, creditScoreTree),
         undefined,
         ctx.signers.minter,
       );
@@ -109,6 +129,7 @@ describe('SapphireCore.open()', () => {
         BORROW_AMOUNT,
         stableCoin.address,
         undefined,
+        getScoreProof(minterBorrowLimitScore, creditScoreTree),
         undefined,
         ctx.signers.minter,
       );
@@ -126,7 +147,8 @@ describe('SapphireCore.open()', () => {
           BORROW_AMOUNT.add(change),
           stableCoin.address,
           undefined,
-          undefined,
+        getScoreProof(minterBorrowLimitScore, creditScoreTree),
+        undefined,
           ctx.signers.minter,
         ),
       ).to.be.revertedWith(
@@ -139,6 +161,7 @@ describe('SapphireCore.open()', () => {
           BORROW_AMOUNT,
           stableCoin.address,
           undefined,
+          getScoreProof(minterBorrowLimitScore, creditScoreTree),
           undefined,
           ctx.signers.minter,
         ),
@@ -162,6 +185,7 @@ describe('SapphireCore.open()', () => {
           BORROW_AMOUNT,
           stableCoin.address,
           undefined,
+          getScoreProof(minterBorrowLimitScore, creditScoreTree),
           undefined,
           ctx.signers.minter,
         ),
@@ -180,6 +204,7 @@ describe('SapphireCore.open()', () => {
           BORROW_AMOUNT,
           stableCoin.address,
           undefined,
+          getScoreProof(minterBorrowLimitScore, creditScoreTree),
           undefined,
           ctx.signers.minter,
         ),
@@ -203,6 +228,7 @@ describe('SapphireCore.open()', () => {
         BORROW_AMOUNT,
         stableCoin.address,
         creditScoreProof,
+        getScoreProof(borrowLimitScore1, creditScoreTree),
         undefined,
         scoredMinter,
       );
@@ -227,6 +253,7 @@ describe('SapphireCore.open()', () => {
         BORROW_AMOUNT,
         stableCoin.address,
         creditScoreProof,
+        getScoreProof(borrowLimitScore1, creditScoreTree),
         undefined,
         scoredMinter,
       );
@@ -245,6 +272,7 @@ describe('SapphireCore.open()', () => {
         BORROW_AMOUNT,
         stableCoin.address,
         creditScoreProof,
+        getScoreProof(borrowLimitScore1, creditScoreTree),
         undefined,
         scoredMinter,
       );
@@ -270,6 +298,7 @@ describe('SapphireCore.open()', () => {
         MAX_BORROW_AMOUNT,
         stableCoin.address,
         creditScoreProof,
+        getScoreProof(borrowLimitScore1, creditScoreTree),
         undefined,
         scoredMinter,
       );
@@ -289,6 +318,7 @@ describe('SapphireCore.open()', () => {
           BORROW_AMOUNT,
           stableCoin.address,
           creditScoreProof,
+          getScoreProof(borrowLimitScore1, creditScoreTree),
           undefined,
           scoredMinter,
         ),
@@ -311,6 +341,7 @@ describe('SapphireCore.open()', () => {
           BORROW_AMOUNT,
           stableCoin.address,
           creditScoreProof,
+          getScoreProof(borrowLimitScore1, creditScoreTree),
           undefined,
           scoredMinter,
         ),
@@ -329,6 +360,7 @@ describe('SapphireCore.open()', () => {
           BORROW_AMOUNT,
           stableCoin.address,
           creditScoreProof,
+          getScoreProof(borrowLimitScore1, creditScoreTree),
           undefined,
           scoredMinter,
         ),
@@ -351,6 +383,7 @@ describe('SapphireCore.open()', () => {
         BORROW_AMOUNT.div(2),
         stableCoin.address,
         getScoreProof(creditScore2, creditScoreTree),
+        getScoreProof(borrowLimitScore2, creditScoreTree),
         undefined,
         ctx.signers.interestSetter,
       );
@@ -362,6 +395,7 @@ describe('SapphireCore.open()', () => {
           BORROW_AMOUNT.div(2).add(1),
           stableCoin.address,
           creditScoreProof,
+          getScoreProof(borrowLimitScore1, creditScoreTree),
           undefined,
           scoredMinter,
         ),

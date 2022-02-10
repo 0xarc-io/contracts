@@ -8,6 +8,7 @@ import { SapphireAssessor, TestTokenFactory } from '@src/typings';
 import { getEvent } from '@src/utils/getEvent';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import {
+  BORROW_LIMIT_PROOF_PROTOCOL,
   DEFAULT_COLLATERAL_DECIMALS,
   DEFAULT_HIGH_C_RATIO,
   DEFAULT_LOW_C_RATIO,
@@ -47,6 +48,8 @@ describe('SapphireCore.withdraw()', () => {
   let arc: SapphireTestArc;
   let signers: TestingSigners;
   let minterCreditScore: PassportScore;
+  let scoredMinterBorrowLimitScore: PassportScore;
+  let minterBorrowLimitScore: PassportScore;
   let creditScoreTree: PassportScoreTree;
   let assessor: SapphireAssessor;
 
@@ -61,7 +64,17 @@ describe('SapphireCore.withdraw()', () => {
       protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       score: BigNumber.from(20),
     };
-    creditScoreTree = new PassportScoreTree([minterCreditScore, creditScore2]);
+    scoredMinterBorrowLimitScore = {
+      account: ctx.signers.scoredMinter.address,
+      protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
+      score: BORROW_AMOUNT,
+    };
+    minterBorrowLimitScore = {
+      account: ctx.signers.minter.address,
+      protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
+      score: BORROW_AMOUNT,
+    };
+    creditScoreTree = new PassportScoreTree([minterCreditScore, creditScore2, minterBorrowLimitScore, scoredMinterBorrowLimitScore]);
 
     await setupSapphire(ctx, {
       merkleRoot: creditScoreTree.getHexRoot(),
@@ -81,6 +94,7 @@ describe('SapphireCore.withdraw()', () => {
     await setupBaseVault(
       arc,
       signers.scoredMinter,
+      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BigNumber.from(0),
     );
@@ -109,7 +123,13 @@ describe('SapphireCore.withdraw()', () => {
   });
 
   it('withdraws to the limit', async () => {
-    await setupBaseVault(arc, signers.minter, COLLATERAL_AMOUNT, BORROW_AMOUNT);
+    await setupBaseVault(
+      arc,
+      signers.minter,
+      getScoreProof(minterBorrowLimitScore, creditScoreTree),
+      COLLATERAL_AMOUNT,
+      BORROW_AMOUNT,
+    );
 
     // Withdraw the max collateral to respect the c-ratio set by DEFAULT_HIGH_C_RATIO
     const withdrawAmt = COLLATERAL_AMOUNT.sub(COLLATERAL_LIMIT);
@@ -136,6 +156,7 @@ describe('SapphireCore.withdraw()', () => {
     await setupBaseVault(
       arc,
       signers.scoredMinter,
+      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
       undefined,
@@ -246,6 +267,7 @@ describe('SapphireCore.withdraw()', () => {
     await setupBaseVault(
       arc,
       signers.scoredMinter,
+      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
       getScoreProof(minterCreditScore, creditScoreTree),
@@ -270,6 +292,7 @@ describe('SapphireCore.withdraw()', () => {
     await setupBaseVault(
       arc,
       signers.scoredMinter,
+      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
     );
@@ -299,6 +322,7 @@ describe('SapphireCore.withdraw()', () => {
     await setupBaseVault(
       arc,
       signers.scoredMinter,
+      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
     );
@@ -342,6 +366,7 @@ describe('SapphireCore.withdraw()', () => {
     await setupBaseVault(
       arc,
       signers.scoredMinter,
+      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
       getScoreProof(minterCreditScore, creditScoreTree),
@@ -366,6 +391,7 @@ describe('SapphireCore.withdraw()', () => {
     await setupBaseVault(
       arc,
       signers.scoredMinter,
+      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BigNumber.from('0'),
     );
@@ -385,6 +411,7 @@ describe('SapphireCore.withdraw()', () => {
     await setupBaseVault(
       arc,
       signers.scoredMinter,
+      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
       getScoreProof(minterCreditScore, creditScoreTree),
