@@ -265,7 +265,6 @@ describe('SapphireCore.borrow()', () => {
   });
 
   it('borrows more if borrow limit is increased', async () => {
-    // The user's existing credit score is updated and increases letting them borrow more
     await mintAndApproveCollateral(scoredMinter, COLLATERAL_AMOUNT.mul(2));
     await arc.deposit(COLLATERAL_AMOUNT.mul(2), undefined, undefined, scoredMinter);
     await arc.borrow(
@@ -279,8 +278,6 @@ describe('SapphireCore.borrow()', () => {
 
     const additionalBorrowAmount = utils.parseEther('0.01');
 
-    // Borrowing BASE rather than BigNumber.from(1), because that number is too small adn won't cause a reversal
-    // due to rounding margins
     await expect(
       arc.borrow(
         additionalBorrowAmount,
