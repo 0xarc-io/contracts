@@ -1352,7 +1352,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
             require(
                 tokenDecimals <= 18,
-                "SapphireCoreV1: used token has more than 18 decimals"
+                "SapphireCoreV1: token has more than 18 decimals"
             );
 
             precisionScalars[_tokenAddress] = 10 ** (18 - tokenDecimals);
