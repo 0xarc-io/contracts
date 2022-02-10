@@ -219,12 +219,23 @@ describe('SapphirePool', () => {
       });
 
       it('if limit is 0, removes the token from the list of tokens that can be deposited', async () => {
-        await pool.setDepositLimit(stablecoin.address, 1000);
-        expect(await pool.getDepositAssets()).to.deep.eq([stablecoin.address]);
+        const testUsdc = await new TestTokenFactory(admin).deploy(
+          'TestUSDC',
+          'TUSDC',
+          6,
+        );
+
+        await pool.setDepositLimit(stablecoin.address, depositAmount);
+        await pool.setDepositLimit(testUsdc.address, depositAmount);
+
+        expect(await pool.getDepositAssets()).to.deep.eq([
+          stablecoin.address,
+          testUsdc.address,
+        ]);
 
         await pool.setDepositLimit(stablecoin.address, 0);
 
-        expect(await pool.getDepositAssets()).to.be.empty;
+        expect(await pool.getDepositAssets()).to.deep.eq([testUsdc.address]);
       });
 
       it('adds 2 assets to the supported assets list', async () => {
@@ -243,6 +254,25 @@ describe('SapphirePool', () => {
           stablecoin.address,
           testUsdc.address,
         ]);
+      });
+
+      it('reverts if trying to set a limit of 0 to the only deposit token available', async () => {
+        const testUsdc = await new TestTokenFactory(admin).deploy(
+          'TestUSDC',
+          'TUSDC',
+          6,
+        );
+
+        await pool.setDepositLimit(stablecoin.address, 100);
+        await pool.setDepositLimit(testUsdc.address, 100);
+
+        await pool.setDepositLimit(stablecoin.address, 0);
+
+        await expect(
+          pool.setDepositLimit(testUsdc.address, 0),
+        ).to.be.revertedWith(
+          'SapphirePool: at least 1 deposit asset must have a positive limit',
+        );
       });
     });
 

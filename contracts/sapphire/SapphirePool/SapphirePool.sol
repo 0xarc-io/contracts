@@ -65,12 +65,12 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     /**
      * @dev Stores the assets that have been historically allowed to be deposited.
      */
-    address[] internal knownDepositAssets;
+    address[] internal _knownDepositAssets;
 
     /**
      * @dev Stores the cores that have historically been approved to swap in assets.
      */
-    address[] internal supportedCores;
+    address[] internal _supportedCores;
 
     mapping (address => uint8) internal _tokenDecimals;
 
@@ -156,7 +156,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         );
 
         if (!isCoreSupported) {
-            supportedCores.push(_coreAddress);
+            _supportedCores.push(_coreAddress);
         }
 
         coreSwapUtilization[_coreAddress].limit = _limit;
@@ -191,20 +191,36 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
             uint256 sumOfCoreLimits,
         ) = _getSumOfLimits(address(0), address(0), _tokenAddress);
 
-        require(
-            sumOfDepositLimits + _limit >= sumOfCoreLimits,
-            "SapphirePool: sum of deposit limits smaller than the sum of the swap limits"
-        );
-
-        assetDepositUtilization[_tokenAddress].limit = _limit;
-
         // Add the token to the known assets array if limit is > 0
         if (_limit > 0 && !isKnownToken) {
-            knownDepositAssets.push(_tokenAddress);
+            _knownDepositAssets.push(_tokenAddress);
 
             // Save token decimals to later compute the token scalar
             _tokenDecimals[_tokenAddress] = IERC20Metadata(_tokenAddress).decimals();
         }
+
+        uint256 scaledNewLimit = _getScaledAmount(
+            _limit, 
+            _tokenDecimals[_tokenAddress], 
+            _decimals
+        );
+
+        if (getDepositAssets().length > 0) {
+            // If there are any existing deposit assets, the new sum of deposit limits cannot
+            // be negative, otherwise the pool will become unusable (deposits will be disabled);
+            require(
+                sumOfDepositLimits + scaledNewLimit > 0,
+                "SapphirePool: at least 1 deposit asset must have a positive limit"
+            );
+        }
+
+
+        require(
+            sumOfDepositLimits + scaledNewLimit >= sumOfCoreLimits,
+            "SapphirePool: sum of deposit limits smaller than the sum of the swap limits"
+        );
+
+        assetDepositUtilization[_tokenAddress].limit = _limit;
 
         emit DepositLimitSet(_tokenAddress, _limit);
     }
@@ -364,8 +380,8 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
 
         uint256 depositValue;
 
-        for (uint8 i = 0; i < knownDepositAssets.length; i++) {
-            address token = knownDepositAssets[i];
+        for (uint8 i = 0; i < _knownDepositAssets.length; i++) {
+            address token = _knownDepositAssets[i];
             depositValue += _getScaledAmount(
                 assetDepositUtilization[token].amountUsed,
                 _tokenDecimals[token],
@@ -381,15 +397,15 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
      * If an asset has a limit of 0, it will be excluded from the list.
      */
     function getDepositAssets()
-        external
+        public
         view
         override
         returns (address[] memory)
     {
         uint8 validAssetCount = 0;
 
-        for (uint8 i = 0; i < knownDepositAssets.length; i++) {
-            address token = knownDepositAssets[i];
+        for (uint8 i = 0; i < _knownDepositAssets.length; i++) {
+            address token = _knownDepositAssets[i];
 
             if (assetDepositUtilization[token].limit > 0) {
                 validAssetCount++;
@@ -398,11 +414,13 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
 
         address[] memory result = new address[](validAssetCount);
 
-        for (uint8 i = 0; i < validAssetCount; i++) {
-            address token = knownDepositAssets[i];
+        uint8 currentIndex = 0;
+        for (uint8 i = 0; i < _knownDepositAssets.length; i++) {
+            address token = _knownDepositAssets[i];
 
             if (assetDepositUtilization[token].limit > 0) {
-                result[i] = token;
+                result[currentIndex] = token;
+                currentIndex++;
             }
         }
 
@@ -420,8 +438,8 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     {
         uint256 result;
 
-        for (uint8 i = 0; i < knownDepositAssets.length; i++) {
-            address token = knownDepositAssets[i];
+        for (uint8 i = 0; i < _knownDepositAssets.length; i++) {
+            address token = _knownDepositAssets[i];
             uint8 decimals = _tokenDecimals[token];
 
             result += _getScaledAmount(
@@ -555,8 +573,8 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         bool isCoreSupported;
         uint8 decimals;
 
-        for (uint8 i = 0; i < knownDepositAssets.length; i++) {
-            address token = knownDepositAssets[i];
+        for (uint8 i = 0; i < _knownDepositAssets.length; i++) {
+            address token = _knownDepositAssets[i];
             if (token == _excludeDepositToken) {
                 continue;
             }
@@ -570,8 +588,8 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
             );
         }
 
-        for (uint8 i = 0; i < supportedCores.length; i++) {
-            address core = supportedCores[i];
+        for (uint8 i = 0; i < _supportedCores.length; i++) {
+            address core = _supportedCores[i];
             if (core == _excludeCore) {
                 continue;
             }
