@@ -9,21 +9,27 @@ interface ISapphirePool {
 
     function setDepositLimit(address _tokenAddress, uint256 _limit) external;
 
-    function swap(address _tokenIn, address _tokenOut, uint256 _amountIn) external;
+    function swap(
+        address _tokenIn, 
+        address _tokenOut, 
+        uint256 _amountIn
+    ) external;
 
     function deposit(address _token, uint256 _amount) external;
 
-    function withdraw(address _token, uint256 _amount) external;
+    function withdraw(uint256 _amount, address _outToken) external;
 
     /* ========== View Functions ========== */
 
-    function getTokenUtilization(address _tokenAddress) external view returns (uint256, uint256);
-
-    function accumulatedRewardAmount(address _token, address _user) external view returns (uint256);
+    function accumulatedRewardAmount() external view returns (uint256);
 
     function coreSwapUtilization(address _coreAddress) external view returns (uint256, uint256);
 
-    function assetsUtilization(address _tokenAddress) external view returns (uint256, uint256);
+    function assetDepositUtilization(address _tokenAddress) external view returns (uint256, uint256);
+
+    function deposits(address _userAddress) external view returns (uint256);
 
     function getDepositAssets() external view returns (address[] memory);
+
+    function getPoolValue() external view returns (uint256);
 }
