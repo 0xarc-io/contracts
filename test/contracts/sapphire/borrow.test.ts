@@ -63,6 +63,30 @@ describe('SapphireCore.borrow()', () => {
   let scoredMinter: SignerWithAddress;
   let minter: SignerWithAddress;
 
+  async function setupPool() {
+    await ctx.contracts.sapphire.pool.setDepositLimit(
+      ctx.contracts.stableCoin.address,
+      BORROW_AMOUNT.mul(2),
+    );
+    await ctx.contracts.sapphire.pool.setCoreSwapLimit(
+      ctx.contracts.sapphire.core.address,
+      BORROW_AMOUNT.mul(2),
+    );
+
+    await ctx.contracts.stableCoin.mintShare(
+      ctx.signers.admin.address,
+      BORROW_AMOUNT.mul(2),
+    );
+    await ctx.contracts.stableCoin.approve(
+      ctx.contracts.sapphire.pool.address,
+      BORROW_AMOUNT.mul(2),
+    );
+    await ctx.contracts.sapphire.pool.deposit(
+      ctx.contracts.stableCoin.address,
+      BORROW_AMOUNT.mul(2),
+    );
+  }
+
   /**
    * Mints `amount` of collateral tokens to the `caller` and approves it on the core
    */
@@ -151,6 +175,8 @@ describe('SapphireCore.borrow()', () => {
     scoredMinter = ctx.signers.scoredMinter;
     minter = ctx.signers.minter;
     stablecoin = ctx.contracts.stablecoin;
+
+    await setupPool();
 
     // mint and approve token
     await mintAndApproveCollateral(minter, COLLATERAL_AMOUNT.mul(2));
