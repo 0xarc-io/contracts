@@ -30,7 +30,10 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     event ActionsOperated(
         SapphireTypes.Action[] _actions,
         SapphireTypes.ScoreProof[] _passportProofs,
-        address indexed _user
+        address indexed _user,
+        uint256 _collateralAmount,
+        uint256 _accumulatedDebt,
+        uint256 _principalAmount
     );
 
     event LiquidationFeesUpdated(
@@ -696,7 +699,10 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         emit ActionsOperated(
             _actions,
             _passportProofs,
-            msg.sender
+            msg.sender,
+            vaults[msg.sender].collateralAmount,
+            _denormalizeBorrowAmount(vaults[msg.sender].normalizedBorrowedAmount, true),
+            vaults[msg.sender].principal
         );
     }
 
