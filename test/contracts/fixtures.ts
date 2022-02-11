@@ -1,10 +1,8 @@
 import { MAX_UINT256 } from '@src/constants';
 import {
-  ArcProxyFactory,
   MockSapphireCoreV1Factory,
   SapphireAssessorFactory,
   SapphireMapperLinearFactory,
-  SapphirePoolFactory,
   SyntheticTokenV2Factory,
 } from '@src/typings';
 
@@ -15,6 +13,7 @@ import {
   deploySyntheticTokenV2,
   deployMockSapphireOracle,
   deployMockSapphirePassportScores,
+  deploySapphirePool,
 } from './deployers';
 
 import { Signer } from 'ethers';
@@ -79,17 +78,9 @@ export async function sapphireFixture(
     deployer,
   );
 
-  const poolImpl = await new SapphirePoolFactory(deployer).deploy();
-  const poolProxy = await new ArcProxyFactory(deployer).deploy(
-    poolImpl.address,
-    deployerAddress,
-    [],
-  );
-  const pool = SapphirePoolFactory.connect(poolProxy.address, deployer);
+  const pool = await deploySapphirePool(deployer);
 
   ctx.contracts.sapphire.pool = pool;
-
-  await coreProxy.setBorrowPool(poolProxy.address);
 
   await tokenV2.init('STABLExV2', 'STABLExV2', '1');
 
@@ -140,6 +131,8 @@ export async function sapphireFixture(
     0,
     0,
   );
+
+  await ctx.contracts.sapphire.core.setBorrowPool(pool.address);
 
   await tokenV2.addMinter(ctx.contracts.sapphire.core.address, MAX_UINT256);
 

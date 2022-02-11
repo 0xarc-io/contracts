@@ -9,6 +9,7 @@ import {
   TestToken,
 } from '@src/typings';
 import { DEFAULT_MAX_CREDIT_SCORE } from '@test/helpers/sapphireDefaults';
+import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { createFixtureLoader } from 'ethereum-waffle';
 import { constants, utils } from 'ethers';
@@ -16,6 +17,7 @@ import {
   deployArcProxy,
   deployMockSapphireCoreV1,
   deployMockSapphirePassportScores,
+  deploySapphirePool,
   deployTestToken,
 } from '../deployers';
 
@@ -51,7 +53,14 @@ export async function setup([deployer, unauthorized]: Wallet[]): Promise<any> {
     6,
   );
 
-  return { sapphireCore, deployer, unauthorized, collateral, synthetic, stableCoin };
+  return {
+    sapphireCore,
+    deployer,
+    unauthorized,
+    collateral,
+    synthetic,
+    stableCoin,
+  };
 }
 
 describe('SapphireCore.init', () => {
@@ -65,7 +74,8 @@ describe('SapphireCore.init', () => {
   let init: (overrides?: any) => unknown;
 
   let defaultOptions;
-  beforeEach(async () => {
+
+  before(async () => {
     const provider = new MockProvider();
     ({
       sapphireCore,
@@ -73,7 +83,7 @@ describe('SapphireCore.init', () => {
       unauthorized,
       collateral,
       synthetic,
-      stableCoin
+      stableCoin,
     } = await createFixtureLoader(provider.getWallets())(setup));
 
     const oracle = await new MockSapphireOracleFactory(deployer).deploy();
@@ -90,6 +100,7 @@ describe('SapphireCore.init', () => {
       creditScore.address,
       DEFAULT_MAX_CREDIT_SCORE,
     );
+    const pool = await deploySapphirePool(deployer);
 
     defaultOptions = {
       collateralAddress: collateral.address,
@@ -98,6 +109,7 @@ describe('SapphireCore.init', () => {
       oracle: oracle.address,
       interestSetter: Wallet.createRandom().address,
       assessor: assessor.address,
+      borrowPool: pool.address,
       pauseOperator: Wallet.createRandom().address,
       highCollateralRatio: constants.WeiPerEther.mul(2),
       lowCollateralRatio: constants.WeiPerEther,
@@ -131,6 +143,8 @@ describe('SapphireCore.init', () => {
         );
     };
   });
+
+  addSnapshotBeforeRestoreAfterEach();
 
   it('reverts if collateral address is 0', async () => {
     await expect(
@@ -179,9 +193,10 @@ describe('SapphireCore.init', () => {
     const decimals = await collateral.decimals();
     expect(decimals).eq(6);
 
-    expect(await sapphireCore.precisionScalars(defaultOptions.collateralAddress), 'precisionScalar').eq(
-      utils.parseUnits('1', 18 - decimals),
-    );
+    expect(
+      await sapphireCore.precisionScalars(defaultOptions.collateralAddress),
+      'precisionScalar',
+    ).eq(utils.parseUnits('1', 18 - decimals));
     expect(await sapphireCore.paused()).to.be.true;
     expect(await sapphireCore.feeCollector()).eq(
       defaultOptions.feeCollector,
@@ -229,10 +244,12 @@ describe('SapphireCore.init', () => {
       'borrowIndex',
     );
     expect(await sapphireCore.getSupportedBorrowAssets()).deep.eq(
-      [
-        defaultOptions.stableCoinAddress,
-      ],
+      [defaultOptions.stableCoinAddress],
       'supportedBorrowAssets',
+    );
+    expect(await sapphireCore.borrowPool()).to.eq(
+      defaultOptions.borrowPool,
+      'borrowPool',
     );
   });
 
