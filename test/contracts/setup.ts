@@ -1,4 +1,4 @@
-import { BigNumber, BigNumberish } from 'ethers';
+import { BigNumber, BigNumberish, utils } from 'ethers';
 import { ITestContext } from './context';
 import { immediatelyUpdateMerkleRoot } from '../helpers/testingUtils';
 import _ from 'lodash';
@@ -18,6 +18,7 @@ export interface SapphireSetupOptions {
     highCollateralRatio?: BigNumberish;
     vaultBorrowMinimum?: BigNumber;
     vaultBorrowMaximum?: BigNumber;
+    poolDepositBorrowLimit?: BigNumber;
   };
   fees?: {
     liquidationUserFee?: BigNumberish;
@@ -74,6 +75,13 @@ export async function setupSapphire(
       merkleRoot,
     );
   }
+
+  // Set pool borrow limit
+  await ctx.contracts.sapphire.pool.setDepositLimit(
+    ctx.contracts.stableCoin.address,
+    limits?.poolDepositBorrowLimit ??
+      utils.parseUnits('100', await ctx.contracts.stableCoin.decimals()),
+  );
 }
 
 async function _setCRatiosIfNeeded(
