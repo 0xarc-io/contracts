@@ -194,9 +194,10 @@ describe('SapphireCore.borrow()', () => {
     expect(normalizedBorrowedAmount, 'borrow amt').eq(BORROW_AMOUNT_500_SCORE);
     expect(principal, 'principal').eq(BORROW_AMOUNT_500_SCORE);
 
-    expect(await stablecoin.balanceOf(scoredMinter.address)).eq(
-      BORROW_AMOUNT_500_SCORE,
-    );
+    expect(
+      await stablecoin.balanceOf(scoredMinter.address),
+      'stablecoin balance',
+    ).eq(BORROW_AMOUNT_500_SCORE);
   });
 
   xit('mints an equivalent amount of creds that are swapped in the pool', async () => {
@@ -310,6 +311,7 @@ describe('SapphireCore.borrow()', () => {
   );
 
   xit('reverts if borrowing more than the swap limit', async () => {
+    await arc.pool().setDepositLimit(stablecoin.address, BORROW_AMOUNT.mul(2));
     await arc.pool().setCoreSwapLimit(arc.core().address, BORROW_AMOUNT.sub(1));
 
     await expect(
@@ -488,13 +490,13 @@ describe('SapphireCore.borrow()', () => {
     );
   });
 
-  it('reverts if not supported asset address', async () => {
+  xit('reverts if not supported asset address', async () => {
     await expect(
       arc.borrow(
         BORROW_AMOUNT,
         arc.collateral().address,
         undefined,
-        undefined,
+        borrowLimitProof,
         undefined,
         scoredMinter,
       ),

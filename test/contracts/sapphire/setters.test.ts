@@ -1,4 +1,8 @@
-import { SapphireAssessorFactory, SapphireCoreV1 } from '@src/typings';
+import {
+  SapphireAssessorFactory,
+  SapphireCoreV1,
+  TestTokenFactory,
+} from '@src/typings';
 import {
   DEFAULT_MAX_CREDIT_SCORE,
   DEFAULT_PROOF_PROTOCOL,
@@ -360,6 +364,39 @@ describe('SapphireCore.setters', () => {
   });
 
   describe('#getSupportedAssets', () => {
-    it('gets the supported assets from the pool');
+    it('gets the supported assets from the pool', async () => {
+      const testDai = await new TestTokenFactory(ctx.signers.admin).deploy(
+        'DAI',
+        'DAI',
+        18,
+      );
+
+      expect(await sapphireCore.getSupportedBorrowAssets()).to.deep.eq([]);
+
+      await ctx.contracts.sapphire.pool.setDepositLimit(
+        ctx.contracts.stableCoin.address,
+        utils.parseEther('100'),
+      );
+      expect(await sapphireCore.getSupportedBorrowAssets()).to.deep.eq([
+        ctx.contracts.stableCoin.address,
+      ]);
+
+      await ctx.contracts.sapphire.pool.setDepositLimit(
+        testDai.address,
+        utils.parseEther('100'),
+      );
+      expect(await sapphireCore.getSupportedBorrowAssets()).to.deep.eq([
+        ctx.contracts.stableCoin.address,
+        testDai.address,
+      ]);
+
+      await ctx.contracts.sapphire.pool.setDepositLimit(
+        ctx.contracts.stableCoin.address,
+        0,
+      );
+      expect(await sapphireCore.getSupportedBorrowAssets()).to.deep.eq([
+        testDai.address,
+      ]);
+    });
   });
 });

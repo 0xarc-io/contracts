@@ -17,6 +17,7 @@ import {SapphireTypes} from "./SapphireTypes.sol";
 import {SapphireCoreStorage} from "./SapphireCoreStorage.sol";
 import {SapphireAssessor} from "./SapphireAssessor.sol";
 import {ISapphireAssessor} from "./ISapphireAssessor.sol";
+import {ISapphirePool} from "./SapphirePool/ISapphirePool.sol";
 
 contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
@@ -110,7 +111,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     function init(
         address _collateralAddress,
         address _syntheticAddress,
-        address _supportedBorrowAddress,
         address _oracleAddress,
         address _interestSetter,
         address _pauseOperator,
@@ -158,7 +158,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         
         savePrecisionScalar(collateralAsset);
 
-        setSupportedBorrowAsset(_supportedBorrowAddress, true);
         setAssessor(_assessorAddress);
         setOracle(_oracleAddress);
         setCollateralRatios(_lowCollateralRatio, _highCollateralRatio);
@@ -443,59 +442,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         emit ProofProtocolSet(_creditScoreProtocol.toString());
     }
 
-    function setSupportedBorrowAsset(
-        address _supportedBorrowAsset,
-        bool _isSupported
-    )
-        public
-        onlyAdmin
-    {
-
-        require(
-            _supportedBorrowAsset != address(0),
-            "SapphireCoreV1: supported borrow asset is required"
-        );
-
-        require(
-            _supportedBorrowAsset.isContract(),
-            "SapphireCoreV1: supported borrow asset is not contract"
-        );
-
-        if(_isSupported) {
-
-            require(
-                !_isSupportedBorrowAssets[_supportedBorrowAsset],
-                "SapphireCoreV1: supported borrow asset is already exist"
-            );
-
-            _isSupportedBorrowAssets[_supportedBorrowAsset] = true;
-            _supportedBorrowAssets.push(_supportedBorrowAsset);
-
-        } else {
-
-            require(
-                _isSupportedBorrowAssets[_supportedBorrowAsset],
-                "SapphireCoreV1: removed borrow asset is not supported"
-            );
-
-            require(
-                _supportedBorrowAssets.length > 1,
-                "SapphireCoreV1: cannot remove the only supported borrow asset address"
-            );
-
-            delete _isSupportedBorrowAssets[_supportedBorrowAsset];
-
-            for (uint256 i=0; i<_supportedBorrowAssets.length; i++) {
-                if(_supportedBorrowAssets[i] == _supportedBorrowAsset) {
-                    _supportedBorrowAssets[i] = _supportedBorrowAssets[_supportedBorrowAssets.length -1];
-                    break;
-                }
-            }
-            _supportedBorrowAssets.pop();
-        }
-        emit SupportedBorrowAssetSet(_supportedBorrowAsset, _isSupported);
-    }
-
     /* ========== Public Functions ========== */
 
     /**
@@ -775,7 +721,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         view
         returns (address[] memory) 
     {
-        return _supportedBorrowAssets;
+        return ISapphirePool(borrowPool).getDepositAssets();
     }
 
     /**
@@ -987,12 +933,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     )
         private
     {
-
-        require(
-            _isSupportedBorrowAssets[_borrowAssetAddress],
-            "SapphireCoreV1: the token address should be one of the supported tokens"
-        );
-
         require(
             _borrowLimitProof.account == msg.sender,
             "SapphireCoreV1: proof.account must match msg.sender"
@@ -1077,12 +1017,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     )
         private
     {
-
-        require(
-            _isSupportedBorrowAssets[_borrowAssetAddress],
-            "SapphireCoreV1: the token address should be one of the supported tokens"
-        );
-
         // Save precision scalar if it doesn't exist
         savePrecisionScalar(_borrowAssetAddress);
 
