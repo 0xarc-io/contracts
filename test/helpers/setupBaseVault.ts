@@ -20,11 +20,13 @@ export async function setupBaseVault(
   collateralAmount = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS),
   borrowAmount = utils.parseEther('200'),
   scoreProof?: PassportScoreProof,
-  synthName?: string,
+  corename?: string,
 ) {
   await mintApprovedCollateral(arc, caller, collateralAmount);
 
-  const supportedBorrowAsset = (await arc.synth().core.getSupportedBorrowAssets())[0];
+  const supportedBorrowAsset = (
+    await arc.coreContracts().core.getSupportedBorrowAssets()
+  )[0];
   // Open vault and mint debt
   await arc.open(
     collateralAmount,
@@ -36,7 +38,7 @@ export async function setupBaseVault(
         utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       ),
     borrowLimitProof,
-    synthName,
+    corename,
     caller,
   );
 }

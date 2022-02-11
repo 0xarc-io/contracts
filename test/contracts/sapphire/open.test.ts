@@ -72,7 +72,13 @@ describe('SapphireCore.open()', () => {
       protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
       score: BORROW_AMOUNT.mul(2),
     };
-    creditScoreTree = new PassportScoreTree([creditScore1, creditScore2, borrowLimitScore1, borrowLimitScore2, minterBorrowLimitScore]);
+    creditScoreTree = new PassportScoreTree([
+      creditScore1,
+      creditScore2,
+      borrowLimitScore1,
+      borrowLimitScore2,
+      minterBorrowLimitScore,
+    ]);
     await setupSapphire(ctx, {
       merkleRoot: creditScoreTree.getHexRoot(),
     });
@@ -118,13 +124,17 @@ describe('SapphireCore.open()', () => {
       expect(await arc.core().totalCollateral()).eq(COLLATERAL_AMOUNT);
       expect(await arc.core().totalBorrowed()).eq(BORROW_AMOUNT);
 
-      expect(await arc.synth().collateral.balanceOf(arc.coreAddress())).eq(
-        COLLATERAL_AMOUNT,
-      );
+      expect(
+        await arc.coreContracts().collateral.balanceOf(arc.coreAddress()),
+      ).eq(COLLATERAL_AMOUNT);
     });
 
     it('open above the c-ratio', async () => {
-      const { normalizedBorrowedAmount, collateralAmount, principal } = await arc.open(
+      const {
+        normalizedBorrowedAmount,
+        collateralAmount,
+        principal,
+      } = await arc.open(
         COLLATERAL_AMOUNT.mul(2),
         BORROW_AMOUNT,
         stableCoin.address,
@@ -147,8 +157,8 @@ describe('SapphireCore.open()', () => {
           BORROW_AMOUNT.add(change),
           stableCoin.address,
           undefined,
-        getScoreProof(minterBorrowLimitScore, creditScoreTree),
-        undefined,
+          getScoreProof(minterBorrowLimitScore, creditScoreTree),
+          undefined,
           ctx.signers.minter,
         ),
       ).to.be.revertedWith(
@@ -222,7 +232,11 @@ describe('SapphireCore.open()', () => {
     });
 
     it('open at the exact default c-ratio', async () => {
-      const { normalizedBorrowedAmount, collateralAmount, principal } = await arc.open(
+      const {
+        normalizedBorrowedAmount,
+        collateralAmount,
+        principal,
+      } = await arc.open(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
         stableCoin.address,
@@ -241,9 +255,9 @@ describe('SapphireCore.open()', () => {
       expect(await arc.core().totalCollateral()).eq(COLLATERAL_AMOUNT);
       expect(await arc.core().totalBorrowed()).eq(BORROW_AMOUNT);
 
-      expect(await arc.synth().collateral.balanceOf(arc.coreAddress())).eq(
-        COLLATERAL_AMOUNT,
-      );
+      expect(
+        await arc.coreContracts().collateral.balanceOf(arc.coreAddress()),
+      ).eq(COLLATERAL_AMOUNT);
     });
 
     it('open above the default c-ratio', async () => {
@@ -257,9 +271,11 @@ describe('SapphireCore.open()', () => {
         scoredMinter,
       );
 
-      const { normalizedBorrowedAmount, collateralAmount, principal } = await arc.getVault(
-        scoredMinter.address,
-      );
+      const {
+        normalizedBorrowedAmount,
+        collateralAmount,
+        principal,
+      } = await arc.getVault(scoredMinter.address);
       expect(collateralAmount).eq(COLLATERAL_AMOUNT.mul(2));
       expect(principal).eq(BORROW_AMOUNT);
       expect(normalizedBorrowedAmount).eq(BORROW_AMOUNT);
@@ -276,9 +292,11 @@ describe('SapphireCore.open()', () => {
         scoredMinter,
       );
 
-      const { normalizedBorrowedAmount, collateralAmount, principal } = await arc.getVault(
-        scoredMinter.address,
-      );
+      const {
+        normalizedBorrowedAmount,
+        collateralAmount,
+        principal,
+      } = await arc.getVault(scoredMinter.address);
       expect(collateralAmount).eq(COLLATERAL_AMOUNT.sub(1));
       expect(normalizedBorrowedAmount).eq(BORROW_AMOUNT);
       expect(principal).eq(BORROW_AMOUNT);
@@ -302,9 +320,11 @@ describe('SapphireCore.open()', () => {
         scoredMinter,
       );
 
-      const { normalizedBorrowedAmount, collateralAmount, principal } = await arc.getVault(
-        scoredMinter.address,
-      );
+      const {
+        normalizedBorrowedAmount,
+        collateralAmount,
+        principal,
+      } = await arc.getVault(scoredMinter.address);
       expect(collateralAmount).eq(COLLATERAL_AMOUNT);
       expect(normalizedBorrowedAmount).eq(MAX_BORROW_AMOUNT);
       expect(principal).eq(MAX_BORROW_AMOUNT);
