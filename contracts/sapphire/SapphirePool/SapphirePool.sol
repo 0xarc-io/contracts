@@ -186,6 +186,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         onlyAdmin
     {
         bool isKnownToken = _isKnownToken(_tokenAddress);
+
         require(
             _limit > 0 || isKnownToken,
             "SapphirePool: cannot set the limit of an unknown asset to 0"
@@ -215,7 +216,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         require(
             sumOfDepositLimits + scaledNewLimit > 0,
             "SapphirePool: at least 1 deposit asset must have a positive limit"
-            );
+        );
 
 
         require(
