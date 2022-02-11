@@ -321,7 +321,9 @@ describe('SapphirePool', () => {
               stablecoin.address,
               scaledDepositAmount.div(2),
             ),
-        ).to.be.revertedWith('SapphirePool: caller is not an approved core');
+        ).to.be.revertedWith(
+          'SapphirePool: caller should be a core with a positive swap limit',
+        );
 
         await expect(
           pool
@@ -331,7 +333,9 @@ describe('SapphirePool', () => {
               creds.address,
               scaledDepositAmount.div(2),
             ),
-        ).to.be.revertedWith('SapphirePool: caller is not an approved core');
+        ).to.be.revertedWith(
+          'SapphirePool: caller should be a core with a positive swap limit',
+        );
       });
 
       it('reverts if there are not enough requested coins', async () => {

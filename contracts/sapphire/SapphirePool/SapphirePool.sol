@@ -244,7 +244,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
 
         require(
             coreSwapUtilization[msg.sender].limit > 0,
-            "SapphirePool: caller is not an approved core"
+            "SapphirePool: caller should be a core with a positive swap limit"
         );
 
         require(
