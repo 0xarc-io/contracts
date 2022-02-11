@@ -1,4 +1,3 @@
-import { MockProvider } from '@ethereum-waffle/provider';
 import { Wallet } from '@ethersproject/wallet';
 import {
   MockSapphireCoreV1,
@@ -13,6 +12,7 @@ import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { createFixtureLoader } from 'ethereum-waffle';
 import { constants, utils } from 'ethers';
+import { ethers } from 'hardhat';
 import {
   deployArcProxy,
   deployMockSapphireCoreV1,
@@ -76,7 +76,6 @@ describe('SapphireCore.init', () => {
   let defaultOptions;
 
   before(async () => {
-    const provider = new MockProvider();
     ({
       sapphireCore,
       deployer,
@@ -84,7 +83,9 @@ describe('SapphireCore.init', () => {
       collateral,
       synthetic,
       stableCoin,
-    } = await createFixtureLoader(provider.getWallets())(setup));
+    } = await createFixtureLoader(
+      ((await ethers.getSigners()) as unknown) as Wallet[],
+    )(setup));
 
     const oracle = await new MockSapphireOracleFactory(deployer).deploy();
     const mapper = await new SapphireMapperLinearFactory(deployer).deploy();
@@ -242,14 +243,6 @@ describe('SapphireCore.init', () => {
     expect(await sapphireCore.borrowIndex()).eq(
       constants.WeiPerEther,
       'borrowIndex',
-    );
-    expect(await sapphireCore.getSupportedBorrowAssets()).deep.eq(
-      [defaultOptions.stableCoinAddress],
-      'supportedBorrowAssets',
-    );
-    expect(await sapphireCore.borrowPool()).to.eq(
-      defaultOptions.borrowPool,
-      'borrowPool',
     );
   });
 
