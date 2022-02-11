@@ -1,8 +1,10 @@
 import { MAX_UINT256 } from '@src/constants';
 import {
+  ArcProxyFactory,
   MockSapphireCoreV1Factory,
   SapphireAssessorFactory,
   SapphireMapperLinearFactory,
+  SapphirePoolFactory,
   SyntheticTokenV2Factory,
 } from '@src/typings';
 
@@ -76,6 +78,19 @@ export async function sapphireFixture(
     syntheticProxy.address,
     deployer,
   );
+
+  const poolImpl = await new SapphirePoolFactory(deployer).deploy();
+  const poolProxy = await new ArcProxyFactory(deployer).deploy(
+    poolImpl.address,
+    deployerAddress,
+    [],
+  );
+  const pool = SapphirePoolFactory.connect(poolProxy.address, deployer);
+
+  ctx.contracts.sapphire.pool = pool;
+
+  await coreProxy.setBorrowPool(poolProxy.address);
+
   await tokenV2.init('STABLExV2', 'STABLExV2', '1');
 
   ctx.contracts.synthetic.tokenV2 = tokenV2;

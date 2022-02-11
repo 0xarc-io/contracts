@@ -295,10 +295,7 @@ describe('SapphireCore.setters', () => {
 
     it('reverts if max limit is lower than the min limit', async () => {
       await expect(
-        sapphireCore.setLimits(
-          vaultBorrowMaximum,
-          vaultBorrowMinimum,
-        ),
+        sapphireCore.setLimits(vaultBorrowMaximum, vaultBorrowMinimum),
       ).to.be.revertedWith(
         'SapphireCoreV1: required condition is vaultMin <= vaultMax',
       );
@@ -306,15 +303,14 @@ describe('SapphireCore.setters', () => {
 
     it('sets the borrow limits', async () => {
       await expect(
-        sapphireCore.setLimits(
-          vaultBorrowMinimum,
-          vaultBorrowMaximum,
-        ),
+        sapphireCore.setLimits(vaultBorrowMinimum, vaultBorrowMaximum),
       )
         .to.emit(sapphireCore, 'LimitsUpdated')
         .withArgs(vaultBorrowMinimum, vaultBorrowMaximum);
       expect(await sapphireCore.vaultBorrowMaximum()).eq(vaultBorrowMaximum);
       expect(await sapphireCore.vaultBorrowMinimum()).eq(vaultBorrowMinimum);
+
+      fail('default borrow limit not implemented');
     });
   });
 
@@ -338,6 +334,28 @@ describe('SapphireCore.setters', () => {
         .setProofProtocol(utils.formatBytes32String('test'));
 
       expect(await sapphireCore.getProofProtocol()).to.eq('test');
+    });
+  });
+
+  describe('#setBorrowPool', () => {
+    it('reverts if called by non-admin', async () => {
+      await expect(
+        sapphireCore
+          .connect(ctx.signers.unauthorized)
+          .setBorrowPool(ctx.contracts.sapphire.pool),
+      ).to.be.revertedWith('Adminable: caller is not admin');
+    });
+
+    it('sets the address of the borrow pool', async () => {
+      expect(await sapphireCore.borrowPool()).to.eq(
+        ctx.contracts.sapphire.pool.address,
+      );
+
+      await sapphireCore.setBorrowPool(ctx.contracts.sapphire.oracle.address);
+
+      expect(await sapphireCore.borrowPool()).to.eq(
+        ctx.contracts.sapphire.oracle.address,
+      );
     });
   });
 
