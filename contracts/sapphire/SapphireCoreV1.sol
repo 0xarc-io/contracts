@@ -707,7 +707,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             _passportProofs,
             msg.sender,
             vaults[msg.sender].collateralAmount,
-            vaults[msg.sender].normalizedBorrowedAmount * currentBorrowIndex(),
+            _denormalizeBorrowAmount(vaults[msg.sender].normalizedBorrowedAmount, true),
             vaults[msg.sender].principal
         );
     }
