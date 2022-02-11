@@ -156,7 +156,6 @@ const collateralConfig = {
       liquidationArcFee: '100000000000000000',
     },
     limits: {
-      totalBorrowLimit: '1000000000000000000000',
       vaultBorrowMin: '10000000000000000000',
       vaultBorrowMax: '100000000000000000000',
     },

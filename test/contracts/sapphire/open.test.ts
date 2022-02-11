@@ -174,7 +174,6 @@ describe('SapphireCore.open()', () => {
       await arc
         .core()
         .setLimits(
-          BORROW_AMOUNT.add(100),
           BORROW_AMOUNT.add(10),
           BORROW_AMOUNT.add(100),
         );
@@ -197,7 +196,7 @@ describe('SapphireCore.open()', () => {
     it('revert if opened above the maximum borrowed amount', async () => {
       await arc
         .core()
-        .setLimits(BORROW_AMOUNT, BORROW_AMOUNT.sub(100), BORROW_AMOUNT.sub(1));
+        .setLimits(BORROW_AMOUNT.sub(100), BORROW_AMOUNT.sub(1));
       await expect(
         arc.open(
           COLLATERAL_AMOUNT,
@@ -331,7 +330,6 @@ describe('SapphireCore.open()', () => {
       await arc
         .core()
         .setLimits(
-          BORROW_AMOUNT.add(100),
           BORROW_AMOUNT.add(10),
           BORROW_AMOUNT.add(100),
         );
@@ -353,7 +351,7 @@ describe('SapphireCore.open()', () => {
     it('revert if opened above the maximum borrowed amount', async () => {
       await arc
         .core()
-        .setLimits(BORROW_AMOUNT, BORROW_AMOUNT.sub(100), BORROW_AMOUNT.sub(1));
+        .setLimits(BORROW_AMOUNT.sub(100), BORROW_AMOUNT.sub(1));
       await expect(
         arc.open(
           COLLATERAL_AMOUNT,
@@ -366,41 +364,6 @@ describe('SapphireCore.open()', () => {
         ),
       ).to.be.revertedWith(
         'SapphireCoreV1: borrowed amount cannot be greater than vault limit',
-      );
-    });
-
-    it('revert if opened above the total maximum borrowed amount', async () => {
-      await arc.core().setLimits(BORROW_AMOUNT, 0, BORROW_AMOUNT);
-
-      // random user borrows some amount
-      await mintApprovedCollateral(
-        arc,
-        ctx.signers.interestSetter,
-        COLLATERAL_AMOUNT,
-      );
-      await arc.open(
-        COLLATERAL_AMOUNT,
-        BORROW_AMOUNT.div(2),
-        stableCoin.address,
-        getScoreProof(creditScore2, creditScoreTree),
-        getScoreProof(borrowLimitScore2, creditScoreTree),
-        undefined,
-        ctx.signers.interestSetter,
-      );
-
-      // other user borrows more than the total limit
-      await expect(
-        arc.open(
-          COLLATERAL_AMOUNT,
-          BORROW_AMOUNT.div(2).add(1),
-          stableCoin.address,
-          creditScoreProof,
-          getScoreProof(borrowLimitScore1, creditScoreTree),
-          undefined,
-          scoredMinter,
-        ),
-      ).to.be.revertedWith(
-        'SapphireCoreV1: borrowed amount cannot be greater than limit',
       );
     });
   });

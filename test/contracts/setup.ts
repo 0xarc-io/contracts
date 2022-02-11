@@ -16,7 +16,6 @@ export interface SapphireSetupOptions {
   limits?: {
     lowCollateralRatio?: BigNumberish;
     highCollateralRatio?: BigNumberish;
-    borrowLimit?: BigNumber;
     vaultBorrowMinimum?: BigNumber;
     vaultBorrowMaximum?: BigNumber;
   };
@@ -48,7 +47,6 @@ export async function setupSapphire(
 
   // Set limits
   await core.setLimits(
-    limits?.borrowLimit || DEFAULT_TOTAL_BORROW_LIMIT,
     limits?.vaultBorrowMinimum || DEFAULT_VAULT_BORROW_MIN,
     limits?.vaultBorrowMaximum || DEFAULT_VAULT_BORROW_MAXIMUM,
   );

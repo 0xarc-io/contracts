@@ -446,14 +446,12 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
     // Set borrow limits if needed. Skip if all zeros
     if (
       !_.isNil(collatConfig.limits) &&
-      (collatConfig.limits.totalBorrowLimit ||
-        collatConfig.limits.vaultBorrowMin ||
+      (collatConfig.limits.vaultBorrowMin ||
         collatConfig.limits.vaultBorrowMax)
     ) {
       console.log(yellow(`Calling core.setLimits() ...\n`));
 
       await core.setLimits(
-        collatConfig.limits.totalBorrowLimit || 0,
         collatConfig.limits.vaultBorrowMin || 0,
         collatConfig.limits.vaultBorrowMax || 0,
       );
@@ -466,7 +464,7 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
     // We already enforce limits at the synthetic level.
     await synthetic.addMinter(
       core.address,
-      collatConfig.limits.totalBorrowLimit || MAX_UINT256,
+      MAX_UINT256,
     );
     console.log(green(`Minter successfully added to synthetic\n`));
 

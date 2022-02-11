@@ -39,7 +39,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     );
 
     event LimitsUpdated(
-        uint256 _totalBorrowLimit,
         uint256 _vaultBorrowMinimum,
         uint256 _vaultBorrowMaximum
     );
@@ -255,12 +254,10 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      *
      * @notice Can only be called by the admin
      *
-     * @param _totalBorrowLimit   Maximum amount of borrowed amount that can be held in the system.
      * @param _vaultBorrowMinimum The minimum allowed borrow amount for vault
      * @param _vaultBorrowMaximum The maximum allowed borrow amount for vault
      */
     function setLimits(
-        uint256 _totalBorrowLimit,
         uint256 _vaultBorrowMinimum,
         uint256 _vaultBorrowMaximum
     )
@@ -268,13 +265,11 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         onlyAdmin
     {
         require(
-            _vaultBorrowMinimum <= _vaultBorrowMaximum &&
-            _vaultBorrowMaximum <= _totalBorrowLimit,
-            "SapphireCoreV1: required condition is vaultMin <= vaultMax <= totalLimit"
+            _vaultBorrowMinimum <= _vaultBorrowMaximum,
+            "SapphireCoreV1: required condition is vaultMin <= vaultMax"
         );
 
         require(
-            (_totalBorrowLimit != totalBorrowLimit) ||
             (_vaultBorrowMinimum != vaultBorrowMinimum) ||
             (_vaultBorrowMaximum != vaultBorrowMaximum),
             "SapphireCoreV1: the same limits are already set"
@@ -282,9 +277,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
         vaultBorrowMinimum = _vaultBorrowMinimum;
         vaultBorrowMaximum = _vaultBorrowMaximum;
-        totalBorrowLimit = _totalBorrowLimit;
 
-        emit LimitsUpdated(totalBorrowLimit, vaultBorrowMinimum, vaultBorrowMaximum);
+        emit LimitsUpdated(vaultBorrowMinimum, vaultBorrowMaximum);
     }
 
     /**
@@ -1030,11 +1024,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         require(
             _newActualVaultBorrowAmount >= vaultBorrowMinimum,
             "SapphireCoreV1: borrowed amount cannot be less than limit"
-        );
-
-        require(
-            _denormalizeBorrowAmount(totalBorrowed, true) <= totalBorrowLimit,
-            "SapphireCoreV1: borrowed amount cannot be greater than limit"
         );
 
         // Mint tokens
