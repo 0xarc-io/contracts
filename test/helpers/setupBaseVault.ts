@@ -20,7 +20,7 @@ export async function setupBaseVault(
   collateralAmount = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS),
   borrowAmount = utils.parseEther('200'),
   scoreProof?: PassportScoreProof,
-  corename?: string,
+  coreName?: string,
 ) {
   await mintApprovedCollateral(arc, caller, collateralAmount);
 
@@ -38,7 +38,7 @@ export async function setupBaseVault(
         utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       ),
     borrowLimitProof,
-    corename,
+    coreName,
     caller,
   );
 }

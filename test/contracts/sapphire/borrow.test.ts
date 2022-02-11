@@ -48,6 +48,9 @@ const BORROW_AMOUNT_500_SCORE = NORMALIZED_COLLATERAL_AMOUNT.mul(
 describe('SapphireCore.borrow()', () => {
   let ctx: ITestContext;
   let arc: SapphireTestArc;
+
+  let stableCoin: TestToken;
+
   let creditScore1: PassportScore;
   let borrowLimitScore1: PassportScore;
   let borrowLimitScore2: PassportScore;
@@ -55,11 +58,11 @@ describe('SapphireCore.borrow()', () => {
   let scoredMinterOtherProtoScore: PassportScore;
   let creditScore2: PassportScore;
   let creditScoreTree: PassportScoreTree;
-  let scoredMinter: SignerWithAddress;
-  let minter: SignerWithAddress;
   let creditScoreProof: PassportScoreProof;
   let borrowLimitProof: PassportScoreProof;
-  let stableCoin: TestToken;
+
+  let scoredMinter: SignerWithAddress;
+  let minter: SignerWithAddress;
 
   /**
    * Mints `amount` of collateral tokens to the `caller` and approves it on the core
@@ -193,7 +196,18 @@ describe('SapphireCore.borrow()', () => {
     fail('stablecoin not implemented');
   });
 
-  it('mints an equivalent amount of creds that are swapped in the pool');
+  it.only('mints an equivalent amount of creds that are swapped in the pool', async () => {
+    expect(await arc.synthetic().balanceOf(arc.pool().address)).eq(0);
+
+    await arc.borrow(
+      BORROW_AMOUNT,
+      stableCoin.address,
+      undefined,
+      borrowLimitProof,
+      undefined,
+      scoredMinter,
+    );
+  });
 
   it('transfers the stables from the pool to the user');
 
