@@ -766,11 +766,10 @@ describe('SapphireCore.borrow()', () => {
   });
 
   it('should not borrow less than the minimum borrow limit', async () => {
-    const totalBorrowLimit = await arc.core().totalBorrowLimit();
     const vaultBorrowMaximum = await arc.core().vaultBorrowMaximum();
     await arc
       .core()
-      .setLimits(totalBorrowLimit, BORROW_AMOUNT, vaultBorrowMaximum);
+      .setLimits(BORROW_AMOUNT, vaultBorrowMaximum);
     await expect(
       arc.borrow(
         BORROW_AMOUNT.sub(10),
@@ -786,12 +785,11 @@ describe('SapphireCore.borrow()', () => {
   });
 
   it('should not borrow more than the maximum amount', async () => {
-    const totalBorrowLimit = await arc.core().totalBorrowLimit();
     const vaultBorrowMinimum = await arc.core().vaultBorrowMinimum();
     // Only update the vault borrow maximum
     await arc
       .core()
-      .setLimits(totalBorrowLimit, vaultBorrowMinimum, BORROW_AMOUNT);
+      .setLimits(vaultBorrowMinimum, BORROW_AMOUNT);
 
     await arc.borrow(
       BORROW_AMOUNT.div(2),

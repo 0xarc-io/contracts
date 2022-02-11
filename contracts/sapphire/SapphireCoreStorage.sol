@@ -120,12 +120,6 @@ contract SapphireCoreStorageV1 {
     address public pauseOperator;
 
     /**
-     * @dev The maximum amount which can be borrowed within a contract. This includes
-     *      the amount of interest accrued.
-     */
-    uint256 public totalBorrowLimit;
-
-    /**
      * @dev The minimum amount which has to be borrowed by a vault. This includes
      *      the amount of interest accrued.
      */
