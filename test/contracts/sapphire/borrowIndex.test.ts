@@ -46,7 +46,7 @@ describe('borrow index (integration)', () => {
   let creditScoreTree: PassportScoreTree;
   let minter1: SignerWithAddress;
   let minter2: SignerWithAddress;
-  let stableCoin: TestToken;
+  let stablecoin: TestToken;
 
   async function init(ctx: ITestContext): Promise<void> {
     minterCreditScore = {
@@ -149,7 +149,12 @@ describe('borrow index (integration)', () => {
     arc = ctx.sdks.sapphire;
     minter1 = signers.minter;
     minter2 = signers.scoredMinter;
-    stableCoin = ctx.contracts.stablecoin;
+    stablecoin = ctx.contracts.stablecoin;
+
+    await ctx.contracts.sapphire.pool.setDepositLimit(
+      ctx.contracts.stablecoin.address,
+      BORROW_AMOUNT.mul(2),
+    );
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -452,7 +457,7 @@ describe('borrow index (integration)', () => {
       // repay a half accumulated debt
       await arc.repay(
         repayAmount,
-        stableCoin.address,
+        stablecoin.address,
         undefined,
         undefined,
         minter1,
@@ -529,7 +534,7 @@ describe('borrow index (integration)', () => {
       // repay a whole accumulated debt
       await arc.repay(
         normalizedBorrowedAmount,
-        stableCoin.address,
+        stablecoin.address,
         undefined,
         undefined,
         minter1,
@@ -592,7 +597,7 @@ describe('borrow index (integration)', () => {
       // Borrow $100 more
       await arc.borrow(
         utils.parseEther('100'),
-        stableCoin.address,
+        stablecoin.address,
         getScoreProof(minterCreditScore, creditScoreTree),
         getScoreProof(minterBorrowLimitScore, creditScoreTree),
         undefined,
@@ -633,7 +638,7 @@ describe('borrow index (integration)', () => {
       );
       await arc.repay(
         repayAmount,
-        stableCoin.address,
+        stablecoin.address,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.scoredMinter,
@@ -682,7 +687,7 @@ describe('borrow index (integration)', () => {
       );
       await arc.repay(
         outstandingRepayAmt,
-        stableCoin.address,
+        stablecoin.address,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.scoredMinter,
@@ -781,7 +786,7 @@ describe('borrow index (integration)', () => {
       );
       await arc.repay(
         BORROW_AMOUNT,
-        stableCoin.address,
+        stablecoin.address,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
         signers.scoredMinter,
@@ -836,7 +841,7 @@ describe('borrow index (integration)', () => {
       );
       await arc.repay(
         outstandingBalance,
-        stableCoin.address,
+        stablecoin.address,
         undefined,
         undefined,
         signers.minter,

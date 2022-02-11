@@ -22,12 +22,15 @@ export async function setupBaseVault(
   scoreProof?: PassportScoreProof,
   coreName?: string,
 ) {
+  console.log('b');
   await mintApprovedCollateral(arc, caller, collateralAmount);
 
+  console.log('b1');
   const supportedBorrowAsset = (
     await arc.coreContracts().core.getSupportedBorrowAssets()
   )[0];
   // Open vault and mint debt
+  console.log('b2');
   await arc.open(
     collateralAmount,
     borrowAmount,
