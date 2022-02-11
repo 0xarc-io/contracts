@@ -70,7 +70,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     /**
      * @dev Stores the cores that have historically been approved to swap in assets.
      */
-    address[] internal _supportedCores;
+    address[] internal _knownCores;
 
     mapping (address => uint8) internal _tokenDecimals;
 
@@ -95,7 +95,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     );
 
     event TokensSwapped(
-        address indexed _user,
+        address indexed _core,
         address indexed _tokenIn,
         address indexed _tokenOut,
         uint256 _amountIn,
@@ -115,15 +115,15 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     /* ========== Restricted functions ========== */
 
     function init(
-        string memory name_,
-        string memory symbol_,
+        string memory _name,
+        string memory _symbol,
         address _credsToken
     )
         external
         onlyAdmin
         initializer
     {
-        _init(name_, symbol_, 18);
+        _init(_name, _symbol, 18);
 
         require (
             _credsToken.isContract(),
@@ -161,7 +161,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         );
 
         if (!isCoreSupported) {
-            _supportedCores.push(_coreAddress);
+            _knownCores.push(_coreAddress);
         }
 
         coreSwapUtilization[_coreAddress].limit = _limit;
@@ -596,8 +596,8 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
             );
         }
 
-        for (uint8 i = 0; i < _supportedCores.length; i++) {
-            address core = _supportedCores[i];
+        for (uint8 i = 0; i < _knownCores.length; i++) {
+            address core = _knownCores[i];
             if (core == _excludeCore) {
                 continue;
             }
