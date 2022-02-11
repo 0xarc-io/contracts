@@ -15,7 +15,8 @@ export interface ITestContext {
 }
 
 export interface ITestContextArgs {
-  decimals: BigNumberish;
+  collateralDecimals?: BigNumberish;
+  stablecoinDecimals?: BigNumberish;
 }
 
 const provider = ethers.provider;
