@@ -7,7 +7,7 @@ import {
 import 'module-alias/register';
 import { ITestContext, generateContext } from '../context';
 import { sapphireFixture } from '../fixtures';
-import { setupSapphire } from '../setup';
+import { setupPool, setupSapphire } from '../setup';
 import { BaseERC20Factory, TestToken, TestTokenFactory } from '@src/typings';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { expect } from 'chai';
@@ -62,33 +62,6 @@ describe('SapphireCore.borrow()', () => {
 
   let scoredMinter: SignerWithAddress;
   let minter: SignerWithAddress;
-
-  /**
-   * Sets the deposit and swap limit to BORROW_AMOUNT * 3
-   */
-  async function setupPool() {  
-    await ctx.contracts.sapphire.pool.setDepositLimit(
-      ctx.contracts.stableCoin.address,
-      BORROW_AMOUNT.mul(3),
-    );
-    await ctx.contracts.sapphire.pool.setCoreSwapLimit(
-      ctx.contracts.sapphire.core.address,
-      BORROW_AMOUNT.mul(3),
-    );
-
-    await ctx.contracts.stableCoin.mintShare(
-      ctx.signers.admin.address,
-      BORROW_AMOUNT.mul(3),
-    );
-    await ctx.contracts.stableCoin.approve(
-      ctx.contracts.sapphire.pool.address,
-      BORROW_AMOUNT.mul(3),
-    );
-    await ctx.contracts.sapphire.pool.deposit(
-      ctx.contracts.stableCoin.address,
-      BORROW_AMOUNT.mul(3),
-    );
-  }
 
   /**
    * Mints `amount` of collateral tokens to the `caller` and approves it on the core
@@ -178,7 +151,7 @@ describe('SapphireCore.borrow()', () => {
     minter = ctx.signers.minter;
     stablecoin = ctx.contracts.stablecoin;
 
-    await setupPool();
+    await setupPool(ctx, BORROW_AMOUNT.mul(3));
 
     // mint and approve token
     await mintAndApproveCollateral(minter, COLLATERAL_AMOUNT.mul(2));
@@ -531,9 +504,7 @@ describe('SapphireCore.borrow()', () => {
         undefined,
         scoredMinter,
       ),
-    ).to.be.revertedWith(
-      'SapphirePool: unknown token',
-    );
+    ).to.be.revertedWith('SapphirePool: unknown token');
   });
 
   it('reverts if borrower cross the c-ratio', async () => {
