@@ -37,7 +37,7 @@ const PRECISION_SCALAR = BigNumber.from(10).pow(
  * Our front-end will always send the proof but in the case that it can't, users can still repay
  * and withdraw directly.
  */
-describe('SapphireCore.repay()', () => {
+xdescribe('SapphireCore.repay()', () => {
   let arc: SapphireTestArc;
   let signers: TestingSigners;
   let minterCreditScore: PassportScore;
