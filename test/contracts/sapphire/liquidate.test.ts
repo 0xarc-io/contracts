@@ -183,7 +183,7 @@ xdescribe('SapphireCore.liquidate()', () => {
 
   describe('Base tests', () => {
     // Test 1 in https://docs.google.com/spreadsheets/d/1rmFbUxnM4gyi1xhcYKBwcdadvXrHBPKbeX7DLk8KQgE/edit?usp=sharing
-    it('liquidates an undercollateralized vault', async () => {
+    it.only('liquidates an undercollateralized vault', async () => {
       /**
        * When a liquidation is done we need to check the following
        * - Ensure that the liquidator has enough debt (STABLEx)
