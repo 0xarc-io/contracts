@@ -23,8 +23,12 @@ describe('SapphireCore.setters', () => {
   let randomAddress: string;
 
   before(async () => {
-    ctx = await generateContext(sapphireFixture, (ctx) =>
-      setupSapphire(ctx, {}),
+    ctx = await generateContext(
+      sapphireFixture,
+      (ctx) => setupSapphire(ctx, {}),
+      {
+        stablecoinDecimals: 18,
+      },
     );
     sapphireCore = ctx.contracts.sapphire.core;
     randomAddress = Wallet.createRandom().address;
@@ -389,7 +393,7 @@ describe('SapphireCore.setters', () => {
         0,
       );
       expect(await sapphireCore.getSupportedBorrowAssets()).to.deep.eq([
-        testDai.address,
+        ctx.contracts.stablecoin.address,
       ]);
     });
   });
