@@ -980,9 +980,11 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
         uint256 actualVaultBorrowAmount = _denormalizeBorrowAmount(vault.normalizedBorrowedAmount, true);
 
+        uint256 scaledAmount = _amount * precisionScalars[_borrowAssetAddress];
+
         // Ensure the vault is collateralized if the borrow action succeeds
         uint256 collateralRatio = calculateCollateralRatio(
-            actualVaultBorrowAmount + _amount,
+            actualVaultBorrowAmount + scaledAmount,
             vault.collateralAmount,
             _collateralPrice
         );
@@ -993,7 +995,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         );
 
         // Calculate new actual vault borrow amount with the added borrow fee
-        uint256 _newActualVaultBorrowAmount = actualVaultBorrowAmount + _amount;
+        uint256 _newActualVaultBorrowAmount = actualVaultBorrowAmount + scaledAmount;
 
         if (_newActualVaultBorrowAmount > defaultBorrowLimit) {
             require(
@@ -1022,7 +1024,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             _newNormalizedVaultBorrowAmount;
 
         vault.normalizedBorrowedAmount = _newNormalizedVaultBorrowAmount;
-        vault.principal = vault.principal + _amount;
+        vault.principal = vault.principal + scaledAmount;
 
         // Do not borrow more than the maximum vault borrow amount
         require(
@@ -1039,7 +1041,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         // Mint creds tokens to core
         ISyntheticTokenV2(syntheticAsset).mint(
             address(this),
-            _amount
+            scaledAmount
         );
 
         SafeERC20.safeApprove(
@@ -1437,15 +1439,14 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         internal
     {
         if (_tokenAddress != address(0) && precisionScalars[_tokenAddress] == 0) {
-            IERC20Metadata token = IERC20Metadata(collateralAsset);
-            uint256 tokenDecimals = token.decimals();
-
+            IERC20Metadata token = IERC20Metadata(_tokenAddress);
+            uint8 tokenDecimals = token.decimals();
             require(
                 tokenDecimals <= 18,
                 "SapphireCoreV1: token has more than 18 decimals"
             );
 
-            precisionScalars[_tokenAddress] = 10 ** (18 - tokenDecimals);
+            precisionScalars[_tokenAddress] = 10 ** (18 - uint256(tokenDecimals));
         }
     }
 }
