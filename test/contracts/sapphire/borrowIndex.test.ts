@@ -24,7 +24,7 @@ import { expect } from 'chai';
 import { BigNumber, BigNumberish, utils } from 'ethers';
 import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
-import { setupPool, setupSapphire } from '../setup';
+import { setupSapphire } from '../setup';
 import { roundUpDiv, roundUpMul } from '@test/helpers/roundUpOperations';
 import { TestToken } from '@src/typings';
 
