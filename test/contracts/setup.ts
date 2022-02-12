@@ -103,3 +103,34 @@ async function _setCRatiosIfNeeded(
     );
   }
 }
+
+/**
+ * Sets the deposit and swap limit to BORROW_AMOUNT * 3
+ * @param depositBorrowAmount The amount deposited in the pool and the core swap limit
+ */
+export async function setupPool(
+  ctx: ITestContext,
+  depositBorrowAmount: BigNumberish,
+) {
+  await ctx.contracts.sapphire.pool.setDepositLimit(
+    ctx.contracts.stableCoin.address,
+    depositBorrowAmount,
+  );
+  await ctx.contracts.sapphire.pool.setCoreSwapLimit(
+    ctx.contracts.sapphire.core.address,
+    depositBorrowAmount,
+  );
+
+  await ctx.contracts.stableCoin.mintShare(
+    ctx.signers.admin.address,
+    depositBorrowAmount,
+  );
+  await ctx.contracts.stableCoin.approve(
+    ctx.contracts.sapphire.pool.address,
+    depositBorrowAmount,
+  );
+  await ctx.contracts.sapphire.pool.deposit(
+    ctx.contracts.stableCoin.address,
+    depositBorrowAmount,
+  );
+}
