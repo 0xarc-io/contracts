@@ -24,7 +24,7 @@ const COLLATERAL_AMOUNT = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS);
 const BORROW_AMOUNT = utils.parseEther('500');
 const INTEREST_RATE = BigNumber.from(1547125957);
 
-describe('SapphireCore.exit()', () => {
+xdescribe('SapphireCore.exit()', () => {
   let ctx: ITestContext;
 
   let arc: SapphireTestArc;
