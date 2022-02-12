@@ -7,7 +7,7 @@ import {
 import 'module-alias/register';
 import { ITestContext, generateContext } from '../context';
 import { sapphireFixture } from '../fixtures';
-import { setupPool, setupSapphire } from '../setup';
+import { setupSapphire } from '../setup';
 import { BaseERC20Factory, TestToken, TestTokenFactory } from '@src/typings';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { expect } from 'chai';
@@ -121,6 +121,7 @@ describe('SapphireCore.borrow()', () => {
     borrowLimitProof = getScoreProof(borrowLimitScore1, creditScoreTree);
     return setupSapphire(ctx, {
       merkleRoot: creditScoreTree.getHexRoot(),
+      poolDepositSwapAmount: BORROW_AMOUNT.mul(3),
     });
   }
 
@@ -150,8 +151,6 @@ describe('SapphireCore.borrow()', () => {
     scoredMinter = ctx.signers.scoredMinter;
     minter = ctx.signers.minter;
     stablecoin = ctx.contracts.stablecoin;
-
-    await setupPool(ctx, BORROW_AMOUNT.mul(3));
 
     // mint and approve token
     await mintAndApproveCollateral(minter, COLLATERAL_AMOUNT.mul(2));

@@ -24,7 +24,7 @@ import { expect } from 'chai';
 import { BigNumber, BigNumberish, utils } from 'ethers';
 import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
-import { setupPool, setupSapphire } from '../setup';
+import { setupSapphire } from '../setup';
 import { roundUpDiv, roundUpMul } from '@test/helpers/roundUpOperations';
 import { TestToken } from '@src/typings';
 
@@ -78,6 +78,7 @@ describe('borrow index (integration)', () => {
     await setupSapphire(ctx, {
       interestRate: INTEREST_RATE,
       merkleRoot: creditScoreTree.getHexRoot(),
+      poolDepositSwapAmount: BORROW_AMOUNT.mul(3),
     });
   }
 
@@ -152,8 +153,6 @@ describe('borrow index (integration)', () => {
     minter1 = signers.minter;
     minter2 = signers.scoredMinter;
     stablecoin = ctx.contracts.stablecoin;
-
-    await setupPool(ctx, BORROW_AMOUNT.mul(3));
   });
 
   addSnapshotBeforeRestoreAfterEach();

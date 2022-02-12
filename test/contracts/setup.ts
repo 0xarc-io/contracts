@@ -110,10 +110,7 @@ async function _setCRatiosIfNeeded(
  * Sets the deposit and swap limit to BORROW_AMOUNT * 3
  * @param depositBorrowAmount The amount deposited in the pool and the core swap limit
  */
-export async function setupPool(
-  ctx: ITestContext,
-  depositBorrowAmount: BigNumberish,
-) {
+async function setupPool(ctx: ITestContext, depositBorrowAmount: BigNumberish) {
   await ctx.contracts.sapphire.pool.setDepositLimit(
     ctx.contracts.stableCoin.address,
     depositBorrowAmount,
