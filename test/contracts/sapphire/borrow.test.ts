@@ -63,27 +63,30 @@ describe('SapphireCore.borrow()', () => {
   let scoredMinter: SignerWithAddress;
   let minter: SignerWithAddress;
 
-  async function setupPool() {
+  /**
+   * Sets the deposit and swap limit to BORROW_AMOUNT * 3
+   */
+  async function setupPool() {  
     await ctx.contracts.sapphire.pool.setDepositLimit(
       ctx.contracts.stableCoin.address,
-      BORROW_AMOUNT.mul(2),
+      BORROW_AMOUNT.mul(3),
     );
     await ctx.contracts.sapphire.pool.setCoreSwapLimit(
       ctx.contracts.sapphire.core.address,
-      BORROW_AMOUNT.mul(2),
+      BORROW_AMOUNT.mul(3),
     );
 
     await ctx.contracts.stableCoin.mintShare(
       ctx.signers.admin.address,
-      BORROW_AMOUNT.mul(2),
+      BORROW_AMOUNT.mul(3),
     );
     await ctx.contracts.stableCoin.approve(
       ctx.contracts.sapphire.pool.address,
-      BORROW_AMOUNT.mul(2),
+      BORROW_AMOUNT.mul(3),
     );
     await ctx.contracts.sapphire.pool.deposit(
       ctx.contracts.stableCoin.address,
-      BORROW_AMOUNT.mul(2),
+      BORROW_AMOUNT.mul(3),
     );
   }
 
@@ -228,7 +231,7 @@ describe('SapphireCore.borrow()', () => {
     ).eq(BORROW_AMOUNT_500_SCORE);
   });
 
-  xit('mints an equivalent amount of creds that are swapped in the pool', async () => {
+  it('mints an equivalent amount of creds that are swapped in the pool', async () => {
     expect(await arc.synthetic().totalSupply()).eq(0);
     expect(await arc.synthetic().balanceOf(arc.pool().address)).eq(0);
 
@@ -248,7 +251,7 @@ describe('SapphireCore.borrow()', () => {
     expect(await stablecoin.balanceOf(scoredMinter.address)).eq(BORROW_AMOUNT);
   });
 
-  xit('triggers a TokensSwapped event on the pool', async () => {
+  it('triggers a TokensSwapped event on the pool', async () => {
     await expect(
       arc.borrow(
         BORROW_AMOUNT,
@@ -269,7 +272,7 @@ describe('SapphireCore.borrow()', () => {
       );
   });
 
-  xit('transfers the stables from the pool to the user', async () => {
+  it('transfers the stables from the pool to the user', async () => {
     const balanceBefore = await stablecoin.balanceOf(arc.pool().address);
 
     await arc.borrow(
@@ -282,7 +285,7 @@ describe('SapphireCore.borrow()', () => {
     );
 
     expect(await stablecoin.balanceOf(arc.pool().address)).eq(
-      balanceBefore.add(BORROW_AMOUNT),
+      balanceBefore.sub(BORROW_AMOUNT),
     );
   });
 
@@ -356,7 +359,7 @@ describe('SapphireCore.borrow()', () => {
 
   it('reverts if the borrow limit + borrow fee are < allowed c-ratio');
 
-  xit('reverts if trying to borrow for an unsupported stablecoin', async () => {
+  it('reverts if trying to borrow for an unsupported stablecoin', async () => {
     const testDai = await new TestTokenFactory(ctx.signers.admin).deploy(
       'Test Dai',
       'TDAI',
@@ -518,7 +521,7 @@ describe('SapphireCore.borrow()', () => {
     );
   });
 
-  xit('reverts if not supported asset address', async () => {
+  it('reverts if not supported asset address', async () => {
     await expect(
       arc.borrow(
         BORROW_AMOUNT,
@@ -529,7 +532,7 @@ describe('SapphireCore.borrow()', () => {
         scoredMinter,
       ),
     ).to.be.revertedWith(
-      'SapphireCoreV1: the token address should be one of the supported tokens',
+      'SapphirePool: unknown token',
     );
   });
 
