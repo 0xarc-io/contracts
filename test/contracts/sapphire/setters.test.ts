@@ -6,6 +6,8 @@ import {
 import {
   DEFAULT_MAX_CREDIT_SCORE,
   DEFAULT_PROOF_PROTOCOL,
+  DEFAULT_VAULT_BORROW_MAXIMUM,
+  DEFAULT_VAULT_BORROW_MIN,
 } from '@test/helpers/sapphireDefaults';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { fail } from 'assert';
@@ -297,28 +299,39 @@ describe('SapphireCore.setters', () => {
       await expect(
         sapphireCore
           .connect(ctx.signers.unauthorized)
-          .setLimits(vaultBorrowMinimum, vaultBorrowMaximum),
+          .setLimits(vaultBorrowMinimum, vaultBorrowMaximum, 0),
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
     it('reverts if max limit is lower than the min limit', async () => {
       await expect(
-        sapphireCore.setLimits(vaultBorrowMaximum, vaultBorrowMinimum),
+        sapphireCore.setLimits(vaultBorrowMaximum, vaultBorrowMinimum, 0),
       ).to.be.revertedWith(
         'SapphireCoreV1: required condition is vaultMin <= vaultMax',
       );
     });
 
-    it.skip('sets the borrow limits', async () => {
+    it('sets the borrow limits', async () => {
+      expect(await sapphireCore.vaultBorrowMaximum()).eq(
+        DEFAULT_VAULT_BORROW_MAXIMUM,
+      );
+      expect(await sapphireCore.vaultBorrowMinimum()).eq(
+        DEFAULT_VAULT_BORROW_MIN,
+      );
+      expect(await sapphireCore.defaultBorrowLimit()).eq(0);
+
       await expect(
-        sapphireCore.setLimits(vaultBorrowMinimum, vaultBorrowMaximum),
+        sapphireCore.setLimits(
+          vaultBorrowMinimum,
+          vaultBorrowMaximum,
+          vaultBorrowMaximum,
+        ),
       )
         .to.emit(sapphireCore, 'LimitsUpdated')
-        .withArgs(vaultBorrowMinimum, vaultBorrowMaximum);
+        .withArgs(vaultBorrowMinimum, vaultBorrowMaximum, vaultBorrowMaximum);
       expect(await sapphireCore.vaultBorrowMaximum()).eq(vaultBorrowMaximum);
       expect(await sapphireCore.vaultBorrowMinimum()).eq(vaultBorrowMinimum);
-
-      fail('default borrow limit not implemented');
+      expect(await sapphireCore.defaultBorrowLimit()).eq(vaultBorrowMaximum);
     });
   });
 

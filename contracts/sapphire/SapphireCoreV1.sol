@@ -43,7 +43,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
     event LimitsUpdated(
         uint256 _vaultBorrowMinimum,
-        uint256 _vaultBorrowMaximum
+        uint256 _vaultBorrowMaximum,
+        uint256 _defaultBorrowLimit
     );
 
     event IndexUpdated(
@@ -86,6 +87,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     );
 
     event BorrowPoolUpdated(address _borrowPool);
+
+    event DefaultBorrowLimitSet(uint256 _defaultBorrowLimit);
 
     /* ========== Admin Setters ========== */
 
@@ -262,7 +265,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      */
     function setLimits(
         uint256 _vaultBorrowMinimum,
-        uint256 _vaultBorrowMaximum
+        uint256 _vaultBorrowMaximum,
+        uint256 _defaultBorrowLimit
     )
         public
         onlyAdmin
@@ -274,14 +278,16 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
         require(
             (_vaultBorrowMinimum != vaultBorrowMinimum) ||
-            (_vaultBorrowMaximum != vaultBorrowMaximum),
+            (_vaultBorrowMaximum != vaultBorrowMaximum) ||
+            (_defaultBorrowLimit != defaultBorrowLimit),
             "SapphireCoreV1: the same limits are already set"
         );
 
         vaultBorrowMinimum = _vaultBorrowMinimum;
         vaultBorrowMaximum = _vaultBorrowMaximum;
+        defaultBorrowLimit = _defaultBorrowLimit;
 
-        emit LimitsUpdated(vaultBorrowMinimum, vaultBorrowMaximum);
+        emit LimitsUpdated(vaultBorrowMinimum, vaultBorrowMaximum, _defaultBorrowLimit);
     }
 
     /**

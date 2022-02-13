@@ -452,6 +452,7 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
       await core.setLimits(
         collatConfig.limits.vaultBorrowMin || 0,
         collatConfig.limits.vaultBorrowMax || 0,
+        collatConfig.limits.defaultBorrowLimit || 0,
       );
 
       console.log(yellow(`Limits successfully set!\n`));
