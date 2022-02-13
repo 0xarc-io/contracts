@@ -344,6 +344,8 @@ describe('SapphireCore.borrow()', () => {
         BORROW_AMOUNT,
       );
 
+    await arc.deposit(COLLATERAL_AMOUNT, undefined, undefined, scoredMinter);
+
     await arc.borrow(
       BORROW_AMOUNT,
       stablecoin.address,
@@ -362,9 +364,7 @@ describe('SapphireCore.borrow()', () => {
         undefined,
         scoredMinter,
       ),
-    ).to.be.revertedWith(
-      'SapphireCoreV1: cannot borrow more than the borrow limit',
-    );
+    ).to.be.revertedWith('SapphirePassportScores: account cannot be address 0');
   });
 
   it('reverts if borrow limit proof is not passed and default borrow limit is 0', async () => {
@@ -379,7 +379,23 @@ describe('SapphireCore.borrow()', () => {
         undefined,
         scoredMinter,
       ),
-    ).to.eq('SapphireCoreV1: borrow limit must be provided');
+    ).to.be.revertedWith('SapphirePassportScores: account cannot be address 0');
+
+    await expect(
+      arc.borrow(
+        BORROW_AMOUNT,
+        stablecoin.address,
+        undefined,
+        {
+          account: scoredMinter.address,
+          score: 0,
+          protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
+          merkleProof: [],
+        },
+        undefined,
+        scoredMinter,
+      ),
+    ).to.be.revertedWith('SapphirePassportScores: invalid proof');
   });
 
   it('reverts if borrowing more than the swap limit', async () => {
@@ -417,19 +433,6 @@ describe('SapphireCore.borrow()', () => {
         scoredMinter,
       ),
     ).to.be.revertedWith('SapphirePool: unknown token');
-  });
-
-  it('reverts if borrow limit proof is not provided', async () => {
-    await expect(
-      arc.borrow(
-        BigNumber.from(1),
-        stablecoin.address,
-        undefined,
-        undefined,
-        undefined,
-        scoredMinter,
-      ),
-    ).to.be.revertedWith('SapphireCoreV1: proof.account must match msg.sender');
   });
 
   it('reverts if borrow limit proof account is not msg.sender', async () => {

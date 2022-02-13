@@ -939,7 +939,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         private
     {
         require(
-            _borrowLimitProof.account == msg.sender,
+            _borrowLimitProof.account == msg.sender ||
+            _borrowLimitProof.account == address(0),
             "SapphireCoreV1: proof.account must match msg.sender"
         );
 
