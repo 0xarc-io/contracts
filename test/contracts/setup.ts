@@ -22,6 +22,7 @@ export interface SapphireSetupOptions {
   fees?: {
     liquidationUserFee?: BigNumberish;
     liquidationArcFee?: BigNumberish;
+    borrowFee?: BigNumberish;
   };
   interestRate?: BigNumberish;
   price?: BigNumberish;
@@ -63,7 +64,11 @@ export async function setupSapphire(
   if (!_.isEmpty(fees)) {
     await arc
       .core()
-      .setFees(fees.liquidationUserFee || '0', fees.liquidationArcFee || '0');
+      .setFees(
+        fees.liquidationUserFee || '0',
+        fees.liquidationArcFee || '0',
+        fees.borrowFee || '0',
+      );
   }
 
   if (price) {

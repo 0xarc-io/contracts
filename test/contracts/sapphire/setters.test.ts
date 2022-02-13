@@ -10,7 +10,6 @@ import {
   DEFAULT_VAULT_BORROW_MIN,
 } from '@test/helpers/sapphireDefaults';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
-import { fail } from 'assert';
 import { expect } from 'chai';
 import { constants, utils, Wallet } from 'ethers';
 import { generateContext, ITestContext } from '../context';
@@ -277,17 +276,25 @@ describe('SapphireCore.setters', () => {
 
     it('reverts if called by non-owner', async () => {
       await expect(
-        sapphireCore.connect(ctx.signers.unauthorized).setFees(userFee, arcFee),
+        sapphireCore
+          .connect(ctx.signers.unauthorized)
+          .setFees(userFee, arcFee, utils.parseEther('0.1')),
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
-    it.skip('sets the liquidation fee, the arc ratio and the borrow fee', async () => {
-      await expect(sapphireCore.setFees(userFee, arcFee))
+    it('sets the liquidation fee, the arc ratio and the borrow fee', async () => {
+      expect(await sapphireCore.liquidationUserRatio()).eq(0);
+      expect(await sapphireCore.liquidationArcRatio()).eq(0);
+      expect(await sapphireCore.borrowFee()).eq(0);
+
+      await expect(
+        sapphireCore.setFees(userFee, arcFee, utils.parseEther('0.1')),
+      )
         .to.emit(sapphireCore, 'LiquidationFeesUpdated')
-        .withArgs(userFee, arcFee);
+        .withArgs(userFee, arcFee, utils.parseEther('0.1'));
       expect(await sapphireCore.liquidationUserRatio()).eq(userFee);
       expect(await sapphireCore.liquidationArcRatio()).eq(arcFee);
-      fail('borrow fee not implemented');
+      expect(await sapphireCore.borrowFee()).eq(utils.parseEther('0.1'));
     });
   });
 
