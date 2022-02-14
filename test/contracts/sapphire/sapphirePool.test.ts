@@ -39,7 +39,7 @@ describe('SapphirePool', () => {
     ctx = await generateContext(sapphireFixture);
     admin = ctx.signers.admin;
     depositor = ctx.signers.unauthorized;
-    stablecoin = ctx.contracts.stableCoin;
+    stablecoin = ctx.contracts.stablecoin;
 
     creds = await new TestTokenFactory(admin).deploy('Creds', 'CREDS', 18);
 

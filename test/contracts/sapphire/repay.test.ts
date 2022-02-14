@@ -110,7 +110,7 @@ describe('SapphireCore.repay()', () => {
     const ctx = await generateContext(sapphireFixture, init);
     signers = ctx.signers;
     arc = ctx.sdks.sapphire;
-    stableCoin = ctx.contracts.stableCoin;
+    stableCoin = ctx.contracts.stablecoin;
 
     await setupBaseVault(
       ctx.sdks.sapphire,

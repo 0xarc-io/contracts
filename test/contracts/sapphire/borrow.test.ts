@@ -147,7 +147,7 @@ describe('SapphireCore.borrow()', () => {
     arc = ctx.sdks.sapphire;
     scoredMinter = ctx.signers.scoredMinter;
     minter = ctx.signers.minter;
-    stablecoin = ctx.contracts.stableCoin;
+    stablecoin = ctx.contracts.stablecoin;
 
     // mint and approve token
     await mintAndApproveCollateral(minter, COLLATERAL_AMOUNT.mul(2));
