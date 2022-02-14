@@ -160,6 +160,16 @@ xdescribe('SapphireCore.liquidate()', () => {
       poolDepositSwapAmount: BORROW_AMOUNT.mul(3),
     });
 
+    // Set the price to $1
+    await ctx.sdks.sapphire.updatePrice(COLLATERAL_PRICE);
+
+    // Set liquidation user fees and arc fees
+    await arc.core().setFees(
+      utils.parseEther('0.05'), // 5% price discount
+      utils.parseEther('0.1'), // 10% arc tax on profit
+      0,
+    );
+
     // Mints enough STABLEx to the liquidator
     await helperSetupBaseVault.setupBaseVault(
       arc,
@@ -182,7 +192,7 @@ xdescribe('SapphireCore.liquidate()', () => {
 
   describe('Base tests', () => {
     // Test 1 in https://docs.google.com/spreadsheets/d/1rmFbUxnM4gyi1xhcYKBwcdadvXrHBPKbeX7DLk8KQgE/edit?usp=sharing
-    it.only('liquidates an undercollateralized vault', async () => {
+    it('liquidates an undercollateralized vault', async () => {
       /**
        * When a liquidation is done we need to check the following
        * - Ensure that the liquidator has enough debt (STABLEx)
