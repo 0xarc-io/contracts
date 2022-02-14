@@ -78,9 +78,9 @@ export async function setupSapphire(
 
   // Set pool borrow limit
   await ctx.contracts.sapphire.pool.setDepositLimit(
-    ctx.contracts.stableCoin.address,
+    ctx.contracts.stablecoin.address,
     limits?.poolDepositBorrowLimit ??
-      utils.parseUnits('100', await ctx.contracts.stableCoin.decimals()),
+      utils.parseUnits('100', await ctx.contracts.stablecoin.decimals()),
   );
 }
 

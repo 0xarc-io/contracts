@@ -113,7 +113,7 @@ describe('SapphireCore.repay()', () => {
     stableCoin = ctx.contracts.stablecoin;
 
     await ctx.contracts.sapphire.pool.setDepositLimit(
-      ctx.contracts.stableCoin.address,
+      ctx.contracts.stablecoin.address,
       BORROW_AMOUNT.mul(2),
     );
 

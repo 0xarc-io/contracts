@@ -372,7 +372,7 @@ describe('SapphireCore.setters', () => {
       );
 
       expect(await sapphireCore.getSupportedBorrowAssets()).to.deep.eq([
-        ctx.contracts.stableCoin.address,
+        ctx.contracts.stablecoin.address,
       ]);
 
       await ctx.contracts.sapphire.pool.setDepositLimit(
@@ -380,12 +380,12 @@ describe('SapphireCore.setters', () => {
         utils.parseEther('100'),
       );
       expect(await sapphireCore.getSupportedBorrowAssets()).to.deep.eq([
-        ctx.contracts.stableCoin.address,
+        ctx.contracts.stablecoin.address,
         testDai.address,
       ]);
 
       await ctx.contracts.sapphire.pool.setDepositLimit(
-        ctx.contracts.stableCoin.address,
+        ctx.contracts.stablecoin.address,
         0,
       );
       expect(await sapphireCore.getSupportedBorrowAssets()).to.deep.eq([

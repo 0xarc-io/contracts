@@ -93,7 +93,7 @@ describe('SapphireCore.withdraw()', () => {
     assessor = ctx.contracts.sapphire.assessor;
 
     await ctx.contracts.sapphire.pool.setDepositLimit(
-      ctx.contracts.stableCoin.address,
+      ctx.contracts.stablecoin.address,
       BORROW_AMOUNT.mul(2),
     );
   });
