@@ -273,12 +273,13 @@ describe('SapphireCore.setters', () => {
   describe('#setFees', () => {
     const userFee = utils.parseEther('0.1');
     const arcFee = utils.parseEther('0.05');
+    const borrowFee = utils.parseEther('0.1');
 
     it('reverts if called by non-owner', async () => {
       await expect(
         sapphireCore
           .connect(ctx.signers.unauthorized)
-          .setFees(userFee, arcFee, utils.parseEther('0.1')),
+          .setFees(userFee, arcFee, borrowFee),
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
@@ -288,13 +289,13 @@ describe('SapphireCore.setters', () => {
       expect(await sapphireCore.borrowFee()).eq(0);
 
       await expect(
-        sapphireCore.setFees(userFee, arcFee, utils.parseEther('0.1')),
+        sapphireCore.setFees(userFee, arcFee, borrowFee),
       )
         .to.emit(sapphireCore, 'LiquidationFeesUpdated')
-        .withArgs(userFee, arcFee, utils.parseEther('0.1'));
+        .withArgs(userFee, arcFee, borrowFee);
       expect(await sapphireCore.liquidationUserRatio()).eq(userFee);
       expect(await sapphireCore.liquidationArcRatio()).eq(arcFee);
-      expect(await sapphireCore.borrowFee()).eq(utils.parseEther('0.1'));
+      expect(await sapphireCore.borrowFee()).eq(borrowFee);
     });
   });
 
