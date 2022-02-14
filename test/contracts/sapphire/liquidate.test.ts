@@ -150,7 +150,6 @@ xdescribe('SapphireCore.liquidate()', () => {
       limits: {
         lowCollateralRatio: LOW_C_RATIO,
         highCollateralRatio: HIGH_C_RATIO,
-        poolDepositBorrowLimit: BORROW_AMOUNT.mul(2),
       },
       merkleRoot: creditScoreTree.getHexRoot(),
       price: COLLATERAL_PRICE, // $1
@@ -183,7 +182,7 @@ xdescribe('SapphireCore.liquidate()', () => {
 
   describe('Base tests', () => {
     // Test 1 in https://docs.google.com/spreadsheets/d/1rmFbUxnM4gyi1xhcYKBwcdadvXrHBPKbeX7DLk8KQgE/edit?usp=sharing
-    it.only('liquidates an undercollateralized vault', async () => {
+    it('liquidates an undercollateralized vault', async () => {
       /**
        * When a liquidation is done we need to check the following
        * - Ensure that the liquidator has enough debt (STABLEx)
