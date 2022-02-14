@@ -562,7 +562,7 @@ describe('SapphireCore.borrow()', () => {
     );
   });
 
-  xit('reverts if not supported asset address', async () => {
+  it('reverts if borrowing unsupported asset', async () => {
     await expect(
       arc.borrow(
         BORROW_AMOUNT,
