@@ -975,7 +975,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         // Calculate actual vault borrow amount
         uint256 actualVaultBorrowAmount = denormalizedBorrowAmount;
 
-        // Calculate new actual vault borrow amount
+        // Calculate new actual vault borrow amount with the added borrow fee
         uint256 _newActualVaultBorrowAmount = actualVaultBorrowAmount + _amount;
 
         if (_newActualVaultBorrowAmount > defaultBorrowLimit) {
@@ -985,11 +985,25 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             );
         }
 
-        // Calculate new normalized vault borrow amount
-        uint256 _newNormalizedVaultBorrowAmount = _normalizeBorrowAmount(_newActualVaultBorrowAmount, true);
+        // Calculate new normalized vault borrow amount, including the borrow fee, if any
+        uint256 _newNormalizedVaultBorrowAmount;
+        if (borrowFee > 0) {
+            _newNormalizedVaultBorrowAmount = _normalizeBorrowAmount(
+                _newActualVaultBorrowAmount + Math.roundUpMul(_amount, borrowFee), 
+                true
+            );
+        } else {
+            _newNormalizedVaultBorrowAmount = _normalizeBorrowAmount(
+                _newActualVaultBorrowAmount,
+                true
+            );
+        }
 
         // Record borrow amount (update vault and total amount)
-        totalBorrowed = totalBorrowed - vault.normalizedBorrowedAmount + _newNormalizedVaultBorrowAmount;
+        totalBorrowed = totalBorrowed - 
+            vault.normalizedBorrowedAmount + 
+            _newNormalizedVaultBorrowAmount;
+
         vault.normalizedBorrowedAmount = _newNormalizedVaultBorrowAmount;
         vault.principal = vault.principal + _amount;
 
