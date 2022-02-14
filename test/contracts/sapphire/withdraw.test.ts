@@ -74,7 +74,12 @@ describe('SapphireCore.withdraw()', () => {
       protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
       score: BORROW_AMOUNT,
     };
-    creditScoreTree = new PassportScoreTree([minterCreditScore, creditScore2, minterBorrowLimitScore, scoredMinterBorrowLimitScore]);
+    creditScoreTree = new PassportScoreTree([
+      minterCreditScore,
+      creditScore2,
+      minterBorrowLimitScore,
+      scoredMinterBorrowLimitScore,
+    ]);
 
     await setupSapphire(ctx, {
       merkleRoot: creditScoreTree.getHexRoot(),
@@ -86,6 +91,11 @@ describe('SapphireCore.withdraw()', () => {
     signers = ctx.signers;
     arc = ctx.sdks.sapphire;
     assessor = ctx.contracts.sapphire.assessor;
+
+    await ctx.contracts.sapphire.pool.setDepositLimit(
+      ctx.contracts.stablecoin.address,
+      BORROW_AMOUNT.mul(2),
+    );
   });
 
   addSnapshotBeforeRestoreAfterEach();

@@ -428,7 +428,6 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
     await core.init(
       collateralAddress,
       syntheticProxyAddress,
-      supportedBorrowAssetAddress,
       oracleAddress,
       collatConfig.params.interestSetter || ultimateOwner,
       collatConfig.params.pauseOperator || ultimateOwner,

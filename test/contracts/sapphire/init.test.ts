@@ -1,4 +1,5 @@
 import { Wallet } from '@ethersproject/wallet';
+import { ethers } from 'hardhat';
 import {
   MockSapphireCoreV1,
   MockSapphireCoreV1Factory,
@@ -12,7 +13,6 @@ import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { createFixtureLoader } from 'ethereum-waffle';
 import { constants, utils } from 'ethers';
-import { ethers } from 'hardhat';
 import {
   deployArcProxy,
   deployMockSapphireCoreV1,
@@ -46,20 +46,12 @@ export async function setup([deployer, unauthorized]: Wallet[]): Promise<any> {
     'STKN',
   );
 
-  const stableCoin = await deployTestToken(
-    deployer,
-    'Test stablecoin',
-    'TEST_USDC',
-    6,
-  );
-
   return {
     sapphireCore,
     deployer,
     unauthorized,
     collateral,
     synthetic,
-    stableCoin,
   };
 }
 
@@ -69,7 +61,6 @@ describe('SapphireCore.init', () => {
   let unauthorized: Wallet;
   let collateral: TestToken;
   let synthetic: TestToken;
-  let stableCoin: TestToken;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let init: (overrides?: any) => unknown;
 
@@ -82,7 +73,6 @@ describe('SapphireCore.init', () => {
       unauthorized,
       collateral,
       synthetic,
-      stableCoin,
     } = await createFixtureLoader(
       ((await ethers.getSigners()) as unknown) as Wallet[],
     )(setup));
@@ -106,7 +96,6 @@ describe('SapphireCore.init', () => {
     defaultOptions = {
       collateralAddress: collateral.address,
       syntheticAddress: synthetic.address,
-      stableCoinAddress: stableCoin.address,
       oracle: oracle.address,
       interestSetter: Wallet.createRandom().address,
       assessor: assessor.address,
@@ -131,7 +120,6 @@ describe('SapphireCore.init', () => {
         .init(
           options.collateralAddress,
           options.syntheticAddress,
-          options.stableCoinAddress,
           options.oracle,
           options.interestSetter,
           options.pauseOperator,
@@ -180,12 +168,6 @@ describe('SapphireCore.init', () => {
     ).to.be.revertedWith(
       'SapphireCoreV1: high c-ratio is lower than the low c-ratio',
     );
-  });
-
-  it('reverts if liquidation user fee is 0', async () => {
-    await expect(
-      init({ liquidationUserRatio: utils.parseEther('101') }),
-    ).to.be.revertedWith('SapphireCoreV1: fees cannot be more than 100%');
   });
 
   it('sets all the passed parameters', async () => {
@@ -244,6 +226,12 @@ describe('SapphireCore.init', () => {
       constants.WeiPerEther,
       'borrowIndex',
     );
+  });
+
+  it('reverts if liquidation user fee is 0', async () => {
+    await expect(
+      init({ liquidationUserRatio: utils.parseEther('101') }),
+    ).to.be.revertedWith('SapphireCoreV1: fees cannot be more than 100%');
   });
 
   it('revert if owner inits twice ', async () => {
