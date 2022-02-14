@@ -85,6 +85,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         bool _isSupported
     );
 
+    event BorrowPoolUpdated(address _borrowPool);
+
     /* ========== Admin Setters ========== */
 
     /**
@@ -140,7 +142,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         require(
             _collateralAddress.isContract() &&
             _syntheticAddress.isContract(),
-            "SapphireCoreV1: collateral or synthetic are not contracts"
+            "SapphireCoreV1: collateral, synthetic or borrow pool are not contracts"
         );
 
         paused          = true;
@@ -339,6 +341,26 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
         assessor = ISapphireAssessor(_assessor);
         emit AssessorUpdated(_assessor);
+    }
+
+    function setBorrowPool(
+        address _borrowPool
+    )
+        external
+        onlyAdmin
+    {
+        require(
+            _borrowPool != address(borrowPool),
+            "SapphireCoreV1: the same borrow pool is already set"
+        );
+
+        require(
+            _borrowPool.isContract(),
+            "SapphireCoreV1: the address is not a contract"
+        );
+
+        borrowPool = _borrowPool;
+        emit BorrowPoolUpdated(_borrowPool);
     }
 
     function setFeeCollector(

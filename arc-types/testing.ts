@@ -9,6 +9,7 @@ import {
   MockSapphirePassportScores,
   SapphireAssessor,
   SapphireMapperLinear,
+  SapphirePool,
   SyntheticTokenV2,
 } from '@src/typings';
 import { SapphireTestArc } from '@src/SapphireTestArc';
@@ -40,6 +41,7 @@ export interface Contracts {
     linearMapper: SapphireMapperLinear;
     assessor: SapphireAssessor;
     oracle: MockSapphireOracle;
+    pool: SapphirePool;
   };
   synthetic: {
     tokenV2: SyntheticTokenV2;
@@ -47,7 +49,7 @@ export interface Contracts {
   staking: {
     addressAccrual: AddressAccrual;
   };
-  stableCoin: TestToken;
+  stablecoin: TestToken;
   collateral: TestToken;
 }
 

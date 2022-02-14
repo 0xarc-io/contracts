@@ -94,7 +94,11 @@ describe('SapphireCore.repay()', () => {
       protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
       score: BORROW_AMOUNT,
     };
-    creditScoreTree = new PassportScoreTree([minterCreditScore, creditScore2, minterBorrowLimitScore]);
+    creditScoreTree = new PassportScoreTree([
+      minterCreditScore,
+      creditScore2,
+      minterBorrowLimitScore,
+    ]);
 
     await setupSapphire(ctx, {
       merkleRoot: creditScoreTree.getHexRoot(),
@@ -106,7 +110,7 @@ describe('SapphireCore.repay()', () => {
     const ctx = await generateContext(sapphireFixture, init);
     signers = ctx.signers;
     arc = ctx.sdks.sapphire;
-    stableCoin = ctx.contracts.stableCoin;
+    stableCoin = ctx.contracts.stablecoin;
 
     await setupBaseVault(
       ctx.sdks.sapphire,
@@ -160,6 +164,8 @@ describe('SapphireCore.repay()', () => {
       .div(vault.normalizedBorrowedAmount);
     expect(cRatio).to.eq(constants.WeiPerEther.mul(4));
   });
+
+  it('decreases the user principal by the repay amount');
 
   it('repays to make the position collateralized', async () => {
     /**
@@ -215,7 +221,9 @@ describe('SapphireCore.repay()', () => {
     expect(vault.normalizedBorrowedAmount).to.eq(
       BORROW_AMOUNT.sub(constants.WeiPerEther.mul(2)),
     );
-    expect(vault.principal).to.eq(BORROW_AMOUNT.sub(constants.WeiPerEther.mul(2)));
+    expect(vault.principal).to.eq(
+      BORROW_AMOUNT.sub(constants.WeiPerEther.mul(2)),
+    );
   });
 
   it('updates the totalBorrowed after a repay', async () => {
@@ -318,4 +326,6 @@ describe('SapphireCore.repay()', () => {
       repay(BORROW_AMOUNT.add(constants.WeiPerEther), signers.scoredMinter),
     ).to.be.revertedWith('SapphireCoreV1: the contract is paused');
   });
+
+  it('should not repay in an unsupported token');
 });

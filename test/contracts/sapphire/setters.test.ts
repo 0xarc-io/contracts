@@ -4,6 +4,7 @@ import {
   DEFAULT_PROOF_PROTOCOL,
 } from '@test/helpers/sapphireDefaults';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
+import { fail } from 'assert';
 import { expect } from 'chai';
 import { constants, utils, Wallet } from 'ethers';
 import { generateContext, ITestContext } from '../context';
@@ -270,12 +271,13 @@ describe('SapphireCore.setters', () => {
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
-    it('sets the liquidation fee and the arc ratio', async () => {
+    it.skip('sets the liquidation fee, the arc ratio and the borrow fee', async () => {
       await expect(sapphireCore.setFees(userFee, arcFee))
         .to.emit(sapphireCore, 'LiquidationFeesUpdated')
         .withArgs(userFee, arcFee);
       expect(await sapphireCore.liquidationUserRatio()).eq(userFee);
       expect(await sapphireCore.liquidationArcRatio()).eq(arcFee);
+      fail('borrow fee not implemented');
     });
   });
 
@@ -293,26 +295,22 @@ describe('SapphireCore.setters', () => {
 
     it('reverts if max limit is lower than the min limit', async () => {
       await expect(
-        sapphireCore.setLimits(
-          vaultBorrowMaximum,
-          vaultBorrowMinimum,
-        ),
+        sapphireCore.setLimits(vaultBorrowMaximum, vaultBorrowMinimum),
       ).to.be.revertedWith(
         'SapphireCoreV1: required condition is vaultMin <= vaultMax',
       );
     });
 
-    it('sets the borrow limits', async () => {
+    it.skip('sets the borrow limits', async () => {
       await expect(
-        sapphireCore.setLimits(
-          vaultBorrowMinimum,
-          vaultBorrowMaximum,
-        ),
+        sapphireCore.setLimits(vaultBorrowMinimum, vaultBorrowMaximum),
       )
         .to.emit(sapphireCore, 'LimitsUpdated')
         .withArgs(vaultBorrowMinimum, vaultBorrowMaximum);
       expect(await sapphireCore.vaultBorrowMaximum()).eq(vaultBorrowMaximum);
       expect(await sapphireCore.vaultBorrowMinimum()).eq(vaultBorrowMinimum);
+
+      fail('default borrow limit not implemented');
     });
   });
 
@@ -339,81 +337,29 @@ describe('SapphireCore.setters', () => {
     });
   });
 
-  describe('#setSupportedBorrowAsset', () => {
-    it('reverts if called by non-owner', async () => {
+  describe('#setBorrowPool', () => {
+    it('reverts if called by non-admin', async () => {
       await expect(
         sapphireCore
           .connect(ctx.signers.unauthorized)
-          .setSupportedBorrowAsset(ctx.contracts.stableCoin.address, true),
+          .setBorrowPool(ctx.contracts.sapphire.pool.address),
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
-    it('reverts if asset is not a contract', async () => {
-      await expect(
-        sapphireCore.setSupportedBorrowAsset(ctx.signers.admin.address, true),
-      ).to.be.revertedWith(
-        'SapphireCoreV1: supported borrow asset is not contract',
+    it('sets the address of the borrow pool', async () => {
+      expect(await sapphireCore.borrowPool()).to.eq(
+        ctx.contracts.sapphire.pool.address,
+      );
+
+      await sapphireCore.setBorrowPool(ctx.contracts.sapphire.oracle.address);
+
+      expect(await sapphireCore.borrowPool()).to.eq(
+        ctx.contracts.sapphire.oracle.address,
       );
     });
+  });
 
-    it('reverts if asset is address zero', async () => {
-      await expect(
-        sapphireCore.setSupportedBorrowAsset(constants.AddressZero, true),
-      ).to.be.revertedWith(
-        'SapphireCoreV1: supported borrow asset is required',
-      );
-    });
-
-    it('reverts if delete address which not exists', async () => {
-      await sapphireCore.setSupportedBorrowAsset(
-        ctx.contracts.collateral.address,
-        true,
-      );
-
-      await expect(
-        sapphireCore.setSupportedBorrowAsset(
-          ctx.contracts.synthetic.tokenV2.address,
-          false,
-        ),
-      ).to.be.revertedWith(
-        'SapphireCoreV1: removed borrow asset is not supported',
-      );
-    });
-
-    it('reverts if deleted address is the only one', async () => {
-      await expect(
-        sapphireCore.setSupportedBorrowAsset(
-          ctx.contracts.stableCoin.address,
-          false,
-        ),
-      ).to.be.revertedWith(
-        'SapphireCoreV1: cannot remove the only supported borrow asset address',
-      );
-    });
-
-    it('sets the borrow asset address', async () => {
-      expect(await sapphireCore.getSupportedBorrowAssets()).to.deep.eq([
-        ctx.contracts.stableCoin.address,
-      ]);
-
-      await sapphireCore.setSupportedBorrowAsset(
-        ctx.contracts.collateral.address,
-        true,
-      );
-
-      expect(await sapphireCore.getSupportedBorrowAssets()).to.deep.eq([
-        ctx.contracts.stableCoin.address,
-        ctx.contracts.collateral.address,
-      ]);
-
-      await sapphireCore.setSupportedBorrowAsset(
-        ctx.contracts.stableCoin.address,
-        false,
-      );
-
-      expect(await sapphireCore.getSupportedBorrowAssets()).to.deep.eq([
-        ctx.contracts.collateral.address,
-      ]);
-    });
+  describe('#getSupportedAssets', () => {
+    it('gets the supported assets from the pool');
   });
 });

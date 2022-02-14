@@ -47,6 +47,9 @@ const BORROW_AMOUNT_500_SCORE = NORMALIZED_COLLATERAL_AMOUNT.mul(
 describe('SapphireCore.borrow()', () => {
   let ctx: ITestContext;
   let arc: SapphireTestArc;
+
+  let stablecoin: TestToken;
+
   let creditScore1: PassportScore;
   let borrowLimitScore1: PassportScore;
   let borrowLimitScore2: PassportScore;
@@ -54,11 +57,11 @@ describe('SapphireCore.borrow()', () => {
   let scoredMinterOtherProtoScore: PassportScore;
   let creditScore2: PassportScore;
   let creditScoreTree: PassportScoreTree;
-  let scoredMinter: SignerWithAddress;
-  let minter: SignerWithAddress;
   let creditScoreProof: PassportScoreProof;
   let borrowLimitProof: PassportScoreProof;
-  let stableCoin: TestToken;
+
+  let scoredMinter: SignerWithAddress;
+  let minter: SignerWithAddress;
 
   /**
    * Mints `amount` of collateral tokens to the `caller` and approves it on the core
@@ -126,9 +129,9 @@ describe('SapphireCore.borrow()', () => {
    * `principal * BASE / borrowIndex`
    * @param principal principal amount to convert
    */
-  async function convertPrincipal(principal: BigNumber) {
+  async function normalizeBorrowAmount(amount: BigNumber) {
     const borrowIndex = await arc.core().borrowIndex();
-    return roundUpDiv(principal, borrowIndex);
+    return roundUpDiv(amount, borrowIndex);
   }
 
   /**
@@ -144,7 +147,7 @@ describe('SapphireCore.borrow()', () => {
     arc = ctx.sdks.sapphire;
     scoredMinter = ctx.signers.scoredMinter;
     minter = ctx.signers.minter;
-    stableCoin = ctx.contracts.stableCoin;
+    stablecoin = ctx.contracts.stablecoin;
 
     // mint and approve token
     await mintAndApproveCollateral(minter, COLLATERAL_AMOUNT.mul(2));
@@ -161,7 +164,7 @@ describe('SapphireCore.borrow()', () => {
 
   addSnapshotBeforeRestoreAfterEach();
 
-  it('borrows the correct amount for collateral tokens that have other than 18 decimal places', async () => {
+  xit('borrows the correct amount of the given stablecoin, having collateral tokens that have other than 18 decimal places', async () => {
     const collateralAddress = await arc.core().collateralAsset();
     const collateralContract = BaseERC20Factory.connect(
       collateralAddress,
@@ -169,10 +172,12 @@ describe('SapphireCore.borrow()', () => {
     );
     const collateralDecimals = await collateralContract.decimals();
 
+    expect(await stablecoin.balanceOf(scoredMinter.address)).eq(0);
+
     expect(collateralDecimals).not.eq(18);
     await arc.borrow(
       BORROW_AMOUNT_500_SCORE,
-      stableCoin.address,
+      stablecoin.address,
       creditScoreProof,
       borrowLimitProof,
       undefined,
@@ -188,7 +193,77 @@ describe('SapphireCore.borrow()', () => {
     expect(collateralAmount, 'collateral amt').eq(COLLATERAL_AMOUNT);
     expect(normalizedBorrowedAmount, 'borrow amt').eq(BORROW_AMOUNT_500_SCORE);
     expect(principal, 'principal').eq(BORROW_AMOUNT_500_SCORE);
+
+    expect(await stablecoin.balanceOf(scoredMinter.address)).eq(
+      BORROW_AMOUNT_500_SCORE,
+    );
   });
+
+  xit('mints an equivalent amount of creds that are swapped in the pool', async () => {
+    expect(await arc.synthetic().totalSupply()).eq(0);
+    expect(await arc.synthetic().balanceOf(arc.pool().address)).eq(0);
+
+    await arc.borrow(
+      BORROW_AMOUNT,
+      stablecoin.address,
+      undefined,
+      borrowLimitProof,
+      undefined,
+      scoredMinter,
+    );
+
+    expect(await arc.synthetic().totalSupply()).eq(BORROW_AMOUNT);
+    expect(await arc.synthetic().balanceOf(arc.pool().address)).eq(
+      BORROW_AMOUNT,
+    );
+    expect(await stablecoin.balanceOf(scoredMinter.address)).eq(BORROW_AMOUNT);
+  });
+
+  xit('triggers a TokensSwapped event on the pool', async () => {
+    await expect(
+      arc.borrow(
+        BORROW_AMOUNT,
+        stablecoin.address,
+        undefined,
+        borrowLimitProof,
+        undefined,
+        scoredMinter,
+      ),
+    )
+      .to.emit(arc.pool(), 'TokensSwapped')
+      .withArgs(
+        arc.core().address,
+        arc.synthetic().address,
+        stablecoin.address,
+        BORROW_AMOUNT,
+        BORROW_AMOUNT,
+      );
+  });
+
+  xit('transfers the stables from the pool to the user', async () => {
+    const balanceBefore = await stablecoin.balanceOf(arc.pool().address);
+
+    await arc.borrow(
+      BORROW_AMOUNT,
+      stablecoin.address,
+      undefined,
+      borrowLimitProof,
+      undefined,
+      scoredMinter,
+    );
+
+    expect(await stablecoin.balanceOf(arc.pool().address)).eq(
+      balanceBefore.add(BORROW_AMOUNT),
+    );
+  });
+
+  it('adds the borrow fee to an initial borrow amount');
+
+  it('adds the borrow fee to an existing borrow amount');
+
+  it(
+    'increases the user principal by the borrowed amount (6 decimal borrow asset)',
+  );
 
   it('borrows with the highest c-ratio if proof is not provided', async () => {
     let vault = await arc.getVault(scoredMinter.address);
@@ -197,7 +272,7 @@ describe('SapphireCore.borrow()', () => {
 
     await arc.borrow(
       BORROW_AMOUNT,
-      stableCoin.address,
+      stablecoin.address,
       undefined,
       borrowLimitProof,
       undefined,
@@ -211,7 +286,7 @@ describe('SapphireCore.borrow()', () => {
     await expect(
       arc.borrow(
         BigNumber.from(1),
-        stableCoin.address,
+        stablecoin.address,
         undefined,
         borrowLimitProof,
         undefined,
@@ -222,11 +297,60 @@ describe('SapphireCore.borrow()', () => {
     );
   });
 
+  it(
+    'does not revert if borrowing <= the default borrow limit, if limit proof is passed and it is smaller than the default default limit',
+  );
+
+  it(
+    'reverts if borrowing more than the default borrow limit, if limit proof is not passed',
+  );
+
+  it(
+    'reverts if borrow limit proof is not passed and default borrow limit is 0',
+  );
+
+  xit('reverts if borrowing more than the swap limit', async () => {
+    await arc.pool().setCoreSwapLimit(arc.core().address, BORROW_AMOUNT.sub(1));
+
+    await expect(
+      arc.borrow(
+        BORROW_AMOUNT,
+        stablecoin.address,
+        undefined,
+        borrowLimitProof,
+        undefined,
+        scoredMinter,
+      ),
+    ).to.be.revertedWith('SapphirePool: core swap limit exceeded');
+  });
+
+  it('reverts if the borrow limit + borrow fee are < allowed c-ratio');
+
+  xit('reverts if trying to borrow for an unsupported stablecoin', async () => {
+    const testDai = await new TestTokenFactory(ctx.signers.admin).deploy(
+      'Test Dai',
+      'TDAI',
+      18,
+    );
+    await testDai.mintShare(arc.pool().address, BORROW_AMOUNT);
+
+    await expect(
+      arc.borrow(
+        BORROW_AMOUNT,
+        testDai.address,
+        undefined,
+        borrowLimitProof,
+        undefined,
+        scoredMinter,
+      ),
+    ).to.be.revertedWith('SapphirePool: unknown token');
+  });
+
   it('reverts if borrow limit proof is not provided', async () => {
     await expect(
       arc.borrow(
         BigNumber.from(1),
-        stableCoin.address,
+        stablecoin.address,
         undefined,
         undefined,
         undefined,
@@ -239,7 +363,7 @@ describe('SapphireCore.borrow()', () => {
     await expect(
       arc.borrow(
         BORROW_AMOUNT,
-        stableCoin.address,
+        stablecoin.address,
         undefined,
         getScoreProof(borrowLimitScore1, creditScoreTree),
         undefined,
@@ -251,7 +375,7 @@ describe('SapphireCore.borrow()', () => {
   it('borrows with exact c-ratio', async () => {
     await arc.borrow(
       BORROW_AMOUNT,
-      stableCoin.address,
+      stablecoin.address,
       undefined,
       getScoreProof(minterBorrowLimitScore, creditScoreTree),
       undefined,
@@ -266,10 +390,15 @@ describe('SapphireCore.borrow()', () => {
 
   it('borrows more if borrow limit is increased', async () => {
     await mintAndApproveCollateral(scoredMinter, COLLATERAL_AMOUNT.mul(2));
-    await arc.deposit(COLLATERAL_AMOUNT.mul(2), undefined, undefined, scoredMinter);
+    await arc.deposit(
+      COLLATERAL_AMOUNT.mul(2),
+      undefined,
+      undefined,
+      scoredMinter,
+    );
     await arc.borrow(
       borrowLimitScore1.score,
-      stableCoin.address,
+      stablecoin.address,
       creditScoreProof,
       borrowLimitProof,
       undefined,
@@ -281,7 +410,7 @@ describe('SapphireCore.borrow()', () => {
     await expect(
       arc.borrow(
         additionalBorrowAmount,
-        stableCoin.address,
+        stablecoin.address,
         creditScoreProof,
         borrowLimitProof,
         undefined,
@@ -295,7 +424,7 @@ describe('SapphireCore.borrow()', () => {
     const borrowLimitScore = {
       ...borrowLimitScore1,
       score: borrowLimitScore1.score.add(additionalBorrowAmount),
-    }
+    };
     const newPassportScoreTree = new PassportScoreTree([
       creditScore1,
       creditScore2,
@@ -309,7 +438,7 @@ describe('SapphireCore.borrow()', () => {
 
     await arc.borrow(
       additionalBorrowAmount,
-      stableCoin.address,
+      stablecoin.address,
       getScoreProof(creditScore1, newPassportScoreTree),
       getScoreProof(borrowLimitScore, newPassportScoreTree),
       undefined,
@@ -319,7 +448,7 @@ describe('SapphireCore.borrow()', () => {
     await expect(
       arc.borrow(
         additionalBorrowAmount,
-        stableCoin.address,
+        stablecoin.address,
         getScoreProof(creditScore1, newPassportScoreTree),
         getScoreProof(borrowLimitScore, newPassportScoreTree),
         undefined,
@@ -335,7 +464,7 @@ describe('SapphireCore.borrow()', () => {
     await expect(
       arc.borrow(
         BORROW_AMOUNT,
-        stableCoin.address,
+        stablecoin.address,
         getScoreProof(scoredMinterOtherProtoScore, creditScoreTree),
         borrowLimitProof,
         undefined,
@@ -348,7 +477,7 @@ describe('SapphireCore.borrow()', () => {
     await expect(
       arc.borrow(
         BORROW_AMOUNT,
-        stableCoin.address,
+        stablecoin.address,
         getScoreProof(creditScore1, creditScoreTree),
         getScoreProof(creditScore1, creditScoreTree),
         undefined,
@@ -388,7 +517,7 @@ describe('SapphireCore.borrow()', () => {
     await expect(
       arc.borrow(
         BORROW_AMOUNT.mul(10),
-        stableCoin.address,
+        stablecoin.address,
         undefined,
         getScoreProof(minterBorrowLimitScore, creditScoreTree),
         undefined,
@@ -402,7 +531,7 @@ describe('SapphireCore.borrow()', () => {
   it('borrows more if more collateral is provided', async () => {
     await arc.borrow(
       BORROW_AMOUNT,
-      stableCoin.address,
+      stablecoin.address,
       undefined,
       getScoreProof(minterBorrowLimitScore, creditScoreTree),
       undefined,
@@ -417,7 +546,7 @@ describe('SapphireCore.borrow()', () => {
     await expect(
       arc.borrow(
         BORROW_AMOUNT,
-        stableCoin.address,
+        stablecoin.address,
         undefined,
         getScoreProof(minterBorrowLimitScore, creditScoreTree),
         undefined,
@@ -435,7 +564,7 @@ describe('SapphireCore.borrow()', () => {
      */
     await arc.borrow(
       BORROW_AMOUNT,
-      stableCoin.address,
+      stablecoin.address,
       undefined,
       getScoreProof(minterBorrowLimitScore, creditScoreTree),
       undefined,
@@ -454,7 +583,7 @@ describe('SapphireCore.borrow()', () => {
     // With the credit score user can borrow more than amount based default collateral ratio
     await arc.borrow(
       BORROW_AMOUNT_500_SCORE,
-      stableCoin.address,
+      stablecoin.address,
       creditScoreProof,
       borrowLimitProof,
       undefined,
@@ -473,7 +602,7 @@ describe('SapphireCore.borrow()', () => {
     // The user's existing credit score is updated and increases letting them borrow more
     await arc.borrow(
       BORROW_AMOUNT_500_SCORE,
-      stableCoin.address,
+      stablecoin.address,
       creditScoreProof,
       borrowLimitProof,
       undefined,
@@ -487,7 +616,7 @@ describe('SapphireCore.borrow()', () => {
     await expect(
       arc.borrow(
         additionalBorrowAmount,
-        stableCoin.address,
+        stablecoin.address,
         creditScoreProof,
         borrowLimitProof,
         undefined,
@@ -517,7 +646,7 @@ describe('SapphireCore.borrow()', () => {
 
     await arc.borrow(
       additionalBorrowAmount,
-      stableCoin.address,
+      stablecoin.address,
       getScoreProof(creditScore, newPassportScoreTree),
       getScoreProof(borrowLimitScore1, newPassportScoreTree),
       undefined,
@@ -528,7 +657,7 @@ describe('SapphireCore.borrow()', () => {
       normalizedBorrowedAmount: vaultBorrowAmount,
       principal,
     } = await arc.getVault(scoredMinter.address);
-    const expectedVaultBorrowAmt = await convertPrincipal(
+    const expectedVaultBorrowAmt = await normalizeBorrowAmount(
       (await denormalizeBorrowAmount(BORROW_AMOUNT_500_SCORE)).add(
         additionalBorrowAmount,
       ),
@@ -559,7 +688,7 @@ describe('SapphireCore.borrow()', () => {
     await expect(
       arc.borrow(
         BORROW_AMOUNT_500_SCORE,
-        stableCoin.address,
+        stablecoin.address,
         getScoreProof(creditScore, newPassportScoreTree),
         borrowLimitProof,
         undefined,
@@ -573,7 +702,7 @@ describe('SapphireCore.borrow()', () => {
   it('updates the total borrowed amount correctly', async () => {
     await arc.borrow(
       BORROW_AMOUNT_500_SCORE,
-      stableCoin.address,
+      stablecoin.address,
       creditScoreProof,
       borrowLimitProof,
       undefined,
@@ -598,7 +727,7 @@ describe('SapphireCore.borrow()', () => {
 
     await arc.borrow(
       BORROW_AMOUNT,
-      stableCoin.address,
+      stablecoin.address,
       undefined,
       getScoreProof(minterBorrowLimitScore, creditScoreTree),
       undefined,
@@ -614,7 +743,7 @@ describe('SapphireCore.borrow()', () => {
     await expect(
       arc.borrow(
         BORROW_AMOUNT,
-        stableCoin.address,
+        stablecoin.address,
         creditScoreProof,
         borrowLimitProof,
         undefined,
@@ -626,7 +755,7 @@ describe('SapphireCore.borrow()', () => {
   it('should not borrow more if the c-ratio is at the minimum', async () => {
     await arc.borrow(
       BORROW_AMOUNT,
-      stableCoin.address,
+      stablecoin.address,
       undefined,
       getScoreProof(minterBorrowLimitScore, creditScoreTree),
       undefined,
@@ -637,7 +766,7 @@ describe('SapphireCore.borrow()', () => {
     await expect(
       arc.borrow(
         utils.parseEther('0.01'),
-        stableCoin.address,
+        stablecoin.address,
         undefined,
         getScoreProof(minterBorrowLimitScore, creditScoreTree),
         undefined,
@@ -651,7 +780,7 @@ describe('SapphireCore.borrow()', () => {
   it('should not borrow more if the price decreases', async () => {
     await arc.borrow(
       BORROW_AMOUNT_500_SCORE.div(2),
-      stableCoin.address,
+      stablecoin.address,
       creditScoreProof,
       borrowLimitProof,
       undefined,
@@ -659,7 +788,7 @@ describe('SapphireCore.borrow()', () => {
     );
     await arc.borrow(
       BORROW_AMOUNT_500_SCORE.div(4),
-      stableCoin.address,
+      stablecoin.address,
       creditScoreProof,
       borrowLimitProof,
       undefined,
@@ -669,7 +798,7 @@ describe('SapphireCore.borrow()', () => {
     await expect(
       arc.borrow(
         BORROW_AMOUNT_500_SCORE.div(4),
-        stableCoin.address,
+        stablecoin.address,
         creditScoreProof,
         borrowLimitProof,
         undefined,
@@ -683,7 +812,7 @@ describe('SapphireCore.borrow()', () => {
   it(`should not borrow if using someone else's score proof`, async () => {
     await arc.borrow(
       BORROW_AMOUNT_500_SCORE,
-      stableCoin.address,
+      stablecoin.address,
       creditScoreProof,
       borrowLimitProof,
       undefined,
@@ -699,7 +828,7 @@ describe('SapphireCore.borrow()', () => {
     await expect(
       arc.borrow(
         utils.parseEther('1'),
-        stableCoin.address,
+        stablecoin.address,
         interestSetterScoreProof,
         undefined,
         undefined,
@@ -714,7 +843,7 @@ describe('SapphireCore.borrow()', () => {
 
     await arc.borrow(
       firstBorrowAmount,
-      stableCoin.address,
+      stablecoin.address,
       creditScoreProof,
       borrowLimitProof,
       undefined,
@@ -736,7 +865,7 @@ describe('SapphireCore.borrow()', () => {
     await expect(
       arc.borrow(
         BORROW_AMOUNT,
-        stableCoin.address,
+        stablecoin.address,
         creditScoreProof,
         borrowLimitProof,
         undefined,
@@ -754,7 +883,7 @@ describe('SapphireCore.borrow()', () => {
     await expect(
       arc.borrow(
         borrowAmount,
-        stableCoin.address,
+        stablecoin.address,
         creditScoreProof,
         borrowLimitProof,
         undefined,
@@ -767,13 +896,11 @@ describe('SapphireCore.borrow()', () => {
 
   it('should not borrow less than the minimum borrow limit', async () => {
     const vaultBorrowMaximum = await arc.core().vaultBorrowMaximum();
-    await arc
-      .core()
-      .setLimits(BORROW_AMOUNT, vaultBorrowMaximum);
+    await arc.core().setLimits(BORROW_AMOUNT, vaultBorrowMaximum);
     await expect(
       arc.borrow(
         BORROW_AMOUNT.sub(10),
-        stableCoin.address,
+        stablecoin.address,
         creditScoreProof,
         borrowLimitProof,
         undefined,
@@ -787,13 +914,11 @@ describe('SapphireCore.borrow()', () => {
   it('should not borrow more than the maximum amount', async () => {
     const vaultBorrowMinimum = await arc.core().vaultBorrowMinimum();
     // Only update the vault borrow maximum
-    await arc
-      .core()
-      .setLimits(vaultBorrowMinimum, BORROW_AMOUNT);
+    await arc.core().setLimits(vaultBorrowMinimum, BORROW_AMOUNT);
 
     await arc.borrow(
       BORROW_AMOUNT.div(2),
-      stableCoin.address,
+      stablecoin.address,
       creditScoreProof,
       borrowLimitProof,
       undefined,
@@ -802,7 +927,7 @@ describe('SapphireCore.borrow()', () => {
     await expect(
       arc.borrow(
         BORROW_AMOUNT.div(2).add(1),
-        stableCoin.address,
+        stablecoin.address,
         creditScoreProof,
         borrowLimitProof,
         undefined,
@@ -818,7 +943,7 @@ describe('SapphireCore.borrow()', () => {
     await expect(
       arc.borrow(
         BORROW_AMOUNT,
-        stableCoin.address,
+        stablecoin.address,
         creditScoreProof,
         borrowLimitProof,
         undefined,
@@ -839,7 +964,7 @@ describe('SapphireCore.borrow()', () => {
     await expect(
       arc.borrow(
         BORROW_AMOUNT,
-        stableCoin.address,
+        stablecoin.address,
         creditScoreProof,
         borrowLimitProof,
         undefined,
@@ -852,7 +977,7 @@ describe('SapphireCore.borrow()', () => {
     await expect(
       arc.borrow(
         BORROW_AMOUNT,
-        stableCoin.address,
+        stablecoin.address,
         creditScoreProof,
         borrowLimitProof,
         undefined,

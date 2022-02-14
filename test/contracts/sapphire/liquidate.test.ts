@@ -129,7 +129,7 @@ describe('SapphireCore.liquidate()', () => {
       protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
       score: BORROW_AMOUNT.mul(3),
     };
-    
+
     creditScoreTree = new PassportScoreTree([
       minterCreditScore,
       liquidatorCreditScore,
@@ -144,7 +144,7 @@ describe('SapphireCore.liquidate()', () => {
     arc = ctx.sdks.sapphire;
     creditScoreContract = ctx.contracts.sapphire.passportScores;
     mapper = ctx.contracts.sapphire.linearMapper;
-    stableCoin = ctx.contracts.stableCoin;
+    stableCoin = ctx.contracts.stablecoin;
 
     await setupSapphire(ctx, {
       limits: {
@@ -291,7 +291,7 @@ describe('SapphireCore.liquidate()', () => {
       );
 
       expect(postLiquidationVault.principal, '10').to.eq(
-        BORROW_AMOUNT.sub(ArcNumber.new(475))
+        BORROW_AMOUNT.sub(ArcNumber.new(475)),
       );
     });
 
@@ -585,13 +585,17 @@ describe('SapphireCore.liquidate()', () => {
       await arc.updatePrice(newPrice);
 
       // Liquidate vault
-      await expect(arc.liquidate(
-        signers.scoredMinter.address,
-        arc.collateral().address,
-        getScoreProof(minterCreditScore, creditScoreTree),
-        undefined,
-        signers.liquidator,
-      )).to.be.revertedWith('SapphireCoreV1: the token address should be one of the supported tokens');
+      await expect(
+        arc.liquidate(
+          signers.scoredMinter.address,
+          arc.collateral().address,
+          getScoreProof(minterCreditScore, creditScoreTree),
+          undefined,
+          signers.liquidator,
+        ),
+      ).to.be.revertedWith(
+        'SapphireCoreV1: the token address should be one of the supported tokens',
+      );
     });
 
     it('reverts if proof is not for the correct protocol', async () => {
@@ -1066,7 +1070,7 @@ describe('SapphireCore.liquidate()', () => {
       expect(postLiquidationVault.principal).to.eq(utils.parseEther('72.5'));
 
       const outstandingDebt = postLiquidationVault.normalizedBorrowedAmount;
-      
+
       // User shouldn't be able borrow and withdraw when vault is under collateralized and borrow amount is 0
       await expect(
         arc.borrow(
@@ -1131,8 +1135,10 @@ describe('SapphireCore.liquidate()', () => {
         undefined,
         signers.scoredMinter,
       );
-      
-      expect((await arc.getVault(signers.scoredMinter.address)).principal).to.eq(BORROW_AMOUNT.sub(repayedAmount))
+
+      expect(
+        (await arc.getVault(signers.scoredMinter.address)).principal,
+      ).to.eq(BORROW_AMOUNT.sub(repayedAmount));
       // The collateral price drops to $0.54
       await arc.updatePrice(utils.parseEther('0.54'));
 

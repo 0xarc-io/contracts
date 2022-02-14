@@ -13,6 +13,7 @@ import {
   deploySyntheticTokenV2,
   deployMockSapphireOracle,
   deployMockSapphirePassportScores,
+  deploySapphirePool,
 } from './deployers';
 
 import { Signer } from 'ethers';
@@ -48,7 +49,7 @@ export async function sapphireFixture(
     args?.decimals ?? DEFAULT_COLLATERAL_DECIMALS,
   );
 
-  ctx.contracts.stableCoin = await deployTestToken(
+  ctx.contracts.stablecoin = await deployTestToken(
     deployer,
     'Test stablecoin',
     'TEST_USDC',
@@ -76,6 +77,9 @@ export async function sapphireFixture(
     syntheticProxy.address,
     deployer,
   );
+
+  ctx.contracts.sapphire.pool = await deploySapphirePool(deployer);
+
   await tokenV2.init('STABLExV2', 'STABLExV2', '1');
 
   ctx.contracts.synthetic.tokenV2 = tokenV2;
@@ -114,7 +118,7 @@ export async function sapphireFixture(
   await ctx.contracts.sapphire.core.init(
     ctx.contracts.collateral.address,
     ctx.contracts.synthetic.tokenV2.address,
-    ctx.contracts.stableCoin.address,
+    ctx.contracts.stablecoin.address,
     ctx.contracts.sapphire.oracle.address,
     ctx.signers.interestSetter.address,
     ctx.signers.pauseOperator.address,
@@ -124,6 +128,10 @@ export async function sapphireFixture(
     DEFAULT_LOW_C_RATIO,
     0,
     0,
+  );
+
+  await ctx.contracts.sapphire.core.setBorrowPool(
+    ctx.contracts.sapphire.pool.address,
   );
 
   await tokenV2.addMinter(ctx.contracts.sapphire.core.address, MAX_UINT256);

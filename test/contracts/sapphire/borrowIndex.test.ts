@@ -149,7 +149,7 @@ describe('borrow index (integration)', () => {
     arc = ctx.sdks.sapphire;
     minter1 = signers.minter;
     minter2 = signers.scoredMinter;
-    stableCoin = ctx.contracts.stableCoin;
+    stableCoin = ctx.contracts.stablecoin;
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -233,7 +233,13 @@ describe('borrow index (integration)', () => {
         BORROW_AMOUNT,
       );
       await advanceNMonths(6);
-      await setupBaseVault(arc, minter2, getScoreProof(minterBorrowLimitScore, creditScoreTree), COLLATERAL_AMOUNT, BORROW_AMOUNT);
+      await setupBaseVault(
+        arc,
+        minter2,
+        getScoreProof(minterBorrowLimitScore, creditScoreTree),
+        COLLATERAL_AMOUNT,
+        BORROW_AMOUNT,
+      );
 
       const borrowIndex6 = await arc.core().currentBorrowIndex();
       expect(borrowIndex6).eq(
@@ -285,7 +291,13 @@ describe('borrow index (integration)', () => {
         BORROW_AMOUNT,
       );
       await advanceNMonths(18);
-      await setupBaseVault(arc, minter2, getScoreProof(minterBorrowLimitScore, creditScoreTree), COLLATERAL_AMOUNT, BORROW_AMOUNT);
+      await setupBaseVault(
+        arc,
+        minter2,
+        getScoreProof(minterBorrowLimitScore, creditScoreTree),
+        COLLATERAL_AMOUNT,
+        BORROW_AMOUNT,
+      );
 
       // check the borrow index
       const borrowIndex = await arc.core().currentBorrowIndex();
@@ -321,7 +333,13 @@ describe('borrow index (integration)', () => {
       );
       await advanceNMonths(6);
 
-      await setupBaseVault(arc, minter2, getScoreProof(minterBorrowLimitScore, creditScoreTree), COLLATERAL_AMOUNT, BORROW_AMOUNT);
+      await setupBaseVault(
+        arc,
+        minter2,
+        getScoreProof(minterBorrowLimitScore, creditScoreTree),
+        COLLATERAL_AMOUNT,
+        BORROW_AMOUNT,
+      );
 
       const borrowIndex = await arc.core().currentBorrowIndex();
       const indexLastUpdate = await arc.core().indexLastUpdate();

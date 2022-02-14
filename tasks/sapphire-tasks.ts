@@ -446,8 +446,7 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
     // Set borrow limits if needed. Skip if all zeros
     if (
       !_.isNil(collatConfig.limits) &&
-      (collatConfig.limits.vaultBorrowMin ||
-        collatConfig.limits.vaultBorrowMax)
+      (collatConfig.limits.vaultBorrowMin || collatConfig.limits.vaultBorrowMax)
     ) {
       console.log(yellow(`Calling core.setLimits() ...\n`));
 
@@ -462,10 +461,7 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
     // Add minter to synth
     console.log(yellow(`Adding minter to synthetic...\n`));
     // We already enforce limits at the synthetic level.
-    await synthetic.addMinter(
-      core.address,
-      MAX_UINT256,
-    );
+    await synthetic.addMinter(core.address, MAX_UINT256);
     console.log(green(`Minter successfully added to synthetic\n`));
 
     // Change admin to ultimate owner
