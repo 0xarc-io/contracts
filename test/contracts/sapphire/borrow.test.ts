@@ -22,7 +22,7 @@ import {
   DEFAULT_VAULT_BORROW_MAXIMUM,
   DEFAULT_VAULT_BORROW_MIN,
 } from '@test/helpers/sapphireDefaults';
-import { getScoreProof } from '@src/utils/getScoreProof';
+import { getScoreProof, getEmptyScoreProof } from '@src/utils/getScoreProof';
 import { roundUpDiv, roundUpMul } from '@test/helpers/roundUpOperations';
 import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
 import { PassportScoreTree } from '@src/MerkleTree';
@@ -386,12 +386,10 @@ describe('SapphireCore.borrow()', () => {
         BORROW_AMOUNT,
         stablecoin.address,
         undefined,
-        {
-          account: scoredMinter.address,
-          score: 0,
-          protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
-          merkleProof: [],
-        },
+        getEmptyScoreProof(
+          scoredMinter.address,
+          utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
+        ),
         undefined,
         scoredMinter,
       ),
