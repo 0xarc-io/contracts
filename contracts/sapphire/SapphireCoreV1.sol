@@ -38,7 +38,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
     event LiquidationFeesUpdated(
         uint256 _liquidationUserRatio,
-        uint256 _liquidationArcRatio
+        uint256 _liquidationArcRatio,
+        uint256 _borrowFee
     );
 
     event LimitsUpdated(
@@ -163,7 +164,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         setAssessor(_assessorAddress);
         setOracle(_oracleAddress);
         setCollateralRatios(_lowCollateralRatio, _highCollateralRatio);
-        _setFees(_liquidationUserRatio, _liquidationArcRatio);
+        _setFees(_liquidationUserRatio, _liquidationArcRatio, 0);
     }
 
     /**
@@ -241,18 +242,20 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      */
     function setFees(
         uint256 _liquidationUserRatio,
-        uint256 _liquidationArcRatio
+        uint256 _liquidationArcRatio,
+        uint256 _borrowFee
     )
         public
         onlyAdmin
     {
         require(
             (_liquidationUserRatio != liquidationUserRatio) ||
-            (_liquidationArcRatio != liquidationArcRatio),
+            (_liquidationArcRatio != liquidationArcRatio) ||
+            (_borrowFee != borrowFee),
             "SapphireCoreV1: the same fees are already set"
         );
 
-        _setFees(_liquidationUserRatio, _liquidationArcRatio);
+        _setFees(_liquidationUserRatio, _liquidationArcRatio, _borrowFee);
     }
 
     /**
@@ -972,7 +975,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         // Calculate actual vault borrow amount
         uint256 actualVaultBorrowAmount = denormalizedBorrowAmount;
 
-        // Calculate new actual vault borrow amount
+        // Calculate new actual vault borrow amount with the added borrow fee
         uint256 _newActualVaultBorrowAmount = actualVaultBorrowAmount + _amount;
 
         if (_newActualVaultBorrowAmount > defaultBorrowLimit) {
@@ -982,11 +985,25 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             );
         }
 
-        // Calculate new normalized vault borrow amount
-        uint256 _newNormalizedVaultBorrowAmount = _normalizeBorrowAmount(_newActualVaultBorrowAmount, true);
+        // Calculate new normalized vault borrow amount, including the borrow fee, if any
+        uint256 _newNormalizedVaultBorrowAmount;
+        if (borrowFee > 0) {
+            _newNormalizedVaultBorrowAmount = _normalizeBorrowAmount(
+                _newActualVaultBorrowAmount + Math.roundUpMul(_amount, borrowFee), 
+                true
+            );
+        } else {
+            _newNormalizedVaultBorrowAmount = _normalizeBorrowAmount(
+                _newActualVaultBorrowAmount,
+                true
+            );
+        }
 
         // Record borrow amount (update vault and total amount)
-        totalBorrowed = totalBorrowed - vault.normalizedBorrowedAmount + _newNormalizedVaultBorrowAmount;
+        totalBorrowed = totalBorrowed - 
+            vault.normalizedBorrowedAmount + 
+            _newNormalizedVaultBorrowAmount;
+
         vault.normalizedBorrowedAmount = _newNormalizedVaultBorrowAmount;
         vault.principal = vault.principal + _amount;
 
@@ -1298,7 +1315,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
     function _setFees(
         uint256 _liquidationUserRatio,
-        uint256 _liquidationArcRatio
+        uint256 _liquidationArcRatio,
+        uint256 _borrowFee
     )
         private
     {
@@ -1310,7 +1328,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
         liquidationUserRatio = _liquidationUserRatio;
         liquidationArcRatio = _liquidationArcRatio;
-        emit LiquidationFeesUpdated(liquidationUserRatio, liquidationArcRatio);
+        borrowFee = _borrowFee;
+        emit LiquidationFeesUpdated(liquidationUserRatio, liquidationArcRatio, _borrowFee);
     }
 
     /**

@@ -49,6 +49,11 @@ contract SapphireCoreStorageV1 {
     uint256 public liquidationArcRatio;
 
     /**
+     * @notice The percentage fee that is added as interest for each loan
+     */
+    uint256 public borrowFee;
+
+    /**
     * @notice The assessor that will determine the collateral-ratio.
     */
     ISapphireAssessor public assessor;

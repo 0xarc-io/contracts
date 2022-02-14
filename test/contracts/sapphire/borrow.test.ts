@@ -263,11 +263,67 @@ describe('SapphireCore.borrow()', () => {
     );
   });
 
-  it('adds the borrow fee to an initial borrow amount');
+  it('adds the borrow fee to an initial borrow amount', async () => {
+    const borrowFee = utils.parseEther('0.1');
+    await arc.core().setFees(0, 0, borrowFee);
 
-  it('adds the borrow fee to an existing borrow amount');
+    let vault = await arc.getVault(scoredMinter.address);
+    expect(vault.normalizedBorrowedAmount).eq(0);
+    expect(await stablecoin.balanceOf(scoredMinter.address)).eq(0);
 
-  it(
+    await arc.borrow(
+      BORROW_AMOUNT,
+      stablecoin.address,
+      undefined,
+      borrowLimitProof,
+      undefined,
+      scoredMinter,
+    );
+
+    vault = await arc.getVault(scoredMinter.address);
+    expect(vault.normalizedBorrowedAmount).eq(
+      BORROW_AMOUNT.add(roundUpMul(BORROW_AMOUNT, borrowFee)),
+    );
+    expect(await stablecoin.balanceOf(scoredMinter.address)).eq(BORROW_AMOUNT);
+  });
+
+  it('adds the borrow fee to an existing borrow amount', async () => {
+    const borrowAmt = BORROW_AMOUNT.div(4);
+    await arc.borrow(
+      borrowAmt,
+      stablecoin.address,
+      undefined,
+      borrowLimitProof,
+      undefined,
+      scoredMinter,
+    );
+
+    let vault = await arc.getVault(scoredMinter.address);
+    expect(vault.normalizedBorrowedAmount).eq(borrowAmt);
+    expect(await stablecoin.balanceOf(scoredMinter.address)).eq(borrowAmt);
+
+    const borrowFee = utils.parseEther('0.1');
+    await arc.core().setFees(0, 0, borrowFee);
+
+    await arc.borrow(
+      borrowAmt,
+      stablecoin.address,
+      undefined,
+      borrowLimitProof,
+      undefined,
+      scoredMinter,
+    );
+
+    vault = await arc.getVault(scoredMinter.address);
+    expect(vault.normalizedBorrowedAmount).eq(
+      borrowAmt.mul(2).add(roundUpMul(borrowAmt, borrowFee)),
+    );
+    expect(await stablecoin.balanceOf(scoredMinter.address)).eq(
+      borrowAmt.mul(2),
+    );
+  });
+
+  xit(
     'increases the user principal by the borrowed amount (6 decimal borrow asset)',
   );
 
@@ -410,8 +466,6 @@ describe('SapphireCore.borrow()', () => {
       ),
     ).to.be.revertedWith('SapphirePool: core swap limit exceeded');
   });
-
-  it('reverts if the borrow limit + borrow fee are < allowed c-ratio');
 
   it('reverts if trying to borrow for an unsupported stablecoin', async () => {
     const testDai = await new TestTokenFactory(ctx.signers.admin).deploy(

@@ -160,6 +160,16 @@ xdescribe('SapphireCore.liquidate()', () => {
       poolDepositSwapAmount: BORROW_AMOUNT.mul(3),
     });
 
+    // Set the price to $1
+    await ctx.sdks.sapphire.updatePrice(COLLATERAL_PRICE);
+
+    // Set liquidation user fees and arc fees
+    await arc.core().setFees(
+      utils.parseEther('0.05'), // 5% price discount
+      utils.parseEther('0.1'), // 10% arc tax on profit
+      0,
+    );
+
     // Mints enough STABLEx to the liquidator
     await helperSetupBaseVault.setupBaseVault(
       arc,
