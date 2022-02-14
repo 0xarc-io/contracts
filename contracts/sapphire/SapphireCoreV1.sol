@@ -43,7 +43,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
     event LimitsUpdated(
         uint256 _vaultBorrowMinimum,
-        uint256 _vaultBorrowMaximum
+        uint256 _vaultBorrowMaximum,
+        uint256 _defaultBorrowLimit
     );
 
     event IndexUpdated(
@@ -86,6 +87,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     );
 
     event BorrowPoolUpdated(address _borrowPool);
+
+    event DefaultBorrowLimitSet(uint256 _defaultBorrowLimit);
 
     /* ========== Admin Setters ========== */
 
@@ -262,7 +265,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      */
     function setLimits(
         uint256 _vaultBorrowMinimum,
-        uint256 _vaultBorrowMaximum
+        uint256 _vaultBorrowMaximum,
+        uint256 _defaultBorrowLimit
     )
         public
         onlyAdmin
@@ -274,14 +278,16 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
         require(
             (_vaultBorrowMinimum != vaultBorrowMinimum) ||
-            (_vaultBorrowMaximum != vaultBorrowMaximum),
+            (_vaultBorrowMaximum != vaultBorrowMaximum) ||
+            (_defaultBorrowLimit != defaultBorrowLimit),
             "SapphireCoreV1: the same limits are already set"
         );
 
         vaultBorrowMinimum = _vaultBorrowMinimum;
         vaultBorrowMaximum = _vaultBorrowMaximum;
+        defaultBorrowLimit = _defaultBorrowLimit;
 
-        emit LimitsUpdated(vaultBorrowMinimum, vaultBorrowMaximum);
+        emit LimitsUpdated(vaultBorrowMinimum, vaultBorrowMaximum, _defaultBorrowLimit);
     }
 
     /**
@@ -933,7 +939,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         private
     {
         require(
-            _borrowLimitProof.account == msg.sender,
+            _borrowLimitProof.account == msg.sender ||
+            _borrowLimitProof.account == address(0),
             "SapphireCoreV1: proof.account must match msg.sender"
         );
 
@@ -968,10 +975,12 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         // Calculate new actual vault borrow amount
         uint256 _newActualVaultBorrowAmount = actualVaultBorrowAmount + _amount;
 
-        require(
-            assessor.assessBorrowLimit(_newActualVaultBorrowAmount, _borrowLimitProof),
-            "SapphireCoreV1: total borrow amount should not exceed borrow limit"
-        );
+        if (_newActualVaultBorrowAmount > defaultBorrowLimit) {
+            require(
+                assessor.assessBorrowLimit(_newActualVaultBorrowAmount, _borrowLimitProof),
+                "SapphireCoreV1: total borrow amount should not exceed borrow limit"
+            );
+        }
 
         // Calculate new normalized vault borrow amount
         uint256 _newNormalizedVaultBorrowAmount = _normalizeBorrowAmount(_newActualVaultBorrowAmount, true);

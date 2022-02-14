@@ -150,7 +150,6 @@ xdescribe('SapphireCore.liquidate()', () => {
       limits: {
         lowCollateralRatio: LOW_C_RATIO,
         highCollateralRatio: HIGH_C_RATIO,
-        poolDepositBorrowLimit: BORROW_AMOUNT.mul(2),
       },
       merkleRoot: creditScoreTree.getHexRoot(),
       price: COLLATERAL_PRICE, // $1

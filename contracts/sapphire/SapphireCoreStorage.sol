@@ -136,6 +136,12 @@ contract SapphireCoreStorageV1 {
      */
     uint256 public vaultBorrowMaximum;
 
+    /**
+     * @notice The default borrow limit to be used if a borrow limit proof is not passed
+     * in the borrow action. If it is set to 0, then a borrow limit proof is required.
+     */
+    uint256 public defaultBorrowLimit;
+
     /* ========== Internal Variables ========== */
 
     /**

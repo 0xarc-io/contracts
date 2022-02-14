@@ -19,8 +19,10 @@ import {
   DEFAULT_LOW_C_RATIO,
   DEFAULT_PRICE,
   DEFAULT_PROOF_PROTOCOL,
+  DEFAULT_VAULT_BORROW_MAXIMUM,
+  DEFAULT_VAULT_BORROW_MIN,
 } from '@test/helpers/sapphireDefaults';
-import { getScoreProof } from '@src/utils/getScoreProof';
+import { getScoreProof, getEmptyScoreProof } from '@src/utils/getScoreProof';
 import { roundUpDiv, roundUpMul } from '@test/helpers/roundUpOperations';
 import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
 import { PassportScoreTree } from '@src/MerkleTree';
@@ -153,8 +155,8 @@ describe('SapphireCore.borrow()', () => {
     stablecoin = ctx.contracts.stablecoin;
 
     // mint and approve token
-    await mintAndApproveCollateral(minter, COLLATERAL_AMOUNT.mul(2));
-    await mintAndApproveCollateral(scoredMinter, COLLATERAL_AMOUNT);
+    await mintAndApproveCollateral(minter, COLLATERAL_AMOUNT.mul(3));
+    await mintAndApproveCollateral(scoredMinter, COLLATERAL_AMOUNT.mul(3));
 
     await arc.deposit(
       COLLATERAL_AMOUNT,
@@ -301,20 +303,100 @@ describe('SapphireCore.borrow()', () => {
     );
   });
 
-  it(
-    'does not revert if borrowing <= the default borrow limit, if limit proof is passed and it is smaller than the default default limit',
-  );
+  it('does not revert if borrowing <= the default borrow limit, if limit proof is passed and it is smaller than the default default limit', async () => {
+    await arc
+      .core()
+      .setLimits(
+        DEFAULT_VAULT_BORROW_MIN,
+        DEFAULT_VAULT_BORROW_MAXIMUM,
+        BORROW_AMOUNT.mul(3),
+      );
+    expect(await arc.core().defaultBorrowLimit()).to.eq(BORROW_AMOUNT.mul(3));
+    expect(borrowLimitProof.score).lt(BORROW_AMOUNT.mul(3));
 
-  it(
-    'reverts if borrowing more than the default borrow limit, if limit proof is not passed',
-  );
+    await arc.deposit(
+      COLLATERAL_AMOUNT.mul(2),
+      creditScoreProof,
+      undefined,
+      scoredMinter,
+    );
 
-  it(
-    'reverts if borrow limit proof is not passed and default borrow limit is 0',
-  );
+    await arc.borrow(
+      BORROW_AMOUNT.mul(3),
+      stablecoin.address,
+      undefined,
+      borrowLimitProof,
+      undefined,
+      scoredMinter,
+    );
 
-  xit('reverts if borrowing more than the swap limit', async () => {
-    await arc.pool().setDepositLimit(stablecoin.address, BORROW_AMOUNT.mul(2));
+    expect(await stablecoin.balanceOf(scoredMinter.address)).to.eq(
+      BORROW_AMOUNT.mul(3),
+    );
+  });
+
+  it('reverts if borrowing more than the default borrow limit, if limit proof is not passed', async () => {
+    await arc
+      .core()
+      .setLimits(
+        DEFAULT_VAULT_BORROW_MIN,
+        DEFAULT_VAULT_BORROW_MAXIMUM,
+        BORROW_AMOUNT,
+      );
+
+    await arc.deposit(COLLATERAL_AMOUNT, undefined, undefined, scoredMinter);
+
+    await arc.borrow(
+      BORROW_AMOUNT,
+      stablecoin.address,
+      undefined,
+      undefined,
+      undefined,
+      scoredMinter,
+    );
+
+    await expect(
+      arc.borrow(
+        utils.parseEther('0.01'),
+        stablecoin.address,
+        undefined,
+        undefined,
+        undefined,
+        scoredMinter,
+      ),
+    ).to.be.revertedWith('SapphirePassportScores: account cannot be address 0');
+  });
+
+  it('reverts if borrow limit proof is not passed and default borrow limit is 0', async () => {
+    expect(await arc.core().defaultBorrowLimit()).to.eq(0);
+
+    await expect(
+      arc.borrow(
+        BORROW_AMOUNT,
+        stablecoin.address,
+        undefined,
+        undefined,
+        undefined,
+        scoredMinter,
+      ),
+    ).to.be.revertedWith('SapphirePassportScores: account cannot be address 0');
+
+    await expect(
+      arc.borrow(
+        BORROW_AMOUNT,
+        stablecoin.address,
+        undefined,
+        getEmptyScoreProof(
+          scoredMinter.address,
+          utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
+        ),
+        undefined,
+        scoredMinter,
+      ),
+    ).to.be.revertedWith('SapphirePassportScores: invalid proof');
+  });
+
+  it('reverts if borrowing more than the swap limit', async () => {
     await arc.pool().setCoreSwapLimit(arc.core().address, BORROW_AMOUNT.sub(1));
 
     await expect(
@@ -349,19 +431,6 @@ describe('SapphireCore.borrow()', () => {
         scoredMinter,
       ),
     ).to.be.revertedWith('SapphirePool: unknown token');
-  });
-
-  it('reverts if borrow limit proof is not provided', async () => {
-    await expect(
-      arc.borrow(
-        BigNumber.from(1),
-        stablecoin.address,
-        undefined,
-        undefined,
-        undefined,
-        scoredMinter,
-      ),
-    ).to.be.revertedWith('SapphireCoreV1: proof.account must match msg.sender');
   });
 
   it('reverts if borrow limit proof account is not msg.sender', async () => {
@@ -493,7 +562,7 @@ describe('SapphireCore.borrow()', () => {
     );
   });
 
-  it('reverts if not supported asset address', async () => {
+  it('reverts if borrowing unsupported asset', async () => {
     await expect(
       arc.borrow(
         BORROW_AMOUNT,
@@ -899,7 +968,7 @@ describe('SapphireCore.borrow()', () => {
 
   it('should not borrow less than the minimum borrow limit', async () => {
     const vaultBorrowMaximum = await arc.core().vaultBorrowMaximum();
-    await arc.core().setLimits(BORROW_AMOUNT, vaultBorrowMaximum);
+    await arc.core().setLimits(BORROW_AMOUNT, vaultBorrowMaximum, 0);
     await expect(
       arc.borrow(
         BORROW_AMOUNT.sub(10),
@@ -917,7 +986,7 @@ describe('SapphireCore.borrow()', () => {
   it('should not borrow more than the maximum amount', async () => {
     const vaultBorrowMinimum = await arc.core().vaultBorrowMinimum();
     // Only update the vault borrow maximum
-    await arc.core().setLimits(vaultBorrowMinimum, BORROW_AMOUNT);
+    await arc.core().setLimits(vaultBorrowMinimum, BORROW_AMOUNT, 0);
 
     await arc.borrow(
       BORROW_AMOUNT.div(2),

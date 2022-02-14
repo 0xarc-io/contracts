@@ -184,7 +184,9 @@ describe('SapphireCore.open()', () => {
     });
 
     it('revert if opened below the minimum position amount', async () => {
-      await arc.core().setLimits(BORROW_AMOUNT.add(10), BORROW_AMOUNT.add(100));
+      await arc
+        .core()
+        .setLimits(BORROW_AMOUNT.add(10), BORROW_AMOUNT.add(100), 0);
 
       await expect(
         arc.open(
@@ -202,7 +204,9 @@ describe('SapphireCore.open()', () => {
     });
 
     it('revert if opened above the maximum borrowed amount', async () => {
-      await arc.core().setLimits(BORROW_AMOUNT.sub(100), BORROW_AMOUNT.sub(1));
+      await arc
+        .core()
+        .setLimits(BORROW_AMOUNT.sub(100), BORROW_AMOUNT.sub(1), 0);
       await expect(
         arc.open(
           COLLATERAL_AMOUNT,
@@ -343,7 +347,9 @@ describe('SapphireCore.open()', () => {
     });
 
     it('revert if opened below the minimum position amount', async () => {
-      await arc.core().setLimits(BORROW_AMOUNT.add(10), BORROW_AMOUNT.add(100));
+      await arc
+        .core()
+        .setLimits(BORROW_AMOUNT.add(10), BORROW_AMOUNT.add(100), 0);
       await expect(
         arc.open(
           COLLATERAL_AMOUNT,
@@ -360,7 +366,9 @@ describe('SapphireCore.open()', () => {
     });
 
     it('revert if opened above the maximum borrowed amount', async () => {
-      await arc.core().setLimits(BORROW_AMOUNT.sub(100), BORROW_AMOUNT.sub(1));
+      await arc
+        .core()
+        .setLimits(BORROW_AMOUNT.sub(100), BORROW_AMOUNT.sub(1), 0);
       await expect(
         arc.open(
           COLLATERAL_AMOUNT,

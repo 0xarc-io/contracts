@@ -1,4 +1,4 @@
-import { BigNumber, BigNumberish, utils } from 'ethers';
+import { BigNumberish, utils } from 'ethers';
 import { ITestContext } from './context';
 import { immediatelyUpdateMerkleRoot } from '../helpers/testingUtils';
 import _ from 'lodash';
@@ -15,9 +15,9 @@ export interface SapphireSetupOptions {
   limits?: {
     lowCollateralRatio?: BigNumberish;
     highCollateralRatio?: BigNumberish;
-    vaultBorrowMinimum?: BigNumber;
-    vaultBorrowMaximum?: BigNumber;
-    poolDepositBorrowLimit?: BigNumber;
+    vaultBorrowMinimum?: BigNumberish;
+    vaultBorrowMaximum?: BigNumberish;
+    defaultBorrowLimit?: BigNumberish;
   };
   fees?: {
     liquidationUserFee?: BigNumberish;
@@ -25,7 +25,7 @@ export interface SapphireSetupOptions {
   };
   interestRate?: BigNumberish;
   price?: BigNumberish;
-  poolDepositSwapAmount?: BigNumber;
+  poolDepositSwapAmount?: BigNumberish;
 }
 
 /**
@@ -57,6 +57,7 @@ export async function setupSapphire(
   await core.setLimits(
     limits?.vaultBorrowMinimum || DEFAULT_VAULT_BORROW_MIN,
     limits?.vaultBorrowMaximum || DEFAULT_VAULT_BORROW_MAXIMUM,
+    limits?.defaultBorrowLimit || 0,
   );
 
   if (!_.isEmpty(fees)) {
