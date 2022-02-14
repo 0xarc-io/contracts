@@ -3,7 +3,6 @@
 pragma solidity 0.8.4;
 
 import {BaseERC20} from "../token/BaseERC20.sol";
-import {IERC20} from "../token/IERC20.sol";
 import {IERC20Metadata} from "../token/IERC20Metadata.sol";
 import {SafeERC20} from "../lib/SafeERC20.sol";
 import {Math} from "../lib/Math.sol";
@@ -629,7 +628,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         // Update the index to calculate how much interest has accrued
         updateIndex();
 
-        uint256 credsBalance = IERC20(syntheticAsset).balanceOf(address(this));
+        uint256 credsBalance = IERC20Metadata(syntheticAsset).balanceOf(address(this));
 
         // Get the c-ratio and current price if necessary. The current price only be >0 if
         // it's required by an action
@@ -659,7 +658,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
             // The creds balance shouldn't have changed between the actions 
             require(
-                credsBalance == IERC20(syntheticAsset).balanceOf(address(this)),
+                credsBalance == IERC20Metadata(syntheticAsset).balanceOf(address(this)),
                 "SapphireCoreV1: the creds balance changed (forbidden)"
             );
         }
@@ -862,7 +861,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         totalCollateral = totalCollateral + _amount;
 
         // Execute transfer
-        IERC20 collateralAsset = IERC20(collateralAsset);
+        IERC20Metadata collateralAsset = IERC20Metadata(collateralAsset);
         SafeERC20.safeTransferFrom(
             collateralAsset,
             msg.sender,
@@ -911,16 +910,16 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         totalCollateral = totalCollateral - _amount;
 
         // Execute transfer
-        IERC20 collateralAsset = IERC20(collateralAsset);
+        IERC20Metadata collateralAsset = IERC20Metadata(collateralAsset);
         SafeERC20.safeTransfer(collateralAsset, msg.sender, _amount);
     }
 
     /**
-     * @dev Borrows synthetic against the user's vault. It ensures the vault
+     * @dev Borrows the given borrow assets against the user's vault. It ensures the vault
      *      still maintains the required collateral ratio
      *
-     * @param _amount               The amount of synthetic to borrow, in 18 decimals
-     * @param _borrowAssetAddress The address of token to borrow
+     * @param _amount               The amount of stablecoins to borrow, in 18 decimals
+     * @param _borrowAssetAddress   The address of the stablecoin token to borrow
      * @param _assessedCRatio       The assessed c-ratio for user's credit score
      * @param _collateralPrice      The current collateral price
      */
@@ -994,9 +993,29 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             "SapphireCoreV1: borrowed amount cannot be less than limit"
         );
 
-        // Mint tokens
+        // Mint creds tokens to core
         ISyntheticTokenV2(syntheticAsset).mint(
-            msg.sender,
+            address(this),
+            _amount
+        );
+
+        SafeERC20.safeApprove(
+            IERC20Metadata(syntheticAsset), 
+            borrowPool, 
+            _amount
+        );
+
+        // Swap creds for stablecoins
+        ISapphirePool(borrowPool).swap(
+            syntheticAsset,
+            _borrowAssetAddress,
+            _amount
+        );
+
+        // Transfer the borrowed stablecoins to the caller
+        SafeERC20.safeTransfer(
+            IERC20Metadata(_borrowAssetAddress), 
+            msg.sender, 
             _amount
         );
     }
@@ -1153,7 +1172,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         );
 
         // Transfer user collateral
-        IERC20 collateralAsset = IERC20(collateralAsset);
+        IERC20Metadata collateralAsset = IERC20Metadata(collateralAsset);
         SafeERC20.safeTransfer(
             collateralAsset,
             msg.sender,

@@ -81,6 +81,7 @@ describe('SapphireCore.open()', () => {
     ]);
     await setupSapphire(ctx, {
       merkleRoot: creditScoreTree.getHexRoot(),
+      poolDepositSwapAmount: BORROW_AMOUNT.mul(3),
     });
 
     await mintApprovedCollateral(
@@ -96,7 +97,9 @@ describe('SapphireCore.open()', () => {
   }
 
   before(async () => {
-    ctx = await generateContext(sapphireFixture, init);
+    ctx = await generateContext(sapphireFixture, init, {
+      stablecoinDecimals: 18,
+    });
     arc = ctx.sdks.sapphire;
     stableCoin = ctx.contracts.stablecoin;
   });

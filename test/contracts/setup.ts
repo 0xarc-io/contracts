@@ -5,7 +5,6 @@ import _ from 'lodash';
 import {
   DEFAULT_HIGH_C_RATIO,
   DEFAULT_LOW_C_RATIO,
-  DEFAULT_TOTAL_BORROW_LIMIT,
   DEFAULT_VAULT_BORROW_MAXIMUM,
   DEFAULT_VAULT_BORROW_MIN,
 } from '@test/helpers/sapphireDefaults';
@@ -26,6 +25,7 @@ export interface SapphireSetupOptions {
   };
   interestRate?: BigNumberish;
   price?: BigNumberish;
+  poolDepositSwapAmount?: BigNumber;
 }
 
 /**
@@ -34,7 +34,14 @@ export interface SapphireSetupOptions {
  */
 export async function setupSapphire(
   ctx: ITestContext,
-  { merkleRoot, limits, fees, price, interestRate }: SapphireSetupOptions,
+  {
+    merkleRoot,
+    limits,
+    fees,
+    price,
+    interestRate,
+    poolDepositSwapAmount,
+  }: SapphireSetupOptions,
 ) {
   const arc = ctx.sdks.sapphire;
 
@@ -76,12 +83,7 @@ export async function setupSapphire(
     );
   }
 
-  // Set pool borrow limit
-  await ctx.contracts.sapphire.pool.setDepositLimit(
-    ctx.contracts.stablecoin.address,
-    limits?.poolDepositBorrowLimit ??
-      utils.parseUnits('100', await ctx.contracts.stablecoin.decimals()),
-  );
+  await setupPool(ctx, poolDepositSwapAmount ?? utils.parseEther('300'));
 }
 
 async function _setCRatiosIfNeeded(
@@ -102,4 +104,32 @@ async function _setCRatiosIfNeeded(
       newHighCRatio || DEFAULT_HIGH_C_RATIO,
     );
   }
+}
+
+/**
+ * Sets the deposit and swap limit to BORROW_AMOUNT * 3
+ * @param depositBorrowAmount The amount deposited in the pool and the core swap limit
+ */
+async function setupPool(ctx: ITestContext, depositBorrowAmount: BigNumberish) {
+  await ctx.contracts.sapphire.pool.setDepositLimit(
+    ctx.contracts.stablecoin.address,
+    depositBorrowAmount,
+  );
+  await ctx.contracts.sapphire.pool.setCoreSwapLimit(
+    ctx.contracts.sapphire.core.address,
+    depositBorrowAmount,
+  );
+
+  await ctx.contracts.stablecoin.mintShare(
+    ctx.signers.admin.address,
+    depositBorrowAmount,
+  );
+  await ctx.contracts.stablecoin.approve(
+    ctx.contracts.sapphire.pool.address,
+    depositBorrowAmount,
+  );
+  await ctx.contracts.sapphire.pool.deposit(
+    ctx.contracts.stablecoin.address,
+    depositBorrowAmount,
+  );
 }

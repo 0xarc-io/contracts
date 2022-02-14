@@ -83,19 +83,17 @@ describe('SapphireCore.withdraw()', () => {
 
     await setupSapphire(ctx, {
       merkleRoot: creditScoreTree.getHexRoot(),
+      poolDepositSwapAmount: BORROW_AMOUNT.mul(3),
     });
   }
 
   before(async () => {
-    ctx = await generateContext(sapphireFixture, init);
+    ctx = await generateContext(sapphireFixture, init, {
+      stablecoinDecimals: 18,
+    });
     signers = ctx.signers;
     arc = ctx.sdks.sapphire;
     assessor = ctx.contracts.sapphire.assessor;
-
-    await ctx.contracts.sapphire.pool.setDepositLimit(
-      ctx.contracts.stablecoin.address,
-      BORROW_AMOUNT.mul(2),
-    );
   });
 
   addSnapshotBeforeRestoreAfterEach();

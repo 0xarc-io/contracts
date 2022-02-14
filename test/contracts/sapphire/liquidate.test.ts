@@ -137,7 +137,9 @@ xdescribe('SapphireCore.liquidate()', () => {
   }
 
   before(async () => {
-    const ctx = await generateContext(sapphireFixture, init);
+    const ctx = await generateContext(sapphireFixture, init, {
+      stablecoinDecimals: 18,
+    });
     signers = ctx.signers;
     arc = ctx.sdks.sapphire;
     creditScoreContract = ctx.contracts.sapphire.passportScores;
@@ -156,6 +158,7 @@ xdescribe('SapphireCore.liquidate()', () => {
         liquidationUserFee: utils.parseEther('0.1'), // 5% price discount
         liquidationArcFee: utils.parseEther('0.1'), // 10% arc tax on profit
       },
+      poolDepositSwapAmount: BORROW_AMOUNT.mul(3),
     });
 
     // Mints enough STABLEx to the liquidator
@@ -196,6 +199,7 @@ xdescribe('SapphireCore.liquidate()', () => {
        */
 
       // Sets up a basic vault
+      console.log('a');
       await setupBaseVault();
 
       expect(
@@ -225,6 +229,7 @@ xdescribe('SapphireCore.liquidate()', () => {
       } = await getBalancesForLiquidation(signers.liquidator);
 
       // Liquidate vault
+      console.log('a1');
       await arc.liquidate(
         signers.scoredMinter.address,
         stableCoin.address,
@@ -232,6 +237,7 @@ xdescribe('SapphireCore.liquidate()', () => {
         undefined,
         signers.liquidator,
       );
+      console.log('a2');
 
       const {
         stablexAmt: postStablexBalance,
