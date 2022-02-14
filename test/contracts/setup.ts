@@ -112,7 +112,7 @@ async function _setCRatiosIfNeeded(
  */
 async function setupPool(ctx: ITestContext, depositBorrowAmount: BigNumberish) {
   await ctx.contracts.sapphire.pool.setDepositLimit(
-    ctx.contracts.stableCoin.address,
+    ctx.contracts.stablecoin.address,
     depositBorrowAmount,
   );
   await ctx.contracts.sapphire.pool.setCoreSwapLimit(
@@ -120,16 +120,16 @@ async function setupPool(ctx: ITestContext, depositBorrowAmount: BigNumberish) {
     depositBorrowAmount,
   );
 
-  await ctx.contracts.stableCoin.mintShare(
+  await ctx.contracts.stablecoin.mintShare(
     ctx.signers.admin.address,
     depositBorrowAmount,
   );
-  await ctx.contracts.stableCoin.approve(
+  await ctx.contracts.stablecoin.approve(
     ctx.contracts.sapphire.pool.address,
     depositBorrowAmount,
   );
   await ctx.contracts.sapphire.pool.deposit(
-    ctx.contracts.stableCoin.address,
+    ctx.contracts.stablecoin.address,
     depositBorrowAmount,
   );
 }
