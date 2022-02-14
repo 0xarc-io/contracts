@@ -33,8 +33,6 @@ chai.use(solidity);
 
 const LOW_C_RATIO = utils.parseEther('1.15');
 const HIGH_C_RATIO = utils.parseEther('1.5');
-const LIQUIDATION_USER_FEE = utils.parseEther('0.1');
-const LIQUIDATION_ARC_FEE = utils.parseEther('0.1');
 
 const COLLATERAL_AMOUNT = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS);
 const COLLATERAL_PRICE = utils.parseEther('1');
@@ -155,7 +153,7 @@ describe('SapphireCore.liquidate()', () => {
       merkleRoot: creditScoreTree.getHexRoot(),
       price: COLLATERAL_PRICE, // $1
       fees: {
-        liquidationUserFee: utils.parseEther('0.05'), // 5% price discount
+        liquidationUserFee: utils.parseEther('0.1'), // 5% price discount
         liquidationArcFee: utils.parseEther('0.1'), // 10% arc tax on profit
       },
     });
