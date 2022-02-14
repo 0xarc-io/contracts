@@ -7,6 +7,10 @@ export const DEFAULT_PRICE = utils.parseEther('10');
 
 export const DEFAULT_COLLATERAL_DECIMALS = BigNumber.from(6);
 export const DEFAULT_STABLE_COIN_DECIMALS = BigNumber.from(8);
+export const DEFAULT_STABLE_COIN_PRECISION_SCALAR = utils.parseUnits(
+    '1',
+    BigNumber.from('18').sub(DEFAULT_STABLE_COIN_DECIMALS),
+  );
 
 export const DEFAULT_TOTAL_BORROW_LIMIT = utils.parseEther('10000');
 
