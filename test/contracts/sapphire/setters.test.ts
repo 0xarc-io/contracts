@@ -388,10 +388,7 @@ describe('SapphireCore.setters', () => {
         testDai.address,
       ]);
 
-      await ctx.contracts.sapphire.pool.setDepositLimit(
-        ctx.contracts.stablecoin.address,
-        0,
-      );
+      await ctx.contracts.sapphire.pool.setDepositLimit(testDai.address, 0);
       expect(await sapphireCore.getSupportedBorrowAssets()).to.deep.eq([
         ctx.contracts.stablecoin.address,
       ]);

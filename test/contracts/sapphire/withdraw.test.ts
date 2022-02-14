@@ -94,11 +94,6 @@ describe('SapphireCore.withdraw()', () => {
     signers = ctx.signers;
     arc = ctx.sdks.sapphire;
     assessor = ctx.contracts.sapphire.assessor;
-
-    await ctx.contracts.sapphire.pool.setDepositLimit(
-      ctx.contracts.stablecoin.address,
-      BORROW_AMOUNT.mul(2),
-    );
   });
 
   addSnapshotBeforeRestoreAfterEach();
