@@ -80,7 +80,10 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         uint256 _amount
     );
 
-    event ProofProtocolSet(string _protocol);
+    event ProofProtocolSet(
+        string _creditProtocol,
+        string _borrowLimitProtocol
+    );
 
     event SupportedBorrowAssetSet(
         address _supportedBorrowedAddress,
@@ -156,8 +159,10 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         interestSetter  = _interestSetter;
         pauseOperator   = _pauseOperator;
         feeCollector    = _feeCollector;
-        _creditScoreProtocol   = "arcx.creditScore";
-        _borrowLimitProtocol   = "arcx.creditLimit";
+        _scoreProtocols = [
+            bytes32("arcx.credit"),
+            bytes32("arcx.creditLimit")
+        ];
         
         savePrecisionScalar(collateralAsset);
 
@@ -439,15 +444,24 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         emit InterestRateUpdated(interestRate);
     }
 
-    function setProofProtocol(
-        bytes32 _protocol
+    function setProofProtocols(
+        bytes32[] memory _protocols
     )
         external
         onlyAdmin
     {
-        _creditScoreProtocol = _protocol;
 
-        emit ProofProtocolSet(_creditScoreProtocol.toString());
+        require(
+            _protocols.length == 2,
+            "SapphireCoreV1: array should contain two protocols"
+        );
+
+        _scoreProtocols = _protocols;
+
+        emit ProofProtocolSet(
+            _protocols[0].toString(),
+            _protocols[1].toString()
+        );
     }
 
     /* ========== Public Functions ========== */
@@ -630,7 +644,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         );
 
         require (
-            _passportProofs[0].protocol == _creditScoreProtocol,
+            _passportProofs[0].protocol == _scoreProtocols[0],
             "SapphireCoreV1: incorrect credit score protocol"
         );
 
@@ -716,12 +730,12 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         return borrowIndex * accumulatedInterest() / BASE + borrowIndex;
     }
 
-    function getProofProtocol()
+    function getProofProtocol(uint8 index)
         external
         view
         returns (string memory)
     {
-        return _creditScoreProtocol.toString();
+        return _scoreProtocols[index].toString();
     }
 
     function getSupportedBorrowAssets()
@@ -948,7 +962,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         );
 
         require(
-            _borrowLimitProof.protocol == _borrowLimitProtocol,
+            _borrowLimitProof.protocol == _scoreProtocols[1],
             "SapphireCoreV1: incorrect borrow limit proof protocol"
         );
 
