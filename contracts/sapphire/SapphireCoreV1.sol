@@ -80,7 +80,10 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         uint256 _amount
     );
 
-    event ProofProtocolSet();
+    event ProofProtocolSet(
+        string _creditProtocol,
+        string _borrowLimitProtocol
+    );
 
     event SupportedBorrowAssetSet(
         address _supportedBorrowedAddress,
@@ -447,9 +450,18 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         external
         onlyAdmin
     {
+
+        require(
+            _protocols.length == 2,
+            "SapphireCoreV1: array should contain two protocols"
+        );
+
         _scoreProtocols = _protocols;
 
-        emit ProofProtocolSet();
+        emit ProofProtocolSet(
+            _protocols[0].toString(),
+            _protocols[1].toString()
+        );
     }
 
     /* ========== Public Functions ========== */
