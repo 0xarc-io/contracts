@@ -429,7 +429,7 @@ describe('borrow index (integration)', () => {
 
     it('open for 1 year and liquidate after this year');
 
-    xit('open for 1 year and repay partially after this year', async () => {
+    it('open for 1 year and repay partially after this year', async () => {
       await setupBaseVault(
         arc,
         minter1,
@@ -448,7 +448,7 @@ describe('borrow index (integration)', () => {
       );
       await approve(
         repayAmount,
-        arc.syntheticAddress(),
+        stablecoin.address,
         arc.coreAddress(),
         minter1,
       );
@@ -498,7 +498,7 @@ describe('borrow index (integration)', () => {
       expect(await arc.core().totalBorrowed()).eq(BORROW_AMOUNT.div(2));
     });
 
-    xit('open for 1 year and repay fully after this year', async () => {
+    it('open for 1 year and repay fully after this year', async () => {
       await setupBaseVault(
         arc,
         minter1,
@@ -519,12 +519,13 @@ describe('borrow index (integration)', () => {
       expect(await getVaultBorrowAmount(minter1)).eq(BORROW_AMOUNT);
 
       // mint accrued interest rate
-      await arc
-        .synthetic()
-        .mint(minter1.address, normalizedBorrowedAmount.sub(BORROW_AMOUNT));
+      await stablecoin.mintShare(
+        minter1.address,
+        normalizedBorrowedAmount.sub(BORROW_AMOUNT),
+      );
       await approve(
         normalizedBorrowedAmount,
-        arc.syntheticAddress(),
+        stablecoin.address,
         arc.coreAddress(),
         minter1,
       );
@@ -549,7 +550,7 @@ describe('borrow index (integration)', () => {
 
   describe('Scenarios', () => {
     // Scenario 1 in the Google SpreadSheet (see link at the top of this file)
-    xit('calculates the interest amount correctly for one user', async () => {
+    it('calculates the interest amount correctly for one user', async () => {
       await arc.core().connect(signers.interestSetter).setInterestRate(0);
 
       await arc.updateTime(1);
@@ -630,7 +631,7 @@ describe('borrow index (integration)', () => {
       const repayAmount = utils.parseEther('600');
       await approve(
         repayAmount,
-        arc.synthetic().address,
+        stablecoin.address,
         arc.coreAddress(),
         signers.scoredMinter,
       );
@@ -674,12 +675,13 @@ describe('borrow index (integration)', () => {
       );
 
       // Owner doesn't have enough money to repay all debt because of interest rate
-      await arc
-        .synthetic()
-        .mint(signers.scoredMinter.address, outstandingRepayAmt);
+      await stablecoin.mintShare(
+        signers.scoredMinter.address,
+        outstandingRepayAmt,
+      );
       await approve(
         outstandingRepayAmt,
-        arc.synthetic().address,
+        stablecoin.address,
         arc.coreAddress(),
         signers.scoredMinter,
       );
@@ -694,7 +696,7 @@ describe('borrow index (integration)', () => {
       expect(await arc.core().totalBorrowed()).to.eq(0);
     });
 
-    xit('calculates the interest amount correctly for two users when a repayment happens in between', async () => {
+    it('calculates the interest amount correctly for two users when a repayment happens in between', async () => {
       await arc.updateTime(1);
 
       // Set interest rate for a 5% APY. Calculated using
@@ -778,7 +780,7 @@ describe('borrow index (integration)', () => {
       // User A repays his initial debt ($500). His vault should contain the accumulated interest
       await approve(
         BORROW_AMOUNT,
-        arc.syntheticAddress(),
+        stablecoin.address,
         arc.coreAddress(),
         signers.scoredMinter,
       );
@@ -828,12 +830,13 @@ describe('borrow index (integration)', () => {
         borrowIndex,
       );
 
-      await arc
-        .synthetic()
-        .mint(signers.minter.address, outstandingBalance.sub(BORROW_AMOUNT));
+      await stablecoin.mintShare(
+        signers.minter.address,
+        outstandingBalance.sub(BORROW_AMOUNT),
+      );
       await approve(
         outstandingBalance,
-        arc.syntheticAddress(),
+        stablecoin.address,
         arc.coreAddress(),
         signers.minter,
       );
@@ -872,9 +875,9 @@ describe('borrow index (integration)', () => {
     });
 
     // TODO develop spreadsheet scenarios for the following cases:
-    xit('2 users borrow, then interest is set to 0');
-    xit('3 users borrow, then halfway the interest rate increases');
-    xit('2 users borrow, then one is liquidated');
-    xit('User repays more than the debt amount');
+    it('2 users borrow, then interest is set to 0');
+    it('3 users borrow, then halfway the interest rate increases');
+    it('2 users borrow, then one is liquidated');
+    it('User repays more than the debt amount');
   });
 });
