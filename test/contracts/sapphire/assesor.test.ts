@@ -434,49 +434,61 @@ describe('SapphireAssessor', () => {
           0,
           getScoreProof(borrowLimitScore1, scoresTree),
         ),
-      ).to.be.revertedWith('SapphireAssessor: The borrow amount cannot be zero');
+      ).to.be.revertedWith(
+        'SapphireAssessor: The borrow amount cannot be zero',
+      );
     });
 
     it(`reverts if the proof is invalid`, async () => {
       await expect(
-        assessor.assessBorrowLimit(
-          borrowLimitScore1.score.sub(1),
-          {
-            ...getScoreProof(borrowLimitScore1, scoresTree),
-            score: borrowLimitScore1.score.sub(1),
-          },
-        ),
+        assessor.assessBorrowLimit(borrowLimitScore1.score.sub(1), {
+          ...getScoreProof(borrowLimitScore1, scoresTree),
+          score: borrowLimitScore1.score.sub(1),
+        }),
       ).to.be.revertedWith('SapphirePassportScores: invalid proof');
     });
 
     it('reverts if score proof is empty', async () => {
       await expect(
-        assessor.assessBorrowLimit(
-          borrowLimitScore1.score.sub(1),
-          {
-            account: user1.address,
-            protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
-            score: borrowLimitScore1.score,
-            merkleProof: [],
-          },
-        ),
+        assessor.assessBorrowLimit(borrowLimitScore1.score.sub(1), {
+          account: user1.address,
+          protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
+          score: borrowLimitScore1.score,
+          merkleProof: [],
+        }),
       ).to.be.revertedWith('SapphirePassportScores: invalid proof');
     });
 
     it('returns false if borrow value is greater then credit limit and has a valid proof', async () => {
-      await expect(assessor.assessBorrowLimit(
-        borrowLimitScore1.score.add(1),
-        getScoreProof(borrowLimitScore1, scoresTree),
-      )).to.emit(assessor, 'CreditLimitAssessed')
-        .withArgs(user1.address, borrowLimitScore1.score.add(1), borrowLimitScore1.score, false);
+      await expect(
+        assessor.assessBorrowLimit(
+          borrowLimitScore1.score.add(1),
+          getScoreProof(borrowLimitScore1, scoresTree),
+        ),
+      )
+        .to.emit(assessor, 'CreditLimitAssessed')
+        .withArgs(
+          user1.address,
+          borrowLimitScore1.score.add(1),
+          borrowLimitScore1.score,
+          false,
+        );
     });
 
     it('return true if borrow value is equal credit limit and has a valid proof', async () => {
-      await expect(assessor.assessBorrowLimit(
-        borrowLimitScore1.score,
-        getScoreProof(borrowLimitScore1, scoresTree),
-      )).to.emit(assessor, 'CreditLimitAssessed')
-        .withArgs(user1.address, borrowLimitScore1.score, borrowLimitScore1.score, true);
+      await expect(
+        assessor.assessBorrowLimit(
+          borrowLimitScore1.score,
+          getScoreProof(borrowLimitScore1, scoresTree),
+        ),
+      )
+        .to.emit(assessor, 'CreditLimitAssessed')
+        .withArgs(
+          user1.address,
+          borrowLimitScore1.score,
+          borrowLimitScore1.score,
+          true,
+        );
     });
   });
 

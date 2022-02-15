@@ -274,6 +274,7 @@ describe('SapphireCore.setters', () => {
     const userFee = utils.parseEther('0.1');
     const arcFee = utils.parseEther('0.05');
     const borrowFee = utils.parseEther('0.1');
+    const poolInterestShare = utils.parseEther('0.4');
 
     it('reverts if called by non-owner', async () => {
       await expect(
@@ -283,17 +284,21 @@ describe('SapphireCore.setters', () => {
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
-    it('sets the liquidation fee, the arc ratio and the borrow fee', async () => {
+    it('sets the liquidation fee, the arc ratio, the borrow fee and the pool share', async () => {
       expect(await sapphireCore.liquidationUserRatio()).eq(0);
       expect(await sapphireCore.liquidationArcRatio()).eq(0);
       expect(await sapphireCore.borrowFee()).eq(0);
+      expect(await sapphireCore.poolInterestShare()).eq(0);
 
-      await expect(sapphireCore.setFees(userFee, arcFee, borrowFee, 0))
-        .to.emit(sapphireCore, 'LiquidationFeesUpdated')
-        .withArgs(userFee, arcFee, borrowFee);
+      await expect(
+        sapphireCore.setFees(userFee, arcFee, borrowFee, poolInterestShare),
+      )
+        .to.emit(sapphireCore, 'FeesUpdated')
+        .withArgs(userFee, arcFee, borrowFee, poolInterestShare);
       expect(await sapphireCore.liquidationUserRatio()).eq(userFee);
       expect(await sapphireCore.liquidationArcRatio()).eq(arcFee);
       expect(await sapphireCore.borrowFee()).eq(borrowFee);
+      expect(await sapphireCore.poolInterestShare()).eq(poolInterestShare);
     });
   });
 

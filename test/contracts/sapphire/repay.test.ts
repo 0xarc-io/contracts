@@ -43,7 +43,7 @@ const PRECISION_SCALAR = BigNumber.from(10).pow(
  * Our front-end will always send the proof but in the case that it can't, users can still repay
  * and withdraw directly.
  */
-xdescribe('SapphireCore.repay()', () => {
+describe('SapphireCore.repay()', () => {
   let arc: SapphireTestArc;
   let pool: SapphirePool;
   let creds: SyntheticTokenV2;
@@ -53,24 +53,6 @@ xdescribe('SapphireCore.repay()', () => {
   let minterCreditScore: PassportScore;
   let minterBorrowLimitScore: PassportScore;
   let creditScoreTree: PassportScoreTree;
-
-  // /**
-  //  * Returns the converted principal, as calculated by the smart contract:
-  //  * `principal * BASE / borrowIndex`
-  //  * @param principal principal amount to convert
-  //  */
-  // async function convertPrincipal(principal: BigNumber) {
-  //   const borrowIndex = await arc.core().borrowIndex();
-  //   return roundUpDiv(principal, borrowIndex);
-  // }
-
-  // /**
-  //  * Returns `amount * borrowIndex`, as calculated by the contract
-  //  */
-  // async function denormalizeBorrowAmount(amount: BigNumber) {
-  //   const borrowIndex = await arc.core().borrowIndex();
-  //   return roundUpMul(amount, borrowIndex);
-  // }
 
   async function repay(
     amount: BigNumber,
@@ -189,7 +171,7 @@ xdescribe('SapphireCore.repay()', () => {
     let vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.normalizedBorrowedAmount).eq(BORROW_AMOUNT);
 
-    await repay(BORROW_AMOUNT.div(2), signers.scoredMinter, stableCoin);
+    await repay(BORROW_AMOUNT.div(2), signers.scoredMinter, stablecoin);
 
     vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.normalizedBorrowedAmount).eq(BORROW_AMOUNT.div(2));
@@ -205,7 +187,7 @@ xdescribe('SapphireCore.repay()', () => {
   it('swaps stables for creds, then burns the creds, (no interest accumulated)', async () => {
     expect(await creds.balanceOf(pool.address)).to.eq(BORROW_AMOUNT);
 
-    await expect(repay(BORROW_AMOUNT.div(2), signers.scoredMinter, stableCoin))
+    await expect(repay(BORROW_AMOUNT.div(2), signers.scoredMinter, stablecoin))
       .to.emit(creds, 'Transfer')
       .withArgs(
         arc.core().address,
@@ -214,7 +196,7 @@ xdescribe('SapphireCore.repay()', () => {
       );
     expect(await creds.balanceOf(pool.address)).to.eq(BORROW_AMOUNT.div(2));
 
-    await expect(repay(BORROW_AMOUNT.div(2), signers.scoredMinter, stableCoin))
+    await expect(repay(BORROW_AMOUNT.div(2), signers.scoredMinter, stablecoin))
       .to.emit(creds, 'Transfer')
       .withArgs(
         arc.core().address,
@@ -230,8 +212,7 @@ xdescribe('SapphireCore.repay()', () => {
 
     expect(await creds.balanceOf(pool.address)).eq(BORROW_AMOUNT);
 
-    await arc.core().setPoolInterestShare(poolShare);
-    await arc.core().setFees(0, 0, borrowFee);
+    await arc.core().setFees(0, 0, borrowFee, poolShare);
     await arc.core().setLimits(0, BORROW_AMOUNT, BORROW_AMOUNT);
     await setupBaseVault(
       arc,
@@ -244,7 +225,7 @@ xdescribe('SapphireCore.repay()', () => {
 
     // There is already one vault open by the scoredMinter
     expect(await creds.balanceOf(pool.address)).eq(BORROW_AMOUNT.mul(2));
-    expect(await stableCoin.balanceOf(await arc.core().feeCollector())).eq(0);
+    expect(await stablecoin.balanceOf(await arc.core().feeCollector())).eq(0);
 
     const interest = roundUpMul(BORROW_AMOUNT, borrowFee);
     let vault = await arc.getVault(signers.staker.address);
@@ -252,7 +233,7 @@ xdescribe('SapphireCore.repay()', () => {
     expect(vault.principal).eq(BORROW_AMOUNT);
 
     // Pay only interest
-    const preRepayStablePoolBalance = await stableCoin.balanceOf(pool.address);
+    const preRepayStablePoolBalance = await stablecoin.balanceOf(pool.address);
     await repay(interest, signers.staker);
 
     vault = await arc.getVault(signers.staker.address);
@@ -264,10 +245,10 @@ xdescribe('SapphireCore.repay()', () => {
     expect(vault.principal).eq(BORROW_AMOUNT);
     // The creds amount didn't change
     expect(await creds.balanceOf(pool.address)).eq(BORROW_AMOUNT.mul(2));
-    expect(await stableCoin.balanceOf(pool.address)).eq(
+    expect(await stablecoin.balanceOf(pool.address)).eq(
       preRepayStablePoolBalance.add(expectedPoolProfit),
     );
-    expect(await stableCoin.balanceOf(await arc.core().feeCollector())).eq(
+    expect(await stablecoin.balanceOf(await arc.core().feeCollector())).eq(
       expectedArcProfit,
     );
   });
@@ -280,8 +261,7 @@ xdescribe('SapphireCore.repay()', () => {
     // there is already one opened vault
     expect(await creds.balanceOf(pool.address)).eq(BORROW_AMOUNT);
 
-    await arc.core().setPoolInterestShare(poolShare);
-    await arc.core().setFees(0, 0, borrowFee);
+    await arc.core().setFees(0, 0, borrowFee, poolShare);
     await arc.core().setLimits(0, BORROW_AMOUNT, BORROW_AMOUNT);
     await setupBaseVault(
       arc,

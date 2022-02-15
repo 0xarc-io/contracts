@@ -23,6 +23,7 @@ export interface SapphireSetupOptions {
     liquidationUserFee?: BigNumberish;
     liquidationArcFee?: BigNumberish;
     borrowFee?: BigNumberish;
+    poolInterestShare?: BigNumberish;
   };
   interestRate?: BigNumberish;
   price?: BigNumberish;
@@ -68,6 +69,7 @@ export async function setupSapphire(
         fees.liquidationUserFee || '0',
         fees.liquidationArcFee || '0',
         fees.borrowFee || '0',
+        fees.poolInterestShare || '0',
       );
   }
 
