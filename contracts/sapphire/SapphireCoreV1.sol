@@ -730,7 +730,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         return borrowIndex * accumulatedInterest() / BASE + borrowIndex;
     }
 
-    function getProofProtocol(uint256 index)
+    function getProofProtocol(uint8 index)
         external
         view
         returns (string memory)
