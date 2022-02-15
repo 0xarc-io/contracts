@@ -47,7 +47,7 @@ const PRECISION_SCALAR = BigNumber.from(10).pow(
  * another user's debt is because they acquire the user's collateral at a discount and can make
  * an insta profit by selling the collateral they got a discount.
  */
-xdescribe('SapphireCore.liquidate()', () => {
+describe('SapphireCore.liquidate()', () => {
   let arc: SapphireTestArc;
 
   let stablecoin: TestToken;
@@ -208,7 +208,6 @@ xdescribe('SapphireCore.liquidate()', () => {
        */
 
       // Sets up a basic vault
-      console.log('a');
       await setupBaseVault();
 
       expect(await stablecoin.balanceOf(signers.liquidator.address)).to.be.gte(
@@ -237,7 +236,6 @@ xdescribe('SapphireCore.liquidate()', () => {
       } = await getBalancesForLiquidation(signers.liquidator);
 
       // Liquidate vault
-      console.log('a1');
       await arc.liquidate(
         signers.scoredMinter.address,
         stablecoin.address,
@@ -245,7 +243,6 @@ xdescribe('SapphireCore.liquidate()', () => {
         undefined,
         signers.liquidator,
       );
-      console.log('a2');
 
       const {
         stablecoinBalance: postStablecoinBalance,
@@ -391,15 +388,30 @@ xdescribe('SapphireCore.liquidate()', () => {
       expect(postLiquidationVault.principal).to.eq(0);
     });
 
-    it.skip('liquidates if interest accumulates (1 day)', async () => {
+    it('liquidates if interest accumulates (1 day)', async () => {
       // Open a vault at the boundary
-
-      // When opening a vault without a credit score, a credit score of 0 is assumed
-      const maxBorrowAmount = COLLATERAL_AMOUNT.mul(BASE).div(HIGH_C_RATIO);
-      await setupBaseVault(COLLATERAL_AMOUNT, maxBorrowAmount);
+      const minterScoreProof = getScoreProof(
+        minterCreditScore,
+        creditScoreTree,
+      );
+      const minterCRatio = await arc
+        .assessor()
+        .assess(LOW_C_RATIO, HIGH_C_RATIO, minterScoreProof, true);
+      const maxBorrowAmount = COLLATERAL_AMOUNT.mul(PRECISION_SCALAR)
+        .mul(BASE)
+        .div(minterCRatio);
+      await setupBaseVault(
+        COLLATERAL_AMOUNT,
+        maxBorrowAmount,
+        undefined,
+        minterScoreProof,
+      );
 
       // Test that a liquidation will occur if the user accumulates enough debt via interest
-      await arc.core().setInterestRate(utils.parseUnits('1', 'gwei'));
+      await arc
+        .core()
+        .connect(signers.interestSetter)
+        .setInterestRate(utils.parseUnits('1', 'gwei'));
 
       await arc.updateTime(60 * 60 * 24);
 
@@ -410,10 +422,20 @@ xdescribe('SapphireCore.liquidate()', () => {
         .collateral()
         .balanceOf(signers.liquidator.address);
 
+      expect(
+        await arc
+          .core()
+          .isCollateralized(
+            signers.scoredMinter.address,
+            COLLATERAL_PRICE,
+            minterCRatio,
+          ),
+      ).to.be.false;
+
       await arc.liquidate(
         signers.scoredMinter.address,
         stablecoin.address,
-        getScoreProof(minterCreditScore, creditScoreTree),
+        minterScoreProof,
         undefined,
         signers.liquidator,
       );
@@ -431,7 +453,7 @@ xdescribe('SapphireCore.liquidate()', () => {
       ).to.be.gt(preCollateralBalance);
     });
 
-    it.skip('liquidates if interest accumulates (1 year)', async () => {
+    xit('liquidates if interest accumulates (1 year)', async () => {
       // Open a vault at the boundary
 
       // When opening a vault without a credit score, a credit score of 0 is assumed

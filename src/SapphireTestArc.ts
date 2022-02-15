@@ -52,6 +52,10 @@ export class SapphireTestArc extends SapphireArc {
     return this.coreContracts().collateral;
   }
 
+  assessor() {
+    return this.coreContracts().assessor;
+  }
+
   coreAddress() {
     return this.coreContracts().core.address;
   }

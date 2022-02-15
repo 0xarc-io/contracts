@@ -20,6 +20,7 @@ import {
 } from 'ethers';
 import {
   BaseERC20Factory,
+  SapphireAssessorFactory,
   SapphireCoreV1,
   SapphireCoreV1Factory,
   SapphirePoolFactory,
@@ -55,6 +56,10 @@ export class SapphireArc {
           this.signer,
         ),
         pool: SapphirePoolFactory.connect(await core.borrowPool(), this.signer),
+        assessor: SapphireAssessorFactory.connect(
+          await core.assessor(),
+          this.signer,
+        ),
       };
     }
   }
