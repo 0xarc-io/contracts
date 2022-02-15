@@ -99,7 +99,8 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         address indexed _tokenIn,
         address indexed _tokenOut,
         uint256 _amountIn,
-        uint256 _amountOut
+        uint256 _amountOut,
+        address _receiver
     );
 
     /* ========== Modifiers ========== */
@@ -235,7 +236,8 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     function swap(
         address _tokenIn,
         address _tokenOut,
-        uint256 _amountIn
+        uint256 _amountIn,
+        address _receiver
     )
         external
         override
@@ -258,12 +260,14 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         if (_tokenIn == address(credsToken)) {
             amountOut = _swapCredsForStables(
                 _tokenOut,
-                _amountIn
+                _amountIn,
+                _receiver
             );
         } else {
             amountOut = _swapStablesForCreds(
                 _tokenIn,
-                _amountIn
+                _amountIn,
+                _receiver
             );
         }
 
@@ -272,7 +276,8 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
             _tokenIn,
             _tokenOut,
             _amountIn,
-            amountOut
+            amountOut,
+            _receiver
         );
     }
 
@@ -488,7 +493,8 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
 
     function _swapCredsForStables(
         address _tokenOut,
-        uint256 _credsAmount
+        uint256 _credsAmount,
+        address _receiver
     )
         private
         checkKnownToken(_tokenOut)
@@ -519,7 +525,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
 
         SafeERC20.safeTransfer(
             IERC20Metadata(_tokenOut),
-            msg.sender,
+            _receiver,
             expectedOutAmount
         );
 
@@ -528,7 +534,8 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
 
     function _swapStablesForCreds(
         address _tokenIn,
-        uint256 _stablesAmount
+        uint256 _stablesAmount,
+        address _receiver
     )
         private
         checkKnownToken(_tokenIn)
@@ -558,7 +565,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
 
         SafeERC20.safeTransfer(
             IERC20Metadata(credsToken),
-            msg.sender,
+            _receiver,
             credsOutAmount
         );
 
