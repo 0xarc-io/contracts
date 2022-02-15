@@ -18,6 +18,8 @@ import {SapphireAssessor} from "./SapphireAssessor.sol";
 import {ISapphireAssessor} from "./ISapphireAssessor.sol";
 import {ISapphirePool} from "./SapphirePool/ISapphirePool.sol";
 
+import "hardhat/console.sol";
+
 contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
     /* ========== Libraries ========== */
@@ -777,7 +779,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         }
 
         uint256 currentCRatio = calculateCollateralRatio(
-            vault.normalizedBorrowedAmount,
+            _denormalizeBorrowAmount(vault.normalizedBorrowedAmount, true),
             vault.collateralAmount,
             _currentPrice
         );
@@ -805,13 +807,13 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      * @dev Calculate how much collateralRatio you would have
      *      with a certain borrow and collateral amount
      *
-     * @param _normalizedBorrowedAmount   The borrowed amount expressed as a uint256 (NOT principal)
+     * @param _denormalizedBorrowAmount The denormalized borrow amount (NOT principal)
      * @param _collateralAmount The amount of collateral, in its original decimals
-     * @param _collateralPrice  What price do you want to calculate the inverse at
+     * @param _collateralPrice What price do you want to calculate the inverse at
      * @return                  The calculated c-ratio
      */
     function calculateCollateralRatio(
-        uint256 _normalizedBorrowedAmount,
+        uint256 _denormalizedBorrowAmount,
         uint256 _collateralAmount,
         uint256 _collateralPrice
     )
@@ -822,7 +824,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         return _collateralAmount *
              precisionScalars[collateralAsset] *
             _collateralPrice /
-            _normalizedBorrowedAmount;
+            _denormalizedBorrowAmount;
     }
 
     /* ========== Private Functions ========== */
@@ -980,11 +982,11 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         // Get the user's vault
         SapphireTypes.Vault storage vault = vaults[msg.sender];
 
-        uint256 denormalizedBorrowAmount = _denormalizeBorrowAmount(vault.normalizedBorrowedAmount, true);
+        uint256 actualVaultBorrowAmount = _denormalizeBorrowAmount(vault.normalizedBorrowedAmount, true);
 
         // Ensure the vault is collateralized if the borrow action succeeds
         uint256 collateralRatio = calculateCollateralRatio(
-            denormalizedBorrowAmount + _amount,
+            actualVaultBorrowAmount + _amount,
             vault.collateralAmount,
             _collateralPrice
         );
@@ -993,9 +995,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             collateralRatio >= _assessedCRatio,
             "SapphireCoreV1: the vault will become undercollateralized"
         );
-
-        // Calculate actual vault borrow amount
-        uint256 actualVaultBorrowAmount = denormalizedBorrowAmount;
 
         // Calculate new actual vault borrow amount with the added borrow fee
         uint256 _newActualVaultBorrowAmount = actualVaultBorrowAmount + _amount;
