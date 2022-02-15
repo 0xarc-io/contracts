@@ -1035,14 +1035,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         ISapphirePool(borrowPool).swap(
             syntheticAsset,
             _borrowAssetAddress,
-            _amount
-        );
-
-        // Transfer the borrowed stablecoins to the caller
-        SafeERC20.safeTransfer(
-            IERC20Metadata(_borrowAssetAddress), 
-            msg.sender, 
-            _amount
+            _amount,
+            msg.sender
         );
     }
 

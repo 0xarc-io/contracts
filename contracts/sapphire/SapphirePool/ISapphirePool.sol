@@ -12,7 +12,8 @@ interface ISapphirePool {
     function swap(
         address _tokenIn, 
         address _tokenOut, 
-        uint256 _amountIn
+        uint256 _amountIn,
+        address _receiver
     ) external;
 
     function deposit(address _token, uint256 _amount) external;
