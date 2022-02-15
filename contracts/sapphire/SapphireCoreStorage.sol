@@ -150,14 +150,11 @@ contract SapphireCoreStorageV1 {
     /* ========== Internal Variables ========== */
 
     /**
-     * @dev The protocol value to be used in the score proofs
+     * @dev The array with protocols' values
+     *      Index 0 - The protocol value to be used in the score proofs
+     *      Index 1 - The protocol value to be used in the borrow limit proofs
      */
-    bytes32 internal _creditScoreProtocol;
-
-    /**
-     * @dev The protocol value to be used in the borrow limit proofs
-     */
-    bytes32 internal _borrowLimitProtocol;
+    bytes32[] internal _scoreProtocols;
 }
 
 // solhint-disable-next-line no-empty-blocks

@@ -288,9 +288,7 @@ describe('SapphireCore.setters', () => {
       expect(await sapphireCore.liquidationArcRatio()).eq(0);
       expect(await sapphireCore.borrowFee()).eq(0);
 
-      await expect(
-        sapphireCore.setFees(userFee, arcFee, borrowFee),
-      )
+      await expect(sapphireCore.setFees(userFee, arcFee, borrowFee))
         .to.emit(sapphireCore, 'LiquidationFeesUpdated')
         .withArgs(userFee, arcFee, borrowFee);
       expect(await sapphireCore.liquidationUserRatio()).eq(userFee);
@@ -348,21 +346,21 @@ describe('SapphireCore.setters', () => {
       await expect(
         sapphireCore
           .connect(ctx.signers.unauthorized)
-          .setProofProtocol(utils.formatBytes32String('test')),
+          .setProofProtocols([utils.formatBytes32String('test')]),
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
     it('sets the proof protocol', async () => {
-      expect(await sapphireCore.getProofProtocol()).to.eq(
+      expect(await sapphireCore.getProofProtocol(0)).to.eq(
         DEFAULT_PROOF_PROTOCOL,
       );
       expect(await sapphireCore.getAdmin()).to.eq(ctx.signers.admin.address);
 
       await sapphireCore
         .connect(ctx.signers.admin)
-        .setProofProtocol(utils.formatBytes32String('test'));
+        .setProofProtocols([utils.formatBytes32String('test')]);
 
-      expect(await sapphireCore.getProofProtocol()).to.eq('test');
+      expect(await sapphireCore.getProofProtocol(0)).to.eq('test');
     });
   });
 
