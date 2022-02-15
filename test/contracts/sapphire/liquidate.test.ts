@@ -453,15 +453,30 @@ describe('SapphireCore.liquidate()', () => {
       ).to.be.gt(preCollateralBalance);
     });
 
-    xit('liquidates if interest accumulates (1 year)', async () => {
+    it('liquidates if interest accumulates (1 year)', async () => {
       // Open a vault at the boundary
-
-      // When opening a vault without a credit score, a credit score of 0 is assumed
-      const maxBorrowAmount = COLLATERAL_AMOUNT.mul(BASE).div(HIGH_C_RATIO);
-      await setupBaseVault(COLLATERAL_AMOUNT, maxBorrowAmount);
+      const minterScoreProof = getScoreProof(
+        minterCreditScore,
+        creditScoreTree,
+      );
+      const minterCRatio = await arc
+        .assessor()
+        .assess(LOW_C_RATIO, HIGH_C_RATIO, minterScoreProof, true);
+      const maxBorrowAmount = COLLATERAL_AMOUNT.mul(PRECISION_SCALAR)
+        .mul(BASE)
+        .div(minterCRatio);
+      await setupBaseVault(
+        COLLATERAL_AMOUNT,
+        maxBorrowAmount,
+        undefined,
+        minterScoreProof,
+      );
 
       // Test that a liquidation will occur if the user accumulates enough debt via interest
-      await arc.core().setInterestRate('1000000');
+      await arc
+        .core()
+        .connect(signers.interestSetter)
+        .setInterestRate('1000000');
 
       await arc.updateTime(ONE_YEAR_IN_SECONDS);
 
