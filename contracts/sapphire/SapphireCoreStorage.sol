@@ -151,7 +151,7 @@ contract SapphireCoreStorageV1 {
 
     /**
      * @dev The array with protocols' values
-     *      Index 0 - The protocol value to be used in the score proofs
+     *      Index 0 - The protocol value to be used in the credit score proofs
      *      Index 1 - The protocol value to be used in the borrow limit proofs
      */
     bytes32[] internal _scoreProtocols;
