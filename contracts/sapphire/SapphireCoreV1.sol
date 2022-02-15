@@ -160,7 +160,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         pauseOperator   = _pauseOperator;
         feeCollector    = _feeCollector;
         _scoreProtocols = [
-            bytes32("arcx.creditScore"),
+            bytes32("arcx.credit"),
             bytes32("arcx.creditLimit")
         ];
         
