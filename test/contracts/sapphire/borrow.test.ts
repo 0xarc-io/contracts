@@ -243,6 +243,7 @@ describe('SapphireCore.borrow()', () => {
         stablecoin.address,
         BORROW_AMOUNT,
         BORROW_AMOUNT,
+        scoredMinter.address,
       );
   });
 
