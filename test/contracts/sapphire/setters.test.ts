@@ -346,8 +346,21 @@ describe('SapphireCore.setters', () => {
       await expect(
         sapphireCore
           .connect(ctx.signers.unauthorized)
-          .setProofProtocols([utils.formatBytes32String('test')]),
+          .setProofProtocols([
+            utils.formatBytes32String('test'),
+            utils.formatBytes32String('test2'),
+          ]),
       ).to.be.revertedWith('Adminable: caller is not admin');
+    });
+
+    it('reverts if array of protocol contain not two items', async () => {
+      await expect(
+        sapphireCore
+          .connect(ctx.signers.admin)
+          .setProofProtocols([utils.formatBytes32String('test')]),
+      ).to.be.revertedWith(
+        'SapphireCoreV1: array should contain two protocols',
+      );
     });
 
     it('sets the proof protocol', async () => {
@@ -358,9 +371,13 @@ describe('SapphireCore.setters', () => {
 
       await sapphireCore
         .connect(ctx.signers.admin)
-        .setProofProtocols([utils.formatBytes32String('test')]);
+        .setProofProtocols([
+          utils.formatBytes32String('test'),
+          utils.formatBytes32String('test2'),
+        ]);
 
       expect(await sapphireCore.getProofProtocol(0)).to.eq('test');
+      expect(await sapphireCore.getProofProtocol(1)).to.eq('test2');
     });
   });
 
