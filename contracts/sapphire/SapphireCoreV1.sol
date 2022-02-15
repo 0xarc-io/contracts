@@ -1008,7 +1008,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         uint256 _newNormalizedVaultBorrowAmount;
         if (borrowFee > 0) {
             _newNormalizedVaultBorrowAmount = _normalizeBorrowAmount(
-                _newActualVaultBorrowAmount + Math.roundUpMul(_amount, borrowFee), 
+                _newActualVaultBorrowAmount + Math.roundUpMul(scaledAmount, borrowFee), 
                 true
             );
         } else {

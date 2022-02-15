@@ -89,7 +89,7 @@ describe('SapphireCore.open()', () => {
     ]);
     await setupSapphire(ctx, {
       merkleRoot: creditScoreTree.getHexRoot(),
-      poolDepositSwapAmount: BORROW_AMOUNT.mul(3),
+      poolDepositSwapAmount: SCALED_BORROW_AMOUNT.mul(3),
     });
 
     await mintApprovedCollateral(
@@ -105,9 +105,7 @@ describe('SapphireCore.open()', () => {
   }
 
   before(async () => {
-    ctx = await generateContext(sapphireFixture, init, {
-      stablecoinDecimals: 18,
-    });
+    ctx = await generateContext(sapphireFixture, init);
     arc = ctx.sdks.sapphire;
     stableCoin = ctx.contracts.stablecoin;
   });
@@ -195,8 +193,8 @@ describe('SapphireCore.open()', () => {
       await arc
         .core()
         .setLimits(
-          BORROW_AMOUNT.mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR).add(10),
-          BORROW_AMOUNT.mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR).add(100),
+          SCALED_BORROW_AMOUNT.add(10),
+          SCALED_BORROW_AMOUNT.add(100),
           0,
         );
 
@@ -219,8 +217,8 @@ describe('SapphireCore.open()', () => {
       await arc
         .core()
         .setLimits(
-          BORROW_AMOUNT.mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR).sub(100),
-          BORROW_AMOUNT.mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR).sub(1),
+          SCALED_BORROW_AMOUNT.sub(100),
+          SCALED_BORROW_AMOUNT.sub(1),
           0,
         );
       await expect(
@@ -370,8 +368,8 @@ describe('SapphireCore.open()', () => {
       await arc
         .core()
         .setLimits(
-          BORROW_AMOUNT.mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR).add(10),
-          BORROW_AMOUNT.mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR).add(100),
+          SCALED_BORROW_AMOUNT.add(10),
+          SCALED_BORROW_AMOUNT.add(100),
           0,
         );
       await expect(
@@ -390,7 +388,7 @@ describe('SapphireCore.open()', () => {
     });
 
     it('revert if opened above the maximum borrowed amount', async () => {
-      await arc.core().setLimits(BORROW_AMOUNT.sub(100), BORROW_AMOUNT.sub(1), 0);
+      await arc.core().setLimits(SCALED_BORROW_AMOUNT.sub(100), SCALED_BORROW_AMOUNT.sub(1), 0);
       await expect(
         arc.open(
           COLLATERAL_AMOUNT,
