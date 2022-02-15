@@ -27,6 +27,7 @@ import {
 } from '@test/helpers/sapphireDefaults';
 import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
 import { PassportScoreTree } from '@src/MerkleTree';
+import { roundUpMul } from '@test/helpers/roundUpOperations';
 
 chai.use(solidity);
 
@@ -618,9 +619,74 @@ describe('SapphireCore.liquidate()', () => {
       );
     });
 
-    it(
-      'distributes part of the interest paid to the pool, and part to the fee receiver',
-    );
+    it('distributes part of the interest paid to the pool, and part to the fee receiver', async () => {
+      // Opens vault at the limit
+      const minterScoreProof = getScoreProof(
+        minterCreditScore,
+        creditScoreTree,
+      );
+      const minterCRatio = await arc
+        .assessor()
+        .assess(LOW_C_RATIO, HIGH_C_RATIO, minterScoreProof, true);
+      const maxBorrowAmount = COLLATERAL_AMOUNT.mul(PRECISION_SCALAR)
+        .mul(BASE)
+        .div(minterCRatio);
+      await setupBaseVault(
+        COLLATERAL_AMOUNT,
+        maxBorrowAmount,
+        undefined,
+        minterScoreProof,
+      );
+
+      // Set interest rate
+      await arc
+        .core()
+        .connect(signers.interestSetter)
+        .setInterestRate('1000000');
+
+      // Wait 1 year
+      await arc.updateTime(ONE_YEAR_IN_SECONDS);
+      await arc.core().updateIndex();
+
+      // Set pool fee
+      const poolFee = utils.parseEther('0.4');
+      await arc.core().setFees(
+        utils.parseEther('0.05'), // 5% price discount
+        utils.parseEther('0.1'), // 10% arc tax on profit
+        0,
+        poolFee,
+      );
+
+      // Prepare variables for checks
+      const { normalizedBorrowedAmount, principal } = await arc.getVault(
+        signers.scoredMinter.address,
+      );
+      const accumulatedBorrow = roundUpMul(
+        normalizedBorrowedAmount,
+        await arc.core().borrowIndex(),
+      );
+      const interest = accumulatedBorrow.sub(principal);
+      const preLiquidationPoolValue = await arc.pool().getPoolValue();
+      const poolShare = roundUpMul(interest, poolFee);
+      const feeCollectorShare = interest.sub(poolShare);
+
+      // Liquidate
+      await arc.liquidate(
+        signers.scoredMinter.address,
+        stablecoin.address,
+        getScoreProof(minterCreditScore, creditScoreTree),
+        undefined,
+        signers.liquidator,
+      );
+
+      // Make checks
+      expect(await stablecoin.balanceOf(await arc.core().feeCollector())).to.eq(
+        feeCollectorShare,
+      );
+      expect(await arc.pool().getPoolValue()).to.eq(
+        preLiquidationPoolValue.add(poolShare),
+      );
+    });
 
     it('reverts if used unsupported address', async () => {
       // Sets up a basic vault
