@@ -10,7 +10,7 @@ import {Adminable} from "../lib/Adminable.sol";
 import {Address} from "../lib/Address.sol";
 import {Bytes32} from "../lib/Bytes32.sol";
 import {ISapphireOracle} from "../oracle/ISapphireOracle.sol";
-import {ISyntheticTokenV2} from "../token/ISyntheticTokenV2.sol";
+import {CredsERC20} from "./Creds/CredsERC20.sol";
 
 import {SapphireTypes} from "./SapphireTypes.sol";
 import {SapphireCoreStorage} from "./SapphireCoreStorage.sol";
@@ -1048,7 +1048,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         );
 
         // Mint creds tokens to core
-        ISyntheticTokenV2(syntheticAsset).mint(
+        CredsERC20(syntheticAsset).mint(
             address(this),
             scaledAmount
         );
@@ -1179,8 +1179,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             );
 
             // Burn the creds
-            ISyntheticTokenV2(syntheticAsset).destroy(
-                _principalPaidScaled * precisionScalars[_borrowAssetAddress]
+            CredsERC20(syntheticAsset).burn(
+                _principalPaidScaled
             );
         }
     }
