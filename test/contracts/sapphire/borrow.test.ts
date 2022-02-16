@@ -21,8 +21,8 @@ import {
   DEFAULT_PROOF_PROTOCOL,
   DEFAULT_VAULT_BORROW_MAXIMUM,
   DEFAULT_VAULT_BORROW_MIN,
-  DEFAULT_STABLE_COIN_DECIMALS,
   DEFAULT_STABLE_COIN_PRECISION_SCALAR,
+  DEFAULT_STABLECOIN_DECIMALS,
 } from '@test/helpers/sapphireDefaults';
 import { getScoreProof, getEmptyScoreProof } from '@src/utils/getScoreProof';
 import { roundUpDiv, roundUpMul } from '@test/helpers/roundUpOperations';
@@ -39,17 +39,22 @@ import { PassportScoreTree } from '@src/MerkleTree';
  */
 
 const SCALED_COLLATERAL_AMOUNT = utils.parseEther('100');
+
 const COLLATERAL_AMOUNT = utils.parseUnits('100', DEFAULT_COLLATERAL_DECIMALS);
+
 const BORROW_AMOUNT = SCALED_COLLATERAL_AMOUNT.mul(DEFAULT_PRICE)
   .div(DEFAULT_HIGH_C_RATIO)
   .div(DEFAULT_STABLE_COIN_PRECISION_SCALAR);
+
 // for credit score equals 500 what is the a half of max credit score
 const BORROW_AMOUNT_500_SCORE = SCALED_COLLATERAL_AMOUNT.mul(DEFAULT_PRICE)
   .div(DEFAULT_LOW_C_RATIO.add(DEFAULT_HIGH_C_RATIO).div(2))
   .div(DEFAULT_STABLE_COIN_PRECISION_SCALAR);
+
 const SCALED_BORROW_AMOUNT = BORROW_AMOUNT.mul(
   DEFAULT_STABLE_COIN_PRECISION_SCALAR,
 );
+
 const BORROW_LIMIT = SCALED_BORROW_AMOUNT.mul(2);
 
 describe('SapphireCore.borrow()', () => {
@@ -309,7 +314,9 @@ describe('SapphireCore.borrow()', () => {
     );
 
     let vault = await arc.getVault(scoredMinter.address);
-    expect(vault.normalizedBorrowedAmount).eq(borrowAmt.mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR));
+    expect(vault.normalizedBorrowedAmount).eq(
+      borrowAmt.mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR),
+    );
     expect(await stablecoin.balanceOf(scoredMinter.address)).eq(borrowAmt);
 
     const borrowFee = utils.parseEther('0.1');
@@ -326,7 +333,15 @@ describe('SapphireCore.borrow()', () => {
 
     vault = await arc.getVault(scoredMinter.address);
     expect(vault.normalizedBorrowedAmount).eq(
-      borrowAmt.mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR).mul(2).add(roundUpMul(borrowAmt.mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR), borrowFee)),
+      borrowAmt
+        .mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR)
+        .mul(2)
+        .add(
+          roundUpMul(
+            borrowAmt.mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR),
+            borrowFee,
+          ),
+        ),
     );
     expect(await stablecoin.balanceOf(scoredMinter.address)).eq(
       borrowAmt.mul(2),
@@ -334,7 +349,7 @@ describe('SapphireCore.borrow()', () => {
   });
 
   xit(
-    'increases the user principal by the borrowed amount (6 decimal borrow asset)',
+    'increases the user principal by the borrowed amount (18 decimal borrow asset)',
   );
 
   it('borrows with the highest c-ratio if proof is not provided', async () => {
@@ -425,7 +440,7 @@ describe('SapphireCore.borrow()', () => {
 
     await expect(
       arc.borrow(
-        utils.parseUnits('0.01', DEFAULT_STABLE_COIN_DECIMALS),
+        utils.parseUnits('0.01', DEFAULT_STABLECOIN_DECIMALS),
         stablecoin.address,
         undefined,
         undefined,
@@ -547,7 +562,7 @@ describe('SapphireCore.borrow()', () => {
 
     const additionalBorrowAmount = utils.parseUnits(
       '0.01',
-      DEFAULT_STABLE_COIN_DECIMALS,
+      DEFAULT_STABLECOIN_DECIMALS,
     );
 
     await expect(
@@ -745,7 +760,7 @@ describe('SapphireCore.borrow()', () => {
 
     const additionalBorrowAmount = utils.parseUnits(
       '0.01',
-      DEFAULT_STABLE_COIN_DECIMALS,
+      DEFAULT_STABLECOIN_DECIMALS,
     );
 
     // Borrowing BASE rather than BigNumber.from(1), because that number is too small adn won't cause a reversal
@@ -910,7 +925,7 @@ describe('SapphireCore.borrow()', () => {
     expect(normalizedBorrowedAmount).eq(SCALED_BORROW_AMOUNT);
     await expect(
       arc.borrow(
-        utils.parseUnits('0.01', DEFAULT_STABLE_COIN_DECIMALS),
+        utils.parseUnits('0.01', DEFAULT_STABLECOIN_DECIMALS),
         stablecoin.address,
         undefined,
         getScoreProof(minterBorrowLimitScore, creditScoreTree),
@@ -972,7 +987,7 @@ describe('SapphireCore.borrow()', () => {
 
     await expect(
       arc.borrow(
-        utils.parseUnits('1', DEFAULT_STABLE_COIN_DECIMALS),
+        utils.parseUnits('1', DEFAULT_STABLECOIN_DECIMALS),
         stablecoin.address,
         interestSetterScoreProof,
         undefined,

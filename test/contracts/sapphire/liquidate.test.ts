@@ -25,7 +25,7 @@ import {
   DEFAULT_COLLATERAL_DECIMALS,
   DEFAULT_COLLATERAL_PRECISION_SCALAR,
   DEFAULT_PROOF_PROTOCOL,
-  DEFAULT_STABLE_COIN_DECIMALS,
+  DEFAULT_STABLECOIN_DECIMALS,
   DEFAULT_STABLE_COIN_PRECISION_SCALAR,
 } from '@test/helpers/sapphireDefaults';
 import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
@@ -226,7 +226,9 @@ describe('SapphireCore.liquidate()', () => {
         LOW_C_RATIO,
         HIGH_C_RATIO,
       );
-      const currentCRatio = COLLATERAL_AMOUNT.mul(DEFAULT_COLLATERAL_PRECISION_SCALAR)
+      const currentCRatio = COLLATERAL_AMOUNT.mul(
+        DEFAULT_COLLATERAL_PRECISION_SCALAR,
+      )
         .mul(newPrice)
         .div(SCALED_BORROW_AMOUNT);
       expect(currentCRatio).to.be.lte(liquidationCRatio);
@@ -261,7 +263,7 @@ describe('SapphireCore.liquidate()', () => {
       // The debt has been taken from the liquidator (stable coin)
       expect(postStablecoinBalance).to.eq(
         preStablecoinBalance.sub(
-          utils.parseUnits('475', DEFAULT_STABLE_COIN_DECIMALS),
+          utils.parseUnits('475', DEFAULT_STABLECOIN_DECIMALS),
         ),
       );
 
@@ -402,7 +404,9 @@ describe('SapphireCore.liquidate()', () => {
       const minterCRatio = await arc
         .assessor()
         .assess(LOW_C_RATIO, HIGH_C_RATIO, minterScoreProof, true);
-      const maxBorrowAmount = COLLATERAL_AMOUNT.mul(DEFAULT_COLLATERAL_PRECISION_SCALAR)
+      const maxBorrowAmount = COLLATERAL_AMOUNT.mul(
+        DEFAULT_COLLATERAL_PRECISION_SCALAR,
+      )
         .div(DEFAULT_STABLE_COIN_PRECISION_SCALAR)
         .mul(BASE)
         .div(minterCRatio);
@@ -468,7 +472,9 @@ describe('SapphireCore.liquidate()', () => {
       const minterCRatio = await arc
         .assessor()
         .assess(LOW_C_RATIO, HIGH_C_RATIO, minterScoreProof, true);
-      const maxBorrowAmount = COLLATERAL_AMOUNT.mul(DEFAULT_COLLATERAL_PRECISION_SCALAR)
+      const maxBorrowAmount = COLLATERAL_AMOUNT.mul(
+        DEFAULT_COLLATERAL_PRECISION_SCALAR,
+      )
         .mul(BASE)
         .div(minterCRatio)
         .div(DEFAULT_STABLE_COIN_PRECISION_SCALAR);
@@ -637,7 +643,9 @@ describe('SapphireCore.liquidate()', () => {
       const minterCRatio = await arc
         .assessor()
         .assess(LOW_C_RATIO, HIGH_C_RATIO, minterScoreProof, true);
-      const maxBorrowAmount = COLLATERAL_AMOUNT.mul(DEFAULT_COLLATERAL_PRECISION_SCALAR)
+      const maxBorrowAmount = COLLATERAL_AMOUNT.mul(
+        DEFAULT_COLLATERAL_PRECISION_SCALAR,
+      )
         .mul(BASE)
         .div(minterCRatio)
         .div(DEFAULT_STABLE_COIN_PRECISION_SCALAR);
@@ -728,9 +736,7 @@ describe('SapphireCore.liquidate()', () => {
           undefined,
           signers.liquidator,
         ),
-      ).to.be.revertedWith(
-        'SapphireCoreV1: vault with such asset was not created',
-      );
+      ).to.be.revertedWith('SapphirePool: invalid swap tokens');
     });
 
     it('reverts if proof is not for the correct protocol', async () => {
@@ -1056,7 +1062,7 @@ describe('SapphireCore.liquidate()', () => {
 
       // User increases his borrow amount by $500
       await arc.borrow(
-        utils.parseUnits('500', DEFAULT_STABLE_COIN_DECIMALS),
+        utils.parseUnits('500', DEFAULT_STABLECOIN_DECIMALS),
         stablecoin.address,
         getScoreProof(minterCreditScore, creditScoreTree),
         getScoreProof(minterBorrowLimitScore, creditScoreTree),
@@ -1095,7 +1101,7 @@ describe('SapphireCore.liquidate()', () => {
       // The debt has been taken from the liquidator (stable coin)
       const stablecoinPaid = utils.parseUnits(
         '1000',
-        DEFAULT_STABLE_COIN_DECIMALS,
+        DEFAULT_STABLECOIN_DECIMALS,
       );
       expect(postStablecoinBalance).to.eq(
         preStablecoinBalance.sub(stablecoinPaid),
@@ -1183,7 +1189,7 @@ describe('SapphireCore.liquidate()', () => {
       // The debt has been taken from the liquidator (stable coin)
       const stablecoinPaid = utils.parseUnits(
         '427.5',
-        DEFAULT_STABLE_COIN_DECIMALS,
+        DEFAULT_STABLECOIN_DECIMALS,
       );
       expect(postStablecoinBalance).to.eq(
         preStablecoinBalance.sub(stablecoinPaid),
@@ -1276,7 +1282,7 @@ describe('SapphireCore.liquidate()', () => {
       // User repays $150
       const repayedAmount = utils.parseUnits(
         '150',
-        DEFAULT_STABLE_COIN_DECIMALS,
+        DEFAULT_STABLECOIN_DECIMALS,
       );
       await stablecoin
         .connect(signers.scoredMinter)
@@ -1337,7 +1343,7 @@ describe('SapphireCore.liquidate()', () => {
         arcCollateralAmt: postArcCollateralAmt,
         credsSupply: postCredsSupply,
       } = await getBalancesForLiquidation(signers.liquidator);
-      const debtPaid = utils.parseUnits('350', DEFAULT_STABLE_COIN_DECIMALS);
+      const debtPaid = utils.parseUnits('350', DEFAULT_STABLECOIN_DECIMALS);
 
       // The debt has been taken from the liquidator (stable coin)
       expect(postStablecoinBalance).to.eq(preStablecoinBalance.sub(debtPaid));
@@ -1385,7 +1391,7 @@ describe('SapphireCore.liquidate()', () => {
 
       // User borrows close to the maximum amount. The min c-ratio is 132.5% so user $245 more
       await arc.borrow(
-        utils.parseUnits('245', DEFAULT_STABLE_COIN_DECIMALS),
+        utils.parseUnits('245', DEFAULT_STABLECOIN_DECIMALS),
         stablecoin.address,
         getScoreProof(minterCreditScore, creditScoreTree),
         getScoreProof(minterBorrowLimitScore, creditScoreTree),
@@ -1448,7 +1454,7 @@ describe('SapphireCore.liquidate()', () => {
         arcCollateralAmt: postArcCollateralAmt,
         credsSupply: postCredsSupply,
       } = await getBalancesForLiquidation(signers.liquidator);
-      const debtPaid = utils.parseUnits('745', DEFAULT_STABLE_COIN_DECIMALS);
+      const debtPaid = utils.parseUnits('745', DEFAULT_STABLECOIN_DECIMALS);
 
       // The debt has been taken from the liquidator (stable coin)
       expect(postStablecoinBalance, 'stablecoin').to.eq(

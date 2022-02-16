@@ -4,7 +4,7 @@ import { TestTokenFactory } from '@src/typings';
 import {
   DEFAULT_COLLATERAL_DECIMALS,
   DEFAULT_PROOF_PROTOCOL,
-  DEFAULT_STABLE_COIN_DECIMALS,
+  DEFAULT_STABLECOIN_DECIMALS,
 } from './sapphireDefaults';
 import { BigNumberish, utils } from 'ethers';
 import { PassportScoreProof } from '@arc-types/sapphireCore';
@@ -19,7 +19,7 @@ export async function setupBaseVault(
   caller: SignerWithAddress,
   borrowLimitProof: PassportScoreProof,
   collateralAmount = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS),
-  borrowAmount = utils.parseUnits('200', DEFAULT_STABLE_COIN_DECIMALS),
+  borrowAmount = utils.parseUnits('200', DEFAULT_STABLECOIN_DECIMALS),
   scoreProof?: PassportScoreProof,
   coreName?: string,
 ) {
