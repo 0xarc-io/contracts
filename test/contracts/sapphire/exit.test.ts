@@ -129,7 +129,7 @@ describe('SapphireCore.exit()', () => {
       signers.scoredMinter,
       getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
-      BORROW_AMOUNT, // -1 for rounding
+      BORROW_AMOUNT,
       getScoreProof(scoredMinterCreditScore, creditScoreTree),
     );
 

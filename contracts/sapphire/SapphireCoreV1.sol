@@ -1180,7 +1180,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
             // Burn the creds
             CredsERC20(syntheticAsset).burn(
-                _principalPaidScaled
+                _principalPaidScaled * precisionScalars[_borrowAssetAddress]
             );
         }
     }
