@@ -8,6 +8,8 @@ contract InitializablePermittable is Initializable {
 
     /* ============ Variables ============ */
 
+    string public version;
+
     // solhint-disable-next-line
     bytes32 public DOMAIN_SEPARATOR;
 
@@ -22,21 +24,22 @@ contract InitializablePermittable is Initializable {
     /* ============ Constructor ============ */
 
     function _init(
-        string memory name,
-        string memory version
+        string memory _name,
+        string memory _version
     )
         internal
         initializer    
     {
-        DOMAIN_SEPARATOR = _initDomainSeparator(name, version);
+        version = _version;
+        DOMAIN_SEPARATOR = _initDomainSeparator(_name, _version);
     }
 
     /**
      * @dev Initializes EIP712 DOMAIN_SEPARATOR based on the current contract and chain ID.
      */
     function _initDomainSeparator(
-        string memory name,
-        string memory version
+        string memory _name,
+        string memory _version
     )
         internal
         view
@@ -51,8 +54,8 @@ contract InitializablePermittable is Initializable {
         return keccak256(
             abi.encode(
                 keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                keccak256(bytes(name)),
-                keccak256(bytes(version)),
+                keccak256(bytes(_name)),
+                keccak256(bytes(_version)),
                 chainID,
                 address(this)
             )
