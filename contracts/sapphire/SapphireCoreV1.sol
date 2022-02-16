@@ -982,9 +982,12 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
         uint256 scaledAmount = _amount * precisionScalars[_borrowAssetAddress];
 
+        // Calculate new actual vault borrow amount with the added borrow fee
+        uint256 _newActualVaultBorrowAmount = actualVaultBorrowAmount + scaledAmount;
+
         // Ensure the vault is collateralized if the borrow action succeeds
         uint256 collateralRatio = calculateCollateralRatio(
-            actualVaultBorrowAmount + scaledAmount,
+            _newActualVaultBorrowAmount,
             vault.collateralAmount,
             _collateralPrice
         );
@@ -993,9 +996,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             collateralRatio >= _assessedCRatio,
             "SapphireCoreV1: the vault will become undercollateralized"
         );
-
-        // Calculate new actual vault borrow amount with the added borrow fee
-        uint256 _newActualVaultBorrowAmount = actualVaultBorrowAmount + scaledAmount;
 
         if (_newActualVaultBorrowAmount > defaultBorrowLimit) {
             require(
@@ -1047,14 +1047,14 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         SafeERC20.safeApprove(
             IERC20Metadata(syntheticAsset), 
             borrowPool, 
-            _amount
+            scaledAmount
         );
 
         // Swap creds for stablecoins
         ISapphirePool(borrowPool).swap(
             syntheticAsset,
             _borrowAssetAddress,
-            _amount,
+            scaledAmount,
             msg.sender
         );
     }
