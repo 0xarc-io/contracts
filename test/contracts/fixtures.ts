@@ -24,6 +24,7 @@ import {
   DEFAULT_HIGH_C_RATIO,
   DEFAULT_LOW_C_RATIO,
   DEFAULT_MAX_CREDIT_SCORE,
+  DEFAULT_STABLECOIN_DECIMALS,
 } from '@test/helpers/sapphireDefaults';
 
 export async function distributorFixture(ctx: ITestContext) {
@@ -53,7 +54,7 @@ export async function sapphireFixture(
     deployer,
     'Test stablecoin',
     'TEST_USDC',
-    args?.stablecoinDecimals ?? 6,
+    args?.stablecoinDecimals ?? DEFAULT_STABLECOIN_DECIMALS,
   );
 
   ctx.contracts.sapphire.oracle = await deployMockSapphireOracle(deployer);

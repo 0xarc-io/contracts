@@ -15,8 +15,11 @@ import { roundUpMul } from '@test/helpers/roundUpOperations';
 import {
   BORROW_LIMIT_PROOF_PROTOCOL,
   DEFAULT_COLLATERAL_DECIMALS,
+  DEFAULT_COLLATERAL_PRECISION_SCALAR,
   DEFAULT_HIGH_C_RATIO,
   DEFAULT_PROOF_PROTOCOL,
+  DEFAULT_STABLECOIN_DECIMALS,
+  DEFAULT_STABLE_COIN_PRECISION_SCALAR,
 } from '@test/helpers/sapphireDefaults';
 import { setupBaseVault } from '@test/helpers/setupBaseVault';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
@@ -27,14 +30,14 @@ import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 
-const NORMALIZED_COLLATERAL_AMOUNT = utils.parseEther('1000');
+const SCALED_COLLATERAL_AMOUNT = utils.parseEther('1000');
 const COLLATERAL_AMOUNT = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS);
 const COLLATERAL_PRICE = utils.parseEther('1');
-const BORROW_AMOUNT = NORMALIZED_COLLATERAL_AMOUNT.mul(COLLATERAL_PRICE).div(
+const SCALED_BORROW_AMOUNT = SCALED_COLLATERAL_AMOUNT.mul(COLLATERAL_PRICE).div(
   DEFAULT_HIGH_C_RATIO,
 );
-const PRECISION_SCALAR = BigNumber.from(10).pow(
-  BigNumber.from(18).sub(DEFAULT_COLLATERAL_DECIMALS),
+const BORROW_AMOUNT = SCALED_BORROW_AMOUNT.div(
+  DEFAULT_STABLE_COIN_PRECISION_SCALAR,
 );
 
 /**
@@ -79,7 +82,7 @@ describe('SapphireCore.repay()', () => {
     minterBorrowLimitScore = {
       account: ctx.signers.scoredMinter.address,
       protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
-      score: BORROW_AMOUNT,
+      score: SCALED_BORROW_AMOUNT,
     };
     creditScoreTree = new PassportScoreTree([
       minterCreditScore,
@@ -90,14 +93,12 @@ describe('SapphireCore.repay()', () => {
     await setupSapphire(ctx, {
       merkleRoot: creditScoreTree.getHexRoot(),
       price: COLLATERAL_PRICE,
-      poolDepositSwapAmount: BORROW_AMOUNT.mul(3),
+      poolDepositSwapAmount: SCALED_BORROW_AMOUNT.mul(3),
     });
   }
 
   before(async () => {
-    const ctx = await generateContext(sapphireFixture, init, {
-      stablecoinDecimals: 18,
-    });
+    const ctx = await generateContext(sapphireFixture, init);
     signers = ctx.signers;
     arc = ctx.sdks.sapphire;
     stablecoin = ctx.contracts.stablecoin;
@@ -120,7 +121,7 @@ describe('SapphireCore.repay()', () => {
     let vault = await arc.getVault(signers.scoredMinter.address);
     // Confirm c-ratio of 200%
     let cRatio = vault.collateralAmount
-      .mul(PRECISION_SCALAR)
+      .mul(DEFAULT_COLLATERAL_PRECISION_SCALAR)
       .mul(COLLATERAL_PRICE)
       .div(vault.normalizedBorrowedAmount);
     expect(cRatio).to.eq(constants.WeiPerEther.mul(2));
@@ -143,15 +144,15 @@ describe('SapphireCore.repay()', () => {
     // Ensure that collateral amount didn't change
     expect(vault.collateralAmount).to.eq(COLLATERAL_AMOUNT);
 
-    expect(vault.normalizedBorrowedAmount).to.eq(BORROW_AMOUNT.div(2));
-    expect(vault.principal).to.eq(BORROW_AMOUNT.div(2));
+    expect(vault.normalizedBorrowedAmount).to.eq(SCALED_BORROW_AMOUNT.div(2));
+    expect(vault.principal).to.eq(SCALED_BORROW_AMOUNT.div(2));
     /**
      * Collateral = 1000
      * Borrow amt = 500/2 = 250
      * C-ratio = 1000/250 = 400%
      */
     cRatio = vault.collateralAmount
-      .mul(PRECISION_SCALAR)
+      .mul(DEFAULT_COLLATERAL_PRECISION_SCALAR)
       .mul(COLLATERAL_PRICE)
       .div(vault.normalizedBorrowedAmount);
     expect(cRatio).to.eq(constants.WeiPerEther.mul(4));
@@ -163,45 +164,47 @@ describe('SapphireCore.repay()', () => {
       'TDAI',
       18,
     );
-    await pool.setDepositLimit(testDai.address, BORROW_AMOUNT);
-    await testDai.mintShare(pool.address, BORROW_AMOUNT);
+    await pool.setDepositLimit(testDai.address, SCALED_BORROW_AMOUNT);
+    await testDai.mintShare(pool.address, SCALED_BORROW_AMOUNT);
 
-    await testDai.mintShare(signers.scoredMinter.address, BORROW_AMOUNT);
+    await testDai.mintShare(signers.scoredMinter.address, SCALED_BORROW_AMOUNT);
 
     let vault = await arc.getVault(signers.scoredMinter.address);
-    expect(vault.normalizedBorrowedAmount).eq(BORROW_AMOUNT);
+    expect(vault.normalizedBorrowedAmount).eq(SCALED_BORROW_AMOUNT);
 
     await repay(BORROW_AMOUNT.div(2), signers.scoredMinter, stablecoin);
 
     vault = await arc.getVault(signers.scoredMinter.address);
-    expect(vault.normalizedBorrowedAmount).eq(BORROW_AMOUNT.div(2));
+    expect(vault.normalizedBorrowedAmount).eq(SCALED_BORROW_AMOUNT.div(2));
 
-    await repay(BORROW_AMOUNT.div(2), signers.scoredMinter, testDai);
+    await repay(SCALED_BORROW_AMOUNT.div(2), signers.scoredMinter, testDai);
 
     vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.normalizedBorrowedAmount).eq(0);
   });
 
-  xit('repays with 6 decimals stablecoin');
+  it('repays with 6 decimals stablecoin');
 
   it('swaps stables for creds, then burns the creds, (no interest accumulated)', async () => {
-    expect(await creds.balanceOf(pool.address)).to.eq(BORROW_AMOUNT);
+    expect(await creds.balanceOf(pool.address)).to.eq(SCALED_BORROW_AMOUNT);
 
     await expect(repay(BORROW_AMOUNT.div(2), signers.scoredMinter, stablecoin))
       .to.emit(creds, 'Transfer')
       .withArgs(
         arc.core().address,
         constants.AddressZero,
-        BORROW_AMOUNT.div(2),
+        SCALED_BORROW_AMOUNT.div(2),
       );
-    expect(await creds.balanceOf(pool.address)).to.eq(BORROW_AMOUNT.div(2));
+    expect(await creds.balanceOf(pool.address)).to.eq(
+      SCALED_BORROW_AMOUNT.div(2),
+    );
 
     await expect(repay(BORROW_AMOUNT.div(2), signers.scoredMinter, stablecoin))
       .to.emit(creds, 'Transfer')
       .withArgs(
         arc.core().address,
         constants.AddressZero,
-        BORROW_AMOUNT.div(2),
+        SCALED_BORROW_AMOUNT.div(2),
       );
     expect(await creds.balanceOf(pool.address)).to.eq(0);
   });
@@ -210,10 +213,11 @@ describe('SapphireCore.repay()', () => {
     const poolShare = utils.parseEther('0.4');
     const borrowFee = utils.parseEther('0.1');
 
-    expect(await creds.balanceOf(pool.address)).eq(BORROW_AMOUNT);
+    expect(await creds.balanceOf(pool.address)).eq(SCALED_BORROW_AMOUNT);
 
     await arc.core().setFees(0, 0, borrowFee, poolShare);
-    await arc.core().setLimits(0, BORROW_AMOUNT, BORROW_AMOUNT);
+    await arc.core().setLimits(0, SCALED_BORROW_AMOUNT, SCALED_BORROW_AMOUNT);
+
     await setupBaseVault(
       arc,
       signers.staker,
@@ -224,45 +228,53 @@ describe('SapphireCore.repay()', () => {
     );
 
     // There is already one vault open by the scoredMinter
-    expect(await creds.balanceOf(pool.address)).eq(BORROW_AMOUNT.mul(2));
+    expect(await creds.balanceOf(pool.address)).eq(SCALED_BORROW_AMOUNT.mul(2));
     expect(await stablecoin.balanceOf(await arc.core().feeCollector())).eq(0);
 
-    const interest = roundUpMul(BORROW_AMOUNT, borrowFee);
+    const scaledInterest = roundUpMul(SCALED_BORROW_AMOUNT, borrowFee);
     let vault = await arc.getVault(signers.staker.address);
-    expect(vault.normalizedBorrowedAmount).eq(BORROW_AMOUNT.add(interest));
-    expect(vault.principal).eq(BORROW_AMOUNT);
+    expect(vault.normalizedBorrowedAmount).eq(
+      SCALED_BORROW_AMOUNT.add(scaledInterest),
+    );
+    expect(vault.principal).eq(SCALED_BORROW_AMOUNT);
 
     // Pay only interest
     const preRepayStablePoolBalance = await stablecoin.balanceOf(pool.address);
-    await repay(interest, signers.staker);
+    await repay(
+      scaledInterest.div(DEFAULT_STABLE_COIN_PRECISION_SCALAR),
+      signers.staker,
+    );
 
     vault = await arc.getVault(signers.staker.address);
-    const expectedPoolProfit = roundUpMul(interest, poolShare);
-    const expectedArcProfit = interest.sub(expectedPoolProfit);
+    const expectedPoolProfit = roundUpMul(scaledInterest, poolShare);
+    const expectedArcProfit = scaledInterest.sub(expectedPoolProfit);
 
     // Vault amount reduced by interest, principal remained unchanged
-    expect(vault.normalizedBorrowedAmount).eq(BORROW_AMOUNT);
-    expect(vault.principal).eq(BORROW_AMOUNT);
+    expect(vault.normalizedBorrowedAmount).eq(SCALED_BORROW_AMOUNT);
+    expect(vault.principal).eq(SCALED_BORROW_AMOUNT);
     // The creds amount didn't change
-    expect(await creds.balanceOf(pool.address)).eq(BORROW_AMOUNT.mul(2));
+    expect(await creds.balanceOf(pool.address)).eq(SCALED_BORROW_AMOUNT.mul(2));
     expect(await stablecoin.balanceOf(pool.address)).eq(
-      preRepayStablePoolBalance.add(expectedPoolProfit),
+      preRepayStablePoolBalance.add(
+        expectedPoolProfit.div(DEFAULT_STABLE_COIN_PRECISION_SCALAR),
+      ),
     );
     expect(await stablecoin.balanceOf(await arc.core().feeCollector())).eq(
-      expectedArcProfit,
+      expectedArcProfit.div(DEFAULT_STABLE_COIN_PRECISION_SCALAR),
     );
   });
-
+  // 1499999999902000000000
+  // 1499999999900020000000
   it('distributes the interest, then swaps stables for creds for the remaining amount', async () => {
     const poolShare = utils.parseEther('0.4');
     const borrowFee = utils.parseEther('0.1');
-    const interest = roundUpMul(BORROW_AMOUNT, borrowFee);
+    const interest = roundUpMul(SCALED_BORROW_AMOUNT, borrowFee);
 
     // there is already one opened vault
-    expect(await creds.balanceOf(pool.address)).eq(BORROW_AMOUNT);
+    expect(await creds.balanceOf(pool.address)).eq(SCALED_BORROW_AMOUNT);
 
     await arc.core().setFees(0, 0, borrowFee, poolShare);
-    await arc.core().setLimits(0, BORROW_AMOUNT, BORROW_AMOUNT);
+    await arc.core().setLimits(0, SCALED_BORROW_AMOUNT, SCALED_BORROW_AMOUNT);
     await setupBaseVault(
       arc,
       signers.staker,
@@ -273,37 +285,43 @@ describe('SapphireCore.repay()', () => {
     );
 
     let vault = await arc.getVault(signers.staker.address);
-    expect(vault.normalizedBorrowedAmount).eq(BORROW_AMOUNT.add(interest));
-    expect(vault.principal).eq(BORROW_AMOUNT);
+    expect(vault.normalizedBorrowedAmount).eq(
+      SCALED_BORROW_AMOUNT.add(interest),
+    );
+    expect(vault.principal).eq(SCALED_BORROW_AMOUNT);
 
     const repayAmount = BORROW_AMOUNT.div(2);
-    const principalRepayed = repayAmount.sub(interest);
-    const totalAccumulatedDebt = BORROW_AMOUNT.add(interest);
+    const principalRepayed = repayAmount
+      .mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR)
+      .sub(interest);
+    const totalAccumulatedDebt = SCALED_BORROW_AMOUNT.add(interest);
 
-    expect(await creds.balanceOf(pool.address)).eq(BORROW_AMOUNT.mul(2));
+    expect(await creds.balanceOf(pool.address)).eq(SCALED_BORROW_AMOUNT.mul(2));
 
     await repay(repayAmount, signers.staker);
 
     // Only the principal paid is swapped out for creds
     expect(await creds.balanceOf(pool.address)).eq(
-      BORROW_AMOUNT.mul(2).sub(principalRepayed),
+      SCALED_BORROW_AMOUNT.mul(2).sub(principalRepayed),
     );
 
     vault = await arc.getVault(signers.staker.address);
     expect(vault.normalizedBorrowedAmount).eq(
-      totalAccumulatedDebt.sub(repayAmount),
+      totalAccumulatedDebt.sub(
+        repayAmount.mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR),
+      ),
     );
-    expect(vault.principal).eq(BORROW_AMOUNT.sub(principalRepayed));
+    expect(vault.principal).eq(SCALED_BORROW_AMOUNT.sub(principalRepayed));
   });
 
   it('decreases the user principal by the repay amount', async () => {
     let vault = await arc.getVault(signers.scoredMinter.address);
-    expect(vault.principal).eq(BORROW_AMOUNT);
+    expect(vault.principal).eq(SCALED_BORROW_AMOUNT);
 
     await repay(BORROW_AMOUNT.div(2), signers.scoredMinter);
 
     vault = await arc.getVault(signers.scoredMinter.address);
-    expect(vault.principal).eq(BORROW_AMOUNT.div(2));
+    expect(vault.principal).eq(SCALED_BORROW_AMOUNT.div(2));
 
     await repay(BORROW_AMOUNT.div(2), signers.scoredMinter);
 
@@ -322,9 +340,9 @@ describe('SapphireCore.repay()', () => {
     // Ensure position is undercollateralized
     const vault = await arc.getVault(signers.scoredMinter.address);
     let cRatio = vault.collateralAmount
-      .mul(PRECISION_SCALAR)
+      .mul(DEFAULT_COLLATERAL_PRECISION_SCALAR)
       .mul(newPrice)
-      .div(BORROW_AMOUNT);
+      .div(SCALED_BORROW_AMOUNT);
 
     expect(cRatio).to.eq(utils.parseEther('0.9'));
 
@@ -335,7 +353,7 @@ describe('SapphireCore.repay()', () => {
       signers.scoredMinter.address,
     );
     cRatio = collateralAmount
-      .mul(PRECISION_SCALAR)
+      .mul(DEFAULT_COLLATERAL_PRECISION_SCALAR)
       .mul(newPrice)
       .div(normalizedBorrowedAmount);
 
@@ -345,18 +363,23 @@ describe('SapphireCore.repay()', () => {
   it('repays without a score proof even if one exists on-chain', async () => {
     // Do two repays. One with credit score and one without. Both should pass
     let vault = await arc.getVault(signers.scoredMinter.address);
-    expect(vault.normalizedBorrowedAmount).to.eq(BORROW_AMOUNT);
+    expect(vault.normalizedBorrowedAmount).to.eq(SCALED_BORROW_AMOUNT);
 
-    await repay(constants.WeiPerEther, signers.scoredMinter);
+    await repay(
+      utils.parseUnits('1', DEFAULT_STABLECOIN_DECIMALS),
+      signers.scoredMinter,
+    );
 
     vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.normalizedBorrowedAmount).to.eq(
-      BORROW_AMOUNT.sub(constants.WeiPerEther),
+      SCALED_BORROW_AMOUNT.sub(constants.WeiPerEther),
     );
-    expect(vault.principal).to.eq(BORROW_AMOUNT.sub(constants.WeiPerEther));
+    expect(vault.principal).to.eq(
+      SCALED_BORROW_AMOUNT.sub(constants.WeiPerEther),
+    );
 
     await repay(
-      constants.WeiPerEther,
+      utils.parseUnits('1', DEFAULT_STABLECOIN_DECIMALS),
       signers.scoredMinter,
       undefined,
       getScoreProof(minterCreditScore, creditScoreTree),
@@ -364,33 +387,33 @@ describe('SapphireCore.repay()', () => {
 
     vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.normalizedBorrowedAmount).to.eq(
-      BORROW_AMOUNT.sub(constants.WeiPerEther.mul(2)),
+      SCALED_BORROW_AMOUNT.sub(constants.WeiPerEther.mul(2)),
     );
     expect(vault.principal).to.eq(
-      BORROW_AMOUNT.sub(constants.WeiPerEther.mul(2)),
+      SCALED_BORROW_AMOUNT.sub(constants.WeiPerEther.mul(2)),
     );
   });
 
   it('updates the totalBorrowed after a repay', async () => {
-    expect(await arc.core().totalBorrowed()).to.eq(BORROW_AMOUNT);
+    expect(await arc.core().totalBorrowed()).to.eq(SCALED_BORROW_AMOUNT);
 
     await repay(BORROW_AMOUNT.div(2), signers.scoredMinter);
 
-    expect(await arc.core().totalBorrowed()).to.eq(BORROW_AMOUNT.div(2));
+    expect(await arc.core().totalBorrowed()).to.eq(SCALED_BORROW_AMOUNT.div(2));
   });
 
   it('updates the vault borrow amount', async () => {
     let vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.collateralAmount).to.eq(COLLATERAL_AMOUNT);
-    expect(vault.normalizedBorrowedAmount).to.eq(BORROW_AMOUNT);
-    expect(vault.principal).to.eq(BORROW_AMOUNT);
+    expect(vault.normalizedBorrowedAmount).to.eq(SCALED_BORROW_AMOUNT);
+    expect(vault.principal).to.eq(SCALED_BORROW_AMOUNT);
 
     await repay(BORROW_AMOUNT.div(2), signers.scoredMinter);
 
     vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.collateralAmount).to.eq(COLLATERAL_AMOUNT);
-    expect(vault.normalizedBorrowedAmount).to.eq(BORROW_AMOUNT.div(2));
-    expect(vault.principal).to.eq(BORROW_AMOUNT.div(2));
+    expect(vault.normalizedBorrowedAmount).to.eq(SCALED_BORROW_AMOUNT.div(2));
+    expect(vault.principal).to.eq(SCALED_BORROW_AMOUNT.div(2));
   });
 
   it('emits ActionsOperated event when a repay happens', async () => {
@@ -427,16 +450,19 @@ describe('SapphireCore.repay()', () => {
     await adminSynth.mint(signers.scoredMinter.address, constants.WeiPerEther);
 
     await expect(
-      repay(BORROW_AMOUNT.add(constants.WeiPerEther), signers.scoredMinter),
+      repay(
+        BORROW_AMOUNT.add(utils.parseUnits('1', DEFAULT_STABLECOIN_DECIMALS)),
+        signers.scoredMinter,
+      ),
     ).to.be.revertedWith('SapphireCoreV1: there is not enough debt to repay');
   });
 
   it('should not repay if contract is paused', async () => {
     await arc.core().connect(signers.pauseOperator).setPause(true);
 
-    await expect(
-      repay(BORROW_AMOUNT.add(constants.WeiPerEther), signers.scoredMinter),
-    ).to.be.revertedWith('SapphireCoreV1: the contract is paused');
+    await expect(repay(BORROW_AMOUNT, signers.scoredMinter)).to.be.revertedWith(
+      'SapphireCoreV1: the contract is paused',
+    );
   });
 
   it('should not repay in an unsupported token', async () => {
