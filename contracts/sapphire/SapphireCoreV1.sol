@@ -36,10 +36,11 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         uint256 _principalAmount
     );
 
-    event LiquidationFeesUpdated(
-        uint256 _liquidationUserRatio,
-        uint256 _liquidationArcRatio,
-        uint256 _borrowFee
+    event FeesUpdated(
+        uint256 _liquidatorDiscount,
+        uint256 _liquidationArcFee,
+        uint256 _borrowFee,
+        uint256 _poolInterestFee
     );
 
     event LimitsUpdated(
@@ -111,8 +112,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      * @param _feeCollector         The address of the ARC fee collector when a liquidation occurs
      * @param _highCollateralRatio  High limit of how much collateral is needed to borrow
      * @param _lowCollateralRatio   Low limit of how much collateral is needed to borrow
-     * @param _liquidationUserRatio   How much is a user penalized if they go below their c-ratio
-     * @param _liquidationArcRatio    How much of the liquidation profit should ARC take
      */
     function init(
         address _collateralAddress,
@@ -123,9 +122,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         address _assessorAddress,
         address _feeCollector,
         uint256 _highCollateralRatio,
-        uint256 _lowCollateralRatio,
-        uint256 _liquidationUserRatio,
-        uint256 _liquidationArcRatio
+        uint256 _lowCollateralRatio
     )
         external
         onlyAdmin
@@ -169,7 +166,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         setAssessor(_assessorAddress);
         setOracle(_oracleAddress);
         setCollateralRatios(_lowCollateralRatio, _highCollateralRatio);
-        _setFees(_liquidationUserRatio, _liquidationArcRatio, 0);
     }
 
     /**
@@ -241,26 +237,36 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      *
      * @notice Can only be called by the admin.
      *
-     * @param _liquidationUserRatio   Determines the penalty a user must pay by discounting
-     *                              their collateral price to provide a profit incentive for liquidators
-     * @param _liquidationArcRatio    The percentage of the profit earned from the liquidation, which feeCollector earns.
+     * @param _liquidatorDiscount Determines the penalty a user must pay by discounting their
+     * collateral price to provide a profit incentive for liquidators.
+     * @param _liquidationArcFee The percentage of the profit earned from the liquidation, 
+     * which the feeCollector earns.
+     * @param _borrowFee The percentage of the the loan that is added as immediate interest.
+     * @param _poolInterestFee The percentage of the interest paid that goes to the borrow pool.
      */
     function setFees(
-        uint256 _liquidationUserRatio,
-        uint256 _liquidationArcRatio,
-        uint256 _borrowFee
+        uint256 _liquidatorDiscount,
+        uint256 _liquidationArcFee,
+        uint256 _borrowFee,
+        uint256 _poolInterestFee
     )
         public
         onlyAdmin
     {
         require(
-            (_liquidationUserRatio != liquidationUserRatio) ||
-            (_liquidationArcRatio != liquidationArcRatio) ||
-            (_borrowFee != borrowFee),
+            (_liquidatorDiscount != liquidatorDiscount) ||
+            (_liquidationArcFee != liquidationArcFee) ||
+            (_borrowFee != borrowFee) ||
+            (_poolInterestFee != poolInterestFee),
             "SapphireCoreV1: the same fees are already set"
         );
 
-        _setFees(_liquidationUserRatio, _liquidationArcRatio, _borrowFee);
+        _setFees(
+            _liquidatorDiscount, 
+            _liquidationArcFee, 
+            _borrowFee, 
+            _poolInterestFee
+        );
     }
 
     /**
@@ -769,7 +775,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         }
 
         uint256 currentCRatio = calculateCollateralRatio(
-            vault.normalizedBorrowedAmount,
+            _denormalizeBorrowAmount(vault.normalizedBorrowedAmount, true),
             vault.collateralAmount,
             _currentPrice
         );
@@ -797,13 +803,13 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      * @dev Calculate how much collateralRatio you would have
      *      with a certain borrow and collateral amount
      *
-     * @param _normalizedBorrowedAmount   The borrowed amount expressed as a uint256 (NOT principal)
+     * @param _denormalizedBorrowAmount The denormalized borrow amount (NOT principal)
      * @param _collateralAmount The amount of collateral, in its original decimals
-     * @param _collateralPrice  What price do you want to calculate the inverse at
+     * @param _collateralPrice What price do you want to calculate the inverse at
      * @return                  The calculated c-ratio
      */
     function calculateCollateralRatio(
-        uint256 _normalizedBorrowedAmount,
+        uint256 _denormalizedBorrowAmount,
         uint256 _collateralAmount,
         uint256 _collateralPrice
     )
@@ -814,7 +820,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         return _collateralAmount *
              precisionScalars[collateralAsset] *
             _collateralPrice /
-            _normalizedBorrowedAmount;
+            _denormalizedBorrowAmount;
     }
 
     /* ========== Private Functions ========== */
@@ -972,11 +978,11 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         // Get the user's vault
         SapphireTypes.Vault storage vault = vaults[msg.sender];
 
-        uint256 denormalizedBorrowAmount = _denormalizeBorrowAmount(vault.normalizedBorrowedAmount, true);
+        uint256 actualVaultBorrowAmount = _denormalizeBorrowAmount(vault.normalizedBorrowedAmount, true);
 
         // Ensure the vault is collateralized if the borrow action succeeds
         uint256 collateralRatio = calculateCollateralRatio(
-            denormalizedBorrowAmount + _amount,
+            actualVaultBorrowAmount + _amount,
             vault.collateralAmount,
             _collateralPrice
         );
@@ -985,9 +991,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             collateralRatio >= _assessedCRatio,
             "SapphireCoreV1: the vault will become undercollateralized"
         );
-
-        // Calculate actual vault borrow amount
-        uint256 actualVaultBorrowAmount = denormalizedBorrowAmount;
 
         // Calculate new actual vault borrow amount with the added borrow fee
         uint256 _newActualVaultBorrowAmount = actualVaultBorrowAmount + _amount;
@@ -1077,37 +1080,93 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         SapphireTypes.Vault storage vault = vaults[_owner];
 
         // Calculate actual vault borrow amount
-        uint256 actualVaultBorrowAmount = _denormalizeBorrowAmount(vault.normalizedBorrowedAmount, true);
+        uint256 actualVaultBorrowAmount = _denormalizeBorrowAmount(
+            vault.normalizedBorrowedAmount, 
+            true
+        );
 
         require(
             _amount <= actualVaultBorrowAmount,
             "SapphireCoreV1: there is not enough debt to repay"
         );
 
+        uint256 _interest = actualVaultBorrowAmount - vault.principal;
+        uint256 _feeCollectorFees;
+        uint256 _poolFees;
+        uint256 _principalPaid;
+
         // Calculate new vault's borrowed amount
-        uint256 _newBorrowAmount = _normalizeBorrowAmount(actualVaultBorrowAmount - _amount, true);
+        uint256 _newNormalizedBorrowAmount = _normalizeBorrowAmount(
+            actualVaultBorrowAmount - _amount, 
+            true
+        );
 
-        // Update total borrow amount
-        totalBorrowed = totalBorrowed - vault.normalizedBorrowedAmount + _newBorrowAmount;
+        // Update principal
+        if(_amount > _interest) {
+            _poolFees = Math.roundUpMul(_interest, poolInterestFee);
+            _feeCollectorFees = _interest - _poolFees;
 
-        // Update vault
-        vault.normalizedBorrowedAmount = _newBorrowAmount;
-
-        uint256 interest = actualVaultBorrowAmount - vault.principal;
-        if(_amount >= interest) {
-            vault.principal = vault.principal - (_amount - interest);
+            // User repays the entire interest and some (or all) principal
+            _principalPaid = _amount - _interest;
+            vault.principal = vault.principal - _principalPaid;
+        } else {
+            // Only interest is paid
+            _poolFees = Math.roundUpMul(_amount, poolInterestFee);
+            _feeCollectorFees = _amount - _poolFees;
         }
 
-        // Transfer tokens to the core
-        ISyntheticTokenV2(syntheticAsset).transferFrom(
-            _repayer,
-            address(this),
-            _amount
-        );
-        // Destroy `_amount` of tokens tokens that the core owns
-        ISyntheticTokenV2(syntheticAsset).destroy(
-            _amount
-        );
+        // Update total borrow amount
+        totalBorrowed = totalBorrowed - vault.normalizedBorrowedAmount + _newNormalizedBorrowAmount;
+
+        // Update vault
+        vault.normalizedBorrowedAmount = _newNormalizedBorrowAmount;
+
+        // Transfer fees to pool and fee collector (if any)
+        if (_interest > 0) {
+            SafeERC20.safeTransferFrom(
+                IERC20Metadata(_borrowAssetAddress), 
+                _repayer, 
+                borrowPool, 
+                _poolFees
+            );
+
+            SafeERC20.safeTransferFrom(
+                IERC20Metadata(_borrowAssetAddress), 
+                _repayer, 
+                feeCollector,
+                _feeCollectorFees
+            );
+        }
+
+        // Swap the principal paid back into the borrow pool
+        if (_principalPaid > 0) {
+            // Transfer tokens to the core
+            SafeERC20.safeTransferFrom(
+                IERC20Metadata(_borrowAssetAddress),
+                _repayer,
+                address(this),
+                _principalPaid
+            );
+
+            SafeERC20.safeApprove(
+                IERC20Metadata(_borrowAssetAddress), 
+                borrowPool, 
+                _principalPaid
+            ); 
+
+            // Swap stables for creds
+            ISapphirePool(borrowPool).swap(
+                _borrowAssetAddress,
+                syntheticAsset,
+                _principalPaid,
+                address(this)
+            );
+
+            // Burn the creds
+            ISyntheticTokenV2(syntheticAsset).destroy(
+                _principalPaid
+            );
+        }
     }
 
     function _liquidate(
@@ -1159,7 +1218,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         // --- EFFECTS ---
 
         // Get the liquidation price of the asset (discount for liquidator)
-        uint256 liquidationPriceRatio = BASE - liquidationUserRatio;
+        uint256 liquidationPriceRatio = BASE - liquidatorDiscount;
         uint256 liquidationPrice = Math.roundUpMul(_currentPrice, liquidationPriceRatio);
 
         // Calculate the amount of collateral to be sold based on the entire debt
@@ -1187,7 +1246,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         uint256 profit = valueCollateralSold - debtToRepay;
 
         // Calculate the ARC share
-        uint256 arcShare = profit * liquidationArcRatio / liquidationPrice / collateralPrecisionScalar;
+        uint256 arcShare = profit * liquidationArcFee / liquidationPrice / collateralPrecisionScalar;
 
         // Calculate liquidator's share
         uint256 liquidatorCollateralShare = collateralToSell - arcShare;
@@ -1322,22 +1381,37 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     }
 
     function _setFees(
-        uint256 _liquidationUserRatio,
-        uint256 _liquidationArcRatio,
-        uint256 _borrowFee
+        uint256 _liquidatorDiscount,
+        uint256 _liquidationArcFee,
+        uint256 _borrowFee,
+        uint256 _poolInterestFee
     )
         private
     {
         require(
-            _liquidationUserRatio <= BASE &&
-            _liquidationArcRatio <= BASE,
+            _liquidatorDiscount <= BASE &&
+            _liquidationArcFee <= BASE,
             "SapphireCoreV1: fees cannot be more than 100%"
         );
 
-        liquidationUserRatio = _liquidationUserRatio;
-        liquidationArcRatio = _liquidationArcRatio;
+        require(
+            _liquidatorDiscount <= BASE &&
+            _poolInterestFee <= BASE &&
+            _liquidationArcFee <= BASE,
+            "SapphireCoreV1: invalid fees"
+        );
+
+        liquidatorDiscount = _liquidatorDiscount;
+        liquidationArcFee = _liquidationArcFee;
         borrowFee = _borrowFee;
-        emit LiquidationFeesUpdated(liquidationUserRatio, liquidationArcRatio, _borrowFee);
+        poolInterestFee = _poolInterestFee;
+
+        emit FeesUpdated(
+            liquidatorDiscount, 
+            liquidationArcFee, 
+            _borrowFee,
+            _poolInterestFee
+        );
     }
 
     /**

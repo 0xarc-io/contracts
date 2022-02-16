@@ -39,10 +39,6 @@ xdescribe('SapphireCore.exit()', () => {
     return ctx.sdks.sapphire.collateral().balanceOf(user.address);
   }
 
-  function getSynthBalance(user: SignerWithAddress) {
-    return ctx.sdks.sapphire.synthetic().balanceOf(user.address);
-  }
-
   async function init(ctx: ITestContext) {
     scoredMinterCreditScore = {
       account: ctx.signers.scoredMinter.address,
@@ -67,24 +63,22 @@ xdescribe('SapphireCore.exit()', () => {
       liquidatorCreditScore,
       scoredMinterBorrowLimitScore,
     ]);
-  }
-
-  before(async () => {
-    ctx = await generateContext(sapphireFixture, init);
-    signers = ctx.signers;
-    arc = ctx.sdks.sapphire;
-    stableCoin = ctx.contracts.stablecoin;
-
-    await ctx.contracts.sapphire.pool.setDepositLimit(
-      ctx.contracts.stablecoin.address,
-      BORROW_AMOUNT.mul(2),
-    );
 
     await setupSapphire(ctx, {
       merkleRoot: creditScoreTree.getHexRoot(),
       // Set the price to $1
       price: utils.parseEther('1'),
+      poolDepositSwapAmount: BORROW_AMOUNT.mul(3),
     });
+  }
+
+  before(async () => {
+    ctx = await generateContext(sapphireFixture, init, {
+      stablecoinDecimals: 18,
+    });
+    signers = ctx.signers;
+    arc = ctx.sdks.sapphire;
+    stableCoin = ctx.contracts.stablecoin;
   });
 
   addSnapshotBeforeRestoreAfterEach();
@@ -99,12 +93,14 @@ xdescribe('SapphireCore.exit()', () => {
       getScoreProof(scoredMinterCreditScore, creditScoreTree),
     );
 
-    const synthBalance = await arc
-      .synthetic()
-      .balanceOf(signers.scoredMinter.address);
+    const stablecoinBalance = await stableCoin.balanceOf(
+      signers.scoredMinter.address,
+    );
 
-    // burn the remaining amount
-    await arc.synthetic().connect(signers.scoredMinter).burn(synthBalance);
+    // get rid of the remaining amount
+    await stableCoin
+      .connect(signers.scoredMinter)
+      .transfer(ctx.signers.admin.address, stablecoinBalance);
 
     const vault = await arc.getVault(signers.scoredMinter.address);
     const remainingDebt = roundUpMul(
@@ -115,16 +111,14 @@ xdescribe('SapphireCore.exit()', () => {
     // Approve repay amount
     await approve(
       remainingDebt,
-      arc.syntheticAddress(),
+      stableCoin.address,
       arc.coreAddress(),
       signers.scoredMinter,
     );
 
     await expect(
       arc.exit(stableCoin.address, undefined, undefined, signers.scoredMinter),
-    ).to.be.revertedWith(
-      'SyntheticTokenV2: sender does not have enough balance',
-    );
+    ).to.be.revertedWith('SafeERC20: TRANSFER_FROM_FAILED');
   });
 
   it('repays all the debt and returns collateral to the user', async () => {
@@ -139,21 +133,22 @@ xdescribe('SapphireCore.exit()', () => {
 
     let vault = await arc.getVault(signers.scoredMinter.address);
     let collateralBalance = await getCollateralBalance(signers.scoredMinter);
-    let synthBalance = await getSynthBalance(signers.scoredMinter);
+    let stableBalance = await stableCoin.balanceOf(
+      signers.scoredMinter.address,
+    );
 
     expect(vault.collateralAmount).to.eq(COLLATERAL_AMOUNT);
     expect(vault.normalizedBorrowedAmount).to.eq(BORROW_AMOUNT);
     expect(collateralBalance).to.eq(0);
-    expect(synthBalance).to.eq(BORROW_AMOUNT);
+    expect(stableBalance).to.eq(BORROW_AMOUNT);
 
     // Approve repay amount
     await approve(
       BORROW_AMOUNT,
-      arc.syntheticAddress(),
+      stableCoin.address,
       arc.coreAddress(),
       signers.scoredMinter,
     );
-    // await ctx.contracts.synthetic.tokenV2.mint(signers.scoredMinter.address, 1); // Mint 1, to account for rounding
 
     await arc.exit(
       stableCoin.address,
@@ -164,12 +159,12 @@ xdescribe('SapphireCore.exit()', () => {
 
     vault = await arc.getVault(signers.scoredMinter.address);
     collateralBalance = await getCollateralBalance(signers.scoredMinter);
-    synthBalance = await getSynthBalance(signers.scoredMinter);
+    stableBalance = await stableCoin.balanceOf(signers.scoredMinter.address);
 
     expect(vault.collateralAmount).to.eq(0);
     expect(vault.normalizedBorrowedAmount).to.eq(0);
     expect(collateralBalance).to.eq(COLLATERAL_AMOUNT);
-    expect(synthBalance).to.eq(0);
+    expect(stableBalance).to.eq(0);
   });
 
   xit('reverts if exit with unsupported token', async () => {
@@ -182,24 +177,24 @@ xdescribe('SapphireCore.exit()', () => {
       getScoreProof(scoredMinterCreditScore, creditScoreTree),
     );
 
+    await arc.synthetic().mint(signers.scoredMinter.address, BORROW_AMOUNT);
+
     // Approve repay amount
     await approve(
       BORROW_AMOUNT,
-      arc.syntheticAddress(),
+      arc.synthetic().address,
       arc.coreAddress(),
       signers.scoredMinter,
     );
 
     await expect(
       arc.exit(
-        arc.collateral().address,
+        arc.synthetic().address,
         undefined,
         undefined,
         signers.scoredMinter,
       ),
-    ).to.be.revertedWith(
-      'SapphireCoreV1: the token address should be one of the supported tokens',
-    );
+    ).to.be.revertedWith('SapphirePool: invalid swap tokens');
   });
 
   it('repays all the debt + accrued interest and returns collateral to the user', async () => {
@@ -210,6 +205,8 @@ xdescribe('SapphireCore.exit()', () => {
       .connect(signers.interestSetter)
       .setInterestRate(INTEREST_RATE);
 
+    expect(await stableCoin.balanceOf(signers.scoredMinter.address)).to.eq(0);
+
     await setupBaseVault(
       arc,
       signers.scoredMinter,
@@ -217,6 +214,10 @@ xdescribe('SapphireCore.exit()', () => {
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
       getScoreProof(scoredMinterCreditScore, creditScoreTree),
+    );
+
+    expect(await stableCoin.balanceOf(signers.scoredMinter.address)).to.eq(
+      BORROW_AMOUNT,
     );
 
     // increase time by 1 second
@@ -232,27 +233,22 @@ xdescribe('SapphireCore.exit()', () => {
     );
     // Check actual borrowed amount, not principal one
     expect(actualBorrowAmount).to.be.gt(BORROW_AMOUNT);
-
     // Approve repay amount
     await approve(
       actualBorrowAmount,
-      arc.syntheticAddress(),
+      stableCoin.address,
       arc.coreAddress(),
       signers.scoredMinter,
     );
+
     // Try to exit but fail because user does not have enough balance due to
     // the accrued interest
     await expect(
       arc.exit(stableCoin.address, undefined, undefined, signers.scoredMinter),
-    ).to.be.revertedWith(
-      'SyntheticTokenV2: sender does not have enough balance',
-    );
+    ).to.be.revertedWith('SafeERC20: TRANSFER_FROM_FAILED');
 
     const accruedInterest = actualBorrowAmount.sub(BORROW_AMOUNT);
-    await arc
-      .synthetic()
-      .connect(signers.admin)
-      .mint(signers.scoredMinter.address, accruedInterest);
+    await stableCoin.mintShare(signers.scoredMinter.address, accruedInterest);
 
     await arc.exit(
       stableCoin.address,

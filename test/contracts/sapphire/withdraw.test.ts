@@ -5,7 +5,6 @@ import { BASE } from '@src/constants';
 import { PassportScoreTree } from '@src/MerkleTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { SapphireAssessor, TestTokenFactory } from '@src/typings';
-import { getEvent } from '@src/utils/getEvent';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import {
   BORROW_LIMIT_PROOF_PROTOCOL,
@@ -189,14 +188,12 @@ describe('SapphireCore.withdraw()', () => {
       signers.scoredMinter,
     );
 
-    const assessmentTx = await assessor.assess(
+    const scoredCRatio = await assessor.assess(
       DEFAULT_LOW_C_RATIO,
       DEFAULT_HIGH_C_RATIO,
       getScoreProof(minterCreditScore, creditScoreTree),
       true,
     );
-    const event = await getEvent(assessmentTx, assessor, 'Assessed');
-    const scoredCRatio = event.args[1];
 
     const remainingAmount2 = BORROW_AMOUNT.mul(scoredCRatio)
       .mul(BigNumber.from(10).pow(DEFAULT_COLLATERAL_DECIMALS))

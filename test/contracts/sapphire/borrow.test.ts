@@ -264,9 +264,11 @@ describe('SapphireCore.borrow()', () => {
     );
   });
 
+  it('borrows twice with two different stablecoins');
+
   it('adds the borrow fee to an initial borrow amount', async () => {
     const borrowFee = utils.parseEther('0.1');
-    await arc.core().setFees(0, 0, borrowFee);
+    await arc.core().setFees(0, 0, borrowFee, 0);
 
     let vault = await arc.getVault(scoredMinter.address);
     expect(vault.normalizedBorrowedAmount).eq(0);
@@ -304,7 +306,7 @@ describe('SapphireCore.borrow()', () => {
     expect(await stablecoin.balanceOf(scoredMinter.address)).eq(borrowAmt);
 
     const borrowFee = utils.parseEther('0.1');
-    await arc.core().setFees(0, 0, borrowFee);
+    await arc.core().setFees(0, 0, borrowFee, 0);
 
     await arc.borrow(
       borrowAmt,

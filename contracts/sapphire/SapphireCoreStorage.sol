@@ -41,12 +41,12 @@ contract SapphireCoreStorageV1 {
      * @notice How much should the liquidation penalty be, expressed as a percentage
      *      with 18 decimals
      */
-    uint256 public liquidationUserRatio;
+    uint256 public liquidatorDiscount;
 
     /**
      * @notice How much of the profit acquired from a liquidation should ARC receive
      */
-    uint256 public liquidationArcRatio;
+    uint256 public liquidationArcFee;
 
     /**
      * @notice The percentage fee that is added as interest for each loan
@@ -118,6 +118,12 @@ contract SapphireCoreStorageV1 {
      * @notice The interest rate charged to borrowers. Expressed as the interest rate per second and 18 d.p
      */
     uint256 public interestRate;
+
+    /**
+     * @notice Ratio determining the portion of the interest that is being distributed to the
+     * borrow pool. The remaining of the pool share will go to the feeCollector.
+     */
+    uint256 public poolInterestFee;
 
     /**
      * @notice Which address can set interest rates for this contract

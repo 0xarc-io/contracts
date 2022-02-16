@@ -29,18 +29,6 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
 
     event PassportScoreContractSet(address _newCreditScoreContract);
 
-    event Assessed(
-        address _account,
-        uint256 _assessedValue
-    );
-
-    event CreditLimitAssessed(
-        address indexed _account,
-        uint256 _borrowAmount,
-        uint256 _creditLimit,
-        bool _isBorrowAmountValid
-    );
-
     event MaxScoreSet(uint16 _maxScore);
 
     /* ========== Constructor ========== */
@@ -80,7 +68,8 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
         SapphireTypes.ScoreProof memory _scoreProof,
         bool _isScoreRequired
     )
-        public
+        external
+        view
         override
         checkScoreProof(_scoreProof, _isScoreRequired, false)
         returns (uint256)
@@ -112,8 +101,6 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
             "SapphireAssessor: The mapper returned a value out of bounds"
         );
 
-        emit Assessed(_scoreProof.account, result);
-
         return result;
     }
 
@@ -121,7 +108,8 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
         uint256 _borrowAmount,
         SapphireTypes.ScoreProof calldata _borrowLimitProof
     )
-        public
+        external
+        view
         override
         checkScoreProof(_borrowLimitProof, true, false)
         returns (bool)
@@ -133,13 +121,6 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
         );
 
         bool _isBorrowAmountValid = _borrowAmount <= _borrowLimitProof.score;
-
-        emit CreditLimitAssessed(
-            _borrowLimitProof.account,
-            _borrowAmount,
-            _borrowLimitProof.score,
-            _isBorrowAmountValid
-        );
 
         return _isBorrowAmountValid;
     }
