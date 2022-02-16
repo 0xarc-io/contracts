@@ -96,11 +96,11 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
 
     event TokensSwapped(
         address indexed _core,
-        address indexed _tokenIn,
+        address _tokenIn,
         address indexed _tokenOut,
         uint256 _amountIn,
         uint256 _amountOut,
-        address _receiver
+        address indexed _receiver
     );
 
     /* ========== Modifiers ========== */
