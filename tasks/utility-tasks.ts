@@ -9,7 +9,7 @@ import {
 import { utils } from 'ethers';
 import { task } from 'hardhat/config';
 import { TestTokenFactory } from '@src/typings';
-import { DeploymentType } from '../deployments/types';
+import { DeploymentCategory } from '../deployments/types';
 
 task('mint-tokens')
   .addParam('token', 'The address of the token to mint from')
@@ -80,7 +80,7 @@ task('deploy-test-erc20', 'Deploys an ERC20 test token with 18 decimals')
           18,
         ),
         version: 1,
-        type: DeploymentType.global,
+        type: DeploymentCategory.global,
       },
       networkConfig,
     );

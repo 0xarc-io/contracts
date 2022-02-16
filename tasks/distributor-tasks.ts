@@ -1,4 +1,4 @@
-import { DeploymentType } from '../deployments/types';
+import { DeploymentCategory } from '../deployments/types';
 import BalanceTree from '@src/MerkleTree/BalanceTree';
 import { MerkleDistributorFactory } from '@src/typings';
 import { readCsv } from '@src/utils/readCsv';
@@ -36,7 +36,7 @@ task('distributor-deploy', 'Deploy merkle token distributor')
           distributorTree.getHexRoot(),
         ),
         version: 1,
-        type: DeploymentType.global,
+        type: DeploymentCategory.global,
       },
       networkConfig,
       5,

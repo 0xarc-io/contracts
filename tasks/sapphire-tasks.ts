@@ -1,11 +1,11 @@
 import {
   ArcProxyFactory,
+  CredsERC20Factory,
   MockOracleFactory,
   SapphireAssessorFactory,
   SapphireCoreV1Factory,
   SapphireMapperLinearFactory,
   SapphirePassportScoresFactory,
-  SyntheticTokenV2Factory,
   TestTokenFactory,
 } from '@src/typings';
 import { green, magenta, red, yellow } from 'chalk';
@@ -25,15 +25,12 @@ import getUltimateOwner from './task-utils/getUltimateOwner';
 import { DEFAULT_MAX_CREDIT_SCORE } from '@test/helpers/sapphireDefaults';
 import { constants } from 'ethers';
 import { verifyContract } from './task-utils';
-import { DeploymentType, NetworkParams } from '../deployments/types';
+import { DeploymentCategory, NetworkParams } from '../deployments/types';
 import { TransactionRequest } from '@ethersproject/providers';
 
-task(
-  'deploy-sapphire-synth',
-  'Deploy the Sapphire synthetic token (SyntheticTokenV2)',
-)
-  .addParam('name', 'The name of the synthetic token')
-  .addParam('symbol', 'The symbol of the synthetic token')
+task('deploy-creds', 'Deploy the CredsERC20 token')
+  .addParam('name', 'The name of the token')
+  .addParam('symbol', 'The symbol of the token')
   .setAction(async (taskArgs, hre) => {
     const name = taskArgs.name;
     const symbol = taskArgs.symbol;
@@ -44,38 +41,36 @@ task(
 
     // Deploy implementation
 
-    const syntheticAddress = await deployContract(
+    const credsAddress = await deployContract(
       {
-        name: 'SyntheticToken',
-        source: 'SyntheticTokenV2',
-        data: new SyntheticTokenV2Factory(signer).getDeployTransaction(
-          name,
-          '2',
-        ),
+        name: 'CredsERC20',
+        source: 'CredsERC20',
+        data: new CredsERC20Factory(signer).getDeployTransaction(),
         version: 2,
-        type: DeploymentType.synth,
+        type: DeploymentCategory.borrowing,
+        group: symbol,
       },
       networkConfig,
     );
 
-    if (!syntheticAddress) {
-      throw red('Synthetic Token has not been deployed!');
+    if (!credsAddress) {
+      throw red(`${name} has not been deployed!`);
     }
 
-    await verifyContract(hre, syntheticAddress, name, '2');
+    await verifyContract(hre, credsAddress);
 
     // Deploy proxy
-    const syntheticProxyAddress = await deployContract(
+    const credsProxyAddress = await deployContract(
       {
-        name: 'SyntheticV2Proxy',
+        name: 'CredsERC20',
         source: 'ArcProxy',
         data: new ArcProxyFactory(signer).getDeployTransaction(
-          syntheticAddress,
+          credsAddress,
           signer.address,
           [],
         ),
         version: 2,
-        type: DeploymentType.synth,
+        type: DeploymentCategory.borrowing,
         group: symbol,
       },
       networkConfig,
@@ -83,32 +78,27 @@ task(
 
     await verifyContract(
       hre,
-      syntheticProxyAddress,
-      syntheticAddress,
+      credsProxyAddress,
+      credsAddress,
       signer.address,
       [],
     );
 
-    const synthetic = SyntheticTokenV2Factory.connect(
-      syntheticProxyAddress,
-      signer,
-    );
+    const creds = CredsERC20Factory.connect(credsProxyAddress, signer);
 
     // Call init()
-    const synthName = await synthetic.name();
-    if (synthName.length > 0) {
-      console.log(
-        magenta(`Synthetic init() function has already been called\n`),
-      );
+    const credsName = await creds.name();
+    if (credsName.length > 0) {
+      console.log(magenta(`Creds init() function has already been called\n`));
       return;
     }
 
     console.log(yellow(`Calling init() ...\n`));
     try {
-      await synthetic.init(name, symbol, '2');
+      await creds.init(name, symbol);
       console.log(green(`init() called successfully!\n`));
     } catch (e) {
-      console.log(red(`Failed to call synthetic init().\nReason: ${e}\n`));
+      console.log(red(`Failed to call creds init().\nReason: ${e}\n`));
     }
   });
 
@@ -161,7 +151,7 @@ task(
         source: 'SapphirePassportScores',
         data: new SapphirePassportScoresFactory(signer).getDeployTransaction(),
         version,
-        type: DeploymentType.global,
+        type: DeploymentCategory.global,
       },
       networkConfig,
     );
@@ -181,7 +171,7 @@ task(
           [],
         ),
         version: 1,
-        type: DeploymentType.global,
+        type: DeploymentCategory.global,
       },
       networkConfig,
     );
@@ -232,7 +222,7 @@ task('deploy-mapper', 'Deploy the Sapphire Mapper').setAction(
         source: 'SapphireMapperLinear',
         data: new SapphireMapperLinearFactory(signer).getDeployTransaction(),
         version: 1,
-        type: DeploymentType.global,
+        type: DeploymentCategory.global,
       },
       networkConfig,
     );
@@ -253,7 +243,7 @@ task('deploy-assessor', 'Deploy the Sapphire Assessor').setAction(
 
     const passportScoresAddress = loadContract({
       network,
-      type: DeploymentType.global,
+      type: DeploymentCategory.global,
       name: 'SapphirePassportScores',
     }).address;
 
@@ -263,7 +253,7 @@ task('deploy-assessor', 'Deploy the Sapphire Assessor').setAction(
 
     const mapperAddress = loadContract({
       network,
-      type: DeploymentType.global,
+      type: DeploymentCategory.global,
       name: 'SapphireMapperLinear',
     }).address;
 
@@ -282,7 +272,7 @@ task('deploy-assessor', 'Deploy the Sapphire Assessor').setAction(
           DEFAULT_MAX_CREDIT_SCORE,
         ),
         version: 1,
-        type: DeploymentType.global,
+        type: DeploymentCategory.global,
       },
       networkConfig,
     );
@@ -330,7 +320,7 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
         source: 'SapphireCoreV1',
         data: new SapphireCoreV1Factory(signer).getDeployTransaction(),
         version: 1,
-        type: DeploymentType.synth,
+        type: DeploymentCategory.borrowing,
       },
       networkConfig,
     );
@@ -365,7 +355,7 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
           [],
         ),
         version: 1,
-        type: DeploymentType.synth,
+        type: DeploymentCategory.borrowing,
         group: collatName,
       },
       networkConfig,
@@ -381,23 +371,20 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
 
     // Initialize core
 
-    const syntheticProxyAddress = loadContract({
+    const credsProxyAddress = loadContract({
       network,
-      type: DeploymentType.synth,
-      name: 'SyntheticV2Proxy',
+      name: 'CredsERC20',
+      source: 'ArcProxy',
     }).address;
 
     const assessorAddress = loadContract({
       network,
-      type: DeploymentType.global,
+      type: DeploymentCategory.global,
       name: 'SapphireAssessor',
     }).address;
 
     const core = SapphireCoreV1Factory.connect(coreProxyAddress, signer);
-    const synthetic = SyntheticTokenV2Factory.connect(
-      syntheticProxyAddress,
-      signer,
-    );
+    const creds = CredsERC20Factory.connect(credsProxyAddress, signer);
 
     const ultimateOwner = getUltimateOwner(signer, networkDetails);
 
@@ -405,7 +392,7 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
       red(
         `Please ensure the following details are correct:\n
           Collateral Address: ${collateralAddress}\n
-          Synthetic Address: ${syntheticProxyAddress}\n
+          Creds Address: ${credsProxyAddress}\n
           Supported Borrow Address: ${supportedBorrowAssetAddress}\n
           Oracle Address: ${oracleAddress}\n
           Interest Rate Setter: ${
@@ -427,7 +414,7 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
 
     await core.init(
       collateralAddress,
-      syntheticProxyAddress,
+      credsProxyAddress,
       oracleAddress,
       collatConfig.params.interestSetter || ultimateOwner,
       collatConfig.params.pauseOperator || ultimateOwner,
@@ -456,15 +443,15 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
       console.log(yellow(`Limits successfully set!\n`));
     }
 
-    // Add minter to synth
-    console.log(yellow(`Adding minter to synthetic...\n`));
-    // We already enforce limits at the synthetic level.
-    await synthetic.addMinter(core.address, MAX_UINT256);
-    console.log(green(`Minter successfully added to synthetic\n`));
+    // Add minter to Creds
+    console.log(yellow(`Adding minter to creds...\n`));
+    // We already enforce limits at the Creds level.
+    await creds.addMinter(core.address, MAX_UINT256);
+    console.log(green(`Minter successfully added to creds\n`));
 
     // Change admin to ultimate owner
     if (network === 'mainnet') {
-      console.log(yellow(`Chaingin admin...`));
+      console.log(yellow(`Changing admin...`));
 
       const proxy = ArcProxyFactory.connect(coreProxyAddress, signer);
       await proxy.changeAdmin(ultimateOwner);
@@ -498,7 +485,7 @@ function _deployTestCollateral(
           18,
         ),
         version: 1,
-        type: DeploymentType.synth,
+        type: DeploymentCategory.borrowing,
         group: collatName,
       },
       networkConfig,
@@ -535,7 +522,7 @@ async function _deployOracle(
         source: 'MockOracle',
         data: new MockOracleFactory(signer).getDeployTransaction(),
         version: 1,
-        type: DeploymentType.synth,
+        type: DeploymentCategory.borrowing,
         group: collatName,
       },
       networkConfig,
@@ -559,7 +546,7 @@ async function _deployOracle(
         source,
         data: getDeployTx(signer),
         version: 1,
-        type: DeploymentType.synth,
+        type: DeploymentCategory.borrowing,
         group: collatName,
       },
       networkConfig,

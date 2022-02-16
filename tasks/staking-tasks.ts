@@ -19,7 +19,7 @@ import {
 import { task } from 'hardhat/config';
 import getUltimateOwner from './task-utils/getUltimateOwner';
 import { verifyContract } from './task-utils';
-import { DeploymentType } from '../deployments/types';
+import { DeploymentCategory } from '../deployments/types';
 import { deployProxy } from './task-utils/deployProxy';
 
 task('deploy-staking', 'Deploy a staking/reward pool')
@@ -48,14 +48,14 @@ task('deploy-staking', 'Deploy a staking/reward pool')
 
     const arcDAO = await loadContract({
       name: 'ArcDAO',
-      type: DeploymentType.global,
+      type: DeploymentCategory.global,
       version: 2,
       network,
     });
 
     const rewardToken = loadContract({
       name: stakingConfig.rewardsToken,
-      type: DeploymentType.global,
+      type: DeploymentCategory.global,
       network,
     });
 
@@ -71,7 +71,7 @@ task('deploy-staking', 'Deploy a staking/reward pool')
             18,
           ),
           version: 1,
-          type: DeploymentType.staking,
+          type: DeploymentCategory.staking,
           group: name,
         },
         networkConfig,
@@ -102,7 +102,7 @@ task('deploy-staking', 'Deploy a staking/reward pool')
         source: stakingConfig.source,
         data: stakingConfig.getDeployTx(signer),
         version: 1,
-        type: DeploymentType.staking,
+        type: DeploymentCategory.staking,
         group: name,
       },
       networkConfig,
@@ -120,7 +120,7 @@ task('deploy-staking', 'Deploy a staking/reward pool')
           [],
         ),
         version: 1,
-        type: DeploymentType.staking,
+        type: DeploymentCategory.staking,
         group: name,
       },
       networkConfig,
@@ -166,7 +166,7 @@ task('deploy-staking', 'Deploy a staking/reward pool')
         for (const rewardGroup of stakingConfig.coreContracts) {
           const contract = await loadContract({
             name: 'CoreProxy',
-            type: DeploymentType.synth,
+            type: DeploymentCategory.borrowing,
             network,
             group: rewardGroup,
           });
@@ -232,14 +232,14 @@ task('deploy-staking-liquidity', 'Deploy a LiquidityCampaign')
 
     const arcDAO = await loadContract({
       name: 'ArcDAO',
-      type: DeploymentType.global,
+      type: DeploymentCategory.global,
       version: 2,
       network,
     });
 
     const rewardToken = await loadContract({
       source: stakingConfig.rewardsToken,
-      type: DeploymentType.global,
+      type: DeploymentCategory.global,
       network,
     });
 
@@ -261,7 +261,7 @@ task('deploy-staking-liquidity', 'Deploy a LiquidityCampaign')
             18,
           ),
           version: 1,
-          type: DeploymentType.staking,
+          type: DeploymentCategory.staking,
           group: name,
         },
         networkConfig,
@@ -273,7 +273,7 @@ task('deploy-staking-liquidity', 'Deploy a LiquidityCampaign')
         source: stakingConfig.source,
         data: stakingConfig.getDeployTx(signer),
         version: 1,
-        type: DeploymentType.staking,
+        type: DeploymentCategory.staking,
         group: name,
       },
       networkConfig,
@@ -289,7 +289,7 @@ task('deploy-staking-liquidity', 'Deploy a LiquidityCampaign')
           [],
         ),
         version: 1,
-        type: DeploymentType.staking,
+        type: DeploymentCategory.staking,
         group: name,
       },
       networkConfig,
@@ -374,14 +374,14 @@ task('deploy-staking-joint-passport', 'Deploy a JointPassportCampaign')
 
     const arcDAO = loadContract({
       name: 'ArcDAO',
-      type: DeploymentType.global,
+      type: DeploymentCategory.global,
       version: 2,
       network,
     });
 
     const rewardToken = loadContract({
       name: 'ArcxToken',
-      type: DeploymentType.global,
+      type: DeploymentCategory.global,
       version: 2,
       network,
     });
@@ -408,7 +408,7 @@ task('deploy-staking-joint-passport', 'Deploy a JointPassportCampaign')
           maxStakePerUser,
           creditScoreThreshold,
         ),
-        type: DeploymentType.staking,
+        type: DeploymentCategory.staking,
         group: name,
         version: 1,
       },
@@ -506,7 +506,7 @@ task(
         source,
         data: factory.getDeployTransaction(),
         version: Number(version) || 1,
-        type: DeploymentType.global,
+        type: DeploymentCategory.global,
         group: 'StakingAccrualERC20',
       },
       networkConfig,
@@ -540,7 +540,7 @@ task(
           [],
         ),
         version: 1,
-        type: DeploymentType.global,
+        type: DeploymentCategory.global,
         group: 'StakingAccrualERC20',
       },
       networkConfig,
@@ -636,7 +636,7 @@ task('deploy-kerman-rewards', 'Deploy the KermanRewards staking contract')
             signer.address,
           ),
           version: 1,
-          type: DeploymentType.staking,
+          type: DeploymentCategory.staking,
           group: 'KermanRewards',
         },
         networkConfig,
@@ -659,7 +659,7 @@ task('deploy-kerman-rewards', 'Deploy the KermanRewards staking contract')
         source: 'KermanRewards',
         data: factory.getDeployTransaction(),
         version: 1,
-        type: DeploymentType.global,
+        type: DeploymentCategory.global,
         group: 'KermanRewards',
       },
       networkConfig,

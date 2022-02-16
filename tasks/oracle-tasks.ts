@@ -1,4 +1,4 @@
-import { DeploymentType } from '../deployments/types';
+import { DeploymentCategory } from '../deployments/types';
 import { ArcUniswapV2OracleFactory } from '@src/typings';
 import { green } from 'chalk';
 import { task } from 'hardhat/config';
@@ -26,7 +26,7 @@ task('deploy-uniswap-oracle', 'Deploy the uniswap TWAP oracle').setAction(
           UNIV2_FACTORY,
         ),
         version: 1,
-        type: DeploymentType.synth,
+        type: DeploymentCategory.global,
       },
       networkConfig,
     );

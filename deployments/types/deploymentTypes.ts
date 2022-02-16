@@ -1,13 +1,22 @@
 import { BigNumberish, Signer } from 'ethers';
 import { TransactionRequest } from '@ethersproject/providers';
 
-export interface DeployContractParams {
+interface BaseDeploymentParams {
   name: string;
   source: string;
-  data: TransactionRequest;
   version: number;
   type: DeploymentCategory;
   group?: string;
+}
+
+export interface DeployContractParams extends BaseDeploymentParams {
+  data: TransactionRequest;
+}
+
+export interface WriteToDeploymentsParams extends BaseDeploymentParams {
+  address: string;
+  txn: string;
+  network: string;
 }
 
 export interface NetworkParams {
@@ -21,17 +30,6 @@ export enum DeploymentCategory {
   borrowing = 'borrowing',
   staking = 'staking',
   global = 'global',
-}
-
-export interface WriteToDeploymentsParams {
-  name: string;
-  source: string;
-  address: string;
-  txn: string;
-  network: string;
-  version: number;
-  type: DeploymentCategory;
-  group?: string;
 }
 
 export interface CollateralConfig {
