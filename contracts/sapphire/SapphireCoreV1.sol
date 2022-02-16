@@ -578,7 +578,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
         // Repay outstanding debt
         actions[0] = SapphireTypes.Action(
-            repayAmount,
+            repayAmount / precisionScalars[_borrowAssetAddress],
             _borrowAssetAddress,
             SapphireTypes.Operation.Repay,
             address(0)

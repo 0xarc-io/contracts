@@ -7,6 +7,7 @@ import {
   BORROW_LIMIT_PROOF_PROTOCOL,
   DEFAULT_COLLATERAL_DECIMALS,
   DEFAULT_PROOF_PROTOCOL,
+  DEFAULT_STABLE_COIN_PRECISION_SCALAR,
 } from '@test/helpers/sapphireDefaults';
 import { setupBaseVault } from '@test/helpers/setupBaseVault';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
@@ -21,10 +22,13 @@ import { PassportScoreTree } from '@src/MerkleTree';
 import { TestToken } from '@src/typings';
 
 const COLLATERAL_AMOUNT = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS);
-const BORROW_AMOUNT = utils.parseEther('500');
+const SCALED_BORROW_AMOUNT = utils.parseEther('500');
+const BORROW_AMOUNT = utils
+  .parseEther('500')
+  .div(DEFAULT_STABLE_COIN_PRECISION_SCALAR);
 const INTEREST_RATE = BigNumber.from(1547125957);
 
-xdescribe('SapphireCore.exit()', () => {
+describe('SapphireCore.exit()', () => {
   let ctx: ITestContext;
 
   let arc: SapphireTestArc;
@@ -49,13 +53,13 @@ xdescribe('SapphireCore.exit()', () => {
     scoredMinterBorrowLimitScore = {
       account: ctx.signers.scoredMinter.address,
       protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
-      score: BORROW_AMOUNT.mul(2),
+      score: SCALED_BORROW_AMOUNT.mul(2),
     };
 
     const liquidatorCreditScore = {
       account: ctx.signers.liquidator.address,
       protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
-      score: BORROW_AMOUNT.mul(2),
+      score: SCALED_BORROW_AMOUNT.mul(2),
     };
 
     creditScoreTree = new PassportScoreTree([
@@ -68,14 +72,12 @@ xdescribe('SapphireCore.exit()', () => {
       merkleRoot: creditScoreTree.getHexRoot(),
       // Set the price to $1
       price: utils.parseEther('1'),
-      poolDepositSwapAmount: BORROW_AMOUNT.mul(3),
+      poolDepositSwapAmount: SCALED_BORROW_AMOUNT.mul(3),
     });
   }
 
   before(async () => {
-    ctx = await generateContext(sapphireFixture, init, {
-      stablecoinDecimals: 18,
-    });
+    ctx = await generateContext(sapphireFixture, init);
     signers = ctx.signers;
     arc = ctx.sdks.sapphire;
     stableCoin = ctx.contracts.stablecoin;
@@ -106,7 +108,7 @@ xdescribe('SapphireCore.exit()', () => {
     const remainingDebt = roundUpMul(
       vault.normalizedBorrowedAmount,
       await arc.core().currentBorrowIndex(),
-    );
+    ).div(DEFAULT_STABLE_COIN_PRECISION_SCALAR);
 
     // Approve repay amount
     await approve(
@@ -138,7 +140,7 @@ xdescribe('SapphireCore.exit()', () => {
     );
 
     expect(vault.collateralAmount).to.eq(COLLATERAL_AMOUNT);
-    expect(vault.normalizedBorrowedAmount).to.eq(BORROW_AMOUNT);
+    expect(vault.normalizedBorrowedAmount).to.eq(SCALED_BORROW_AMOUNT);
     expect(collateralBalance).to.eq(0);
     expect(stableBalance).to.eq(BORROW_AMOUNT);
 
@@ -167,7 +169,7 @@ xdescribe('SapphireCore.exit()', () => {
     expect(stableBalance).to.eq(0);
   });
 
-  xit('reverts if exit with unsupported token', async () => {
+  it('reverts if exit with unsupported token', async () => {
     await setupBaseVault(
       arc,
       signers.scoredMinter,
@@ -177,11 +179,13 @@ xdescribe('SapphireCore.exit()', () => {
       getScoreProof(scoredMinterCreditScore, creditScoreTree),
     );
 
-    await arc.synthetic().mint(signers.scoredMinter.address, BORROW_AMOUNT);
+    await arc
+      .synthetic()
+      .mint(signers.scoredMinter.address, SCALED_BORROW_AMOUNT);
 
     // Approve repay amount
     await approve(
-      BORROW_AMOUNT,
+      SCALED_BORROW_AMOUNT,
       arc.synthetic().address,
       arc.coreAddress(),
       signers.scoredMinter,
@@ -212,12 +216,12 @@ xdescribe('SapphireCore.exit()', () => {
       signers.scoredMinter,
       getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
-      BORROW_AMOUNT,
+      SCALED_BORROW_AMOUNT,
       getScoreProof(scoredMinterCreditScore, creditScoreTree),
     );
 
     expect(await stableCoin.balanceOf(signers.scoredMinter.address)).to.eq(
-      BORROW_AMOUNT,
+      SCALED_BORROW_AMOUNT,
     );
 
     // increase time by 1 second
@@ -232,7 +236,7 @@ xdescribe('SapphireCore.exit()', () => {
       borrowIndex,
     );
     // Check actual borrowed amount, not principal one
-    expect(actualBorrowAmount).to.be.gt(BORROW_AMOUNT);
+    expect(actualBorrowAmount).to.be.gt(SCALED_BORROW_AMOUNT);
     // Approve repay amount
     await approve(
       actualBorrowAmount,
@@ -247,7 +251,7 @@ xdescribe('SapphireCore.exit()', () => {
       arc.exit(stableCoin.address, undefined, undefined, signers.scoredMinter),
     ).to.be.revertedWith('SafeERC20: TRANSFER_FROM_FAILED');
 
-    const accruedInterest = actualBorrowAmount.sub(BORROW_AMOUNT);
+    const accruedInterest = actualBorrowAmount.sub(SCALED_BORROW_AMOUNT);
     await stableCoin.mintShare(signers.scoredMinter.address, accruedInterest);
 
     await arc.exit(
