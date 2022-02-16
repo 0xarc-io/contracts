@@ -185,7 +185,7 @@ describe('SapphireCore.repay()', () => {
     expect(vault.normalizedBorrowedAmount).eq(0);
   });
 
-  xit('repays with 6 decimals stablecoin');
+  it('repays with 6 decimals stablecoin');
 
   it('swaps stables for creds, then burns the creds, (no interest accumulated)', async () => {
     expect(await creds.balanceOf(pool.address)).to.eq(SCALED_BORROW_AMOUNT);
@@ -219,7 +219,7 @@ describe('SapphireCore.repay()', () => {
 
     await arc.core().setFees(0, 0, borrowFee, poolShare);
     await arc.core().setLimits(0, SCALED_BORROW_AMOUNT, SCALED_BORROW_AMOUNT);
-    console.log('setupBaseVault');
+
     await setupBaseVault(
       arc,
       signers.staker,
@@ -241,9 +241,7 @@ describe('SapphireCore.repay()', () => {
     expect(vault.principal).eq(SCALED_BORROW_AMOUNT);
 
     // Pay only interest
-    console.log('scaledInterest', scaledInterest.toString());
     const preRepayStablePoolBalance = await stablecoin.balanceOf(pool.address);
-    console.log('repay scaled interest');
     await repay(
       scaledInterest.div(DEFAULT_STABLE_COIN_PRECISION_SCALAR),
       signers.staker,
@@ -257,13 +255,12 @@ describe('SapphireCore.repay()', () => {
     expect(vault.normalizedBorrowedAmount).eq(SCALED_BORROW_AMOUNT);
     expect(vault.principal).eq(SCALED_BORROW_AMOUNT);
     // The creds amount didn't change
-    console.log('pool (cred) balance');
     expect(await creds.balanceOf(pool.address)).eq(SCALED_BORROW_AMOUNT.mul(2));
-    console.log('pool balance');
     expect(await stablecoin.balanceOf(pool.address)).eq(
-      preRepayStablePoolBalance.add(expectedPoolProfit.div(DEFAULT_STABLE_COIN_PRECISION_SCALAR)),
-      );
-    console.log('fee collector balance');
+      preRepayStablePoolBalance.add(
+        expectedPoolProfit.div(DEFAULT_STABLE_COIN_PRECISION_SCALAR),
+      ),
+    );
     expect(await stablecoin.balanceOf(await arc.core().feeCollector())).eq(
       expectedArcProfit.div(DEFAULT_STABLE_COIN_PRECISION_SCALAR),
     );
@@ -312,7 +309,9 @@ describe('SapphireCore.repay()', () => {
 
     vault = await arc.getVault(signers.staker.address);
     expect(vault.normalizedBorrowedAmount).eq(
-      totalAccumulatedDebt.sub(repayAmount.mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR)),
+      totalAccumulatedDebt.sub(
+        repayAmount.mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR),
+      ),
     );
     expect(vault.principal).eq(SCALED_BORROW_AMOUNT.sub(principalRepayed));
   });

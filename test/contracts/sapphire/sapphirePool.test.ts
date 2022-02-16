@@ -955,8 +955,8 @@ describe('SapphirePool', () => {
         ).to.be.revertedWith('SapphirePool: unknown token');
       });
 
-      it('withdraws token with 6 decimals', async () => {
-        expect(await stablecoin.decimals()).to.eq(6);
+      it('withdraws token with 8 decimals', async () => {
+        expect(await stablecoin.decimals()).to.eq(8);
         // The user already deposited depositAmount in beforeEach()
         expect(await pool.balanceOf(depositor.address)).to.eq(
           scaledDepositAmount,

@@ -13,6 +13,7 @@ import {
   DEFAULT_LOW_C_RATIO,
   DEFAULT_PRICE,
   DEFAULT_PROOF_PROTOCOL,
+  DEFAULT_STABLE_COIN_PRECISION_SCALAR,
 } from '@test/helpers/sapphireDefaults';
 import { setupBaseVault } from '@test/helpers/setupBaseVault';
 import {
@@ -20,19 +21,20 @@ import {
   immediatelyUpdateMerkleRoot,
 } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
-import { utils } from 'ethers';
+import { constants, utils } from 'ethers';
 import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 
 const COLLATERAL_AMOUNT = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS);
-const BORROW_AMOUNT = utils.parseEther('200');
+const SCALED_BORROW_AMOUNT = utils.parseEther('200');
+const BORROW_AMOUNT = utils.parseEther('200').div(DEFAULT_STABLE_COIN_PRECISION_SCALAR);
 /**
  * Add +1 at the end to account for rounding.
  * When the contract computes the c-ratio, it will be slightly smaller to be on the
  * safe side.
  */
-const COLLATERAL_LIMIT = BORROW_AMOUNT.mul(DEFAULT_HIGH_C_RATIO)
+const COLLATERAL_LIMIT = SCALED_BORROW_AMOUNT.mul(DEFAULT_HIGH_C_RATIO)
   .div(DEFAULT_PRICE)
   .div(BASE)
   .mul(BigNumber.from(10).pow(DEFAULT_COLLATERAL_DECIMALS));
@@ -66,12 +68,12 @@ describe('SapphireCore.withdraw()', () => {
     scoredMinterBorrowLimitScore = {
       account: ctx.signers.scoredMinter.address,
       protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
-      score: BORROW_AMOUNT,
+      score: SCALED_BORROW_AMOUNT,
     };
     minterBorrowLimitScore = {
       account: ctx.signers.minter.address,
       protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
-      score: BORROW_AMOUNT,
+      score: SCALED_BORROW_AMOUNT,
     };
     creditScoreTree = new PassportScoreTree([
       minterCreditScore,
@@ -82,14 +84,12 @@ describe('SapphireCore.withdraw()', () => {
 
     await setupSapphire(ctx, {
       merkleRoot: creditScoreTree.getHexRoot(),
-      poolDepositSwapAmount: BORROW_AMOUNT.mul(3),
+      poolDepositSwapAmount: SCALED_BORROW_AMOUNT.mul(3),
     });
   }
 
   before(async () => {
-    ctx = await generateContext(sapphireFixture, init, {
-      stablecoinDecimals: 18,
-    });
+    ctx = await generateContext(sapphireFixture, init);
     signers = ctx.signers;
     arc = ctx.sdks.sapphire;
     assessor = ctx.contracts.sapphire.assessor;
@@ -103,7 +103,7 @@ describe('SapphireCore.withdraw()', () => {
       signers.scoredMinter,
       getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
-      BigNumber.from(0),
+      constants.Zero,
     );
     let vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.collateralAmount).to.eq(COLLATERAL_AMOUNT);
@@ -195,7 +195,7 @@ describe('SapphireCore.withdraw()', () => {
       true,
     );
 
-    const remainingAmount2 = BORROW_AMOUNT.mul(scoredCRatio)
+    const remainingAmount2 = SCALED_BORROW_AMOUNT.mul(scoredCRatio)
       .mul(BigNumber.from(10).pow(DEFAULT_COLLATERAL_DECIMALS))
       .div(DEFAULT_PRICE)
       .div(BASE)
