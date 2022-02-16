@@ -68,7 +68,7 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
         SapphireTypes.ScoreProof memory _scoreProof,
         bool _isScoreRequired
     )
-        public
+        external
         view
         override
         checkScoreProof(_scoreProof, _isScoreRequired, false)
@@ -108,7 +108,7 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
         uint256 _borrowAmount,
         SapphireTypes.ScoreProof calldata _borrowLimitProof
     )
-        public
+        external
         view
         override
         checkScoreProof(_borrowLimitProof, true, false)
