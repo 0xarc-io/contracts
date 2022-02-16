@@ -17,6 +17,7 @@ import {SapphireCoreStorage} from "./SapphireCoreStorage.sol";
 import {SapphireAssessor} from "./SapphireAssessor.sol";
 import {ISapphireAssessor} from "./ISapphireAssessor.sol";
 import {ISapphirePool} from "./SapphirePool/ISapphirePool.sol";
+import "hardhat/console.sol";
 
 contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
@@ -1087,8 +1088,10 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             true
         );
 
+        uint256 scaledAmount = _amount * precisionScalars[_borrowAssetAddress];
+
         require(
-            _amount <= actualVaultBorrowAmount,
+            scaledAmount <= actualVaultBorrowAmount,
             "SapphireCoreV1: there is not enough debt to repay"
         );
 
@@ -1099,22 +1102,22 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
         // Calculate new vault's borrowed amount
         uint256 _newNormalizedBorrowAmount = _normalizeBorrowAmount(
-            actualVaultBorrowAmount - _amount, 
+            actualVaultBorrowAmount - scaledAmount, 
             true
         );
 
         // Update principal
-        if(_amount > _interest) {
+        if(scaledAmount > _interest) {
             _poolFees = Math.roundUpMul(_interest, poolInterestFee);
             _feeCollectorFees = _interest - _poolFees;
 
             // User repays the entire interest and some (or all) principal
-            _principalPaid = _amount - _interest;
+            _principalPaid = scaledAmount - _interest;
             vault.principal = vault.principal - _principalPaid;
         } else {
             // Only interest is paid
-            _poolFees = Math.roundUpMul(_amount, poolInterestFee);
-            _feeCollectorFees = _amount - _poolFees;
+            _poolFees = Math.roundUpMul(scaledAmount, poolInterestFee);
+            _feeCollectorFees = scaledAmount - _poolFees;
         }
 
         // Update total borrow amount
@@ -1125,18 +1128,20 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
         // Transfer fees to pool and fee collector (if any)
         if (_interest > 0) {
+            console.log("Trying to send borrowPool %s tokens", _poolFees);
             SafeERC20.safeTransferFrom(
                 IERC20Metadata(_borrowAssetAddress), 
                 _repayer, 
                 borrowPool, 
-                _poolFees
+                _poolFees / precisionScalars[_borrowAssetAddress]
             );
 
+            console.log("Trying to send _feeCollectorFees %s tokens", _feeCollectorFees);
             SafeERC20.safeTransferFrom(
                 IERC20Metadata(_borrowAssetAddress), 
                 _repayer, 
                 feeCollector,
-                _feeCollectorFees
+                _feeCollectorFees / precisionScalars[_borrowAssetAddress]
             );
         }
 
@@ -1147,20 +1152,20 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
                 IERC20Metadata(_borrowAssetAddress),
                 _repayer,
                 address(this),
-                _principalPaid
+                _principalPaid / precisionScalars[_borrowAssetAddress]
             );
 
             SafeERC20.safeApprove(
                 IERC20Metadata(_borrowAssetAddress), 
                 borrowPool, 
-                _principalPaid
+                _principalPaid / precisionScalars[_borrowAssetAddress]
             ); 
 
             // Swap stables for creds
             ISapphirePool(borrowPool).swap(
                 _borrowAssetAddress,
                 syntheticAsset,
-                _principalPaid,
+                _principalPaid / precisionScalars[_borrowAssetAddress],
                 address(this)
             );
 
