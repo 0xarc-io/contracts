@@ -303,8 +303,8 @@ describe('SapphireAssessor', () => {
 
     it(`returns the upperBound if the user has no proof`, async () => {
       // If there's no score & no proof, pass the lowest credit score to the mapper
-      await expect(
-        assessor.assess(
+      expect(
+        await assessor.assess(
           1,
           10,
           {
@@ -315,9 +315,7 @@ describe('SapphireAssessor', () => {
           },
           false,
         ),
-      )
-        .to.emit(assessor, 'Assessed')
-        .withArgs(user2.address, 10);
+      ).eq(10);
     });
 
     it(`reverts if score is required and no proof is passed`, async () => {
@@ -338,10 +336,6 @@ describe('SapphireAssessor', () => {
 
     it(`reverts if score is required and no proof`, async () => {
       await expect(
-        assessor.assess(1, 10, getScoreProof(passportScore2, scoresTree), true),
-      ).to.emit(assessor, 'Assessed');
-
-      await expect(
         assessor.assess(
           1,
           10,
@@ -354,26 +348,6 @@ describe('SapphireAssessor', () => {
       ).to.be.revertedWith('SapphirePassportScores: invalid proof');
     });
 
-    it(`emit Assessed if the user has an existing score, score is required and proof is provided`, async () => {
-      await expect(
-        assessor.assess(
-          ArcNumber.new(100),
-          ArcNumber.new(200),
-          getScoreProof(passportScore1, scoresTree),
-          true,
-        ),
-      ).to.emit(assessor, 'Assessed');
-
-      await expect(
-        assessor.assess(
-          ArcNumber.new(100),
-          ArcNumber.new(200),
-          getScoreProof(passportScore1, scoresTree),
-          true,
-        ),
-      ).to.emit(assessor, 'Assessed');
-    });
-
     it('returns the lowerBound if credit score is maxed out', async () => {
       const {
         assessor: testAssessor,
@@ -381,16 +355,14 @@ describe('SapphireAssessor', () => {
         scoresTree: testPassportScoreTree,
       } = await getAssessorWithCredit(BigNumber.from(1000));
 
-      await expect(
-        testAssessor.assess(
+      expect(
+        await testAssessor.assess(
           ArcNumber.new(100),
           ArcNumber.new(200),
           getScoreProof(maxPassportScore, testPassportScoreTree),
           false,
         ),
-      )
-        .to.emit(testAssessor, 'Assessed')
-        .withArgs(maxPassportScore.account, ArcNumber.new(100));
+      ).to.eq(ArcNumber.new(100));
     });
 
     it('returns the upperBound if credit score is at minimum', async () => {
@@ -400,30 +372,26 @@ describe('SapphireAssessor', () => {
         scoresTree: testPassportScoreTree,
       } = await getAssessorWithCredit(BigNumber.from(0));
 
-      await expect(
-        testAssessor.assess(
+      expect(
+        await testAssessor.assess(
           ArcNumber.new(100),
           ArcNumber.new(200),
           getScoreProof(minPassportScore, testPassportScoreTree),
           false,
         ),
-      )
-        .to.emit(testAssessor, 'Assessed')
-        .withArgs(minPassportScore.account, ArcNumber.new(200));
+      ).to.eq(ArcNumber.new(200));
     });
 
     it('returns the correct value given the credit score and a valid proof', async () => {
       // 200 - (600/1000 * (200-100)) = 140
-      await expect(
-        assessor.assess(
+      expect(
+        await assessor.assess(
           ArcNumber.new(100),
           ArcNumber.new(200),
           getScoreProof(passportScore1, scoresTree),
           false,
         ),
-      )
-        .to.emit(assessor, 'Assessed')
-        .withArgs(user1.address, ArcNumber.new(140));
+      ).to.eq(ArcNumber.new(140));
     });
   });
 
@@ -460,35 +428,21 @@ describe('SapphireAssessor', () => {
     });
 
     it('returns false if borrow value is greater then credit limit and has a valid proof', async () => {
-      await expect(
-        assessor.assessBorrowLimit(
+      expect(
+        await assessor.assessBorrowLimit(
           borrowLimitScore1.score.add(1),
           getScoreProof(borrowLimitScore1, scoresTree),
         ),
-      )
-        .to.emit(assessor, 'CreditLimitAssessed')
-        .withArgs(
-          user1.address,
-          borrowLimitScore1.score.add(1),
-          borrowLimitScore1.score,
-          false,
-        );
+      ).to.eq(false);
     });
 
     it('return true if borrow value is equal credit limit and has a valid proof', async () => {
-      await expect(
-        assessor.assessBorrowLimit(
+      expect(
+        await assessor.assessBorrowLimit(
           borrowLimitScore1.score,
           getScoreProof(borrowLimitScore1, scoresTree),
         ),
-      )
-        .to.emit(assessor, 'CreditLimitAssessed')
-        .withArgs(
-          user1.address,
-          borrowLimitScore1.score,
-          borrowLimitScore1.score,
-          true,
-        );
+      ).to.eq(true);
     });
   });
 
