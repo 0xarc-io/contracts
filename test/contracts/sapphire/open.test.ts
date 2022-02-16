@@ -12,7 +12,7 @@ import {
   DEFAULT_COLLATERAL_DECIMALS,
   DEFAULT_PRICE,
   DEFAULT_PROOF_PROTOCOL,
-  DEFAULT_STABLE_COIN_DECIMALS,
+  DEFAULT_STABLECOIN_DECIMALS,
   DEFAULT_STABLE_COIN_PRECISION_SCALAR,
 } from '@test/helpers/sapphireDefaults';
 import { mintApprovedCollateral } from '@test/helpers/setupBaseVault';
@@ -37,7 +37,7 @@ describe('SapphireCore.open()', () => {
     DEFAULT_COLLATERAL_DECIMALS,
   );
   const BORROW_AMOUNT = utils
-    .parseUnits('50', DEFAULT_STABLE_COIN_DECIMALS)
+    .parseUnits('50', DEFAULT_STABLECOIN_DECIMALS)
     .mul(DEFAULT_PRICE)
     .div(BASE);
   const SCALED_BORROW_AMOUNT = BORROW_AMOUNT.mul(
@@ -388,7 +388,13 @@ describe('SapphireCore.open()', () => {
     });
 
     it('revert if opened above the maximum borrowed amount', async () => {
-      await arc.core().setLimits(SCALED_BORROW_AMOUNT.sub(100), SCALED_BORROW_AMOUNT.sub(1), 0);
+      await arc
+        .core()
+        .setLimits(
+          SCALED_BORROW_AMOUNT.sub(100),
+          SCALED_BORROW_AMOUNT.sub(1),
+          0,
+        );
       await expect(
         arc.open(
           COLLATERAL_AMOUNT,

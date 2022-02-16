@@ -18,7 +18,7 @@ import {
   DEFAULT_COLLATERAL_PRECISION_SCALAR,
   DEFAULT_HIGH_C_RATIO,
   DEFAULT_PROOF_PROTOCOL,
-  DEFAULT_STABLE_COIN_DECIMALS,
+  DEFAULT_STABLECOIN_DECIMALS,
   DEFAULT_STABLE_COIN_PRECISION_SCALAR,
 } from '@test/helpers/sapphireDefaults';
 import { setupBaseVault } from '@test/helpers/setupBaseVault';
@@ -366,7 +366,7 @@ describe('SapphireCore.repay()', () => {
     expect(vault.normalizedBorrowedAmount).to.eq(SCALED_BORROW_AMOUNT);
 
     await repay(
-      utils.parseUnits('1', DEFAULT_STABLE_COIN_DECIMALS),
+      utils.parseUnits('1', DEFAULT_STABLECOIN_DECIMALS),
       signers.scoredMinter,
     );
 
@@ -379,7 +379,7 @@ describe('SapphireCore.repay()', () => {
     );
 
     await repay(
-      utils.parseUnits('1', DEFAULT_STABLE_COIN_DECIMALS),
+      utils.parseUnits('1', DEFAULT_STABLECOIN_DECIMALS),
       signers.scoredMinter,
       undefined,
       getScoreProof(minterCreditScore, creditScoreTree),
@@ -451,7 +451,7 @@ describe('SapphireCore.repay()', () => {
 
     await expect(
       repay(
-        BORROW_AMOUNT.add(utils.parseUnits('1', DEFAULT_STABLE_COIN_DECIMALS)),
+        BORROW_AMOUNT.add(utils.parseUnits('1', DEFAULT_STABLECOIN_DECIMALS)),
         signers.scoredMinter,
       ),
     ).to.be.revertedWith('SapphireCoreV1: there is not enough debt to repay');
