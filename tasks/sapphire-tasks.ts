@@ -435,8 +435,6 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
       collatConfig.params.feeCollector || ultimateOwner,
       collatConfig.params.highCRatio,
       collatConfig.params.lowCRatio,
-      collatConfig.params.liquidationUserFee,
-      collatConfig.params.liquidationArcFee,
       { gasLimit: 150000 },
     );
 

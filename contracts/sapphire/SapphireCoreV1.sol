@@ -37,10 +37,10 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     );
 
     event FeesUpdated(
-        uint256 _liquidationUserRatio,
-        uint256 _liquidationArcRatio,
+        uint256 _liquidatorDiscount,
+        uint256 _liquidationArcFee,
         uint256 _borrowFee,
-        uint256 _poolInterestShare
+        uint256 _poolInterestFee
     );
 
     event LimitsUpdated(
@@ -112,8 +112,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      * @param _feeCollector         The address of the ARC fee collector when a liquidation occurs
      * @param _highCollateralRatio  High limit of how much collateral is needed to borrow
      * @param _lowCollateralRatio   Low limit of how much collateral is needed to borrow
-     * @param _liquidationUserRatio   How much is a user penalized if they go below their c-ratio
-     * @param _liquidationArcRatio    How much of the liquidation profit should ARC take
      */
     function init(
         address _collateralAddress,
@@ -124,9 +122,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         address _assessorAddress,
         address _feeCollector,
         uint256 _highCollateralRatio,
-        uint256 _lowCollateralRatio,
-        uint256 _liquidationUserRatio,
-        uint256 _liquidationArcRatio
+        uint256 _lowCollateralRatio
     )
         external
         onlyAdmin
@@ -170,7 +166,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         setAssessor(_assessorAddress);
         setOracle(_oracleAddress);
         setCollateralRatios(_lowCollateralRatio, _highCollateralRatio);
-        _setFees(_liquidationUserRatio, _liquidationArcRatio, 0, 0);
     }
 
     /**
@@ -242,32 +237,35 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      *
      * @notice Can only be called by the admin.
      *
-     * @param _liquidationUserRatio   Determines the penalty a user must pay by discounting
-     *                              their collateral price to provide a profit incentive for liquidators
-     * @param _liquidationArcRatio    The percentage of the profit earned from the liquidation, which feeCollector earns.
+     * @param _liquidatorDiscount Determines the penalty a user must pay by discounting their
+     * collateral price to provide a profit incentive for liquidators.
+     * @param _liquidationArcFee The percentage of the profit earned from the liquidation, 
+     * which the feeCollector earns.
+     * @param _borrowFee The percentage of the the loan that is added as immediate interest.
+     * @param _poolInterestFee The percentage of the interest paid that goes to the borrow pool.
      */
     function setFees(
-        uint256 _liquidationUserRatio,
-        uint256 _liquidationArcRatio,
+        uint256 _liquidatorDiscount,
+        uint256 _liquidationArcFee,
         uint256 _borrowFee,
-        uint256 _poolInterestShare
+        uint256 _poolInterestFee
     )
         public
         onlyAdmin
     {
         require(
-            (_liquidationUserRatio != liquidationUserRatio) ||
-            (_liquidationArcRatio != liquidationArcRatio) ||
+            (_liquidatorDiscount != liquidatorDiscount) ||
+            (_liquidationArcFee != liquidationArcFee) ||
             (_borrowFee != borrowFee) ||
-            (_poolInterestShare != poolInterestShare),
+            (_poolInterestFee != poolInterestFee),
             "SapphireCoreV1: the same fees are already set"
         );
 
         _setFees(
-            _liquidationUserRatio, 
-            _liquidationArcRatio, 
+            _liquidatorDiscount, 
+            _liquidationArcFee, 
             _borrowFee, 
-            _poolInterestShare
+            _poolInterestFee
         );
     }
 
@@ -1105,7 +1103,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
         // Update principal
         if(_amount > _interest) {
-            _poolFees = Math.roundUpMul(_interest, poolInterestShare);
+            _poolFees = Math.roundUpMul(_interest, poolInterestFee);
             _feeCollectorFees = _interest - _poolFees;
 
             // User repays the entire interest and some (or all) principal
@@ -1113,7 +1111,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             vault.principal = vault.principal - _principalPaid;
         } else {
             // Only interest is paid
-            _poolFees = Math.roundUpMul(_amount, poolInterestShare);
+            _poolFees = Math.roundUpMul(_amount, poolInterestFee);
             _feeCollectorFees = _amount - _poolFees;
         }
 
@@ -1220,7 +1218,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         // --- EFFECTS ---
 
         // Get the liquidation price of the asset (discount for liquidator)
-        uint256 liquidationPriceRatio = BASE - liquidationUserRatio;
+        uint256 liquidationPriceRatio = BASE - liquidatorDiscount;
         uint256 liquidationPrice = Math.roundUpMul(_currentPrice, liquidationPriceRatio);
 
         // Calculate the amount of collateral to be sold based on the entire debt
@@ -1248,7 +1246,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         uint256 profit = valueCollateralSold - debtToRepay;
 
         // Calculate the ARC share
-        uint256 arcShare = profit * liquidationArcRatio / liquidationPrice / collateralPrecisionScalar;
+        uint256 arcShare = profit * liquidationArcFee / liquidationPrice / collateralPrecisionScalar;
 
         // Calculate liquidator's share
         uint256 liquidatorCollateralShare = collateralToSell - arcShare;
@@ -1383,34 +1381,36 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     }
 
     function _setFees(
-        uint256 _liquidationUserRatio,
-        uint256 _liquidationArcRatio,
+        uint256 _liquidatorDiscount,
+        uint256 _liquidationArcFee,
         uint256 _borrowFee,
-        uint256 _poolInterestShare
+        uint256 _poolInterestFee
     )
         private
     {
         require(
-            _liquidationUserRatio <= BASE &&
-            _liquidationArcRatio <= BASE,
+            _liquidatorDiscount <= BASE &&
+            _liquidationArcFee <= BASE,
             "SapphireCoreV1: fees cannot be more than 100%"
         );
 
         require(
-            _poolInterestShare <= BASE,
-            "SapphireCoreV1: poolInterestShare must be less than or equal to 100%"
+            _liquidatorDiscount <= BASE &&
+            _poolInterestFee <= BASE &&
+            _liquidationArcFee <= BASE,
+            "SapphireCoreV1: invalid fees"
         );
 
-        liquidationUserRatio = _liquidationUserRatio;
-        liquidationArcRatio = _liquidationArcRatio;
+        liquidatorDiscount = _liquidatorDiscount;
+        liquidationArcFee = _liquidationArcFee;
         borrowFee = _borrowFee;
-        poolInterestShare = _poolInterestShare;
+        poolInterestFee = _poolInterestFee;
 
         emit FeesUpdated(
-            liquidationUserRatio, 
-            liquidationArcRatio, 
+            liquidatorDiscount, 
+            liquidationArcFee, 
             _borrowFee,
-            _poolInterestShare
+            _poolInterestFee
         );
     }
 

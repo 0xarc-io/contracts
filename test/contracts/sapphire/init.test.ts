@@ -103,8 +103,8 @@ describe('SapphireCore.init', () => {
       pauseOperator: Wallet.createRandom().address,
       highCollateralRatio: constants.WeiPerEther.mul(2),
       lowCollateralRatio: constants.WeiPerEther,
-      liquidationUserRatio: utils.parseEther('0.1'),
-      liquidationArcRatio: utils.parseEther('0.2'),
+      liquidatorDiscount: utils.parseEther('0.1'),
+      liquidationArcFee: utils.parseEther('0.2'),
       executor: deployer,
       feeCollector: Wallet.createRandom().address,
     };
@@ -127,8 +127,6 @@ describe('SapphireCore.init', () => {
           options.feeCollector,
           options.highCollateralRatio,
           options.lowCollateralRatio,
-          options.liquidationUserRatio,
-          options.liquidationArcRatio,
         );
     };
   });
@@ -206,14 +204,6 @@ describe('SapphireCore.init', () => {
       defaultOptions.assessor,
       'assessor',
     );
-    expect(await sapphireCore.liquidationUserRatio()).eq(
-      defaultOptions.liquidationUserRatio,
-      'liquidationUserRatio',
-    );
-    expect(await sapphireCore.liquidationArcRatio()).eq(
-      defaultOptions.liquidationArcRatio,
-      'liquidationArcRatio',
-    );
     expect(await sapphireCore.interestSetter()).eq(
       defaultOptions.interestSetter,
       'interest setter',
@@ -226,12 +216,6 @@ describe('SapphireCore.init', () => {
       constants.WeiPerEther,
       'borrowIndex',
     );
-  });
-
-  it('reverts if liquidation user fee is 0', async () => {
-    await expect(
-      init({ liquidationUserRatio: utils.parseEther('101') }),
-    ).to.be.revertedWith('SapphireCoreV1: fees cannot be more than 100%');
   });
 
   it('revert if owner inits twice ', async () => {

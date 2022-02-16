@@ -126,8 +126,6 @@ export async function sapphireFixture(
     ctx.signers.feeCollector.address,
     DEFAULT_HIGH_C_RATIO,
     DEFAULT_LOW_C_RATIO,
-    0,
-    0,
   );
 
   await ctx.contracts.sapphire.core.setBorrowPool(

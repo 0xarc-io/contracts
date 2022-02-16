@@ -274,7 +274,7 @@ describe('SapphireCore.setters', () => {
     const userFee = utils.parseEther('0.1');
     const arcFee = utils.parseEther('0.05');
     const borrowFee = utils.parseEther('0.1');
-    const poolInterestShare = utils.parseEther('0.4');
+    const poolInterestFee = utils.parseEther('0.4');
 
     it('reverts if called by non-owner', async () => {
       await expect(
@@ -284,21 +284,27 @@ describe('SapphireCore.setters', () => {
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
+    it('reverts if liquidation discount is > 100%', async () => {
+      await expect(
+        sapphireCore.setFees(utils.parseEther('1').add(1), 0, 0, 0),
+      ).to.be.revertedWith('SapphireCoreV1: fees cannot be more than 100%');
+    });
+
     it('sets the liquidation fee, the arc ratio, the borrow fee and the pool share', async () => {
-      expect(await sapphireCore.liquidationUserRatio()).eq(0);
-      expect(await sapphireCore.liquidationArcRatio()).eq(0);
+      expect(await sapphireCore.liquidatorDiscount()).eq(0);
+      expect(await sapphireCore.liquidationArcFee()).eq(0);
       expect(await sapphireCore.borrowFee()).eq(0);
-      expect(await sapphireCore.poolInterestShare()).eq(0);
+      expect(await sapphireCore.poolInterestFee()).eq(0);
 
       await expect(
-        sapphireCore.setFees(userFee, arcFee, borrowFee, poolInterestShare),
+        sapphireCore.setFees(userFee, arcFee, borrowFee, poolInterestFee),
       )
         .to.emit(sapphireCore, 'FeesUpdated')
-        .withArgs(userFee, arcFee, borrowFee, poolInterestShare);
-      expect(await sapphireCore.liquidationUserRatio()).eq(userFee);
-      expect(await sapphireCore.liquidationArcRatio()).eq(arcFee);
+        .withArgs(userFee, arcFee, borrowFee, poolInterestFee);
+      expect(await sapphireCore.liquidatorDiscount()).eq(userFee);
+      expect(await sapphireCore.liquidationArcFee()).eq(arcFee);
       expect(await sapphireCore.borrowFee()).eq(borrowFee);
-      expect(await sapphireCore.poolInterestShare()).eq(poolInterestShare);
+      expect(await sapphireCore.poolInterestFee()).eq(poolInterestFee);
     });
   });
 
