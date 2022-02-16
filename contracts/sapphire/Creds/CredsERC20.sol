@@ -9,7 +9,7 @@ import {InitializableBaseERC20} from "../../token/InitializableBaseERC20.sol";
 
 import {CredsStorage} from "./CredsStorage.sol";
 
-contract SyntheticTokenV2 is Adminable, InitializableBaseERC20, CredsStorage {
+contract CredsERC20 is Adminable, InitializableBaseERC20, CredsStorage {
 
     /* ========== Events ========== */
 
@@ -29,7 +29,7 @@ contract SyntheticTokenV2 is Adminable, InitializableBaseERC20, CredsStorage {
     modifier onlyMinter() {
         require(
             minterLimits[msg.sender] > 0,
-            "SyntheticTokenV2: only callable by minter"
+            "CredsERC20: only callable by minter"
         );
         _;
     }
@@ -37,7 +37,7 @@ contract SyntheticTokenV2 is Adminable, InitializableBaseERC20, CredsStorage {
     /* ========== Init Function ========== */
 
 /**
-     * @dev Initialize the synthetic token
+     * @dev Initialize the contract
      *
      * @param _name The name of the token
      * @param _symbol The symbol of the token
@@ -95,7 +95,7 @@ contract SyntheticTokenV2 is Adminable, InitializableBaseERC20, CredsStorage {
     {
         require(
             minterLimits[_minter] > 0,
-            "SyntheticTokenV2: Minter already exists"
+            "CredsERC20: Minter already exists"
         );
 
         _mintersArray.push(_minter);
@@ -105,7 +105,7 @@ contract SyntheticTokenV2 is Adminable, InitializableBaseERC20, CredsStorage {
     }
 
     /**
-     * @dev Remove a minter from the synthetic token
+     * @dev Remove a minter from the list of valid minters (thus setting its limit to 0)
      *
      * @param _minter Address of the minter to remove
      */
@@ -117,7 +117,7 @@ contract SyntheticTokenV2 is Adminable, InitializableBaseERC20, CredsStorage {
     {
         require(
             minterLimits[_minter] > 0,
-            "SyntheticTokenV2: not a minter"
+            "CredsERC20: not a minter"
         );
 
         for (uint256 i = 0; i < _mintersArray.length; i++) {
@@ -148,12 +148,12 @@ contract SyntheticTokenV2 is Adminable, InitializableBaseERC20, CredsStorage {
     {
         require(
             minterLimits[_minter] > 0,
-            "SyntheticTokenV2: not a minter"
+            "CredsERC20: not a minter"
         );
 
         require(
             minterLimits[_minter] != _limit,
-            "SyntheticTokenV2: cannot set the same limit"
+            "CredsERC20: cannot set the same limit"
         );
 
         minterLimits[_minter] = _limit;
@@ -164,12 +164,12 @@ contract SyntheticTokenV2 is Adminable, InitializableBaseERC20, CredsStorage {
     /* ========== Minter Functions ========== */
 
     /**
-     * @dev Mint synthetic tokens
+     * @dev Mint tokens
      *
      * @notice Can only be called by a valid minter.
      *
      * @param _to The destination to mint the token to
-     * @param _value The amount of synths to mint
+     * @param _value The amount of tokens to mint
      */
     function mint(
         address _to,
@@ -180,14 +180,14 @@ contract SyntheticTokenV2 is Adminable, InitializableBaseERC20, CredsStorage {
     {
         require(
             _value > 0,
-            "SyntheticTokenV2: cannot mint zero"
+            "CredsERC20: cannot mint zero"
         );
 
         uint256 issuedAmount = minterIssued[msg.sender] + _value;
 
         require(
             issuedAmount <= minterLimits[msg.sender],
-            "SyntheticTokenV2: minter limit reached"
+            "CredsERC20: minter limit reached"
         );
 
         minterIssued[msg.sender] = issuedAmount;
@@ -196,9 +196,9 @@ contract SyntheticTokenV2 is Adminable, InitializableBaseERC20, CredsStorage {
     }
 
     /**
-     * @dev Burn synthetic tokens of the msg.sender
+     * @dev Burn tokens of the caller
      *
-     * @param _value The amount of the synth to destroy
+     * @param _value The amount of tokens to burn
      */
     function burn(
         uint256 _value
