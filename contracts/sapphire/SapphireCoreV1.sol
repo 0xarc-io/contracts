@@ -18,8 +18,6 @@ import {SapphireAssessor} from "./SapphireAssessor.sol";
 import {ISapphireAssessor} from "./ISapphireAssessor.sol";
 import {ISapphirePool} from "./SapphirePool/ISapphirePool.sol";
 
-import "hardhat/console.sol";
-
 contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
     /* ========== Libraries ========== */
