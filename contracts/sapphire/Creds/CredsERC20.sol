@@ -94,7 +94,7 @@ contract CredsERC20 is Adminable, InitializableBaseERC20, CredsStorage {
         onlyAdmin
     {
         require(
-            minterLimits[_minter] > 0,
+            minterLimits[_minter] == 0,
             "CredsERC20: Minter already exists"
         );
 
