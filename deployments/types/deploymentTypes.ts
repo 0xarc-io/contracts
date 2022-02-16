@@ -1,4 +1,4 @@
-import { Signer } from 'ethers';
+import { BigNumberish, Signer } from 'ethers';
 import { TransactionRequest } from '@ethersproject/providers';
 
 export interface DeployContractParams {
@@ -6,7 +6,7 @@ export interface DeployContractParams {
   source: string;
   data: TransactionRequest;
   version: number;
-  type: DeploymentType;
+  type: DeploymentCategory;
   group?: string;
 }
 
@@ -17,11 +17,10 @@ export interface NetworkParams {
   gasLimit?: string;
 }
 
-export enum DeploymentType {
-  synth = 'synth',
+export enum DeploymentCategory {
+  borrowing = 'borrowing',
   staking = 'staking',
   global = 'global',
-  savings = 'savings',
 }
 
 export interface WriteToDeploymentsParams {
@@ -31,6 +30,38 @@ export interface WriteToDeploymentsParams {
   txn: string;
   network: string;
   version: number;
-  type: DeploymentType;
+  type: DeploymentCategory;
   group?: string;
+}
+
+export interface CollateralConfig {
+  [collateralName: string]: {
+    collateralAddress: string;
+    borrowPool: string;
+    oracle: {
+      source: string;
+      getDeployTx: (signer: Signer) => TransactionRequest;
+    };
+    borrowRatios: {
+      highCRatio: BigNumberish;
+      lowCRatio: BigNumberish;
+    };
+    fees: {
+      liquidatorDiscount: BigNumberish;
+      poolInterestFee: BigNumberish;
+      liquidationArcFee?: BigNumberish;
+      borrowFee?: BigNumberish;
+    };
+    limits: {
+      vaultBorrowMax: BigNumberish;
+      vaultBorrowMin?: BigNumberish;
+      defaultBorrowLimit?: BigNumberish;
+    };
+    interestSettings?: {
+      interestRate?: BigNumberish;
+      interestSetter?: string;
+    };
+    pauseOperator?: string;
+    feeCollector?: string;
+  };
 }
