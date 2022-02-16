@@ -15,6 +15,7 @@ import { roundUpMul } from '@test/helpers/roundUpOperations';
 import {
   BORROW_LIMIT_PROOF_PROTOCOL,
   DEFAULT_COLLATERAL_DECIMALS,
+  DEFAULT_COLLATERAL_PRECISION_SCALAR,
   DEFAULT_HIGH_C_RATIO,
   DEFAULT_PROOF_PROTOCOL,
   DEFAULT_STABLE_COIN_DECIMALS,
@@ -37,9 +38,6 @@ const SCALED_BORROW_AMOUNT = SCALED_COLLATERAL_AMOUNT.mul(COLLATERAL_PRICE).div(
 );
 const BORROW_AMOUNT = SCALED_BORROW_AMOUNT.div(
   DEFAULT_STABLE_COIN_PRECISION_SCALAR,
-);
-const PRECISION_SCALAR = BigNumber.from(10).pow(
-  BigNumber.from(18).sub(DEFAULT_COLLATERAL_DECIMALS),
 );
 
 /**
@@ -123,7 +121,7 @@ describe('SapphireCore.repay()', () => {
     let vault = await arc.getVault(signers.scoredMinter.address);
     // Confirm c-ratio of 200%
     let cRatio = vault.collateralAmount
-      .mul(PRECISION_SCALAR)
+      .mul(DEFAULT_COLLATERAL_PRECISION_SCALAR)
       .mul(COLLATERAL_PRICE)
       .div(vault.normalizedBorrowedAmount);
     expect(cRatio).to.eq(constants.WeiPerEther.mul(2));
@@ -154,7 +152,7 @@ describe('SapphireCore.repay()', () => {
      * C-ratio = 1000/250 = 400%
      */
     cRatio = vault.collateralAmount
-      .mul(PRECISION_SCALAR)
+      .mul(DEFAULT_COLLATERAL_PRECISION_SCALAR)
       .mul(COLLATERAL_PRICE)
       .div(vault.normalizedBorrowedAmount);
     expect(cRatio).to.eq(constants.WeiPerEther.mul(4));
@@ -342,7 +340,7 @@ describe('SapphireCore.repay()', () => {
     // Ensure position is undercollateralized
     const vault = await arc.getVault(signers.scoredMinter.address);
     let cRatio = vault.collateralAmount
-      .mul(PRECISION_SCALAR)
+      .mul(DEFAULT_COLLATERAL_PRECISION_SCALAR)
       .mul(newPrice)
       .div(SCALED_BORROW_AMOUNT);
 
@@ -355,7 +353,7 @@ describe('SapphireCore.repay()', () => {
       signers.scoredMinter.address,
     );
     cRatio = collateralAmount
-      .mul(PRECISION_SCALAR)
+      .mul(DEFAULT_COLLATERAL_PRECISION_SCALAR)
       .mul(newPrice)
       .div(normalizedBorrowedAmount);
 
