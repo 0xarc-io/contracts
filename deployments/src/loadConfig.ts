@@ -1,3 +1,4 @@
+import { CoreConfig } from '@deployments/types';
 import { gray, red, blue } from 'chalk';
 import { constants, getPathToNetwork } from './config';
 
@@ -11,11 +12,11 @@ export interface LoadConfigParams {
 }
 
 export async function loadCollateralConfig(params: LoadConfigParams) {
-  return await loadConfig(
+  return (await loadConfig(
     params,
     constants.COLLATERAL_CONFIG_FILENAME,
-    'synth',
-  );
+    'core',
+  )) as CoreConfig;
 }
 
 export async function loadSavingsConfig(params: LoadConfigParams) {

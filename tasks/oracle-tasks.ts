@@ -26,7 +26,7 @@ task('deploy-uniswap-oracle', 'Deploy the uniswap TWAP oracle').setAction(
           UNIV2_FACTORY,
         ),
         version: 1,
-        type: DeploymentType.synth,
+        type: DeploymentType.global,
       },
       networkConfig,
     );

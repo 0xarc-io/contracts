@@ -11,6 +11,7 @@ contract MockSapphireOracle is ISapphireOracle {
     uint256 public currentPrice = 10 ** 19;
 
     uint256 public mockTimestamp = 0;
+    bool public reportRealTimestamp = false;
 
     function fetchCurrentPrice()
         external
@@ -19,13 +20,18 @@ contract MockSapphireOracle is ISapphireOracle {
         returns (uint256 price, uint256 timestamp)
     {
         price = currentPrice;
-        timestamp = mockTimestamp;
+
+        if (reportRealTimestamp) {
+            timestamp = block.timestamp;
+        } else {
+            timestamp = mockTimestamp;
+        }
     }
 
     function setPrice(
         uint256 _price
     )
-        public
+        external
     {
         currentPrice = _price;
     }
@@ -33,9 +39,16 @@ contract MockSapphireOracle is ISapphireOracle {
     function setTimestamp(
         uint256 timestamp
     )
-        public
+        external
     {
         mockTimestamp = timestamp;
     }
 
+    function setReportRealTimestamp(
+        bool _reportRealTimestamp
+    )
+        external
+    {
+        reportRealTimestamp = _reportRealTimestamp;
+    }
 }
