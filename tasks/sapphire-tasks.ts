@@ -21,11 +21,10 @@ import {
 import { task } from 'hardhat/config';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import _ from 'lodash';
-import { MAX_UINT256 } from '@src/constants';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import getUltimateOwner from './task-utils/getUltimateOwner';
 import { DEFAULT_MAX_CREDIT_SCORE } from '@test/helpers/sapphireDefaults';
-import { constants } from 'ethers';
+import { constants, utils } from 'ethers';
 import { verifyContract } from './task-utils';
 import {
   CollateralConfig,
@@ -33,6 +32,7 @@ import {
   NetworkParams,
 } from '../deployments/types';
 import { TransactionRequest } from '@ethersproject/providers';
+import { getEmptyScoreProof } from '@src/utils/getScoreProof';
 
 task('deploy-creds', 'Deploy the CredsERC20 token')
   .addParam('name', 'The name of the token')
@@ -418,6 +418,14 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
       console.log(green('Core already initialized!'));
     }
 
+    if ((await core.borrowPool()) !== collatConfig.borrowPool) {
+      console.log(
+        yellow(`Setting borrow pool to ${collatConfig.borrowPool} ...`),
+      );
+      await core.setBorrowPool(collatConfig.borrowPool);
+      console.log(green('Borrow pool set successfully'));
+    }
+
     if (await shouldSetFees(core, collatConfig)) {
       console.log(
         yellow(`Setting fees...
@@ -666,3 +674,23 @@ async function shouldSetLimits(
 
   return false;
 }
+
+task('test-borrow').setAction(async (_, hre) => {
+  const { signer } = await loadDetails(hre);
+  const core = SapphireCoreV1Factory.connect(
+    '0x6a263eeCec9FEA177CE2ed3EAe5bEABa50AF5a1d',
+    signer,
+  );
+
+  const tx = await core.borrow(
+    utils.parseEther('0.1'),
+    '0xa09ad20adf13175a7bedb6af95cbc4d38d87d524',
+    [
+      getEmptyScoreProof(signer.address, 'arcx.credit'),
+      getEmptyScoreProof(signer.address, 'arcx.creditLimit'),
+    ],
+    { gasLimit: 1500000 },
+  );
+  console.log(`Waiting for tx hash ${tx.hash}`);
+  await tx.wait();
+});
