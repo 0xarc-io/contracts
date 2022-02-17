@@ -3,6 +3,7 @@ import {
   CredsERC20Factory,
   MockOracleFactory,
   SapphireAssessorFactory,
+  SapphireCoreV1,
   SapphireCoreV1Factory,
   SapphireMapperLinearFactory,
   SapphirePassportScoresFactory,
@@ -26,7 +27,11 @@ import getUltimateOwner from './task-utils/getUltimateOwner';
 import { DEFAULT_MAX_CREDIT_SCORE } from '@test/helpers/sapphireDefaults';
 import { constants } from 'ethers';
 import { verifyContract } from './task-utils';
-import { DeploymentCategory, NetworkParams } from '../deployments/types';
+import {
+  CollateralConfig,
+  DeploymentCategory,
+  NetworkParams,
+} from '../deployments/types';
 import { TransactionRequest } from '@ethersproject/providers';
 
 task('deploy-creds', 'Deploy the CredsERC20 token')
@@ -211,7 +216,7 @@ task(
   });
 
 task('deploy-mapper', 'Deploy the Sapphire Mapper').setAction(
-  async (taskArgs, hre) => {
+  async (_, hre) => {
     const { network, signer, networkConfig } = await loadDetails(hre);
 
     await pruneDeployments(network, signer.provider);
@@ -237,7 +242,7 @@ task('deploy-mapper', 'Deploy the Sapphire Mapper').setAction(
 );
 
 task('deploy-assessor', 'Deploy the Sapphire Assessor').setAction(
-  async (taskArgs, hre) => {
+  async (_, hre) => {
     const { network, signer, networkConfig } = await loadDetails(hre);
 
     await pruneDeployments(network, signer.provider);
@@ -329,20 +334,6 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
     );
     await verifyContract(hre, coreAddress);
 
-    const { collateralAddress } = collatConfig;
-
-    const oracleAddress = await _deployOracle(
-      collatName,
-      networkConfig,
-      signer,
-      hre,
-      collatConfig.oracle,
-    );
-
-    if (!oracleAddress) {
-      throw red(`The oracle was not deployed!`);
-    }
-
     const coreProxyAddress = await deployContract(
       {
         name: 'SapphireCoreProxy',
@@ -359,13 +350,20 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
       networkConfig,
     );
     console.log(green(`Sapphire core proxy deployed at ${coreProxyAddress}`));
-    await verifyContract(
+
+    const { collateralAddress } = collatConfig;
+
+    const oracleAddress = await _deployOracle(
+      collatName,
+      networkConfig,
+      signer,
       hre,
-      coreProxyAddress,
-      coreAddress,
-      await signer.getAddress(),
-      [],
+      collatConfig.oracle,
     );
+
+    if (!oracleAddress) {
+      throw red(`The oracle was not deployed!`);
+    }
 
     // Initialize core
 
@@ -386,75 +384,82 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
 
     const ultimateOwner = getUltimateOwner(signer, networkDetails);
 
-    console.log(
-      red(
-        `Please ensure the following details are correct:\n
-          Collateral Address: ${collateralAddress}\n
-          Creds Address: ${credsProxyAddress}\n
-          Oracle Address: ${oracleAddress}\n
-          Interest Rate Setter: ${
-            collatConfig.interestSettings.interestSetter || ultimateOwner
-          }\n
-          Pause operator: ${collatConfig.pauseOperator || ultimateOwner}\n,
-          Assessor address: ${assessorAddress}\n,
-          Fee collector: ${collatConfig.feeCollector || ultimateOwner}\n
-          High c-ratio: ${collatConfig.borrowRatios.highCRatio}\n
-          Low c-ratio: ${collatConfig.borrowRatios.lowCRatio}\n`,
-      ),
-    );
+    if (!(await core.collateralAsset())) {
+      console.log(
+        red(
+          `Please ensure the following details are correct:
+            Collateral Address: ${collateralAddress}
+            Creds Address: ${credsProxyAddress}
+            Oracle Address: ${oracleAddress}
+            Interest Rate Setter: ${
+              collatConfig.interestSettings.interestSetter || ultimateOwner
+            }
+            Pause operator: ${collatConfig.pauseOperator || ultimateOwner}
+            Assessor address: ${assessorAddress}
+            Fee collector: ${collatConfig.feeCollector || ultimateOwner}
+            High c-ratio: ${collatConfig.borrowRatios.highCRatio}
+            Low c-ratio: ${collatConfig.borrowRatios.lowCRatio}`,
+        ),
+      );
+      console.log(yellow(`Calling core.init() ...\n`));
+      await core.init(
+        collateralAddress,
+        credsProxyAddress,
+        oracleAddress,
+        collatConfig.interestSettings.interestSetter || ultimateOwner,
+        collatConfig.pauseOperator || ultimateOwner,
+        assessorAddress,
+        collatConfig.feeCollector || ultimateOwner,
+        collatConfig.borrowRatios.highCRatio,
+        collatConfig.borrowRatios.lowCRatio,
+      );
+      console.log(green(`core.init() called successfully!\n`));
+    } else {
+      console.log(green('Core already initialized!'));
+    }
 
-    console.log(yellow(`Calling core.init() ...\n`));
-
-    await core.init(
-      collateralAddress,
-      credsProxyAddress,
-      oracleAddress,
-      collatConfig.interestSettings.interestSetter || ultimateOwner,
-      collatConfig.pauseOperator || ultimateOwner,
-      assessorAddress,
-      collatConfig.feeCollector || ultimateOwner,
-      collatConfig.borrowRatios.highCRatio,
-      collatConfig.borrowRatios.lowCRatio,
-    );
-
-    console.log(green(`core.init() called successfully!\n`));
-
-    console.log(
-      yellow(`Setting fees...\n
-      Liquidator discount: ${collatConfig.fees.liquidatorDiscount}\n
-      Arc liquidation fee: ${collatConfig.fees.liquidationArcFee}\n
-      Pool interest fee: ${collatConfig.fees.poolInterestFee}\n
-      Borrow fee: ${collatConfig.fees.borrowFee}
-    `),
-    );
-    await core.setFees(
-      collatConfig.fees.liquidatorDiscount,
-      collatConfig.fees.liquidationArcFee,
-      collatConfig.fees.borrowFee,
-      collatConfig.fees.poolInterestFee,
-    );
-    console.log(green('Fees successfully set\n'));
+    if (await shouldSetFees(core, collatConfig)) {
+      console.log(
+        yellow(`Setting fees...
+        Liquidator discount: ${collatConfig.fees.liquidatorDiscount}
+        Arc liquidation fee: ${collatConfig.fees.liquidationArcFee}
+        Pool interest fee: ${collatConfig.fees.poolInterestFee}
+        Borrow fee: ${collatConfig.fees.borrowFee}
+      `),
+      );
+      await core.setFees(
+        collatConfig.fees.liquidatorDiscount,
+        collatConfig.fees.liquidationArcFee,
+        collatConfig.fees.borrowFee,
+        collatConfig.fees.poolInterestFee,
+      );
+      console.log(green('Fees successfully set\n'));
+    }
 
     // Set borrow limits if needed. Skip if all zeros
-    console.log(
-      yellow(`Setting limits:\n
-      Vault borrow min: ${collatConfig.limits.vaultBorrowMin || 0}\n
-      Vault borrow max: ${collatConfig.limits.vaultBorrowMax || 0}\n
-      Default borrow limit: ${collatConfig.limits.defaultBorrowLimit || 0}
-    `),
-    );
-    await core.setLimits(
-      collatConfig.limits.vaultBorrowMin || 0,
-      collatConfig.limits.vaultBorrowMax || 0,
-      collatConfig.limits.defaultBorrowLimit || 0,
-    );
-    console.log(yellow(`Limits successfully set!\n`));
+    if (await shouldSetLimits(core, collatConfig)) {
+      console.log(
+        yellow(`Setting limits:
+        Vault borrow min: ${collatConfig.limits.vaultBorrowMin || 0}
+        Vault borrow max: ${collatConfig.limits.vaultBorrowMax || 0}
+        Default borrow limit: ${collatConfig.limits.defaultBorrowLimit || 0}
+      `),
+      );
+      await core.setLimits(
+        collatConfig.limits.vaultBorrowMin || 0,
+        collatConfig.limits.vaultBorrowMax || 0,
+        collatConfig.limits.defaultBorrowLimit || 0,
+      );
+      console.log(yellow(`Limits successfully set!\n`));
+    }
 
     // Add minter to Creds
-    console.log(yellow(`Adding minter to Creds...\n`));
-    // We already enforce limits at the Creds level.
-    await creds.addMinter(core.address, collatConfig.mintLimit);
-    console.log(green(`Minter successfully added to creds\n`));
+    if (!(await creds.isValidMinter(core.address))) {
+      console.log(yellow(`Adding minter to Creds...\n`));
+      // We already enforce limits at the Creds level.
+      await creds.addMinter(core.address, collatConfig.mintLimit);
+      console.log(green(`Minter successfully added to creds\n`));
+    }
 
     if (collatConfig.interestSettings.interestRate) {
       console.log(
@@ -482,7 +487,7 @@ task('deploy-borrow-pool')
       source: 'ArcProxy',
     }).address;
 
-    const sapphirePoolAddress = await deployContract(
+    const sapphirePoolImpl = await deployContract(
       {
         name: 'SapphirePool',
         source: 'SapphirePool',
@@ -492,10 +497,32 @@ task('deploy-borrow-pool')
       },
       networkConfig,
     );
-    console.log(green(`Sapphire pool deployed at ${sapphirePoolAddress}`));
+    await verifyContract(hre, sapphirePoolImpl);
+
+    const sapphirePoolProxy = await deployContract(
+      {
+        name: 'SapphirePool',
+        source: 'ArcProxy',
+        data: new ArcProxyFactory(signer).getDeployTransaction(
+          sapphirePoolImpl,
+          signer.address,
+          [],
+        ),
+        version: 1,
+        type: DeploymentCategory.global,
+      },
+      networkConfig,
+    );
+
+    console.log(green(`Sapphire pool deployed at ${sapphirePoolProxy}`));
 
     console.log(yellow('Calling init...'));
-    await SapphirePoolFactory.connect(sapphirePoolAddress, signer).init(
+    console.log({
+      name,
+      symbol,
+      credsAddress,
+    });
+    await SapphirePoolFactory.connect(sapphirePoolProxy, signer).init(
       name,
       symbol,
       credsAddress,
@@ -536,11 +563,7 @@ function _deployTestCollateral(
 }
 
 /**
- *
- * @param networkConfig
- * @param signer
- * @param hre
- * @returns
+ * Deploys the given oracle, or a mock oracle
  */
 async function _deployOracle(
   collatName: string,
@@ -605,4 +628,41 @@ async function _deployOracle(
 
     return oracleAddress;
   }
+}
+
+async function shouldSetFees(
+  core: SapphireCoreV1,
+  collatConfig: CollateralConfig,
+): Promise<boolean> {
+  if (
+    !(await core.liquidatorDiscount()).eq(
+      collatConfig.fees.liquidatorDiscount,
+    ) ||
+    !(await core.liquidationArcFee()).eq(collatConfig.fees.liquidationArcFee) ||
+    !(await core.poolInterestFee()).eq(collatConfig.fees.poolInterestFee) ||
+    !(await core.borrowFee()).eq(collatConfig.fees.borrowFee)
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+async function shouldSetLimits(
+  core: SapphireCoreV1,
+  collatConfig: CollateralConfig,
+): Promise<boolean> {
+  if (
+    !(await core.vaultBorrowMinimum()).eq(
+      collatConfig.limits.vaultBorrowMin || 0,
+    ) ||
+    !(await core.vaultBorrowMaximum()).eq(collatConfig.limits.vaultBorrowMax) ||
+    !(await core.defaultBorrowLimit()).eq(
+      collatConfig.limits.defaultBorrowLimit || 0,
+    )
+  ) {
+    return true;
+  }
+
+  return false;
 }
