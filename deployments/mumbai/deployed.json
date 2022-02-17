@@ -140,16 +140,6 @@
     "group": "WMATIC"
   },
   {
-    "name": "Oracle",
-    "source": "MockOracle",
-    "address": "0x99CbD84Dd8e418BB3374C09AA44644D95f86b3b9",
-    "txn": "0x31a8b013ad1020fd1959c653a29b604e0267970823b073762afbb1245ff2acdc",
-    "network": "mumbai",
-    "version": 1,
-    "type": "borrowing",
-    "group": "WMATIC"
-  },
-  {
     "name": "SapphireMapperLinear",
     "source": "SapphireMapperLinear",
     "address": "0x8F78973e6FE36E5bdDf184C94Fb4eE8601213974",
@@ -168,5 +158,15 @@
     "version": 1,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "Oracle",
+    "source": "MockSapphireOracle",
+    "address": "0xf827f5Fd129Adca77241565aBA90a237911D6296",
+    "txn": "0xf5a4ecf9956512bb31cc286c4ab0299afff4039336fc599bf776fdf0b6d1717e",
+    "network": "mumbai",
+    "version": 1,
+    "type": "borrowing",
+    "group": "WMATIC"
   }
 ]

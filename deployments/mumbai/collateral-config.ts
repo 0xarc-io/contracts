@@ -1,5 +1,5 @@
 import { CollateralConfigMap } from '@deployments/types';
-import { MockOracleFactory } from '@src/typings';
+import { MockSapphireOracleFactory } from '@src/typings';
 import { Signer, utils } from 'ethers';
 
 const collateralConfig: CollateralConfigMap = {
@@ -8,9 +8,9 @@ const collateralConfig: CollateralConfigMap = {
     borrowPool: '0xb1fB649039F829Aa588bAc07411bb2D25A21E446',
     mintLimit: utils.parseEther('500000'),
     oracle: {
-      source: 'MockOracle',
+      source: 'MockSapphireOracle',
       getDeployTx: (signer: Signer) =>
-        new MockOracleFactory(signer).getDeployTransaction(),
+        new MockSapphireOracleFactory(signer).getDeployTransaction(),
       constructorArguments: [],
     },
     borrowRatios: {
@@ -25,6 +25,7 @@ const collateralConfig: CollateralConfigMap = {
     },
     limits: {
       vaultBorrowMax: utils.parseEther('100000'),
+      defaultBorrowLimit: utils.parseEther('50000'),
     },
     interestSettings: {
       interestRate: '1547125957',
