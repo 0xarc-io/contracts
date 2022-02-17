@@ -14,7 +14,7 @@ import { BigNumber, ContractTransaction, utils } from 'ethers';
 import _ from 'lodash';
 import ArcDecimal from '@src/utils/ArcDecimal';
 import { ArcxTokenV2Factory } from '@src/typings/ArcxTokenV2Factory';
-import { DeploymentCategory, NetworkParams } from '../deployments/types';
+import { DeploymentType, NetworkParams } from '../deployments/types';
 import { verifyContract } from '.';
 
 task(
@@ -37,7 +37,7 @@ task(
         source: 'AddressAccrual',
         data: new AddressAccrualFactory(signer).getDeployTransaction(token),
         version: 2,
-        type: DeploymentCategory.global,
+        type: DeploymentType.global,
       },
       networkConfig,
     );
@@ -67,7 +67,7 @@ task('deploy-arcx-token-v2', 'Deploy the ArcxTokenV2')
           oldArcxToken,
         ),
         version: 2,
-        type: DeploymentCategory.global,
+        type: DeploymentType.global,
       },
       networkConfig,
     );
@@ -108,7 +108,7 @@ task(
           USDCAddress,
         ),
         version: 1,
-        type: DeploymentCategory.global,
+        type: DeploymentType.global,
       },
       networkConfig,
     );

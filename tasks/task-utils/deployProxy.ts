@@ -1,5 +1,5 @@
 import { deployContract } from '../../deployments/src';
-import { DeploymentCategory, NetworkParams } from '../../deployments/types';
+import { DeploymentType, NetworkParams } from '../../deployments/types';
 import { ArcProxyFactory } from '../../src/typings';
 import { green, red } from 'chalk';
 import { Signer } from 'ethers';
@@ -20,7 +20,7 @@ export async function deployProxy(
         [],
       ),
       version: 1,
-      type: DeploymentCategory.global,
+      type: DeploymentType.global,
       group,
     },
     networkConfig,

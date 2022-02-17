@@ -1,4 +1,4 @@
-import { DeploymentCategory } from '../deployments/types';
+import { DeploymentType } from '../deployments/types';
 import { DefiPassportFactory, WaitlistBatchFactory } from '@src/typings';
 import { PassportWaitlistFactory } from '@src/typings/PassportWaitlistFactory';
 import { utils, BigNumber } from 'ethers';
@@ -36,7 +36,7 @@ task('deploy-waitlist-batch', 'Deploy the WaitlistBatch contract')
           depositduration,
         ),
         version: 1,
-        type: DeploymentCategory.global,
+        type: DeploymentType.global,
       },
       networkConfig,
     );
@@ -69,7 +69,7 @@ task('deploy-passport-waitlist', 'Deploy the PassportWaitlist contract')
           paymentReceiver || signer.address,
         ),
         version: 1,
-        type: DeploymentCategory.global,
+        type: DeploymentType.global,
       },
       networkConfig,
     );

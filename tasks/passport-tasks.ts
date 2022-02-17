@@ -13,7 +13,7 @@ import {
   loadContract,
 } from '../deployments/src';
 import { task } from 'hardhat/config';
-import { DeploymentCategory } from '../deployments/types';
+import { DeploymentType } from '../deployments/types';
 import { verifyContract } from './task-utils';
 
 task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
@@ -48,7 +48,7 @@ task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
         source: 'DefiPassport',
         data: new DefiPassportFactory(signer).getDeployTransaction(),
         version: Number(version) || 1,
-        type: DeploymentCategory.global,
+        type: DeploymentType.global,
         group: 'DefiPassport',
       },
       networkConfig,
@@ -69,7 +69,7 @@ task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
           [],
         ),
         version: 1,
-        type: DeploymentCategory.global,
+        type: DeploymentType.global,
         group: 'DefiPassport',
       },
       networkConfig,
@@ -135,7 +135,7 @@ task(
           symbol,
         ),
         version: 1,
-        type: DeploymentCategory.global,
+        type: DeploymentType.global,
       },
       networkConfig,
     );
@@ -188,7 +188,7 @@ task(
       source: 'DefiPassportSkin',
       data: new DefiPassportSkinFactory(signer).getDeployTransaction(),
       version: 1,
-      type: DeploymentCategory.global,
+      type: DeploymentType.global,
       group: 'DefiPassport',
     },
     networkConfig,
@@ -512,7 +512,7 @@ task('deploy-early-skin', 'Deploys the EarlyPassportSkin NFT').setAction(
           defiPassportAddress,
         ),
         version: 1,
-        type: DeploymentCategory.global,
+        type: DeploymentType.global,
         group: undefined,
       },
       networkConfig,

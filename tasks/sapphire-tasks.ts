@@ -28,7 +28,7 @@ import { constants, utils } from 'ethers';
 import { verifyContract } from './task-utils';
 import {
   CollateralConfig,
-  DeploymentCategory,
+  DeploymentType,
   NetworkParams,
 } from '../deployments/types';
 import { TransactionRequest } from '@ethersproject/providers';
@@ -53,7 +53,7 @@ task('deploy-creds', 'Deploy the CredsERC20 token')
         source: 'CredsERC20',
         data: new CredsERC20Factory(signer).getDeployTransaction(),
         version: 2,
-        type: DeploymentCategory.borrowing,
+        type: DeploymentType.borrowing,
         group: symbol,
       },
       networkConfig,
@@ -76,7 +76,7 @@ task('deploy-creds', 'Deploy the CredsERC20 token')
           [],
         ),
         version: 2,
-        type: DeploymentCategory.borrowing,
+        type: DeploymentType.borrowing,
         group: symbol,
       },
       networkConfig,
@@ -157,7 +157,7 @@ task(
         source: 'SapphirePassportScores',
         data: new SapphirePassportScoresFactory(signer).getDeployTransaction(),
         version,
-        type: DeploymentCategory.global,
+        type: DeploymentType.global,
       },
       networkConfig,
     );
@@ -177,7 +177,7 @@ task(
           [],
         ),
         version: 1,
-        type: DeploymentCategory.global,
+        type: DeploymentType.global,
       },
       networkConfig,
     );
@@ -228,7 +228,7 @@ task('deploy-mapper', 'Deploy the Sapphire Mapper').setAction(
         source: 'SapphireMapperLinear',
         data: new SapphireMapperLinearFactory(signer).getDeployTransaction(),
         version: 1,
-        type: DeploymentCategory.global,
+        type: DeploymentType.global,
       },
       networkConfig,
     );
@@ -249,7 +249,7 @@ task('deploy-assessor', 'Deploy the Sapphire Assessor').setAction(
 
     const passportScoresAddress = loadContract({
       network,
-      type: DeploymentCategory.global,
+      type: DeploymentType.global,
       name: 'SapphirePassportScores',
     }).address;
 
@@ -259,7 +259,7 @@ task('deploy-assessor', 'Deploy the Sapphire Assessor').setAction(
 
     const mapperAddress = loadContract({
       network,
-      type: DeploymentCategory.global,
+      type: DeploymentType.global,
       name: 'SapphireMapperLinear',
     }).address;
 
@@ -278,7 +278,7 @@ task('deploy-assessor', 'Deploy the Sapphire Assessor').setAction(
           DEFAULT_MAX_CREDIT_SCORE,
         ),
         version: 1,
-        type: DeploymentCategory.global,
+        type: DeploymentType.global,
       },
       networkConfig,
     );
@@ -324,7 +324,7 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
         source: 'SapphireCoreV1',
         data: new SapphireCoreV1Factory(signer).getDeployTransaction(),
         version: 1,
-        type: DeploymentCategory.borrowing,
+        type: DeploymentType.borrowing,
         group: collatName,
       },
       networkConfig,
@@ -344,7 +344,7 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
           [],
         ),
         version: 1,
-        type: DeploymentCategory.borrowing,
+        type: DeploymentType.borrowing,
         group: collatName,
       },
       networkConfig,
@@ -375,7 +375,7 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
 
     const assessorAddress = loadContract({
       network,
-      type: DeploymentCategory.global,
+      type: DeploymentType.global,
       name: 'SapphireAssessor',
     }).address;
 
@@ -501,7 +501,7 @@ task('deploy-borrow-pool')
         source: 'SapphirePool',
         data: new SapphirePoolFactory(signer).getDeployTransaction(),
         version: 1,
-        type: DeploymentCategory.global,
+        type: DeploymentType.global,
       },
       networkConfig,
     );
@@ -517,7 +517,7 @@ task('deploy-borrow-pool')
           [],
         ),
         version: 1,
-        type: DeploymentCategory.global,
+        type: DeploymentType.global,
       },
       networkConfig,
     );
@@ -562,7 +562,7 @@ function _deployTestCollateral(
           18,
         ),
         version: 1,
-        type: DeploymentCategory.borrowing,
+        type: DeploymentType.borrowing,
         group: collatName,
       },
       networkConfig,
@@ -600,7 +600,7 @@ async function _deployOracle(
         source: 'MockOracle',
         data: new MockOracleFactory(signer).getDeployTransaction(),
         version: 1,
-        type: DeploymentCategory.borrowing,
+        type: DeploymentType.borrowing,
         group: collatName,
       },
       networkConfig,
@@ -624,7 +624,7 @@ async function _deployOracle(
         source,
         data: getDeployTx(signer),
         version: 1,
-        type: DeploymentCategory.borrowing,
+        type: DeploymentType.borrowing,
         group: collatName,
       },
       networkConfig,

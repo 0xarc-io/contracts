@@ -5,7 +5,7 @@ interface BaseDeploymentParams {
   name: string;
   source: string;
   version: number;
-  type: DeploymentCategory;
+  type: DeploymentType;
   group?: string;
 }
 
@@ -26,7 +26,7 @@ export interface NetworkParams {
   gasLimit?: string;
 }
 
-export enum DeploymentCategory {
+export enum DeploymentType {
   borrowing = 'borrowing',
   staking = 'staking',
   global = 'global',
