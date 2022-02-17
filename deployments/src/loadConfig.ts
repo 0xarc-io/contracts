@@ -23,9 +23,9 @@ export async function loadSavingsConfig(params: LoadConfigParams) {
   return await loadConfig(params, constants.SAVINGS_CONFIG_FILENAME, 'savings');
 }
 
-export async function loadStakingConfig(params: LoadConfigParams) {
-  return await loadConfig(params, constants.STAKING_CONFIG_FILENAME, 'staking');
-}
+// export async function loadStakingConfig(params: LoadConfigParams) {
+//   return await loadConfig(params, constants.STAKING_CONFIG_FILENAME, 'staking');
+// }
 
 async function loadConfig(
   params: LoadConfigParams,
