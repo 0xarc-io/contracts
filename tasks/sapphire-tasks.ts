@@ -289,10 +289,8 @@ task('deploy-assessor', 'Deploy the Sapphire Assessor').setAction(
 
 task('deploy-sapphire', 'Deploy a Sapphire core')
   .addParam('collateral', 'The collateral name to register the core with')
-  .addParam('supportedborrowaddress', 'The supported borrow address')
   .setAction(async (taskArgs, hre) => {
     const collatName = taskArgs.collateral;
-    const supportedBorrowAssetAddress = taskArgs.supportedborrowaddress;
 
     const {
       network,
@@ -321,6 +319,7 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
         data: new SapphireCoreV1Factory(signer).getDeployTransaction(),
         version: 1,
         type: DeploymentCategory.borrowing,
+        group: collatName,
       },
       networkConfig,
     );
@@ -329,16 +328,14 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
     );
     await verifyContract(hre, coreAddress);
 
-    const collateralAddress =
-      collatConfig.collateral_address ||
-      (await _deployTestCollateral(networkConfig, collatName, signer));
+    const { collateralAddress } = collatConfig;
 
     const oracleAddress = await _deployOracle(
       collatName,
-      collatConfig,
       networkConfig,
       signer,
       hre,
+      collatConfig.oracle,
     );
 
     if (!oracleAddress) {
@@ -393,20 +390,15 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
         `Please ensure the following details are correct:\n
           Collateral Address: ${collateralAddress}\n
           Creds Address: ${credsProxyAddress}\n
-          Supported Borrow Address: ${supportedBorrowAssetAddress}\n
           Oracle Address: ${oracleAddress}\n
           Interest Rate Setter: ${
-            collatConfig.params.interestSetter || ultimateOwner
+            collatConfig.interestSettings.interestSetter || ultimateOwner
           }\n
-          Pause operator: ${
-            collatConfig.params.pauseOperator || ultimateOwner
-          }\n,
+          Pause operator: ${collatConfig.pauseOperator || ultimateOwner}\n,
           Assessor address: ${assessorAddress}\n,
-          Fee collector: ${collatConfig.params.feeCollector || ultimateOwner}\n
-          High c-ratio: ${collatConfig.params.highCRatio}\n
-          Low c-ratio: ${collatConfig.params.lowCRatio}\n
-          Liquidation user fee: ${collatConfig.params.liquidationUserFee}\n
-          Liquidation ARC fee: ${collatConfig.params.liquidationArcFee}\n`,
+          Fee collector: ${collatConfig.feeCollector || ultimateOwner}\n
+          High c-ratio: ${collatConfig.borrowRatios.highCRatio}\n
+          Low c-ratio: ${collatConfig.borrowRatios.lowCRatio}\n`,
       ),
     );
 
@@ -416,47 +408,61 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
       collateralAddress,
       credsProxyAddress,
       oracleAddress,
-      collatConfig.params.interestSetter || ultimateOwner,
-      collatConfig.params.pauseOperator || ultimateOwner,
+      collatConfig.interestSettings.interestSetter || ultimateOwner,
+      collatConfig.pauseOperator || ultimateOwner,
       assessorAddress,
-      collatConfig.params.feeCollector || ultimateOwner,
-      collatConfig.params.highCRatio,
-      collatConfig.params.lowCRatio,
-      { gasLimit: 150000 },
+      collatConfig.feeCollector || ultimateOwner,
+      collatConfig.borrowRatios.highCRatio,
+      collatConfig.borrowRatios.lowCRatio,
     );
 
     console.log(green(`core.init() called successfully!\n`));
 
+    console.log(
+      yellow(`Setting fees...\n
+      Liquidator discount: ${collatConfig.fees.liquidatorDiscount}\n
+      Arc liquidation fee: ${collatConfig.fees.liquidationArcFee}\n
+      Pool interest fee: ${collatConfig.fees.poolInterestFee}\n
+      Borrow fee: ${collatConfig.fees.borrowFee}
+    `),
+    );
+    await core.setFees(
+      collatConfig.fees.liquidatorDiscount,
+      collatConfig.fees.liquidationArcFee,
+      collatConfig.fees.borrowFee,
+      collatConfig.fees.poolInterestFee,
+    );
+    console.log(green('Fees successfully set\n'));
+
     // Set borrow limits if needed. Skip if all zeros
-    if (
-      !_.isNil(collatConfig.limits) &&
-      (collatConfig.limits.vaultBorrowMin || collatConfig.limits.vaultBorrowMax)
-    ) {
-      console.log(yellow(`Calling core.setLimits() ...\n`));
-
-      await core.setLimits(
-        collatConfig.limits.vaultBorrowMin || 0,
-        collatConfig.limits.vaultBorrowMax || 0,
-        collatConfig.limits.defaultBorrowLimit || 0,
-      );
-
-      console.log(yellow(`Limits successfully set!\n`));
-    }
+    console.log(
+      yellow(`Setting limits:\n
+      Vault borrow min: ${collatConfig.limits.vaultBorrowMin || 0}\n
+      Vault borrow max: ${collatConfig.limits.vaultBorrowMax || 0}\n
+      Default borrow limit: ${collatConfig.limits.defaultBorrowLimit || 0}
+    `),
+    );
+    await core.setLimits(
+      collatConfig.limits.vaultBorrowMin || 0,
+      collatConfig.limits.vaultBorrowMax || 0,
+      collatConfig.limits.defaultBorrowLimit || 0,
+    );
+    console.log(yellow(`Limits successfully set!\n`));
 
     // Add minter to Creds
-    console.log(yellow(`Adding minter to creds...\n`));
+    console.log(yellow(`Adding minter to Creds...\n`));
     // We already enforce limits at the Creds level.
-    await creds.addMinter(core.address, MAX_UINT256);
+    await creds.addMinter(core.address, collatConfig.mintLimit);
     console.log(green(`Minter successfully added to creds\n`));
 
-    // Change admin to ultimate owner
-    if (network === 'mainnet') {
-      console.log(yellow(`Changing admin...`));
-
-      const proxy = ArcProxyFactory.connect(coreProxyAddress, signer);
-      await proxy.changeAdmin(ultimateOwner);
-
-      console.log(green(`Admin successfully set to ${ultimateOwner}`));
+    if (collatConfig.interestSettings.interestRate) {
+      console.log(
+        yellow(
+          `Setting interest rate to ${collatConfig.interestSettings.interestRate.toString()}\n`,
+        ),
+      );
+      await core.setInterestRate(collatConfig.interestSettings.interestRate);
+      console.log(green(`Interest rate successfully set\n`));
     }
   });
 
@@ -493,22 +499,27 @@ function _deployTestCollateral(
   }
 }
 
+/**
+ *
+ * @param networkConfig
+ * @param signer
+ * @param hre
+ * @returns
+ */
 async function _deployOracle(
   collatName: string,
-  collatConfig: {
-    oracle?: {
-      source?: string;
-      getDeployTx: (SignerWithAddress) => TransactionRequest;
-      constructorArguments: unknown[];
-    };
-  },
   networkConfig: NetworkParams,
   signer: SignerWithAddress,
   hre: HardhatRuntimeEnvironment,
+  oracleConfig?: {
+    source?: string;
+    getDeployTx: (SignerWithAddress) => TransactionRequest;
+    constructorArguments: unknown[];
+  },
 ): Promise<string> {
   const { network } = networkConfig;
 
-  if (_.isNil(collatConfig.oracle)) {
+  if (_.isNil(oracleConfig)) {
     if (network === 'mainnet') {
       throw red(
         `The oracle was not set in the collateral config file. Please set it and try again.`,
@@ -531,7 +542,7 @@ async function _deployOracle(
     await verifyContract(hre, mockOracleAddress);
   } else {
     // Oracle is found, deploy it
-    const { source, getDeployTx, constructorArguments } = collatConfig.oracle;
+    const { source, getDeployTx, constructorArguments } = oracleConfig;
 
     if (!source || !getDeployTx) {
       throw red(

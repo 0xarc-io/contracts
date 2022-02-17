@@ -33,33 +33,37 @@ export enum DeploymentCategory {
 }
 
 export interface CollateralConfig {
-  [collateralName: string]: {
-    collateralAddress: string;
-    borrowPool: string;
-    oracle: {
-      source: string;
-      getDeployTx: (signer: Signer) => TransactionRequest;
-    };
-    borrowRatios: {
-      highCRatio: BigNumberish;
-      lowCRatio: BigNumberish;
-    };
-    fees: {
-      liquidatorDiscount: BigNumberish;
-      poolInterestFee: BigNumberish;
-      liquidationArcFee?: BigNumberish;
-      borrowFee?: BigNumberish;
-    };
-    limits: {
-      vaultBorrowMax: BigNumberish;
-      vaultBorrowMin?: BigNumberish;
-      defaultBorrowLimit?: BigNumberish;
-    };
-    interestSettings?: {
-      interestRate?: BigNumberish;
-      interestSetter?: string;
-    };
-    pauseOperator?: string;
-    feeCollector?: string;
+  collateralAddress: string;
+  borrowPool: string;
+  mintLimit: BigNumberish;
+  oracle: {
+    source: string;
+    getDeployTx: (signer: Signer) => TransactionRequest;
+    constructorArguments: unknown[];
   };
+  borrowRatios: {
+    highCRatio: BigNumberish;
+    lowCRatio: BigNumberish;
+  };
+  fees: {
+    liquidatorDiscount: BigNumberish;
+    poolInterestFee: BigNumberish;
+    liquidationArcFee?: BigNumberish;
+    borrowFee?: BigNumberish;
+  };
+  limits: {
+    vaultBorrowMax: BigNumberish;
+    vaultBorrowMin?: BigNumberish;
+    defaultBorrowLimit?: BigNumberish;
+  };
+  interestSettings?: {
+    interestRate?: BigNumberish;
+    interestSetter?: string;
+  };
+  pauseOperator?: string;
+  feeCollector?: string;
+}
+
+export interface CollateralConfigMap {
+  [collateralName: string]: CollateralConfig;
 }

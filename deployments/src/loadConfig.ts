@@ -1,3 +1,4 @@
+import { CollateralConfig } from '@deployments/types';
 import { gray, red, blue } from 'chalk';
 import { constants, getPathToNetwork } from './config';
 
@@ -30,7 +31,7 @@ async function loadConfig(
   params: LoadConfigParams,
   filename: string,
   type: string,
-) {
+): Promise<CollateralConfig> {
   console.log(
     gray(`Loading the ${type} config for ${params.network.toUpperCase()}...`),
   );
