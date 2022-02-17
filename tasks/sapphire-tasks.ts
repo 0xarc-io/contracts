@@ -27,7 +27,7 @@ import { DEFAULT_MAX_CREDIT_SCORE } from '@test/helpers/sapphireDefaults';
 import { constants } from 'ethers';
 import { verifyContract } from './task-utils';
 import {
-  CollateralConfig,
+  CoreConfig,
   DeploymentType,
   NetworkParams,
 } from '../deployments/types';
@@ -639,7 +639,7 @@ async function _deployOracle(
 
 async function shouldSetFees(
   core: SapphireCoreV1,
-  collatConfig: CollateralConfig,
+  collatConfig: CoreConfig,
 ): Promise<boolean> {
   if (
     !(await core.liquidatorDiscount()).eq(
@@ -657,7 +657,7 @@ async function shouldSetFees(
 
 async function shouldSetLimits(
   core: SapphireCoreV1,
-  collatConfig: CollateralConfig,
+  collatConfig: CoreConfig,
 ): Promise<boolean> {
   if (
     !(await core.vaultBorrowMinimum()).eq(

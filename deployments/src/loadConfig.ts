@@ -1,4 +1,4 @@
-import { CollateralConfig } from '@deployments/types';
+import { CoreConfig } from '@deployments/types';
 import { gray, red, blue } from 'chalk';
 import { constants, getPathToNetwork } from './config';
 
@@ -12,26 +12,26 @@ export interface LoadConfigParams {
 }
 
 export async function loadCollateralConfig(params: LoadConfigParams) {
-  return await loadConfig(
+  return (await loadConfig(
     params,
     constants.COLLATERAL_CONFIG_FILENAME,
-    'synth',
-  );
+    'core',
+  )) as CoreConfig;
 }
 
 export async function loadSavingsConfig(params: LoadConfigParams) {
   return await loadConfig(params, constants.SAVINGS_CONFIG_FILENAME, 'savings');
 }
 
-// export async function loadStakingConfig(params: LoadConfigParams) {
-//   return await loadConfig(params, constants.STAKING_CONFIG_FILENAME, 'staking');
-// }
+export async function loadStakingConfig(params: LoadConfigParams) {
+  return await loadConfig(params, constants.STAKING_CONFIG_FILENAME, 'staking');
+}
 
 async function loadConfig(
   params: LoadConfigParams,
   filename: string,
   type: string,
-): Promise<CollateralConfig> {
+) {
   console.log(
     gray(`Loading the ${type} config for ${params.network.toUpperCase()}...`),
   );

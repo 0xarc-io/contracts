@@ -32,7 +32,7 @@ export enum DeploymentType {
   global = 'global',
 }
 
-export interface CollateralConfig {
+export interface CoreConfig {
   collateralAddress: string;
   borrowPool: string;
   mintLimit: BigNumberish;
@@ -65,5 +65,5 @@ export interface CollateralConfig {
 }
 
 export interface CollateralConfigMap {
-  [collateralName: string]: CollateralConfig;
+  [collateralName: string]: CoreConfig;
 }
