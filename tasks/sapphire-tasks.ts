@@ -6,6 +6,7 @@ import {
   SapphireCoreV1Factory,
   SapphireMapperLinearFactory,
   SapphirePassportScoresFactory,
+  SapphirePoolFactory,
   TestTokenFactory,
 } from '@src/typings';
 import { green, magenta, red, yellow } from 'chalk';
@@ -464,6 +465,41 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
       await core.setInterestRate(collatConfig.interestSettings.interestRate);
       console.log(green(`Interest rate successfully set\n`));
     }
+  });
+
+task('deploy-borrow-pool')
+  .addParam('name', 'Sapphire pool ERC20 name')
+  .addParam('symbol', 'Sapphire pool ERC20 symbol')
+  .setAction(async (taskArgs, hre) => {
+    const { network, signer, networkConfig } = await loadDetails(hre);
+    const { name, symbol } = taskArgs;
+
+    await pruneDeployments(network, signer.provider);
+
+    const credsAddress = loadContract({
+      network,
+      name: 'CredsERC20',
+      source: 'ArcProxy',
+    }).address;
+
+    const sapphirePoolAddress = await deployContract(
+      {
+        name: 'SapphirePool',
+        source: 'SapphirePool',
+        data: new SapphirePoolFactory(signer).getDeployTransaction(),
+        version: 1,
+        type: DeploymentCategory.global,
+      },
+      networkConfig,
+    );
+    console.log(green(`Sapphire pool deployed at ${sapphirePoolAddress}`));
+
+    console.log(yellow('Calling init...'));
+    await SapphirePoolFactory.connect(sapphirePoolAddress, signer).init(
+      name,
+      symbol,
+      credsAddress,
+    );
   });
 
 function _deployTestCollateral(
