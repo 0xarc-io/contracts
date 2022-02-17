@@ -1,9 +1,9 @@
-import { CollateralConfig } from '@deployments/types';
+// import { CollateralConfig } from '@deployments/types';
 
-const collateralConfig: CollateralConfig = {
-  // WMATIC: {
-  //   collateral_address:
-  // }
-};
+// const collateralConfig: CollateralConfig = {
+//   // WMATIC: {
+//   //   collateral_address:
+//   // }
+// };
 
-export default collateralConfig;
+// export default collateralConfig;
