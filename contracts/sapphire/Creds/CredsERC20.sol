@@ -2,7 +2,6 @@
 
 pragma solidity 0.8.4;
 
-
 import {Adminable} from "../../lib/Adminable.sol";
 import {InitializablePermittable} from "../../lib/InitializablePermittable.sol";
 import {InitializableBaseERC20} from "../../token/InitializableBaseERC20.sol";
