@@ -27,7 +27,7 @@ import { setupSapphire } from '../setup';
 import _ from 'lodash';
 import { PassportScoreTree } from '@src/MerkleTree';
 import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
-import { CREDIT_PROOF_PROTOCOL } from '@src/constants/protocols';
+import { CREDIT_PROOF_PROTOCOL } from '@src/constants';
 
 chai.use(solidity);
 const expect = chai.expect;

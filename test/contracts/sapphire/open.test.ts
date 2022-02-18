@@ -16,7 +16,7 @@ import {
 import {
   CREDIT_PROOF_PROTOCOL,
   BORROW_LIMIT_PROOF_PROTOCOL,
-} from '@src/constants/protocols';
+} from '@src/constants';
 import { mintApprovedCollateral } from '@test/helpers/setupBaseVault';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { BASE } from '@src/constants';

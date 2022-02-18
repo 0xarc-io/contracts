@@ -1,6 +1,6 @@
 import { Wallet } from '@ethersproject/wallet';
 import { PassportScoreTree } from '@src/MerkleTree';
-import { CREDIT_PROOF_PROTOCOL } from '@src/constants/protocols';
+import { CREDIT_PROOF_PROTOCOL } from '@src/constants';
 import { expect } from 'chai';
 import { BigNumber, utils } from 'ethers';
 import { v1 as uuidv1 } from 'uuid';

@@ -29,7 +29,7 @@ import {
 import {
   CREDIT_PROOF_PROTOCOL,
   BORROW_LIMIT_PROOF_PROTOCOL,
-} from '@src/constants/protocols';
+} from '@src/constants';
 import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
 import { PassportScoreTree } from '@src/MerkleTree';
 import { roundUpMul } from '@test/helpers/roundUpOperations';

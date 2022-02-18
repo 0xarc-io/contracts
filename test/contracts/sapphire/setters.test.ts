@@ -8,7 +8,7 @@ import {
   DEFAULT_VAULT_BORROW_MAXIMUM,
   DEFAULT_VAULT_BORROW_MIN,
 } from '@test/helpers/sapphireDefaults';
-import { CREDIT_PROOF_PROTOCOL } from '@src/constants/protocols';
+import { CREDIT_PROOF_PROTOCOL } from '@src/constants';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { constants, utils, Wallet } from 'ethers';
