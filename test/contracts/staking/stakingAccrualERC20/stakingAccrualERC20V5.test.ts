@@ -18,7 +18,7 @@ import {
   TestTokenFactory,
 } from '@src/typings';
 import { approve, getEmptyScoreProof, getScoreProof } from '@src/utils';
-import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
+import { CREDIT_PROOF_PROTOCOL } from '@src/constants/protocols';
 import {
   addSnapshotBeforeRestoreAfterEach,
   immediatelyUpdateMerkleRoot,
@@ -193,12 +193,12 @@ describe('StakingAccrualERC20V5', () => {
 
     const score1 = {
       account: user1.address,
-      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(DEFAULT_SCORE_THRESHOLD),
     };
     const score2 = {
       account: user2.address,
-      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(DEFAULT_SCORE_THRESHOLD),
     };
 
@@ -1014,14 +1014,14 @@ describe('StakingAccrualERC20V5', () => {
         );
 
         await upgradedContract.setProofProtocol(
-          utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+          utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
         );
         await upgradedContract.setScoreThreshold(DEFAULT_SCORE_THRESHOLD);
       });
 
       it('reverts if proof is set and no proof is provided', async () => {
         expect(await upgradedContract.getProofProtocol()).to.eq(
-          DEFAULT_PROOF_PROTOCOL,
+          CREDIT_PROOF_PROTOCOL,
         );
         expect(await upgradedContract.scoreThreshold()).to.eq(
           DEFAULT_SCORE_THRESHOLD,
@@ -1032,7 +1032,7 @@ describe('StakingAccrualERC20V5', () => {
             STAKE_AMOUNT,
             getEmptyScoreProof(
               user1.address,
-              utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+              utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
             ),
           ),
         ).to.be.revertedWith(
@@ -1057,7 +1057,7 @@ describe('StakingAccrualERC20V5', () => {
 
       it('stakes if proof is set and score is greater than or equal to the threshold', async () => {
         expect(await upgradedContract.getProofProtocol()).to.eq(
-          DEFAULT_PROOF_PROTOCOL,
+          CREDIT_PROOF_PROTOCOL,
         );
         expect(await upgradedContract.scoreThreshold()).to.eq(
           DEFAULT_SCORE_THRESHOLD,

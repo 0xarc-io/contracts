@@ -7,10 +7,6 @@ import {
   Vault,
 } from '@arc-types/sapphireCore';
 import {
-  BORROW_LIMIT_PROOF_PROTOCOL,
-  DEFAULT_PROOF_PROTOCOL,
-} from '@test/helpers/sapphireDefaults';
-import {
   BigNumber,
   BigNumberish,
   constants,
@@ -18,6 +14,7 @@ import {
   Signer,
   utils,
 } from 'ethers';
+import { BORROW_LIMIT_PROOF_PROTOCOL, CREDIT_PROOF_PROTOCOL } from './constants/protocols';
 import {
   BaseERC20Factory,
   SapphireAssessorFactory,
@@ -86,7 +83,7 @@ export class SapphireArc {
     borrowAssetAddress: string,
     passportScoreProof: PassportScoreProof = getEmptyScoreProof(
       undefined,
-      utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
     ),
     minterBorrowLimitScore: PassportScoreProof = getEmptyScoreProof(
       undefined,
@@ -131,7 +128,7 @@ export class SapphireArc {
     borrowAssetAddress: string,
     passportScoreProof: PassportScoreProof = getEmptyScoreProof(
       undefined,
-      utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
     ),
     coreName = this.getCoreNames()[0],
     caller = this.signer,
@@ -147,7 +144,7 @@ export class SapphireArc {
     borrowAssetAddress: string,
     passportScoreProof: PassportScoreProof = getEmptyScoreProof(
       undefined,
-      utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
     ),
     coreName: string = this.getCoreNames()[0],
     caller: Signer = this.signer,
@@ -167,11 +164,11 @@ export class SapphireArc {
     actions: Action[],
     passportScoreProof: PassportScoreProof = getEmptyScoreProof(
       undefined,
-      utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
     ),
     passportBorrowLimitProof: PassportScoreProof = getEmptyScoreProof(
       undefined,
-      utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
     ),
     coreName: string = this.getCoreNames()[0],
     caller: Signer = this.signer,
@@ -197,7 +194,7 @@ export class SapphireArc {
     borrowAssetAddress: string,
     passportScoreProof: PassportScoreProof = getEmptyScoreProof(
       undefined,
-      utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
     ),
     borrowLimitProof: PassportScoreProof = getEmptyScoreProof(
       undefined,
@@ -222,7 +219,7 @@ export class SapphireArc {
     borrowAssetAddress: string,
     passportScoreProof: PassportScoreProof = getEmptyScoreProof(
       undefined,
-      utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
     ),
     coreName: string = this.getCoreNames()[0],
     caller: Signer = this.signer,
@@ -244,7 +241,7 @@ export class SapphireArc {
     amount: BigNumber,
     passportScoreProof: PassportScoreProof = getEmptyScoreProof(
       undefined,
-      utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
     ),
     coreName: string = this.getCoreNames()[0],
     caller: Signer = this.signer,
@@ -259,7 +256,7 @@ export class SapphireArc {
     amount: BigNumber,
     passportScoreProof: PassportScoreProof = getEmptyScoreProof(
       undefined,
-      utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
     ),
     corename: string = this.getCoreNames()[0],
     caller: Signer = this.signer,

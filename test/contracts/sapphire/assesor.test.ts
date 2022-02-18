@@ -1,5 +1,6 @@
 import { PassportScore } from '@arc-types/sapphireCore';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
+import { CREDIT_PROOF_PROTOCOL, BORROW_LIMIT_PROOF_PROTOCOL } from '@src/constants/protocols';
 import { PassportScoreTree } from '@src/MerkleTree';
 import {
   SapphireMapperLinear,
@@ -11,9 +12,7 @@ import {
 import { MockSapphirePassportScores } from '@src/typings/MockSapphirePassportScores';
 import { ArcNumber, getScoreProof } from '@src/utils';
 import {
-  BORROW_LIMIT_PROOF_PROTOCOL,
   DEFAULT_MAX_CREDIT_SCORE,
-  DEFAULT_PROOF_PROTOCOL,
 } from '@test/helpers/sapphireDefaults';
 import { expect } from 'chai';
 import { BigNumber, constants, utils } from 'ethers';
@@ -48,12 +47,12 @@ describe('SapphireAssessor', () => {
   }> {
     const testPassportScore = {
       account: user1.address,
-      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: score,
     };
     const anotherPassportScore = {
       account: user2.address,
-      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(500),
     };
 
@@ -95,7 +94,7 @@ describe('SapphireAssessor', () => {
 
     passportScore1 = {
       account: user1.address,
-      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(600),
     };
 
@@ -107,7 +106,7 @@ describe('SapphireAssessor', () => {
 
     passportScore2 = {
       account: user2.address,
-      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(200),
     };
 
@@ -119,7 +118,7 @@ describe('SapphireAssessor', () => {
 
     passportScore3 = {
       account: signers[3].address,
-      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(300),
     };
 
@@ -221,7 +220,7 @@ describe('SapphireAssessor', () => {
           100,
           {
             account: constants.AddressZero,
-            protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+            protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
             score: passportScore1.score,
             merkleProof: scoresTree.getProof(passportScore1),
           },
@@ -239,7 +238,7 @@ describe('SapphireAssessor', () => {
           10,
           {
             account: user1.address,
-            protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+            protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
             score: passportScore1.score,
             merkleProof: scoresTree.getProof(passportScore1),
           },

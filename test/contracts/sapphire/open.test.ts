@@ -8,13 +8,15 @@ import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 import {
-  BORROW_LIMIT_PROOF_PROTOCOL,
   DEFAULT_COLLATERAL_DECIMALS,
   DEFAULT_PRICE,
-  DEFAULT_PROOF_PROTOCOL,
   DEFAULT_STABLECOIN_DECIMALS,
   DEFAULT_STABLE_COIN_PRECISION_SCALAR,
 } from '@test/helpers/sapphireDefaults';
+import {
+  CREDIT_PROOF_PROTOCOL,
+  BORROW_LIMIT_PROOF_PROTOCOL,
+} from '@src/constants/protocols';
 import { mintApprovedCollateral } from '@test/helpers/setupBaseVault';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { BASE } from '@src/constants';
@@ -57,12 +59,12 @@ describe('SapphireCore.open()', () => {
   async function init(ctx: ITestContext): Promise<void> {
     creditScore1 = {
       account: ctx.signers.scoredMinter.address,
-      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(500),
     };
     creditScore2 = {
       account: ctx.signers.interestSetter.address,
-      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(20),
     };
     borrowLimitScore1 = {
