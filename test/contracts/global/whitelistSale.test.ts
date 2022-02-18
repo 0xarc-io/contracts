@@ -1,6 +1,6 @@
 import 'module-alias/register';
 
-import { BigNumber } from 'ethers';
+import { BigNumber, utils } from 'ethers';
 import chai from 'chai';
 
 import { expectRevert } from '@test/helpers/expectRevert';
@@ -13,7 +13,6 @@ import {
 } from '@src/typings';
 import { deployTestToken } from '../deployers';
 import { solidity } from 'ethereum-waffle';
-import { ArcNumber } from '@src/utils';
 
 chai.use(solidity);
 const expect = chai.expect;
@@ -48,7 +47,7 @@ describe('WhitelistSale', () => {
     );
 
     // Give some test tokens to the user account
-    const mintAmount = ArcNumber.new(10);
+    const mintAmount = utils.parseEther('10');
     await currency.mintShare(userAccount.address, mintAmount);
     const userTokenContract = TestTokenFactory.connect(
       currency.address,
@@ -62,15 +61,15 @@ describe('WhitelistSale', () => {
   describe('#setHardCap', () => {
     it('should not be able to set the hard cap as a non-owner', async () => {
       const contract = await connectAs(userAccount);
-      expect(await contract.totalHardCap()).to.equal(ArcNumber.new(0));
+      expect(await contract.totalHardCap()).to.equal(utils.parseEther('0'));
       await expectRevert(contract.setHardCap(5));
     });
 
     it('should be able to set the hard cap as the owner', async () => {
       const contract = await connectAs(ownerAccount);
-      expect(await contract.totalHardCap()).to.equal(ArcNumber.new(0));
+      expect(await contract.totalHardCap()).to.equal(utils.parseEther('0'));
 
-      const HARD_CAP = ArcNumber.new(50);
+      const HARD_CAP = utils.parseEther('50');
       await contract.setHardCap(HARD_CAP);
       expect(await contract.totalHardCap()).to.equal(HARD_CAP);
     });
@@ -83,7 +82,7 @@ describe('WhitelistSale', () => {
       await expectRevert(
         userWhiteSaleContract.setAllocation(
           [signers[1].address, signers[2].address],
-          [ArcNumber.new(10), ArcNumber.new(20)],
+          [utils.parseEther('10'), utils.parseEther('20')],
         ),
       );
     });
@@ -93,15 +92,15 @@ describe('WhitelistSale', () => {
       await expectRevert(
         whitelistSale.setAllocation(
           [signers[1].address, signers[2].address],
-          [ArcNumber.new(10)],
+          [utils.parseEther('10')],
         ),
       );
     });
 
     it('should be able to set the allocation correctly', async () => {
       const whitelistSale = connectAs(ownerAccount);
-      const signer1Allocation = ArcNumber.new(10);
-      const signer2Allocation = ArcNumber.new(20);
+      const signer1Allocation = utils.parseEther('10');
+      const signer2Allocation = utils.parseEther('20');
 
       await whitelistSale.setAllocation(
         [signers[1].address, signers[2].address],
@@ -121,8 +120,8 @@ describe('WhitelistSale', () => {
       // Add two allocations
       const whitelistSale = connectAs(ownerAccount);
 
-      const signer1Allocation = ArcNumber.new(10);
-      const signer2Allocation = ArcNumber.new(20);
+      const signer1Allocation = utils.parseEther('10');
+      const signer2Allocation = utils.parseEther('20');
 
       await whitelistSale.setAllocation(
         [signers[1].address, signers[2].address],
@@ -151,97 +150,97 @@ describe('WhitelistSale', () => {
 
   describe('#claimAllocation', () => {
     it('should not be able to claim if the sale has not started', async () => {
-      await setAllocation(userAccount, ArcNumber.new(10));
+      await setAllocation(userAccount, utils.parseEther('10'));
 
       const whitelistSale = connectAs(userAccount);
-      await expectRevert(whitelistSale.claimAllocation(ArcNumber.new(5)));
+      await expectRevert(whitelistSale.claimAllocation(utils.parseEther('5')));
     });
 
     it('should not be able to cliam more than the allocation', async () => {
-      await setAllocation(userAccount, ArcNumber.new(5));
+      await setAllocation(userAccount, utils.parseEther('5'));
 
       const ownerWhitelistSale = connectAs(ownerAccount);
       await ownerWhitelistSale.updateSaleStatus(true);
-      await ownerWhitelistSale.setHardCap(ArcNumber.new(10));
+      await ownerWhitelistSale.setHardCap(utils.parseEther('10'));
 
       const userWhiteSaleContract = connectAs(userAccount);
       await expectRevert(
-        userWhiteSaleContract.claimAllocation(ArcNumber.new(6)),
+        userWhiteSaleContract.claimAllocation(utils.parseEther('6')),
       );
     });
 
     it('should not be able to claim the allocation if the hardcap is met', async () => {
-      await setAllocation(userAccount, ArcNumber.new(10));
+      await setAllocation(userAccount, utils.parseEther('10'));
 
       const ownerWhitelistSale = connectAs(ownerAccount);
       await ownerWhitelistSale.updateSaleStatus(true);
-      await ownerWhitelistSale.setHardCap(ArcNumber.new(7));
+      await ownerWhitelistSale.setHardCap(utils.parseEther('7'));
 
       const userWhiteSaleContract = connectAs(userAccount);
-      await userWhiteSaleContract.claimAllocation(ArcNumber.new(5));
-      await userWhiteSaleContract.claimAllocation(ArcNumber.new(2));
+      await userWhiteSaleContract.claimAllocation(utils.parseEther('5'));
+      await userWhiteSaleContract.claimAllocation(utils.parseEther('2'));
 
       expect(await userWhiteSaleContract.totalRaised()).to.equal(
-        ArcNumber.new(7),
+        utils.parseEther('7'),
       );
       await expectRevert(
-        userWhiteSaleContract.claimAllocation(ArcNumber.new(1)),
+        userWhiteSaleContract.claimAllocation(utils.parseEther('1')),
       );
     });
 
     it('should not be able to claim more than the allocation if amountToClaim + amountSpent > allocation', async () => {
       const ownerWhitelistSale = connectAs(ownerAccount);
       await ownerWhitelistSale.updateSaleStatus(true);
-      await ownerWhitelistSale.setHardCap(ArcNumber.new(10));
+      await ownerWhitelistSale.setHardCap(utils.parseEther('10'));
 
-      await setAllocation(userAccount, ArcNumber.new(5));
+      await setAllocation(userAccount, utils.parseEther('5'));
 
       const userWhiteSaleContract = connectAs(userAccount);
-      await userWhiteSaleContract.claimAllocation(ArcNumber.new(3));
+      await userWhiteSaleContract.claimAllocation(utils.parseEther('3'));
 
       await expectRevert(
-        userWhiteSaleContract.claimAllocation(ArcNumber.new(3)),
+        userWhiteSaleContract.claimAllocation(utils.parseEther('3')),
       );
     });
 
     it('should be able to spend up to the allocation', async () => {
       const ownerWhitelistSale = connectAs(ownerAccount);
       await ownerWhitelistSale.updateSaleStatus(true);
-      await ownerWhitelistSale.setHardCap(ArcNumber.new(10));
+      await ownerWhitelistSale.setHardCap(utils.parseEther('10'));
 
-      await setAllocation(userAccount, ArcNumber.new(5));
+      await setAllocation(userAccount, utils.parseEther('5'));
 
       const userWhiteSaleContract = connectAs(userAccount);
-      await userWhiteSaleContract.claimAllocation(ArcNumber.new(5));
+      await userWhiteSaleContract.claimAllocation(utils.parseEther('5'));
 
       const participantInfo = await userWhiteSaleContract.participants(
         userAccount.address,
       );
 
-      expect(participantInfo.spent).to.eq(ArcNumber.new(5));
+      expect(participantInfo.spent).to.eq(utils.parseEther('5'));
     });
 
     it('should be able to spend more if the allocation increases', async () => {
       const ownerWhitelistSale = connectAs(ownerAccount);
       await ownerWhitelistSale.updateSaleStatus(true);
-      await ownerWhitelistSale.setHardCap(ArcNumber.new(10));
+      await ownerWhitelistSale.setHardCap(utils.parseEther('10'));
 
-      await setAllocation(userAccount, ArcNumber.new(5));
+      await setAllocation(userAccount, utils.parseEther('5'));
 
       const userWhiteSaleContract = connectAs(userAccount);
 
-      await userWhiteSaleContract.claimAllocation(ArcNumber.new(5));
-      await setAllocation(userAccount, ArcNumber.new(6));
-      await userWhiteSaleContract.claimAllocation(ArcNumber.new(1));
+      await userWhiteSaleContract.claimAllocation(utils.parseEther('5'));
+      await setAllocation(userAccount, utils.parseEther('6'));
+      await userWhiteSaleContract.claimAllocation(utils.parseEther('1'));
 
       const participantInfo = await userWhiteSaleContract.participants(
         userAccount.address,
       );
-      expect(participantInfo.spent).to.eq(ArcNumber.new(6));
+      expect(participantInfo.spent).to.eq(utils.parseEther('6'));
     });
 
     it('should transfer the funds from user to owner', async () => {
-      const claimAmount = ArcNumber.new(5);
+      const claimAmount = utils.parseEther('5');
       const ownerWhitelistSale = connectAs(ownerAccount);
       await ownerWhitelistSale.updateSaleStatus(true);
       await ownerWhitelistSale.setHardCap(claimAmount);

@@ -10,7 +10,7 @@ import {
   SapphireAssessorFactory,
 } from '@src/typings';
 import { MockSapphirePassportScores } from '@src/typings/MockSapphirePassportScores';
-import { ArcNumber, getScoreProof } from '@src/utils';
+import { getScoreProof } from '@src/utils';
 import {
   DEFAULT_MAX_CREDIT_SCORE,
 } from '@test/helpers/sapphireDefaults';
@@ -356,12 +356,12 @@ describe('SapphireAssessor', () => {
 
       expect(
         await testAssessor.assess(
-          ArcNumber.new(100),
-          ArcNumber.new(200),
+          utils.parseEther('100'),
+          utils.parseEther('200'),
           getScoreProof(maxPassportScore, testPassportScoreTree),
           false,
         ),
-      ).to.eq(ArcNumber.new(100));
+      ).to.eq(utils.parseEther('100'));
     });
 
     it('returns the upperBound if credit score is at minimum', async () => {
@@ -373,24 +373,24 @@ describe('SapphireAssessor', () => {
 
       expect(
         await testAssessor.assess(
-          ArcNumber.new(100),
-          ArcNumber.new(200),
+          utils.parseEther('100'),
+          utils.parseEther('200'),
           getScoreProof(minPassportScore, testPassportScoreTree),
           false,
         ),
-      ).to.eq(ArcNumber.new(200));
+      ).to.eq(utils.parseEther('200'));
     });
 
     it('returns the correct value given the credit score and a valid proof', async () => {
       // 200 - (600/1000 * (200-100)) = 140
       expect(
         await assessor.assess(
-          ArcNumber.new(100),
-          ArcNumber.new(200),
+          utils.parseEther('100'),
+          utils.parseEther('200'),
           getScoreProof(passportScore1, scoresTree),
           false,
         ),
-      ).to.eq(ArcNumber.new(140));
+      ).to.eq(utils.parseEther('140'));
     });
   });
 
