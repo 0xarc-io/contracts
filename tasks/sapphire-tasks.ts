@@ -227,7 +227,7 @@ task('deploy-mapper', 'Deploy the Sapphire Mapper').setAction(
         source: 'SapphireMapperLinear',
         data: new SapphireMapperLinearFactory(signer).getDeployTransaction(),
         version: 1,
-        type: DeploymentType.global,
+        type: DeploymentType.borrowing,
       },
       networkConfig,
     );
@@ -258,7 +258,7 @@ task('deploy-assessor', 'Deploy the Sapphire Assessor').setAction(
 
     const mapperAddress = loadContract({
       network,
-      type: DeploymentType.global,
+      type: DeploymentType.borrowing,
       name: 'SapphireMapperLinear',
     }).address;
 
@@ -277,7 +277,7 @@ task('deploy-assessor', 'Deploy the Sapphire Assessor').setAction(
           DEFAULT_MAX_CREDIT_SCORE,
         ),
         version: 1,
-        type: DeploymentType.global,
+        type: DeploymentType.borrowing,
       },
       networkConfig,
     );
@@ -324,7 +324,6 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
         data: new SapphireCoreV1Factory(signer).getDeployTransaction(),
         version: 1,
         type: DeploymentType.borrowing,
-        group: collatName,
       },
       networkConfig,
     );
@@ -353,7 +352,6 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
     const { collateralAddress } = collatConfig;
 
     const oracleAddress = await _deployOracle(
-      collatName,
       networkConfig,
       signer,
       hre,
@@ -374,7 +372,7 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
 
     const assessorAddress = loadContract({
       network,
-      type: DeploymentType.global,
+      type: DeploymentType.borrowing,
       name: 'SapphireAssessor',
     }).address;
 
@@ -500,7 +498,7 @@ task('deploy-borrow-pool')
         source: 'SapphirePool',
         data: new SapphirePoolFactory(signer).getDeployTransaction(),
         version: 1,
-        type: DeploymentType.global,
+        type: DeploymentType.borrowing,
       },
       networkConfig,
     );
@@ -516,7 +514,7 @@ task('deploy-borrow-pool')
           [],
         ),
         version: 1,
-        type: DeploymentType.global,
+        type: DeploymentType.borrowing,
       },
       networkConfig,
     );
@@ -561,7 +559,7 @@ function _deployTestCollateral(
           18,
         ),
         version: 1,
-        type: DeploymentType.borrowing,
+        type: DeploymentType.global,
         group: collatName,
       },
       networkConfig,
@@ -573,7 +571,6 @@ function _deployTestCollateral(
  * Deploys the given oracle, or a mock oracle
  */
 async function _deployOracle(
-  collatName: string,
   networkConfig: NetworkParams,
   signer: SignerWithAddress,
   hre: HardhatRuntimeEnvironment,
@@ -599,8 +596,7 @@ async function _deployOracle(
         source: 'MockOracle',
         data: new MockOracleFactory(signer).getDeployTransaction(),
         version: 1,
-        type: DeploymentType.borrowing,
-        group: collatName,
+        type: DeploymentType.global,
       },
       networkConfig,
     );
@@ -623,8 +619,7 @@ async function _deployOracle(
         source,
         data: getDeployTx(signer),
         version: 1,
-        type: DeploymentType.borrowing,
-        group: collatName,
+        type: DeploymentType.global,
       },
       networkConfig,
     );
