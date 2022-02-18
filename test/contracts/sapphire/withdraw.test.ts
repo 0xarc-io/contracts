@@ -7,14 +7,16 @@ import { SapphireTestArc } from '@src/SapphireTestArc';
 import { SapphireAssessor, TestTokenFactory } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import {
-  BORROW_LIMIT_PROOF_PROTOCOL,
   DEFAULT_COLLATERAL_DECIMALS,
   DEFAULT_HIGH_C_RATIO,
   DEFAULT_LOW_C_RATIO,
   DEFAULT_PRICE,
-  DEFAULT_PROOF_PROTOCOL,
   DEFAULT_STABLE_COIN_PRECISION_SCALAR,
 } from '@test/helpers/sapphireDefaults';
+import {
+  CREDIT_PROOF_PROTOCOL,
+  BORROW_LIMIT_PROOF_PROTOCOL,
+} from '@src/constants/protocols';
 import { setupBaseVault } from '@test/helpers/setupBaseVault';
 import {
   addSnapshotBeforeRestoreAfterEach,
@@ -28,7 +30,9 @@ import { setupSapphire } from '../setup';
 
 const COLLATERAL_AMOUNT = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS);
 const SCALED_BORROW_AMOUNT = utils.parseEther('200');
-const BORROW_AMOUNT = utils.parseEther('200').div(DEFAULT_STABLE_COIN_PRECISION_SCALAR);
+const BORROW_AMOUNT = utils
+  .parseEther('200')
+  .div(DEFAULT_STABLE_COIN_PRECISION_SCALAR);
 /**
  * Add +1 at the end to account for rounding.
  * When the contract computes the c-ratio, it will be slightly smaller to be on the
@@ -57,12 +61,12 @@ describe('SapphireCore.withdraw()', () => {
   async function init(ctx: ITestContext) {
     minterCreditScore = {
       account: ctx.signers.scoredMinter.address,
-      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(500),
     };
     const creditScore2 = {
       account: ctx.signers.interestSetter.address,
-      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(20),
     };
     scoredMinterBorrowLimitScore = {
@@ -344,7 +348,7 @@ describe('SapphireCore.withdraw()', () => {
     // A new user with credit score 1000 is added to the tree
     const maxCreditScore = {
       account: signers.staker.address,
-      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(1000),
     };
     const newCreditTree = new PassportScoreTree([

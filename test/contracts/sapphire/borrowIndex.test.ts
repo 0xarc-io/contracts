@@ -13,11 +13,11 @@ import { BASE, ONE_YEAR_IN_SECONDS } from '@src/constants';
 import { PassportScoreTree } from '@src/MerkleTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { getScoreProof } from '@src/utils/getScoreProof';
+import { DEFAULT_COLLATERAL_DECIMALS } from '@test/helpers/sapphireDefaults';
 import {
+  CREDIT_PROOF_PROTOCOL,
   BORROW_LIMIT_PROOF_PROTOCOL,
-  DEFAULT_COLLATERAL_DECIMALS,
-  DEFAULT_PROOF_PROTOCOL,
-} from '@test/helpers/sapphireDefaults';
+} from '@src/constants/protocols';
 import { setupBaseVault } from '@test/helpers/setupBaseVault';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
@@ -51,7 +51,7 @@ describe('borrow index (integration)', () => {
   async function init(ctx: ITestContext): Promise<void> {
     minterCreditScore = {
       account: ctx.signers.scoredMinter.address,
-      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(500),
     };
     minterBorrowLimitScore = {
@@ -66,7 +66,7 @@ describe('borrow index (integration)', () => {
     };
     const creditScore2 = {
       account: ctx.signers.interestSetter.address,
-      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(20),
     };
     creditScoreTree = new PassportScoreTree([
