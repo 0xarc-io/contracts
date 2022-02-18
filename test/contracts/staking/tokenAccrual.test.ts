@@ -2,7 +2,7 @@ import 'module-alias/register';
 import { expect } from 'chai';
 
 import { TestToken } from '@src/typings/TestToken';
-import { BigNumber, BigNumberish } from 'ethers';
+import { BigNumber, BigNumberish, utils } from 'ethers';
 import { TokenStakingAccrual } from '@src/typings/TokenStakingAccrual';
 import { expectRevert } from '@test/helpers/expectRevert';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
@@ -10,7 +10,7 @@ import { ethers } from 'hardhat';
 import { TestTokenFactory } from '@src/typings/TestTokenFactory';
 import { TokenStakingAccrualFactory } from '@src/typings/TokenStakingAccrualFactory';
 import { deployTokenStakingAccrual } from '../deployers';
-import { ArcNumber, Token } from '@src/utils';
+import { Token } from '@src/utils';
 
 let ownerAccount: SignerWithAddress;
 let userAccount: SignerWithAddress;
@@ -86,7 +86,7 @@ describe('TokenAccrual', () => {
   });
 
   it('should be able to claim fees', async () => {
-    const DEPOSIT_AMOUNT = ArcNumber.new(100);
+    const DEPOSIT_AMOUNT = utils.parseEther('100');
 
     const userRewardContract = await getStakingContractAs(userAccount);
     await stakeTokens(userRewardContract, DEPOSIT_AMOUNT, userAccount);
@@ -101,11 +101,11 @@ describe('TokenAccrual', () => {
 
     expect(
       (await rewardToken.balanceOf(userAccount.address)).toString(),
-    ).to.equal(ArcNumber.new(50).toString());
+    ).to.equal(utils.parseEther('50').toString());
 
     expect(
       (await rewardToken.balanceOf(ownerAccount.address)).toString(),
-    ).to.equal(ArcNumber.new(50).toString());
+    ).to.equal(utils.parseEther('50').toString());
 
     await expectRevert(rewardContract.claimFor(userAccount.address));
     await expectRevert(rewardContract.claimFor(ownerAccount.address));
@@ -117,15 +117,15 @@ describe('TokenAccrual', () => {
 
     expect(
       (await rewardToken.balanceOf(userAccount.address)).toString(),
-    ).to.equal(ArcNumber.new(100).toString());
+    ).to.equal(utils.parseEther('100').toString());
 
     expect(
       (await rewardToken.balanceOf(ownerAccount.address)).toString(),
-    ).to.equal(ArcNumber.new(100).toString());
+    ).to.equal(utils.parseEther('100').toString());
   });
 
   it('should be able to exit', async () => {
-    const DEPOSIT_AMOUNT = ArcNumber.new(100);
+    const DEPOSIT_AMOUNT = utils.parseEther('100');
 
     const rewardContract = await getStakingContractAs(userAccount);
 
