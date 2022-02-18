@@ -25,7 +25,7 @@ If you want to contribute, familiarity with [Hardhat](https://github.com/nomicla
 
 ### Pre Requisites
 
-Before running any command, make sure to install dependencies:
+Before running any command, make sure to install dependencies: 
 
 ```sh
 $ yarn install
