@@ -1,11 +1,10 @@
-import { BigNumber, BigNumberish } from 'ethers';
+import { BigNumberish, utils } from 'ethers';
 import { ITestContext } from './context';
 import { immediatelyUpdateMerkleRoot } from '../helpers/testingUtils';
 import _ from 'lodash';
 import {
   DEFAULT_HIGH_C_RATIO,
   DEFAULT_LOW_C_RATIO,
-  DEFAULT_TOTAL_BORROW_LIMIT,
   DEFAULT_VAULT_BORROW_MAXIMUM,
   DEFAULT_VAULT_BORROW_MIN,
 } from '@test/helpers/sapphireDefaults';
@@ -16,16 +15,19 @@ export interface SapphireSetupOptions {
   limits?: {
     lowCollateralRatio?: BigNumberish;
     highCollateralRatio?: BigNumberish;
-    borrowLimit?: BigNumber;
-    vaultBorrowMinimum?: BigNumber;
-    vaultBorrowMaximum?: BigNumber;
+    vaultBorrowMinimum?: BigNumberish;
+    vaultBorrowMaximum?: BigNumberish;
+    defaultBorrowLimit?: BigNumberish;
   };
   fees?: {
     liquidationUserFee?: BigNumberish;
     liquidationArcFee?: BigNumberish;
+    borrowFee?: BigNumberish;
+    poolInterestFee?: BigNumberish;
   };
   interestRate?: BigNumberish;
   price?: BigNumberish;
+  poolDepositSwapAmount?: BigNumberish;
 }
 
 /**
@@ -34,12 +36,19 @@ export interface SapphireSetupOptions {
  */
 export async function setupSapphire(
   ctx: ITestContext,
-  { merkleRoot, limits, fees, price, interestRate }: SapphireSetupOptions,
+  {
+    merkleRoot,
+    limits,
+    fees,
+    price,
+    interestRate,
+    poolDepositSwapAmount,
+  }: SapphireSetupOptions,
 ) {
   const arc = ctx.sdks.sapphire;
 
   // Update the collateral ratio if needed
-  const core = arc.synth().core;
+  const core = arc.core();
   await _setCRatiosIfNeeded(
     core,
     limits?.lowCollateralRatio,
@@ -48,17 +57,19 @@ export async function setupSapphire(
 
   // Set limits
   await core.setLimits(
-    limits?.borrowLimit || DEFAULT_TOTAL_BORROW_LIMIT,
     limits?.vaultBorrowMinimum || DEFAULT_VAULT_BORROW_MIN,
     limits?.vaultBorrowMaximum || DEFAULT_VAULT_BORROW_MAXIMUM,
+    limits?.defaultBorrowLimit || 0,
   );
 
   if (!_.isEmpty(fees)) {
     await arc
-      .synth()
-      .core.setFees(
+      .core()
+      .setFees(
         fees.liquidationUserFee || '0',
         fees.liquidationArcFee || '0',
+        fees.borrowFee || '0',
+        fees.poolInterestFee || '0',
       );
   }
 
@@ -79,6 +90,8 @@ export async function setupSapphire(
       merkleRoot,
     );
   }
+
+  await setupPool(ctx, poolDepositSwapAmount ?? utils.parseEther('300'));
 }
 
 async function _setCRatiosIfNeeded(
@@ -99,4 +112,32 @@ async function _setCRatiosIfNeeded(
       newHighCRatio || DEFAULT_HIGH_C_RATIO,
     );
   }
+}
+
+/**
+ * Sets the deposit and swap limit to BORROW_AMOUNT * 3
+ * @param depositBorrowAmount The amount deposited in the pool and the core swap limit
+ */
+async function setupPool(ctx: ITestContext, depositBorrowAmount: BigNumberish) {
+  await ctx.contracts.sapphire.pool.setDepositLimit(
+    ctx.contracts.stablecoin.address,
+    depositBorrowAmount,
+  );
+  await ctx.contracts.sapphire.pool.setCoreSwapLimit(
+    ctx.contracts.sapphire.core.address,
+    depositBorrowAmount,
+  );
+
+  await ctx.contracts.stablecoin.mintShare(
+    ctx.signers.admin.address,
+    depositBorrowAmount,
+  );
+  await ctx.contracts.stablecoin.approve(
+    ctx.contracts.sapphire.pool.address,
+    depositBorrowAmount,
+  );
+  await ctx.contracts.sapphire.pool.deposit(
+    ctx.contracts.stablecoin.address,
+    depositBorrowAmount,
+  );
 }

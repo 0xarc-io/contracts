@@ -4,6 +4,7 @@ import { TestTokenFactory } from '@src/typings';
 import {
   DEFAULT_COLLATERAL_DECIMALS,
   DEFAULT_PROOF_PROTOCOL,
+  DEFAULT_STABLECOIN_DECIMALS,
 } from './sapphireDefaults';
 import { BigNumberish, utils } from 'ethers';
 import { PassportScoreProof } from '@arc-types/sapphireCore';
@@ -16,23 +17,29 @@ import { getEmptyScoreProof } from '@src/utils';
 export async function setupBaseVault(
   arc: SapphireTestArc,
   caller: SignerWithAddress,
+  borrowLimitProof: PassportScoreProof,
   collateralAmount = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS),
-  borrowAmount = utils.parseEther('200'),
+  borrowAmount = utils.parseUnits('200', DEFAULT_STABLECOIN_DECIMALS),
   scoreProof?: PassportScoreProof,
-  synthName?: string,
+  coreName?: string,
 ) {
   await mintApprovedCollateral(arc, caller, collateralAmount);
 
+  const supportedBorrowAsset = (
+    await arc.coreContracts().core.getSupportedBorrowAssets()
+  )[0];
   // Open vault and mint debt
   await arc.open(
     collateralAmount,
     borrowAmount,
+    supportedBorrowAsset,
     scoreProof ??
       getEmptyScoreProof(
         undefined,
         utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
       ),
-    synthName,
+    borrowLimitProof,
+    coreName,
     caller,
   );
 }

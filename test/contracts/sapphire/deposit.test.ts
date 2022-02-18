@@ -51,7 +51,7 @@ describe('SapphireCore.deposit()', () => {
     scoredMinter = ctx.signers.scoredMinter;
     minter = ctx.signers.minter;
     collateral = TestTokenFactory.connect(
-      await arc.collateral().address,
+      arc.collateral().address,
       minter,
     );
 

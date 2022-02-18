@@ -9,11 +9,13 @@ import { MockOracle } from '@src/typings/MockOracle';
 import {
   MockSapphireCoreV1Factory,
   MockSapphirePassportScoresFactory,
+  SapphirePoolFactory,
 } from '@src/typings';
 import { MerkleDistributor } from '@src/typings/MerkleDistributor';
 import { SyntheticTokenV2 } from '@src/typings/SyntheticTokenV2';
 import { MockSapphireOracle } from '@src/typings/MockSapphireOracle';
 import { DefiPassportFactory } from '@src/typings/DefiPassportFactory';
+import { CredsERC20Factory } from '@src/typings/CredsERC20Factory';
 
 export async function deploySyntheticTokenV2(
   deployer: Signer,
@@ -135,4 +137,33 @@ export async function deployDefiPassport(deployer: Signer) {
   );
 
   return DefiPassportFactory.connect(proxy.address, deployer);
+}
+
+export async function deploySapphirePool(deployer: Signer) {
+  const poolImpl = await new SapphirePoolFactory(deployer).deploy();
+  const poolProxy = await new ArcProxyFactory(deployer).deploy(
+    poolImpl.address,
+    await deployer.getAddress(),
+    [],
+  );
+  return SapphirePoolFactory.connect(poolProxy.address, deployer);
+}
+
+export async function deployCredsERC20(
+  deployer: Signer,
+  name: string,
+  symbol: string,
+) {
+  const impl = await new CredsERC20Factory(deployer).deploy();
+  const proxy = await deployArcProxy(
+    deployer,
+    impl.address,
+    await deployer.getAddress(),
+    [],
+  );
+
+  const credsProxy = CredsERC20Factory.connect(proxy.address, deployer);
+  await credsProxy.init(name, symbol);
+
+  return credsProxy;
 }

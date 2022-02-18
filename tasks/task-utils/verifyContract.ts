@@ -1,5 +1,6 @@
 import { green, yellow } from 'chalk';
-import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import { HardhatRuntimeEnvironment, Network } from 'hardhat/types';
+import axios from 'axios';
 
 const ETHERSCAN_APY_SUPPORTED_NETWORKS = [
   'mainnet',
@@ -13,6 +14,11 @@ export async function verifyContract(
   contractAddress: string,
   ...contractArgs: unknown[]
 ) {
+  if (await isVerified(contractAddress, hre.network)) {
+    console.log(yellow('Contract already verified'));
+    return;
+  }
+
   const { network } = hre.hardhatArguments;
   if (!ETHERSCAN_APY_SUPPORTED_NETWORKS.includes(network)) {
     console.log(
@@ -40,4 +46,20 @@ export async function verifyContract(
     }
   }
   console.log(green(`Contract verified successfully`));
+}
+
+async function isVerified(address: string, network: Network): Promise<boolean> {
+  const supportedNetworks = ['mumbai'];
+
+  if (!supportedNetworks.includes(network.name)) {
+    return false;
+  }
+
+  const baseUrl = 'https://api-testnet.polygonscan.com/api';
+
+  const res = await axios.get(
+    `${baseUrl}?module=contract&action=getabi&address=${address}&apiKey=${process.env.ETHERSCAN_KEY}`,
+  );
+
+  return res.data.status === '1';
 }

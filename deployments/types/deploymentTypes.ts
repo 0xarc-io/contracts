@@ -1,13 +1,22 @@
-import { Signer } from 'ethers';
+import { BigNumberish, Signer } from 'ethers';
 import { TransactionRequest } from '@ethersproject/providers';
 
-export interface DeployContractParams {
+interface BaseDeploymentParams {
   name: string;
   source: string;
-  data: TransactionRequest;
   version: number;
   type: DeploymentType;
   group?: string;
+}
+
+export interface DeployContractParams extends BaseDeploymentParams {
+  data: TransactionRequest;
+}
+
+export interface WriteToDeploymentsParams extends BaseDeploymentParams {
+  address: string;
+  txn: string;
+  network: string;
 }
 
 export interface NetworkParams {
@@ -18,19 +27,43 @@ export interface NetworkParams {
 }
 
 export enum DeploymentType {
-  synth = 'synth',
+  borrowing = 'borrowing',
   staking = 'staking',
   global = 'global',
-  savings = 'savings',
 }
 
-export interface WriteToDeploymentsParams {
-  name: string;
-  source: string;
-  address: string;
-  txn: string;
-  network: string;
-  version: number;
-  type: DeploymentType;
-  group?: string;
+export interface CoreConfig {
+  collateralAddress: string;
+  borrowPool: string;
+  mintLimit: BigNumberish;
+  oracle: {
+    source: string;
+    getDeployTx: (signer: Signer) => TransactionRequest;
+    constructorArguments: unknown[];
+  };
+  borrowRatios: {
+    highCRatio: BigNumberish;
+    lowCRatio: BigNumberish;
+  };
+  fees: {
+    liquidatorDiscount: BigNumberish;
+    poolInterestFee: BigNumberish;
+    liquidationArcFee?: BigNumberish;
+    borrowFee?: BigNumberish;
+  };
+  limits: {
+    vaultBorrowMax: BigNumberish;
+    vaultBorrowMin?: BigNumberish;
+    defaultBorrowLimit?: BigNumberish;
+  };
+  interestSettings?: {
+    interestRate?: BigNumberish;
+    interestSetter?: string;
+  };
+  pauseOperator?: string;
+  feeCollector?: string;
+}
+
+export interface CollateralConfigMap {
+  [collateralName: string]: CoreConfig;
 }

@@ -13,7 +13,8 @@ library SapphireTypes {
 
     struct Vault {
         uint256 collateralAmount;
-        uint256 borrowedAmount;
+        uint256 normalizedBorrowedAmount;
+        uint256 principal;
     }
 
     struct RootInfo {
@@ -31,6 +32,7 @@ library SapphireTypes {
 
     struct Action {
         uint256 amount;
+        address borrowAssetAddress;
         Operation operation;
         address userToLiquidate;
     }

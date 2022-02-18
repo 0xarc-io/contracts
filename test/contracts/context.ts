@@ -15,7 +15,8 @@ export interface ITestContext {
 }
 
 export interface ITestContextArgs {
-  decimals: BigNumberish;
+  collateralDecimals?: BigNumberish;
+  stablecoinDecimals?: BigNumberish;
 }
 
 const provider = ethers.provider;
@@ -32,7 +33,7 @@ export type initFunction = (
 
 export async function generateContext(
   fixture: fixtureFunction,
-  init: initFunction,
+  init?: initFunction,
   args?: ITestContextArgs,
 ) {
   const signers = {} as TestingSigners;
@@ -60,7 +61,10 @@ export async function generateContext(
   const ctx = { signers, sdks, contracts, evm } as ITestContext;
 
   await fixture(ctx, args);
-  await init(ctx, args);
+
+  if (init) {
+    await init(ctx, args);
+  }
 
   ctx.postInitSnapshotId = await evm.snapshot();
 

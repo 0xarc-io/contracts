@@ -1,7 +1,13 @@
-import { SapphireAssessorFactory, SapphireCoreV1 } from '@src/typings';
+import {
+  SapphireAssessorFactory,
+  SapphireCoreV1,
+  TestTokenFactory,
+} from '@src/typings';
 import {
   DEFAULT_MAX_CREDIT_SCORE,
   DEFAULT_PROOF_PROTOCOL,
+  DEFAULT_VAULT_BORROW_MAXIMUM,
+  DEFAULT_VAULT_BORROW_MIN,
 } from '@test/helpers/sapphireDefaults';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
@@ -18,8 +24,12 @@ describe('SapphireCore.setters', () => {
   let randomAddress: string;
 
   before(async () => {
-    ctx = await generateContext(sapphireFixture, (ctx) =>
-      setupSapphire(ctx, {}),
+    ctx = await generateContext(
+      sapphireFixture,
+      (ctx) => setupSapphire(ctx, {}),
+      {
+        stablecoinDecimals: 18,
+      },
     );
     sapphireCore = ctx.contracts.sapphire.core;
     randomAddress = Wallet.createRandom().address;
@@ -263,24 +273,42 @@ describe('SapphireCore.setters', () => {
   describe('#setFees', () => {
     const userFee = utils.parseEther('0.1');
     const arcFee = utils.parseEther('0.05');
+    const borrowFee = utils.parseEther('0.1');
+    const poolInterestFee = utils.parseEther('0.4');
 
     it('reverts if called by non-owner', async () => {
       await expect(
-        sapphireCore.connect(ctx.signers.unauthorized).setFees(userFee, arcFee),
+        sapphireCore
+          .connect(ctx.signers.unauthorized)
+          .setFees(userFee, arcFee, borrowFee, 0),
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
-    it('sets the liquidation fee and the arc ratio', async () => {
-      await expect(sapphireCore.setFees(userFee, arcFee))
-        .to.emit(sapphireCore, 'LiquidationFeesUpdated')
-        .withArgs(userFee, arcFee);
-      expect(await sapphireCore.liquidationUserRatio()).eq(userFee);
-      expect(await sapphireCore.liquidationArcRatio()).eq(arcFee);
+    it('reverts if liquidation discount is > 100%', async () => {
+      await expect(
+        sapphireCore.setFees(utils.parseEther('1').add(1), 0, 0, 0),
+      ).to.be.revertedWith('SapphireCoreV1: fees cannot be more than 100%');
+    });
+
+    it('sets the liquidation fee, the arc ratio, the borrow fee and the pool share', async () => {
+      expect(await sapphireCore.liquidatorDiscount()).eq(0);
+      expect(await sapphireCore.liquidationArcFee()).eq(0);
+      expect(await sapphireCore.borrowFee()).eq(0);
+      expect(await sapphireCore.poolInterestFee()).eq(0);
+
+      await expect(
+        sapphireCore.setFees(userFee, arcFee, borrowFee, poolInterestFee),
+      )
+        .to.emit(sapphireCore, 'FeesUpdated')
+        .withArgs(userFee, arcFee, borrowFee, poolInterestFee);
+      expect(await sapphireCore.liquidatorDiscount()).eq(userFee);
+      expect(await sapphireCore.liquidationArcFee()).eq(arcFee);
+      expect(await sapphireCore.borrowFee()).eq(borrowFee);
+      expect(await sapphireCore.poolInterestFee()).eq(poolInterestFee);
     });
   });
 
   describe('#setLimits', () => {
-    const totalBorrowLimit = utils.parseEther('1000000');
     const vaultBorrowMaximum = utils.parseEther('1000');
     const vaultBorrowMinimum = utils.parseEther('100');
 
@@ -288,53 +316,39 @@ describe('SapphireCore.setters', () => {
       await expect(
         sapphireCore
           .connect(ctx.signers.unauthorized)
-          .setLimits(totalBorrowLimit, vaultBorrowMinimum, vaultBorrowMaximum),
+          .setLimits(vaultBorrowMinimum, vaultBorrowMaximum, 0),
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
     it('reverts if max limit is lower than the min limit', async () => {
       await expect(
-        sapphireCore.setLimits(
-          totalBorrowLimit,
-          vaultBorrowMaximum,
-          vaultBorrowMinimum,
-        ),
+        sapphireCore.setLimits(vaultBorrowMaximum, vaultBorrowMinimum, 0),
       ).to.be.revertedWith(
-        'SapphireCoreV1: required condition is vaultMin <= vaultMax <= totalLimit',
-      );
-      await expect(
-        sapphireCore.setLimits(
-          vaultBorrowMinimum,
-          totalBorrowLimit,
-          vaultBorrowMaximum,
-        ),
-      ).to.be.revertedWith(
-        'SapphireCoreV1: required condition is vaultMin <= vaultMax <= totalLimit',
-      );
-      await expect(
-        sapphireCore.setLimits(
-          vaultBorrowMaximum,
-          vaultBorrowMinimum,
-          totalBorrowLimit,
-        ),
-      ).to.be.revertedWith(
-        'SapphireCoreV1: required condition is vaultMin <= vaultMax <= totalLimit',
+        'SapphireCoreV1: required condition is vaultMin <= vaultMax',
       );
     });
 
     it('sets the borrow limits', async () => {
+      expect(await sapphireCore.vaultBorrowMaximum()).eq(
+        DEFAULT_VAULT_BORROW_MAXIMUM,
+      );
+      expect(await sapphireCore.vaultBorrowMinimum()).eq(
+        DEFAULT_VAULT_BORROW_MIN,
+      );
+      expect(await sapphireCore.defaultBorrowLimit()).eq(0);
+
       await expect(
         sapphireCore.setLimits(
-          totalBorrowLimit,
           vaultBorrowMinimum,
+          vaultBorrowMaximum,
           vaultBorrowMaximum,
         ),
       )
         .to.emit(sapphireCore, 'LimitsUpdated')
-        .withArgs(totalBorrowLimit, vaultBorrowMinimum, vaultBorrowMaximum);
-      expect(await sapphireCore.totalBorrowLimit()).eq(totalBorrowLimit);
+        .withArgs(vaultBorrowMinimum, vaultBorrowMaximum, vaultBorrowMaximum);
       expect(await sapphireCore.vaultBorrowMaximum()).eq(vaultBorrowMaximum);
       expect(await sapphireCore.vaultBorrowMinimum()).eq(vaultBorrowMinimum);
+      expect(await sapphireCore.defaultBorrowLimit()).eq(vaultBorrowMaximum);
     });
   });
 
@@ -343,21 +357,88 @@ describe('SapphireCore.setters', () => {
       await expect(
         sapphireCore
           .connect(ctx.signers.unauthorized)
-          .setProofProtocol(utils.formatBytes32String('test')),
+          .setProofProtocols([
+            utils.formatBytes32String('test'),
+            utils.formatBytes32String('test2'),
+          ]),
       ).to.be.revertedWith('Adminable: caller is not admin');
     });
 
+    it('reverts if array of protocol contain not two items', async () => {
+      await expect(
+        sapphireCore
+          .connect(ctx.signers.admin)
+          .setProofProtocols([utils.formatBytes32String('test')]),
+      ).to.be.revertedWith(
+        'SapphireCoreV1: array should contain two protocols',
+      );
+    });
+
     it('sets the proof protocol', async () => {
-      expect(await sapphireCore.getProofProtocol()).to.eq(
+      expect(await sapphireCore.getProofProtocol(0)).to.eq(
         DEFAULT_PROOF_PROTOCOL,
       );
       expect(await sapphireCore.getAdmin()).to.eq(ctx.signers.admin.address);
 
       await sapphireCore
         .connect(ctx.signers.admin)
-        .setProofProtocol(utils.formatBytes32String('test'));
+        .setProofProtocols([
+          utils.formatBytes32String('test'),
+          utils.formatBytes32String('test2'),
+        ]);
 
-      expect(await sapphireCore.getProofProtocol()).to.eq('test');
+      expect(await sapphireCore.getProofProtocol(0)).to.eq('test');
+      expect(await sapphireCore.getProofProtocol(1)).to.eq('test2');
+    });
+  });
+
+  describe('#setBorrowPool', () => {
+    it('reverts if called by non-admin', async () => {
+      await expect(
+        sapphireCore
+          .connect(ctx.signers.unauthorized)
+          .setBorrowPool(ctx.contracts.sapphire.pool.address),
+      ).to.be.revertedWith('Adminable: caller is not admin');
+    });
+
+    it('sets the address of the borrow pool', async () => {
+      expect(await sapphireCore.borrowPool()).to.eq(
+        ctx.contracts.sapphire.pool.address,
+      );
+
+      await sapphireCore.setBorrowPool(ctx.contracts.sapphire.oracle.address);
+
+      expect(await sapphireCore.borrowPool()).to.eq(
+        ctx.contracts.sapphire.oracle.address,
+      );
+    });
+  });
+
+  describe('#getSupportedAssets', () => {
+    it('gets the supported assets from the pool', async () => {
+      const testDai = await new TestTokenFactory(ctx.signers.admin).deploy(
+        'DAI',
+        'DAI',
+        18,
+      );
+
+      expect(await sapphireCore.getSupportedBorrowAssets()).to.deep.eq([
+        ctx.contracts.stablecoin.address,
+      ]);
+
+      await ctx.contracts.sapphire.pool.setDepositLimit(
+        testDai.address,
+        utils.parseEther('100'),
+      );
+      expect(await sapphireCore.getSupportedBorrowAssets()).to.deep.eq([
+        ctx.contracts.stablecoin.address,
+        testDai.address,
+      ]);
+
+      await ctx.contracts.sapphire.pool.setDepositLimit(testDai.address, 0);
+      expect(await sapphireCore.getSupportedBorrowAssets()).to.deep.eq([
+        ctx.contracts.stablecoin.address,
+      ]);
     });
   });
 });

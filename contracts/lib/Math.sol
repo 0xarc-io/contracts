@@ -2,7 +2,6 @@
 
 pragma solidity 0.8.4;
 
-import {SafeMath} from "./SafeMath.sol";
 
 /**
  * @title Math
@@ -10,8 +9,6 @@ import {SafeMath} from "./SafeMath.sol";
  * Library for non-standard Math functions
  */
 library Math {
-    using SafeMath for uint256;
-
     uint256 public constant BASE = 10**18;
 
     // ============ Library Functions ============
@@ -28,7 +25,7 @@ library Math {
         pure
         returns (uint256)
     {
-        return target.mul(numerator).div(denominator);
+        return target * numerator / denominator;
     }
 
     function to128(
@@ -79,10 +76,7 @@ library Math {
         pure
         returns (uint256)
     {
-        return a
-            .mul(BASE)
-            .add(b.sub(1))
-            .div(b);
+        return (a * BASE + b - 1) / b;
     }
 
     /**
@@ -96,9 +90,6 @@ library Math {
         pure
         returns (uint256)
     {
-        return a
-            .mul(b)
-            .add(BASE.sub(1))
-            .div(BASE);
+        return (a * b + BASE - 1) / BASE;
     }
 }

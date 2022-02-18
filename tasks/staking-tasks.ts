@@ -19,8 +19,8 @@ import {
 import { task } from 'hardhat/config';
 import getUltimateOwner from './task-utils/getUltimateOwner';
 import { verifyContract } from './task-utils';
-import { DeploymentType } from '../deployments/types';
 import { deployProxy } from './task-utils/deployProxy';
+import { DeploymentType } from '@deployments/types';
 
 task('deploy-staking', 'Deploy a staking/reward pool')
   .addParam('name', 'The name of the pool you would like to deploy')
@@ -166,7 +166,7 @@ task('deploy-staking', 'Deploy a staking/reward pool')
         for (const rewardGroup of stakingConfig.coreContracts) {
           const contract = await loadContract({
             name: 'CoreProxy',
-            type: DeploymentType.synth,
+            type: DeploymentType.borrowing,
             network,
             group: rewardGroup,
           });

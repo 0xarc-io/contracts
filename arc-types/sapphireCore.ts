@@ -10,7 +10,8 @@ export enum Operation {
 
 export type Vault = {
   collateralAmount: BigNumber;
-  borrowedAmount: BigNumber;
+  normalizedBorrowedAmount: BigNumber;
+  principal: BigNumber;
 };
 
 export type PassportScore = {
@@ -28,6 +29,7 @@ export interface PassportScoreProof {
 
 export type Action = {
   operation: Operation;
+  borrowAssetAddress: string;
   amount: BigNumberish;
   userToLiquidate: string;
 };
