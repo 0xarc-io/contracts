@@ -26,7 +26,7 @@
     "coverage": "yarn run build && yarn hardhat coverage --testfiles test/contracts/ --temp artifacts",
     "test": "yarn hardhat test",
     "test:ci": "npx mocha --reporter mocha-junit-reporter --require ts-node/register --require tsconfig-paths/register --require hardhat/register --exit",
-    "release:local": "rm -rf dist && yarn ttsc",
+    "release:local": "rm -rf dist && ttsc && copyfiles -u 2 src/typings/*.d.ts dist/src/typings",
     "release": "yarn release:local && release-it",
     "commit": "git add . && cz"
   },
@@ -51,6 +51,7 @@
     "chokidar": "^3.4.0",
     "commander": "^6.0.0",
     "commitizen": "^4.2.2",
+    "copyfiles": "^2.4.1",
     "csv-writer": "^1.6.0",
     "dotenv": "^8.2.0",
     "eslint": "^7.10.0",
