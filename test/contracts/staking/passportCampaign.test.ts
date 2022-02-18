@@ -27,7 +27,7 @@ import { setupSapphire } from '../setup';
 import _ from 'lodash';
 import { PassportScoreTree } from '@src/MerkleTree';
 import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
-import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
+import { CREDIT_PROOF_PROTOCOL } from '@src/constants/protocols';
 
 chai.use(solidity);
 const expect = chai.expect;
@@ -184,19 +184,19 @@ describe('PassportCampaign', () => {
 
     stakerPassportScore = {
       account: staker.address,
-      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: CREDIT_SCORE_THRESHOLD,
     };
 
     user1PassportScore = {
       account: signers.scoredMinter.address,
-      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: CREDIT_SCORE_THRESHOLD.add(100),
     };
 
     unauthorizedPassportScore = {
       account: unauthorized.address,
-      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: CREDIT_SCORE_THRESHOLD.sub(10),
     };
 
@@ -259,7 +259,7 @@ describe('PassportCampaign', () => {
     await mintAndApprove(stakingToken, staker, STAKE_AMOUNT);
 
     await adminPassportCampaign.setProofProtocol(
-      utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
     );
   });
 
@@ -1010,7 +1010,7 @@ describe('PassportCampaign', () => {
 
       it('sets the proof protocol', async () => {
         expect(await user1PassportCampaign.getProofProtocol()).to.eq(
-          DEFAULT_PROOF_PROTOCOL,
+          CREDIT_PROOF_PROTOCOL,
         );
 
         await adminPassportCampaign.setProofProtocol(
@@ -1055,7 +1055,7 @@ describe('PassportCampaign', () => {
       Object.keys(users).forEach((userKey) => {
         creditScores[userKey] = {
           account: users[userKey].address,
-          protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+          protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
           score: CREDIT_SCORE_THRESHOLD,
         };
       });

@@ -3,9 +3,9 @@ import { SapphireTestArc } from '@src/SapphireTestArc';
 import { TestTokenFactory } from '@src/typings';
 import {
   DEFAULT_COLLATERAL_DECIMALS,
-  DEFAULT_PROOF_PROTOCOL,
   DEFAULT_STABLECOIN_DECIMALS,
 } from './sapphireDefaults';
+import { CREDIT_PROOF_PROTOCOL } from '@src/constants/protocols';
 import { BigNumberish, utils } from 'ethers';
 import { PassportScoreProof } from '@arc-types/sapphireCore';
 import { getEmptyScoreProof } from '@src/utils';
@@ -36,7 +36,7 @@ export async function setupBaseVault(
     scoreProof ??
       getEmptyScoreProof(
         undefined,
-        utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+        utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       ),
     borrowLimitProof,
     coreName,

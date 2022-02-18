@@ -1,6 +1,6 @@
 import 'module-alias/register';
 
-import { BigNumber } from 'ethers';
+import { BigNumber, utils } from 'ethers';
 import { expect } from 'chai';
 
 import ArcDecimal from '@src/utils/ArcDecimal';
@@ -11,7 +11,6 @@ import { ethers } from 'hardhat';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { AddressAccrualFactory } from '@src/typings/AddressAccrualFactory';
 import { deployAddressAccrual, deployTestToken } from '../deployers';
-import { ArcNumber } from '@src/utils';
 
 let ownerAccount: SignerWithAddress;
 let investorAccount: SignerWithAddress;
@@ -41,7 +40,7 @@ describe('Distribution', () => {
       rewardToken.address,
     );
 
-    await rewardToken.mintShare(distribution.address, ArcNumber.new(100));
+    await rewardToken.mintShare(distribution.address, utils.parseEther('100'));
 
     await distribution.increaseShare(investorAccount.address, INVESTOR_SHARE);
     await distribution.increaseShare(
@@ -68,17 +67,17 @@ describe('Distribution', () => {
     expect(await distribution.balanceOf(arcAccount.address)).to.equal(
       ARC_SHARE,
     );
-    expect(await distribution.totalSupply()).to.equal(ArcNumber.new(100));
+    expect(await distribution.totalSupply()).to.equal(utils.parseEther('100'));
   });
 
   it('should be able to decrease shares', async () => {
-    await distribution.decreaseShare(investorAccount.address, ArcNumber.new(1));
+    await distribution.decreaseShare(investorAccount.address, utils.parseEther('1'));
 
     expect(await distribution.balanceOf(investorAccount.address)).to.equal(
-      INVESTOR_SHARE.sub(ArcNumber.new(1)),
+      INVESTOR_SHARE.sub(utils.parseEther('1')),
     );
 
-    await distribution.increaseShare(investorAccount.address, ArcNumber.new(1));
+    await distribution.increaseShare(investorAccount.address, utils.parseEther('1'));
     expect(await distribution.balanceOf(investorAccount.address)).to.equal(
       INVESTOR_SHARE,
     );
@@ -111,7 +110,7 @@ describe('Distribution', () => {
 
     await expectRevert(claimAs(investorAccount));
 
-    await rewardToken.mintShare(distribution.address, ArcNumber.new(10));
+    await rewardToken.mintShare(distribution.address, utils.parseEther('10'));
     await claimAs(investorAccount);
 
     expect(

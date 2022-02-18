@@ -1,6 +1,6 @@
 import { Wallet } from '@ethersproject/wallet';
 import { PassportScoreTree } from '@src/MerkleTree';
-import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
+import { CREDIT_PROOF_PROTOCOL } from '@src/constants/protocols';
 import { expect } from 'chai';
 import { BigNumber, utils } from 'ethers';
 import { v1 as uuidv1 } from 'uuid';
@@ -11,18 +11,18 @@ describe('PassportScoreTree', () => {
 
   const passportScore1 = {
     account: account1,
-    protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+    protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
     score: BigNumber.from(500),
   };
   const passportScore2 = {
     account: account2,
-    protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+    protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
     score: BigNumber.from(20),
   };
 
   function generateScalabilityScores(numScores: number) {
     const scores = [];
-    const protocol = utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL);
+    const protocol = utils.formatBytes32String(CREDIT_PROOF_PROTOCOL);
     for (let i = 0; i < numScores; i++) {
       scores.push({
         account: '0x' + uuidv1().replace(/-/g, '') + '00000000',
@@ -40,7 +40,7 @@ describe('PassportScoreTree', () => {
       expect(
         () => new PassportScoreTree([passportScore1, passportScore2, passportScore2]),
       ).throw(
-        `There are more than 1 score for the protocol ${DEFAULT_PROOF_PROTOCOL} for user ${passportScore2.account}`,
+        `There are more than 1 score for the protocol ${CREDIT_PROOF_PROTOCOL} for user ${passportScore2.account}`,
       );
     });
 
@@ -52,12 +52,12 @@ describe('PassportScoreTree', () => {
             passportScore2,
             {
               account: account1,
-              protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+              protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
               score: BigNumber.from(10),
             },
           ]),
       ).throw(
-        `There are more than 1 score for the protocol ${DEFAULT_PROOF_PROTOCOL} for user ${passportScore1.account}`,
+        `There are more than 1 score for the protocol ${CREDIT_PROOF_PROTOCOL} for user ${passportScore1.account}`,
       );
     });
 

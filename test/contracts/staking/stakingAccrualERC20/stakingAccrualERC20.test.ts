@@ -11,7 +11,7 @@ import {
 } from '@src/typings';
 import { MockStakingAccrualERC20 } from '@src/typings/MockStakingAccrualERC20';
 import { MockStakingAccrualERC20Factory } from '@src/typings/MockStakingAccrualERC20Factory';
-import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
+import { CREDIT_PROOF_PROTOCOL } from '@src/constants/protocols';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { constants, utils } from 'ethers';
@@ -71,7 +71,7 @@ describe('StakingAccrualERC20', () => {
     );
 
     await starcx.setProofProtocol(
-      utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
     );
   }
 
@@ -336,7 +336,7 @@ describe('StakingAccrualERC20', () => {
       });
 
       it('sets the proof protocol', async () => {
-        expect(await starcx.getProofProtocol()).to.eq(DEFAULT_PROOF_PROTOCOL);
+        expect(await starcx.getProofProtocol()).to.eq(CREDIT_PROOF_PROTOCOL);
 
         await starcx
           .connect(admin)
@@ -359,7 +359,7 @@ describe('StakingAccrualERC20', () => {
           STAKE_AMOUNT,
           STREAM_DURATION,
         );
-        await starcx.setSablierStreamId(streamId)
+        await starcx.setSablierStreamId(streamId);
 
         await sablierContract.setCurrentTimestamp(1);
         await starcx.claimStreamFunds();
@@ -456,7 +456,7 @@ describe('StakingAccrualERC20', () => {
           STAKE_AMOUNT,
           STREAM_DURATION,
         );
-        await starcx.setSablierStreamId(streamId)
+        await starcx.setSablierStreamId(streamId);
 
         await sablierContract.setCurrentTimestamp(1);
         expect(await stakingToken.balanceOf(starcx.address)).to.eq(0);
@@ -572,7 +572,7 @@ describe('StakingAccrualERC20', () => {
           STAKE_AMOUNT,
           STREAM_DURATION,
         );
-        await starcx.setSablierStreamId(streamId)
+        await starcx.setSablierStreamId(streamId);
 
         await sablierContract.setCurrentTimestamp(1);
         await user1starcx.exit();
@@ -627,7 +627,7 @@ describe('StakingAccrualERC20', () => {
           STAKE_AMOUNT,
           STREAM_DURATION,
         );
-        await starcx.setSablierStreamId(streamId)
+        await starcx.setSablierStreamId(streamId);
 
         await sablierContract.setCurrentTimestamp(1);
 

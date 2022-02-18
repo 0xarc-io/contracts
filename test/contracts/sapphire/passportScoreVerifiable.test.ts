@@ -7,7 +7,7 @@ import {
   SapphirePassportScores,
 } from '@src/typings';
 import { getEmptyScoreProof, getScoreProof } from '@src/utils';
-import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
+import { CREDIT_PROOF_PROTOCOL } from '@src/constants/protocols';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { BigNumber, utils } from 'ethers';
@@ -28,12 +28,12 @@ describe('PassportScoreVerifiable', () => {
     const ctx = await generateContext(sapphireFixture, async (ctx) => {
       userCreditScore = {
         account: ctx.signers.scoredMinter.address,
-        protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+        protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
         score: BigNumber.from(12),
       };
       ownerCreditScore = {
         account: ctx.signers.admin.address,
-        protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+        protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
         score: BigNumber.from(20),
       };
       tree = new PassportScoreTree([userCreditScore, ownerCreditScore]);

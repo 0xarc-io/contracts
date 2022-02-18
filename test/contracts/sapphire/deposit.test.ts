@@ -4,10 +4,10 @@ import { PassportScoreTree } from '@src/MerkleTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { TestToken, TestTokenFactory } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
+import { DEFAULT_COLLATERAL_DECIMALS } from '@test/helpers/sapphireDefaults';
 import {
-  DEFAULT_COLLATERAL_DECIMALS,
-  DEFAULT_PROOF_PROTOCOL,
-} from '@test/helpers/sapphireDefaults';
+  CREDIT_PROOF_PROTOCOL,
+} from '@src/constants/protocols';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { BigNumber, utils } from 'ethers';
@@ -30,12 +30,12 @@ describe('SapphireCore.deposit()', () => {
   function init(ctx: ITestContext): Promise<void> {
     creditScore1 = {
       account: ctx.signers.scoredMinter.address,
-      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(500),
     };
     creditScore2 = {
       account: ctx.signers.interestSetter.address,
-      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(20),
     };
     creditScoreTree = new PassportScoreTree([creditScore1, creditScore2]);
@@ -50,10 +50,7 @@ describe('SapphireCore.deposit()', () => {
     arc = ctx.sdks.sapphire;
     scoredMinter = ctx.signers.scoredMinter;
     minter = ctx.signers.minter;
-    collateral = TestTokenFactory.connect(
-      arc.collateral().address,
-      minter,
-    );
+    collateral = TestTokenFactory.connect(arc.collateral().address, minter);
 
     // mint and approve token
     await collateral.mintShare(minter.address, COLLATERAL_AMOUNT);
