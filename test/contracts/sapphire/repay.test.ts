@@ -13,14 +13,16 @@ import {
 import { getScoreProof } from '@src/utils/getScoreProof';
 import { roundUpMul } from '@test/helpers/roundUpOperations';
 import {
-  BORROW_LIMIT_PROOF_PROTOCOL,
   DEFAULT_COLLATERAL_DECIMALS,
   DEFAULT_COLLATERAL_PRECISION_SCALAR,
   DEFAULT_HIGH_C_RATIO,
-  DEFAULT_PROOF_PROTOCOL,
   DEFAULT_STABLECOIN_DECIMALS,
   DEFAULT_STABLE_COIN_PRECISION_SCALAR,
 } from '@test/helpers/sapphireDefaults';
+import {
+  CREDIT_PROOF_PROTOCOL,
+  BORROW_LIMIT_PROOF_PROTOCOL,
+} from '@src/constants/protocols';
 import { setupBaseVault } from '@test/helpers/setupBaseVault';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
@@ -71,12 +73,12 @@ describe('SapphireCore.repay()', () => {
   async function init(ctx: ITestContext) {
     minterCreditScore = {
       account: ctx.signers.scoredMinter.address,
-      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(500),
     };
     const creditScore2 = {
       account: ctx.signers.interestSetter.address,
-      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(20),
     };
     minterBorrowLimitScore = {

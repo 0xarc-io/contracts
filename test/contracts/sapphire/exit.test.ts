@@ -4,11 +4,13 @@ import { approve } from '@src/utils/approve';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import {
-  BORROW_LIMIT_PROOF_PROTOCOL,
   DEFAULT_COLLATERAL_DECIMALS,
-  DEFAULT_PROOF_PROTOCOL,
   DEFAULT_STABLE_COIN_PRECISION_SCALAR,
 } from '@test/helpers/sapphireDefaults';
+import {
+  CREDIT_PROOF_PROTOCOL,
+  BORROW_LIMIT_PROOF_PROTOCOL,
+} from '@src/constants/protocols';
 import { setupBaseVault } from '@test/helpers/setupBaseVault';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
@@ -46,7 +48,7 @@ describe('SapphireCore.exit()', () => {
   async function init(ctx: ITestContext) {
     scoredMinterCreditScore = {
       account: ctx.signers.scoredMinter.address,
-      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(500),
     };
 
@@ -58,7 +60,7 @@ describe('SapphireCore.exit()', () => {
 
     const liquidatorCreditScore = {
       account: ctx.signers.liquidator.address,
-      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: SCALED_BORROW_AMOUNT.mul(2),
     };
 
