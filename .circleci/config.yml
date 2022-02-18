@@ -41,6 +41,6 @@ jobs:
             MOCHA_FILE=~/mocha/test-results.xml yarn test:ci --file "$(sed ':a; N; $!ba; s/\n/,/g' /tmp/tests-to-run)"
       - run:
           name: Publish release
-          command: yarn semantic-release
+          command: cp src/typings/*.d.ts dist/src/typings && yarn semantic-release
       - store_test_results:
           path: ~/mocha
