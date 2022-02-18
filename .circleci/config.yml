@@ -40,7 +40,10 @@ jobs:
             circleci tests glob "test/**/*.test.ts" | circleci tests split --split-by=timings > /tmp/tests-to-run
             MOCHA_FILE=~/mocha/test-results.xml yarn test:ci --file "$(sed ':a; N; $!ba; s/\n/,/g' /tmp/tests-to-run)"
       - run:
+        name: Prepare Release
+        command: yarn release:local
+      - run:
           name: Publish release
-          command: cp src/typings/*.d.ts dist/src/typings && yarn semantic-release
+          command: yarn semantic-release
       - store_test_results:
           path: ~/mocha
