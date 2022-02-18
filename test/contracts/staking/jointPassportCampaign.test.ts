@@ -24,7 +24,7 @@ import { BASE } from '@src/constants';
 import { ethers } from 'hardhat';
 import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
 import { PassportScoreTree } from '@src/MerkleTree';
-import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
+import { CREDIT_PROOF_PROTOCOL } from '@src/constants/protocols';
 
 chai.use(solidity);
 const expect = chai.expect;
@@ -191,7 +191,7 @@ describe('JointPassportCampaign', () => {
 
     user1CreditScore = {
       account: user1.address,
-      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: CREDIT_SCORE_THRESHOLD,
     };
 
@@ -202,13 +202,13 @@ describe('JointPassportCampaign', () => {
 
     user2CreditScore = {
       account: user2.address,
-      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: CREDIT_SCORE_THRESHOLD,
     };
 
     unauthorizedCreditScore = {
       account: unauthorized.address,
-      protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+      protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: CREDIT_SCORE_THRESHOLD.sub(10),
     };
 
@@ -1444,7 +1444,7 @@ describe('JointPassportCampaign', () => {
 
       it('sets the proof protocol', async () => {
         expect(await arcPassportCampaign.getProofProtocol()).to.eq(
-          DEFAULT_PROOF_PROTOCOL,
+          CREDIT_PROOF_PROTOCOL,
         );
 
         await arcPassportCampaign.setProofProtocol(
@@ -1476,7 +1476,7 @@ describe('JointPassportCampaign', () => {
       Object.keys(users).forEach((userKey) => {
         creditScores[userKey] = {
           account: users[userKey].address,
-          protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+          protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
           score: CREDIT_SCORE_THRESHOLD,
         };
       });

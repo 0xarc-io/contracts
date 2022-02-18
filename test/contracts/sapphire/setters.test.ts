@@ -5,10 +5,10 @@ import {
 } from '@src/typings';
 import {
   DEFAULT_MAX_CREDIT_SCORE,
-  DEFAULT_PROOF_PROTOCOL,
   DEFAULT_VAULT_BORROW_MAXIMUM,
   DEFAULT_VAULT_BORROW_MIN,
 } from '@test/helpers/sapphireDefaults';
+import { CREDIT_PROOF_PROTOCOL } from '@src/constants/protocols';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { constants, utils, Wallet } from 'ethers';
@@ -376,7 +376,7 @@ describe('SapphireCore.setters', () => {
 
     it('sets the proof protocol', async () => {
       expect(await sapphireCore.getProofProtocol(0)).to.eq(
-        DEFAULT_PROOF_PROTOCOL,
+        CREDIT_PROOF_PROTOCOL,
       );
       expect(await sapphireCore.getAdmin()).to.eq(ctx.signers.admin.address);
 

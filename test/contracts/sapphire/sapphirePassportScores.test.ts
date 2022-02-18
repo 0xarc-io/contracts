@@ -5,13 +5,13 @@ import {
   ArcProxyFactory,
   MockSapphirePassportScores,
   MockSapphirePassportScoresFactory,
-  SapphirePassportScoresFactory
+  SapphirePassportScoresFactory,
 } from '@src/typings';
 import { getScoreProof } from '@src/utils';
-import { DEFAULT_PROOF_PROTOCOL } from '@test/helpers/sapphireDefaults';
+import { CREDIT_PROOF_PROTOCOL } from '@src/constants/protocols';
 import {
   addSnapshotBeforeRestoreAfterEach,
-  advanceEpoch
+  advanceEpoch,
 } from '@test/helpers/testingUtils';
 import chai, { expect } from 'chai';
 import { solidity } from 'ethereum-waffle';
@@ -69,7 +69,7 @@ describe('SapphireCreditScore', () => {
     ctx = await generateContext(sapphireFixture, async (ctx) => {
       passportScore1 = {
         account: ctx.signers.admin.address,
-        protocol: utils.formatBytes32String(DEFAULT_PROOF_PROTOCOL),
+        protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
         score: BigNumber.from(12),
       };
       passportScore2 = {
