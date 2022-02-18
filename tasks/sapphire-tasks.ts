@@ -1,11 +1,13 @@
 import {
   ArcProxyFactory,
+  CredsERC20Factory,
   MockOracleFactory,
   SapphireAssessorFactory,
+  SapphireCoreV1,
   SapphireCoreV1Factory,
   SapphireMapperLinearFactory,
   SapphirePassportScoresFactory,
-  SyntheticTokenV2Factory,
+  SapphirePoolFactory,
   TestTokenFactory,
 } from '@src/typings';
 import { green, magenta, red, yellow } from 'chalk';
@@ -19,21 +21,21 @@ import {
 import { task } from 'hardhat/config';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import _ from 'lodash';
-import { MAX_UINT256 } from '@src/constants';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import getUltimateOwner from './task-utils/getUltimateOwner';
 import { DEFAULT_MAX_CREDIT_SCORE } from '@test/helpers/sapphireDefaults';
 import { constants } from 'ethers';
 import { verifyContract } from './task-utils';
-import { DeploymentType, NetworkParams } from '../deployments/types';
+import {
+  CoreConfig,
+  DeploymentType,
+  NetworkParams,
+} from '../deployments/types';
 import { TransactionRequest } from '@ethersproject/providers';
 
-task(
-  'deploy-sapphire-synth',
-  'Deploy the Sapphire synthetic token (SyntheticTokenV2)',
-)
-  .addParam('name', 'The name of the synthetic token')
-  .addParam('symbol', 'The symbol of the synthetic token')
+task('deploy-creds', 'Deploy the CredsERC20 token')
+  .addParam('name', 'The name of the token')
+  .addParam('symbol', 'The symbol of the token')
   .setAction(async (taskArgs, hre) => {
     const name = taskArgs.name;
     const symbol = taskArgs.symbol;
@@ -44,38 +46,36 @@ task(
 
     // Deploy implementation
 
-    const syntheticAddress = await deployContract(
+    const credsAddress = await deployContract(
       {
-        name: 'SyntheticToken',
-        source: 'SyntheticTokenV2',
-        data: new SyntheticTokenV2Factory(signer).getDeployTransaction(
-          name,
-          '2',
-        ),
+        name: 'CredsERC20',
+        source: 'CredsERC20',
+        data: new CredsERC20Factory(signer).getDeployTransaction(),
         version: 2,
-        type: DeploymentType.synth,
+        type: DeploymentType.borrowing,
+        group: symbol,
       },
       networkConfig,
     );
 
-    if (!syntheticAddress) {
-      throw red('Synthetic Token has not been deployed!');
+    if (!credsAddress) {
+      throw red(`${name} has not been deployed!`);
     }
 
-    await verifyContract(hre, syntheticAddress, name, '2');
+    await verifyContract(hre, credsAddress);
 
     // Deploy proxy
-    const syntheticProxyAddress = await deployContract(
+    const credsProxyAddress = await deployContract(
       {
-        name: 'SyntheticV2Proxy',
+        name: 'CredsERC20',
         source: 'ArcProxy',
         data: new ArcProxyFactory(signer).getDeployTransaction(
-          syntheticAddress,
+          credsAddress,
           signer.address,
           [],
         ),
         version: 2,
-        type: DeploymentType.synth,
+        type: DeploymentType.borrowing,
         group: symbol,
       },
       networkConfig,
@@ -83,32 +83,27 @@ task(
 
     await verifyContract(
       hre,
-      syntheticProxyAddress,
-      syntheticAddress,
+      credsProxyAddress,
+      credsAddress,
       signer.address,
       [],
     );
 
-    const synthetic = SyntheticTokenV2Factory.connect(
-      syntheticProxyAddress,
-      signer,
-    );
+    const creds = CredsERC20Factory.connect(credsProxyAddress, signer);
 
     // Call init()
-    const synthName = await synthetic.name();
-    if (synthName.length > 0) {
-      console.log(
-        magenta(`Synthetic init() function has already been called\n`),
-      );
+    const credsName = await creds.name();
+    if (credsName.length > 0) {
+      console.log(magenta(`Creds init() function has already been called\n`));
       return;
     }
 
     console.log(yellow(`Calling init() ...\n`));
     try {
-      await synthetic.init(name, symbol, '2');
+      await creds.init(name, symbol);
       console.log(green(`init() called successfully!\n`));
     } catch (e) {
-      console.log(red(`Failed to call synthetic init().\nReason: ${e}\n`));
+      console.log(red(`Failed to call creds init().\nReason: ${e}\n`));
     }
   });
 
@@ -220,7 +215,7 @@ task(
   });
 
 task('deploy-mapper', 'Deploy the Sapphire Mapper').setAction(
-  async (taskArgs, hre) => {
+  async (_, hre) => {
     const { network, signer, networkConfig } = await loadDetails(hre);
 
     await pruneDeployments(network, signer.provider);
@@ -232,7 +227,7 @@ task('deploy-mapper', 'Deploy the Sapphire Mapper').setAction(
         source: 'SapphireMapperLinear',
         data: new SapphireMapperLinearFactory(signer).getDeployTransaction(),
         version: 1,
-        type: DeploymentType.global,
+        type: DeploymentType.borrowing,
       },
       networkConfig,
     );
@@ -246,7 +241,7 @@ task('deploy-mapper', 'Deploy the Sapphire Mapper').setAction(
 );
 
 task('deploy-assessor', 'Deploy the Sapphire Assessor').setAction(
-  async (taskArgs, hre) => {
+  async (_, hre) => {
     const { network, signer, networkConfig } = await loadDetails(hre);
 
     await pruneDeployments(network, signer.provider);
@@ -263,7 +258,7 @@ task('deploy-assessor', 'Deploy the Sapphire Assessor').setAction(
 
     const mapperAddress = loadContract({
       network,
-      type: DeploymentType.global,
+      type: DeploymentType.borrowing,
       name: 'SapphireMapperLinear',
     }).address;
 
@@ -282,7 +277,7 @@ task('deploy-assessor', 'Deploy the Sapphire Assessor').setAction(
           DEFAULT_MAX_CREDIT_SCORE,
         ),
         version: 1,
-        type: DeploymentType.global,
+        type: DeploymentType.borrowing,
       },
       networkConfig,
     );
@@ -328,7 +323,7 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
         source: 'SapphireCoreV1',
         data: new SapphireCoreV1Factory(signer).getDeployTransaction(),
         version: 1,
-        type: DeploymentType.synth,
+        type: DeploymentType.borrowing,
       },
       networkConfig,
     );
@@ -336,22 +331,6 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
       green(`Sapphire Core implementation deployed at ${coreAddress}`),
     );
     await verifyContract(hre, coreAddress);
-
-    const collateralAddress =
-      collatConfig.collateral_address ||
-      (await _deployTestCollateral(networkConfig, collatName, signer));
-
-    const oracleAddress = await _deployOracle(
-      collatName,
-      collatConfig,
-      networkConfig,
-      signer,
-      hre,
-    );
-
-    if (!oracleAddress) {
-      throw red(`The oracle was not deployed!`);
-    }
 
     const coreProxyAddress = await deployContract(
       {
@@ -363,118 +342,196 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
           [],
         ),
         version: 1,
-        type: DeploymentType.synth,
+        type: DeploymentType.borrowing,
         group: collatName,
       },
       networkConfig,
     );
     console.log(green(`Sapphire core proxy deployed at ${coreProxyAddress}`));
-    await verifyContract(
+
+    const { collateralAddress } = collatConfig;
+
+    const oracleAddress = await _deployOracle(
+      networkConfig,
+      signer,
       hre,
-      coreProxyAddress,
-      coreAddress,
-      await signer.getAddress(),
-      [],
+      collatConfig.oracle,
     );
+
+    if (!oracleAddress) {
+      throw red(`The oracle was not deployed!`);
+    }
 
     // Initialize core
 
-    const syntheticProxyAddress = loadContract({
+    const credsProxyAddress = loadContract({
       network,
-      type: DeploymentType.synth,
-      name: 'SyntheticV2Proxy',
+      name: 'CredsERC20',
+      source: 'ArcProxy',
     }).address;
 
     const assessorAddress = loadContract({
       network,
-      type: DeploymentType.global,
+      type: DeploymentType.borrowing,
       name: 'SapphireAssessor',
     }).address;
 
     const core = SapphireCoreV1Factory.connect(coreProxyAddress, signer);
-    const synthetic = SyntheticTokenV2Factory.connect(
-      syntheticProxyAddress,
-      signer,
-    );
+    const creds = CredsERC20Factory.connect(credsProxyAddress, signer);
 
     const ultimateOwner = getUltimateOwner(signer, networkDetails);
 
-    console.log(
-      red(
-        `Please ensure the following details are correct:\n
-          Collateral Address: ${collateralAddress}\n
-          Synthetic Address: ${syntheticProxyAddress}\n
-          Oracle Address: ${oracleAddress}\n
-          Interest Rate Setter: ${
-            collatConfig.params.interestSetter || ultimateOwner
-          }\n
-          Pause operator: ${
-            collatConfig.params.pauseOperator || ultimateOwner
-          }\n,
-          Assessor address: ${assessorAddress}\n,
-          Fee collector: ${collatConfig.params.feeCollector || ultimateOwner}\n
-          High c-ratio: ${collatConfig.params.highCRatio}\n
-          Low c-ratio: ${collatConfig.params.lowCRatio}\n
-          Liquidation user fee: ${collatConfig.params.liquidationUserFee}\n
-          Liquidation ARC fee: ${collatConfig.params.liquidationArcFee}\n`,
-      ),
-    );
+    if (!(await core.collateralAsset())) {
+      console.log(
+        red(
+          `Please ensure the following details are correct:
+            Collateral Address: ${collateralAddress}
+            Creds Address: ${credsProxyAddress}
+            Oracle Address: ${oracleAddress}
+            Interest Rate Setter: ${
+              collatConfig.interestSettings.interestSetter || ultimateOwner
+            }
+            Pause operator: ${collatConfig.pauseOperator || ultimateOwner}
+            Assessor address: ${assessorAddress}
+            Fee collector: ${collatConfig.feeCollector || ultimateOwner}
+            High c-ratio: ${collatConfig.borrowRatios.highCRatio}
+            Low c-ratio: ${collatConfig.borrowRatios.lowCRatio}`,
+        ),
+      );
+      console.log(yellow(`Calling core.init() ...\n`));
+      await core.init(
+        collateralAddress,
+        credsProxyAddress,
+        oracleAddress,
+        collatConfig.interestSettings.interestSetter || ultimateOwner,
+        collatConfig.pauseOperator || ultimateOwner,
+        assessorAddress,
+        collatConfig.feeCollector || ultimateOwner,
+        collatConfig.borrowRatios.highCRatio,
+        collatConfig.borrowRatios.lowCRatio,
+      );
+      console.log(green(`core.init() called successfully!\n`));
+    } else {
+      console.log(green('Core already initialized!'));
+    }
 
-    console.log(yellow(`Calling core.init() ...\n`));
+    if ((await core.borrowPool()) !== collatConfig.borrowPool) {
+      console.log(
+        yellow(`Setting borrow pool to ${collatConfig.borrowPool} ...`),
+      );
+      await core.setBorrowPool(collatConfig.borrowPool);
+      console.log(green('Borrow pool set successfully'));
+    }
 
-    await core.init(
-      collateralAddress,
-      syntheticProxyAddress,
-      oracleAddress,
-      collatConfig.params.interestSetter || ultimateOwner,
-      collatConfig.params.pauseOperator || ultimateOwner,
-      assessorAddress,
-      collatConfig.params.feeCollector || ultimateOwner,
-      collatConfig.params.highCRatio,
-      collatConfig.params.lowCRatio,
-      collatConfig.params.liquidationUserFee,
-      collatConfig.params.liquidationArcFee,
-      { gasLimit: 150000 },
-    );
-
-    console.log(green(`core.init() called successfully!\n`));
+    if (await shouldSetFees(core, collatConfig)) {
+      console.log(
+        yellow(`Setting fees...
+        Liquidator discount: ${collatConfig.fees.liquidatorDiscount}
+        Arc liquidation fee: ${collatConfig.fees.liquidationArcFee}
+        Pool interest fee: ${collatConfig.fees.poolInterestFee}
+        Borrow fee: ${collatConfig.fees.borrowFee}
+      `),
+      );
+      await core.setFees(
+        collatConfig.fees.liquidatorDiscount,
+        collatConfig.fees.liquidationArcFee,
+        collatConfig.fees.borrowFee,
+        collatConfig.fees.poolInterestFee,
+      );
+      console.log(green('Fees successfully set\n'));
+    }
 
     // Set borrow limits if needed. Skip if all zeros
-    if (
-      !_.isNil(collatConfig.limits) &&
-      (collatConfig.limits.totalBorrowLimit ||
-        collatConfig.limits.vaultBorrowMin ||
-        collatConfig.limits.vaultBorrowMax)
-    ) {
-      console.log(yellow(`Calling core.setLimits() ...\n`));
-
+    if (await shouldSetLimits(core, collatConfig)) {
+      console.log(
+        yellow(`Setting limits:
+        Vault borrow min: ${collatConfig.limits.vaultBorrowMin || 0}
+        Vault borrow max: ${collatConfig.limits.vaultBorrowMax || 0}
+        Default borrow limit: ${collatConfig.limits.defaultBorrowLimit || 0}
+      `),
+      );
       await core.setLimits(
-        collatConfig.limits.totalBorrowLimit || 0,
         collatConfig.limits.vaultBorrowMin || 0,
         collatConfig.limits.vaultBorrowMax || 0,
+        collatConfig.limits.defaultBorrowLimit || 0,
       );
-
       console.log(yellow(`Limits successfully set!\n`));
     }
 
-    // Add minter to synth
-    console.log(yellow(`Adding minter to synthetic...\n`));
-    // We already enforce limits at the synthetic level.
-    await synthetic.addMinter(
-      core.address,
-      collatConfig.limits.totalBorrowLimit || MAX_UINT256,
-    );
-    console.log(green(`Minter successfully added to synthetic\n`));
-
-    // Change admin to ultimate owner
-    if (network === 'mainnet') {
-      console.log(yellow(`Chaingin admin...`));
-
-      const proxy = ArcProxyFactory.connect(coreProxyAddress, signer);
-      await proxy.changeAdmin(ultimateOwner);
-
-      console.log(green(`Admin successfully set to ${ultimateOwner}`));
+    // Add minter to Creds
+    if (!(await creds.isValidMinter(core.address))) {
+      console.log(yellow(`Adding minter to Creds...\n`));
+      // We already enforce limits at the Creds level.
+      await creds.addMinter(core.address, collatConfig.mintLimit);
+      console.log(green(`Minter successfully added to creds\n`));
     }
+
+    if (collatConfig.interestSettings.interestRate) {
+      console.log(
+        yellow(
+          `Setting interest rate to ${collatConfig.interestSettings.interestRate.toString()}\n`,
+        ),
+      );
+      await core.setInterestRate(collatConfig.interestSettings.interestRate);
+      console.log(green(`Interest rate successfully set\n`));
+    }
+  });
+
+task('deploy-borrow-pool')
+  .addParam('name', 'Sapphire pool ERC20 name')
+  .addParam('symbol', 'Sapphire pool ERC20 symbol')
+  .setAction(async (taskArgs, hre) => {
+    const { network, signer, networkConfig } = await loadDetails(hre);
+    const { name, symbol } = taskArgs;
+
+    await pruneDeployments(network, signer.provider);
+
+    const credsAddress = loadContract({
+      network,
+      name: 'CredsERC20',
+      source: 'ArcProxy',
+    }).address;
+
+    const sapphirePoolImpl = await deployContract(
+      {
+        name: 'SapphirePool',
+        source: 'SapphirePool',
+        data: new SapphirePoolFactory(signer).getDeployTransaction(),
+        version: 1,
+        type: DeploymentType.borrowing,
+      },
+      networkConfig,
+    );
+    await verifyContract(hre, sapphirePoolImpl);
+
+    const sapphirePoolProxy = await deployContract(
+      {
+        name: 'SapphirePool',
+        source: 'ArcProxy',
+        data: new ArcProxyFactory(signer).getDeployTransaction(
+          sapphirePoolImpl,
+          signer.address,
+          [],
+        ),
+        version: 1,
+        type: DeploymentType.borrowing,
+      },
+      networkConfig,
+    );
+
+    console.log(green(`Sapphire pool deployed at ${sapphirePoolProxy}`));
+
+    console.log(yellow('Calling init...'));
+    console.log({
+      name,
+      symbol,
+      credsAddress,
+    });
+    await SapphirePoolFactory.connect(sapphirePoolProxy, signer).init(
+      name,
+      symbol,
+      credsAddress,
+    );
   });
 
 function _deployTestCollateral(
@@ -502,7 +559,7 @@ function _deployTestCollateral(
           18,
         ),
         version: 1,
-        type: DeploymentType.synth,
+        type: DeploymentType.global,
         group: collatName,
       },
       networkConfig,
@@ -510,22 +567,22 @@ function _deployTestCollateral(
   }
 }
 
+/**
+ * Deploys the given oracle, or a mock oracle
+ */
 async function _deployOracle(
-  collatName: string,
-  collatConfig: {
-    oracle?: {
-      source?: string;
-      getDeployTx: (SignerWithAddress) => TransactionRequest;
-      constructorArguments: unknown[];
-    };
-  },
   networkConfig: NetworkParams,
   signer: SignerWithAddress,
   hre: HardhatRuntimeEnvironment,
+  oracleConfig?: {
+    source?: string;
+    getDeployTx: (SignerWithAddress) => TransactionRequest;
+    constructorArguments: unknown[];
+  },
 ): Promise<string> {
   const { network } = networkConfig;
 
-  if (_.isNil(collatConfig.oracle)) {
+  if (_.isNil(oracleConfig)) {
     if (network === 'mainnet') {
       throw red(
         `The oracle was not set in the collateral config file. Please set it and try again.`,
@@ -539,8 +596,7 @@ async function _deployOracle(
         source: 'MockOracle',
         data: new MockOracleFactory(signer).getDeployTransaction(),
         version: 1,
-        type: DeploymentType.synth,
-        group: collatName,
+        type: DeploymentType.global,
       },
       networkConfig,
     );
@@ -548,7 +604,7 @@ async function _deployOracle(
     await verifyContract(hre, mockOracleAddress);
   } else {
     // Oracle is found, deploy it
-    const { source, getDeployTx, constructorArguments } = collatConfig.oracle;
+    const { source, getDeployTx, constructorArguments } = oracleConfig;
 
     if (!source || !getDeployTx) {
       throw red(
@@ -563,8 +619,7 @@ async function _deployOracle(
         source,
         data: getDeployTx(signer),
         version: 1,
-        type: DeploymentType.synth,
-        group: collatName,
+        type: DeploymentType.global,
       },
       networkConfig,
     );
@@ -575,4 +630,41 @@ async function _deployOracle(
 
     return oracleAddress;
   }
+}
+
+async function shouldSetFees(
+  core: SapphireCoreV1,
+  collatConfig: CoreConfig,
+): Promise<boolean> {
+  if (
+    !(await core.liquidatorDiscount()).eq(
+      collatConfig.fees.liquidatorDiscount,
+    ) ||
+    !(await core.liquidationArcFee()).eq(collatConfig.fees.liquidationArcFee) ||
+    !(await core.poolInterestFee()).eq(collatConfig.fees.poolInterestFee) ||
+    !(await core.borrowFee()).eq(collatConfig.fees.borrowFee)
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+async function shouldSetLimits(
+  core: SapphireCoreV1,
+  collatConfig: CoreConfig,
+): Promise<boolean> {
+  if (
+    !(await core.vaultBorrowMinimum()).eq(
+      collatConfig.limits.vaultBorrowMin || 0,
+    ) ||
+    !(await core.vaultBorrowMaximum()).eq(collatConfig.limits.vaultBorrowMax) ||
+    !(await core.defaultBorrowLimit()).eq(
+      collatConfig.limits.defaultBorrowLimit || 0,
+    )
+  ) {
+    return true;
+  }
+
+  return false;
 }

@@ -13,6 +13,7 @@ import {
   deploySyntheticTokenV2,
   deployMockSapphireOracle,
   deployMockSapphirePassportScores,
+  deploySapphirePool,
 } from './deployers';
 
 import { Signer } from 'ethers';
@@ -23,6 +24,7 @@ import {
   DEFAULT_HIGH_C_RATIO,
   DEFAULT_LOW_C_RATIO,
   DEFAULT_MAX_CREDIT_SCORE,
+  DEFAULT_STABLECOIN_DECIMALS,
 } from '@test/helpers/sapphireDefaults';
 
 export async function distributorFixture(ctx: ITestContext) {
@@ -45,7 +47,14 @@ export async function sapphireFixture(
     deployer,
     'Test collateral',
     'COLL',
-    args?.decimals ?? DEFAULT_COLLATERAL_DECIMALS,
+    args?.collateralDecimals ?? DEFAULT_COLLATERAL_DECIMALS,
+  );
+
+  ctx.contracts.stablecoin = await deployTestToken(
+    deployer,
+    'Test stablecoin',
+    'TEST_USDC',
+    args?.stablecoinDecimals ?? DEFAULT_STABLECOIN_DECIMALS,
   );
 
   ctx.contracts.sapphire.oracle = await deployMockSapphireOracle(deployer);
@@ -69,6 +78,10 @@ export async function sapphireFixture(
     syntheticProxy.address,
     deployer,
   );
+
+  ctx.contracts.sapphire.pool = await deploySapphirePool(deployer);
+  await ctx.contracts.sapphire.pool.init('Creds', 'CR', syntheticProxy.address);
+
   await tokenV2.init('STABLExV2', 'STABLExV2', '1');
 
   ctx.contracts.synthetic.tokenV2 = tokenV2;
@@ -114,8 +127,10 @@ export async function sapphireFixture(
     ctx.signers.feeCollector.address,
     DEFAULT_HIGH_C_RATIO,
     DEFAULT_LOW_C_RATIO,
-    0,
-    0,
+  );
+
+  await ctx.contracts.sapphire.core.setBorrowPool(
+    ctx.contracts.sapphire.pool.address,
   );
 
   await tokenV2.addMinter(ctx.contracts.sapphire.core.address, MAX_UINT256);
@@ -128,5 +143,5 @@ export async function sapphireFixture(
     .setPause(false);
 
   ctx.sdks.sapphire = SapphireTestArc.new(deployer);
-  await ctx.sdks.sapphire.addSynths({ sapphireSynth: coreProxy.address });
+  await ctx.sdks.sapphire.addCores({ sapphireSynth: coreProxy.address });
 }

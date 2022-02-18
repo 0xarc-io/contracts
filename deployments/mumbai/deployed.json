@@ -78,5 +78,93 @@
     "version": 1,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "CredsERC20",
+    "source": "CredsERC20",
+    "address": "0x406B4c1b62cF3C326701D8C5FB5cadf35CCf9dCE",
+    "txn": "0xae0d8b3cfd7671837703718a6ef0c53af37c4494dde323bb0ebc185d8f8eda92",
+    "network": "mumbai",
+    "version": 2,
+    "type": "borrowing",
+    "group": "CR"
+  },
+  {
+    "name": "CredsERC20",
+    "source": "ArcProxy",
+    "address": "0xeeE3399d437911D863F93c7Dd4736a1553B39BDA",
+    "txn": "0x9e382a4322139ecb9e98d02d4ca10ecac1aab01552a18e6de68a27b7541995c0",
+    "network": "mumbai",
+    "version": 2,
+    "type": "borrowing",
+    "group": "CR"
+  },
+  {
+    "name": "SapphirePool",
+    "source": "SapphirePool",
+    "address": "0xD1e1289C092D2C3F19847C2e52a8644fFF66f4fa",
+    "txn": "0x15ca6dc6826a1402c2b478360ca983fbe5e538530bf082c291f2b999d1c91d63",
+    "network": "mumbai",
+    "version": 1,
+    "type": "borrowing",
+    "group": ""
+  },
+  {
+    "name": "SapphirePool",
+    "source": "ArcProxy",
+    "address": "0xb1fB649039F829Aa588bAc07411bb2D25A21E446",
+    "txn": "0x6556163aabd44ebde71c8a053d658f45fd584733a2152e187b6ebb8d6c7a808b",
+    "network": "mumbai",
+    "version": 1,
+    "type": "borrowing",
+    "group": ""
+  },
+  {
+    "name": "SapphireCore",
+    "source": "SapphireCoreV1",
+    "address": "0x760c7982FF1A60f28857aBF61Fa97080bf56A042",
+    "txn": "0x15f886a0aa7f1d81462933aaca226779c119ba0fcc22580e284a147b44c47c49",
+    "network": "mumbai",
+    "version": 1,
+    "type": "borrowing"
+  },
+  {
+    "name": "SapphireCoreProxy",
+    "source": "ArcProxy",
+    "address": "0x6a263eeCec9FEA177CE2ed3EAe5bEABa50AF5a1d",
+    "txn": "0x0281df097bfdb498186f954b3bb4fb4551ef6040e09b3d34ad88344793bf7b0b",
+    "network": "mumbai",
+    "version": 1,
+    "type": "borrowing",
+    "group": "WMATIC"
+  },
+  {
+    "name": "SapphireMapperLinear",
+    "source": "SapphireMapperLinear",
+    "address": "0x8F78973e6FE36E5bdDf184C94Fb4eE8601213974",
+    "txn": "0xcb90c34d9d5e41ee96d3f60f5772edd100a22ef538f84711e76a22b1b8de13a2",
+    "network": "mumbai",
+    "version": 1,
+    "type": "borrowing",
+    "group": ""
+  },
+  {
+    "name": "SapphireAssessor",
+    "source": "SapphireAssessor",
+    "address": "0x117C41DB12D0AcFe0294033647AC88D905C0C495",
+    "txn": "0xc7d82830b93a0ba6b16d25bce33f07bff46d3e2e8c2f7bcdd5895d9962d9a065",
+    "network": "mumbai",
+    "version": 1,
+    "type": "borrowing",
+    "group": ""
+  },
+  {
+    "name": "Oracle",
+    "source": "MockSapphireOracle",
+    "address": "0xf827f5Fd129Adca77241565aBA90a237911D6296",
+    "txn": "0xf5a4ecf9956512bb31cc286c4ab0299afff4039336fc599bf776fdf0b6d1717e",
+    "network": "mumbai",
+    "version": 1,
+    "type": "global"
   }
 ]

@@ -81,7 +81,6 @@ export default {
       liquidationArcFee: utils.parseEther('0.05'),
     },
     limits: {
-      totalBorrowLimit: 0,
       vaultBorrowMin: 0,
       vaultBorrowMax: 0,
     },

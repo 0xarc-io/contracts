@@ -8,6 +8,7 @@ import { distributorFixture } from '@test/contracts/fixtures';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { deployMerkleDistributor } from '@test/contracts/deployers';
 import { MerkleDistributor } from '@src/typings/MerkleDistributor';
+import { ARITHMETIC_ERROR } from '@test/helpers/contractErrors';
 
 chai.use(solidity);
 
@@ -146,7 +147,7 @@ describe('MerkleDistributor', () => {
         await ctx.contracts.collateral.redeemShare(distributor.address, 140);
         await expect(
           distributor.claim(0, ctx.signers.admin.address, 100, proof0),
-        ).to.be.revertedWith('SafeMath: subtraction overflow');
+        ).to.be.revertedWith(ARITHMETIC_ERROR);
       });
 
       it('sets #isClaimed', async () => {

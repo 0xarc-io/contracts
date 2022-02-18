@@ -3,14 +3,14 @@
 pragma solidity ^0.8.4;
 
 import {IERC20Metadata} from "./IERC20Metadata.sol";
-import {Permittable} from "./Permittable.sol";
+import {InitializablePermittable} from "../lib/InitializablePermittable.sol";
 
 /**
  * @title ERC20 Token
  *
- * Basic ERC20 Implementation
+ * Basic ERC20 Implementation to be used in a proxy pattern.
  */
-contract BaseERC20 is IERC20Metadata, Permittable {
+contract InitializableBaseERC20 is IERC20Metadata, InitializablePermittable {
 
     mapping (address => uint256) private _balances;
 
@@ -27,15 +27,18 @@ contract BaseERC20 is IERC20Metadata, Permittable {
      * a default value of 18.
      *
      * All three of these values are immutable: they can only be set once during
-     * construction.
+     * initialization.
      */
-    constructor (
+    function _init(
         string memory name_,
         string memory symbol_,
         uint8         decimals_
     )
-        Permittable(name_, "1")
+        internal
+        initializer
     {
+        _init(name_, "1");
+        
         _name = name_;
         _symbol = symbol_;
         _decimals = decimals_;
