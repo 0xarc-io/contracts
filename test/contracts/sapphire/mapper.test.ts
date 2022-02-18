@@ -2,10 +2,9 @@ import {
   SapphireMapperLinear,
   SapphireMapperLinearFactory,
 } from '@src/typings';
-import { ArcNumber } from '@src/utils';
 import { expectRevert } from '@test/helpers/expectRevert';
 import { expect } from 'chai';
-import { BigNumber } from 'ethers';
+import { BigNumber, utils } from 'ethers';
 import { ethers } from 'hardhat';
 
 describe('SapphireMapperLinear', () => {
@@ -52,11 +51,11 @@ describe('SapphireMapperLinear', () => {
 
     expect(
       await mapper.map(
-        ArcNumber.new(65),
-        ArcNumber.new(100),
+        utils.parseEther('65'),
+        utils.parseEther('100'),
         0,
-        ArcNumber.new(1000),
+        utils.parseEther('1000'),
       ),
-    ).to.eq(ArcNumber.new(350));
+    ).to.eq(utils.parseEther('350'));
   });
 });
