@@ -11,7 +11,7 @@ import {
 } from '@src/typings';
 import { MockStakingAccrualERC20 } from '@src/typings/MockStakingAccrualERC20';
 import { MockStakingAccrualERC20Factory } from '@src/typings/MockStakingAccrualERC20Factory';
-import { CREDIT_PROOF_PROTOCOL } from '@src/constants/protocols';
+import { CREDIT_PROOF_PROTOCOL } from '@src/constants';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { constants, utils } from 'ethers';

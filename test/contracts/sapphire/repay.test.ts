@@ -22,7 +22,7 @@ import {
 import {
   CREDIT_PROOF_PROTOCOL,
   BORROW_LIMIT_PROOF_PROTOCOL,
-} from '@src/constants/protocols';
+} from '@src/constants';
 import { setupBaseVault } from '@test/helpers/setupBaseVault';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';

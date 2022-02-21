@@ -25,7 +25,7 @@ import {
 import {
   CREDIT_PROOF_PROTOCOL,
   BORROW_LIMIT_PROOF_PROTOCOL,
-} from '@src/constants/protocols';
+} from '@src/constants';
 import { getScoreProof, getEmptyScoreProof } from '@src/utils/getScoreProof';
 import { roundUpDiv, roundUpMul } from '@test/helpers/roundUpOperations';
 import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
