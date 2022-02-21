@@ -30,6 +30,7 @@ import { getScoreProof, getEmptyScoreProof } from '@src/utils/getScoreProof';
 import { roundUpDiv, roundUpMul } from '@test/helpers/roundUpOperations';
 import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
 import { PassportScoreTree } from '@src/MerkleTree';
+import { deployTestToken } from '../deployers';
 
 /**
  * This is the most crucial function of the system as it's how users actually borrow from a vault.
@@ -278,7 +279,56 @@ describe('SapphireCore.borrow()', () => {
     );
   });
 
-  it('borrows twice with two different stablecoins');
+  it('borrows twice with two different stablecoins', async () => {
+    const anotherStablecoin = await deployTestToken(
+      minter,
+      'Another Stablecoin',
+      'ASTABLE',
+      18,
+    );
+    await anotherStablecoin.mintShare(arc.pool().address, SCALED_BORROW_AMOUNT.div(2))
+    await ctx.contracts.sapphire.pool.setDepositLimit(anotherStablecoin.address, utils.parseEther('1000'))
+
+    expect(await stablecoin.balanceOf(scoredMinter.address)).eq(0);
+    expect(await anotherStablecoin.balanceOf(scoredMinter.address)).eq(0);
+
+    await arc.borrow(
+      BORROW_AMOUNT.div(2),
+      stablecoin.address,
+      creditScoreProof,
+      borrowLimitProof,
+      undefined,
+      scoredMinter,
+    );
+    await arc.borrow(
+      SCALED_BORROW_AMOUNT.div(2),
+      anotherStablecoin.address,
+      creditScoreProof,
+      borrowLimitProof,
+      undefined,
+      scoredMinter,
+    );
+    const {
+      collateralAmount,
+      normalizedBorrowedAmount,
+      principal,
+    } = await arc.getVault(scoredMinter.address);
+
+    expect(collateralAmount, 'collateral amt').eq(COLLATERAL_AMOUNT);
+    expect(normalizedBorrowedAmount, 'borrow amt').eq(
+      SCALED_BORROW_AMOUNT,
+    );
+    expect(principal, 'principal').eq(
+      SCALED_BORROW_AMOUNT,
+    );
+    expect(
+      await stablecoin.balanceOf(scoredMinter.address),
+      'stablecoin balance',
+    ).eq(BORROW_AMOUNT.div(2));
+    expect(
+      await anotherStablecoin.balanceOf(scoredMinter.address),
+    ).eq(SCALED_BORROW_AMOUNT.div(2));
+  });
 
   it('adds the borrow fee to an initial borrow amount', async () => {
     const borrowFee = utils.parseEther('0.1');
