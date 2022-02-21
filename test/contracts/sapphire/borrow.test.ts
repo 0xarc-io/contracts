@@ -286,8 +286,14 @@ describe('SapphireCore.borrow()', () => {
       'ASTABLE',
       18,
     );
-    await anotherStablecoin.mintShare(arc.pool().address, SCALED_BORROW_AMOUNT.div(2))
-    await ctx.contracts.sapphire.pool.setDepositLimit(anotherStablecoin.address, utils.parseEther('1000'))
+    await anotherStablecoin.mintShare(
+      arc.pool().address,
+      SCALED_BORROW_AMOUNT.div(2),
+    );
+    await ctx.contracts.sapphire.pool.setDepositLimit(
+      anotherStablecoin.address,
+      utils.parseEther('1000'),
+    );
 
     expect(await stablecoin.balanceOf(scoredMinter.address)).eq(0);
     expect(await anotherStablecoin.balanceOf(scoredMinter.address)).eq(0);
@@ -315,19 +321,15 @@ describe('SapphireCore.borrow()', () => {
     } = await arc.getVault(scoredMinter.address);
 
     expect(collateralAmount, 'collateral amt').eq(COLLATERAL_AMOUNT);
-    expect(normalizedBorrowedAmount, 'borrow amt').eq(
-      SCALED_BORROW_AMOUNT,
-    );
-    expect(principal, 'principal').eq(
-      SCALED_BORROW_AMOUNT,
-    );
+    expect(normalizedBorrowedAmount, 'borrow amt').eq(SCALED_BORROW_AMOUNT);
+    expect(principal, 'principal').eq(SCALED_BORROW_AMOUNT);
     expect(
       await stablecoin.balanceOf(scoredMinter.address),
       'stablecoin balance',
     ).eq(BORROW_AMOUNT.div(2));
-    expect(
-      await anotherStablecoin.balanceOf(scoredMinter.address),
-    ).eq(SCALED_BORROW_AMOUNT.div(2));
+    expect(await anotherStablecoin.balanceOf(scoredMinter.address)).eq(
+      SCALED_BORROW_AMOUNT.div(2),
+    );
   });
 
   it('adds the borrow fee to an initial borrow amount', async () => {
@@ -400,9 +402,42 @@ describe('SapphireCore.borrow()', () => {
     );
   });
 
-  xit(
-    'increases the user principal by the borrowed amount (18 decimal borrow asset)',
-  );
+  it('increases the user principal by the borrowed amount (18 decimal borrow asset)', async () => {
+    const anotherStablecoin = await deployTestToken(
+      minter,
+      'Another Stablecoin',
+      'ASTABLE',
+      18,
+    );
+    await anotherStablecoin.mintShare(arc.pool().address, SCALED_BORROW_AMOUNT);
+    await ctx.contracts.sapphire.pool.setDepositLimit(
+      anotherStablecoin.address,
+      utils.parseEther('1000'),
+    );
+
+    expect(await anotherStablecoin.balanceOf(scoredMinter.address)).eq(0);
+
+    await arc.borrow(
+      SCALED_BORROW_AMOUNT,
+      anotherStablecoin.address,
+      creditScoreProof,
+      borrowLimitProof,
+      undefined,
+      scoredMinter,
+    );
+    const {
+      collateralAmount,
+      normalizedBorrowedAmount,
+      principal,
+    } = await arc.getVault(scoredMinter.address);
+
+    expect(collateralAmount, 'collateral amt').eq(COLLATERAL_AMOUNT);
+    expect(normalizedBorrowedAmount, 'borrow amt').eq(SCALED_BORROW_AMOUNT);
+    expect(principal, 'principal').eq(SCALED_BORROW_AMOUNT);
+    expect(await anotherStablecoin.balanceOf(scoredMinter.address)).eq(
+      SCALED_BORROW_AMOUNT,
+    );
+  });
 
   it('borrows with the highest c-ratio if proof is not provided', async () => {
     let vault = await arc.getVault(scoredMinter.address);
