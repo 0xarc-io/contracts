@@ -18,7 +18,7 @@ import {
   TestTokenFactory,
 } from '@src/typings';
 import { approve, getEmptyScoreProof, getScoreProof } from '@src/utils';
-import { CREDIT_PROOF_PROTOCOL } from '@src/constants/protocols';
+import { CREDIT_PROOF_PROTOCOL } from '@src/constants';
 import {
   addSnapshotBeforeRestoreAfterEach,
   immediatelyUpdateMerkleRoot,

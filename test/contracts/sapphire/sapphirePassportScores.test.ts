@@ -8,7 +8,7 @@ import {
   SapphirePassportScoresFactory,
 } from '@src/typings';
 import { getScoreProof } from '@src/utils';
-import { CREDIT_PROOF_PROTOCOL } from '@src/constants/protocols';
+import { CREDIT_PROOF_PROTOCOL } from '@src/constants';
 import {
   addSnapshotBeforeRestoreAfterEach,
   advanceEpoch,
