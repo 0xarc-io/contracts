@@ -25,6 +25,7 @@ import {
 } from '@src/constants';
 import { setupBaseVault } from '@test/helpers/setupBaseVault';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
+import { getEmptyScoreProof } from '@src/utils/getScoreProof';
 import { expect } from 'chai';
 import { constants, utils } from 'ethers';
 import 'module-alias/register';
@@ -418,11 +419,21 @@ describe('SapphireCore.repay()', () => {
     expect(vault.principal).to.eq(SCALED_BORROW_AMOUNT.div(2));
   });
 
-  it('emits ActionsOperated event when a repay happens', async () => {
-    await expect(repay(BORROW_AMOUNT.div(2), signers.scoredMinter)).to.emit(
-      arc.core(),
-      'ActionsOperated',
-    );
+  it.only('emits Repaid event when a repay happens', async () => {
+    await expect(repay(BORROW_AMOUNT.div(2), signers.scoredMinter))
+      .to.emit(arc.core(), 'Repaid')
+      .withArgs(
+        signers.scoredMinter.address,
+        BORROW_AMOUNT.div(2),
+        stablecoin.address,
+        getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
+        ),
+        COLLATERAL_AMOUNT,
+        BORROW_AMOUNT.div(2),
+        BORROW_AMOUNT.div(2),
+      );
   });
 
   it('should not repay if user did not approve', async () => {

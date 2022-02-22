@@ -1046,6 +1046,43 @@ describe('SapphireCore.liquidate()', () => {
         ),
       ).to.be.revertedWith('SapphireCoreV1: the oracle has stale prices');
     });
+
+    it.only('emits Liquidated event', async () => {
+      await setupBaseVault();
+      const collateralPrice = COLLATERAL_PRICE.div(2);
+      await arc.updatePrice(collateralPrice);
+
+      // Numbers taken from the first test
+      const borrowAmtPaid = utils.parseEther('475');
+      const remainingDebt = SCALED_BORROW_AMOUNT.sub(borrowAmtPaid);
+      const scoreProof = getScoreProof(minterCreditScore, creditScoreTree);
+      const cRatio = await arc
+        .assessor()
+        .assess(LOW_C_RATIO, HIGH_C_RATIO, scoreProof, true);
+
+      await expect(
+        arc.liquidate(
+          signers.scoredMinter.address,
+          stablecoin.address,
+          scoreProof,
+          undefined,
+          signers.liquidator,
+        ),
+      )
+        .to.emit(arc.core(), 'Liquidated')
+        .withArgs(
+          signers.scoredMinter.address,
+          signers.liquidator.address,
+          collateralPrice,
+          cRatio,
+          COLLATERAL_AMOUNT,
+          borrowAmtPaid,
+          stablecoin.address,
+          0,
+          remainingDebt,
+          remainingDebt,
+        );
+    });
   });
 
   // Accompanying sheet: https://docs.google.com/spreadsheets/d/1rmFbUxnM4gyi1xhcYKBwcdadvXrHBPKbeX7DLk8KQgE/edit#gid=387958619
