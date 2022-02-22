@@ -27,10 +27,52 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
     /* ========== Events ========== */
 
-    event ActionsOperated(
-        SapphireTypes.Action[] _actions,
-        SapphireTypes.ScoreProof[] _passportProofs,
+    event Deposited(
         address indexed _user,
+        uint256 _deposit,
+        SapphireTypes.ScoreProof _creditScoreProof,
+        uint256 _collateralAmount,
+        uint256 _accumulatedDebt,
+        uint256 _principalAmount
+    );
+
+    event Withdrawn(
+        address indexed _user,
+        uint256 _withdrawn,
+        SapphireTypes.ScoreProof _creditScoreProof,
+        uint256 _collateralAmount,
+        uint256 _accumulatedDebt,
+        uint256 _principalAmount
+    );
+
+    event Borrowed(
+        address indexed _user,
+        uint256 _borrowed,
+        address indexed _borrowAsset,
+        SapphireTypes.ScoreProof[] _proofs,
+        uint256 _collateralAmount,
+        uint256 _accumulatedDebt,
+        uint256 _principalAmount
+    );
+
+    event Repaid(
+        address indexed _user,
+        uint256 _repaid,
+        address indexed _repayAsset,
+        SapphireTypes.ScoreProof _creditScoreProof,
+        uint256 _collateralAmount,
+        uint256 _accumulatedDebt,
+        uint256 _principalAmount
+    );
+
+    event Liquidated(
+        address indexed _userLiquidator,
+        address indexed _liquidator,
+        uint256 _collateralPrice,
+        uint256 _assessedCRatio,
+        uint256 _liquidatedCollateral,
+        uint256 _repayAmount,
+        address indexed _repayAsset,
         uint256 _collateralAmount,
         uint256 _accumulatedDebt,
         uint256 _principalAmount
@@ -702,15 +744,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
                 "SapphireCoreV1: the creds balance changed (forbidden)"
             );
         }
-
-        emit ActionsOperated(
-            _actions,
-            _passportProofs,
-            msg.sender,
-            vaults[msg.sender].collateralAmount,
-            _denormalizeBorrowAmount(vaults[msg.sender].normalizedBorrowedAmount, true),
-            vaults[msg.sender].principal
-        );
     }
 
     function updateIndex()
@@ -1221,6 +1254,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         );
 
         SapphireTypes.Vault storage vault = vaults[_owner];
+        SapphireTypes.LiquidationVars memory vars;
 
         // Ensure that the vault is not collateralized
         require(
@@ -1235,47 +1269,47 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         // --- EFFECTS ---
 
         // Get the liquidation price of the asset (discount for liquidator)
-        uint256 liquidationPrice = Math.roundUpMul(_currentPrice, BASE - liquidatorDiscount);
+        vars.liquidationPrice = Math.roundUpMul(_currentPrice, BASE - liquidatorDiscount);
 
         // Calculate the amount of collateral to be sold based on the entire debt
         // in the vault
-        uint256 debtToRepay = _denormalizeBorrowAmount(vault.normalizedBorrowedAmount, true);
+        vars.debtToRepay = _denormalizeBorrowAmount(vault.normalizedBorrowedAmount, true);
 
-        uint256 collateralPrecisionScalar = precisionScalars[collateralAsset];
+        vars.collateralPrecisionScalar = precisionScalars[collateralAsset];
         // Do a rounded up operation of
         // debtToRepay / LiquidationFee / collateralPrecisionScalar
-        uint256 collateralToSell = (
-            Math.roundUpDiv(debtToRepay, liquidationPrice) + collateralPrecisionScalar - 1
-        ) / collateralPrecisionScalar;
+        vars.collateralToSell = (
+            Math.roundUpDiv(vars.debtToRepay, vars.liquidationPrice) + vars.collateralPrecisionScalar - 1
+        ) / vars.collateralPrecisionScalar;
 
         // If the discounted collateral is more than the amount in the vault, limit
         // the sale to that amount
-        if (collateralToSell > vault.collateralAmount) {
-            collateralToSell = vault.collateralAmount;
+        if (vars.collateralToSell > vault.collateralAmount) {
+            vars.collateralToSell = vault.collateralAmount;
             // Calculate the new debt to repay
-            debtToRepay = collateralToSell * collateralPrecisionScalar * liquidationPrice / BASE;
+            vars.debtToRepay = vars.collateralToSell * vars.collateralPrecisionScalar * vars.liquidationPrice / BASE;
         }
 
         // Calculate the profit made in USD
-        uint256 valueCollateralSold = collateralToSell *
-            collateralPrecisionScalar *
+        vars.valueCollateralSold = vars.collateralToSell *
+            vars.collateralPrecisionScalar *
             _currentPrice /
             BASE;
 
         // Total profit in dollar amount
-        uint256 profit = valueCollateralSold - debtToRepay;
+        vars.profit = vars.valueCollateralSold - vars.debtToRepay;
 
         // Calculate the ARC share
-        uint256 arcShare = profit *
+        vars.arcShare = vars.profit *
             liquidationArcFee /
-            liquidationPrice /
-            collateralPrecisionScalar;
+            vars.liquidationPrice /
+            vars.collateralPrecisionScalar;
 
         // Calculate liquidator's share
-        uint256 liquidatorCollateralShare = collateralToSell - arcShare;
+        vars.liquidatorCollateralShare = vars.collateralToSell - vars.arcShare;
 
         // Update owner's vault
-        vault.collateralAmount = vault.collateralAmount - collateralToSell;
+        vault.collateralAmount = vault.collateralAmount - vars.collateralToSell;
 
         // --- INTEGRATIONS ---
 
@@ -1283,7 +1317,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         _repay(
             _owner,
             msg.sender,
-            debtToRepay / precisionScalars[_borrowAssetAddress],
+            vars.debtToRepay / precisionScalars[_borrowAssetAddress],
             _borrowAssetAddress
         );
 
@@ -1292,14 +1326,27 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         SafeERC20.safeTransfer(
             collateralAsset,
             msg.sender,
-            liquidatorCollateralShare
+            vars.liquidatorCollateralShare
         );
 
         // Transfer Arc's share of collateral
         SafeERC20.safeTransfer(
             collateralAsset,
             feeCollector,
-            arcShare
+            vars.arcShare
+        );
+
+        emit Liquidated(
+            _owner,
+            msg.sender,
+            _currentPrice,
+            _assessedCRatio,
+            vars.collateralToSell,
+            vars.debtToRepay,
+            _borrowAssetAddress,
+            vault.collateralAmount,
+            _denormalizeBorrowAmount(vault.normalizedBorrowedAmount, true),
+            vault.principal
         );
     }
 
