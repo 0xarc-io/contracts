@@ -7,7 +7,7 @@ import {
   SapphirePassportScores,
 } from '@src/typings';
 import { getEmptyScoreProof, getScoreProof } from '@src/utils';
-import { CREDIT_PROOF_PROTOCOL } from '@src/constants/protocols';
+import { CREDIT_PROOF_PROTOCOL } from '@src/constants';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { BigNumber, utils } from 'ethers';

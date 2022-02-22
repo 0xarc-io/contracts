@@ -5,7 +5,7 @@ import {
   DEFAULT_COLLATERAL_DECIMALS,
   DEFAULT_STABLECOIN_DECIMALS,
 } from './sapphireDefaults';
-import { CREDIT_PROOF_PROTOCOL } from '@src/constants/protocols';
+import { CREDIT_PROOF_PROTOCOL } from '@src/constants';
 import { BigNumberish, utils } from 'ethers';
 import { PassportScoreProof } from '@arc-types/sapphireCore';
 import { getEmptyScoreProof } from '@src/utils';

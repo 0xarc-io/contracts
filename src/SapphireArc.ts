@@ -14,7 +14,7 @@ import {
   Signer,
   utils,
 } from 'ethers';
-import { BORROW_LIMIT_PROOF_PROTOCOL, CREDIT_PROOF_PROTOCOL } from './constants/protocols';
+import { BORROW_LIMIT_PROOF_PROTOCOL, CREDIT_PROOF_PROTOCOL } from './constants';
 import {
   BaseERC20Factory,
   SapphireAssessorFactory,
