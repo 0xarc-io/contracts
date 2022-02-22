@@ -3,6 +3,7 @@ import {
   JointPassportCampaignFactory,
   KermanRewardsFactory,
   MockKermanSocialMoneyFactory,
+  SablierFactory,
   StakingAccrualERC20Factory,
   StakingAccrualERC20V5Factory,
   TestTokenFactory,
@@ -21,6 +22,8 @@ import getUltimateOwner from './task-utils/getUltimateOwner';
 import { verifyContract } from './task-utils';
 import { deployProxy } from './task-utils/deployProxy';
 import { DeploymentType } from '../deployments/types';
+import { utils } from 'ethers';
+import { getEvent } from '@src/utils/getEvent';
 
 task('deploy-staking', 'Deploy a staking/reward pool')
   .addParam('name', 'The name of the pool you would like to deploy')
@@ -717,4 +720,78 @@ task('deploy-kerman-rewards', 'Deploy the KermanRewards staking contract')
       await signer.getAddress(),
       [],
     );
+  });
+
+task(
+  'top-up-starcx',
+  'Tops up the stARCx contract with the given amount of ARCx',
+)
+  .addParam('amount', 'Amount of ARCx to top up in ether')
+  .setAction(async (taskArgs, hre) => {
+    const { amount } = taskArgs;
+
+    const { network, signer } = await loadDetails(hre);
+
+    const starcxAddress = await loadContract({
+      name: 'StakingAccrualERC20Proxy',
+      network,
+    }).address;
+    const starcx = StakingAccrualERC20Factory.connect(starcxAddress, signer);
+
+    const sablierAddress = await starcx.sablierContract();
+    const sablier = SablierFactory.connect(sablierAddress, signer);
+
+    // Claim any outstanding rewards
+    console.log(yellow('Claiming stream funds...'));
+    let tx = await starcx.claimStreamFunds();
+    await tx.wait();
+
+    const arcxAddress = await starcx.stakingToken();
+    const arcx = TestTokenFactory.connect(arcxAddress, signer);
+
+    const targetAmount = utils.parseEther(amount);
+    console.log(yellow('Minting ARCx share...'));
+    tx = await arcx.mintShare(signer.address, targetAmount);
+    await tx.wait();
+
+    // Create new sablier stream
+    const streamDuration = 30 * 24 * 60 * 60;
+    const streamAmount = targetAmount.div(streamDuration).mul(streamDuration);
+    const startTime = Math.floor(new Date().getTime() / 1000) + 60;
+    const endTime = startTime + streamDuration;
+
+    console.log(yellow('Approving stream amount on the sablier stream...'));
+    tx = await arcx.approve(sablierAddress, streamAmount);
+    await tx.wait();
+
+    console.log(yellow('Creating stream...'));
+    tx = await sablier.createStream(
+      starcxAddress,
+      streamAmount,
+      arcxAddress,
+      startTime,
+      endTime,
+    );
+    await tx.wait();
+    const txLogs = await getEvent(tx, sablier, 'CreateStream');
+    const streamId = txLogs.args.streamId;
+
+    console.log(yellow(`Setting stream id ${streamId}`));
+    tx = await starcx.setSablierStreamId(streamId);
+    await tx.wait();
+  });
+
+task(
+  'print-stream-amount',
+  'Prints the amount in wei to be created in the sablier stream',
+)
+  .addParam('amount', 'Amount of ARCx to top up in ether')
+  .setAction(async (taskArgs) => {
+    const { amount } = taskArgs;
+
+    const targetAmount = utils.parseEther(amount);
+    const streamDuration = 30 * 24 * 60 * 60;
+    const streamAmount = targetAmount.div(streamDuration).mul(streamDuration);
+
+    console.log(green(`${streamAmount} wei`));
   });
