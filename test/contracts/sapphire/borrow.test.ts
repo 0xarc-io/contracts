@@ -1141,7 +1141,7 @@ describe('SapphireCore.borrow()', () => {
     ).to.be.revertedWith('SapphireCoreV1: the oracle has stale prices');
   });
 
-  it.only('emits Borrowed event when a borrow occurs', async () => {
+  it('emits Borrowed event when a borrow occurs', async () => {
     await expect(
       arc.borrow(
         BORROW_AMOUNT,
@@ -1157,11 +1157,9 @@ describe('SapphireCore.borrow()', () => {
         scoredMinter.address,
         BORROW_AMOUNT,
         stablecoin.address,
-        [creditScoreProof, borrowLimitProof],
         COLLATERAL_AMOUNT,
-        BORROW_AMOUNT,
-        BORROW_AMOUNT,
+        SCALED_BORROW_AMOUNT,
+        SCALED_BORROW_AMOUNT,
       );
-    // .withArgs([[BORROW_AMOUNT, 2]], creditScoreProof, scoredMinter.address);
   });
 });

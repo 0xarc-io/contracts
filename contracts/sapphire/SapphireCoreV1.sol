@@ -49,7 +49,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         address indexed _user,
         uint256 _borrowed,
         address indexed _borrowAsset,
-        SapphireTypes.ScoreProof[] _proofs,
         uint256 _collateralAmount,
         uint256 _accumulatedDebt,
         uint256 _principalAmount
@@ -1098,6 +1097,15 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             _borrowAssetAddress,
             scaledAmount,
             msg.sender
+        );
+
+        emit Borrowed(
+            msg.sender,
+            _amount,
+            _borrowAssetAddress,
+            vault.collateralAmount,
+            _denormalizeBorrowAmount(vault.normalizedBorrowedAmount, true),
+            vault.principal
         );
     }
 
