@@ -1,6 +1,6 @@
 import { PassportScore } from '@arc-types/sapphireCore';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { CREDIT_PROOF_PROTOCOL, BORROW_LIMIT_PROOF_PROTOCOL } from '@src/constants/protocols';
+import { CREDIT_PROOF_PROTOCOL, BORROW_LIMIT_PROOF_PROTOCOL } from '@src/constants';
 import { PassportScoreTree } from '@src/MerkleTree';
 import {
   SapphireMapperLinear,
