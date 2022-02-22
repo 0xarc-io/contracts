@@ -438,7 +438,7 @@ describe('SapphireCore.withdraw()', () => {
     ).to.be.revertedWith('SapphireCoreV1: the contract is paused');
   });
 
-  it.only('emits the Withdrawn event', async () => {
+  it('emits the Withdrawn event', async () => {
     const scoreProof = getScoreProof(
       scoredMinterBorrowLimitScore,
       creditScoreTree,
@@ -459,14 +459,7 @@ describe('SapphireCore.withdraw()', () => {
         signers.scoredMinter,
       ),
     )
-      .to.emit(arc.core(), 'Withdrew')
-      .withArgs(
-        signers.scoredMinter.address,
-        COLLATERAL_AMOUNT,
-        scoreProof,
-        0,
-        0,
-        0,
-      );
+      .to.emit(arc.core(), 'Withdrawn')
+      .withArgs(signers.scoredMinter.address, COLLATERAL_AMOUNT, 0, 0, 0);
   });
 });

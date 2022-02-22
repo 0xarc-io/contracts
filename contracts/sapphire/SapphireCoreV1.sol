@@ -39,7 +39,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     event Withdrawn(
         address indexed _user,
         uint256 _withdrawn,
-        SapphireTypes.ScoreProof _creditScoreProof,
         uint256 _collateralAmount,
         uint256 _accumulatedDebt,
         uint256 _principalAmount
@@ -116,25 +115,12 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         address _feeCollector
     );
 
-    event TokensWithdrawn(
-        address indexed _token,
-        address _destination,
-        uint256 _amount
-    );
-
     event ProofProtocolSet(
         string _creditProtocol,
         string _borrowLimitProtocol
     );
 
-    event SupportedBorrowAssetSet(
-        address _supportedBorrowedAddress,
-        bool _isSupported
-    );
-
     event BorrowPoolUpdated(address _borrowPool);
-
-    event DefaultBorrowLimitSet(uint256 _defaultBorrowLimit);
 
     /* ========== Modifiers ========== */
 
@@ -984,6 +970,14 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         // Execute transfer
         IERC20Metadata collateralAsset = IERC20Metadata(collateralAsset);
         SafeERC20.safeTransfer(collateralAsset, msg.sender, _amount);
+
+        emit Withdrawn(
+            msg.sender,
+            _amount,
+            vault.collateralAmount,
+            _denormalizeBorrowAmount(vault.normalizedBorrowedAmount, true),
+            vault.principal
+        );
     }
 
     /**
