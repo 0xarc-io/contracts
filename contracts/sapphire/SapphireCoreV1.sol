@@ -57,9 +57,9 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
     event Repaid(
         address indexed _user,
+        address indexed _repayer,
         uint256 _repaid,
         address indexed _repayAsset,
-        SapphireTypes.ScoreProof _creditScoreProof,
         uint256 _collateralAmount,
         uint256 _accumulatedDebt,
         uint256 _principalAmount
@@ -1216,6 +1216,16 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
                 _principalPaidScaled * precisionScalars[_borrowAssetAddress]
             );
         }
+
+        emit Repaid(
+            _owner,
+            _repayer,
+            _amount,
+            _borrowAssetAddress,
+            vault.collateralAmount,
+            _denormalizeBorrowAmount(vault.normalizedBorrowedAmount, true),
+            vault.principal
+        );
     }
 
     function _liquidate(
