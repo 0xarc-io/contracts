@@ -5,9 +5,7 @@ import { SapphireTestArc } from '@src/SapphireTestArc';
 import { TestToken, TestTokenFactory } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import { DEFAULT_COLLATERAL_DECIMALS } from '@test/helpers/sapphireDefaults';
-import {
-  CREDIT_PROOF_PROTOCOL,
-} from '@src/constants';
+import { CREDIT_PROOF_PROTOCOL } from '@src/constants';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { BigNumber, utils } from 'ethers';
@@ -123,15 +121,20 @@ describe('SapphireCore.deposit()', () => {
     expect(collateralAmount).to.eq(COLLATERAL_AMOUNT);
   });
 
-  it('emits the ActionsOperated event', async () => {
+  it.only('emits the Deposited event', async () => {
+    const scoreProof = getScoreProof(creditScore1, creditScoreTree);
     await expect(
-      arc.deposit(
+      arc.deposit(COLLATERAL_AMOUNT, scoreProof, undefined, scoredMinter),
+    )
+      .to.emit(arc.core(), 'Deposited')
+      .withArgs(
+        scoredMinter.address,
         COLLATERAL_AMOUNT,
-        getScoreProof(creditScore1, creditScoreTree),
-        undefined,
-        scoredMinter,
-      ),
-    ).to.emit(arc.core(), 'ActionsOperated');
+        scoreProof,
+        COLLATERAL_AMOUNT,
+        0,
+        0,
+      );
     /**
      * if uncommenting below, it fails with
      * "AssertionError: expected [ Array(2) ] to equal [ Array(2) ]"
