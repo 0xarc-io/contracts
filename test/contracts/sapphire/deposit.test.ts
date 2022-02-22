@@ -121,7 +121,7 @@ describe('SapphireCore.deposit()', () => {
     expect(collateralAmount).to.eq(COLLATERAL_AMOUNT);
   });
 
-  it.only('emits the Deposited event', async () => {
+  it('emits the Deposited event', async () => {
     const scoreProof = getScoreProof(creditScore1, creditScoreTree);
     await expect(
       arc.deposit(COLLATERAL_AMOUNT, scoreProof, undefined, scoredMinter),
@@ -130,22 +130,9 @@ describe('SapphireCore.deposit()', () => {
       .withArgs(
         scoredMinter.address,
         COLLATERAL_AMOUNT,
-        scoreProof,
         COLLATERAL_AMOUNT,
         0,
         0,
       );
-    /**
-     * if uncommenting below, it fails with
-     * "AssertionError: expected [ Array(2) ] to equal [ Array(2) ]"
-     *
-     * Feel free to fix this
-     */
-
-    // .withArgs(
-    //   [[COLLATERAL_AMOUNT, 0]],
-    //   getScoreProof(creditScore1, creditScoreTree),
-    //   scoredMinter.address,
-    // );
   });
 });

@@ -30,7 +30,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     event Deposited(
         address indexed _user,
         uint256 _deposit,
-        SapphireTypes.ScoreProof _creditScoreProof,
         uint256 _collateralAmount,
         uint256 _accumulatedDebt,
         uint256 _principalAmount
@@ -925,6 +924,14 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             msg.sender,
             address(this),
             _amount
+        );
+
+        emit Deposited(
+            msg.sender,
+            _amount,
+            vault.collateralAmount,
+            _denormalizeBorrowAmount(vault.normalizedBorrowedAmount, true),
+            vault.principal
         );
     }
 
