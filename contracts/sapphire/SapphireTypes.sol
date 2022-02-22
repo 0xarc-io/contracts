@@ -37,4 +37,15 @@ library SapphireTypes {
         address userToLiquidate;
     }
 
+    struct LiquidationVars {
+        uint256 liquidationPrice;
+        uint256 debtToRepay;
+        uint256 collateralPrecisionScalar;
+        uint256 collateralToSell;
+        uint256 valueCollateralSold;
+        uint256 profit;
+        uint256 arcShare;
+        uint256 liquidatorCollateralShare;
+    }
+
 }

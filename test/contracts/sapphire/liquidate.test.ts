@@ -1047,7 +1047,7 @@ describe('SapphireCore.liquidate()', () => {
       ).to.be.revertedWith('SapphireCoreV1: the oracle has stale prices');
     });
 
-    it.only('emits Liquidated event', async () => {
+    it('emits Liquidated event', async () => {
       await setupBaseVault();
       const collateralPrice = COLLATERAL_PRICE.div(2);
       await arc.updatePrice(collateralPrice);
