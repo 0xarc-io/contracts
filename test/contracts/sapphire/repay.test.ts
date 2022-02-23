@@ -441,11 +441,18 @@ describe('SapphireCore.repay()', () => {
     expect(vault.principal).to.eq(SCALED_BORROW_AMOUNT.div(2));
   });
 
-  it('emits ActionsOperated event when a repay happens', async () => {
-    await expect(repay(BORROW_AMOUNT.div(2), signers.scoredMinter)).to.emit(
-      arc.core(),
-      'ActionsOperated',
-    );
+  it('emits Repaid event when a repay happens', async () => {
+    await expect(repay(BORROW_AMOUNT.div(2), signers.scoredMinter))
+      .to.emit(arc.core(), 'Repaid')
+      .withArgs(
+        signers.scoredMinter.address,
+        signers.scoredMinter.address,
+        BORROW_AMOUNT.div(2),
+        stablecoin.address,
+        COLLATERAL_AMOUNT,
+        SCALED_BORROW_AMOUNT.div(2),
+        SCALED_BORROW_AMOUNT.div(2),
+      );
   });
 
   it('should not repay if user did not approve', async () => {
