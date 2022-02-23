@@ -175,6 +175,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     )
         external
         onlyAdmin
+        cacheAssetDecimals(_collateralAddress)
     {
         require(
             collateralAsset == address(0),
@@ -209,8 +210,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             bytes32("arcx.credit"),
             bytes32("arcx.creditLimit")
         ];
-
-        _savePrecisionScalar(collateralAsset);
 
         setAssessor(_assessorAddress);
         setOracle(_oracleAddress);
@@ -1004,7 +1003,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      * @dev Borrows the given borrow assets against the user's vault. It ensures the vault
      *      still maintains the required collateral ratio
      *
-     * @param _amount               The amount of stablecoins to borrow, in 18 decimals
+     * @param _amount               The amount of stablecoins to borrow
      * @param _borrowAssetAddress   The address of the stablecoin token to borrow
      * @param _assessedCRatio       The assessed c-ratio for user's credit score
      * @param _collateralPrice      The current collateral price
