@@ -14,7 +14,10 @@ import {
   Signer,
   utils,
 } from 'ethers';
-import { BORROW_LIMIT_PROOF_PROTOCOL, CREDIT_PROOF_PROTOCOL } from './constants';
+import {
+  BORROW_LIMIT_PROOF_PROTOCOL,
+  CREDIT_PROOF_PROTOCOL,
+} from './constants';
 import {
   BaseERC20Factory,
   SapphireAssessorFactory,
@@ -137,6 +140,46 @@ export class SapphireArc {
     const core = this._getCore(coreName, caller);
 
     return core.exit(borrowAssetAddress, [passportScoreProof], overrides);
+  }
+
+  async repayAndWithdraw(
+    repayAssetAddress: string,
+    repayAmount: BigNumber,
+    withdrawAmount: BigNumber,
+    caller: Signer = this.signer,
+    passportScoreProof: PassportScoreProof = getEmptyScoreProof(
+      undefined,
+      utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
+    ),
+    coreName: string = this.getCoreNames()[0],
+    overrides: TransactionOverrides = {},
+  ) {
+    if (repayAmount.isZero() && withdrawAmount.isZero()) {
+      throw new Error('SapphireArc: repay and withdraw amounts cannot be 0');
+    }
+
+    const core = this._getCore(coreName, caller);
+    const actions: Action[] = [];
+
+    if (!repayAmount.isZero()) {
+      actions.push({
+        operation: Operation.Repay,
+        borrowAssetAddress: repayAssetAddress,
+        amount: repayAmount,
+        userToLiquidate: constants.AddressZero,
+      });
+    }
+
+    if (!withdrawAmount.isZero()) {
+      actions.push({
+        operation: Operation.Withdraw,
+        borrowAssetAddress: constants.AddressZero,
+        amount: withdrawAmount,
+        userToLiquidate: constants.AddressZero,
+      });
+    }
+
+    return core.executeActions(actions, [passportScoreProof], overrides);
   }
 
   async liquidate(
