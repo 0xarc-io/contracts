@@ -36,5 +36,4 @@ library SapphireTypes {
         Operation operation;
         address userToLiquidate;
     }
-
 }

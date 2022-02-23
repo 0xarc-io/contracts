@@ -437,4 +437,29 @@ describe('SapphireCore.withdraw()', () => {
       ),
     ).to.be.revertedWith('SapphireCoreV1: the contract is paused');
   });
+
+  it('emits the Withdrawn event', async () => {
+    const scoreProof = getScoreProof(
+      scoredMinterBorrowLimitScore,
+      creditScoreTree,
+    );
+    await setupBaseVault(
+      arc,
+      signers.scoredMinter,
+      scoreProof,
+      COLLATERAL_AMOUNT,
+      constants.Zero,
+    );
+
+    await expect(
+      arc.withdraw(
+        COLLATERAL_AMOUNT,
+        undefined,
+        undefined,
+        signers.scoredMinter,
+      ),
+    )
+      .to.emit(arc.core(), 'Withdrawn')
+      .withArgs(signers.scoredMinter.address, COLLATERAL_AMOUNT, 0, 0, 0);
+  });
 });
