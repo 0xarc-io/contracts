@@ -231,5 +231,15 @@ describe('SapphireCore.init', () => {
     );
   });
 
-  it('reverts if collateral has more than 18 decimals');
+  it('reverts if collateral has more than 18 decimals', async () => {
+    const collatera19 = await deployTestToken(
+      deployer,
+      'New Collateral',
+      'CLTRL',
+      21,
+    );
+    await expect(init({ collateralAddress: collatera19.address })).to.be.revertedWith(
+      'SapphireCoreV1: token has more than 18 decimals',
+    );
+  });
 });

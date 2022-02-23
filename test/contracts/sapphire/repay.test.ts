@@ -31,6 +31,7 @@ import 'module-alias/register';
 import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
+import { deployTestToken } from '../deployers';
 
 const SCALED_COLLATERAL_AMOUNT = utils.parseEther('1000');
 const COLLATERAL_AMOUNT = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS);
@@ -185,7 +186,29 @@ describe('SapphireCore.repay()', () => {
     expect(vault.normalizedBorrowedAmount).eq(0);
   });
 
-  it('repays with 6 decimals stablecoin');
+  it(`repays with 6 decimals stablecoin (borrowed with ${DEFAULT_STABLECOIN_DECIMALS.toString()})`, async () => {
+    const anotherStablecoin = await deployTestToken(
+      signers.admin,
+      'Another Stablecoin',
+      'ASTABLE',
+      6,
+    );
+    const repayAmount = utils.parseUnits(utils.formatEther(SCALED_BORROW_AMOUNT), DEFAULT_STABLECOIN_DECIMALS);
+    await pool.setDepositLimit(
+      anotherStablecoin.address,
+      repayAmount,
+    );
+
+    await anotherStablecoin.mintShare(signers.scoredMinter.address, repayAmount);
+
+    let vault = await arc.getVault(signers.scoredMinter.address);
+    expect(vault.normalizedBorrowedAmount).eq(SCALED_BORROW_AMOUNT);
+
+    await repay(repayAmount, signers.scoredMinter, stablecoin);
+
+    vault = await arc.getVault(signers.scoredMinter.address);
+    expect(vault.normalizedBorrowedAmount).eq(0);
+  });
 
   it('swaps stables for creds, then burns the creds, (no interest accumulated)', async () => {
     expect(await creds.balanceOf(pool.address)).to.eq(SCALED_BORROW_AMOUNT);

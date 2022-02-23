@@ -41,6 +41,7 @@ describe('borrow index (integration)', () => {
   let arc: SapphireTestArc;
   let signers: TestingSigners;
   let minterCreditScore: PassportScore;
+  let minter1CreditScore: PassportScore;
   let minterBorrowLimitScore: PassportScore;
   let borrowLimitScore1: PassportScore;
   let creditScoreTree: PassportScoreTree;
@@ -51,6 +52,11 @@ describe('borrow index (integration)', () => {
   async function init(ctx: ITestContext): Promise<void> {
     minterCreditScore = {
       account: ctx.signers.scoredMinter.address,
+      protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
+      score: BigNumber.from(500),
+    };
+    minter1CreditScore = {
+      account: ctx.signers.minter.address,
       protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(500),
     };
@@ -74,6 +80,7 @@ describe('borrow index (integration)', () => {
       creditScore2,
       minterBorrowLimitScore,
       borrowLimitScore1,
+      minter1CreditScore,
     ]);
     await setupSapphire(ctx, {
       interestRate: INTEREST_RATE,
@@ -427,7 +434,80 @@ describe('borrow index (integration)', () => {
       );
     });
 
-    it('open for 1 year and liquidate after this year');
+    it('open for 1 year and liquidate after this year', async () => {
+      const COLLATERAL_PRICE = utils.parseEther('1');
+      // Sets up a basic vault
+      await setupBaseVault(
+        arc,
+        minter1,
+        getScoreProof(borrowLimitScore1, creditScoreTree),
+        COLLATERAL_AMOUNT,
+        BORROW_AMOUNT,
+      );
+
+      await stablecoin.mintShare(signers.liquidator.address, BORROW_AMOUNT);
+      await approve(
+        BORROW_AMOUNT,
+        stablecoin.address,
+        arc.coreAddress(),
+        signers.liquidator,
+      );
+      expect(await stablecoin.balanceOf(signers.liquidator.address)).to.be.eq(
+        BORROW_AMOUNT,
+      );
+
+      await advanceNYears(1);
+      // Drop the price by half to make the vault under-collateralized
+      const newPrice = COLLATERAL_PRICE.div(2);
+      await arc.updatePrice(newPrice);
+      expect(await arc.core().borrowIndex()).eq(utils.parseEther('1'));
+      const {
+        principal: prePrincipal,
+        normalizedBorrowedAmount: preNormalizedBorrowedAmount,
+      } = await arc.getVault(minter1.address);
+      expect(prePrincipal).eq(BORROW_AMOUNT);
+      expect(preNormalizedBorrowedAmount).eq(BORROW_AMOUNT);
+      // Liquidate vault
+      await arc.liquidate(
+        signers.minter.address,
+        stablecoin.address,
+        getScoreProof(minter1CreditScore, creditScoreTree),
+        undefined,
+        signers.liquidator,
+      );
+
+      const borrowIndexAfterLiquidation = await arc.core().borrowIndex();
+      expect(borrowIndexAfterLiquidation).eq('1048790164179952000');
+      expect(borrowIndexAfterLiquidation).eq(
+        ONE_YEAR_IN_SECONDS.mul(INTEREST_RATE).add(BASE),
+      );
+
+      expect(await stablecoin.balanceOf(signers.liquidator.address)).to.eq(0);
+      expect(
+        await arc.collateral().balanceOf(signers.liquidator.address),
+      ).to.eq(
+        utils
+          .parseUnits('500', DEFAULT_COLLATERAL_DECIMALS)
+          .mul(BASE)
+          .div(COLLATERAL_PRICE.div(2)),
+      );
+      const { principal, normalizedBorrowedAmount } = await arc.getVault(
+        minter1.address,
+      );
+      expect(principal).eq(
+        roundUpMul(borrowIndexAfterLiquidation, BORROW_AMOUNT).sub(
+          BORROW_AMOUNT,
+        ),
+      );
+      expect(normalizedBorrowedAmount).eq(
+        roundUpDiv(
+          roundUpMul(borrowIndexAfterLiquidation, BORROW_AMOUNT).sub(
+            BORROW_AMOUNT,
+          ),
+          borrowIndexAfterLiquidation,
+        ),
+      );
+    });
 
     it('open for 1 year and repay partially after this year', async () => {
       await setupBaseVault(
