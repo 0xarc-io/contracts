@@ -12,13 +12,19 @@ import { approve } from '@src/utils/approve';
 import { BASE, ONE_YEAR_IN_SECONDS } from '@src/constants';
 import { PassportScoreTree } from '@src/MerkleTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
-import { getScoreProof } from '@src/utils/getScoreProof';
-import { DEFAULT_COLLATERAL_DECIMALS } from '@test/helpers/sapphireDefaults';
+import { getEmptyScoreProof, getScoreProof } from '@src/utils/getScoreProof';
+import {
+  DEFAULT_COLLATERAL_DECIMALS,
+  DEFAULT_STABLE_COIN_PRECISION_SCALAR,
+} from '@test/helpers/sapphireDefaults';
 import {
   CREDIT_PROOF_PROTOCOL,
   BORROW_LIMIT_PROOF_PROTOCOL,
 } from '@src/constants';
-import { setupBaseVault } from '@test/helpers/setupBaseVault';
+import {
+  mintApprovedCollateral,
+  setupBaseVault,
+} from '@test/helpers/setupBaseVault';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { BigNumber, BigNumberish, utils } from 'ethers';
@@ -27,6 +33,7 @@ import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 import { roundUpDiv, roundUpMul } from '@test/helpers/roundUpOperations';
 import { TestToken } from '@src/typings';
+import { deployTestToken } from '../deployers';
 
 const COLLATERAL_AMOUNT = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS);
 const BORROW_AMOUNT = utils.parseEther('500');
@@ -230,6 +237,75 @@ describe('borrow index (integration)', () => {
       );
       expect(normalizedBorrowedAmount).eq(BORROW_AMOUNT);
       expect(principal).eq(BORROW_AMOUNT);
+    });
+
+    it('for one and half years for 6 decimal borrow asset', async () => {
+      // setup additional stablecoin
+      const anotherStablecoin = await deployTestToken(
+        signers.admin,
+        'Another Stablecoin',
+        'ASTABLE',
+        6,
+      );
+      const borrowAmount = utils.parseUnits(
+        utils.formatEther(BORROW_AMOUNT),
+        6,
+      );
+      await arc.pool().setDepositLimit(
+        anotherStablecoin.address,
+        borrowAmount,
+      );
+      await anotherStablecoin.mintShare(
+        arc.pool().address,
+        borrowAmount,
+      );
+      await mintApprovedCollateral(arc, minter1, COLLATERAL_AMOUNT);
+
+      await advanceNMonths(6);
+      await arc.core().updateIndex();
+      const borrowIndex1month = await arc.core().currentBorrowIndex();
+      const lastUpdateIndex1month = await arc.core().indexLastUpdate();
+
+      await arc.open(
+        COLLATERAL_AMOUNT,
+        borrowAmount,
+        anotherStablecoin.address,
+        getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
+        ),
+        getScoreProof(borrowLimitScore1, creditScoreTree),
+        undefined,
+        minter1,
+      );
+      await advanceNMonths(18);
+      const currentBorrowIndex = await arc.core().currentBorrowIndex();
+      expect(currentBorrowIndex).eq(
+        await getBorrowIndex(lastUpdateIndex1month, borrowIndex1month)
+      );
+      await arc.core().updateIndex();
+
+      const vault = await arc.getVault(signers.minter.address);
+      expect(vault.normalizedBorrowedAmount).eq(
+        roundUpDiv(BORROW_AMOUNT, borrowIndex1month),
+      );
+      expect(vault.principal).eq(BORROW_AMOUNT);
+
+      const accumulatedInterest = BORROW_AMOUNT.mul(INTEREST_RATE)
+        .mul(SECONDS_PER_MONTH)
+        .mul(18)
+        .div(BASE);
+      const borrowAmountBasedOnIndex = vault.normalizedBorrowedAmount
+        .mul(currentBorrowIndex)
+        .div(BASE);
+      const borrowAmountBasedOnCalculations = BORROW_AMOUNT.add(
+        accumulatedInterest,
+      );
+      // divided by CALCULATION_PRECISION because of dividing loses in contract
+      const CALCULATION_PRECISION = utils.parseUnits('1', 7);
+      expect(borrowAmountBasedOnIndex.div(CALCULATION_PRECISION)).eq(
+        borrowAmountBasedOnCalculations.div(CALCULATION_PRECISION),
+      );
     });
   });
 
@@ -1112,12 +1188,14 @@ describe('borrow index (integration)', () => {
         .mul(borrowIndex1year)
         .div(BASE);
       // We can do INTEREST_RATE.add(newInterestRate), because of same duration for these interests a * k1 + b * k1 = k1 * (a + b)
-      const accumulatedInterstA = BORROW_AMOUNT.mul(INTEREST_RATE.add(newInterestRate))
+      const accumulatedInterestA = BORROW_AMOUNT.mul(
+        INTEREST_RATE.add(newInterestRate),
+      )
         .mul(SECONDS_PER_MONTH)
         .mul(6)
         .div(BASE);
       const borrowAmountBasedOnCalculationsA = BORROW_AMOUNT.add(
-        accumulatedInterstA,
+        accumulatedInterestA,
       );
 
       expect(borrowAmountBasedOnIndexA).gt(borrowAmountBasedOnCalculationsA);
@@ -1127,7 +1205,7 @@ describe('borrow index (integration)', () => {
       );
 
       // User B
-      const accumulatedInterstB = BORROW_AMOUNT.mul(newInterestRate)
+      const accumulatedInterestB = BORROW_AMOUNT.mul(newInterestRate)
         .mul(SECONDS_PER_MONTH)
         .mul(6)
         .div(BASE);
@@ -1135,16 +1213,13 @@ describe('borrow index (integration)', () => {
         .mul(borrowIndex1year)
         .div(BASE);
       const borrowAmountBasedOnCalculationsB = BORROW_AMOUNT.add(
-        accumulatedInterstB,
+        accumulatedInterestB,
       );
-      expect(borrowAmountBasedOnIndexB).lt(borrowAmountBasedOnCalculationsB);
       // divided by CALCULATION_PRECISION because of dividing loses in contract
       const CALCULATION_PRECISION = utils.parseUnits('1', 7);
       expect(borrowAmountBasedOnIndexB.div(CALCULATION_PRECISION)).eq(
         borrowAmountBasedOnCalculationsB.div(CALCULATION_PRECISION),
       );
     });
-
-    it('2 users borrow, then one is liquidated');
   });
 });
