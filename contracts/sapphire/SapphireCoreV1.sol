@@ -20,6 +20,19 @@ import {ISapphirePool} from "./SapphirePool/ISapphirePool.sol";
 
 contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
+    /* ========== Structs ========== */
+
+    struct LiquidationVars {
+        uint256 liquidationPrice;
+        uint256 debtToRepay;
+        uint256 collateralPrecisionScalar;
+        uint256 collateralToSell;
+        uint256 valueCollateralSold;
+        uint256 profit;
+        uint256 arcShare;
+        uint256 liquidatorCollateralShare;
+    }
+
     /* ========== Libraries ========== */
 
     using Address for address;
@@ -1273,7 +1286,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         );
 
         SapphireTypes.Vault storage vault = vaults[_owner];
-        SapphireTypes.LiquidationVars memory vars;
+        // Use struct to go around the stack too deep error
+        LiquidationVars memory vars;
 
         // Ensure that the vault is not collateralized
         require(
