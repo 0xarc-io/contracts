@@ -293,7 +293,11 @@ task('deploy-assessor', 'Deploy the Sapphire Assessor').setAction(
 );
 
 task('deploy-sapphire', 'Deploy a Sapphire core')
-  .addParam('collateral', 'The collateral name to register the core with')
+  .addOptionalParam(
+    'collateral',
+    'The collateral name to register the core with',
+  )
+  .addFlag('implementationonly', 'Deploy only the implementation contract')
   .setAction(async (taskArgs, hre) => {
     const collatName = taskArgs.collateral;
 
@@ -305,17 +309,6 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
     } = await loadDetails(hre);
 
     await pruneDeployments(network, signer.provider);
-
-    const collatConfig = await loadCollateralConfig({
-      network,
-      key: collatName,
-    });
-
-    if (!collatConfig) {
-      throw red(
-        `No configuration has been found for collateral: ${collatName}`,
-      );
-    }
 
     const coreAddress = await deployContract(
       {
@@ -331,6 +324,23 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
       green(`Sapphire Core implementation deployed at ${coreAddress}`),
     );
     await verifyContract(hre, coreAddress);
+
+    if (taskArgs.implementationonly) return;
+
+    if (!collatName) {
+      throw red('You must specify the collateral name');
+    }
+
+    const collatConfig = await loadCollateralConfig({
+      network,
+      key: collatName,
+    });
+
+    if (!collatConfig) {
+      throw red(
+        `No configuration has been found for collateral: ${collatName}`,
+      );
+    }
 
     const coreProxyAddress = await deployContract(
       {
