@@ -263,8 +263,8 @@ describe('borrow index (integration)', () => {
 
       await advanceNMonths(6);
       await arc.core().updateIndex();
-      const borrowIndex1month = await arc.core().currentBorrowIndex();
-      const lastUpdateIndex1month = await arc.core().indexLastUpdate();
+      const borrowIndex6months = await arc.core().currentBorrowIndex();
+      const lastUpdateIndex6months = await arc.core().indexLastUpdate();
 
       await arc.open(
         COLLATERAL_AMOUNT,
@@ -281,13 +281,13 @@ describe('borrow index (integration)', () => {
       await advanceNMonths(18);
       const currentBorrowIndex = await arc.core().currentBorrowIndex();
       expect(currentBorrowIndex).eq(
-        await getBorrowIndex(lastUpdateIndex1month, borrowIndex1month)
+        await getBorrowIndex(lastUpdateIndex6months, borrowIndex6months)
       );
       await arc.core().updateIndex();
 
       const vault = await arc.getVault(signers.minter.address);
       expect(vault.normalizedBorrowedAmount).eq(
-        roundUpDiv(BORROW_AMOUNT, borrowIndex1month),
+        roundUpDiv(BORROW_AMOUNT, borrowIndex6months),
       );
       expect(vault.principal).eq(BORROW_AMOUNT);
 
