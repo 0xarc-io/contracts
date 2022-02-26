@@ -12,13 +12,19 @@ import { approve } from '@src/utils/approve';
 import { BASE, ONE_YEAR_IN_SECONDS } from '@src/constants';
 import { PassportScoreTree } from '@src/MerkleTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
-import { getScoreProof } from '@src/utils/getScoreProof';
-import { DEFAULT_COLLATERAL_DECIMALS } from '@test/helpers/sapphireDefaults';
+import { getEmptyScoreProof, getScoreProof } from '@src/utils/getScoreProof';
+import {
+  DEFAULT_COLLATERAL_DECIMALS,
+  DEFAULT_STABLE_COIN_PRECISION_SCALAR,
+} from '@test/helpers/sapphireDefaults';
 import {
   CREDIT_PROOF_PROTOCOL,
   BORROW_LIMIT_PROOF_PROTOCOL,
 } from '@src/constants';
-import { setupBaseVault } from '@test/helpers/setupBaseVault';
+import {
+  mintApprovedCollateral,
+  setupBaseVault,
+} from '@test/helpers/setupBaseVault';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { BigNumber, BigNumberish, utils } from 'ethers';
@@ -27,6 +33,7 @@ import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 import { roundUpDiv, roundUpMul } from '@test/helpers/roundUpOperations';
 import { TestToken } from '@src/typings';
+import { deployTestToken } from '../deployers';
 
 const COLLATERAL_AMOUNT = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS);
 const BORROW_AMOUNT = utils.parseEther('500');
@@ -230,6 +237,75 @@ describe('borrow index (integration)', () => {
       );
       expect(normalizedBorrowedAmount).eq(BORROW_AMOUNT);
       expect(principal).eq(BORROW_AMOUNT);
+    });
+
+    it('for one and half years for 6 decimal borrow asset', async () => {
+      // setup additional stablecoin
+      const anotherStablecoin = await deployTestToken(
+        signers.admin,
+        'Another Stablecoin',
+        'ASTABLE',
+        6,
+      );
+      const borrowAmount = utils.parseUnits(
+        utils.formatEther(BORROW_AMOUNT),
+        6,
+      );
+      await arc.pool().setDepositLimit(
+        anotherStablecoin.address,
+        borrowAmount,
+      );
+      await anotherStablecoin.mintShare(
+        arc.pool().address,
+        borrowAmount,
+      );
+      await mintApprovedCollateral(arc, minter1, COLLATERAL_AMOUNT);
+
+      await advanceNMonths(6);
+      await arc.core().updateIndex();
+      const borrowIndex6months = await arc.core().currentBorrowIndex();
+      const lastUpdateIndex6months = await arc.core().indexLastUpdate();
+
+      await arc.open(
+        COLLATERAL_AMOUNT,
+        borrowAmount,
+        anotherStablecoin.address,
+        getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
+        ),
+        getScoreProof(borrowLimitScore1, creditScoreTree),
+        undefined,
+        minter1,
+      );
+      await advanceNMonths(18);
+      const currentBorrowIndex = await arc.core().currentBorrowIndex();
+      expect(currentBorrowIndex).eq(
+        await getBorrowIndex(lastUpdateIndex6months, borrowIndex6months)
+      );
+      await arc.core().updateIndex();
+
+      const vault = await arc.getVault(signers.minter.address);
+      expect(vault.normalizedBorrowedAmount).eq(
+        roundUpDiv(BORROW_AMOUNT, borrowIndex6months),
+      );
+      expect(vault.principal).eq(BORROW_AMOUNT);
+
+      const accumulatedInterest = BORROW_AMOUNT.mul(INTEREST_RATE)
+        .mul(SECONDS_PER_MONTH)
+        .mul(18)
+        .div(BASE);
+      const borrowAmountBasedOnIndex = vault.normalizedBorrowedAmount
+        .mul(currentBorrowIndex)
+        .div(BASE);
+      const borrowAmountBasedOnCalculations = BORROW_AMOUNT.add(
+        accumulatedInterest,
+      );
+      // divided by CALCULATION_PRECISION because of dividing loses in contract
+      const CALCULATION_PRECISION = utils.parseUnits('1', 7);
+      expect(borrowAmountBasedOnIndex.div(CALCULATION_PRECISION)).eq(
+        borrowAmountBasedOnCalculations.div(CALCULATION_PRECISION),
+      );
     });
   });
 
@@ -778,14 +854,10 @@ describe('borrow index (integration)', () => {
 
     it('calculates the interest amount correctly for two users when a repayment happens in between', async () => {
       await arc.updateTime(1);
-
-      // Set interest rate for a 5% APY. Calculated using
-      // https://www.wolframalpha.com/input/?i=31536000th+root+of+1.05
-      const interestRate = BigNumber.from(1547125957);
       await arc
         .core()
         .connect(signers.interestSetter)
-        .setInterestRate(interestRate);
+        .setInterestRate(INTEREST_RATE);
 
       // User A opens position of 1000 tokens at $1 and $500 debt
       await arc.updateTime(2);
@@ -954,10 +1026,200 @@ describe('borrow index (integration)', () => {
       // which is equal to the totalBorrowed amount of the system
     });
 
-    // TODO develop spreadsheet scenarios for the following cases:
-    it('2 users borrow, then interest is set to 0');
-    it('3 users borrow, then halfway the interest rate increases');
-    it('2 users borrow, then one is liquidated');
-    it('User repays more than the debt amount');
+    it('2 users borrow, meanwhile interest is set to 0', async () => {
+      await arc.updateTime(0);
+      await arc
+        .core()
+        .connect(signers.interestSetter)
+        .setInterestRate(INTEREST_RATE);
+
+      // User A opens position of 1000 tokens at $1 and $500 debt
+      await arc.updateTime(2);
+      await setupBaseVault(
+        arc,
+        signers.scoredMinter,
+        getScoreProof(minterBorrowLimitScore, creditScoreTree),
+        COLLATERAL_AMOUNT,
+        BORROW_AMOUNT,
+      );
+      const borrowIndex2sec = await arc.core().borrowIndex();
+      expect(await arc.core().borrowIndex()).eq(
+        utils.parseEther('1').add(INTEREST_RATE.mul(2)),
+      );
+
+      // Update time to 6 months and update index
+      await advanceNMonths(6);
+
+      expect(await arc.core().indexLastUpdate()).eq(2);
+      expect(await arc.core().borrowIndex()).eq(borrowIndex2sec);
+
+      // User B opens position at 1000 tokens at $1 and $500 debt
+      await setupBaseVault(
+        arc,
+        signers.minter,
+        getScoreProof(borrowLimitScore1, creditScoreTree),
+        COLLATERAL_AMOUNT,
+        BORROW_AMOUNT,
+      );
+
+      const borrowIndex6Months = await arc.core().borrowIndex();
+      expect(await arc.core().indexLastUpdate()).eq(
+        SECONDS_PER_MONTH.mul(6).add(2),
+      );
+      expect(borrowIndex6Months).eq(
+        await getBorrowIndex(BigNumber.from(2), borrowIndex2sec),
+      );
+
+      await arc.core().connect(signers.interestSetter).setInterestRate(0);
+
+      // Update time to 12 months and update index
+      await advanceNMonths(6);
+      await arc.core().updateIndex();
+
+      const borrowIndex1year = await arc.core().borrowIndex();
+      expect(borrowIndex1year).eq(
+        await getBorrowIndex(
+          SECONDS_PER_MONTH.mul(6).add(2),
+          borrowIndex6Months,
+          BigNumber.from(0),
+        ),
+      );
+      expect(await arc.core().indexLastUpdate()).eq(
+        SECONDS_PER_MONTH.mul(12).add(2),
+      );
+
+      const vaultA = await arc.getVault(signers.scoredMinter.address);
+      const vaultB = await arc.getVault(signers.minter.address);
+      expect(vaultA.normalizedBorrowedAmount).eq(
+        roundUpDiv(BORROW_AMOUNT, borrowIndex2sec),
+      );
+      expect(vaultA.principal).eq(BORROW_AMOUNT);
+
+      expect(vaultB.normalizedBorrowedAmount).eq(
+        roundUpDiv(BORROW_AMOUNT, borrowIndex6Months),
+      );
+      expect(vaultB.principal).eq(BORROW_AMOUNT);
+
+      expect(
+        vaultB.normalizedBorrowedAmount.mul(borrowIndex1year).div(BASE),
+      ).eq(BORROW_AMOUNT);
+    });
+
+    it('2 users borrow, then halfway the interest rate increases', async () => {
+      await arc.updateTime(0);
+      await arc
+        .core()
+        .connect(signers.interestSetter)
+        .setInterestRate(INTEREST_RATE);
+
+      // User A opens position of 1000 tokens at $1 and $500 debt
+      await arc.updateTime(2);
+      await setupBaseVault(
+        arc,
+        signers.scoredMinter,
+        getScoreProof(minterBorrowLimitScore, creditScoreTree),
+        COLLATERAL_AMOUNT,
+        BORROW_AMOUNT,
+      );
+      const borrowIndex2sec = await arc.core().borrowIndex();
+      expect(await arc.core().borrowIndex()).eq(
+        utils.parseEther('1').add(INTEREST_RATE.mul(2)),
+      );
+
+      // Update time to 6 months and update index
+      await advanceNMonths(6);
+
+      expect(await arc.core().indexLastUpdate()).eq(2);
+      expect(await arc.core().borrowIndex()).eq(borrowIndex2sec);
+
+      // User B opens position at 1000 tokens at $1 and $500 debt
+      await setupBaseVault(
+        arc,
+        signers.minter,
+        getScoreProof(borrowLimitScore1, creditScoreTree),
+        COLLATERAL_AMOUNT,
+        BORROW_AMOUNT,
+      );
+
+      const borrowIndex6Months = await arc.core().borrowIndex();
+      expect(await arc.core().indexLastUpdate()).eq(
+        SECONDS_PER_MONTH.mul(6).add(2),
+      );
+      expect(borrowIndex6Months).eq(
+        await getBorrowIndex(BigNumber.from(2), borrowIndex2sec),
+      );
+
+      const newInterestRate = INTEREST_RATE.mul(2);
+      await arc
+        .core()
+        .connect(signers.interestSetter)
+        .setInterestRate(newInterestRate);
+
+      // Update time to 12 months and update index
+      await advanceNMonths(6);
+      await arc.core().updateIndex();
+
+      const borrowIndex1year = await arc.core().borrowIndex();
+      expect(borrowIndex1year).eq(
+        await getBorrowIndex(
+          SECONDS_PER_MONTH.mul(6).add(2),
+          borrowIndex6Months,
+          newInterestRate,
+        ),
+      );
+      expect(await arc.core().indexLastUpdate()).eq(
+        SECONDS_PER_MONTH.mul(12).add(2),
+      );
+
+      const vaultA = await arc.getVault(signers.scoredMinter.address);
+      const vaultB = await arc.getVault(signers.minter.address);
+      expect(vaultA.normalizedBorrowedAmount).eq(
+        roundUpDiv(BORROW_AMOUNT, borrowIndex2sec),
+      );
+      expect(vaultA.principal).eq(BORROW_AMOUNT);
+
+      expect(vaultB.normalizedBorrowedAmount).eq(
+        roundUpDiv(BORROW_AMOUNT, borrowIndex6Months),
+      );
+      expect(vaultB.principal).eq(BORROW_AMOUNT);
+
+      // User A
+      const borrowAmountBasedOnIndexA = vaultA.normalizedBorrowedAmount
+        .mul(borrowIndex1year)
+        .div(BASE);
+      // We can do INTEREST_RATE.add(newInterestRate), because of same duration for these interests a * k1 + b * k1 = k1 * (a + b)
+      const accumulatedInterestA = BORROW_AMOUNT.mul(
+        INTEREST_RATE.add(newInterestRate),
+      )
+        .mul(SECONDS_PER_MONTH)
+        .mul(6)
+        .div(BASE);
+      const borrowAmountBasedOnCalculationsA = BORROW_AMOUNT.add(
+        accumulatedInterestA,
+      );
+
+      expect(borrowAmountBasedOnIndexA).gt(borrowAmountBasedOnCalculationsA);
+      // divided by CALCULATION_PRECISION because of dividing loses in contract
+      expect(borrowAmountBasedOnIndexA.div(BASE)).eq(
+        borrowAmountBasedOnCalculationsA.div(BASE),
+      );
+
+      // User B
+      const accumulatedInterestB = BORROW_AMOUNT.mul(newInterestRate)
+        .mul(SECONDS_PER_MONTH)
+        .mul(6)
+        .div(BASE);
+      const borrowAmountBasedOnIndexB = vaultB.normalizedBorrowedAmount
+        .mul(borrowIndex1year)
+        .div(BASE);
+      const borrowAmountBasedOnCalculationsB = BORROW_AMOUNT.add(
+        accumulatedInterestB,
+      );
+      // divided by CALCULATION_PRECISION because of dividing loses in contract
+      const CALCULATION_PRECISION = utils.parseUnits('1', 7);
+      expect(borrowAmountBasedOnIndexB.div(CALCULATION_PRECISION)).eq(
+        borrowAmountBasedOnCalculationsB.div(CALCULATION_PRECISION),
+      );
+    });
   });
 });
