@@ -251,14 +251,8 @@ describe('borrow index (integration)', () => {
         utils.formatEther(BORROW_AMOUNT),
         6,
       );
-      await arc.pool().setDepositLimit(
-        anotherStablecoin.address,
-        borrowAmount,
-      );
-      await anotherStablecoin.mintShare(
-        arc.pool().address,
-        borrowAmount,
-      );
+      await arc.pool().setDepositLimit(anotherStablecoin.address, borrowAmount);
+      await anotherStablecoin.mintShare(arc.pool().address, borrowAmount);
       await mintApprovedCollateral(arc, minter1, COLLATERAL_AMOUNT);
 
       await advanceNMonths(6);
@@ -266,7 +260,7 @@ describe('borrow index (integration)', () => {
       const borrowIndex6months = await arc.core().currentBorrowIndex();
       const lastUpdateIndex6months = await arc.core().indexLastUpdate();
 
-      await arc.open(
+      await arc.depositAndBorrow(
         COLLATERAL_AMOUNT,
         borrowAmount,
         anotherStablecoin.address,
@@ -281,7 +275,7 @@ describe('borrow index (integration)', () => {
       await advanceNMonths(18);
       const currentBorrowIndex = await arc.core().currentBorrowIndex();
       expect(currentBorrowIndex).eq(
-        await getBorrowIndex(lastUpdateIndex6months, borrowIndex6months)
+        await getBorrowIndex(lastUpdateIndex6months, borrowIndex6months),
       );
       await arc.core().updateIndex();
 
