@@ -29,7 +29,7 @@ export async function setupBaseVault(
     await arc.coreContracts().core.getSupportedBorrowAssets()
   )[0];
   // Open vault and mint debt
-  await arc.open(
+  await arc.depositAndBorrow(
     collateralAmount,
     borrowAmount,
     supportedBorrowAsset,

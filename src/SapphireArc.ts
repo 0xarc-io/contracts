@@ -8,7 +8,6 @@ import {
 } from '@arc-types/sapphireCore';
 import {
   BigNumber,
-  BigNumberish,
   constants,
   ContractTransaction,
   Signer,
@@ -80,8 +79,8 @@ export class SapphireArc {
    * Runs deposit and borrow on the given core
    * @returns The new vault
    */
-  async open(
-    collateralAmount: BigNumberish,
+  async depositAndBorrow(
+    collateralAmount: BigNumber,
     borrowAmount: BigNumber,
     borrowAssetAddress: string,
     passportScoreProof: PassportScoreProof = getEmptyScoreProof(
@@ -96,14 +95,20 @@ export class SapphireArc {
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
   ): Promise<Vault> {
-    const actions: Action[] = [
-      {
+    if (collateralAmount.isZero() && borrowAmount.isZero()) {
+      throw new Error('SapphireArc: collateral and borrow amounts cannot be 0');
+    }
+
+    const actions: Action[] = [];
+
+    if (!collateralAmount.isZero()) {
+      actions.push({
         operation: Operation.Deposit,
         borrowAssetAddress: constants.AddressZero,
         amount: collateralAmount,
         userToLiquidate: constants.AddressZero,
-      },
-    ];
+      });
+    }
 
     if (!borrowAmount.isZero()) {
       actions.push({
@@ -151,6 +156,10 @@ export class SapphireArc {
       undefined,
       utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
     ),
+    passportBorrowLimitProof: PassportScoreProof = getEmptyScoreProof(
+      undefined,
+      utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
+    ),
     coreName: string = this.getCoreNames()[0],
     overrides: TransactionOverrides = {},
   ) {
@@ -158,7 +167,6 @@ export class SapphireArc {
       throw new Error('SapphireArc: repay and withdraw amounts cannot be 0');
     }
 
-    const core = this._getCore(coreName, caller);
     const actions: Action[] = [];
 
     if (!repayAmount.isZero()) {
@@ -179,7 +187,14 @@ export class SapphireArc {
       });
     }
 
-    return core.executeActions(actions, [passportScoreProof], overrides);
+    return this.executeActions(
+      actions,
+      passportScoreProof,
+      passportBorrowLimitProof,
+      coreName,
+      caller,
+      overrides,
+    );
   }
 
   async liquidate(
