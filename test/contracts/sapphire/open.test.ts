@@ -116,7 +116,7 @@ describe('SapphireCore.open()', () => {
 
   describe('without score proof', () => {
     it('open at the exact c-ratio', async () => {
-      const vault = await arc.open(
+      const vault = await arc.depositAndBorrow(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
         stableCoin.address,
@@ -145,7 +145,7 @@ describe('SapphireCore.open()', () => {
         normalizedBorrowedAmount,
         collateralAmount,
         principal,
-      } = await arc.open(
+      } = await arc.depositAndBorrow(
         COLLATERAL_AMOUNT.mul(2),
         BORROW_AMOUNT,
         stableCoin.address,
@@ -163,7 +163,7 @@ describe('SapphireCore.open()', () => {
     it('revert if opened below the c-ratio', async () => {
       const change = utils.parseUnits('1', DEFAULT_COLLATERAL_DECIMALS);
       await expect(
-        arc.open(
+        arc.depositAndBorrow(
           COLLATERAL_AMOUNT,
           BORROW_AMOUNT.add(change),
           stableCoin.address,
@@ -177,7 +177,7 @@ describe('SapphireCore.open()', () => {
       );
 
       await expect(
-        arc.open(
+        arc.depositAndBorrow(
           COLLATERAL_AMOUNT.sub(change),
           BORROW_AMOUNT,
           stableCoin.address,
@@ -201,7 +201,7 @@ describe('SapphireCore.open()', () => {
         );
 
       await expect(
-        arc.open(
+        arc.depositAndBorrow(
           COLLATERAL_AMOUNT,
           BORROW_AMOUNT,
           stableCoin.address,
@@ -224,7 +224,7 @@ describe('SapphireCore.open()', () => {
           0,
         );
       await expect(
-        arc.open(
+        arc.depositAndBorrow(
           COLLATERAL_AMOUNT,
           BORROW_AMOUNT,
           stableCoin.address,
@@ -252,7 +252,7 @@ describe('SapphireCore.open()', () => {
         normalizedBorrowedAmount,
         collateralAmount,
         principal,
-      } = await arc.open(
+      } = await arc.depositAndBorrow(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
         stableCoin.address,
@@ -277,7 +277,7 @@ describe('SapphireCore.open()', () => {
     });
 
     it('open above the default c-ratio', async () => {
-      await arc.open(
+      await arc.depositAndBorrow(
         COLLATERAL_AMOUNT.mul(2),
         BORROW_AMOUNT,
         stableCoin.address,
@@ -298,7 +298,7 @@ describe('SapphireCore.open()', () => {
     });
 
     it('open below the default c-ratio, but above c-ratio based on credit score', async () => {
-      await arc.open(
+      await arc.depositAndBorrow(
         COLLATERAL_AMOUNT.sub(1),
         BORROW_AMOUNT,
         stableCoin.address,
@@ -326,7 +326,7 @@ describe('SapphireCore.open()', () => {
       // maxBorrow = 4/3 * defaultBorrow
       const MAX_BORROW_AMOUNT = BORROW_AMOUNT.mul(4).div(3);
 
-      await arc.open(
+      await arc.depositAndBorrow(
         COLLATERAL_AMOUNT,
         MAX_BORROW_AMOUNT,
         stableCoin.address,
@@ -352,7 +352,7 @@ describe('SapphireCore.open()', () => {
 
     it('revert if opened below c-ratio based on credit score', async () => {
       await expect(
-        arc.open(
+        arc.depositAndBorrow(
           constants.One,
           BORROW_AMOUNT,
           stableCoin.address,
@@ -375,7 +375,7 @@ describe('SapphireCore.open()', () => {
           0,
         );
       await expect(
-        arc.open(
+        arc.depositAndBorrow(
           COLLATERAL_AMOUNT,
           BORROW_AMOUNT,
           stableCoin.address,
@@ -398,7 +398,7 @@ describe('SapphireCore.open()', () => {
           0,
         );
       await expect(
-        arc.open(
+        arc.depositAndBorrow(
           COLLATERAL_AMOUNT,
           BORROW_AMOUNT,
           stableCoin.address,
