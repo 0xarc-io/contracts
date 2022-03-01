@@ -3,7 +3,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { PassportScoreTree } from '@src/MerkleTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { TestToken, TestTokenFactory } from '@src/typings';
-import { getScoreProof } from '@src/utils/getScoreProof';
+import { getScoreProof, getEmptyScoreProof } from '@src/utils/getScoreProof';
 import { DEFAULT_COLLATERAL_DECIMALS } from '@test/helpers/sapphireDefaults';
 import { CREDIT_PROOF_PROTOCOL } from '@src/constants';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
@@ -134,5 +134,33 @@ describe('SapphireCore.deposit()', () => {
         0,
         0,
       );
+  });
+
+  it('sets the effective epoch of the sender to epoch + 2 if NO proof was passed', async () => {
+    expect(await arc.core().effectiveEpoch(scoredMinter.address)).to.eq(0);
+
+    const currentEpoch = await ctx.contracts.sapphire.passportScores.currentEpoch();
+    await arc.deposit(
+      COLLATERAL_AMOUNT,
+      getEmptyScoreProof(),
+      undefined,
+      scoredMinter,
+    );
+
+    expect(await arc.core().effectiveEpoch(scoredMinter.address)).to.eq(
+      currentEpoch.add(2),
+    );
+  });
+
+  it('sets the effective epoch of the sender to the current epoch if a proof was passed', async () => {
+    expect(await arc.core().effectiveEpoch(scoredMinter.address)).to.eq(0);
+
+    const scoreProof = getScoreProof(creditScore1, creditScoreTree);
+    const currentEpoch = await ctx.contracts.sapphire.passportScores.currentEpoch();
+    await arc.deposit(COLLATERAL_AMOUNT, scoreProof, undefined, scoredMinter);
+
+    expect(await arc.core().effectiveEpoch(scoredMinter.address)).to.eq(
+      currentEpoch,
+    );
   });
 });

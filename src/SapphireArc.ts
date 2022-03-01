@@ -201,7 +201,7 @@ export class SapphireArc {
     owner: string,
     borrowAssetAddress: string,
     passportScoreProof: PassportScoreProof = getEmptyScoreProof(
-      undefined,
+      owner,
       utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
     ),
     coreName: string = this.getCoreNames()[0],
