@@ -1451,6 +1451,11 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
                 }
 
             } else if (action.operation == SapphireTypes.Operation.Withdraw) {
+                require(
+                    _scoreProof.account == msg.sender,
+                    "SapphireCoreV1: proof.account must match msg.sender"
+                );
+
                 needsCollateralPrice = true;
             }
         }
