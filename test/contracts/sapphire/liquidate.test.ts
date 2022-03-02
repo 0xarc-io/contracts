@@ -350,18 +350,15 @@ describe('SapphireCore.liquidate()', () => {
 
     it('liquidates if current epoch is < effective and no proof was passed', async () => {
       const maxBorrowAmount = await getMaxBorrowAmount();
-      await setupBaseVault(
-        undefined,
-        maxBorrowAmount,
-        undefined,
-        getScoreProof(minterCreditScore, creditScoreTree),
-      );
+      await setupBaseVault(undefined, maxBorrowAmount);
 
       await arc.updatePrice(COLLATERAL_PRICE.sub(utils.parseEther('0.01')));
 
       expect(
         await arc.core().effectiveEpoch(signers.scoredMinter.address),
-      ).to.eq(await ctx.contracts.sapphire.passportScores.currentEpoch());
+      ).to.eq(
+        (await ctx.contracts.sapphire.passportScores.currentEpoch()).add(2),
+      );
 
       await expect(
         arc.liquidate(
@@ -371,7 +368,7 @@ describe('SapphireCore.liquidate()', () => {
           undefined,
           signers.liquidator,
         ),
-      ).to.not.be.reverted;
+      ).to.not.be.reverted
     });
 
     // Test 2 in https://docs.google.com/spreadsheets/d/1rmFbUxnM4gyi1xhcYKBwcdadvXrHBPKbeX7DLk8KQgE/edit?usp=sharing
@@ -821,7 +818,7 @@ describe('SapphireCore.liquidate()', () => {
           undefined,
           signers.liquidator,
         ),
-      ).to.be.revertedWith('SapphireCoreV1: vault is collateralized');
+      ).to.be.revertedWith('SapphirePassportScores: invalid proof');
     });
 
     it('reverts if proof is not for the correct protocol', async () => {

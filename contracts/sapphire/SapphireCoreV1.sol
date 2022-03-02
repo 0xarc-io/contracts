@@ -1440,14 +1440,13 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
                     "SapphireCoreV1: proof.account does not match the user to liquidate"
                 );
 
-                mandatoryProof = true;
                 needsCollateralPrice = true;
 
                 // If the effective passport epoch of the user to liquidate is gte to the
                 // current epoch, then the proof is mandatory. Otherwise, will assume the
                 // high c-ratio
                 (, uint256 currentEpoch) = _getPassportAndEpoch();
-                if (effectiveEpoch[action.userToLiquidate] >= currentEpoch) {
+                if (currentEpoch >= effectiveEpoch[action.userToLiquidate]) {
                     mandatoryProof = true;
                 }
 
