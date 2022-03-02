@@ -153,6 +153,12 @@ contract SapphireCoreStorageV1 {
      */
     uint256 public defaultBorrowLimit;
 
+    /**
+     * @notice Stores the epoch (of the vault owner) at which it becomes required 
+     * for the liquidator to include the score proof of the vault owner
+     */
+    mapping (address => uint256) public effectiveEpoch;
+
     /* ========== Internal Variables ========== */
 
     /**

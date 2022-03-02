@@ -142,7 +142,10 @@ describe('SapphireCore.deposit()', () => {
     const currentEpoch = await ctx.contracts.sapphire.passportScores.currentEpoch();
     await arc.deposit(
       COLLATERAL_AMOUNT,
-      getEmptyScoreProof(),
+      getEmptyScoreProof(
+        scoredMinter.address,
+        utils.formatBytes32String('arcx.credit'),
+      ),
       undefined,
       scoredMinter,
     );
