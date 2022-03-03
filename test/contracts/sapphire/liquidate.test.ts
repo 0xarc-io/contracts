@@ -73,9 +73,9 @@ describe('SapphireCore.liquidate()', () => {
       .assess(LOW_C_RATIO, HIGH_C_RATIO, scoreProof, false);
 
     return COLLATERAL_AMOUNT.mul(DEFAULT_COLLATERAL_PRECISION_SCALAR)
-      .div(DEFAULT_STABLE_COIN_PRECISION_SCALAR)
       .mul(BASE)
-      .div(minterCRatio);
+      .div(minterCRatio)
+      .div(DEFAULT_STABLE_COIN_PRECISION_SCALAR);
   }
 
   /**
@@ -335,7 +335,7 @@ describe('SapphireCore.liquidate()', () => {
       await arc.updatePrice(COLLATERAL_PRICE.sub(utils.parseEther('0.01')));
 
       expect(
-        await arc.core().effectiveEpoch(signers.scoredMinter.address),
+        await arc.core().expectedEpochForProof(signers.scoredMinter.address),
       ).to.eq(await ctx.contracts.sapphire.passportScores.currentEpoch());
       await expect(
         arc.liquidate(
@@ -355,7 +355,7 @@ describe('SapphireCore.liquidate()', () => {
       await arc.updatePrice(COLLATERAL_PRICE.sub(utils.parseEther('0.01')));
 
       expect(
-        await arc.core().effectiveEpoch(signers.scoredMinter.address),
+        await arc.core().expectedEpochForProof(signers.scoredMinter.address),
       ).to.eq(
         (await ctx.contracts.sapphire.passportScores.currentEpoch()).add(2),
       );
@@ -368,7 +368,7 @@ describe('SapphireCore.liquidate()', () => {
           undefined,
           signers.liquidator,
         ),
-      ).to.not.be.reverted
+      ).to.not.be.reverted;
     });
 
     // Test 2 in https://docs.google.com/spreadsheets/d/1rmFbUxnM4gyi1xhcYKBwcdadvXrHBPKbeX7DLk8KQgE/edit?usp=sharing
@@ -809,6 +809,49 @@ describe('SapphireCore.liquidate()', () => {
       await setupBaseVault(undefined, undefined, undefined, minterScoreProof);
 
       await arc.updatePrice(COLLATERAL_PRICE.div(2));
+
+      const currentEpoch = await ctx.contracts.sapphire.passportScores.currentEpoch();
+      expect(
+        await arc.core().expectedEpochForProof(signers.scoredMinter.address),
+      ).to.eq(currentEpoch);
+
+      await expect(
+        arc.liquidate(
+          signers.scoredMinter.address,
+          stablecoin.address,
+          undefined,
+          undefined,
+          signers.liquidator,
+        ),
+      ).to.be.revertedWith('SapphirePassportScores: invalid proof');
+    });
+
+    it('reverts if user deposits without a proof, then borrows with proof and someone tries to liquidate him without proof', async () => {
+      // Borrow without proof
+      await setupBaseVault(COLLATERAL_AMOUNT, BigNumber.from(0));
+
+      const currentEpoch = await ctx.contracts.sapphire.passportScores.currentEpoch();
+      expect(
+        await arc.core().expectedEpochForProof(signers.scoredMinter.address),
+      ).to.eq(currentEpoch.add(2));
+
+      // Here, maxBorrowAmount is the max borrow amount without a proof. But since the user
+      // passed a proof, he should be immune from liquidations if the prices changes by $0.01
+      const maxBorrowAmount = await getMaxBorrowAmount();
+      await arc.borrow(
+        maxBorrowAmount,
+        stablecoin.address,
+        getScoreProof(minterCreditScore, creditScoreTree),
+        getScoreProof(minterBorrowLimitScore, creditScoreTree),
+        undefined,
+        signers.scoredMinter,
+      );
+
+      expect(
+        await arc.core().expectedEpochForProof(signers.scoredMinter.address),
+      ).to.eq(currentEpoch);
+
+      await arc.updatePrice(COLLATERAL_PRICE.sub(utils.parseEther('0.01')));
 
       await expect(
         arc.liquidate(
