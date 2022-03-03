@@ -155,9 +155,9 @@ contract SapphireCoreStorageV1 {
 
     /**
      * @notice Stores the epoch (of the vault owner) at which it becomes required 
-     * for the liquidator to include the score proof of the vault owner
+     * for the liquidator to include their score proof
      */
-    mapping (address => uint256) public effectiveEpoch;
+    mapping (address => uint256) public expectedEpochForProof;
 
     /* ========== Internal Variables ========== */
 

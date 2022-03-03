@@ -18,7 +18,6 @@ import {SapphireAssessor} from "./SapphireAssessor.sol";
 import {ISapphireAssessor} from "./ISapphireAssessor.sol";
 import {ISapphirePool} from "./SapphirePool/ISapphirePool.sol";
 import {ISapphirePassportScores} from "./ISapphirePassportScores.sol";
-import {PassportScoreVerifiable} from "../lib/PassportScoreVerifiable.sol";
 
 contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
@@ -721,7 +720,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             SapphireTypes.Action memory action = _actions[i];
 
             if (action.operation == SapphireTypes.Operation.Deposit) {
-                _deposit(action.amount, _passportProofs[0]);
+                _deposit(action.amount);
 
             } else if (action.operation == SapphireTypes.Operation.Withdraw){
                 _withdraw(action.amount, assessedCRatio, currentPrice);
@@ -916,14 +915,10 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      * @dev Deposits the collateral amount in the user's vault
      */
     function _deposit(
-        uint256 _amount,
-        SapphireTypes.ScoreProof memory _scoreProof
+        uint256 _amount
     )
         private
     {
-        // Set the effective epoch of the caller if it's not set yet
-        _setEffectiveEpoch(_scoreProof);
-        
         // Record deposit
         SapphireTypes.Vault storage vault = vaults[msg.sender];
 
@@ -1446,7 +1441,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
                 // current epoch, then the proof is mandatory. Otherwise, will assume the
                 // high c-ratio
                 (, uint256 currentEpoch) = _getPassportAndEpoch();
-                if (currentEpoch >= effectiveEpoch[action.userToLiquidate]) {
+                if (currentEpoch >= expectedEpochForProof[action.userToLiquidate]) {
                     mandatoryProof = true;
                 }
 
@@ -1479,6 +1474,9 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
                 "SapphireCoreV1: the oracle returned a price of 0"
             );
         }
+
+        // Set the effective epoch of the caller if it's not set yet
+        _setEffectiveEpoch(_scoreProof);
 
         if (address(assessor) == address(0) || _actions.length == 0) {
             assessedCRatio = highCollateralRatio;
@@ -1569,20 +1567,30 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     )
         private
     {
-        if (effectiveEpoch[msg.sender] == 0) {
-            (
-                ISapphirePassportScores passportScores,
-                uint256 currentEpoch
-            ) = _getPassportAndEpoch();
+        (
+            ISapphirePassportScores passportScores,
+            uint256 currentEpoch
+        ) = _getPassportAndEpoch();
+        
+        if (_scoreProof.merkleProof.length == 0) {
+            // Proof is not passed. If the proof's owner has no expected epoch, set it to the next 2
+            if (expectedEpochForProof[_scoreProof.account] == 0) {
+                expectedEpochForProof[_scoreProof.account] = currentEpoch + 2;
+            }
+        } else {
+            // Proof is passed, expected epoch for proof's account is not set yet
+            require(
+                passportScores.verify(_scoreProof),
+                "SapphireCoreV1: invalid proof"
+            );
 
-            try passportScores.verify(_scoreProof) returns (bool isValid) {
-                if (isValid) {
-                    effectiveEpoch[msg.sender] = currentEpoch;
-                } else {
-                    effectiveEpoch[msg.sender] = currentEpoch + 2;
-                }
-            } catch {
-                effectiveEpoch[msg.sender] = currentEpoch + 2;
+            if (
+                expectedEpochForProof[_scoreProof.account] == 0 ||
+                expectedEpochForProof[_scoreProof.account] > currentEpoch
+            ) {
+                // Owner has a valid proof, so will enforce liquidations to pass a proof for this 
+                // user from now on
+                expectedEpochForProof[_scoreProof.account] = currentEpoch;
             }
         }
     }
@@ -1592,8 +1600,10 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         view
         returns (ISapphirePassportScores, uint256)
     {
-        ISapphirePassportScores passportScores = PassportScoreVerifiable(address(assessor))
-            .passportScoresContract();
+        ISapphirePassportScores passportScores = ISapphirePassportScores(
+            ISapphireAssessor(address(assessor))
+                .getPassportScoresContract()
+        );
 
         return (passportScores, passportScores.currentEpoch());
     }
