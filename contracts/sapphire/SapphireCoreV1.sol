@@ -1421,13 +1421,22 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             * Ensure the credit score proof refers to the correct account given
             * the action.
             */
-            if (action.operation == SapphireTypes.Operation.Borrow) {
+            if (
+                action.operation == SapphireTypes.Operation.Deposit ||
+                action.operation == SapphireTypes.Operation.Withdraw ||
+                action.operation == SapphireTypes.Operation.Borrow
+            ) {
                 require(
                     _scoreProof.account == msg.sender,
                     "SapphireCoreV1: proof.account must match msg.sender"
                 );
-                
-                needsCollateralPrice = true;
+
+                if (
+                    action.operation == SapphireTypes.Operation.Borrow ||
+                    action.operation == SapphireTypes.Operation.Withdraw
+                ) {
+                    needsCollateralPrice = true;
+                }
 
             } else if (action.operation == SapphireTypes.Operation.Liquidate) {
                require(
@@ -1445,13 +1454,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
                     mandatoryProof = true;
                 }
 
-            } else if (action.operation == SapphireTypes.Operation.Withdraw) {
-                require(
-                    _scoreProof.account == msg.sender,
-                    "SapphireCoreV1: proof.account must match msg.sender"
-                );
-
-                needsCollateralPrice = true;
             }
         }
 
