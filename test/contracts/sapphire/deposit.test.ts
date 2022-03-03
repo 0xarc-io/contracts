@@ -137,7 +137,9 @@ describe('SapphireCore.deposit()', () => {
   });
 
   it('sets the effective epoch of the sender to epoch + 2 if NO proof was passed', async () => {
-    expect(await arc.core().effectiveEpoch(scoredMinter.address)).to.eq(0);
+    expect(await arc.core().expectedEpochForProof(scoredMinter.address)).to.eq(
+      0,
+    );
 
     const currentEpoch = await ctx.contracts.sapphire.passportScores.currentEpoch();
     await arc.deposit(
@@ -150,20 +152,43 @@ describe('SapphireCore.deposit()', () => {
       scoredMinter,
     );
 
-    expect(await arc.core().effectiveEpoch(scoredMinter.address)).to.eq(
+    expect(await arc.core().expectedEpochForProof(scoredMinter.address)).to.eq(
       currentEpoch.add(2),
     );
   });
 
   it('sets the effective epoch of the sender to the current epoch if a proof was passed', async () => {
-    expect(await arc.core().effectiveEpoch(scoredMinter.address)).to.eq(0);
+    expect(await arc.core().expectedEpochForProof(scoredMinter.address)).to.eq(
+      0,
+    );
 
     const scoreProof = getScoreProof(creditScore1, creditScoreTree);
     const currentEpoch = await ctx.contracts.sapphire.passportScores.currentEpoch();
     await arc.deposit(COLLATERAL_AMOUNT, scoreProof, undefined, scoredMinter);
 
-    expect(await arc.core().effectiveEpoch(scoredMinter.address)).to.eq(
+    expect(await arc.core().expectedEpochForProof(scoredMinter.address)).to.eq(
       currentEpoch,
     );
+  });
+
+  it("reverts if proof is not the caller's", async () => {
+    await collateral.mintShare(
+      ctx.signers.interestSetter.address,
+      COLLATERAL_AMOUNT,
+    );
+    await collateral.approveOnBehalf(
+      ctx.signers.interestSetter.address,
+      arc.coreAddress(),
+      COLLATERAL_AMOUNT,
+    );
+
+    await expect(
+      arc.deposit(
+        COLLATERAL_AMOUNT,
+        getScoreProof(creditScore1, creditScoreTree),
+        undefined,
+        ctx.signers.interestSetter,
+      ),
+    ).to.be.revertedWith('SapphireCoreV1: proof.account must match msg.sender');
   });
 });
