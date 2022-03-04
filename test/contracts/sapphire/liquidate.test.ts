@@ -335,7 +335,7 @@ describe('SapphireCore.liquidate()', () => {
       await arc.updatePrice(COLLATERAL_PRICE.sub(utils.parseEther('0.01')));
 
       expect(
-        await arc.core().expectedEpochForProof(signers.scoredMinter.address),
+        await arc.core().expectedEpochWithProof(signers.scoredMinter.address),
       ).to.eq(await ctx.contracts.sapphire.passportScores.currentEpoch());
       await expect(
         arc.liquidate(
@@ -355,7 +355,7 @@ describe('SapphireCore.liquidate()', () => {
       await arc.updatePrice(COLLATERAL_PRICE.sub(utils.parseEther('0.01')));
 
       expect(
-        await arc.core().expectedEpochForProof(signers.scoredMinter.address),
+        await arc.core().expectedEpochWithProof(signers.scoredMinter.address),
       ).to.eq(
         (await ctx.contracts.sapphire.passportScores.currentEpoch()).add(2),
       );
@@ -812,7 +812,7 @@ describe('SapphireCore.liquidate()', () => {
 
       const currentEpoch = await ctx.contracts.sapphire.passportScores.currentEpoch();
       expect(
-        await arc.core().expectedEpochForProof(signers.scoredMinter.address),
+        await arc.core().expectedEpochWithProof(signers.scoredMinter.address),
       ).to.eq(currentEpoch);
 
       await expect(
@@ -832,7 +832,7 @@ describe('SapphireCore.liquidate()', () => {
 
       const currentEpoch = await ctx.contracts.sapphire.passportScores.currentEpoch();
       expect(
-        await arc.core().expectedEpochForProof(signers.scoredMinter.address),
+        await arc.core().expectedEpochWithProof(signers.scoredMinter.address),
       ).to.eq(currentEpoch.add(2));
 
       // Here, maxBorrowAmount is the max borrow amount without a proof. But since the user
@@ -848,7 +848,7 @@ describe('SapphireCore.liquidate()', () => {
       );
 
       expect(
-        await arc.core().expectedEpochForProof(signers.scoredMinter.address),
+        await arc.core().expectedEpochWithProof(signers.scoredMinter.address),
       ).to.eq(currentEpoch);
 
       await arc.updatePrice(COLLATERAL_PRICE.sub(utils.parseEther('0.01')));
