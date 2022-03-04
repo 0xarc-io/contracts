@@ -1,7 +1,7 @@
 import {
   ArcProxyFactory,
   CredsERC20Factory,
-  MockOracleFactory,
+  MockSapphireOracleFactory,
   SapphireAssessorFactory,
   SapphireCoreV1,
   SapphireCoreV1Factory,
@@ -604,7 +604,7 @@ async function _deployOracle(
       {
         name: 'Oracle',
         source: 'MockOracle',
-        data: new MockOracleFactory(signer).getDeployTransaction(),
+        data: new MockSapphireOracleFactory(signer).getDeployTransaction(),
         version: 1,
         type: DeploymentType.global,
       },
