@@ -1450,7 +1450,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
                 // current epoch, then the proof is mandatory. Otherwise, will assume the
                 // high c-ratio
                 (, uint256 currentEpoch) = _getPassportAndEpoch();
-                if (currentEpoch >= expectedEpochForProof[action.userToLiquidate]) {
+                if (currentEpoch >= expectedEpochWithProof[action.userToLiquidate]) {
                     mandatoryProof = true;
                 }
 
@@ -1576,8 +1576,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         
         if (_scoreProof.merkleProof.length == 0) {
             // Proof is not passed. If the proof's owner has no expected epoch, set it to the next 2
-            if (expectedEpochForProof[_scoreProof.account] == 0) {
-                expectedEpochForProof[_scoreProof.account] = currentEpoch + 2;
+            if (expectedEpochWithProof[_scoreProof.account] == 0) {
+                expectedEpochWithProof[_scoreProof.account] = currentEpoch + 2;
             }
         } else {
             // Proof is passed, expected epoch for proof's account is not set yet
@@ -1587,12 +1587,12 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             );
 
             if (
-                expectedEpochForProof[_scoreProof.account] == 0 ||
-                expectedEpochForProof[_scoreProof.account] > currentEpoch
+                expectedEpochWithProof[_scoreProof.account] == 0 ||
+                expectedEpochWithProof[_scoreProof.account] > currentEpoch
             ) {
                 // Owner has a valid proof, so will enforce liquidations to pass a proof for this 
                 // user from now on
-                expectedEpochForProof[_scoreProof.account] = currentEpoch;
+                expectedEpochWithProof[_scoreProof.account] = currentEpoch;
             }
         }
     }
@@ -1603,8 +1603,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         returns (ISapphirePassportScores, uint256)
     {
         ISapphirePassportScores passportScores = ISapphirePassportScores(
-            ISapphireAssessor(address(assessor))
-                .getPassportScoresContract()
+            assessor.getPassportScoresContract()
         );
 
         return (passportScores, passportScores.currentEpoch());
