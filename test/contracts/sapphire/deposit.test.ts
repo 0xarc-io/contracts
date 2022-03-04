@@ -137,7 +137,7 @@ describe('SapphireCore.deposit()', () => {
   });
 
   it('sets the effective epoch of the sender to epoch + 2 if NO proof was passed', async () => {
-    expect(await arc.core().expectedEpochForProof(scoredMinter.address)).to.eq(
+    expect(await arc.core().expectedEpochWithProof(scoredMinter.address)).to.eq(
       0,
     );
 
@@ -152,13 +152,13 @@ describe('SapphireCore.deposit()', () => {
       scoredMinter,
     );
 
-    expect(await arc.core().expectedEpochForProof(scoredMinter.address)).to.eq(
+    expect(await arc.core().expectedEpochWithProof(scoredMinter.address)).to.eq(
       currentEpoch.add(2),
     );
   });
 
   it('sets the effective epoch of the sender to the current epoch if a proof was passed', async () => {
-    expect(await arc.core().expectedEpochForProof(scoredMinter.address)).to.eq(
+    expect(await arc.core().expectedEpochWithProof(scoredMinter.address)).to.eq(
       0,
     );
 
@@ -166,7 +166,7 @@ describe('SapphireCore.deposit()', () => {
     const currentEpoch = await ctx.contracts.sapphire.passportScores.currentEpoch();
     await arc.deposit(COLLATERAL_AMOUNT, scoreProof, undefined, scoredMinter);
 
-    expect(await arc.core().expectedEpochForProof(scoredMinter.address)).to.eq(
+    expect(await arc.core().expectedEpochWithProof(scoredMinter.address)).to.eq(
       currentEpoch,
     );
   });
