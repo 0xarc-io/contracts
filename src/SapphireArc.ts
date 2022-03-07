@@ -234,12 +234,13 @@ export class SapphireArc {
   ): Promise<Vault> {
     const core = this._getCore(coreName, caller);
 
-    await core.executeActions(
+    const {wait} = await core.executeActions(
       actions,
       [passportScoreProof, passportBorrowLimitProof],
       overrides,
     );
 
+    await wait()
     const vault = await this.getVault(await caller.getAddress());
 
     return vault;
