@@ -3,7 +3,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { PassportScoreTree } from '@src/MerkleTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { TestToken, TestTokenFactory } from '@src/typings';
-import { getScoreProof } from '@src/utils/getScoreProof';
+import { getScoreProof, getEmptyScoreProof } from '@src/utils/getScoreProof';
 import { DEFAULT_COLLATERAL_DECIMALS } from '@test/helpers/sapphireDefaults';
 import { CREDIT_PROOF_PROTOCOL } from '@src/constants';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
@@ -134,5 +134,61 @@ describe('SapphireCore.deposit()', () => {
         0,
         0,
       );
+  });
+
+  it('sets the effective epoch of the sender to epoch + 2 if NO proof was passed', async () => {
+    expect(await arc.core().expectedEpochWithProof(scoredMinter.address)).to.eq(
+      0,
+    );
+
+    const currentEpoch = await ctx.contracts.sapphire.passportScores.currentEpoch();
+    await arc.deposit(
+      COLLATERAL_AMOUNT,
+      getEmptyScoreProof(
+        scoredMinter.address,
+        utils.formatBytes32String('arcx.credit'),
+      ),
+      undefined,
+      scoredMinter,
+    );
+
+    expect(await arc.core().expectedEpochWithProof(scoredMinter.address)).to.eq(
+      currentEpoch.add(2),
+    );
+  });
+
+  it('sets the effective epoch of the sender to the current epoch if a proof was passed', async () => {
+    expect(await arc.core().expectedEpochWithProof(scoredMinter.address)).to.eq(
+      0,
+    );
+
+    const scoreProof = getScoreProof(creditScore1, creditScoreTree);
+    const currentEpoch = await ctx.contracts.sapphire.passportScores.currentEpoch();
+    await arc.deposit(COLLATERAL_AMOUNT, scoreProof, undefined, scoredMinter);
+
+    expect(await arc.core().expectedEpochWithProof(scoredMinter.address)).to.eq(
+      currentEpoch,
+    );
+  });
+
+  it("reverts if proof is not the caller's", async () => {
+    await collateral.mintShare(
+      ctx.signers.interestSetter.address,
+      COLLATERAL_AMOUNT,
+    );
+    await collateral.approveOnBehalf(
+      ctx.signers.interestSetter.address,
+      arc.coreAddress(),
+      COLLATERAL_AMOUNT,
+    );
+
+    await expect(
+      arc.deposit(
+        COLLATERAL_AMOUNT,
+        getScoreProof(creditScore1, creditScoreTree),
+        undefined,
+        ctx.signers.interestSetter,
+      ),
+    ).to.be.revertedWith('SapphireCoreV1: proof.account must match msg.sender');
   });
 });

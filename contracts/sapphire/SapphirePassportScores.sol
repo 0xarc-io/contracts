@@ -48,17 +48,17 @@ contract SapphirePassportScores is ISapphirePassportScores, Adminable, Initializ
     /**
      * @dev Mapping of the epoch to a merkle root and its timestamp
      */
-    mapping (uint256 => SapphireTypes.RootInfo) public rootsHistory;
+    mapping (uint256 => SapphireTypes.RootInfo) public override rootsHistory;
 
-    bool public isPaused;
+    bool public override isPaused;
 
-    uint256 public merkleRootDelayDuration;
+    uint256 public override merkleRootDelayDuration;
 
-    address public merkleRootUpdater;
+    address public override merkleRootUpdater;
 
-    address public pauseOperator;
+    address public override pauseOperator;
 
-    uint256 public currentEpoch;
+    uint256 public override currentEpoch;
 
     /* ========== Modifiers ========== */
 

@@ -49,6 +49,17 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
         setMaxScore(_maxScore);
     }
 
+    /* ========== View Functions ========== */
+
+    function getPassportScoresContract() 
+        external 
+        view
+        override
+        returns (address)
+    {
+        return address(passportScoresContract);
+    }
+    
     /* ========== Public Functions ========== */
 
     /**
