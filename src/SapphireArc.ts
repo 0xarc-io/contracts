@@ -77,7 +77,7 @@ export class SapphireArc {
 
   /**
    * Runs deposit and borrow on the given core
-   * @returns The new vault
+   * @returns The transaction
    */
   async depositAndBorrow(
     collateralAmount: BigNumber,
@@ -94,7 +94,7 @@ export class SapphireArc {
     coreName: string = this.getCoreNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
-  ): Promise<Vault> {
+  ): Promise<ContractTransaction> {
     if (collateralAmount.isZero() && borrowAmount.isZero()) {
       throw new Error('SapphireArc: collateral and borrow amounts cannot be 0');
     }
@@ -231,19 +231,14 @@ export class SapphireArc {
     coreName: string = this.getCoreNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
-  ): Promise<Vault> {
+  ): Promise<ContractTransaction> {
     const core = this._getCore(coreName, caller);
 
-    const {wait} = await core.executeActions(
+    return core.executeActions(
       actions,
       [passportScoreProof, passportBorrowLimitProof],
       overrides,
     );
-
-    await wait()
-    const vault = await this.getVault(await caller.getAddress());
-
-    return vault;
   }
 
   /* ========== Borrow functions ==========*/
