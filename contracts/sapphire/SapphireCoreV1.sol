@@ -17,6 +17,7 @@ import {SapphireCoreStorage} from "./SapphireCoreStorage.sol";
 import {SapphireAssessor} from "./SapphireAssessor.sol";
 import {ISapphireAssessor} from "./ISapphireAssessor.sol";
 import {ISapphirePool} from "./SapphirePool/ISapphirePool.sol";
+import {ISapphirePassportScores} from "./ISapphirePassportScores.sol";
 
 contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
@@ -1416,35 +1417,43 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         for (uint256 i = 0; i < _actions.length; i++) {
             SapphireTypes.Action memory action = _actions[i];
 
-            if (action.operation == SapphireTypes.Operation.Borrow ||
-                action.operation == SapphireTypes.Operation.Liquidate
-            ) {
-                if (action.operation == SapphireTypes.Operation.Liquidate) {
-                    mandatoryProof = true;
-                }
-
-                needsCollateralPrice = true;
-
-            } else if (action.operation == SapphireTypes.Operation.Withdraw) {
-                needsCollateralPrice = true;
-            }
-
             /**
             * Ensure the credit score proof refers to the correct account given
             * the action.
             */
-            if (action.operation == SapphireTypes.Operation.Borrow ||
-                action.operation == SapphireTypes.Operation.Withdraw
+            if (
+                action.operation == SapphireTypes.Operation.Deposit ||
+                action.operation == SapphireTypes.Operation.Withdraw ||
+                action.operation == SapphireTypes.Operation.Borrow
             ) {
                 require(
                     _scoreProof.account == msg.sender,
                     "SapphireCoreV1: proof.account must match msg.sender"
                 );
+
+                if (
+                    action.operation == SapphireTypes.Operation.Borrow ||
+                    action.operation == SapphireTypes.Operation.Withdraw
+                ) {
+                    needsCollateralPrice = true;
+                }
+
             } else if (action.operation == SapphireTypes.Operation.Liquidate) {
-                require(
+               require(
                     _scoreProof.account == action.userToLiquidate,
                     "SapphireCoreV1: proof.account does not match the user to liquidate"
                 );
+
+                needsCollateralPrice = true;
+
+                // If the effective passport epoch of the user to liquidate is gte to the
+                // current epoch, then the proof is mandatory. Otherwise, will assume the
+                // high c-ratio
+                (, uint256 currentEpoch) = _getPassportAndEpoch();
+                if (currentEpoch >= expectedEpochWithProof[action.userToLiquidate]) {
+                    mandatoryProof = true;
+                }
+
             }
         }
 
@@ -1467,6 +1476,9 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
                 "SapphireCoreV1: the oracle returned a price of 0"
             );
         }
+
+        // Set the effective epoch of the caller if it's not set yet
+        _setEffectiveEpoch(_scoreProof);
 
         if (address(assessor) == address(0) || _actions.length == 0) {
             assessedCRatio = highCollateralRatio;
@@ -1547,5 +1559,53 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
             precisionScalars[_tokenAddress] = 10 ** (18 - uint256(tokenDecimals));
         }
+    }
+
+    /**
+     * @dev Set the effective epoch of the caller if it's not set yet
+     */
+    function _setEffectiveEpoch(
+        SapphireTypes.ScoreProof memory _scoreProof
+    )
+        private
+    {
+        (
+            ISapphirePassportScores passportScores,
+            uint256 currentEpoch
+        ) = _getPassportAndEpoch();
+        
+        if (_scoreProof.merkleProof.length == 0) {
+            // Proof is not passed. If the proof's owner has no expected epoch, set it to the next 2
+            if (expectedEpochWithProof[_scoreProof.account] == 0) {
+                expectedEpochWithProof[_scoreProof.account] = currentEpoch + 2;
+            }
+        } else {
+            // Proof is passed, expected epoch for proof's account is not set yet
+            require(
+                passportScores.verify(_scoreProof),
+                "SapphireCoreV1: invalid proof"
+            );
+
+            if (
+                expectedEpochWithProof[_scoreProof.account] == 0 ||
+                expectedEpochWithProof[_scoreProof.account] > currentEpoch
+            ) {
+                // Owner has a valid proof, so will enforce liquidations to pass a proof for this 
+                // user from now on
+                expectedEpochWithProof[_scoreProof.account] = currentEpoch;
+            }
+        }
+    }
+
+    function _getPassportAndEpoch()
+        private
+        view
+        returns (ISapphirePassportScores, uint256)
+    {
+        ISapphirePassportScores passportScores = ISapphirePassportScores(
+            assessor.getPassportScoresContract()
+        );
+
+        return (passportScores, passportScores.currentEpoch());
     }
 }
