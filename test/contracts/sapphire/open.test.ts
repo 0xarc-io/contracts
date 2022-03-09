@@ -1,7 +1,7 @@
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import chai, { expect } from 'chai';
-import { BigNumber, constants, utils } from 'ethers';
+import { BigNumber, constants, Signer, utils } from 'ethers';
 import { solidity } from 'ethereum-waffle';
 import 'module-alias/register';
 import { generateContext, ITestContext } from '../context';
@@ -20,10 +20,15 @@ import {
 import { mintApprovedCollateral } from '@test/helpers/setupBaseVault';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { BASE } from '@src/constants';
-import { getScoreProof } from '@src/utils/getScoreProof';
-import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
+import { getEmptyScoreProof, getScoreProof } from '@src/utils/getScoreProof';
+import {
+  PassportScore,
+  PassportScoreProof,
+  Vault,
+} from '@arc-types/sapphireCore';
 import { PassportScoreTree } from '@src/MerkleTree';
 import { TestToken } from '@src/typings';
+import { TransactionOverrides } from '@arc-types/ethereum';
 
 chai.use(solidity);
 
@@ -55,6 +60,36 @@ describe('SapphireCore.depositAndBorrow()', () => {
   let minterBorrowLimitScore: PassportScore;
   let creditScoreTree: PassportScoreTree;
   let stableCoin: TestToken;
+
+  async function depositAndBorrow(
+    collateralAmount: BigNumber,
+    borrowAmount: BigNumber,
+    borrowAssetAddress: string,
+    passportScoreProof: PassportScoreProof = getEmptyScoreProof(
+      undefined,
+      utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
+    ),
+    minterBorrowLimitScore: PassportScoreProof = getEmptyScoreProof(
+      undefined,
+      utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
+    ),
+    coreName: string = arc.getCoreNames()[0],
+    caller: Signer = arc.signer,
+    overrides: TransactionOverrides = {},
+  ): Promise<Vault> {
+    await arc.depositAndBorrow(
+      collateralAmount,
+      borrowAmount,
+      borrowAssetAddress,
+      passportScoreProof,
+      minterBorrowLimitScore,
+      coreName,
+      caller,
+      overrides,
+    );
+
+    return arc.getVault(await caller.getAddress());
+  }
 
   async function init(ctx: ITestContext): Promise<void> {
     creditScore1 = {
@@ -116,7 +151,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
 
   describe('without score proof', () => {
     it('open at the exact c-ratio', async () => {
-      const vault = await arc.depositAndBorrow(
+      const vault = await depositAndBorrow(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
         stableCoin.address,
@@ -145,7 +180,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
         normalizedBorrowedAmount,
         collateralAmount,
         principal,
-      } = await arc.depositAndBorrow(
+      } = await depositAndBorrow(
         COLLATERAL_AMOUNT.mul(2),
         BORROW_AMOUNT,
         stableCoin.address,
@@ -163,7 +198,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
     it('revert if opened below the c-ratio', async () => {
       const change = utils.parseUnits('1', DEFAULT_COLLATERAL_DECIMALS);
       await expect(
-        arc.depositAndBorrow(
+        depositAndBorrow(
           COLLATERAL_AMOUNT,
           BORROW_AMOUNT.add(change),
           stableCoin.address,
@@ -177,7 +212,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
       );
 
       await expect(
-        arc.depositAndBorrow(
+        depositAndBorrow(
           COLLATERAL_AMOUNT.sub(change),
           BORROW_AMOUNT,
           stableCoin.address,
@@ -201,7 +236,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
         );
 
       await expect(
-        arc.depositAndBorrow(
+        depositAndBorrow(
           COLLATERAL_AMOUNT,
           BORROW_AMOUNT,
           stableCoin.address,
@@ -224,7 +259,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
           0,
         );
       await expect(
-        arc.depositAndBorrow(
+        depositAndBorrow(
           COLLATERAL_AMOUNT,
           BORROW_AMOUNT,
           stableCoin.address,
@@ -252,7 +287,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
         normalizedBorrowedAmount,
         collateralAmount,
         principal,
-      } = await arc.depositAndBorrow(
+      } = await depositAndBorrow(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
         stableCoin.address,
@@ -277,7 +312,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
     });
 
     it('open above the default c-ratio', async () => {
-      await arc.depositAndBorrow(
+      await depositAndBorrow(
         COLLATERAL_AMOUNT.mul(2),
         BORROW_AMOUNT,
         stableCoin.address,
@@ -298,7 +333,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
     });
 
     it('open below the default c-ratio, but above c-ratio based on credit score', async () => {
-      await arc.depositAndBorrow(
+      await depositAndBorrow(
         COLLATERAL_AMOUNT.sub(1),
         BORROW_AMOUNT,
         stableCoin.address,
@@ -326,7 +361,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
       // maxBorrow = 4/3 * defaultBorrow
       const MAX_BORROW_AMOUNT = BORROW_AMOUNT.mul(4).div(3);
 
-      await arc.depositAndBorrow(
+      await depositAndBorrow(
         COLLATERAL_AMOUNT,
         MAX_BORROW_AMOUNT,
         stableCoin.address,
@@ -352,7 +387,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
 
     it('revert if opened below c-ratio based on credit score', async () => {
       await expect(
-        arc.depositAndBorrow(
+        depositAndBorrow(
           constants.One,
           BORROW_AMOUNT,
           stableCoin.address,
@@ -375,7 +410,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
           0,
         );
       await expect(
-        arc.depositAndBorrow(
+        depositAndBorrow(
           COLLATERAL_AMOUNT,
           BORROW_AMOUNT,
           stableCoin.address,
@@ -398,7 +433,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
           0,
         );
       await expect(
-        arc.depositAndBorrow(
+        depositAndBorrow(
           COLLATERAL_AMOUNT,
           BORROW_AMOUNT,
           stableCoin.address,
