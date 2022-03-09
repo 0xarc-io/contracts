@@ -811,7 +811,10 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     {
         SapphireTypes.Vault memory vault = vaults[_owner];
 
-        if (vault.normalizedBorrowedAmount == 0) {
+        if (
+            vault.normalizedBorrowedAmount == 0 ||
+            vault.collateralAmount == 0
+        ) {
             return true;
         }
 
