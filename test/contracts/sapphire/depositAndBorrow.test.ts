@@ -1,7 +1,7 @@
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import chai, { expect } from 'chai';
-import { BigNumber, constants, utils } from 'ethers';
+import { BigNumber, constants, Signer, utils } from 'ethers';
 import { solidity } from 'ethereum-waffle';
 import 'module-alias/register';
 import { generateContext, ITestContext } from '../context';
@@ -20,15 +20,20 @@ import {
 import { mintApprovedCollateral } from '@test/helpers/setupBaseVault';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { BASE } from '@src/constants';
-import { getScoreProof } from '@src/utils/getScoreProof';
-import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
+import { getEmptyScoreProof, getScoreProof } from '@src/utils/getScoreProof';
+import {
+  PassportScore,
+  PassportScoreProof,
+  Vault,
+} from '@arc-types/sapphireCore';
 import { PassportScoreTree } from '@src/MerkleTree';
 import { TestToken } from '@src/typings';
+import { TransactionOverrides } from '@arc-types/ethereum';
 
 chai.use(solidity);
 
 /**
- * When calling open(), it's calling executeActions underneath the hood with borrow and deposit actions.
+ * When calling depositAndBorrow(), it's calling executeActions underneath the hood with borrow and deposit actions.
  * Because borrow is called first time it creates a position for sender, which is connected directly with his address.
  * The two scenarios to test here are for with a valid score proof and one without a valid score proof.
  * You only need a score proof if your address has a store proof in the CreditScore contract.
@@ -55,6 +60,36 @@ describe('SapphireCore.depositAndBorrow()', () => {
   let minterBorrowLimitScore: PassportScore;
   let creditScoreTree: PassportScoreTree;
   let stableCoin: TestToken;
+
+  async function depositAndBorrowAndGetVault(
+    collateralAmount: BigNumber,
+    borrowAmount: BigNumber,
+    borrowAssetAddress: string,
+    passportScoreProof: PassportScoreProof = getEmptyScoreProof(
+      undefined,
+      utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
+    ),
+    minterBorrowLimitScore: PassportScoreProof = getEmptyScoreProof(
+      undefined,
+      utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
+    ),
+    coreName: string = arc.getCoreNames()[0],
+    caller: Signer = arc.signer,
+    overrides: TransactionOverrides = {},
+  ): Promise<Vault> {
+    await arc.depositAndBorrow(
+      collateralAmount,
+      borrowAmount,
+      borrowAssetAddress,
+      passportScoreProof,
+      minterBorrowLimitScore,
+      coreName,
+      caller,
+      overrides,
+    );
+
+    return arc.getVault(await caller.getAddress());
+  }
 
   async function init(ctx: ITestContext): Promise<void> {
     creditScore1 = {
@@ -115,8 +150,8 @@ describe('SapphireCore.depositAndBorrow()', () => {
   addSnapshotBeforeRestoreAfterEach();
 
   describe('without score proof', () => {
-    it('open at the exact c-ratio', async () => {
-      const vault = await arc.depositAndBorrow(
+    it('depositAndBorrow at the exact c-ratio', async () => {
+      const vault = await depositAndBorrowAndGetVault(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
         stableCoin.address,
@@ -140,12 +175,12 @@ describe('SapphireCore.depositAndBorrow()', () => {
       ).eq(COLLATERAL_AMOUNT);
     });
 
-    it('open above the c-ratio', async () => {
+    it('depositAndBorrow above the c-ratio', async () => {
       const {
         normalizedBorrowedAmount,
         collateralAmount,
         principal,
-      } = await arc.depositAndBorrow(
+      } = await depositAndBorrowAndGetVault(
         COLLATERAL_AMOUNT.mul(2),
         BORROW_AMOUNT,
         stableCoin.address,
@@ -160,10 +195,10 @@ describe('SapphireCore.depositAndBorrow()', () => {
       expect(normalizedBorrowedAmount).eq(SCALED_BORROW_AMOUNT);
     });
 
-    it('revert if opened below the c-ratio', async () => {
+    it('revert if depositAndBorrowed below the c-ratio', async () => {
       const change = utils.parseUnits('1', DEFAULT_COLLATERAL_DECIMALS);
       await expect(
-        arc.depositAndBorrow(
+        depositAndBorrowAndGetVault(
           COLLATERAL_AMOUNT,
           BORROW_AMOUNT.add(change),
           stableCoin.address,
@@ -177,7 +212,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
       );
 
       await expect(
-        arc.depositAndBorrow(
+        depositAndBorrowAndGetVault(
           COLLATERAL_AMOUNT.sub(change),
           BORROW_AMOUNT,
           stableCoin.address,
@@ -191,7 +226,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
       );
     });
 
-    it('revert if opened below the minimum position amount', async () => {
+    it('revert if depositAndBorrowed below the minimum position amount', async () => {
       await arc
         .core()
         .setLimits(
@@ -201,7 +236,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
         );
 
       await expect(
-        arc.depositAndBorrow(
+        depositAndBorrowAndGetVault(
           COLLATERAL_AMOUNT,
           BORROW_AMOUNT,
           stableCoin.address,
@@ -215,7 +250,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
       );
     });
 
-    it('revert if opened above the maximum borrowed amount', async () => {
+    it('revert if depositAndBorrowed above the maximum borrowed amount', async () => {
       await arc
         .core()
         .setLimits(
@@ -224,7 +259,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
           0,
         );
       await expect(
-        arc.depositAndBorrow(
+        depositAndBorrowAndGetVault(
           COLLATERAL_AMOUNT,
           BORROW_AMOUNT,
           stableCoin.address,
@@ -247,12 +282,12 @@ describe('SapphireCore.depositAndBorrow()', () => {
       scoredMinter = ctx.signers.scoredMinter;
     });
 
-    it('open at the exact default c-ratio', async () => {
+    it('depositAndBorrow at the exact default c-ratio', async () => {
       const {
         normalizedBorrowedAmount,
         collateralAmount,
         principal,
-      } = await arc.depositAndBorrow(
+      } = await depositAndBorrowAndGetVault(
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
         stableCoin.address,
@@ -276,8 +311,8 @@ describe('SapphireCore.depositAndBorrow()', () => {
       ).eq(COLLATERAL_AMOUNT);
     });
 
-    it('open above the default c-ratio', async () => {
-      await arc.depositAndBorrow(
+    it('depositAndBorrow above the default c-ratio', async () => {
+      await depositAndBorrowAndGetVault(
         COLLATERAL_AMOUNT.mul(2),
         BORROW_AMOUNT,
         stableCoin.address,
@@ -297,8 +332,8 @@ describe('SapphireCore.depositAndBorrow()', () => {
       expect(normalizedBorrowedAmount).eq(SCALED_BORROW_AMOUNT);
     });
 
-    it('open below the default c-ratio, but above c-ratio based on credit score', async () => {
-      await arc.depositAndBorrow(
+    it('depositAndBorrow below the default c-ratio, but above c-ratio based on credit score', async () => {
+      await depositAndBorrowAndGetVault(
         COLLATERAL_AMOUNT.sub(1),
         BORROW_AMOUNT,
         stableCoin.address,
@@ -318,7 +353,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
       expect(principal).eq(SCALED_BORROW_AMOUNT);
     });
 
-    it('open at the c-ratio based on credit score', async () => {
+    it('depositAndBorrow at the c-ratio based on credit score', async () => {
       //  defaultBorrow * 2 = defaultCollateral
       // 2 => 3/2
       // maxBorrow = defaultCollateral / (3/2)
@@ -326,7 +361,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
       // maxBorrow = 4/3 * defaultBorrow
       const MAX_BORROW_AMOUNT = BORROW_AMOUNT.mul(4).div(3);
 
-      await arc.depositAndBorrow(
+      await depositAndBorrowAndGetVault(
         COLLATERAL_AMOUNT,
         MAX_BORROW_AMOUNT,
         stableCoin.address,
@@ -350,9 +385,9 @@ describe('SapphireCore.depositAndBorrow()', () => {
       );
     });
 
-    it('revert if opened below c-ratio based on credit score', async () => {
+    it('revert if depositAndBorrowed below c-ratio based on credit score', async () => {
       await expect(
-        arc.depositAndBorrow(
+        depositAndBorrowAndGetVault(
           constants.One,
           BORROW_AMOUNT,
           stableCoin.address,
@@ -366,7 +401,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
       );
     });
 
-    it('revert if opened below the minimum position amount', async () => {
+    it('revert if depositAndBorrowed below the minimum position amount', async () => {
       await arc
         .core()
         .setLimits(
@@ -375,7 +410,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
           0,
         );
       await expect(
-        arc.depositAndBorrow(
+        depositAndBorrowAndGetVault(
           COLLATERAL_AMOUNT,
           BORROW_AMOUNT,
           stableCoin.address,
@@ -389,7 +424,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
       );
     });
 
-    it('revert if opened above the maximum borrowed amount', async () => {
+    it('revert if depositAndBorrowed above the maximum borrowed amount', async () => {
       await arc
         .core()
         .setLimits(
@@ -398,7 +433,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
           0,
         );
       await expect(
-        arc.depositAndBorrow(
+        depositAndBorrowAndGetVault(
           COLLATERAL_AMOUNT,
           BORROW_AMOUNT,
           stableCoin.address,
