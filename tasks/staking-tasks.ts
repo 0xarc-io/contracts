@@ -695,21 +695,27 @@ task('deploy-kerman-rewards', 'Deploy the KermanRewards staking contract')
       signer,
     );
 
-    console.log(
-      yellow(`Calling init({
-        stakingToken: ${stakingToken},
-        rewardsToken: ${rewardsToken},
-        stakeDeadline: ${stakeDeadline},
-        sablier: ${sablier}
-      })...`),
-    );
-    await kermanRewardsProxyContract.init(
-      sablier,
-      stakingToken,
-      rewardsToken,
-      stakeDeadline,
-    );
-    console.log(green(`Init successfully called`));
+    const sablierAddr = await kermanRewardsProxyContract.sablierContract();
+    if (!sablierAddr) {
+      console.log(
+        yellow(`Calling init({
+          stakingToken: ${stakingToken},
+          rewardsToken: ${rewardsToken},
+          stakeDeadline: ${stakeDeadline},
+          sablier: ${sablier}
+        })...`),
+      );
+
+      await kermanRewardsProxyContract.init(
+        sablier,
+        stakingToken,
+        rewardsToken,
+        stakeDeadline,
+      );
+      console.log(green(`Init successfully called`));
+    } else {
+      console.log(yellow(`Not calling init since it was already called`));
+    }
 
     console.log(yellow('Verifying contracts...'));
     await verifyContract(hre, contractImplementation);
