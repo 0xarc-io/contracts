@@ -1084,15 +1084,10 @@ describe('SapphireCore.liquidate()', () => {
     });
 
     it('should not liquidate twice in a row', async () => {
-      /**
-       * Given the price does not change, there isn't a lot of time elapsed and the credit score
-       * did not drop significantly, someone should not be able to liquidate twice or more in a row
-       */
-
       await setupBaseVault();
 
-      // Price drops, setting the c-ratio to 130%
-      await arc.updatePrice(utils.parseEther('0.65'));
+      // Price drops by half, setting the c-ratio to 100%
+      await arc.updatePrice(COLLATERAL_PRICE.div(2));
 
       // Liquidate vault
       await arc.liquidate(
