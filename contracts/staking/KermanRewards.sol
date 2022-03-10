@@ -49,14 +49,14 @@ contract KermanRewards is Adminable, Initializable {
     /* ========== Restricted Functions ========== */
 
     function init(
-        address _sablierContract, 
+        address _sablierContract,
         address _stakingToken,
         address _rewardsToken,
         uint256 _stakeDeadline
     )
         external
         onlyAdmin
-        initializer 
+        initializer
     {
         require (
             _rewardsToken.isContract(),
@@ -125,7 +125,7 @@ contract KermanRewards is Adminable, Initializable {
         );
 
         sablierStartTime = startTime;
-        sablierStopTime = stopTime; 
+        sablierStopTime = stopTime;
         sablierRatePerSecond = ratePerSecond;
 
         sablierStreamId = _sablierStreamId;
@@ -194,7 +194,7 @@ contract KermanRewards is Adminable, Initializable {
         );
 
         uint256 _amount = rewardsAvailable(msg.sender);
-        
+
         require(
             _amount > 0,
             "KermanRewards: User has not rewards to claim"
@@ -233,8 +233,8 @@ contract KermanRewards is Adminable, Initializable {
             // (staked[user] / totalStaked) * sablierRatePerSecond * claimDuration
             return staked[_user] *
                 sablierRatePerSecond *
-                claimDuration / totalStaked
-                - claimed[_user];
+                claimDuration / totalStaked -
+                claimed[_user];
         } else {
             return 0;
         }
@@ -250,7 +250,7 @@ contract KermanRewards is Adminable, Initializable {
     }
 
     /* ========== Private Functions ========== */
-    
+
     /** @dev Creates `amount` tokens and assigns them to `account`, increasing
      * the total supply.
      */
