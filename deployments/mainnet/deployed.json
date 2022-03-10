@@ -827,5 +827,25 @@
     "version": 1,
     "type": "global",
     "group": "DefiPassport"
+  },
+  {
+    "name": "KermanRewards",
+    "source": "KermanRewards",
+    "address": "0x0C8C14e90eFFf5a106924D5e77946a7A15B7D435",
+    "txn": "0x52f3eae4eb616a71fdd26f3e8f6871eb6494f998631ff4f6a3d52afe97a07dbf",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global",
+    "group": "KermanRewards"
+  },
+  {
+    "name": "KermanRewardsProxy",
+    "source": "ArcProxy",
+    "address": "0x91b1FC48eb9e98D57d7d567391805c1459E2bF6F",
+    "txn": "0x7551ae2d1178e7278a9bb9abc0974bdd9de984f31a660f3e1cc0720999eb1664",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global",
+    "group": "KermanRewards"
   }
 ]
