@@ -1,6 +1,5 @@
 import {
   ArcProxyFactory,
-  CredsERC20Factory,
   MockSapphireOracleFactory,
   SapphireAssessorFactory,
   SapphireCoreV1,
@@ -10,7 +9,7 @@ import {
   SapphirePoolFactory,
   TestTokenFactory,
 } from '@src/typings';
-import { green, magenta, red, yellow } from 'chalk';
+import { green, red, yellow } from 'chalk';
 import {
   deployContract,
   loadCollateralConfig,
@@ -32,80 +31,6 @@ import {
   NetworkParams,
 } from '../deployments/types';
 import { TransactionRequest } from '@ethersproject/providers';
-
-task('deploy-creds', 'Deploy the CredsERC20 token')
-  .addParam('name', 'The name of the token')
-  .addParam('symbol', 'The symbol of the token')
-  .setAction(async (taskArgs, hre) => {
-    const name = taskArgs.name;
-    const symbol = taskArgs.symbol;
-
-    const { network, signer, networkConfig } = await loadDetails(hre);
-
-    await pruneDeployments(network, signer.provider);
-
-    // Deploy implementation
-
-    const credsAddress = await deployContract(
-      {
-        name: 'CredsERC20',
-        source: 'CredsERC20',
-        data: new CredsERC20Factory(signer).getDeployTransaction(),
-        version: 2,
-        type: DeploymentType.borrowing,
-        group: symbol,
-      },
-      networkConfig,
-    );
-
-    if (!credsAddress) {
-      throw red(`${name} has not been deployed!`);
-    }
-
-    await verifyContract(hre, credsAddress);
-
-    // Deploy proxy
-    const credsProxyAddress = await deployContract(
-      {
-        name: 'CredsERC20',
-        source: 'ArcProxy',
-        data: new ArcProxyFactory(signer).getDeployTransaction(
-          credsAddress,
-          signer.address,
-          [],
-        ),
-        version: 2,
-        type: DeploymentType.borrowing,
-        group: symbol,
-      },
-      networkConfig,
-    );
-
-    await verifyContract(
-      hre,
-      credsProxyAddress,
-      credsAddress,
-      signer.address,
-      [],
-    );
-
-    const creds = CredsERC20Factory.connect(credsProxyAddress, signer);
-
-    // Call init()
-    const credsName = await creds.name();
-    if (credsName.length > 0) {
-      console.log(magenta(`Creds init() function has already been called\n`));
-      return;
-    }
-
-    console.log(yellow(`Calling init() ...\n`));
-    try {
-      await creds.init(name, symbol);
-      console.log(green(`init() called successfully!\n`));
-    } catch (e) {
-      console.log(red(`Failed to call creds init().\nReason: ${e}\n`));
-    }
-  });
 
 task(
   'deploy-passport-scores',
@@ -387,7 +312,6 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
     }).address;
 
     const core = SapphireCoreV1Factory.connect(coreProxyAddress, signer);
-    const creds = CredsERC20Factory.connect(credsProxyAddress, signer);
 
     const ultimateOwner = getUltimateOwner(signer, networkDetails);
 
@@ -468,14 +392,6 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
       console.log(yellow(`Limits successfully set!\n`));
     }
 
-    // Add minter to Creds
-    if (!(await creds.isValidMinter(core.address))) {
-      console.log(yellow(`Adding minter to Creds...\n`));
-      // We already enforce limits at the Creds level.
-      await creds.addMinter(core.address, collatConfig.mintLimit);
-      console.log(green(`Minter successfully added to creds\n`));
-    }
-
     if (collatConfig.interestSettings.interestRate) {
       console.log(
         yellow(
@@ -495,12 +411,6 @@ task('deploy-borrow-pool')
     const { name, symbol } = taskArgs;
 
     await pruneDeployments(network, signer.provider);
-
-    const credsAddress = loadContract({
-      network,
-      name: 'CredsERC20',
-      source: 'ArcProxy',
-    }).address;
 
     const sapphirePoolImpl = await deployContract(
       {
@@ -535,12 +445,10 @@ task('deploy-borrow-pool')
     console.log({
       name,
       symbol,
-      credsAddress,
     });
     await SapphirePoolFactory.connect(sapphirePoolProxy, signer).init(
       name,
       symbol,
-      credsAddress,
     );
   });
 
