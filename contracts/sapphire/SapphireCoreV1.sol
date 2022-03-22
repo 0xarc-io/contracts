@@ -152,7 +152,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      *      Make sure this is true before calling this function.
      *
      * @param _collateralAddress    The address of the collateral to be used
-     * @param _syntheticAddress     The address of the synthetic token proxy
      * @param _oracleAddress        The address of the IOracle conforming contract
      * @param _interestSetter       The address which can update interest rates
      * @param _pauseOperator        The address which can pause the contract
@@ -164,7 +163,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      */
     function init(
         address _collateralAddress,
-        address _syntheticAddress,
         address _oracleAddress,
         address _interestSetter,
         address _pauseOperator,
@@ -187,22 +185,10 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             "SapphireCoreV1: collateral is required"
         );
 
-        require(
-            _syntheticAddress != address(0),
-            "SapphireCoreV1: synthetic is required"
-        );
-
-        require(
-            _collateralAddress.isContract() &&
-            _syntheticAddress.isContract(),
-            "SapphireCoreV1: collateral, synthetic or borrow pool are not contracts"
-        );
-
         paused          = true;
         borrowIndex     = BASE;
         indexLastUpdate = currentTimestamp();
         collateralAsset = _collateralAddress;
-        syntheticAsset  = _syntheticAddress;
         interestSetter  = _interestSetter;
         pauseOperator   = _pauseOperator;
         feeCollector    = _feeCollector;
@@ -1087,12 +1073,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             "SapphireCoreV1: borrowed amount cannot be less than limit"
         );
 
-        SafeERC20.safeApprove(
-            IERC20Metadata(syntheticAsset),
-            borrowPool,
-            scaledAmount
-        );
-
         // Borrow stablecoins from pool
         ISapphirePool(borrowPool).borrowStables(
             _borrowAssetAddress,
@@ -1111,7 +1091,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     }
 
     /**
-     * @dev Repays the given `_amount` of the synthetic back
+     * @dev Repays the given `_amount` of the stablecoin
      *
      * @param _owner The owner of the vault
      * @param _repayer The person who repays the debt
