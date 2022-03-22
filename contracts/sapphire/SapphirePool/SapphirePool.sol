@@ -437,7 +437,7 @@ contract SapphirePool is Adminable, InitializableBaseERC20, ISapphirePool, Sapph
             );
         }
 
-        result += creds;
+        result += stablesLent;
 
         return result;
     }
@@ -532,7 +532,7 @@ contract SapphirePool is Adminable, InitializableBaseERC20, ISapphirePool, Sapph
 
         // Increase core utilization
         utilization.amountUsed += _scaledBorrowAmount;
-        creds += _scaledBorrowAmount;
+        stablesLent += _scaledBorrowAmount;
 
         SafeERC20.safeTransfer(
             IERC20Metadata(_borrowTokenAddress),
@@ -565,7 +565,7 @@ contract SapphirePool is Adminable, InitializableBaseERC20, ISapphirePool, Sapph
         SharedPoolStructs.AssetUtilization storage utilization = _coreSwapUtilization[msg.sender];
 
         utilization.amountUsed -= credsDecreaseAmt;
-        creds -= credsDecreaseAmt;
+        stablesLent -= credsDecreaseAmt;
 
         SafeERC20.safeTransferFrom(
             IERC20Metadata(_repayTokenAddress),
