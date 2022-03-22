@@ -23,7 +23,6 @@ import {
   SapphireCoreV1,
   SapphireCoreV1Factory,
   SapphirePoolFactory,
-  SyntheticTokenV2Factory,
 } from './typings';
 import { IOracleFactory } from './typings/IOracleFactory';
 import { getEmptyScoreProof } from './utils/getScoreProof';
@@ -48,10 +47,6 @@ export class SapphireArc {
         oracle: IOracleFactory.connect(await core.oracle(), this.signer),
         collateral: BaseERC20Factory.connect(
           await core.collateralAsset(),
-          this.signer,
-        ),
-        synthetic: SyntheticTokenV2Factory.connect(
-          await core.syntheticAsset(),
           this.signer,
         ),
         pool: SapphirePoolFactory.connect(await core.borrowPool(), this.signer),

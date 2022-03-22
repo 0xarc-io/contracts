@@ -3,14 +3,12 @@ import {
   MockSapphireCoreV1Factory,
   SapphireAssessorFactory,
   SapphireMapperLinearFactory,
-  SyntheticTokenV2Factory,
 } from '@src/typings';
 
 import {
   deployArcProxy,
   deployTestToken,
   deployMockSapphireCoreV1,
-  deploySyntheticTokenV2,
   deployMockSapphireOracle,
   deployMockSapphirePassportScores,
   deploySapphirePool,
@@ -67,24 +65,8 @@ export async function sapphireFixture(
     [],
   );
 
-  const synthImp = await deploySyntheticTokenV2(deployer, 'STABLExV2', '1');
-  const syntheticProxy = await deployArcProxy(
-    deployer,
-    synthImp.address,
-    deployerAddress,
-    [],
-  );
-  const tokenV2 = SyntheticTokenV2Factory.connect(
-    syntheticProxy.address,
-    deployer,
-  );
-
   ctx.contracts.sapphire.pool = await deploySapphirePool(deployer);
-  await ctx.contracts.sapphire.pool.init('Creds', 'CR', syntheticProxy.address);
-
-  await tokenV2.init('STABLExV2', 'STABLExV2', '1');
-
-  ctx.contracts.synthetic.tokenV2 = tokenV2;
+  await ctx.contracts.sapphire.pool.init('Creds', 'CR');
 
   ctx.contracts.sapphire.linearMapper = await new SapphireMapperLinearFactory(
     deployer,
@@ -132,11 +114,6 @@ export async function sapphireFixture(
   await ctx.contracts.sapphire.core.setBorrowPool(
     ctx.contracts.sapphire.pool.address,
   );
-
-  await tokenV2.addMinter(ctx.contracts.sapphire.core.address, MAX_UINT256);
-
-  // Add admin minter
-  await tokenV2.addMinter(ctx.signers.admin.address, MAX_UINT256);
 
   await ctx.contracts.sapphire.core
     .connect(ctx.signers.pauseOperator)

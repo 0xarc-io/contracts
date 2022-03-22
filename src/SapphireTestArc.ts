@@ -40,10 +40,6 @@ export class SapphireTestArc extends SapphireArc {
     return this.coreContracts().core;
   }
 
-  synthetic() {
-    return this.coreContracts().synthetic;
-  }
-
   pool() {
     return this.coreContracts().pool;
   }
@@ -58,9 +54,5 @@ export class SapphireTestArc extends SapphireArc {
 
   coreAddress() {
     return this.coreContracts().core.address;
-  }
-
-  syntheticAddress() {
-    return this.coreContracts().synthetic.address;
   }
 }
