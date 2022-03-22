@@ -9,9 +9,9 @@ contract SapphirePoolStorage {
     /* ========== External ========== */
     
     /**
-     * @notice Stores the total amount of stables borrowed by the cores. Stored in 18 decimals.
+     * @notice Stores the total amount of stables lent to the cores. Stored in 18 decimals.
      */
-    uint256 public creds;
+    uint256 public stablesLent;
     
     /* ========== Internal ========== */
 

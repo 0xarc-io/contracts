@@ -487,17 +487,21 @@ describe('SapphirePool', () => {
       it('repays the correct amount of requested tokens and updates the creds correctly', async () => {
         expect(await stablecoin.balanceOf(admin.address)).to.eq(0);
 
-        await pool.borrowStables(stablecoin.address, scaledDepositAmount);
+        await pool.borrowStables(
+          stablecoin.address,
+          scaledDepositAmount,
+          admin.address,
+        );
 
         expect(await stablecoin.balanceOf(admin.address)).to.eq(depositAmount);
-        expect(await pool.creds()).to.eq(scaledDepositAmount);
+        expect(await pool.stablesLent()).to.eq(scaledDepositAmount);
 
         await pool.repayStables(stablecoin.address, depositAmount.div(2));
 
         expect(await stablecoin.balanceOf(admin.address)).to.eq(
           depositAmount.div(2),
         );
-        expect(await pool.creds()).to.eq(scaledDepositAmount.div(2));
+        expect(await pool.stablesLent()).to.eq(scaledDepositAmount.div(2));
       });
 
       it('correctly repays assets that have 18 decimals', async () => {
@@ -551,7 +555,11 @@ describe('SapphirePool', () => {
         await pool.setDepositLimit(testDai.address, scaledDepositAmount);
         await testDai.mintShare(pool.address, scaledDepositAmount);
 
-        await pool.borrowStables(testDai.address, scaledDepositAmount);
+        await pool.borrowStables(
+          testDai.address,
+          scaledDepositAmount,
+          admin.address,
+        );
 
         await pool.setDepositLimit(testDai.address, 0);
 
@@ -1177,7 +1185,7 @@ describe('SapphirePool', () => {
       await pool
         .connect(core)
         .borrowStables(stablecoin.address, scaledDepositAmount, admin.address);
-      expect(await pool.creds()).to.eq(scaledDepositAmount);
+      expect(await pool.stablesLent()).to.eq(scaledDepositAmount);
       expect(await stablecoin.balanceOf(pool.address)).to.eq(
         depositAmount.mul(14),
       );
