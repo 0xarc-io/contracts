@@ -424,6 +424,23 @@ describe('SapphirePool', () => {
         utilization = await pool.coreBorrowUtilization(admin.address);
         expect(utilization.amountUsed).to.eq(scaledDepositAmount);
       });
+
+      it('emits TokensBorrowed', async () => {
+        await expect(
+          pool.borrowStables(
+            stablecoin.address,
+            scaledDepositAmount,
+            admin.address,
+          ),
+        )
+          .to.emit(pool, 'TokensBorrowed')
+          .withArgs(
+            admin.address,
+            stablecoin.address,
+            depositAmount,
+            admin.address,
+          );
+      });
     });
 
     describe('#repayStables', () => {

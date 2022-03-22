@@ -10,7 +10,6 @@ import {Adminable} from "../lib/Adminable.sol";
 import {Address} from "../lib/Address.sol";
 import {Bytes32} from "../lib/Bytes32.sol";
 import {ISapphireOracle} from "../oracle/ISapphireOracle.sol";
-import {ICredsERC20} from "./Creds/ICredsERC20.sol";
 
 import {SapphireTypes} from "./SapphireTypes.sol";
 import {SapphireCoreStorage} from "./SapphireCoreStorage.sol";
@@ -707,8 +706,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         // Update the index to calculate how much interest has accrued
         updateIndex();
 
-        uint256 credsBalance = IERC20Metadata(syntheticAsset).balanceOf(address(this));
-
         // Get the c-ratio and current price if necessary. The current price only be >0 if
         // it's required by an action
         (
@@ -734,12 +731,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             } else if (action.operation == SapphireTypes.Operation.Liquidate) {
                 _liquidate(action.userToLiquidate, currentPrice, assessedCRatio, action.borrowAssetAddress);
             }
-
-            // The creds balance shouldn't have changed between the actions
-            require(
-                credsBalance == IERC20Metadata(syntheticAsset).balanceOf(address(this)),
-                "SapphireCoreV1: the creds balance changed (forbidden)"
-            );
         }
     }
 
@@ -1096,21 +1087,14 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             "SapphireCoreV1: borrowed amount cannot be less than limit"
         );
 
-        // Mint creds tokens to core
-        ICredsERC20(syntheticAsset).mint(
-            address(this),
-            scaledAmount
-        );
-
         SafeERC20.safeApprove(
             IERC20Metadata(syntheticAsset),
             borrowPool,
             scaledAmount
         );
 
-        // Swap creds for stablecoins
-        ISapphirePool(borrowPool).swap(
-            syntheticAsset,
+        // Borrow stablecoins from pool
+        ISapphirePool(borrowPool).borrowStables(
             _borrowAssetAddress,
             scaledAmount,
             msg.sender
@@ -1228,17 +1212,10 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
                 _principalPaidScaled
             );
 
-            // Swap stables for creds
-            ISapphirePool(borrowPool).swap(
+            // Repay stables to pool
+            ISapphirePool(borrowPool).repayStables(
                 _borrowAssetAddress,
-                syntheticAsset,
-                _principalPaidScaled,
-                address(this)
-            );
-
-            // Burn the creds
-            ICredsERC20(syntheticAsset).burn(
-                _principalPaidScaled * precisionScalars[_borrowAssetAddress]
+                _principalPaidScaled
             );
         }
 
