@@ -220,9 +220,8 @@ describe('SapphireCore.borrow()', () => {
     ).eq(BORROW_AMOUNT_500_SCORE);
   });
 
-  it('mints an equivalent amount of creds that are swapped in the pool', async () => {
-    expect(await arc.synthetic().totalSupply()).eq(0);
-    expect(await arc.synthetic().balanceOf(arc.pool().address)).eq(0);
+  it('increases stablesLent in the pool of equivalent amount of what is borrowed', async () => {
+    expect(await arc.pool().stablesLent()).eq(0);
 
     await arc.borrow(
       BORROW_AMOUNT,
@@ -233,14 +232,11 @@ describe('SapphireCore.borrow()', () => {
       scoredMinter,
     );
 
-    expect(await arc.synthetic().totalSupply()).eq(SCALED_BORROW_AMOUNT);
-    expect(await arc.synthetic().balanceOf(arc.pool().address)).eq(
-      SCALED_BORROW_AMOUNT,
-    );
+    expect(await arc.pool().stablesLent()).eq(SCALED_BORROW_AMOUNT);
     expect(await stablecoin.balanceOf(scoredMinter.address)).eq(BORROW_AMOUNT);
   });
 
-  it('triggers a TokensSwapped event on the pool', async () => {
+  it('triggers a TokensBorrowed event on the pool', async () => {
     await expect(
       arc.borrow(
         BORROW_AMOUNT,
@@ -251,12 +247,10 @@ describe('SapphireCore.borrow()', () => {
         scoredMinter,
       ),
     )
-      .to.emit(arc.pool(), 'TokensSwapped')
+      .to.emit(arc.pool(), 'TokensBorrowed')
       .withArgs(
         arc.core().address,
-        arc.synthetic().address,
         stablecoin.address,
-        SCALED_BORROW_AMOUNT,
         BORROW_AMOUNT,
         scoredMinter.address,
       );
@@ -566,8 +560,10 @@ describe('SapphireCore.borrow()', () => {
     ).to.be.revertedWith('SapphirePassportScores: invalid proof');
   });
 
-  it('reverts if borrowing more than the swap limit', async () => {
-    await arc.pool().setCoreSwapLimit(arc.core().address, BORROW_AMOUNT.sub(1));
+  it('reverts if borrowing more than the borrow limit', async () => {
+    await arc
+      .pool()
+      .setCoreBorrowLimit(arc.core().address, BORROW_AMOUNT.sub(1));
 
     await expect(
       arc.borrow(
@@ -578,7 +574,7 @@ describe('SapphireCore.borrow()', () => {
         undefined,
         scoredMinter,
       ),
-    ).to.be.revertedWith('SapphirePool: core swap limit exceeded');
+    ).to.be.revertedWith('SapphirePool: core borrow limit exceeded');
   });
 
   it('reverts if trying to borrow for an unsupported stablecoin', async () => {
