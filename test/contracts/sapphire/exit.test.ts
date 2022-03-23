@@ -181,26 +181,27 @@ describe('SapphireCore.exit()', () => {
       getScoreProof(scoredMinterCreditScore, creditScoreTree),
     );
 
-    await arc
-      .synthetic()
-      .mint(signers.scoredMinter.address, SCALED_BORROW_AMOUNT);
+    await ctx.contracts.collateral.mintShare(
+      signers.scoredMinter.address,
+      SCALED_BORROW_AMOUNT,
+    );
 
     // Approve repay amount
     await approve(
       SCALED_BORROW_AMOUNT,
-      arc.synthetic().address,
+      ctx.contracts.collateral.address,
       arc.coreAddress(),
       signers.scoredMinter,
     );
 
     await expect(
       arc.exit(
-        arc.synthetic().address,
+        ctx.contracts.collateral.address,
         undefined,
         undefined,
         signers.scoredMinter,
       ),
-    ).to.be.revertedWith('SapphirePool: invalid swap tokens');
+    ).to.be.revertedWith('SapphirePool: unknown token');
   });
 
   it('repays all the debt + accrued interest and returns collateral to the user', async () => {
