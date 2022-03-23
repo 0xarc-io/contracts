@@ -91,13 +91,13 @@ describe('SapphireCore.liquidate()', () => {
     const arcCollateralAmt = await arc
       .collateral()
       .balanceOf(await arc.core().feeCollector());
-    const credsSupply = await arc.synthetic().totalSupply();
+    const stablesLent = await arc.pool().stablesLent();
 
     return {
       stablecoinBalance,
       collateralAmt,
       arcCollateralAmt,
-      credsSupply,
+      credsSupply: stablesLent,
     };
   }
 
@@ -777,11 +777,11 @@ describe('SapphireCore.liquidate()', () => {
       await setupBaseVault();
 
       // Mint unsupported repay token to liquidator
-      await arc
-        .synthetic()
-        .mint(signers.liquidator.address, SCALED_BORROW_AMOUNT);
-      await arc
-        .synthetic()
+      await ctx.contracts.collateral.mintShare(
+        signers.liquidator.address,
+        SCALED_BORROW_AMOUNT,
+      );
+      await ctx.contracts.collateral
         .connect(signers.liquidator)
         .approve(arc.coreAddress(), SCALED_BORROW_AMOUNT);
 
@@ -793,12 +793,12 @@ describe('SapphireCore.liquidate()', () => {
       await expect(
         arc.liquidate(
           signers.scoredMinter.address,
-          arc.syntheticAddress(),
+          ctx.contracts.collateral.address,
           getScoreProof(minterCreditScore, creditScoreTree),
           undefined,
           signers.liquidator,
         ),
-      ).to.be.revertedWith('SapphirePool: invalid swap tokens');
+      ).to.be.revertedWith('SapphirePool: unknown token');
     });
 
     it('reverts if proof is not passed and effective epoch is ≥ current epoch', async () => {
