@@ -54,7 +54,7 @@ contract SapphirePool is Adminable, InitializableBaseERC20, ISapphirePool, Sapph
     event TokensWithdrawn(
         address indexed _user,
         address indexed _token,
-        uint256 _credsAmount,
+        uint256 _lpAmount,
         uint256 _withdrawAmount
     );
 
@@ -69,7 +69,7 @@ contract SapphirePool is Adminable, InitializableBaseERC20, ISapphirePool, Sapph
         address indexed _core,
         address indexed _stablecoin,
         uint256 _repaidAmount,
-        uint256 _credsReduced
+        uint256 _debtRepaid
     );
 
     /* ========== Modifiers ========== */
@@ -238,7 +238,7 @@ contract SapphirePool is Adminable, InitializableBaseERC20, ISapphirePool, Sapph
         override
         onlyCores
     {
-        uint256 credsReduced = _repayStables(
+        uint256 debtDecreaseAmt = _repayStables(
             _stablecoinAddress,
             _repayAmount
         );
@@ -247,7 +247,7 @@ contract SapphirePool is Adminable, InitializableBaseERC20, ISapphirePool, Sapph
             msg.sender,
             _stablecoinAddress,
             _repayAmount,
-            credsReduced
+            debtDecreaseAmt
         );
     }
 
@@ -309,9 +309,9 @@ contract SapphirePool is Adminable, InitializableBaseERC20, ISapphirePool, Sapph
     }
 
     /**
-     * @notice Exchanges the given amount of Creds for the equivalent amount of the given token,
-     * plus the proportional rewards. The Creds exchanged are burned.
-     * @param _lpAmount The amount of Creds to exchange.
+     * @notice Exchanges the given amount of LP tokens for the equivalent amount of the given token,
+     * plus the proportional rewards. The tokens exchanged are burned.
+     * @param _lpAmount The amount of LP tokens to exchange.
      * @param _withdrawToken The token to exchange for.
      */
     function withdraw(
@@ -410,7 +410,7 @@ contract SapphirePool is Adminable, InitializableBaseERC20, ISapphirePool, Sapph
     }
 
     /**
-     * @notice Returns the value of the pool in terms of the deposited stablecoins and creds.
+     * @notice Returns the value of the pool in terms of the deposited stablecoins and stables lent
      */
     function getPoolValue()
         public
