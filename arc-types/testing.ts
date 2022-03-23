@@ -10,7 +10,6 @@ import {
   SapphireAssessor,
   SapphireMapperLinear,
   SapphirePool,
-  SyntheticTokenV2,
 } from '@src/typings';
 import { SapphireTestArc } from '@src/SapphireTestArc';
 import { MockSapphireOracle } from '@src/typings/MockSapphireOracle';
@@ -42,9 +41,6 @@ export interface Contracts {
     assessor: SapphireAssessor;
     oracle: MockSapphireOracle;
     pool: SapphirePool;
-  };
-  synthetic: {
-    tokenV2: SyntheticTokenV2;
   };
   staking: {
     addressAccrual: AddressAccrual;
