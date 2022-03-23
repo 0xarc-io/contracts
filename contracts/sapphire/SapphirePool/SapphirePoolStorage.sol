@@ -22,10 +22,10 @@ contract SapphirePoolStorage {
     mapping (address => uint256) internal _deposits;
 
     /**
-     * @dev Determines the amount of creds the core can swap in. The amounts are stored in
+     * @dev Determines the amount of stables the cores can borrow. The amounts are stored in
      * 18 decimals.
      */
-    mapping (address => SharedPoolStructs.AssetUtilization) internal _coreSwapUtilization;
+    mapping (address => SharedPoolStructs.AssetUtilization) internal _coreBorrowUtilization;
 
     /**
      * @dev Determines the amount of tokens that can be deposited by
@@ -39,7 +39,7 @@ contract SapphirePoolStorage {
     address[] internal _knownDepositAssets;
 
     /**
-     * @dev Stores the cores that have historically been approved to swap in assets.
+     * @dev Stores the cores that have historically been approved to borrow.
      */
     address[] internal _knownCores;
 

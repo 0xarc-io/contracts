@@ -7,7 +7,7 @@ import {SharedPoolStructs} from "./SharedPoolStructs.sol";
 interface ISapphirePool {
     /* ========== Mutating Functions ========== */
 
-    function setCoreSwapLimit(address _coreAddress, uint256 _limit) external;
+    function setCoreBorrowLimit(address _coreAddress, uint256 _limit) external;
 
     function setDepositLimit(address _tokenAddress, uint256 _limit) external;
 
@@ -30,7 +30,7 @@ interface ISapphirePool {
 
     function accumulatedRewardAmount() external view returns (uint256);
 
-    function coreSwapUtilization(address _coreAddress) 
+    function coreBorrowUtilization(address _coreAddress) 
         external 
         view 
         returns (SharedPoolStructs.AssetUtilization memory);
