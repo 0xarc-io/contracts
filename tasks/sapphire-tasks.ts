@@ -335,7 +335,6 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
       console.log(yellow(`Calling core.init() ...\n`));
       await core.init(
         collateralAddress,
-        credsProxyAddress,
         oracleAddress,
         collatConfig.interestSettings.interestSetter || ultimateOwner,
         collatConfig.pauseOperator || ultimateOwner,
