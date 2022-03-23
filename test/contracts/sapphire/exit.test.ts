@@ -74,7 +74,7 @@ describe('SapphireCore.exit()', () => {
       merkleRoot: creditScoreTree.getHexRoot(),
       // Set the price to $1
       price: utils.parseEther('1'),
-      poolDepositSwapAmount: SCALED_BORROW_AMOUNT.mul(3),
+      poolDepositBorrowAmount: SCALED_BORROW_AMOUNT.mul(3),
     });
   }
 

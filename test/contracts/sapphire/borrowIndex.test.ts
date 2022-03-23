@@ -92,7 +92,7 @@ describe('borrow index (integration)', () => {
     await setupSapphire(ctx, {
       interestRate: INTEREST_RATE,
       merkleRoot: creditScoreTree.getHexRoot(),
-      poolDepositSwapAmount: BORROW_AMOUNT.mul(3),
+      poolDepositBorrowAmount: BORROW_AMOUNT.mul(3),
     });
   }
 

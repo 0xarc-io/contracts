@@ -4,12 +4,7 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { PassportScoreTree } from '@src/MerkleTree';
 import { SapphireTestArc } from '@src/SapphireTestArc';
-import {
-  SapphirePool,
-  SyntheticTokenV2,
-  TestToken,
-  TestTokenFactory,
-} from '@src/typings';
+import { SapphirePool, TestToken, TestTokenFactory } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import { roundUpMul } from '@test/helpers/roundUpOperations';
 import {
@@ -52,7 +47,6 @@ const BORROW_AMOUNT = SCALED_BORROW_AMOUNT.div(
 describe('SapphireCore.repay()', () => {
   let arc: SapphireTestArc;
   let pool: SapphirePool;
-  let creds: SyntheticTokenV2;
   let stablecoin: TestToken;
 
   let signers: TestingSigners;
@@ -96,7 +90,7 @@ describe('SapphireCore.repay()', () => {
     await setupSapphire(ctx, {
       merkleRoot: creditScoreTree.getHexRoot(),
       price: COLLATERAL_PRICE,
-      poolDepositSwapAmount: SCALED_BORROW_AMOUNT.mul(3),
+      poolDepositBorrowAmount: SCALED_BORROW_AMOUNT.mul(3),
     });
   }
 
@@ -106,7 +100,6 @@ describe('SapphireCore.repay()', () => {
     arc = ctx.sdks.sapphire;
     stablecoin = ctx.contracts.stablecoin;
     pool = ctx.contracts.sapphire.pool;
-    creds = ctx.contracts.synthetic.tokenV2;
 
     await setupBaseVault(
       ctx.sdks.sapphire,
@@ -193,13 +186,16 @@ describe('SapphireCore.repay()', () => {
       'ASTABLE',
       6,
     );
-    const repayAmount = utils.parseUnits(utils.formatEther(SCALED_BORROW_AMOUNT), DEFAULT_STABLECOIN_DECIMALS);
-    await pool.setDepositLimit(
-      anotherStablecoin.address,
+    const repayAmount = utils.parseUnits(
+      utils.formatEther(SCALED_BORROW_AMOUNT),
+      DEFAULT_STABLECOIN_DECIMALS,
+    );
+    await pool.setDepositLimit(anotherStablecoin.address, repayAmount);
+
+    await anotherStablecoin.mintShare(
+      signers.scoredMinter.address,
       repayAmount,
     );
-
-    await anotherStablecoin.mintShare(signers.scoredMinter.address, repayAmount);
 
     let vault = await arc.getVault(signers.scoredMinter.address);
     expect(vault.normalizedBorrowedAmount).eq(SCALED_BORROW_AMOUNT);
@@ -210,35 +206,21 @@ describe('SapphireCore.repay()', () => {
     expect(vault.normalizedBorrowedAmount).eq(0);
   });
 
-  it('swaps stables for creds, then burns the creds, (no interest accumulated)', async () => {
-    expect(await creds.balanceOf(pool.address)).to.eq(SCALED_BORROW_AMOUNT);
+  it('repays stables, then decreases stables lent, (no interest accumulated)', async () => {
+    expect(await pool.stablesLent()).to.eq(SCALED_BORROW_AMOUNT);
 
-    await expect(repay(BORROW_AMOUNT.div(2), signers.scoredMinter, stablecoin))
-      .to.emit(creds, 'Transfer')
-      .withArgs(
-        arc.core().address,
-        constants.AddressZero,
-        SCALED_BORROW_AMOUNT.div(2),
-      );
-    expect(await creds.balanceOf(pool.address)).to.eq(
-      SCALED_BORROW_AMOUNT.div(2),
-    );
+    await repay(BORROW_AMOUNT.div(2), signers.scoredMinter, stablecoin);
+    expect(await pool.stablesLent()).to.eq(SCALED_BORROW_AMOUNT.div(2));
 
-    await expect(repay(BORROW_AMOUNT.div(2), signers.scoredMinter, stablecoin))
-      .to.emit(creds, 'Transfer')
-      .withArgs(
-        arc.core().address,
-        constants.AddressZero,
-        SCALED_BORROW_AMOUNT.div(2),
-      );
-    expect(await creds.balanceOf(pool.address)).to.eq(0);
+    await repay(BORROW_AMOUNT.div(2), signers.scoredMinter, stablecoin);
+    expect(await pool.stablesLent()).to.eq(0);
   });
 
-  it('distributes the interest, without executing a swap, when only interest is paid', async () => {
+  it('distributes the interest, without executing a borrow/repay on the pool, when only interest is paid', async () => {
     const poolShare = utils.parseEther('0.4');
     const borrowFee = utils.parseEther('0.1');
 
-    expect(await creds.balanceOf(pool.address)).eq(SCALED_BORROW_AMOUNT);
+    expect(await pool.stablesLent()).eq(SCALED_BORROW_AMOUNT);
 
     await arc.core().setFees(0, 0, borrowFee, poolShare);
     await arc.core().setLimits(0, SCALED_BORROW_AMOUNT, SCALED_BORROW_AMOUNT);
@@ -253,7 +235,7 @@ describe('SapphireCore.repay()', () => {
     );
 
     // There is already one vault open by the scoredMinter
-    expect(await creds.balanceOf(pool.address)).eq(SCALED_BORROW_AMOUNT.mul(2));
+    expect(await pool.stablesLent()).eq(SCALED_BORROW_AMOUNT.mul(2));
     expect(await stablecoin.balanceOf(await arc.core().feeCollector())).eq(0);
 
     const scaledInterest = roundUpMul(SCALED_BORROW_AMOUNT, borrowFee);
@@ -277,8 +259,8 @@ describe('SapphireCore.repay()', () => {
     // Vault amount reduced by interest, principal remained unchanged
     expect(vault.normalizedBorrowedAmount).eq(SCALED_BORROW_AMOUNT);
     expect(vault.principal).eq(SCALED_BORROW_AMOUNT);
-    // The creds amount didn't change
-    expect(await creds.balanceOf(pool.address)).eq(SCALED_BORROW_AMOUNT.mul(2));
+    // The amount lent by the pool didn't change
+    expect(await pool.stablesLent()).eq(SCALED_BORROW_AMOUNT.mul(2));
     expect(await stablecoin.balanceOf(pool.address)).eq(
       preRepayStablePoolBalance.add(
         expectedPoolProfit.div(DEFAULT_STABLE_COIN_PRECISION_SCALAR),
@@ -290,13 +272,13 @@ describe('SapphireCore.repay()', () => {
   });
   // 1499999999902000000000
   // 1499999999900020000000
-  it('distributes the interest, then swaps stables for creds for the remaining amount', async () => {
+  it('distributes the interest, then repays stables for the remaining amount', async () => {
     const poolShare = utils.parseEther('0.4');
     const borrowFee = utils.parseEther('0.1');
     const interest = roundUpMul(SCALED_BORROW_AMOUNT, borrowFee);
 
     // there is already one opened vault
-    expect(await creds.balanceOf(pool.address)).eq(SCALED_BORROW_AMOUNT);
+    expect(await pool.stablesLent()).eq(SCALED_BORROW_AMOUNT);
 
     await arc.core().setFees(0, 0, borrowFee, poolShare);
     await arc.core().setLimits(0, SCALED_BORROW_AMOUNT, SCALED_BORROW_AMOUNT);
@@ -316,18 +298,18 @@ describe('SapphireCore.repay()', () => {
     expect(vault.principal).eq(SCALED_BORROW_AMOUNT);
 
     const repayAmount = BORROW_AMOUNT.div(2);
-    const principalRepayed = repayAmount
+    const principalRepaid = repayAmount
       .mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR)
       .sub(interest);
     const totalAccumulatedDebt = SCALED_BORROW_AMOUNT.add(interest);
 
-    expect(await creds.balanceOf(pool.address)).eq(SCALED_BORROW_AMOUNT.mul(2));
+    expect(await pool.stablesLent()).eq(SCALED_BORROW_AMOUNT.mul(2));
 
     await repay(repayAmount, signers.staker);
 
-    // Only the principal paid is swapped out for creds
-    expect(await creds.balanceOf(pool.address)).eq(
-      SCALED_BORROW_AMOUNT.mul(2).sub(principalRepayed),
+    // Only the principal paid is repaid to the pool
+    expect(await pool.stablesLent()).eq(
+      SCALED_BORROW_AMOUNT.mul(2).sub(principalRepaid),
     );
 
     vault = await arc.getVault(signers.staker.address);
@@ -336,7 +318,7 @@ describe('SapphireCore.repay()', () => {
         repayAmount.mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR),
       ),
     );
-    expect(vault.principal).eq(SCALED_BORROW_AMOUNT.sub(principalRepayed));
+    expect(vault.principal).eq(SCALED_BORROW_AMOUNT.sub(principalRepaid));
   });
 
   it('decreases the user principal by the repay amount', async () => {
@@ -468,8 +450,7 @@ describe('SapphireCore.repay()', () => {
   });
 
   it('should not repay to a vault that does not exist', async () => {
-    const adminSynth = arc.synthetic().connect(signers.admin);
-    await adminSynth.mint(signers.minter.address, constants.WeiPerEther);
+    await stablecoin.mintShare(signers.minter.address, constants.WeiPerEther);
 
     await expect(
       repay(constants.WeiPerEther, signers.minter),
@@ -478,8 +459,10 @@ describe('SapphireCore.repay()', () => {
 
   it(`should not repay more than the vault's debt`, async () => {
     // Mint more stablex
-    const adminSynth = arc.synthetic().connect(signers.admin);
-    await adminSynth.mint(signers.scoredMinter.address, constants.WeiPerEther);
+    await stablecoin.mintShare(
+      signers.scoredMinter.address,
+      constants.WeiPerEther,
+    );
 
     await expect(
       repay(

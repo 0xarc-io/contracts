@@ -238,7 +238,6 @@ describe('SapphirePool', () => {
       });
 
       it('reverts if setting a deposit limit that makes the sum of the deposit limits smaller than than the sum of the borrow limits', async () => {
-        console.log('stablecoin: ', stablecoin.address);
         await pool.setDepositLimit(stablecoin.address, depositAmount);
         await pool.setDepositLimit(
           ctx.contracts.collateral.address,
