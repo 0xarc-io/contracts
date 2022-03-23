@@ -15,6 +15,7 @@ import {
   TRANSFER_FROM_FAILED,
 } from '@test/helpers/contractErrors';
 import { roundUpDiv } from '@test/helpers/roundUpOperations';
+import { DEFAULT_COLLATERAL_DECIMALS } from '@test/helpers/sapphireDefaults';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { BigNumber, BigNumberish, utils } from 'ethers';
@@ -112,7 +113,7 @@ describe('SapphirePool', () => {
             scaledDepositAmount.add(1),
           ),
         ).to.be.revertedWith(
-          'SapphirePool: swap limit is greater than the sum of the deposit limits',
+          'SapphirePool: sum of the deposit limits exceeds sum of borrow limits',
         );
       });
 
@@ -175,7 +176,7 @@ describe('SapphirePool', () => {
         await expect(
           pool.setCoreBorrowLimit(admin.address, 0),
         ).to.be.revertedWith(
-          'SapphirePool: at least one asset must have a positive swap limit',
+          'SapphirePool: at least one asset must have a positive borrow limit',
         );
       });
     });
@@ -236,11 +237,12 @@ describe('SapphirePool', () => {
         );
       });
 
-      it('reverts if setting a limit that makes the sum of the deposit limits smaller than than the sum of the swap limits', async () => {
+      it('reverts if setting a deposit limit that makes the sum of the deposit limits smaller than than the sum of the borrow limits', async () => {
+        console.log('stablecoin: ', stablecoin.address);
         await pool.setDepositLimit(stablecoin.address, depositAmount);
         await pool.setDepositLimit(
           ctx.contracts.collateral.address,
-          scaledDepositAmount,
+          utils.parseUnits('100', DEFAULT_COLLATERAL_DECIMALS),
         );
 
         await pool.setCoreBorrowLimit(admin.address, scaledDepositAmount);
@@ -249,7 +251,7 @@ describe('SapphirePool', () => {
         await expect(
           pool.setDepositLimit(stablecoin.address, depositAmount.mul(2).div(3)),
         ).to.be.revertedWith(
-          'SapphirePool: sum of deposit limits smaller than the sum of the swap limits',
+          'SapphirePool: sum of borrow limits exceeds sum of deposit limits',
         );
       });
 
@@ -323,9 +325,7 @@ describe('SapphirePool', () => {
               scaledDepositAmount.div(2),
               depositor.address,
             ),
-        ).to.be.revertedWith(
-          'SapphirePool: caller should be a core with a positive borrow limit',
-        );
+        ).to.be.revertedWith('SapphirePool: sender is not a Core');
       });
 
       it('reverts if there are not enough requested stables', async () => {
@@ -368,7 +368,7 @@ describe('SapphirePool', () => {
             scaledDepositAmount,
             admin.address,
           ),
-        ).to.be.revertedWith('SapphirePool: core swap limit exceeded');
+        ).to.be.revertedWith('SapphirePool: core borrow limit exceeded');
       });
 
       it('correctly borrows assets that have 18 decimals', async () => {
@@ -451,9 +451,7 @@ describe('SapphirePool', () => {
           pool
             .connect(depositor)
             .repayStables(stablecoin.address, scaledDepositAmount.div(2)),
-        ).to.be.revertedWith(
-          'SapphirePool: caller should be a core with a positive borrow limit',
-        );
+        ).to.be.revertedWith('SapphirePool: sender is not a Core');
       });
 
       it('reverts if there are not enough creds to repay', async () => {
@@ -470,7 +468,7 @@ describe('SapphirePool', () => {
             stablecoin.address,
             scaledDepositAmount.div(3).mul(2),
           ),
-        ).to.be.revertedWith(TRANSFER_FAILED);
+        ).to.be.revertedWith(ARITHMETIC_ERROR);
       });
 
       it('reverts if trying to repay with an unsupported token', async () => {
@@ -523,27 +521,37 @@ describe('SapphirePool', () => {
         );
         await pool
           .connect(depositor)
-          .repayStables(testDai.address, daiDepositAmount);
+          .deposit(testDai.address, daiDepositAmount);
 
-        expect(await testDai.balanceOf(admin.address)).to.eq(0);
-
-        await pool.repayStables(testDai.address, daiDepositAmount);
+        await pool.borrowStables(
+          testDai.address,
+          daiDepositAmount,
+          admin.address,
+        );
         expect(await testDai.balanceOf(admin.address)).to.eq(daiDepositAmount);
+
+        await approve(daiDepositAmount, testDai.address, pool.address, admin);
+        await pool.repayStables(testDai.address, daiDepositAmount);
+        expect(await testDai.balanceOf(admin.address)).to.eq(0);
       });
 
       it('decreases the token utilization borrow amount', async () => {
         let utilization = await pool.coreBorrowUtilization(admin.address);
         expect(utilization.amountUsed).to.eq(0);
 
-        await pool.repayStables(stablecoin.address, scaledDepositAmount.div(2));
+        await pool.borrowStables(
+          stablecoin.address,
+          scaledDepositAmount.div(2),
+          admin.address,
+        );
 
         utilization = await pool.coreBorrowUtilization(admin.address);
         expect(utilization.amountUsed).to.eq(scaledDepositAmount.div(2));
 
-        await pool.repayStables(stablecoin.address, scaledDepositAmount.div(2));
+        await pool.repayStables(stablecoin.address, depositAmount.div(2));
 
         utilization = await pool.coreBorrowUtilization(admin.address);
-        expect(utilization.amountUsed).to.eq(scaledDepositAmount);
+        expect(utilization.amountUsed).to.eq(0);
       });
 
       it('reverts if trying to repay if the limit for that stablecoin is 0', async () => {
@@ -570,6 +578,7 @@ describe('SapphirePool', () => {
       });
     });
 
+    // TODO PASS824: https://app.asana.com/0/1200654815768576/1201991858248399
     describe('#burnCreds', () => {
       it('reverts if called by a non-approved core');
       it('reverts if trying to burn more more than available creds');
