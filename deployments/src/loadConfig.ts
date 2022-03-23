@@ -3,7 +3,7 @@ import { gray, red, blue } from 'chalk';
 import { constants, getPathToNetwork } from './config';
 
 /*
- * Load Synth Config
+ * Load Core Config
  */
 
 export interface LoadConfigParams {
