@@ -80,11 +80,6 @@ contract SapphireCoreStorageV1 {
     address public collateralAsset;
 
     /**
-     * @notice The address of the synthetic token where this core is approved to mint from
-     */
-    address public syntheticAsset;
-
-    /**
      * @notice The address of the SapphirePool - the contract where the borrowed tokens come from
      */
     address public borrowPool;
