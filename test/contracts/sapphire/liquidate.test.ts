@@ -164,7 +164,7 @@ describe('SapphireCore.liquidate()', () => {
         liquidationUserFee: utils.parseEther('0.1'), // 5% price discount
         liquidationArcFee: utils.parseEther('0.1'), // 10% arc tax on profit
       },
-      poolDepositSwapAmount: SCALED_BORROW_AMOUNT.mul(5),
+      poolDepositBorrowAmount: SCALED_BORROW_AMOUNT.mul(5),
     });
   }
 

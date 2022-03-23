@@ -88,7 +88,7 @@ describe('SapphireCore.withdraw()', () => {
 
     await setupSapphire(ctx, {
       merkleRoot: creditScoreTree.getHexRoot(),
-      poolDepositSwapAmount: SCALED_BORROW_AMOUNT.mul(3),
+      poolDepositBorrowAmount: SCALED_BORROW_AMOUNT.mul(3),
     });
   }
 

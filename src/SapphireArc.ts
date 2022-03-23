@@ -307,11 +307,11 @@ export class SapphireArc {
       undefined,
       utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
     ),
-    corename: string = this.getCoreNames()[0],
+    coreName: string = this.getCoreNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
   ): Promise<ContractTransaction> {
-    const core = this._getCore(corename, caller);
+    const core = this._getCore(coreName, caller);
 
     return core.withdraw(amount, [passportScoreProof], overrides);
   }
