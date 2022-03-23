@@ -119,5 +119,5 @@ export async function sapphireFixture(
     .setPause(false);
 
   ctx.sdks.sapphire = SapphireTestArc.new(deployer);
-  await ctx.sdks.sapphire.addCores({ sapphireSynth: coreProxy.address });
+  await ctx.sdks.sapphire.addCores({ sapphireCore: coreProxy.address });
 }

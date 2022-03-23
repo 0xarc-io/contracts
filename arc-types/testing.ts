@@ -50,10 +50,6 @@ export interface Contracts {
 }
 
 export interface Stubs {
-  synthetic: {
-    static: MockContract;
-    tokenV1: MockContract;
-  };
   staking: {
     addressAccrual: MockContract;
     adminRewards: MockContract;
