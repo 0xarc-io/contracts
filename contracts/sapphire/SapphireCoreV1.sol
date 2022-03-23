@@ -550,7 +550,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
     /**
      * @dev Borrow against an existing position
      *
-     * @param _amount The amount of synthetic to borrow
+     * @param _amount The amount of stablecoins to borrow
      * @param _borrowAssetAddress The address of token to borrow
      * @param _passportProofs The passport score proofs - mandatory
      *                        Index 0 - score proof
