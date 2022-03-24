@@ -555,10 +555,37 @@ describe('SapphirePool', () => {
     });
 
     // TODO PASS824: https://app.asana.com/0/1200654815768576/1201991858248399
-    describe('#burnCreds', () => {
-      it('reverts if called by a non-approved core');
-      it('reverts if trying to burn more more than available creds');
-      it('burns the correct amount of creds');
+    describe('#reduceStablesLent', () => {
+      it('reverts if called by a non-approved core', async () => {
+        await expect(
+          pool.connect(depositor).reduceStablesLent(100),
+        ).to.be.revertedWith('SapphirePool: sender is not a Core');
+      });
+
+      it('reverts if trying to reduce more than the current lent amount', async () => {
+        await pool.borrowStables(
+          stablecoin.address,
+          scaledDepositAmount,
+          admin.address,
+        );
+        expect(await pool.stablesLent()).to.eq(scaledDepositAmount);
+
+        await expect(
+          pool.reduceStablesLent(scaledDepositAmount.add(1)),
+        ).to.be.revertedWith(ARITHMETIC_ERROR);
+      });
+
+      it('reduces the stables lent amount correctly', async () => {
+        await pool.borrowStables(
+          stablecoin.address,
+          scaledDepositAmount,
+          admin.address,
+        );
+        expect(await pool.stablesLent()).to.eq(scaledDepositAmount);
+
+        await pool.reduceStablesLent(scaledDepositAmount.div(2));
+        expect(await pool.stablesLent()).to.eq(scaledDepositAmount.div(2));
+      });
     });
   });
 
