@@ -97,7 +97,7 @@ describe('SapphireCore.liquidate()', () => {
       stablecoinBalance,
       collateralAmt,
       arcCollateralAmt,
-      credsSupply: stablesLent,
+      stablesLent,
     };
   }
 
@@ -251,7 +251,7 @@ describe('SapphireCore.liquidate()', () => {
         stablecoinBalance: preStablecoinBalance,
         collateralAmt: preCollateralBalance,
         arcCollateralAmt: preArcCollateralAmt,
-        credsSupply: preCredsSupply,
+        stablesLent: prestablesLent,
       } = await getBalancesForLiquidation(signers.liquidator);
 
       // Liquidate vault
@@ -267,7 +267,7 @@ describe('SapphireCore.liquidate()', () => {
         stablecoinBalance: postStablecoinBalance,
         collateralAmt: postCollateralBalance,
         arcCollateralAmt: postArcCollateralAmt,
-        credsSupply: postCredsSupply,
+        stablesLent: poststablesLent,
       } = await getBalancesForLiquidation(signers.liquidator);
 
       const {
@@ -298,8 +298,8 @@ describe('SapphireCore.liquidate()', () => {
       );
 
       // The total Creds supply has decreased
-      expect(postCredsSupply).to.eq(
-        preCredsSupply.sub(utils.parseEther('475')),
+      expect(poststablesLent).to.eq(
+        prestablesLent.sub(utils.parseEther('475')),
       );
 
       // The vault collateral amount has decreased
@@ -408,7 +408,7 @@ describe('SapphireCore.liquidate()', () => {
         stablecoinBalance: preStablecoinBalance,
         collateralAmt: preCollateralBalance,
         arcCollateralAmt: preArcCollateralAmt,
-        credsSupply: preCredsSupply,
+        stablesLent: prestablesLent,
       } = await getBalancesForLiquidation(signers.liquidator);
 
       // The liquidator submits the user's credit score and is then able to liquidate
@@ -424,7 +424,7 @@ describe('SapphireCore.liquidate()', () => {
         stablecoinBalance: postStablecoinBalance,
         collateralAmt: postCollateralBalance,
         arcCollateralAmt: postArcCollateralAmt,
-        credsSupply: postCredsSupply,
+        stablesLent: poststablesLent,
       } = await getBalancesForLiquidation(signers.liquidator);
 
       // The debt has been taken from the liquidator (stable coin)
@@ -447,7 +447,7 @@ describe('SapphireCore.liquidate()', () => {
       );
 
       // The total creds supply has decreased
-      expect(postCredsSupply).to.eq(preCredsSupply.sub(SCALED_BORROW_AMOUNT));
+      expect(poststablesLent).to.eq(prestablesLent.sub(SCALED_BORROW_AMOUNT));
 
       // The vault collateral amount has decreased
       const postLiquidationVault = await arc.getVault(
@@ -597,7 +597,7 @@ describe('SapphireCore.liquidate()', () => {
         stablecoinBalance: preStablecoinBalance,
         collateralAmt: preCollateralBalance,
         arcCollateralAmt: preArcCollateralAmt,
-        credsSupply: preCredsSupply,
+        stablesLent: prestablesLent,
       } = await getBalancesForLiquidation(signers.liquidator);
 
       // Liquidate
@@ -613,7 +613,7 @@ describe('SapphireCore.liquidate()', () => {
         stablecoinBalance: postStablecoinBalance,
         collateralAmt: postCollateralBalance,
         arcCollateralAmt: postArcCollateralAmt,
-        credsSupply: postCredsSupply,
+        stablesLent: poststablesLent,
       } = await getBalancesForLiquidation(signers.liquidator);
 
       expect(postStablecoinBalance).to.eq(
@@ -629,7 +629,7 @@ describe('SapphireCore.liquidate()', () => {
           utils.parseUnits('4.261666', DEFAULT_COLLATERAL_DECIMALS),
         ),
       );
-      expect(postCredsSupply).to.eq(preCredsSupply.sub(SCALED_BORROW_AMOUNT));
+      expect(poststablesLent).to.eq(prestablesLent.sub(SCALED_BORROW_AMOUNT));
 
       // Borrow to the limit (up to 150% c-ratio)
       const vault = await arc.getVault(signers.scoredMinter.address);
@@ -656,7 +656,7 @@ describe('SapphireCore.liquidate()', () => {
         stablecoinBalance: preStablecoinBalance,
         collateralAmt: preCollateralBalance,
         arcCollateralAmt: preArcCollateralAmt,
-        credsSupply: preCredsSupply,
+        stablesLent: prestablesLent,
       } = await getBalancesForLiquidation(signers.liquidator));
 
       // Liquidate again
@@ -672,7 +672,7 @@ describe('SapphireCore.liquidate()', () => {
         stablecoinBalance: postStablecoinBalance,
         collateralAmt: postCollateralBalance,
         arcCollateralAmt: postArcCollateralAmt,
-        credsSupply: postCredsSupply,
+        stablesLent: poststablesLent,
       } = await getBalancesForLiquidation(signers.liquidator));
 
       // check the numbers again
@@ -689,8 +689,8 @@ describe('SapphireCore.liquidate()', () => {
           utils.parseUnits('0.815751', DEFAULT_COLLATERAL_DECIMALS),
         ),
       );
-      expect(postCredsSupply, 'supply').to.eq(
-        preCredsSupply.sub(
+      expect(poststablesLent, 'supply').to.eq(
+        prestablesLent.sub(
           maxBorrowAmount.mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR),
         ),
       );
@@ -1236,7 +1236,7 @@ describe('SapphireCore.liquidate()', () => {
         stablecoinBalance: preStablecoinBalance,
         collateralAmt: preCollateralBalance,
         arcCollateralAmt: preArcCollateralAmt,
-        credsSupply: preCredsSupply,
+        stablesLent: prestablesLent,
       } = await getBalancesForLiquidation(signers.liquidator);
 
       // Liquidate vault
@@ -1252,7 +1252,7 @@ describe('SapphireCore.liquidate()', () => {
         stablecoinBalance: postStablecoinBalance,
         collateralAmt: postCollateralBalance,
         arcCollateralAmt: postArcCollateralAmt,
-        credsSupply: postCredsSupply,
+        stablesLent: poststablesLent,
       } = await getBalancesForLiquidation(signers.liquidator);
 
       // The debt has been taken from the liquidator (stable coin)
@@ -1279,8 +1279,8 @@ describe('SapphireCore.liquidate()', () => {
       );
 
       // The total creds supply has decreased
-      expect(postCredsSupply).to.eq(
-        preCredsSupply.sub(
+      expect(poststablesLent).to.eq(
+        prestablesLent.sub(
           stablecoinPaid.mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR),
         ),
       );
@@ -1324,7 +1324,7 @@ describe('SapphireCore.liquidate()', () => {
         stablecoinBalance: preStablecoinBalance,
         collateralAmt: preCollateralBalance,
         arcCollateralAmt: preArcCollateralAmt,
-        credsSupply: preCredsSupply,
+        stablesLent: prestablesLent,
       } = await getBalancesForLiquidation(signers.liquidator);
 
       // Liquidate vault
@@ -1340,7 +1340,7 @@ describe('SapphireCore.liquidate()', () => {
         stablecoinBalance: postStablecoinBalance,
         collateralAmt: postCollateralBalance,
         arcCollateralAmt: postArcCollateralAmt,
-        credsSupply: postCredsSupply,
+        stablesLent: poststablesLent,
       } = await getBalancesForLiquidation(signers.liquidator);
 
       // The debt has been taken from the liquidator (stable coin)
@@ -1367,8 +1367,8 @@ describe('SapphireCore.liquidate()', () => {
       );
 
       // The total creds supply has decreased
-      expect(postCredsSupply).to.eq(
-        preCredsSupply.sub(
+      expect(poststablesLent).to.eq(
+        prestablesLent.sub(
           stablecoinPaid.mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR),
         ),
       );
@@ -1482,7 +1482,7 @@ describe('SapphireCore.liquidate()', () => {
         stablecoinBalance: preStablecoinBalance,
         collateralAmt: preCollateralBalance,
         arcCollateralAmt: preArcCollateralAmt,
-        credsSupply: preCredsSupply,
+        stablesLent: prestablesLent,
       } = await getBalancesForLiquidation(signers.liquidator);
 
       // Liquidation occurs
@@ -1498,7 +1498,7 @@ describe('SapphireCore.liquidate()', () => {
         stablecoinBalance: postStablecoinBalance,
         collateralAmt: postCollateralBalance,
         arcCollateralAmt: postArcCollateralAmt,
-        credsSupply: postCredsSupply,
+        stablesLent: poststablesLent,
       } = await getBalancesForLiquidation(signers.liquidator);
       const debtPaid = utils.parseUnits('350', DEFAULT_STABLECOIN_DECIMALS);
 
@@ -1520,8 +1520,8 @@ describe('SapphireCore.liquidate()', () => {
       );
 
       // The total creds supply has decreased
-      expect(postCredsSupply).to.eq(
-        preCredsSupply.sub(debtPaid.mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR)),
+      expect(poststablesLent).to.eq(
+        prestablesLent.sub(debtPaid.mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR)),
       );
 
       // The vault collateral amount has decreased
@@ -1593,7 +1593,7 @@ describe('SapphireCore.liquidate()', () => {
         stablecoinBalance: preStablecoinBalance,
         collateralAmt: preCollateralBalance,
         arcCollateralAmt: preArcCollateralAmt,
-        credsSupply: preCredsSupply,
+        stablesLent: prestablesLent,
       } = await getBalancesForLiquidation(signers.liquidator);
 
       // Liquidation occurs
@@ -1609,7 +1609,7 @@ describe('SapphireCore.liquidate()', () => {
         stablecoinBalance: postStablecoinBalance,
         collateralAmt: postCollateralBalance,
         arcCollateralAmt: postArcCollateralAmt,
-        credsSupply: postCredsSupply,
+        stablesLent: poststablesLent,
       } = await getBalancesForLiquidation(signers.liquidator);
       const debtPaid = utils.parseUnits('745', DEFAULT_STABLECOIN_DECIMALS);
 
@@ -1633,8 +1633,8 @@ describe('SapphireCore.liquidate()', () => {
       );
 
       // The total creds supply has decreased
-      expect(postCredsSupply, 'creds total supply').to.eq(
-        preCredsSupply.sub(debtPaid.mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR)),
+      expect(poststablesLent, 'creds total supply').to.eq(
+        prestablesLent.sub(debtPaid.mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR)),
       );
 
       // The vault collateral amount has decreased
