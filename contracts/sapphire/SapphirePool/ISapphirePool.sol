@@ -26,6 +26,8 @@ interface ISapphirePool {
 
     function withdraw(uint256 _amount, address _outToken) external;
 
+    function decreaseStablesLent(uint256 _debtDecreaseAmount) external;
+
     /* ========== View Functions ========== */
 
     function accumulatedRewardAmount() external view returns (uint256);
