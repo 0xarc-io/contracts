@@ -717,7 +717,13 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
                 _borrow(action.amount, action.borrowAssetAddress, assessedCRatio, currentPrice, _passportProofs[1]);
 
             }  else if (action.operation == SapphireTypes.Operation.Repay) {
-                _repay(msg.sender, msg.sender, action.amount, action.borrowAssetAddress);
+                _repay(
+                    msg.sender,
+                    msg.sender,
+                    action.amount,
+                    action.borrowAssetAddress,
+                    false
+                );
 
             } else if (action.operation == SapphireTypes.Operation.Liquidate) {
                 _liquidate(action.userToLiquidate, currentPrice, assessedCRatio, action.borrowAssetAddress);
@@ -1102,12 +1108,14 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      * @param _repayer The person who repays the debt
      * @param _amount The amount to repay, denominated in the decimals of the borrow asset
      * @param _borrowAssetAddress The address of token to repay
+     * @param _shouldCleanBadDebt Indicates if it should clean the remaining debt after repayment
      */
     function _repay(
         address _owner,
         address _repayer,
         uint256 _amount,
-        address _borrowAssetAddress
+        address _borrowAssetAddress,
+        bool _shouldCleanBadDebt
     )
         private
         cacheAssetDecimals(_borrowAssetAddress)
@@ -1134,6 +1142,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         uint256 _feeCollectorFeesScaled;
         uint256 _poolFeesScaled;
         uint256 _principalPaidScaled;
+        uint256 _stablesLentDecreaseAmt;
 
         // Calculate new vault's borrowed amount
         uint256 _newNormalizedBorrowAmount = _normalizeBorrowAmount(
@@ -1156,13 +1165,25 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             _feeCollectorFeesScaled = _amount - _poolFeesScaled;
         }
 
-        // Update total borrow amount
-        totalBorrowed = totalBorrowed -
-            vault.normalizedBorrowedAmount +
-            _newNormalizedBorrowAmount;
+        // Update vault's borrowed amounts and clean debt if requested
+        if (_shouldCleanBadDebt) {
+            totalBorrowed -= vault.normalizedBorrowedAmount;
+            _stablesLentDecreaseAmt = (actualVaultBorrowAmountScaled - _amount) *
+                precisionScalars[_borrowAssetAddress];
 
-        // Update vault
-        vault.normalizedBorrowedAmount = _newNormalizedBorrowAmount;
+            // Can only decrease by the amount borrowed
+            if (_stablesLentDecreaseAmt > vault.principal) {
+                _stablesLentDecreaseAmt = vault.principal;
+            }
+
+            vault.principal = 0;
+            vault.normalizedBorrowedAmount = 0;
+        } else {
+            totalBorrowed = totalBorrowed -
+                vault.normalizedBorrowedAmount +
+                _newNormalizedBorrowAmount;
+            vault.normalizedBorrowedAmount = _newNormalizedBorrowAmount;
+        }
 
         // Transfer fees to pool and fee collector (if any)
         if (_interestScaled > 0) {
@@ -1204,6 +1225,11 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             );
         }
 
+        // Clean the remaining debt if requested
+        if (_stablesLentDecreaseAmt > 0) {
+            ISapphirePool(borrowPool).decreaseStablesLent(_stablesLentDecreaseAmt);
+        }
+
         emit Repaid(
             _owner,
             _repayer,
@@ -1238,10 +1264,11 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         // 5. Decrease the owner's collateral
 
         // INTEGRATIONS
-        // 1. Transfer the debt to pay from the liquidator to the core
-        // 2. Destroy the debt to be paid
-        // 3. Transfer the user portion of the collateral sold to the msg.sender
-        // 4. Transfer Arc's portion of the profit to the fee collector
+        // 1. Transfer the debt to pay from the liquidator to the pool
+        // 2. Transfer the user portion of the collateral sold to the msg.sender
+        // 3. Transfer Arc's portion of the profit to the fee collector
+        // 4. If there is bad debt, make LPs pay for it by reducing the stablesLent on the pool
+        //    by the amount of the bad debt.
 
         // --- CHECKS ---
 
@@ -1316,7 +1343,8 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             _owner,
             msg.sender,
             vars.debtToRepay / precisionScalars[_borrowAssetAddress],
-            _borrowAssetAddress
+            _borrowAssetAddress,
+            true
         );
 
         // Transfer user collateral
@@ -1538,7 +1566,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             ISapphirePassportScores passportScores,
             uint256 currentEpoch
         ) = _getPassportAndEpoch();
-        
+
         if (_scoreProof.merkleProof.length == 0) {
             // Proof is not passed. If the proof's owner has no expected epoch, set it to the next 2
             if (expectedEpochWithProof[_scoreProof.account] == 0) {
@@ -1555,7 +1583,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
                 expectedEpochWithProof[_scoreProof.account] == 0 ||
                 expectedEpochWithProof[_scoreProof.account] > currentEpoch
             ) {
-                // Owner has a valid proof, so will enforce liquidations to pass a proof for this 
+                // Owner has a valid proof, so will enforce liquidations to pass a proof for this
                 // user from now on
                 expectedEpochWithProof[_scoreProof.account] = currentEpoch;
             }
