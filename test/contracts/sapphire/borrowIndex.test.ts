@@ -564,19 +564,8 @@ describe('borrow index (integration)', () => {
       const { principal, normalizedBorrowedAmount } = await arc.getVault(
         minter1.address,
       );
-      expect(principal).eq(
-        roundUpMul(borrowIndexAfterLiquidation, BORROW_AMOUNT).sub(
-          BORROW_AMOUNT,
-        ),
-      );
-      expect(normalizedBorrowedAmount).eq(
-        roundUpDiv(
-          roundUpMul(borrowIndexAfterLiquidation, BORROW_AMOUNT).sub(
-            BORROW_AMOUNT,
-          ),
-          borrowIndexAfterLiquidation,
-        ),
-      );
+      expect(principal).eq(0);
+      expect(normalizedBorrowedAmount).eq(0);
     });
 
     it('open for 1 year and repay partially after this year', async () => {
