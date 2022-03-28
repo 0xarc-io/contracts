@@ -312,14 +312,14 @@ describe('SapphirePool', () => {
       });
     });
 
-    describe('#borrowStables', () => {
+    describe('#borrow', () => {
       beforeEach(() => borrowAndRepaySetup());
 
       it('reverts if called by a non-approved core', async () => {
         await expect(
           pool
             .connect(depositor)
-            .borrowStables(
+            .borrow(
               stablecoin.address,
               scaledDepositAmount.div(2),
               depositor.address,
@@ -337,7 +337,7 @@ describe('SapphirePool', () => {
         );
 
         await expect(
-          pool.borrowStables(
+          pool.borrow(
             stablecoin.address,
             scaledDepositAmount.div(3).mul(2),
             admin.address,
@@ -347,7 +347,7 @@ describe('SapphirePool', () => {
 
       it('reverts if trying to borrow an unsupported token', async () => {
         await expect(
-          pool.borrowStables(
+          pool.borrow(
             ctx.contracts.collateral.address,
             scaledDepositAmount,
             admin.address,
@@ -362,11 +362,7 @@ describe('SapphirePool', () => {
         );
 
         await expect(
-          pool.borrowStables(
-            stablecoin.address,
-            scaledDepositAmount,
-            admin.address,
-          ),
+          pool.borrow(stablecoin.address, scaledDepositAmount, admin.address),
         ).to.be.revertedWith('SapphirePool: core borrow limit exceeded');
       });
 
@@ -393,11 +389,7 @@ describe('SapphirePool', () => {
 
         expect(await testDai.balanceOf(admin.address)).to.eq(0);
 
-        await pool.borrowStables(
-          testDai.address,
-          daiDepositAmount,
-          admin.address,
-        );
+        await pool.borrow(testDai.address, daiDepositAmount, admin.address);
         expect(await testDai.balanceOf(admin.address)).to.eq(daiDepositAmount);
       });
 
@@ -405,7 +397,7 @@ describe('SapphirePool', () => {
         let utilization = await pool.coreBorrowUtilization(admin.address);
         expect(utilization.amountUsed).to.eq(0);
 
-        await pool.borrowStables(
+        await pool.borrow(
           stablecoin.address,
           scaledDepositAmount.div(2),
           admin.address,
@@ -414,7 +406,7 @@ describe('SapphirePool', () => {
         utilization = await pool.coreBorrowUtilization(admin.address);
         expect(utilization.amountUsed).to.eq(scaledDepositAmount.div(2));
 
-        await pool.borrowStables(
+        await pool.borrow(
           stablecoin.address,
           scaledDepositAmount.div(2),
           admin.address,
@@ -426,11 +418,7 @@ describe('SapphirePool', () => {
 
       it('emits TokensBorrowed', async () => {
         await expect(
-          pool.borrowStables(
-            stablecoin.address,
-            scaledDepositAmount,
-            admin.address,
-          ),
+          pool.borrow(stablecoin.address, scaledDepositAmount, admin.address),
         )
           .to.emit(pool, 'TokensBorrowed')
           .withArgs(
@@ -442,14 +430,14 @@ describe('SapphirePool', () => {
       });
     });
 
-    describe('#repayStables', () => {
+    describe('#repay', () => {
       beforeEach(() => borrowAndRepaySetup());
 
       it('reverts if called by a non-approved core', async () => {
         await expect(
           pool
             .connect(depositor)
-            .repayStables(stablecoin.address, scaledDepositAmount.div(2)),
+            .repay(stablecoin.address, scaledDepositAmount.div(2)),
         ).to.be.revertedWith('SapphirePool: sender is not a Core');
       });
 
@@ -463,10 +451,7 @@ describe('SapphirePool', () => {
         );
 
         await expect(
-          pool.repayStables(
-            stablecoin.address,
-            scaledDepositAmount.div(3).mul(2),
-          ),
+          pool.repay(stablecoin.address, scaledDepositAmount.div(3).mul(2)),
         ).to.be.revertedWith(ARITHMETIC_ERROR);
       });
 
@@ -477,14 +462,14 @@ describe('SapphirePool', () => {
         );
 
         await expect(
-          pool.repayStables(ctx.contracts.collateral.address, depositAmount),
+          pool.repay(ctx.contracts.collateral.address, depositAmount),
         ).to.be.revertedWith('SapphirePool: unknown token');
       });
 
       it('repays the correct amount of requested tokens and updates the creds correctly', async () => {
         expect(await stablecoin.balanceOf(admin.address)).to.eq(0);
 
-        await pool.borrowStables(
+        await pool.borrow(
           stablecoin.address,
           scaledDepositAmount,
           admin.address,
@@ -493,7 +478,7 @@ describe('SapphirePool', () => {
         expect(await stablecoin.balanceOf(admin.address)).to.eq(depositAmount);
         expect(await pool.stablesLent()).to.eq(scaledDepositAmount);
 
-        await pool.repayStables(stablecoin.address, depositAmount.div(2));
+        await pool.repay(stablecoin.address, depositAmount.div(2));
 
         expect(await stablecoin.balanceOf(admin.address)).to.eq(
           depositAmount.div(2),
@@ -522,15 +507,11 @@ describe('SapphirePool', () => {
           .connect(depositor)
           .deposit(testDai.address, daiDepositAmount);
 
-        await pool.borrowStables(
-          testDai.address,
-          daiDepositAmount,
-          admin.address,
-        );
+        await pool.borrow(testDai.address, daiDepositAmount, admin.address);
         expect(await testDai.balanceOf(admin.address)).to.eq(daiDepositAmount);
 
         await approve(daiDepositAmount, testDai.address, pool.address, admin);
-        await pool.repayStables(testDai.address, daiDepositAmount);
+        await pool.repay(testDai.address, daiDepositAmount);
         expect(await testDai.balanceOf(admin.address)).to.eq(0);
       });
 
@@ -538,7 +519,7 @@ describe('SapphirePool', () => {
         let utilization = await pool.coreBorrowUtilization(admin.address);
         expect(utilization.amountUsed).to.eq(0);
 
-        await pool.borrowStables(
+        await pool.borrow(
           stablecoin.address,
           scaledDepositAmount.div(2),
           admin.address,
@@ -547,7 +528,7 @@ describe('SapphirePool', () => {
         utilization = await pool.coreBorrowUtilization(admin.address);
         expect(utilization.amountUsed).to.eq(scaledDepositAmount.div(2));
 
-        await pool.repayStables(stablecoin.address, depositAmount.div(2));
+        await pool.repay(stablecoin.address, depositAmount.div(2));
 
         utilization = await pool.coreBorrowUtilization(admin.address);
         expect(utilization.amountUsed).to.eq(0);
@@ -562,17 +543,13 @@ describe('SapphirePool', () => {
         await pool.setDepositLimit(testDai.address, scaledDepositAmount);
         await testDai.mintShare(pool.address, scaledDepositAmount);
 
-        await pool.borrowStables(
-          testDai.address,
-          scaledDepositAmount,
-          admin.address,
-        );
+        await pool.borrow(testDai.address, scaledDepositAmount, admin.address);
 
         await pool.setDepositLimit(testDai.address, 0);
 
         await testDai.approve(pool.address, scaledDepositAmount);
         await expect(
-          pool.repayStables(testDai.address, scaledDepositAmount),
+          pool.repay(testDai.address, scaledDepositAmount),
         ).to.be.revertedWith('SapphirePool: cannot repay with the given token');
       });
     });
@@ -706,7 +683,7 @@ describe('SapphirePool', () => {
           .connect(depositor)
           .deposit(testDai.address, scaledDepositAmount);
 
-        await pool.borrowStables(
+        await pool.borrow(
           stablecoin.address,
           scaledDepositAmount.div(2),
           admin.address,
@@ -916,7 +893,7 @@ describe('SapphirePool', () => {
       it('reverts if withdrawing more than the available balance on the contract', async () => {
         await pool.setCoreBorrowLimit(admin.address, scaledDepositAmount);
 
-        await pool.borrowStables(
+        await pool.borrow(
           stablecoin.address,
           scaledDepositAmount,
           admin.address,
@@ -1192,7 +1169,7 @@ describe('SapphirePool', () => {
       // Core borrows 100 USDC
       await pool
         .connect(core)
-        .borrowStables(stablecoin.address, scaledDepositAmount, admin.address);
+        .borrow(stablecoin.address, scaledDepositAmount, admin.address);
       expect(await pool.stablesLent()).to.eq(scaledDepositAmount);
       expect(await stablecoin.balanceOf(pool.address)).to.eq(
         depositAmount.mul(14),

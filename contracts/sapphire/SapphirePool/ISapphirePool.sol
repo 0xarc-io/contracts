@@ -11,13 +11,13 @@ interface ISapphirePool {
 
     function setDepositLimit(address _tokenAddress, uint256 _limit) external;
 
-    function borrowStables(
+    function borrow(
         address _stablecoinAddress, 
         uint256 _scaledBorrowAmount,
         address _receiver
     ) external;
 
-    function repayStables(
+    function repay(
         address _stablecoinAddress, 
         uint256 _repayAmount
     ) external;

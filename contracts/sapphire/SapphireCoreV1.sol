@@ -1074,7 +1074,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         );
 
         // Borrow stablecoins from pool
-        ISapphirePool(borrowPool).borrowStables(
+        ISapphirePool(borrowPool).borrow(
             _borrowAssetAddress,
             scaledAmount,
             msg.sender
@@ -1193,7 +1193,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             );
 
             // Repay stables to pool
-            ISapphirePool(borrowPool).repayStables(
+            ISapphirePool(borrowPool).repay(
                 _borrowAssetAddress,
                 _principalPaidScaled
             );
