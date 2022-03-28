@@ -203,7 +203,7 @@ contract SapphirePool is Adminable, InitializableBaseERC20, ISapphirePool, Sapph
     /**
      * @notice Borrows the specified tokens from the pool. Available only to approved cores.
      */
-    function borrowStables(
+    function borrow(
         address _stablecoinAddress,
         uint256 _scaledBorrowAmount,
         address _receiver
@@ -212,7 +212,7 @@ contract SapphirePool is Adminable, InitializableBaseERC20, ISapphirePool, Sapph
         override
         onlyCores
     {
-        uint256 amountOut = _borrowStables(
+        uint256 amountOut = _borrow(
             _stablecoinAddress,
             _scaledBorrowAmount,
             _receiver
@@ -230,7 +230,7 @@ contract SapphirePool is Adminable, InitializableBaseERC20, ISapphirePool, Sapph
      * @notice Repays the specified stablecoins to the pool. Available only to approved cores.
      * This function should only be called to repay principal, without interest.
      */
-    function repayStables(
+    function repay(
         address _stablecoinAddress,
         uint256 _repayAmount
     )
@@ -238,7 +238,7 @@ contract SapphirePool is Adminable, InitializableBaseERC20, ISapphirePool, Sapph
         override
         onlyCores
     {
-        uint256 debtDecreaseAmt = _repayStables(
+        uint256 debtDecreaseAmt = _repay(
             _stablecoinAddress,
             _repayAmount
         );
@@ -502,7 +502,7 @@ contract SapphirePool is Adminable, InitializableBaseERC20, ISapphirePool, Sapph
         }
     }
 
-    function _borrowStables(
+    function _borrow(
         address _borrowTokenAddress,
         uint256 _scaledBorrowAmount,
         address _receiver
@@ -537,7 +537,7 @@ contract SapphirePool is Adminable, InitializableBaseERC20, ISapphirePool, Sapph
         return expectedOutAmount;
     }
 
-    function _repayStables(
+    function _repay(
         address _repayTokenAddress,
         uint256 _repayAmount
     )
