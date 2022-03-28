@@ -402,11 +402,15 @@ describe('SapphireCore.repay()', () => {
   });
 
   it('updates the totalBorrowed after a repay', async () => {
-    expect(await arc.core().totalBorrowed()).to.eq(SCALED_BORROW_AMOUNT);
+    expect(await arc.core().normalizedTotalBorrowed()).to.eq(
+      SCALED_BORROW_AMOUNT,
+    );
 
     await repay(BORROW_AMOUNT.div(2), signers.scoredMinter);
 
-    expect(await arc.core().totalBorrowed()).to.eq(SCALED_BORROW_AMOUNT.div(2));
+    expect(await arc.core().normalizedTotalBorrowed()).to.eq(
+      SCALED_BORROW_AMOUNT.div(2),
+    );
   });
 
   it('updates the vault borrow amount', async () => {
