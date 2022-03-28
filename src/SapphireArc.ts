@@ -82,7 +82,7 @@ export class SapphireArc {
       undefined,
       utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
     ),
-    minterBorrowLimitScore: PassportScoreProof = getEmptyScoreProof(
+    creditLimitScore: PassportScoreProof = getEmptyScoreProof(
       undefined,
       utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
     ),
@@ -117,7 +117,7 @@ export class SapphireArc {
     return this.executeActions(
       actions,
       passportScoreProof,
-      minterBorrowLimitScore,
+      creditLimitScore,
       coreName,
       caller,
       overrides,
