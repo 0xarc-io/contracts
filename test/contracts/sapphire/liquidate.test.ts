@@ -302,13 +302,9 @@ describe('SapphireCore.liquidate()', () => {
       expect(postLiquidationVault.collateralAmount).to.eq(0);
 
       // The vault debt amount is wiped because it was bad debt
-      expect(postLiquidationVault.normalizedBorrowedAmount).to.eq(
-        SCALED_BORROW_AMOUNT.sub(utils.parseEther('500')),
-      );
+      expect(postLiquidationVault.normalizedBorrowedAmount).to.eq(0);
 
-      expect(postLiquidationVault.principal).to.eq(
-        SCALED_BORROW_AMOUNT.sub(utils.parseEther('500')),
-      );
+      expect(postLiquidationVault.principal).to.eq(0);
     });
 
     it('liquidates if the current epoch is ≥ the effective epoch of the vault owner and proof is passed', async () => {
