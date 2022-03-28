@@ -95,7 +95,7 @@ contract SapphireCoreStorageV1 {
      * @notice An account of the total amount being borrowed by all depositors. This includes
      *      the amount of interest accrued.
      */
-    uint256 public totalBorrowed;
+    uint256 public normalizedTotalBorrowed;
 
     /**
      * @notice The accumulated borrow index. Each time a borrows, their borrow amount is expressed

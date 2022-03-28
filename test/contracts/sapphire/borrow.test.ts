@@ -955,7 +955,7 @@ describe('SapphireCore.borrow()', () => {
     expect(normalizedBorrowedAmount).eq(
       BORROW_AMOUNT_500_SCORE.mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR),
     );
-    expect(await ctx.contracts.sapphire.core.totalBorrowed()).eq(
+    expect(await ctx.contracts.sapphire.core.normalizedTotalBorrowed()).eq(
       BORROW_AMOUNT_500_SCORE.mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR),
     );
 
@@ -974,7 +974,7 @@ describe('SapphireCore.borrow()', () => {
       undefined,
       ctx.signers.minter,
     );
-    expect(await ctx.contracts.sapphire.core.totalBorrowed()).eq(
+    expect(await ctx.contracts.sapphire.core.normalizedTotalBorrowed()).eq(
       BORROW_AMOUNT_500_SCORE.mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR).add(
         SCALED_BORROW_AMOUNT,
       ),

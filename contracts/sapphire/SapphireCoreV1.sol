@@ -1065,7 +1065,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         }
 
         // Record borrow amount (update vault and total amount)
-        totalBorrowed = totalBorrowed -
+        normalizedTotalBorrowed = normalizedTotalBorrowed -
             vault.normalizedBorrowedAmount +
             _newNormalizedVaultBorrowAmount;
 
@@ -1106,16 +1106,16 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
      *
      * @param _owner The owner of the vault
      * @param _repayer The person who repays the debt
-     * @param _amount The amount to repay, denominated in the decimals of the borrow asset
+     * @param _amountScaled The amount to repay, denominated in the decimals of the borrow asset
      * @param _borrowAssetAddress The address of token to repay
-     * @param _shouldCleanBadDebt Indicates if it should clean the remaining debt after repayment
+     * @param _isLiquidation Indicates if it should clean the remaining debt after repayment
      */
     function _repay(
         address _owner,
         address _repayer,
-        uint256 _amount,
+        uint256 _amountScaled,
         address _borrowAssetAddress,
-        bool _shouldCleanBadDebt
+        bool _isLiquidation
     )
         private
         cacheAssetDecimals(_borrowAssetAddress)
@@ -1130,7 +1130,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         ) / precisionScalars[_borrowAssetAddress];
 
         require(
-            _amount <= actualVaultBorrowAmountScaled,
+            _amountScaled <= actualVaultBorrowAmountScaled,
             "SapphireCoreV1: there is not enough debt to repay"
         );
 
@@ -1146,29 +1146,29 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
 
         // Calculate new vault's borrowed amount
         uint256 _newNormalizedBorrowAmount = _normalizeBorrowAmount(
-            (actualVaultBorrowAmountScaled - _amount) * precisionScalars[_borrowAssetAddress],
+            (actualVaultBorrowAmountScaled - _amountScaled) * precisionScalars[_borrowAssetAddress],
             true
         );
 
         // Update principal
-        if(_amount > _interestScaled) {
+        if(_amountScaled > _interestScaled) {
             _poolFeesScaled = Math.roundUpMul(_interestScaled, poolInterestFee);
             _feeCollectorFeesScaled = _interestScaled - _poolFeesScaled;
 
             // User repays the entire interest and some (or all) principal
-            _principalPaidScaled = _amount - _interestScaled;
+            _principalPaidScaled = _amountScaled - _interestScaled;
             vault.principal = vault.principal -
                 _principalPaidScaled * precisionScalars[_borrowAssetAddress];
         } else {
             // Only interest is paid
-            _poolFeesScaled = Math.roundUpMul(_amount, poolInterestFee);
-            _feeCollectorFeesScaled = _amount - _poolFeesScaled;
+            _poolFeesScaled = Math.roundUpMul(_amountScaled, poolInterestFee);
+            _feeCollectorFeesScaled = _amountScaled - _poolFeesScaled;
         }
 
         // Update vault's borrowed amounts and clean debt if requested
-        if (_shouldCleanBadDebt) {
-            totalBorrowed -= vault.normalizedBorrowedAmount;
-            _stablesLentDecreaseAmt = (actualVaultBorrowAmountScaled - _amount) *
+        if (_isLiquidation) {
+            normalizedTotalBorrowed -= vault.normalizedBorrowedAmount;
+            _stablesLentDecreaseAmt = (actualVaultBorrowAmountScaled - _amountScaled) *
                 precisionScalars[_borrowAssetAddress];
 
             // Can only decrease by the amount borrowed
@@ -1179,7 +1179,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             vault.principal = 0;
             vault.normalizedBorrowedAmount = 0;
         } else {
-            totalBorrowed = totalBorrowed -
+            normalizedTotalBorrowed = normalizedTotalBorrowed -
                 vault.normalizedBorrowedAmount +
                 _newNormalizedBorrowAmount;
             vault.normalizedBorrowedAmount = _newNormalizedBorrowAmount;
@@ -1233,7 +1233,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         emit Repaid(
             _owner,
             _repayer,
-            _amount,
+            _amountScaled,
             _borrowAssetAddress,
             vault.collateralAmount,
             _denormalizeBorrowAmount(vault.normalizedBorrowedAmount, true),
