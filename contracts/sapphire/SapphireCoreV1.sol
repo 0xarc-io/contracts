@@ -181,11 +181,6 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         );
 
         require(
-            _collateralAddress != address(0),
-            "SapphireCoreV1: collateral is required"
-        );
-
-        require(
             _collateralAddress.isContract(),
             "SapphireCoreV1: collateral is not a contract"
         );
