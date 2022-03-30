@@ -1660,6 +1660,10 @@ describe('SapphireCore.liquidate()', () => {
        * drastically, such that the discounted value of the collateral is less than the interest
        */
 
+      const preBorrowTotalCoreBorrow = await arc
+        .core()
+        .normalizedTotalBorrowed();
+
       // Set up vault at $1000 collateral and $500 debt (200% c-ratio)
       await setupBaseVault();
 
@@ -1713,6 +1717,9 @@ describe('SapphireCore.liquidate()', () => {
 
       vault = await arc.getVault(signers.scoredMinter.address);
       expect(vault.normalizedBorrowedAmount).to.eq(0);
+      expect(await arc.core().normalizedTotalBorrowed()).eq(
+        preBorrowTotalCoreBorrow,
+      );
     });
   });
 });
