@@ -129,6 +129,12 @@ describe('SapphireCore.init', () => {
     ).to.be.revertedWith('SapphireCoreV1: collateral is required');
   });
 
+  it('reverts if collateral address is 0', async () => {
+    await expect(
+      init({ collateralAddress: deployer.address }),
+    ).to.be.revertedWith('SapphireCoreV1: collateral is not a contract');
+  });
+
   it('reverts if low c-ratio is 0', async () => {
     await expect(init({ lowCollateralRatio: 0 })).to.be.revertedWith(
       'SapphireCoreV1: collateral ratio has to be at least 1',

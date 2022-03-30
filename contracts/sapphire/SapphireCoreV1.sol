@@ -185,6 +185,11 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
             "SapphireCoreV1: collateral is required"
         );
 
+        require(
+            _collateralAddress.isContract(),
+            "SapphireCoreV1: collateral is not a contract"
+        );
+
         paused          = true;
         borrowIndex     = BASE;
         indexLastUpdate = currentTimestamp();
