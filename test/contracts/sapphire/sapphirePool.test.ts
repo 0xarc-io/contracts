@@ -557,7 +557,7 @@ describe('SapphirePool', () => {
     describe('#decreaseStablesLent', () => {
       beforeEach(async () => {
         await borrowAndRepaySetup();
-        await pool.borrowStables(
+        await pool.borrow(
           stablecoin.address,
           scaledDepositAmount,
           admin.address,
