@@ -199,13 +199,3 @@ task(
       console.log(red(`Error setting allocations: ${err}`));
     }
   });
-
-// @TODO: Scenarios to plan for:
-//        - Deploying all the core contracts
-//          - ARCX Token
-//          - Synth Registry
-//        - Deploying a new version of KYF
-//        - Deploy a new KYF Token
-//        - Deploy a new Skillset Token
-//        - Transfer ownership of any new token to the rightful owner
-//        - Getting verified on Etherscan

@@ -23,7 +23,6 @@ import {
   SapphireCoreV1,
   SapphireCoreV1Factory,
   SapphirePoolFactory,
-  SyntheticTokenV2Factory,
 } from './typings';
 import { IOracleFactory } from './typings/IOracleFactory';
 import { getEmptyScoreProof } from './utils/getScoreProof';
@@ -48,10 +47,6 @@ export class SapphireArc {
         oracle: IOracleFactory.connect(await core.oracle(), this.signer),
         collateral: BaseERC20Factory.connect(
           await core.collateralAsset(),
-          this.signer,
-        ),
-        synthetic: SyntheticTokenV2Factory.connect(
-          await core.syntheticAsset(),
           this.signer,
         ),
         pool: SapphirePoolFactory.connect(await core.borrowPool(), this.signer),
@@ -312,11 +307,11 @@ export class SapphireArc {
       undefined,
       utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
     ),
-    corename: string = this.getCoreNames()[0],
+    coreName: string = this.getCoreNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
   ): Promise<ContractTransaction> {
-    const core = this._getCore(corename, caller);
+    const core = this._getCore(coreName, caller);
 
     return core.withdraw(amount, [passportScoreProof], overrides);
   }
