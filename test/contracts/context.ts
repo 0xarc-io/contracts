@@ -55,7 +55,6 @@ export async function generateContext(
   const sdks = {} as SDKs;
   const contracts = {
     sapphire: {},
-    synthetic: {},
   } as Contracts;
 
   const ctx = { signers, sdks, contracts, evm } as ITestContext;

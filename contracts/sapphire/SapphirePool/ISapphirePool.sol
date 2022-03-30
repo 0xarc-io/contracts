@@ -2,18 +2,24 @@
 
 pragma solidity 0.8.4;
 
+import {SharedPoolStructs} from "./SharedPoolStructs.sol";
+
 interface ISapphirePool {
     /* ========== Mutating Functions ========== */
 
-    function setCoreSwapLimit(address _coreAddress, uint256 _limit) external;
+    function setCoreBorrowLimit(address _coreAddress, uint256 _limit) external;
 
     function setDepositLimit(address _tokenAddress, uint256 _limit) external;
 
-    function swap(
-        address _tokenIn, 
-        address _tokenOut, 
-        uint256 _amountIn,
+    function borrow(
+        address _stablecoinAddress, 
+        uint256 _scaledBorrowAmount,
         address _receiver
+    ) external;
+
+    function repay(
+        address _stablecoinAddress, 
+        uint256 _repayAmount
     ) external;
 
     function deposit(address _token, uint256 _amount) external;
@@ -24,9 +30,15 @@ interface ISapphirePool {
 
     function accumulatedRewardAmount() external view returns (uint256);
 
-    function coreSwapUtilization(address _coreAddress) external view returns (uint256, uint256);
+    function coreBorrowUtilization(address _coreAddress) 
+        external 
+        view 
+        returns (SharedPoolStructs.AssetUtilization memory);
 
-    function assetDepositUtilization(address _tokenAddress) external view returns (uint256, uint256);
+    function assetDepositUtilization(address _tokenAddress) 
+        external 
+        view 
+        returns (SharedPoolStructs.AssetUtilization memory);
 
     function deposits(address _userAddress) external view returns (uint256);
 

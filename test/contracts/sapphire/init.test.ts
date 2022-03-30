@@ -40,18 +40,12 @@ export async function setup([deployer, unauthorized]: Wallet[]): Promise<any> {
     'CTKN6',
     6,
   );
-  const synthetic = await deployTestToken(
-    deployer,
-    'Synthetic Token Name',
-    'STKN',
-  );
 
   return {
     sapphireCore,
     deployer,
     unauthorized,
     collateral,
-    synthetic,
   };
 }
 
@@ -60,7 +54,6 @@ describe('SapphireCore.init', () => {
   let deployer: Wallet;
   let unauthorized: Wallet;
   let collateral: TestToken;
-  let synthetic: TestToken;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let init: (overrides?: any) => unknown;
 
@@ -72,7 +65,6 @@ describe('SapphireCore.init', () => {
       deployer,
       unauthorized,
       collateral,
-      synthetic,
     } = await createFixtureLoader(
       ((await ethers.getSigners()) as unknown) as Wallet[],
     )(setup));
@@ -95,7 +87,6 @@ describe('SapphireCore.init', () => {
 
     defaultOptions = {
       collateralAddress: collateral.address,
-      syntheticAddress: synthetic.address,
       oracle: oracle.address,
       interestSetter: Wallet.createRandom().address,
       assessor: assessor.address,
@@ -119,7 +110,6 @@ describe('SapphireCore.init', () => {
         .connect(options.executor)
         .init(
           options.collateralAddress,
-          options.syntheticAddress,
           options.oracle,
           options.interestSetter,
           options.pauseOperator,
@@ -139,10 +129,10 @@ describe('SapphireCore.init', () => {
     ).to.be.revertedWith('SapphireCoreV1: collateral is required');
   });
 
-  it('reverts if synthetic address is 0', async () => {
+  it('reverts if collateral address is 0', async () => {
     await expect(
-      init({ syntheticAddress: constants.AddressZero }),
-    ).to.be.revertedWith('SapphireCoreV1: synthetic is required');
+      init({ collateralAddress: deployer.address }),
+    ).to.be.revertedWith('SapphireCoreV1: collateral is not a contract');
   });
 
   it('reverts if low c-ratio is 0', async () => {
@@ -187,10 +177,6 @@ describe('SapphireCore.init', () => {
     expect(await sapphireCore.collateralAsset()).eq(
       defaultOptions.collateralAddress,
       'collateralAsset',
-    );
-    expect(await sapphireCore.syntheticAsset()).eq(
-      defaultOptions.syntheticAddress,
-      'syntheticAsset',
     );
     expect(await sapphireCore.highCollateralRatio()).eq(
       defaultOptions.highCollateralRatio,
@@ -238,8 +224,8 @@ describe('SapphireCore.init', () => {
       'CLTRL',
       21,
     );
-    await expect(init({ collateralAddress: collatera19.address })).to.be.revertedWith(
-      'SapphireCoreV1: token has more than 18 decimals',
-    );
+    await expect(
+      init({ collateralAddress: collatera19.address }),
+    ).to.be.revertedWith('SapphireCoreV1: token has more than 18 decimals');
   });
 });

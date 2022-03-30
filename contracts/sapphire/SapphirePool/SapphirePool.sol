@@ -3,6 +3,8 @@
 pragma solidity 0.8.4;
 
 import {ISapphirePool} from "./ISapphirePool.sol";
+import {SapphirePoolStorage} from "./SapphirePoolStorage.sol";
+import {SharedPoolStructs} from "./SharedPoolStructs.sol";
 
 import {SafeERC20} from "../../lib/SafeERC20.sol";
 import {Adminable} from "../../lib/Adminable.sol";
@@ -12,22 +14,18 @@ import {IERC20Metadata} from "../../token/IERC20Metadata.sol";
 import {InitializableBaseERC20} from "../../token/InitializableBaseERC20.sol";
 
 /**
- * @notice A special AMM-like contract where swapping is permitted only by an approved
- * Sapphire Core. A portion of the interest made from the loans by the Cores is deposited
- * into this contract, and shared among the LPs.
+ * @notice A pool of stablecoins where the public can deposit assets and borrow them through 
+ * SapphireCores
+ * A portion of the interest made from the loans by the Cores is deposited into this contract, and 
+ * shared among the lenders.
  */
-contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
+contract SapphirePool is Adminable, InitializableBaseERC20, ISapphirePool, SapphirePoolStorage {
 
     /* ========== Libraries ========== */
 
     using Address for address;
 
     /* ========== Structs ========== */
-
-    struct AssetUtilization {
-        uint256 amountUsed;
-        uint256 limit;
-    }
 
     // Used in _getWithdrawAmounts to get around the stack too deep error.
     struct WithdrawAmountInfo {
@@ -40,43 +38,9 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         uint256 scaledAssetUtilization;
     }
 
-    /* ========== Variables ========== */
-
-    IERC20Metadata public credsToken;
-
-    /**
-     * @notice Determines the amount of creds the core can swap in. The amounts are stored in
-     * 18 decimals.
-     */
-    mapping (address => AssetUtilization) public override coreSwapUtilization;
-
-    /**
-     * @notice Determines the amount of tokens that can be deposited by
-     * liquidity providers. The amounts are stored in the asset's native decimals.
-     */
-    mapping (address => AssetUtilization) public override assetDepositUtilization;
-
-    /**
-     * @notice Determines the amount of tokens deposited by liquidity providers. Stored in 18
-     * decimals.
-     */
-    mapping (address => uint256) public override deposits;
-
-    /**
-     * @dev Stores the assets that have been historically allowed to be deposited.
-     */
-    address[] internal _knownDepositAssets;
-
-    /**
-     * @dev Stores the cores that have historically been approved to swap in assets.
-     */
-    address[] internal _knownCores;
-
-    mapping (address => uint8) internal _tokenDecimals;
-
     /* ========== Events ========== */
 
-    event CoreSwapLimitSet(address _core, uint256 _limit);
+    event CoreBorrowLimitSet(address _core, uint256 _limit);
 
     event DepositLimitSet(address _asset, uint256 _limit);
 
@@ -90,17 +54,22 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     event TokensWithdrawn(
         address indexed _user,
         address indexed _token,
-        uint256 _credsAmount,
+        uint256 _lpAmount,
         uint256 _withdrawAmount
     );
 
-    event TokensSwapped(
+    event TokensBorrowed(
         address indexed _core,
-        address _tokenIn,
-        address indexed _tokenOut,
-        uint256 _amountIn,
-        uint256 _amountOut,
-        address indexed _receiver
+        address indexed _stablecoin,
+        uint256 _borrowedAmount,
+        address _receiver
+    );
+
+    event TokensRepaid(
+        address indexed _core,
+        address indexed _stablecoin,
+        uint256 _repaidAmount,
+        uint256 _debtRepaid
     );
 
     /* ========== Modifiers ========== */
@@ -113,31 +82,32 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         _;
     }
 
+    modifier onlyCores () {
+        require(
+            _coreBorrowUtilization[msg.sender].limit > 0,
+            "SapphirePool: sender is not a Core"
+        );
+        _;
+    }
+
     /* ========== Restricted functions ========== */
 
     function init(
         string memory _name,
-        string memory _symbol,
-        address _credsToken
+        string memory _symbol
     )
         external
         onlyAdmin
         initializer
     {
         _init(_name, _symbol, 18);
-
-        require (
-            _credsToken.isContract(),
-            "SapphirePool: Creds address is not a contract"
-        );
-        credsToken = IERC20Metadata(_credsToken);
     }
 
     /**
-     * @notice Sets the limit for how many Creds can be swapped in by a Core.
+     * @notice Sets the limit for how many stables can be borrowed by the given core.
      * The sum of the core limits cannot be greater than the sum of the deposit limits.
      */
-    function setCoreSwapLimit(
+    function setCoreBorrowLimit(
         address _coreAddress,
         uint256 _limit
     )
@@ -153,28 +123,29 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
 
         require(
             sumOfCoreLimits + _limit <= sumOfDepositLimits,
-            "SapphirePool: swap limit is greater than the sum of the deposit limits"
+            "SapphirePool: sum of the deposit limits exceeds sum of borrow limits"
         );
 
         require(
             sumOfCoreLimits + _limit > 0,
-            "SapphirePool: at least one asset must have a positive swap limit"
+            "SapphirePool: at least one asset must have a positive borrow limit"
         );
 
         if (!isCoreKnown) {
             _knownCores.push(_coreAddress);
         }
 
-        coreSwapUtilization[_coreAddress].limit = _limit;
+        _coreBorrowUtilization[_coreAddress].limit = _limit;
 
-        emit CoreSwapLimitSet(_coreAddress, _limit);
+        emit CoreBorrowLimitSet(_coreAddress, _limit);
     }
 
     /**
      * @notice Sets the limit for the deposit token. If the limit is > 0, the token is added to
      * the list of the known deposit assets. These assets also become available for being
-     * swapped by the Cores, unless their limit is set to 0 later on.
+     * borrowed by Cores, unless their limit is set to 0 later on.
      * The sum of the deposit limits cannot be smaller than the sum of the core limits.
+     *
      * @param _tokenAddress The address of the deposit token.
      * @param _limit The limit for the deposit token, in its own native decimals.
      */
@@ -213,7 +184,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         );
 
         // The new sum of deposit limits cannot be zero, otherwise the pool will become
-        // unusable (deposits will be disabled).
+        // unusable (_deposits will be disabled).
         require(
             sumOfDepositLimits + scaledNewLimit > 0,
             "SapphirePool: at least 1 deposit asset must have a positive limit"
@@ -221,63 +192,62 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
 
         require(
             sumOfDepositLimits + scaledNewLimit >= sumOfCoreLimits,
-            "SapphirePool: sum of deposit limits smaller than the sum of the swap limits"
+            "SapphirePool: sum of borrow limits exceeds sum of deposit limits"
         );
 
-        assetDepositUtilization[_tokenAddress].limit = _limit;
+        _assetDepositUtilization[_tokenAddress].limit = _limit;
 
         emit DepositLimitSet(_tokenAddress, _limit);
     }
 
     /**
-     * @notice Performs a swap between the specified tokens, for the given amount. Assumes
-     * a 1:1 conversion. Only approved cores have permission to swap.
+     * @notice Borrows the specified tokens from the pool. Available only to approved cores.
      */
-    function swap(
-        address _tokenIn,
-        address _tokenOut,
-        uint256 _amountIn,
+    function borrow(
+        address _stablecoinAddress,
+        uint256 _scaledBorrowAmount,
         address _receiver
     )
         external
         override
+        onlyCores
     {
-        uint256 amountOut;
-
-        require(
-            coreSwapUtilization[msg.sender].limit > 0,
-            "SapphirePool: caller should be a core with a positive swap limit"
+        uint256 amountOut = _borrow(
+            _stablecoinAddress,
+            _scaledBorrowAmount,
+            _receiver
         );
 
-        require(
-            _tokenIn != _tokenOut && (
-                _tokenIn == address(credsToken) ||
-                _tokenOut == address(credsToken)
-            ),
-            "SapphirePool: invalid swap tokens"
-        );
-
-        if (_tokenIn == address(credsToken)) {
-            amountOut = _swapCredsForStables(
-                _tokenOut,
-                _amountIn,
-                _receiver
-            );
-        } else {
-            amountOut = _swapStablesForCreds(
-                _tokenIn,
-                _amountIn,
-                _receiver
-            );
-        }
-
-        emit TokensSwapped(
+        emit TokensBorrowed(
             msg.sender,
-            _tokenIn,
-            _tokenOut,
-            _amountIn,
+            _stablecoinAddress,
             amountOut,
             _receiver
+        );
+    }
+
+    /**
+     * @notice Repays the specified stablecoins to the pool. Available only to approved cores.
+     * This function should only be called to repay principal, without interest.
+     */
+    function repay(
+        address _stablecoinAddress,
+        uint256 _repayAmount
+    )
+        external
+        override
+        onlyCores
+    {
+        uint256 debtDecreaseAmt = _repay(
+            _stablecoinAddress,
+            _repayAmount
+        );
+
+        emit TokensRepaid(
+            msg.sender,
+            _stablecoinAddress,
+            _repayAmount,
+            debtDecreaseAmt
         );
     }
 
@@ -294,7 +264,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         external
         override
     {
-        AssetUtilization storage utilization = assetDepositUtilization[_token];
+        SharedPoolStructs.AssetUtilization storage utilization = _assetDepositUtilization[_token];
 
         require(
             utilization.amountUsed + _amount <= utilization.limit,
@@ -319,7 +289,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         }
 
         utilization.amountUsed += _amount;
-        deposits[msg.sender] += scaledAmount;
+        _deposits[msg.sender] += scaledAmount;
 
         _mint(msg.sender, lpToMint);
 
@@ -339,9 +309,9 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     }
 
     /**
-     * @notice Exchanges the given amount of Creds for the equivalent amount of the given token,
-     * plus the proportional rewards. The Creds exchanged are burned.
-     * @param _lpAmount The amount of Creds to exchange.
+     * @notice Exchanges the given amount of LP tokens for the equivalent amount of the given token,
+     * plus the proportional rewards. The tokens exchanged are burned.
+     * @param _lpAmount The amount of LP tokens to exchange.
      * @param _withdrawToken The token to exchange for.
      */
     function withdraw(
@@ -358,8 +328,8 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
             uint256 scaledWithdrawAmt
         ) = _getWithdrawAmounts(_lpAmount, _withdrawToken);
 
-        assetDepositUtilization[_withdrawToken].amountUsed -= assetUtilizationReduceAmt;
-        deposits[msg.sender] -= userDepositReduceAmt;
+        _assetDepositUtilization[_withdrawToken].amountUsed -= assetUtilizationReduceAmt;
+        _deposits[msg.sender] -= userDepositReduceAmt;
 
         _burn(msg.sender, _lpAmount);
 
@@ -395,7 +365,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         for (uint8 i = 0; i < _knownDepositAssets.length; i++) {
             address token = _knownDepositAssets[i];
             depositValue += _getScaledAmount(
-                assetDepositUtilization[token].amountUsed,
+                _assetDepositUtilization[token].amountUsed,
                 _tokenDecimals[token],
                 18
             );
@@ -405,7 +375,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     }
 
     /**
-     * @notice Returns the list of the available deposit and swap assets.
+     * @notice Returns the list of the available deposit and borrow assets.
      * If an asset has a limit of 0, it will be excluded from the list.
      */
     function getDepositAssets()
@@ -419,7 +389,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         for (uint8 i = 0; i < _knownDepositAssets.length; i++) {
             address token = _knownDepositAssets[i];
 
-            if (assetDepositUtilization[token].limit > 0) {
+            if (_assetDepositUtilization[token].limit > 0) {
                 validAssetCount++;
             }
         }
@@ -430,7 +400,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         for (uint8 i = 0; i < _knownDepositAssets.length; i++) {
             address token = _knownDepositAssets[i];
 
-            if (assetDepositUtilization[token].limit > 0) {
+            if (_assetDepositUtilization[token].limit > 0) {
                 result[currentIndex] = token;
                 currentIndex++;
             }
@@ -440,7 +410,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
     }
 
     /**
-     * @notice Returns the value of the pool in terms of the deposited stablecoins and creds.
+     * @notice Returns the value of the pool in terms of the deposited stablecoins and stables lent
      */
     function getPoolValue()
         public
@@ -461,9 +431,50 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
             );
         }
 
-        result += credsToken.balanceOf(address(this));
+        result += stablesLent;
 
         return result;
+    }
+
+    /**
+     * @notice Determines the amount of stables the cores can borrow. The amounts are stored in
+     * 18 decimals.
+     */
+    function coreBorrowUtilization(
+        address _coreAddress
+    )
+        external
+        view
+        override
+        returns (SharedPoolStructs.AssetUtilization memory)
+    {
+        return _coreBorrowUtilization[_coreAddress];
+    }
+
+    /**
+     * @notice Determines the amount of tokens that can be deposited by
+     * liquidity providers. The amounts are stored in the asset's native decimals.
+     */
+    function assetDepositUtilization(
+        address _tokenAddress
+    )
+        external
+        view
+        override
+        returns (SharedPoolStructs.AssetUtilization memory)
+    {
+        return _assetDepositUtilization[_tokenAddress];
+    }
+
+    function deposits(
+        address _userAddress
+    )
+        external
+        view
+        override
+        returns (uint256)
+    {
+        return _deposits[_userAddress];
     }
 
     /* ========== Private functions ========== */
@@ -491,40 +502,34 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         }
     }
 
-    function _swapCredsForStables(
-        address _tokenOut,
-        uint256 _credsAmount,
+    function _borrow(
+        address _borrowTokenAddress,
+        uint256 _scaledBorrowAmount,
         address _receiver
     )
         private
-        checkKnownToken(_tokenOut)
+        checkKnownToken(_borrowTokenAddress)
         returns (uint256)
     {
-        AssetUtilization storage utilization = coreSwapUtilization[msg.sender];
+        SharedPoolStructs.AssetUtilization storage utilization = _coreBorrowUtilization[msg.sender];
 
         require(
-            utilization.amountUsed + _credsAmount <= utilization.limit,
-            "SapphirePool: core swap limit exceeded"
+            utilization.amountUsed + _scaledBorrowAmount <= utilization.limit,
+            "SapphirePool: core borrow limit exceeded"
         );
 
         uint256 expectedOutAmount = _getScaledAmount(
-            _credsAmount,
+            _scaledBorrowAmount,
             _decimals,
-            _tokenDecimals[_tokenOut]
+            _tokenDecimals[_borrowTokenAddress]
         );
 
         // Increase core utilization
-        utilization.amountUsed += _credsAmount;
-
-        SafeERC20.safeTransferFrom(
-            IERC20Metadata(credsToken),
-            msg.sender,
-            address(this),
-            _credsAmount
-        );
+        utilization.amountUsed += _scaledBorrowAmount;
+        stablesLent += _scaledBorrowAmount;
 
         SafeERC20.safeTransfer(
-            IERC20Metadata(_tokenOut),
+            IERC20Metadata(_borrowTokenAddress),
             _receiver,
             expectedOutAmount
         );
@@ -532,49 +537,43 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         return expectedOutAmount;
     }
 
-    function _swapStablesForCreds(
-        address _tokenIn,
-        uint256 _stablesAmount,
-        address _receiver
+    function _repay(
+        address _repayTokenAddress,
+        uint256 _repayAmount
     )
         private
-        checkKnownToken(_tokenIn)
+        checkKnownToken(_repayTokenAddress)
         returns (uint256)
     {
         require(
-            assetDepositUtilization[_tokenIn].limit > 0,
+            _assetDepositUtilization[_repayTokenAddress].limit > 0,
             "SapphirePool: cannot repay with the given token"
         );
 
-        uint8 stableDecimals = _tokenDecimals[_tokenIn];
-        uint256 credsOutAmount = _getScaledAmount(
-            _stablesAmount,
+        uint8 stableDecimals = _tokenDecimals[_repayTokenAddress];
+        uint256 debtDecreaseAmt = _getScaledAmount(
+            _repayAmount,
             stableDecimals,
             _decimals
         );
-        AssetUtilization storage utilization = coreSwapUtilization[msg.sender];
+        SharedPoolStructs.AssetUtilization storage utilization = _coreBorrowUtilization[msg.sender];
 
-        utilization.amountUsed -= credsOutAmount;
+        utilization.amountUsed -= debtDecreaseAmt;
+        stablesLent -= debtDecreaseAmt;
 
         SafeERC20.safeTransferFrom(
-            IERC20Metadata(_tokenIn),
+            IERC20Metadata(_repayTokenAddress),
             msg.sender,
             address(this),
-            _stablesAmount
+            _repayAmount
         );
 
-        SafeERC20.safeTransfer(
-            IERC20Metadata(credsToken),
-            _receiver,
-            credsOutAmount
-        );
-
-        return credsOutAmount;
+        return debtDecreaseAmt;
     }
 
     /**
-     * @dev Returns the sum of the deposit limits and the sum of the core swap limits
-     * @param _optionalCoreCheck An optional parameter to check if the core has a swap limit > 0
+     * @dev Returns the sum of the deposit limits and the sum of the core borrow limits
+     * @param _optionalCoreCheck An optional parameter to check if the core has a borrow limit > 0
      * @param _excludeCore An optional parameter to exclude the core from the sum
      * @param _excludeDepositToken An optional parameter to exclude the deposit token from the sum
      */
@@ -590,7 +589,6 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
         uint256 sumOfDepositLimits;
         uint256 sumOfCoreLimits;
         bool isCoreKnown;
-        uint8 decimals;
 
         for (uint8 i = 0; i < _knownDepositAssets.length; i++) {
             address token = _knownDepositAssets[i];
@@ -598,11 +596,9 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
                 continue;
             }
 
-            decimals = _tokenDecimals[token];
-
             sumOfDepositLimits += _getScaledAmount(
-                assetDepositUtilization[token].limit,
-                decimals,
+                _assetDepositUtilization[token].limit,
+                _tokenDecimals[token],
                 18
             );
         }
@@ -613,7 +609,7 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
                 continue;
             }
 
-            sumOfCoreLimits += coreSwapUtilization[core].limit;
+            sumOfCoreLimits += _coreBorrowUtilization[core].limit;
 
             if (core == _optionalCoreCheck) {
                 isCoreKnown = true;
@@ -709,8 +705,8 @@ contract SapphirePool is ISapphirePool, Adminable, InitializableBaseERC20 {
             _tokenDecimals[_withdrawToken]
         );
 
-        info.userDeposit = deposits[msg.sender];
-        info.assetUtilization = assetDepositUtilization[_withdrawToken].amountUsed;
+        info.userDeposit = _deposits[msg.sender];
+        info.assetUtilization = _assetDepositUtilization[_withdrawToken].amountUsed;
         info.scaledAssetUtilization = _getScaledAmount(
             info.assetUtilization,
             _tokenDecimals[_withdrawToken],
