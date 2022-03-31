@@ -123,15 +123,9 @@ describe('SapphireCore.init', () => {
 
   addSnapshotBeforeRestoreAfterEach();
 
-  it('reverts if collateral address is 0', async () => {
+  it('reverts if collateral address is not a contract address', async () => {
     await expect(
       init({ collateralAddress: constants.AddressZero }),
-    ).to.be.revertedWith('SapphireCoreV1: collateral is required');
-  });
-
-  it('reverts if collateral address is 0', async () => {
-    await expect(
-      init({ collateralAddress: deployer.address }),
     ).to.be.revertedWith('SapphireCoreV1: collateral is not a contract');
   });
 

@@ -72,6 +72,12 @@ contract SapphirePool is Adminable, InitializableBaseERC20, ISapphirePool, Sapph
         uint256 _debtRepaid
     );
 
+    event StablesLentDecreased(
+        address indexed _core,
+        uint256 _amountDecreased,
+        uint256 _newStablesLentAmount
+    );
+
     /* ========== Modifiers ========== */
 
     modifier checkKnownToken (address _token) {
@@ -250,6 +256,27 @@ contract SapphirePool is Adminable, InitializableBaseERC20, ISapphirePool, Sapph
             debtDecreaseAmt
         );
     }
+
+    /**
+     * @notice Decreases the stables lent by the given amount. Only available to approved cores.
+     * This is used to make the lenders pay for the bad debt following a liquidation
+     */
+    function decreaseStablesLent(
+        uint256 _debtDecreaseAmount
+    )
+        external
+        override
+        onlyCores
+    {
+        stablesLent -= _debtDecreaseAmount;
+
+        emit StablesLentDecreased(
+            msg.sender, 
+            _debtDecreaseAmount, 
+            stablesLent
+        );
+    }
+
 
     /* ========== Public functions ========== */
 
