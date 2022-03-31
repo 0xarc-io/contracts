@@ -168,7 +168,9 @@ describe('SapphireCore.depositAndBorrow()', () => {
 
       // Check total collateral and borrowed values
       expect(await arc.core().totalCollateral()).eq(COLLATERAL_AMOUNT);
-      expect(await arc.core().totalBorrowed()).eq(SCALED_BORROW_AMOUNT);
+      expect(await arc.core().normalizedTotalBorrowed()).eq(
+        SCALED_BORROW_AMOUNT,
+      );
 
       expect(
         await arc.coreContracts().collateral.balanceOf(arc.coreAddress()),
@@ -304,7 +306,9 @@ describe('SapphireCore.depositAndBorrow()', () => {
 
       // Check total collateral and borrowed values
       expect(await arc.core().totalCollateral()).eq(COLLATERAL_AMOUNT);
-      expect(await arc.core().totalBorrowed()).eq(SCALED_BORROW_AMOUNT);
+      expect(await arc.core().normalizedTotalBorrowed()).eq(
+        SCALED_BORROW_AMOUNT,
+      );
 
       expect(
         await arc.coreContracts().collateral.balanceOf(arc.coreAddress()),
