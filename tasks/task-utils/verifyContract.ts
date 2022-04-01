@@ -38,7 +38,8 @@ export async function verifyContract(
       constructorArguments: contractArgs,
     });
   } catch (err) {
-    if (err.message.includes('already verified')) {
+    console.error('in verify contracts:', err);
+    if (err.message.toLowerCase().includes('already verified')) {
       console.log(green(`Contract is already verified`));
       return;
     } else {

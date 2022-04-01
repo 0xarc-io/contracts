@@ -15,17 +15,17 @@ const collateralConfig: CollateralConfigMap = {
     },
     borrowRatios: {
       highCRatio: utils.parseEther('2'),
-      lowCRatio: utils.parseEther('1'),
+      lowCRatio: utils.parseEther('1.4285714285'),
     },
     fees: {
       liquidatorDiscount: utils.parseEther('0.1'),
       poolInterestFee: utils.parseEther('0.5'),
       liquidationArcFee: utils.parseEther('0.4'),
-      borrowFee: utils.parseEther('0.005'),
+      borrowFee: utils.parseEther('0.0005'),
     },
     limits: {
       vaultBorrowMax: utils.parseEther('100000'),
-      defaultBorrowLimit: utils.parseEther('50000'),
+      defaultBorrowLimit: utils.parseEther('5000'),
     },
     interestSettings: {
       interestRate: '1547125957',
