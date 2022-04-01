@@ -1,7 +1,6 @@
 import fs from 'fs';
 
 import { HardhatUserConfig } from 'hardhat/config';
-import { BigNumber } from 'ethers';
 
 import 'hardhat-preprocessor';
 import 'hardhat-spdx-license-identifier';
@@ -27,7 +26,8 @@ export const params = {
   testnet_private_key: process.env.TESTNET_DEPLOY_PRIVATE_KEY || '',
   deploy_private_key: process.env.DEPLOY_PRIVATE_KEY || '',
   infura_key: process.env.INFURA_PROJECT_ID || '',
-  etherscan_key: process.env.ETHERSCAN_KEY || '',
+  etherscan_key: process.env.MAINNET_ETHERSCAN_KEY || '',
+  mumbai_etherscan_key: process.env.MUMBAI_ETHERSCAN_KEY || '',
   mainnet_alchemy_url: process.env.MAINNET_ALCHEMY || '',
 };
 
@@ -42,8 +42,6 @@ export function getNetworkUrl(network: string) {
 
   return `https://${prefix}${network}.infura.io/v3/${process.env.INFURA_PROJECT_ID}`;
 }
-
-const HUNDRED_THOUSAND_ETH = BigNumber.from(100000).pow(18).toString();
 
 const config: HardhatUserConfig = {
   defaultNetwork: 'hardhat',
@@ -127,7 +125,10 @@ const config: HardhatUserConfig = {
     target: 'ethers-v5',
   },
   etherscan: {
-    apiKey: params.etherscan_key,
+    apiKey: {
+      mainnet: params.etherscan_key,
+      polygonMumbai: params.mumbai_etherscan_key,
+    },
   },
   // watcher: {
   //   compilation: {
