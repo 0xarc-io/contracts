@@ -31,6 +31,7 @@ import {
   NetworkParams,
 } from '../deployments/types';
 import { TransactionRequest } from '@ethersproject/providers';
+import prompt from 'prompt';
 
 task(
   'deploy-passport-scores',
@@ -267,6 +268,10 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
       );
     }
 
+    console.log(
+      yellow(`Collateral config:\n`, JSON.stringify(collatConfig, null, 2)),
+    );
+
     const coreProxyAddress = await deployContract(
       {
         name: 'SapphireCoreProxy',
@@ -283,6 +288,13 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
       networkConfig,
     );
     console.log(green(`Sapphire core proxy deployed at ${coreProxyAddress}`));
+    await verifyContract(
+      hre,
+      coreProxyAddress,
+      coreAddress,
+      await signer.getAddress(),
+      [],
+    );
 
     const { collateralAddress } = collatConfig;
 
@@ -298,13 +310,6 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
     }
 
     // Initialize core
-
-    const credsProxyAddress = loadContract({
-      network,
-      name: 'CredsERC20',
-      source: 'ArcProxy',
-    }).address;
-
     const assessorAddress = loadContract({
       network,
       type: DeploymentType.borrowing,
@@ -315,12 +320,25 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
 
     const ultimateOwner = getUltimateOwner(signer, networkDetails);
 
-    if (!(await core.collateralAsset())) {
+    if (!ultimateOwner || ultimateOwner === constants.AddressZero) {
+      throw red(`Ultimate owner is null`);
+    }
+
+    console.log(
+      yellow(
+        `Ultimate owner is ${
+          collatConfig.interestSettings.interestSetter || ultimateOwner
+        }`,
+      ),
+    );
+
+    const collateralAddressSet = await core.collateralAsset();
+    if (collateralAddressSet === constants.AddressZero) {
+      prompt.start();
       console.log(
         red(
           `Please ensure the following details are correct:
             Collateral Address: ${collateralAddress}
-            Creds Address: ${credsProxyAddress}
             Oracle Address: ${oracleAddress}
             Interest Rate Setter: ${
               collatConfig.interestSettings.interestSetter || ultimateOwner
@@ -332,8 +350,19 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
             Low c-ratio: ${collatConfig.borrowRatios.lowCRatio}`,
         ),
       );
+      const { agree } = await prompt.get([
+        {
+          name: 'agree',
+          description: 'Do you agree?',
+          default: 'Y',
+        },
+      ]);
+      if (agree.toString().toLowerCase() !== 'y') {
+        throw red(`You must agree to continue`);
+      }
+
       console.log(yellow(`Calling core.init() ...\n`));
-      await core.init(
+      const tx = await core.init(
         collateralAddress,
         oracleAddress,
         collatConfig.interestSettings.interestSetter || ultimateOwner,
@@ -343,6 +372,7 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
         collatConfig.borrowRatios.highCRatio,
         collatConfig.borrowRatios.lowCRatio,
       );
+      await tx.wait();
       console.log(green(`core.init() called successfully!\n`));
     } else {
       console.log(green('Core already initialized!'));

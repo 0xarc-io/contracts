@@ -100,36 +100,6 @@
     "group": "CR"
   },
   {
-    "name": "SapphirePool",
-    "source": "SapphirePool",
-    "address": "0xD1e1289C092D2C3F19847C2e52a8644fFF66f4fa",
-    "txn": "0x15ca6dc6826a1402c2b478360ca983fbe5e538530bf082c291f2b999d1c91d63",
-    "network": "mumbai",
-    "version": 1,
-    "type": "borrowing",
-    "group": ""
-  },
-  {
-    "name": "SapphirePool",
-    "source": "ArcProxy",
-    "address": "0xb1fB649039F829Aa588bAc07411bb2D25A21E446",
-    "txn": "0x6556163aabd44ebde71c8a053d658f45fd584733a2152e187b6ebb8d6c7a808b",
-    "network": "mumbai",
-    "version": 1,
-    "type": "borrowing",
-    "group": ""
-  },
-  {
-    "name": "SapphireCoreProxy",
-    "source": "ArcProxy",
-    "address": "0x6a263eeCec9FEA177CE2ed3EAe5bEABa50AF5a1d",
-    "txn": "0x0281df097bfdb498186f954b3bb4fb4551ef6040e09b3d34ad88344793bf7b0b",
-    "network": "mumbai",
-    "version": 1,
-    "type": "borrowing",
-    "group": "WMATIC"
-  },
-  {
     "name": "SapphireMapperLinear",
     "source": "SapphireMapperLinear",
     "address": "0x8F78973e6FE36E5bdDf184C94Fb4eE8601213974",
@@ -159,13 +129,43 @@
     "type": "global"
   },
   {
-    "name": "SapphireCore",
-    "source": "SapphireCoreV1",
-    "address": "0xd53E06d9Ed2f54328f1981A5c27c436E30B01aEc",
-    "txn": "0x2e849c16a49a0b1302dda2d6d084a85f172d4a039010dbe60d67961f0b293456",
+    "name": "SapphirePool",
+    "source": "SapphirePool",
+    "address": "0x06Eb4DB1fA8d4908Ff7b55A8E2EA844c1F778F37",
+    "txn": "0xb4bf57c8cffdccd444fed9580fb7075c4dc6c6560170c80504c4859664d134da",
     "network": "mumbai",
     "version": 1,
     "type": "borrowing",
     "group": ""
+  },
+  {
+    "name": "SapphirePool",
+    "source": "ArcProxy",
+    "address": "0x417FBD7a478EFcca9E1a3F907562BEf22DB7fEE0",
+    "txn": "0x048ca34844b49ade72f8445360b52e88c0958bce8b5ca0f3761322daea9cb331",
+    "network": "mumbai",
+    "version": 1,
+    "type": "borrowing",
+    "group": ""
+  },
+  {
+    "name": "SapphireCore",
+    "source": "SapphireCoreV1",
+    "address": "0xEE320bE30a5E26F5542464058ed4f21055426B12",
+    "txn": "0x758555e8345b2eed4471430a5fff3327cb697b768145d136448131952c4e4b33",
+    "network": "mumbai",
+    "version": 1,
+    "type": "borrowing",
+    "group": ""
+  },
+  {
+    "name": "SapphireCoreProxy",
+    "source": "ArcProxy",
+    "address": "0xABCcBA7D02855bb17bBf5c2A5706fB80bA71c7E4",
+    "txn": "0x4ba1da0a952d286d9f1f251748ec41c96c3bbf0129734a2e28b62ca663b8fdb6",
+    "network": "mumbai",
+    "version": 1,
+    "type": "borrowing",
+    "group": "WMATIC"
   }
 ]
