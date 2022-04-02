@@ -635,7 +635,9 @@ describe('SapphireCore.borrow()', () => {
       scoredMinter,
     );
     await arc.borrow(
-      borrowLimitScore1.score.div(DEFAULT_STABLE_COIN_PRECISION_SCALAR),
+      BigNumber.from(borrowLimitScore1.score).div(
+        DEFAULT_STABLE_COIN_PRECISION_SCALAR,
+      ),
       stablecoin.address,
       creditScoreProof,
       borrowLimitProof,
@@ -664,7 +666,7 @@ describe('SapphireCore.borrow()', () => {
 
     const borrowLimitScore = {
       ...borrowLimitScore1,
-      score: borrowLimitScore1.score.add(
+      score: BigNumber.from(borrowLimitScore1.score).add(
         additionalBorrowAmount.mul(DEFAULT_STABLE_COIN_PRECISION_SCALAR),
       ),
     };

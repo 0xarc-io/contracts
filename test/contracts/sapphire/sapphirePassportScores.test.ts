@@ -448,11 +448,11 @@ describe('SapphireCreditScore', () => {
     beforeEach(async () => {
       const secondScore = {
         ...passportScore2,
-        score: passportScore2.score.add(100),
+        score: BigNumber.from(passportScore2.score).add(100),
       };
       const thirdScore = {
         ...passportScore2,
-        score: passportScore2.score.add(200),
+        score: BigNumber.from(passportScore2.score).add(200),
       };
 
       const secondTree = new PassportScoreTree([passportScore1, secondScore]);
