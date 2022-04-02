@@ -1,6 +1,9 @@
 import { PassportScore } from '@arc-types/sapphireCore';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { CREDIT_PROOF_PROTOCOL, BORROW_LIMIT_PROOF_PROTOCOL } from '@src/constants';
+import {
+  CREDIT_PROOF_PROTOCOL,
+  BORROW_LIMIT_PROOF_PROTOCOL,
+} from '@src/constants';
 import { PassportScoreTree } from '@src/MerkleTree';
 import {
   SapphireMapperLinear,
@@ -11,9 +14,7 @@ import {
 } from '@src/typings';
 import { MockSapphirePassportScores } from '@src/typings/MockSapphirePassportScores';
 import { getScoreProof } from '@src/utils';
-import {
-  DEFAULT_MAX_CREDIT_SCORE,
-} from '@test/helpers/sapphireDefaults';
+import { DEFAULT_MAX_CREDIT_SCORE } from '@test/helpers/sapphireDefaults';
 import { expect } from 'chai';
 import { BigNumber, constants, utils } from 'ethers';
 import { ethers } from 'hardhat';
@@ -293,7 +294,7 @@ describe('SapphireAssessor', () => {
           10,
           {
             ...getScoreProof(passportScore1, scoresTree),
-            score: passportScore1.score.add(1),
+            score: BigNumber.from(passportScore1.score).add(1),
           },
           false,
         ),
@@ -408,28 +409,34 @@ describe('SapphireAssessor', () => {
 
     it(`reverts if the proof is invalid`, async () => {
       await expect(
-        assessor.assessBorrowLimit(borrowLimitScore1.score.sub(1), {
-          ...getScoreProof(borrowLimitScore1, scoresTree),
-          score: borrowLimitScore1.score.sub(1),
-        }),
+        assessor.assessBorrowLimit(
+          BigNumber.from(borrowLimitScore1.score).sub(1),
+          {
+            ...getScoreProof(borrowLimitScore1, scoresTree),
+            score: BigNumber.from(borrowLimitScore1.score).sub(1),
+          },
+        ),
       ).to.be.revertedWith('SapphirePassportScores: invalid proof');
     });
 
     it('reverts if score proof is empty', async () => {
       await expect(
-        assessor.assessBorrowLimit(borrowLimitScore1.score.sub(1), {
-          account: user1.address,
-          protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
-          score: borrowLimitScore1.score,
-          merkleProof: [],
-        }),
+        assessor.assessBorrowLimit(
+          BigNumber.from(borrowLimitScore1.score).sub(1),
+          {
+            account: user1.address,
+            protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
+            score: borrowLimitScore1.score,
+            merkleProof: [],
+          },
+        ),
       ).to.be.revertedWith('SapphirePassportScores: invalid proof');
     });
 
     it('returns false if borrow value is greater then credit limit and has a valid proof', async () => {
       expect(
         await assessor.assessBorrowLimit(
-          borrowLimitScore1.score.add(1),
+          BigNumber.from(borrowLimitScore1.score).add(1),
           getScoreProof(borrowLimitScore1, scoresTree),
         ),
       ).to.eq(false);
