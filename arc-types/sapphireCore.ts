@@ -17,13 +17,10 @@ export type Vault = {
 export type PassportScore = {
   account: string;
   protocol: string;
-  score: BigNumber;
+  score: BigNumberish;
 };
 
-export interface PassportScoreProof {
-  account: string;
-  protocol: string;
-  score: BigNumberish;
+export interface PassportScoreProof extends PassportScore {
   merkleProof: string[];
 }
 
