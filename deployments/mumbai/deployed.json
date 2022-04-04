@@ -110,16 +110,6 @@
     "group": ""
   },
   {
-    "name": "SapphireAssessor",
-    "source": "SapphireAssessor",
-    "address": "0x117C41DB12D0AcFe0294033647AC88D905C0C495",
-    "txn": "0xc7d82830b93a0ba6b16d25bce33f07bff46d3e2e8c2f7bcdd5895d9962d9a065",
-    "network": "mumbai",
-    "version": 1,
-    "type": "borrowing",
-    "group": ""
-  },
-  {
     "name": "Oracle",
     "source": "MockSapphireOracle",
     "address": "0xf827f5Fd129Adca77241565aBA90a237911D6296",
@@ -167,5 +157,15 @@
     "version": 1,
     "type": "borrowing",
     "group": "WMATIC"
+  },
+  {
+    "name": "SapphireAssessor",
+    "source": "SapphireAssessor",
+    "address": "0x00FBD7D81C8BC3AbC59d454a303717B77A04F70a",
+    "txn": "0x70cea567d82d41287b56bde911ac0f8f6e933c41f5fa871af7eb79ad5d780e2d",
+    "network": "mumbai",
+    "version": 1,
+    "type": "borrowing",
+    "group": ""
   }
 ]
