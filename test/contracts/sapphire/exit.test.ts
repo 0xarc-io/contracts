@@ -37,8 +37,8 @@ describe('SapphireCore.exit()', () => {
   let signers: TestingSigners;
   let stablecoin: TestToken;
 
-  let scoredMinterCreditScore: PassportScore;
-  let scoredMinterBorrowLimitScore: PassportScore;
+  let scoredBorrowerCreditScore: PassportScore;
+  let scoredBorrowerBorrowLimitScore: PassportScore;
   let creditScoreTree: PassportScoreTree;
 
   function getCollateralBalance(user: SignerWithAddress) {
@@ -46,13 +46,13 @@ describe('SapphireCore.exit()', () => {
   }
 
   async function init(ctx: ITestContext) {
-    scoredMinterCreditScore = {
+    scoredBorrowerCreditScore = {
       account: ctx.signers.scoredBorrower.address,
       protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(500),
     };
 
-    scoredMinterBorrowLimitScore = {
+    scoredBorrowerBorrowLimitScore = {
       account: ctx.signers.scoredBorrower.address,
       protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
       score: SCALED_BORROW_AMOUNT.mul(2),
@@ -65,9 +65,9 @@ describe('SapphireCore.exit()', () => {
     };
 
     creditScoreTree = new PassportScoreTree([
-      scoredMinterCreditScore,
+      scoredBorrowerCreditScore,
       liquidatorCreditScore,
-      scoredMinterBorrowLimitScore,
+      scoredBorrowerBorrowLimitScore,
     ]);
 
     await setupSapphire(ctx, {
@@ -91,10 +91,10 @@ describe('SapphireCore.exit()', () => {
     await setupBaseVault(
       arc,
       signers.scoredBorrower,
-      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
+      getScoreProof(scoredBorrowerBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
-      getScoreProof(scoredMinterCreditScore, creditScoreTree),
+      getScoreProof(scoredBorrowerCreditScore, creditScoreTree),
     );
 
     const stablecoinBalance = await stablecoin.balanceOf(
@@ -134,10 +134,10 @@ describe('SapphireCore.exit()', () => {
     await setupBaseVault(
       arc,
       signers.scoredBorrower,
-      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
+      getScoreProof(scoredBorrowerBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
-      getScoreProof(scoredMinterCreditScore, creditScoreTree),
+      getScoreProof(scoredBorrowerCreditScore, creditScoreTree),
     );
 
     let vault = await arc.getVault(signers.scoredBorrower.address);
@@ -161,7 +161,7 @@ describe('SapphireCore.exit()', () => {
 
     await arc.exit(
       stablecoin.address,
-      getScoreProof(scoredMinterCreditScore, creditScoreTree),
+      getScoreProof(scoredBorrowerCreditScore, creditScoreTree),
       undefined,
       signers.scoredBorrower,
     );
@@ -180,10 +180,10 @@ describe('SapphireCore.exit()', () => {
     await setupBaseVault(
       arc,
       signers.scoredBorrower,
-      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
+      getScoreProof(scoredBorrowerBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT, // -1 for rounding
-      getScoreProof(scoredMinterCreditScore, creditScoreTree),
+      getScoreProof(scoredBorrowerCreditScore, creditScoreTree),
     );
 
     await ctx.contracts.collateral.mintShare(
@@ -222,10 +222,10 @@ describe('SapphireCore.exit()', () => {
     await setupBaseVault(
       arc,
       signers.scoredBorrower,
-      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
+      getScoreProof(scoredBorrowerBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
-      getScoreProof(scoredMinterCreditScore, creditScoreTree),
+      getScoreProof(scoredBorrowerCreditScore, creditScoreTree),
     );
 
     expect(await stablecoin.balanceOf(signers.scoredBorrower.address)).to.eq(
@@ -287,10 +287,10 @@ describe('SapphireCore.exit()', () => {
     await setupBaseVault(
       arc,
       signers.scoredBorrower,
-      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
+      getScoreProof(scoredBorrowerBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
-      getScoreProof(scoredMinterCreditScore, creditScoreTree),
+      getScoreProof(scoredBorrowerCreditScore, creditScoreTree),
     );
 
     await approve(
