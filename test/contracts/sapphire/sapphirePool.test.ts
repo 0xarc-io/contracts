@@ -1172,7 +1172,7 @@ describe('SapphirePool', () => {
     });
 
     it('Scenario 2: 2 LPs with 2 cores interact with the pool', async () => {
-      const core = ctx.signers.scoredMinter;
+      const core = ctx.signers.scoredBorrower;
 
       // Initial state (A 1000, B 500)
       await stablecoin.mintShare(userA.address, depositAmount.mul(9)); // User A already has 100
