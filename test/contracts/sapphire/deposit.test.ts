@@ -47,7 +47,7 @@ describe('SapphireCore.deposit()', () => {
     ctx = await generateContext(sapphireFixture, init);
     arc = ctx.sdks.sapphire;
     scoredMinter = ctx.signers.scoredBorrower;
-    minter = ctx.signers.minter;
+    minter = ctx.signers.borrower;
     collateral = TestTokenFactory.connect(arc.collateral().address, minter);
 
     // mint and approve token

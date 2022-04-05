@@ -113,7 +113,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
       score: SCALED_BORROW_AMOUNT.mul(2),
     };
     minterBorrowLimitScore = {
-      account: ctx.signers.minter.address,
+      account: ctx.signers.borrower.address,
       protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
       score: SCALED_BORROW_AMOUNT.mul(2),
     };
@@ -131,7 +131,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
 
     await mintApprovedCollateral(
       ctx.sdks.sapphire,
-      ctx.signers.minter,
+      ctx.signers.borrower,
       COLLATERAL_AMOUNT.mul(2),
     );
     await mintApprovedCollateral(
@@ -158,7 +158,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
         undefined,
         getScoreProof(minterBorrowLimitScore, creditScoreTree),
         undefined,
-        ctx.signers.minter,
+        ctx.signers.borrower,
       );
 
       // Ensure the function returned correct information
@@ -189,7 +189,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
         undefined,
         getScoreProof(minterBorrowLimitScore, creditScoreTree),
         undefined,
-        ctx.signers.minter,
+        ctx.signers.borrower,
       );
 
       expect(collateralAmount).eq(COLLATERAL_AMOUNT.mul(2));
@@ -207,7 +207,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
           undefined,
           getScoreProof(minterBorrowLimitScore, creditScoreTree),
           undefined,
-          ctx.signers.minter,
+          ctx.signers.borrower,
         ),
       ).to.be.revertedWith(
         'SapphireCoreV1: the vault will become undercollateralized',
@@ -221,7 +221,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
           undefined,
           getScoreProof(minterBorrowLimitScore, creditScoreTree),
           undefined,
-          ctx.signers.minter,
+          ctx.signers.borrower,
         ),
       ).to.be.revertedWith(
         'SapphireCoreV1: the vault will become undercollateralized',
@@ -245,7 +245,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
           undefined,
           getScoreProof(minterBorrowLimitScore, creditScoreTree),
           undefined,
-          ctx.signers.minter,
+          ctx.signers.borrower,
         ),
       ).to.be.revertedWith(
         'SapphireCoreV1: borrowed amount cannot be less than limit',
@@ -268,7 +268,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
           undefined,
           getScoreProof(minterBorrowLimitScore, creditScoreTree),
           undefined,
-          ctx.signers.minter,
+          ctx.signers.borrower,
         ),
       ).to.be.revertedWith(
         'SapphireCoreV1: borrowed amount cannot be greater than vault limit',

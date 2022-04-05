@@ -75,7 +75,7 @@ describe('SapphireCore.withdraw()', () => {
       score: SCALED_BORROW_AMOUNT,
     };
     minterBorrowLimitScore = {
-      account: ctx.signers.minter.address,
+      account: ctx.signers.borrower.address,
       protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
       score: SCALED_BORROW_AMOUNT,
     };
