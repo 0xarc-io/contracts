@@ -40,7 +40,7 @@ export async function generateContext(
 
   const retrievedSigners: SignerWithAddress[] = await ethers.getSigners();
   signers.admin = retrievedSigners[0];
-  signers.minter = retrievedSigners[1];
+  signers.borrower = retrievedSigners[1];
   signers.interestSetter = retrievedSigners[2];
   signers.liquidator = retrievedSigners[3];
   signers.staker = retrievedSigners[4];
@@ -48,7 +48,7 @@ export async function generateContext(
   signers.globalOperator = retrievedSigners[6];
   signers.positionOperator = retrievedSigners[7];
   signers.unauthorized = retrievedSigners[8];
-  signers.scoredMinter = retrievedSigners[9];
+  signers.scoredBorrower = retrievedSigners[9];
   signers.pauseOperator = signers.positionOperator;
   signers.merkleRootUpdater = signers.interestSetter;
 

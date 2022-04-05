@@ -27,7 +27,7 @@ describe('PassportScoreVerifiable', () => {
   before(async () => {
     const ctx = await generateContext(sapphireFixture, async (ctx) => {
       userCreditScore = {
-        account: ctx.signers.scoredMinter.address,
+        account: ctx.signers.scoredBorrower.address,
         protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
         score: BigNumber.from(12),
       };

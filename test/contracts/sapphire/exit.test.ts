@@ -37,8 +37,8 @@ describe('SapphireCore.exit()', () => {
   let signers: TestingSigners;
   let stablecoin: TestToken;
 
-  let scoredMinterCreditScore: PassportScore;
-  let scoredMinterBorrowLimitScore: PassportScore;
+  let scoredBorrowerCreditScore: PassportScore;
+  let scoredBorrowerBorrowLimitScore: PassportScore;
   let creditScoreTree: PassportScoreTree;
 
   function getCollateralBalance(user: SignerWithAddress) {
@@ -46,14 +46,14 @@ describe('SapphireCore.exit()', () => {
   }
 
   async function init(ctx: ITestContext) {
-    scoredMinterCreditScore = {
-      account: ctx.signers.scoredMinter.address,
+    scoredBorrowerCreditScore = {
+      account: ctx.signers.scoredBorrower.address,
       protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(500),
     };
 
-    scoredMinterBorrowLimitScore = {
-      account: ctx.signers.scoredMinter.address,
+    scoredBorrowerBorrowLimitScore = {
+      account: ctx.signers.scoredBorrower.address,
       protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
       score: SCALED_BORROW_AMOUNT.mul(2),
     };
@@ -65,9 +65,9 @@ describe('SapphireCore.exit()', () => {
     };
 
     creditScoreTree = new PassportScoreTree([
-      scoredMinterCreditScore,
+      scoredBorrowerCreditScore,
       liquidatorCreditScore,
-      scoredMinterBorrowLimitScore,
+      scoredBorrowerBorrowLimitScore,
     ]);
 
     await setupSapphire(ctx, {
@@ -90,23 +90,23 @@ describe('SapphireCore.exit()', () => {
   it('reverts if user does not have enough balance to close his vault', async () => {
     await setupBaseVault(
       arc,
-      signers.scoredMinter,
-      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
+      signers.scoredBorrower,
+      getScoreProof(scoredBorrowerBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
-      getScoreProof(scoredMinterCreditScore, creditScoreTree),
+      getScoreProof(scoredBorrowerCreditScore, creditScoreTree),
     );
 
     const stablecoinBalance = await stablecoin.balanceOf(
-      signers.scoredMinter.address,
+      signers.scoredBorrower.address,
     );
 
     // get rid of the remaining amount
     await stablecoin
-      .connect(signers.scoredMinter)
+      .connect(signers.scoredBorrower)
       .transfer(ctx.signers.admin.address, stablecoinBalance);
 
-    const vault = await arc.getVault(signers.scoredMinter.address);
+    const vault = await arc.getVault(signers.scoredBorrower.address);
     const remainingDebt = roundUpMul(
       vault.normalizedBorrowedAmount,
       await arc.core().currentBorrowIndex(),
@@ -117,28 +117,33 @@ describe('SapphireCore.exit()', () => {
       remainingDebt,
       stablecoin.address,
       arc.coreAddress(),
-      signers.scoredMinter,
+      signers.scoredBorrower,
     );
 
     await expect(
-      arc.exit(stablecoin.address, undefined, undefined, signers.scoredMinter),
+      arc.exit(
+        stablecoin.address,
+        undefined,
+        undefined,
+        signers.scoredBorrower,
+      ),
     ).to.be.revertedWith('SafeERC20: TRANSFER_FROM_FAILED');
   });
 
   it('repays all the debt and returns collateral to the user', async () => {
     await setupBaseVault(
       arc,
-      signers.scoredMinter,
-      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
+      signers.scoredBorrower,
+      getScoreProof(scoredBorrowerBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
-      getScoreProof(scoredMinterCreditScore, creditScoreTree),
+      getScoreProof(scoredBorrowerCreditScore, creditScoreTree),
     );
 
-    let vault = await arc.getVault(signers.scoredMinter.address);
-    let collateralBalance = await getCollateralBalance(signers.scoredMinter);
+    let vault = await arc.getVault(signers.scoredBorrower.address);
+    let collateralBalance = await getCollateralBalance(signers.scoredBorrower);
     let stableBalance = await stablecoin.balanceOf(
-      signers.scoredMinter.address,
+      signers.scoredBorrower.address,
     );
 
     expect(vault.collateralAmount).to.eq(COLLATERAL_AMOUNT);
@@ -151,19 +156,19 @@ describe('SapphireCore.exit()', () => {
       BORROW_AMOUNT,
       stablecoin.address,
       arc.coreAddress(),
-      signers.scoredMinter,
+      signers.scoredBorrower,
     );
 
     await arc.exit(
       stablecoin.address,
-      getScoreProof(scoredMinterCreditScore, creditScoreTree),
+      getScoreProof(scoredBorrowerCreditScore, creditScoreTree),
       undefined,
-      signers.scoredMinter,
+      signers.scoredBorrower,
     );
 
-    vault = await arc.getVault(signers.scoredMinter.address);
-    collateralBalance = await getCollateralBalance(signers.scoredMinter);
-    stableBalance = await stablecoin.balanceOf(signers.scoredMinter.address);
+    vault = await arc.getVault(signers.scoredBorrower.address);
+    collateralBalance = await getCollateralBalance(signers.scoredBorrower);
+    stableBalance = await stablecoin.balanceOf(signers.scoredBorrower.address);
 
     expect(vault.collateralAmount).to.eq(0);
     expect(vault.normalizedBorrowedAmount).to.eq(0);
@@ -174,15 +179,15 @@ describe('SapphireCore.exit()', () => {
   it('reverts if exit with unsupported token', async () => {
     await setupBaseVault(
       arc,
-      signers.scoredMinter,
-      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
+      signers.scoredBorrower,
+      getScoreProof(scoredBorrowerBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT, // -1 for rounding
-      getScoreProof(scoredMinterCreditScore, creditScoreTree),
+      getScoreProof(scoredBorrowerCreditScore, creditScoreTree),
     );
 
     await ctx.contracts.collateral.mintShare(
-      signers.scoredMinter.address,
+      signers.scoredBorrower.address,
       SCALED_BORROW_AMOUNT,
     );
 
@@ -191,7 +196,7 @@ describe('SapphireCore.exit()', () => {
       SCALED_BORROW_AMOUNT,
       ctx.contracts.collateral.address,
       arc.coreAddress(),
-      signers.scoredMinter,
+      signers.scoredBorrower,
     );
 
     await expect(
@@ -199,7 +204,7 @@ describe('SapphireCore.exit()', () => {
         ctx.contracts.collateral.address,
         undefined,
         undefined,
-        signers.scoredMinter,
+        signers.scoredBorrower,
       ),
     ).to.be.revertedWith('SapphirePool: unknown token');
   });
@@ -212,18 +217,18 @@ describe('SapphireCore.exit()', () => {
       .connect(signers.interestSetter)
       .setInterestRate(INTEREST_RATE);
 
-    expect(await stablecoin.balanceOf(signers.scoredMinter.address)).to.eq(0);
+    expect(await stablecoin.balanceOf(signers.scoredBorrower.address)).to.eq(0);
 
     await setupBaseVault(
       arc,
-      signers.scoredMinter,
-      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
+      signers.scoredBorrower,
+      getScoreProof(scoredBorrowerBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
-      getScoreProof(scoredMinterCreditScore, creditScoreTree),
+      getScoreProof(scoredBorrowerCreditScore, creditScoreTree),
     );
 
-    expect(await stablecoin.balanceOf(signers.scoredMinter.address)).to.eq(
+    expect(await stablecoin.balanceOf(signers.scoredBorrower.address)).to.eq(
       BORROW_AMOUNT,
     );
 
@@ -231,7 +236,7 @@ describe('SapphireCore.exit()', () => {
     await arc.updateTime(2);
 
     // Vault contains principal borrow amount
-    let vault = await arc.getVault(signers.scoredMinter.address);
+    let vault = await arc.getVault(signers.scoredBorrower.address);
 
     // Get borrow index, which will be used to calculate actual borrow amount in the core contract
     const borrowIndex = await arc.core().currentBorrowIndex();
@@ -246,18 +251,23 @@ describe('SapphireCore.exit()', () => {
       actualBorrowAmount.div(DEFAULT_STABLE_COIN_PRECISION_SCALAR),
       stablecoin.address,
       arc.coreAddress(),
-      signers.scoredMinter,
+      signers.scoredBorrower,
     );
 
     // Try to exit but fail because user does not have enough balance due to
     // the accrued interest
     await expect(
-      arc.exit(stablecoin.address, undefined, undefined, signers.scoredMinter),
+      arc.exit(
+        stablecoin.address,
+        undefined,
+        undefined,
+        signers.scoredBorrower,
+      ),
     ).to.be.revertedWith('SafeERC20: TRANSFER_FROM_FAILED');
 
     const accruedInterest = actualBorrowAmount.sub(SCALED_BORROW_AMOUNT);
     await stablecoin.mintShare(
-      signers.scoredMinter.address,
+      signers.scoredBorrower.address,
       accruedInterest.div(DEFAULT_STABLE_COIN_PRECISION_SCALAR),
     );
 
@@ -265,10 +275,10 @@ describe('SapphireCore.exit()', () => {
       stablecoin.address,
       undefined,
       undefined,
-      signers.scoredMinter,
+      signers.scoredBorrower,
     );
 
-    vault = await arc.getVault(signers.scoredMinter.address);
+    vault = await arc.getVault(signers.scoredBorrower.address);
     expect(vault.collateralAmount).to.eq(0);
     expect(vault.normalizedBorrowedAmount).to.eq(0);
   });
@@ -276,33 +286,35 @@ describe('SapphireCore.exit()', () => {
   it("uses SapphireArc's repay and withdraw", async () => {
     await setupBaseVault(
       arc,
-      signers.scoredMinter,
-      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
+      signers.scoredBorrower,
+      getScoreProof(scoredBorrowerBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
-      getScoreProof(scoredMinterCreditScore, creditScoreTree),
+      getScoreProof(scoredBorrowerCreditScore, creditScoreTree),
     );
 
     await approve(
       BORROW_AMOUNT,
       stablecoin.address,
       arc.coreAddress(),
-      signers.scoredMinter,
+      signers.scoredBorrower,
     );
 
     await arc.repayAndWithdraw(
       stablecoin.address,
       BORROW_AMOUNT,
       COLLATERAL_AMOUNT,
-      signers.scoredMinter,
+      signers.scoredBorrower,
       undefined,
       undefined,
     );
 
-    const vault = await arc.getVault(signers.scoredMinter.address);
-    const collateralBalance = await getCollateralBalance(signers.scoredMinter);
+    const vault = await arc.getVault(signers.scoredBorrower.address);
+    const collateralBalance = await getCollateralBalance(
+      signers.scoredBorrower,
+    );
     const stableBalance = await stablecoin.balanceOf(
-      signers.scoredMinter.address,
+      signers.scoredBorrower.address,
     );
 
     expect(vault.collateralAmount).to.eq(0);

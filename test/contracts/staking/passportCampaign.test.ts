@@ -179,7 +179,7 @@ describe('PassportCampaign', () => {
     evm = new EVM(hre.ethers.provider);
     admin = signers.admin;
     staker = signers.staker;
-    user1 = signers.scoredMinter;
+    user1 = signers.scoredBorrower;
     unauthorized = signers.unauthorized;
 
     stakerPassportScore = {
@@ -189,7 +189,7 @@ describe('PassportCampaign', () => {
     };
 
     user1PassportScore = {
-      account: signers.scoredMinter.address,
+      account: signers.scoredBorrower.address,
       protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: CREDIT_SCORE_THRESHOLD.add(100),
     };

@@ -186,7 +186,7 @@ describe('JointPassportCampaign', () => {
     admin = signers.admin;
     collab = signers.positionOperator;
     user1 = signers.staker;
-    user2 = signers.minter;
+    user2 = signers.borrower;
     unauthorized = signers.unauthorized;
 
     user1CreditScore = {
