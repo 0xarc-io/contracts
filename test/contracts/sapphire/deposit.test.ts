@@ -21,8 +21,8 @@ describe('SapphireCore.deposit()', () => {
   let creditScoreTree: PassportScoreTree;
   let creditScore1: PassportScore;
   let creditScore2: PassportScore;
-  let scoredMinter: SignerWithAddress;
-  let minter: SignerWithAddress;
+  let scoredBorrower: SignerWithAddress;
+  let borrower: SignerWithAddress;
   let collateral: TestToken;
 
   function init(ctx: ITestContext): Promise<void> {
@@ -46,21 +46,21 @@ describe('SapphireCore.deposit()', () => {
   before(async () => {
     ctx = await generateContext(sapphireFixture, init);
     arc = ctx.sdks.sapphire;
-    scoredMinter = ctx.signers.scoredBorrower;
-    minter = ctx.signers.borrower;
-    collateral = TestTokenFactory.connect(arc.collateral().address, minter);
+    scoredBorrower = ctx.signers.scoredBorrower;
+    borrower = ctx.signers.borrower;
+    collateral = TestTokenFactory.connect(arc.collateral().address, borrower);
 
     // mint and approve token
-    await collateral.mintShare(minter.address, COLLATERAL_AMOUNT);
-    await collateral.mintShare(scoredMinter.address, COLLATERAL_AMOUNT);
+    await collateral.mintShare(borrower.address, COLLATERAL_AMOUNT);
+    await collateral.mintShare(scoredBorrower.address, COLLATERAL_AMOUNT);
 
     await collateral.approveOnBehalf(
-      minter.address,
+      borrower.address,
       arc.coreAddress(),
       COLLATERAL_AMOUNT,
     );
     await collateral.approveOnBehalf(
-      scoredMinter.address,
+      scoredBorrower.address,
       arc.coreAddress(),
       COLLATERAL_AMOUNT,
     );
@@ -72,26 +72,26 @@ describe('SapphireCore.deposit()', () => {
     await arc.core().connect(ctx.signers.pauseOperator).setPause(true);
 
     await expect(
-      arc.deposit(COLLATERAL_AMOUNT, undefined, undefined, minter),
+      arc.deposit(COLLATERAL_AMOUNT, undefined, undefined, borrower),
     ).revertedWith('SapphireCoreV1: the contract is paused');
   });
 
   it(`reverts if the user doesn't have enough funds`, async () => {
-    const preMinterBalance = await collateral.balanceOf(minter.address);
+    const preBorrowerBalance = await collateral.balanceOf(borrower.address);
 
     await expect(
-      arc.deposit(preMinterBalance.add(1), undefined, undefined, minter),
+      arc.deposit(preBorrowerBalance.add(1), undefined, undefined, borrower),
     ).revertedWith('SafeERC20: TRANSFER_FROM_FAILED');
   });
 
   it('deposit without credit score', async () => {
-    const preMinterBalance = await collateral.balanceOf(minter.address);
+    const preBorrowerBalance = await collateral.balanceOf(borrower.address);
     const preCoreBalance = await collateral.balanceOf(arc.coreAddress());
 
-    await arc.deposit(COLLATERAL_AMOUNT, undefined, undefined, minter);
+    await arc.deposit(COLLATERAL_AMOUNT, undefined, undefined, borrower);
 
-    expect(await collateral.balanceOf(minter.address)).eq(
-      preMinterBalance.sub(COLLATERAL_AMOUNT),
+    expect(await collateral.balanceOf(borrower.address)).eq(
+      preBorrowerBalance.sub(COLLATERAL_AMOUNT),
     );
     expect(await collateral.balanceOf(arc.coreAddress())).eq(
       preCoreBalance.add(COLLATERAL_AMOUNT),
@@ -99,36 +99,38 @@ describe('SapphireCore.deposit()', () => {
   });
 
   it('deposit with credit score', async () => {
-    const preMinterBalance = await collateral.balanceOf(scoredMinter.address);
+    const preBorrowerBalance = await collateral.balanceOf(
+      scoredBorrower.address,
+    );
     const preCoreBalance = await collateral.balanceOf(arc.coreAddress());
 
     await arc.deposit(
       COLLATERAL_AMOUNT,
       getScoreProof(creditScore1, creditScoreTree),
       undefined,
-      scoredMinter,
+      scoredBorrower,
     );
 
     expect(
-      await collateral.balanceOf(scoredMinter.address),
-      'scored minter balance',
-    ).eq(preMinterBalance.sub(COLLATERAL_AMOUNT));
+      await collateral.balanceOf(scoredBorrower.address),
+      'scored borrower balance',
+    ).eq(preBorrowerBalance.sub(COLLATERAL_AMOUNT));
     expect(await collateral.balanceOf(arc.coreAddress()), 'core balance').eq(
       preCoreBalance.add(COLLATERAL_AMOUNT),
     );
 
-    const { collateralAmount } = await arc.getVault(scoredMinter.address);
+    const { collateralAmount } = await arc.getVault(scoredBorrower.address);
     expect(collateralAmount).to.eq(COLLATERAL_AMOUNT);
   });
 
   it('emits the Deposited event', async () => {
     const scoreProof = getScoreProof(creditScore1, creditScoreTree);
     await expect(
-      arc.deposit(COLLATERAL_AMOUNT, scoreProof, undefined, scoredMinter),
+      arc.deposit(COLLATERAL_AMOUNT, scoreProof, undefined, scoredBorrower),
     )
       .to.emit(arc.core(), 'Deposited')
       .withArgs(
-        scoredMinter.address,
+        scoredBorrower.address,
         COLLATERAL_AMOUNT,
         COLLATERAL_AMOUNT,
         0,
@@ -137,38 +139,38 @@ describe('SapphireCore.deposit()', () => {
   });
 
   it('sets the effective epoch of the sender to epoch + 2 if NO proof was passed', async () => {
-    expect(await arc.core().expectedEpochWithProof(scoredMinter.address)).to.eq(
-      0,
-    );
+    expect(
+      await arc.core().expectedEpochWithProof(scoredBorrower.address),
+    ).to.eq(0);
 
     const currentEpoch = await ctx.contracts.sapphire.passportScores.currentEpoch();
     await arc.deposit(
       COLLATERAL_AMOUNT,
       getEmptyScoreProof(
-        scoredMinter.address,
+        scoredBorrower.address,
         utils.formatBytes32String('arcx.credit'),
       ),
       undefined,
-      scoredMinter,
+      scoredBorrower,
     );
 
-    expect(await arc.core().expectedEpochWithProof(scoredMinter.address)).to.eq(
-      currentEpoch.add(2),
-    );
+    expect(
+      await arc.core().expectedEpochWithProof(scoredBorrower.address),
+    ).to.eq(currentEpoch.add(2));
   });
 
   it('sets the effective epoch of the sender to the current epoch if a proof was passed', async () => {
-    expect(await arc.core().expectedEpochWithProof(scoredMinter.address)).to.eq(
-      0,
-    );
+    expect(
+      await arc.core().expectedEpochWithProof(scoredBorrower.address),
+    ).to.eq(0);
 
     const scoreProof = getScoreProof(creditScore1, creditScoreTree);
     const currentEpoch = await ctx.contracts.sapphire.passportScores.currentEpoch();
-    await arc.deposit(COLLATERAL_AMOUNT, scoreProof, undefined, scoredMinter);
+    await arc.deposit(COLLATERAL_AMOUNT, scoreProof, undefined, scoredBorrower);
 
-    expect(await arc.core().expectedEpochWithProof(scoredMinter.address)).to.eq(
-      currentEpoch,
-    );
+    expect(
+      await arc.core().expectedEpochWithProof(scoredBorrower.address),
+    ).to.eq(currentEpoch);
   });
 
   it("reverts if proof is not the caller's", async () => {
