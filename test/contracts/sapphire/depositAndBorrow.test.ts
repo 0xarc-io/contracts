@@ -93,7 +93,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
 
   async function init(ctx: ITestContext): Promise<void> {
     creditScore1 = {
-      account: ctx.signers.scoredMinter.address,
+      account: ctx.signers.scoredBorrower.address,
       protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(500),
     };
@@ -103,7 +103,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
       score: BigNumber.from(20),
     };
     borrowLimitScore1 = {
-      account: ctx.signers.scoredMinter.address,
+      account: ctx.signers.scoredBorrower.address,
       protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
       score: SCALED_BORROW_AMOUNT.mul(2),
     };
@@ -136,7 +136,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
     );
     await mintApprovedCollateral(
       ctx.sdks.sapphire,
-      ctx.signers.scoredMinter,
+      ctx.signers.scoredBorrower,
       COLLATERAL_AMOUNT.mul(2),
     );
   }
@@ -281,7 +281,7 @@ describe('SapphireCore.depositAndBorrow()', () => {
     let scoredMinter: SignerWithAddress;
     before(() => {
       creditScoreProof = getScoreProof(creditScore1, creditScoreTree);
-      scoredMinter = ctx.signers.scoredMinter;
+      scoredMinter = ctx.signers.scoredBorrower;
     });
 
     it('depositAndBorrow at the exact default c-ratio', async () => {

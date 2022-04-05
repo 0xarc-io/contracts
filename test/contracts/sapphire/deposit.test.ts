@@ -27,7 +27,7 @@ describe('SapphireCore.deposit()', () => {
 
   function init(ctx: ITestContext): Promise<void> {
     creditScore1 = {
-      account: ctx.signers.scoredMinter.address,
+      account: ctx.signers.scoredBorrower.address,
       protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(500),
     };
@@ -46,7 +46,7 @@ describe('SapphireCore.deposit()', () => {
   before(async () => {
     ctx = await generateContext(sapphireFixture, init);
     arc = ctx.sdks.sapphire;
-    scoredMinter = ctx.signers.scoredMinter;
+    scoredMinter = ctx.signers.scoredBorrower;
     minter = ctx.signers.minter;
     collateral = TestTokenFactory.connect(arc.collateral().address, minter);
 

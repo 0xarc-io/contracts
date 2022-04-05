@@ -150,7 +150,7 @@ describe('StakingAccrualERC20V5', () => {
 
   async function init(ctx: ITestContext) {
     admin = ctx.signers.admin;
-    user1 = ctx.signers.scoredMinter;
+    user1 = ctx.signers.scoredBorrower;
     user2 = ctx.signers.staker;
 
     await _setupDefiPassport();

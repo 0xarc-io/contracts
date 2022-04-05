@@ -16,7 +16,7 @@ import { MockSapphireOracle } from '@src/typings/MockSapphireOracle';
 
 export interface TestingSigners {
   admin: SignerWithAddress;
-  minter: SignerWithAddress;
+  borrower: SignerWithAddress;
   interestSetter: SignerWithAddress;
   merkleRootUpdater: SignerWithAddress;
   liquidator: SignerWithAddress;
@@ -25,7 +25,7 @@ export interface TestingSigners {
   globalOperator: SignerWithAddress;
   positionOperator: SignerWithAddress;
   unauthorized: SignerWithAddress;
-  scoredMinter: SignerWithAddress;
+  scoredBorrower: SignerWithAddress;
   pauseOperator: SignerWithAddress;
 }
 

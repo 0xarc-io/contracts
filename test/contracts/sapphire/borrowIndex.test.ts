@@ -58,7 +58,7 @@ describe('borrow index (integration)', () => {
 
   async function init(ctx: ITestContext): Promise<void> {
     minterCreditScore = {
-      account: ctx.signers.scoredMinter.address,
+      account: ctx.signers.scoredBorrower.address,
       protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(500),
     };
@@ -68,7 +68,7 @@ describe('borrow index (integration)', () => {
       score: BigNumber.from(500),
     };
     minterBorrowLimitScore = {
-      account: ctx.signers.scoredMinter.address,
+      account: ctx.signers.scoredBorrower.address,
       protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
       score: BORROW_AMOUNT.mul(2),
     };
@@ -165,7 +165,7 @@ describe('borrow index (integration)', () => {
     signers = ctx.signers;
     arc = ctx.sdks.sapphire;
     minter1 = signers.minter;
-    minter2 = signers.scoredMinter;
+    minter2 = signers.scoredBorrower;
     stablecoin = ctx.contracts.stablecoin;
   });
 
@@ -705,7 +705,7 @@ describe('borrow index (integration)', () => {
       await arc.updateTime(2);
       await setupBaseVault(
         arc,
-        signers.scoredMinter,
+        signers.scoredBorrower,
         getScoreProof(minterBorrowLimitScore, creditScoreTree),
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
@@ -715,7 +715,7 @@ describe('borrow index (integration)', () => {
       let totalBorrowed = await arc.core().normalizedTotalBorrowed();
       const normalizedBorrowed = await convertPrincipal(BORROW_AMOUNT);
       expect(totalBorrowed).to.eq(normalizedBorrowed);
-      expect(await getVaultBorrowAmount(signers.scoredMinter)).to.eq(
+      expect(await getVaultBorrowAmount(signers.scoredBorrower)).to.eq(
         normalizedBorrowed,
       );
 
@@ -741,7 +741,7 @@ describe('borrow index (integration)', () => {
         getScoreProof(minterCreditScore, creditScoreTree),
         getScoreProof(minterBorrowLimitScore, creditScoreTree),
         undefined,
-        signers.scoredMinter,
+        signers.scoredBorrower,
       );
 
       totalBorrowed = await arc.core().normalizedTotalBorrowed();
@@ -774,14 +774,14 @@ describe('borrow index (integration)', () => {
         repayAmount,
         stablecoin.address,
         arc.coreAddress(),
-        signers.scoredMinter,
+        signers.scoredBorrower,
       );
       await arc.repay(
         repayAmount,
         stablecoin.address,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
-        signers.scoredMinter,
+        signers.scoredBorrower,
       );
 
       totalBorrowed = await arc.core().normalizedTotalBorrowed();
@@ -790,7 +790,7 @@ describe('borrow index (integration)', () => {
         (await denormalizeBorrowAmount(expectedAmountInVault)).sub(repayAmount),
       );
 
-      expect(await getVaultBorrowAmount(signers.scoredMinter)).eq(
+      expect(await getVaultBorrowAmount(signers.scoredBorrower)).eq(
         expectedAmountInVault,
       );
       expect(totalBorrowed).to.eq(expectedAmountInVault);
@@ -811,29 +811,29 @@ describe('borrow index (integration)', () => {
 
       // Repay remaining interest
       const outstandingRepayAmt = roundUpMul(
-        await getVaultBorrowAmount(signers.scoredMinter),
+        await getVaultBorrowAmount(signers.scoredBorrower),
         borrowIndex,
       );
 
       // Owner doesn't have enough money to repay all debt because of interest rate
       await stablecoin.mintShare(
-        signers.scoredMinter.address,
+        signers.scoredBorrower.address,
         outstandingRepayAmt,
       );
       await approve(
         outstandingRepayAmt,
         stablecoin.address,
         arc.coreAddress(),
-        signers.scoredMinter,
+        signers.scoredBorrower,
       );
       await arc.repay(
         outstandingRepayAmt,
         stablecoin.address,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
-        signers.scoredMinter,
+        signers.scoredBorrower,
       );
-      expect(await getVaultBorrowAmount(signers.scoredMinter)).to.eq(0);
+      expect(await getVaultBorrowAmount(signers.scoredBorrower)).to.eq(0);
       expect(await arc.core().normalizedTotalBorrowed()).to.eq(0);
     });
 
@@ -848,7 +848,7 @@ describe('borrow index (integration)', () => {
       await arc.updateTime(2);
       await setupBaseVault(
         arc,
-        signers.scoredMinter,
+        signers.scoredBorrower,
         getScoreProof(minterBorrowLimitScore, creditScoreTree),
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
@@ -887,7 +887,7 @@ describe('borrow index (integration)', () => {
         borrowIndex,
       );
 
-      expect(await getVaultBorrowAmount(signers.scoredMinter)).eq(
+      expect(await getVaultBorrowAmount(signers.scoredBorrower)).eq(
         normalizedVaultABorrowedAmount,
       );
 
@@ -919,14 +919,14 @@ describe('borrow index (integration)', () => {
         BORROW_AMOUNT,
         stablecoin.address,
         arc.coreAddress(),
-        signers.scoredMinter,
+        signers.scoredBorrower,
       );
       await arc.repay(
         BORROW_AMOUNT,
         stablecoin.address,
         getScoreProof(minterCreditScore, creditScoreTree),
         undefined,
-        signers.scoredMinter,
+        signers.scoredBorrower,
       );
 
       const normalizedVaultABorrowedAfterRepay = await convertPrincipal(
@@ -934,7 +934,7 @@ describe('borrow index (integration)', () => {
           BORROW_AMOUNT,
         ),
       );
-      expect(await getVaultBorrowAmount(signers.scoredMinter)).eq(
+      expect(await getVaultBorrowAmount(signers.scoredBorrower)).eq(
         normalizedVaultABorrowedAfterRepay,
       );
 
@@ -985,7 +985,7 @@ describe('borrow index (integration)', () => {
         signers.minter,
       );
 
-      expect(await getVaultBorrowAmount(signers.scoredMinter)).eq(
+      expect(await getVaultBorrowAmount(signers.scoredBorrower)).eq(
         normalizedVaultABorrowedAfterRepay,
       );
 
@@ -1022,7 +1022,7 @@ describe('borrow index (integration)', () => {
       await arc.updateTime(2);
       await setupBaseVault(
         arc,
-        signers.scoredMinter,
+        signers.scoredBorrower,
         getScoreProof(minterBorrowLimitScore, creditScoreTree),
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
@@ -1073,7 +1073,7 @@ describe('borrow index (integration)', () => {
         SECONDS_PER_MONTH.mul(12).add(2),
       );
 
-      const vaultA = await arc.getVault(signers.scoredMinter.address);
+      const vaultA = await arc.getVault(signers.scoredBorrower.address);
       const vaultB = await arc.getVault(signers.minter.address);
       expect(vaultA.normalizedBorrowedAmount).eq(
         roundUpDiv(BORROW_AMOUNT, borrowIndex2sec),
@@ -1101,7 +1101,7 @@ describe('borrow index (integration)', () => {
       await arc.updateTime(2);
       await setupBaseVault(
         arc,
-        signers.scoredMinter,
+        signers.scoredBorrower,
         getScoreProof(minterBorrowLimitScore, creditScoreTree),
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
@@ -1156,7 +1156,7 @@ describe('borrow index (integration)', () => {
         SECONDS_PER_MONTH.mul(12).add(2),
       );
 
-      const vaultA = await arc.getVault(signers.scoredMinter.address);
+      const vaultA = await arc.getVault(signers.scoredBorrower.address);
       const vaultB = await arc.getVault(signers.minter.address);
       expect(vaultA.normalizedBorrowedAmount).eq(
         roundUpDiv(BORROW_AMOUNT, borrowIndex2sec),
