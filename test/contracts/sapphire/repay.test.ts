@@ -50,8 +50,8 @@ describe('SapphireCore.repay()', () => {
   let stablecoin: TestToken;
 
   let signers: TestingSigners;
-  let minterCreditScore: PassportScore;
-  let minterBorrowLimitScore: PassportScore;
+  let borrowerCreditScore: PassportScore;
+  let borrowerBorrowLimitScore: PassportScore;
   let creditScoreTree: PassportScoreTree;
 
   async function repay(
@@ -66,7 +66,7 @@ describe('SapphireCore.repay()', () => {
   }
 
   async function init(ctx: ITestContext) {
-    minterCreditScore = {
+    borrowerCreditScore = {
       account: ctx.signers.scoredBorrower.address,
       protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(500),
@@ -76,15 +76,15 @@ describe('SapphireCore.repay()', () => {
       protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(20),
     };
-    minterBorrowLimitScore = {
+    borrowerBorrowLimitScore = {
       account: ctx.signers.scoredBorrower.address,
       protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
       score: SCALED_BORROW_AMOUNT,
     };
     creditScoreTree = new PassportScoreTree([
-      minterCreditScore,
+      borrowerCreditScore,
       creditScore2,
-      minterBorrowLimitScore,
+      borrowerBorrowLimitScore,
     ]);
 
     await setupSapphire(ctx, {
@@ -104,10 +104,10 @@ describe('SapphireCore.repay()', () => {
     await setupBaseVault(
       ctx.sdks.sapphire,
       ctx.signers.scoredBorrower,
-      getScoreProof(minterBorrowLimitScore, creditScoreTree),
+      getScoreProof(borrowerBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
-      getScoreProof(minterCreditScore, creditScoreTree),
+      getScoreProof(borrowerCreditScore, creditScoreTree),
     );
   });
 
@@ -237,7 +237,7 @@ describe('SapphireCore.repay()', () => {
       undefined,
     );
 
-    // There is already one vault open by the scoredMinter
+    // There is already one vault open by the scoredBorrower
     expect(await pool.stablesLent()).eq(SCALED_BORROW_AMOUNT.mul(2));
     expect(await stablecoin.balanceOf(await arc.core().feeCollector())).eq(0);
 
@@ -392,7 +392,7 @@ describe('SapphireCore.repay()', () => {
       utils.parseUnits('1', DEFAULT_STABLECOIN_DECIMALS),
       signers.scoredBorrower,
       undefined,
-      getScoreProof(minterCreditScore, creditScoreTree),
+      getScoreProof(borrowerCreditScore, creditScoreTree),
     );
 
     vault = await arc.getVault(signers.scoredBorrower.address);
@@ -457,10 +457,10 @@ describe('SapphireCore.repay()', () => {
   });
 
   it('should not repay to a vault that does not exist', async () => {
-    await stablecoin.mintShare(signers.minter.address, constants.WeiPerEther);
+    await stablecoin.mintShare(signers.borrower.address, constants.WeiPerEther);
 
     await expect(
-      repay(constants.WeiPerEther, signers.minter),
+      repay(constants.WeiPerEther, signers.borrower),
     ).to.be.revertedWith('SapphireCoreV1: there is not enough debt to repay');
   });
 

@@ -52,14 +52,14 @@ describe('SapphireCore.withdraw()', () => {
   let ctx: ITestContext;
   let arc: SapphireTestArc;
   let signers: TestingSigners;
-  let minterCreditScore: PassportScore;
-  let scoredMinterBorrowLimitScore: PassportScore;
-  let minterBorrowLimitScore: PassportScore;
+  let borrowerCreditScore: PassportScore;
+  let scoredBorrowerBorrowLimitScore: PassportScore;
+  let borrowerBorrowLimitScore: PassportScore;
   let creditScoreTree: PassportScoreTree;
   let assessor: SapphireAssessor;
 
   async function init(ctx: ITestContext) {
-    minterCreditScore = {
+    borrowerCreditScore = {
       account: ctx.signers.scoredBorrower.address,
       protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(500),
@@ -69,21 +69,21 @@ describe('SapphireCore.withdraw()', () => {
       protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(20),
     };
-    scoredMinterBorrowLimitScore = {
+    scoredBorrowerBorrowLimitScore = {
       account: ctx.signers.scoredBorrower.address,
       protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
       score: SCALED_BORROW_AMOUNT,
     };
-    minterBorrowLimitScore = {
+    borrowerBorrowLimitScore = {
       account: ctx.signers.borrower.address,
       protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
       score: SCALED_BORROW_AMOUNT,
     };
     creditScoreTree = new PassportScoreTree([
-      minterCreditScore,
+      borrowerCreditScore,
       creditScore2,
-      minterBorrowLimitScore,
-      scoredMinterBorrowLimitScore,
+      borrowerBorrowLimitScore,
+      scoredBorrowerBorrowLimitScore,
     ]);
 
     await setupSapphire(ctx, {
@@ -105,7 +105,7 @@ describe('SapphireCore.withdraw()', () => {
     await setupBaseVault(
       arc,
       signers.scoredBorrower,
-      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
+      getScoreProof(scoredBorrowerBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       constants.Zero,
     );
@@ -136,28 +136,30 @@ describe('SapphireCore.withdraw()', () => {
   it('withdraws to the limit', async () => {
     await setupBaseVault(
       arc,
-      signers.minter,
-      getScoreProof(minterBorrowLimitScore, creditScoreTree),
+      signers.borrower,
+      getScoreProof(borrowerBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
     );
 
     // Withdraw the max collateral to respect the c-ratio set by DEFAULT_HIGH_C_RATIO
     const withdrawAmt = COLLATERAL_AMOUNT.sub(COLLATERAL_LIMIT);
-    const preBalance = await arc.collateral().balanceOf(signers.minter.address);
+    const preBalance = await arc
+      .collateral()
+      .balanceOf(signers.borrower.address);
 
-    await arc.withdraw(withdrawAmt, undefined, undefined, signers.minter);
+    await arc.withdraw(withdrawAmt, undefined, undefined, signers.borrower);
 
     const postBalance = await arc
       .collateral()
-      .balanceOf(signers.minter.address);
-    const vault = await arc.getVault(signers.minter.address);
+      .balanceOf(signers.borrower.address);
+    const vault = await arc.getVault(signers.borrower.address);
 
     expect(vault.collateralAmount).to.eq(COLLATERAL_LIMIT);
     expect(postBalance).to.eq(preBalance.add(withdrawAmt));
 
     await expect(
-      arc.withdraw(BigNumber.from(1), undefined, undefined, signers.minter),
+      arc.withdraw(BigNumber.from(1), undefined, undefined, signers.borrower),
     ).to.be.revertedWith(
       'SapphireCoreV1: the vault will become undercollateralized',
     );
@@ -167,7 +169,7 @@ describe('SapphireCore.withdraw()', () => {
     await setupBaseVault(
       arc,
       signers.scoredBorrower,
-      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
+      getScoreProof(scoredBorrowerBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
       undefined,
@@ -187,7 +189,7 @@ describe('SapphireCore.withdraw()', () => {
     // Withdraw the same amount as permitted without a credit score
     await arc.withdraw(
       withdrawAmt1,
-      getScoreProof(minterCreditScore, creditScoreTree),
+      getScoreProof(borrowerCreditScore, creditScoreTree),
       undefined,
       signers.scoredBorrower,
     );
@@ -195,7 +197,7 @@ describe('SapphireCore.withdraw()', () => {
     const scoredCRatio = await assessor.assess(
       DEFAULT_LOW_C_RATIO,
       DEFAULT_HIGH_C_RATIO,
-      getScoreProof(minterCreditScore, creditScoreTree),
+      getScoreProof(borrowerCreditScore, creditScoreTree),
       true,
     );
 
@@ -209,7 +211,7 @@ describe('SapphireCore.withdraw()', () => {
     // Withdraw more - to the limit permitted by the credit score
     await arc.withdraw(
       withdrawAmt2,
-      getScoreProof(minterCreditScore, creditScoreTree),
+      getScoreProof(borrowerCreditScore, creditScoreTree),
       undefined,
       signers.scoredBorrower,
     );
@@ -276,10 +278,10 @@ describe('SapphireCore.withdraw()', () => {
     await setupBaseVault(
       arc,
       signers.scoredBorrower,
-      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
+      getScoreProof(scoredBorrowerBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
-      getScoreProof(minterCreditScore, creditScoreTree),
+      getScoreProof(borrowerCreditScore, creditScoreTree),
     );
 
     expect(await arc.core().totalCollateral()).to.eq(COLLATERAL_AMOUNT);
@@ -301,7 +303,7 @@ describe('SapphireCore.withdraw()', () => {
     await setupBaseVault(
       arc,
       signers.scoredBorrower,
-      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
+      getScoreProof(scoredBorrowerBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
     );
@@ -331,7 +333,7 @@ describe('SapphireCore.withdraw()', () => {
     await setupBaseVault(
       arc,
       signers.scoredBorrower,
-      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
+      getScoreProof(scoredBorrowerBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
     );
@@ -352,7 +354,7 @@ describe('SapphireCore.withdraw()', () => {
       score: BigNumber.from(1000),
     };
     const newCreditTree = new PassportScoreTree([
-      minterCreditScore,
+      borrowerCreditScore,
       maxCreditScore,
     ]);
 
@@ -375,10 +377,10 @@ describe('SapphireCore.withdraw()', () => {
     await setupBaseVault(
       arc,
       signers.scoredBorrower,
-      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
+      getScoreProof(scoredBorrowerBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
-      getScoreProof(minterCreditScore, creditScoreTree),
+      getScoreProof(borrowerCreditScore, creditScoreTree),
     );
 
     // Drop price to make position undercollateralized
@@ -400,7 +402,7 @@ describe('SapphireCore.withdraw()', () => {
     await setupBaseVault(
       arc,
       signers.scoredBorrower,
-      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
+      getScoreProof(scoredBorrowerBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BigNumber.from('0'),
     );
@@ -420,10 +422,10 @@ describe('SapphireCore.withdraw()', () => {
     await setupBaseVault(
       arc,
       signers.scoredBorrower,
-      getScoreProof(scoredMinterBorrowLimitScore, creditScoreTree),
+      getScoreProof(scoredBorrowerBorrowLimitScore, creditScoreTree),
       COLLATERAL_AMOUNT,
       BORROW_AMOUNT,
-      getScoreProof(minterCreditScore, creditScoreTree),
+      getScoreProof(borrowerCreditScore, creditScoreTree),
     );
 
     await arc.core().connect(signers.pauseOperator).setPause(true);
@@ -440,7 +442,7 @@ describe('SapphireCore.withdraw()', () => {
 
   it('emits the Withdrawn event', async () => {
     const scoreProof = getScoreProof(
-      scoredMinterBorrowLimitScore,
+      scoredBorrowerBorrowLimitScore,
       creditScoreTree,
     );
     await setupBaseVault(

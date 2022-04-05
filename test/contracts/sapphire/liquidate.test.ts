@@ -63,19 +63,19 @@ describe('SapphireCore.liquidate()', () => {
 
   let signers: TestingSigners;
   let creditScoreTree: PassportScoreTree;
-  let minterCreditScore: PassportScore;
-  let minterBorrowLimitScore: PassportScore;
+  let borrowerCreditScore: PassportScore;
+  let borrowerBorrowLimitScore: PassportScore;
   let liquidatorCreditScore: PassportScore;
   let liquidatorBorrowLimitScore: PassportScore;
 
   async function getMaxBorrowAmount(scoreProof = getEmptyScoreProof()) {
-    const minterCRatio = await arc
+    const borrowerCRatio = await arc
       .assessor()
       .assess(LOW_C_RATIO, HIGH_C_RATIO, scoreProof, false);
 
     return COLLATERAL_AMOUNT.mul(DEFAULT_COLLATERAL_PRECISION_SCALAR)
       .mul(BASE)
-      .div(minterCRatio)
+      .div(borrowerCRatio)
       .div(DEFAULT_STABLE_COIN_PRECISION_SCALAR);
   }
 
@@ -118,7 +118,7 @@ describe('SapphireCore.liquidate()', () => {
     return helperSetupBaseVault.setupBaseVault(
       arc,
       signers.scoredBorrower,
-      getScoreProof(minterBorrowLimitScore, creditScoreTree),
+      getScoreProof(borrowerBorrowLimitScore, creditScoreTree),
       collateralAmount,
       borrowAmount,
       scoreProof,
@@ -126,12 +126,12 @@ describe('SapphireCore.liquidate()', () => {
   }
 
   async function init(ctx: ITestContext) {
-    minterCreditScore = {
+    borrowerCreditScore = {
       account: ctx.signers.scoredBorrower.address,
       protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       score: BigNumber.from(500),
     };
-    minterBorrowLimitScore = {
+    borrowerBorrowLimitScore = {
       account: ctx.signers.scoredBorrower.address,
       protocol: utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
       score: SCALED_BORROW_AMOUNT.mul(3),
@@ -148,9 +148,9 @@ describe('SapphireCore.liquidate()', () => {
     };
 
     creditScoreTree = new PassportScoreTree([
-      minterCreditScore,
+      borrowerCreditScore,
       liquidatorCreditScore,
-      minterBorrowLimitScore,
+      borrowerBorrowLimitScore,
       liquidatorBorrowLimitScore,
     ]);
 
@@ -228,7 +228,7 @@ describe('SapphireCore.liquidate()', () => {
 
       // Make sure vault is under-collateralized
       const liquidationCRatio = await mapper.map(
-        minterCreditScore.score,
+        borrowerCreditScore.score,
         1000,
         LOW_C_RATIO,
         HIGH_C_RATIO,
@@ -251,7 +251,7 @@ describe('SapphireCore.liquidate()', () => {
       await arc.liquidate(
         signers.scoredBorrower.address,
         stablecoin.address,
-        getScoreProof(minterCreditScore, creditScoreTree),
+        getScoreProof(borrowerCreditScore, creditScoreTree),
         undefined,
         signers.liquidator,
       );
@@ -308,17 +308,17 @@ describe('SapphireCore.liquidate()', () => {
     });
 
     it('liquidates if the current epoch is ≥ the effective epoch of the vault owner and proof is passed', async () => {
-      const minterScoreProof = getScoreProof(
-        minterCreditScore,
+      const borrowerScoreProof = getScoreProof(
+        borrowerCreditScore,
         creditScoreTree,
       );
-      const maxBorrowAmount = await getMaxBorrowAmount(minterScoreProof);
+      const maxBorrowAmount = await getMaxBorrowAmount(borrowerScoreProof);
 
       await setupBaseVault(
         undefined,
         maxBorrowAmount,
         undefined,
-        minterScoreProof,
+        borrowerScoreProof,
       );
 
       await arc.updatePrice(COLLATERAL_PRICE.sub(utils.parseEther('0.01')));
@@ -330,7 +330,7 @@ describe('SapphireCore.liquidate()', () => {
         arc.liquidate(
           signers.scoredBorrower.address,
           stablecoin.address,
-          getScoreProof(minterCreditScore, creditScoreTree),
+          getScoreProof(borrowerCreditScore, creditScoreTree),
           undefined,
           signers.liquidator,
         ),
@@ -365,7 +365,7 @@ describe('SapphireCore.liquidate()', () => {
       /**
        * The base vault is at a healthy 200% c-ratio when the price is $1.
        * Changing the price to $0.68 will change the c-ratio to 135%.
-       * Since the minter has a 500 credit score, their vault won't be liquidated
+       * Since the borrower has a 500 credit score, their vault won't be liquidated
        * until 132.5%.
        * If the credit score drops to 50, their vault can get liquidated if the c-ratio
        * goes below 148.25%.
@@ -379,13 +379,13 @@ describe('SapphireCore.liquidate()', () => {
       await arc.updatePrice(newPrice);
 
       // The user's credit score decreases
-      const newMinterCreditScore = {
+      const newBorrowerCreditScore = {
         account: signers.scoredBorrower.address,
         protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
         score: BigNumber.from(50),
       };
       const newCreditTree = new PassportScoreTree([
-        newMinterCreditScore,
+        newBorrowerCreditScore,
         liquidatorCreditScore,
       ]);
       await immediatelyUpdateMerkleRoot(
@@ -404,7 +404,7 @@ describe('SapphireCore.liquidate()', () => {
       await arc.liquidate(
         signers.scoredBorrower.address,
         stablecoin.address,
-        getScoreProof(newMinterCreditScore, newCreditTree),
+        getScoreProof(newBorrowerCreditScore, newCreditTree),
         undefined,
         signers.liquidator,
       );
@@ -453,16 +453,16 @@ describe('SapphireCore.liquidate()', () => {
 
     it('liquidates if interest accumulates (1 day)', async () => {
       // Open a vault at the boundary
-      const minterScoreProof = getScoreProof(
-        minterCreditScore,
+      const borrowerScoreProof = getScoreProof(
+        borrowerCreditScore,
         creditScoreTree,
       );
-      const maxBorrowAmount = await getMaxBorrowAmount(minterScoreProof);
+      const maxBorrowAmount = await getMaxBorrowAmount(borrowerScoreProof);
       await setupBaseVault(
         COLLATERAL_AMOUNT,
         maxBorrowAmount,
         undefined,
-        minterScoreProof,
+        borrowerScoreProof,
       );
 
       // Test that a liquidation will occur if the user accumulates enough debt via interest
@@ -479,9 +479,9 @@ describe('SapphireCore.liquidate()', () => {
       const preCollateralBalance = await arc
         .collateral()
         .balanceOf(signers.liquidator.address);
-      const minterCRatio = await arc
+      const borrowerCRatio = await arc
         .assessor()
-        .assess(LOW_C_RATIO, HIGH_C_RATIO, minterScoreProof, false);
+        .assess(LOW_C_RATIO, HIGH_C_RATIO, borrowerScoreProof, false);
 
       expect(
         await arc
@@ -489,14 +489,14 @@ describe('SapphireCore.liquidate()', () => {
           .isCollateralized(
             signers.scoredBorrower.address,
             COLLATERAL_PRICE,
-            minterCRatio,
+            borrowerCRatio,
           ),
       ).to.be.false;
 
       await arc.liquidate(
         signers.scoredBorrower.address,
         stablecoin.address,
-        minterScoreProof,
+        borrowerScoreProof,
         undefined,
         signers.liquidator,
       );
@@ -516,24 +516,24 @@ describe('SapphireCore.liquidate()', () => {
 
     it('liquidates if interest accumulates (1 year)', async () => {
       // Open a vault at the boundary
-      const minterScoreProof = getScoreProof(
-        minterCreditScore,
+      const borrowerScoreProof = getScoreProof(
+        borrowerCreditScore,
         creditScoreTree,
       );
-      const minterCRatio = await arc
+      const borrowerCRatio = await arc
         .assessor()
-        .assess(LOW_C_RATIO, HIGH_C_RATIO, minterScoreProof, true);
+        .assess(LOW_C_RATIO, HIGH_C_RATIO, borrowerScoreProof, true);
       const maxBorrowAmount = COLLATERAL_AMOUNT.mul(
         DEFAULT_COLLATERAL_PRECISION_SCALAR,
       )
         .mul(BASE)
-        .div(minterCRatio)
+        .div(borrowerCRatio)
         .div(DEFAULT_STABLE_COIN_PRECISION_SCALAR);
       await setupBaseVault(
         COLLATERAL_AMOUNT,
         maxBorrowAmount,
         undefined,
-        minterScoreProof,
+        borrowerScoreProof,
       );
 
       // Test that a liquidation will occur if the user accumulates enough debt via interest
@@ -554,7 +554,7 @@ describe('SapphireCore.liquidate()', () => {
       await arc.liquidate(
         signers.scoredBorrower.address,
         stablecoin.address,
-        getScoreProof(minterCreditScore, creditScoreTree),
+        getScoreProof(borrowerCreditScore, creditScoreTree),
         undefined,
         signers.liquidator,
       );
@@ -593,7 +593,7 @@ describe('SapphireCore.liquidate()', () => {
       await arc.liquidate(
         signers.scoredBorrower.address,
         stablecoin.address,
-        getScoreProof(minterCreditScore, creditScoreTree),
+        getScoreProof(borrowerCreditScore, creditScoreTree),
         undefined,
         signers.liquidator,
       );
@@ -631,8 +631,8 @@ describe('SapphireCore.liquidate()', () => {
       await arc.borrow(
         maxBorrowAmount,
         stablecoin.address,
-        getScoreProof(minterCreditScore, creditScoreTree),
-        getScoreProof(minterBorrowLimitScore, creditScoreTree),
+        getScoreProof(borrowerCreditScore, creditScoreTree),
+        getScoreProof(borrowerBorrowLimitScore, creditScoreTree),
         undefined,
         signers.scoredBorrower,
       );
@@ -652,7 +652,7 @@ describe('SapphireCore.liquidate()', () => {
       await arc.liquidate(
         signers.scoredBorrower.address,
         stablecoin.address,
-        getScoreProof(minterCreditScore, creditScoreTree),
+        getScoreProof(borrowerCreditScore, creditScoreTree),
         undefined,
         signers.liquidator,
       );
@@ -687,24 +687,24 @@ describe('SapphireCore.liquidate()', () => {
 
     it('distributes part of the interest paid to the pool, and part to the fee receiver', async () => {
       // Opens vault at the limit
-      const minterScoreProof = getScoreProof(
-        minterCreditScore,
+      const borrowerScoreProof = getScoreProof(
+        borrowerCreditScore,
         creditScoreTree,
       );
-      const minterCRatio = await arc
+      const borrowerCRatio = await arc
         .assessor()
-        .assess(LOW_C_RATIO, HIGH_C_RATIO, minterScoreProof, true);
+        .assess(LOW_C_RATIO, HIGH_C_RATIO, borrowerScoreProof, true);
       const maxBorrowAmount = COLLATERAL_AMOUNT.mul(
         DEFAULT_COLLATERAL_PRECISION_SCALAR,
       )
         .mul(BASE)
-        .div(minterCRatio)
+        .div(borrowerCRatio)
         .div(DEFAULT_STABLE_COIN_PRECISION_SCALAR);
       await setupBaseVault(
         COLLATERAL_AMOUNT,
         maxBorrowAmount,
         undefined,
-        minterScoreProof,
+        borrowerScoreProof,
       );
 
       // Set interest rate
@@ -743,7 +743,7 @@ describe('SapphireCore.liquidate()', () => {
       await arc.liquidate(
         signers.scoredBorrower.address,
         stablecoin.address,
-        getScoreProof(minterCreditScore, creditScoreTree),
+        getScoreProof(borrowerCreditScore, creditScoreTree),
         undefined,
         signers.liquidator,
       );
@@ -776,7 +776,7 @@ describe('SapphireCore.liquidate()', () => {
         arc.liquidate(
           signers.scoredBorrower.address,
           stablecoin.address,
-          getScoreProof(minterCreditScore, creditScoreTree),
+          getScoreProof(borrowerCreditScore, creditScoreTree),
           undefined,
           signers.liquidator,
         ),
@@ -814,7 +814,7 @@ describe('SapphireCore.liquidate()', () => {
         arc.liquidate(
           signers.scoredBorrower.address,
           ctx.contracts.collateral.address,
-          getScoreProof(minterCreditScore, creditScoreTree),
+          getScoreProof(borrowerCreditScore, creditScoreTree),
           undefined,
           signers.liquidator,
         ),
@@ -822,11 +822,11 @@ describe('SapphireCore.liquidate()', () => {
     });
 
     it('reverts if proof is not passed and effective epoch is ≥ current epoch', async () => {
-      const minterScoreProof = getScoreProof(
-        minterCreditScore,
+      const borrowerScoreProof = getScoreProof(
+        borrowerCreditScore,
         creditScoreTree,
       );
-      await setupBaseVault(undefined, undefined, undefined, minterScoreProof);
+      await setupBaseVault(undefined, undefined, undefined, borrowerScoreProof);
 
       await arc.updatePrice(COLLATERAL_PRICE.div(2));
 
@@ -861,8 +861,8 @@ describe('SapphireCore.liquidate()', () => {
       await arc.borrow(
         maxBorrowAmount,
         stablecoin.address,
-        getScoreProof(minterCreditScore, creditScoreTree),
-        getScoreProof(minterBorrowLimitScore, creditScoreTree),
+        getScoreProof(borrowerCreditScore, creditScoreTree),
+        getScoreProof(borrowerBorrowLimitScore, creditScoreTree),
         undefined,
         signers.scoredBorrower,
       );
@@ -892,14 +892,14 @@ describe('SapphireCore.liquidate()', () => {
       await arc.updatePrice(newPrice);
 
       // Add a score for another protocol
-      const newMinterCreditScore = {
+      const newBorrowerCreditScore = {
         account: signers.scoredBorrower.address,
         protocol: utils.formatBytes32String('defi.other'),
         score: BigNumber.from(0),
       };
       const newCreditTree = new PassportScoreTree([
-        newMinterCreditScore,
-        minterCreditScore,
+        newBorrowerCreditScore,
+        borrowerCreditScore,
         liquidatorCreditScore,
       ]);
       await immediatelyUpdateMerkleRoot(
@@ -912,7 +912,7 @@ describe('SapphireCore.liquidate()', () => {
         arc.liquidate(
           signers.scoredBorrower.address,
           stablecoin.address,
-          getScoreProof(newMinterCreditScore, newCreditTree),
+          getScoreProof(newBorrowerCreditScore, newCreditTree),
           undefined,
           signers.liquidator,
         ),
@@ -945,7 +945,7 @@ describe('SapphireCore.liquidate()', () => {
         arc.liquidate(
           signers.scoredBorrower.address,
           stablecoin.address,
-          getScoreProof(minterCreditScore, creditScoreTree),
+          getScoreProof(borrowerCreditScore, creditScoreTree),
           undefined,
           signers.liquidator,
         ),
@@ -964,7 +964,7 @@ describe('SapphireCore.liquidate()', () => {
       const newCreditTree = new PassportScoreTree([
         zeroCreditScore,
         liquidatorCreditScore,
-        minterCreditScore,
+        borrowerCreditScore,
       ]);
 
       await immediatelyUpdateMerkleRoot(
@@ -974,7 +974,7 @@ describe('SapphireCore.liquidate()', () => {
 
       /**
        * Drop the price to $0.70 to bring the c-ratio down to 140%.
-       * The scored minter should be protected from liquidations since
+       * The scored borrower should be protected from liquidations since
        * he has a credit score of 500, which makes him immune until a
        * c-ratio of 132.5%.
        */
@@ -1001,15 +1001,15 @@ describe('SapphireCore.liquidate()', () => {
        */
 
       // First, open the vault with a credit score of 0
-      let newMinterCreditScore = {
+      let newBorrowerCreditScore = {
         account: signers.scoredBorrower.address,
         protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
         score: BigNumber.from(0),
       };
       let newCreditTree = new PassportScoreTree([
-        newMinterCreditScore,
+        newBorrowerCreditScore,
         liquidatorCreditScore,
-        minterBorrowLimitScore,
+        borrowerBorrowLimitScore,
       ]);
       await immediatelyUpdateMerkleRoot(
         creditScoreContract.connect(signers.interestSetter),
@@ -1019,10 +1019,10 @@ describe('SapphireCore.liquidate()', () => {
       await helperSetupBaseVault.setupBaseVault(
         arc,
         signers.scoredBorrower,
-        getScoreProof(minterBorrowLimitScore, newCreditTree),
+        getScoreProof(borrowerBorrowLimitScore, newCreditTree),
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
-        getScoreProof(newMinterCreditScore, newCreditTree),
+        getScoreProof(newBorrowerCreditScore, newCreditTree),
       );
 
       // Drop the price to $0.70 to bring the c-ratio down to 140%
@@ -1034,15 +1034,15 @@ describe('SapphireCore.liquidate()', () => {
        * since the liquidation c-ratio decreases from 150% to 132.5%
        */
 
-      newMinterCreditScore = {
+      newBorrowerCreditScore = {
         account: signers.scoredBorrower.address,
         protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
         score: BigNumber.from(500),
       };
       newCreditTree = new PassportScoreTree([
-        newMinterCreditScore,
+        newBorrowerCreditScore,
         liquidatorCreditScore,
-        minterBorrowLimitScore,
+        borrowerBorrowLimitScore,
       ]);
       await immediatelyUpdateMerkleRoot(
         creditScoreContract.connect(signers.interestSetter),
@@ -1054,7 +1054,7 @@ describe('SapphireCore.liquidate()', () => {
         arc.liquidate(
           signers.scoredBorrower.address,
           stablecoin.address,
-          getScoreProof(newMinterCreditScore, newCreditTree),
+          getScoreProof(newBorrowerCreditScore, newCreditTree),
         ),
       ).to.be.revertedWith('SapphireCoreV1: vault is collateralized');
     });
@@ -1077,7 +1077,7 @@ describe('SapphireCore.liquidate()', () => {
         arc.liquidate(
           signers.scoredBorrower.address,
           stablecoin.address,
-          getScoreProof(minterCreditScore, creditScoreTree),
+          getScoreProof(borrowerCreditScore, creditScoreTree),
           undefined,
           signers.liquidator,
         ),
@@ -1098,7 +1098,7 @@ describe('SapphireCore.liquidate()', () => {
         arc.liquidate(
           signers.scoredBorrower.address,
           stablecoin.address,
-          getScoreProof(minterCreditScore, creditScoreTree),
+          getScoreProof(borrowerCreditScore, creditScoreTree),
         ),
       ).to.be.revertedWith('SapphireCoreV1: vault is collateralized');
     });
@@ -1113,7 +1113,7 @@ describe('SapphireCore.liquidate()', () => {
       await arc.liquidate(
         signers.scoredBorrower.address,
         stablecoin.address,
-        getScoreProof(minterCreditScore, creditScoreTree),
+        getScoreProof(borrowerCreditScore, creditScoreTree),
         undefined,
         signers.liquidator,
       );
@@ -1123,7 +1123,7 @@ describe('SapphireCore.liquidate()', () => {
         arc.liquidate(
           signers.scoredBorrower.address,
           stablecoin.address,
-          getScoreProof(minterCreditScore, creditScoreTree),
+          getScoreProof(borrowerCreditScore, creditScoreTree),
           undefined,
           signers.liquidator,
         ),
@@ -1134,7 +1134,7 @@ describe('SapphireCore.liquidate()', () => {
         arc.liquidate(
           signers.scoredBorrower.address,
           stablecoin.address,
-          getScoreProof(minterCreditScore, creditScoreTree),
+          getScoreProof(borrowerCreditScore, creditScoreTree),
           undefined,
           signers.liquidator,
         ),
@@ -1153,7 +1153,7 @@ describe('SapphireCore.liquidate()', () => {
         arc.liquidate(
           signers.scoredBorrower.address,
           stablecoin.address,
-          getScoreProof(minterCreditScore, creditScoreTree),
+          getScoreProof(borrowerCreditScore, creditScoreTree),
           undefined,
           signers.liquidator,
         ),
@@ -1178,7 +1178,7 @@ describe('SapphireCore.liquidate()', () => {
         arc.liquidate(
           signers.scoredBorrower.address,
           stablecoin.address,
-          getScoreProof(minterCreditScore, creditScoreTree),
+          getScoreProof(borrowerCreditScore, creditScoreTree),
           undefined,
           signers.liquidator,
         ),
@@ -1233,7 +1233,7 @@ describe('SapphireCore.liquidate()', () => {
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
         undefined,
-        getScoreProof(minterCreditScore, creditScoreTree),
+        getScoreProof(borrowerCreditScore, creditScoreTree),
       );
 
       // Price increases to $1.35
@@ -1243,8 +1243,8 @@ describe('SapphireCore.liquidate()', () => {
       await arc.borrow(
         utils.parseUnits('500', DEFAULT_STABLECOIN_DECIMALS),
         stablecoin.address,
-        getScoreProof(minterCreditScore, creditScoreTree),
-        getScoreProof(minterBorrowLimitScore, creditScoreTree),
+        getScoreProof(borrowerCreditScore, creditScoreTree),
+        getScoreProof(borrowerBorrowLimitScore, creditScoreTree),
         undefined,
         signers.scoredBorrower,
       );
@@ -1265,7 +1265,7 @@ describe('SapphireCore.liquidate()', () => {
       await arc.liquidate(
         signers.scoredBorrower.address,
         stablecoin.address,
-        getScoreProof(minterCreditScore, creditScoreTree),
+        getScoreProof(borrowerCreditScore, creditScoreTree),
         undefined,
         signers.liquidator,
       );
@@ -1325,7 +1325,7 @@ describe('SapphireCore.liquidate()', () => {
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
         undefined,
-        getScoreProof(minterCreditScore, creditScoreTree),
+        getScoreProof(borrowerCreditScore, creditScoreTree),
       );
 
       // Price decreases to $0.45
@@ -1353,7 +1353,7 @@ describe('SapphireCore.liquidate()', () => {
       await arc.liquidate(
         signers.scoredBorrower.address,
         stablecoin.address,
-        getScoreProof(minterCreditScore, creditScoreTree),
+        getScoreProof(borrowerCreditScore, creditScoreTree),
         undefined,
         signers.liquidator,
       );
@@ -1406,8 +1406,8 @@ describe('SapphireCore.liquidate()', () => {
         arc.borrow(
           constants.One,
           stablecoin.address,
-          getScoreProof(minterCreditScore, creditScoreTree),
-          getScoreProof(minterBorrowLimitScore, creditScoreTree),
+          getScoreProof(borrowerCreditScore, creditScoreTree),
+          getScoreProof(borrowerBorrowLimitScore, creditScoreTree),
           undefined,
           signers.scoredBorrower,
         ),
@@ -1417,7 +1417,7 @@ describe('SapphireCore.liquidate()', () => {
       await expect(
         arc.withdraw(
           constants.One,
-          getScoreProof(minterCreditScore, creditScoreTree),
+          getScoreProof(borrowerCreditScore, creditScoreTree),
           undefined,
           signers.scoredBorrower,
         ),
@@ -1433,7 +1433,7 @@ describe('SapphireCore.liquidate()', () => {
       // User removes 100 collateral
       await arc.withdraw(
         utils.parseUnits('100', DEFAULT_COLLATERAL_DECIMALS),
-        getScoreProof(minterCreditScore, creditScoreTree),
+        getScoreProof(borrowerCreditScore, creditScoreTree),
         undefined,
         signers.scoredBorrower,
       );
@@ -1450,7 +1450,7 @@ describe('SapphireCore.liquidate()', () => {
       await arc.repay(
         repayedAmount,
         stablecoin.address,
-        getScoreProof(minterCreditScore, creditScoreTree),
+        getScoreProof(borrowerCreditScore, creditScoreTree),
         undefined,
         signers.scoredBorrower,
       );
@@ -1466,13 +1466,13 @@ describe('SapphireCore.liquidate()', () => {
       await arc.updatePrice(utils.parseEther('0.54'));
 
       // Credit score drops to 50
-      const newMinterCreditScore = {
+      const newBorrowerCreditScore = {
         account: signers.scoredBorrower.address,
         protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
         score: BigNumber.from(50),
       };
       const newCreditTree = new PassportScoreTree([
-        newMinterCreditScore,
+        newBorrowerCreditScore,
         liquidatorCreditScore,
       ]);
       await immediatelyUpdateMerkleRoot(
@@ -1491,7 +1491,7 @@ describe('SapphireCore.liquidate()', () => {
       await arc.liquidate(
         signers.scoredBorrower.address,
         stablecoin.address,
-        getScoreProof(newMinterCreditScore, newCreditTree),
+        getScoreProof(newBorrowerCreditScore, newCreditTree),
         undefined,
         signers.liquidator,
       );
@@ -1545,15 +1545,15 @@ describe('SapphireCore.liquidate()', () => {
         COLLATERAL_AMOUNT,
         BORROW_AMOUNT,
         undefined,
-        getScoreProof(minterCreditScore, creditScoreTree),
+        getScoreProof(borrowerCreditScore, creditScoreTree),
       );
 
       // User borrows close to the maximum amount. The min c-ratio is 132.5% so user $245 more
       await arc.borrow(
         utils.parseUnits('245', DEFAULT_STABLECOIN_DECIMALS),
         stablecoin.address,
-        getScoreProof(minterCreditScore, creditScoreTree),
-        getScoreProof(minterBorrowLimitScore, creditScoreTree),
+        getScoreProof(borrowerCreditScore, creditScoreTree),
+        getScoreProof(borrowerBorrowLimitScore, creditScoreTree),
         undefined,
         signers.scoredBorrower,
       );
@@ -1562,13 +1562,13 @@ describe('SapphireCore.liquidate()', () => {
       await arc.updatePrice(utils.parseEther('0.91'));
 
       // User's credit score increases to 950
-      const newMinterCreditScore = {
+      const newBorrowerCreditScore = {
         account: signers.scoredBorrower.address,
         protocol: utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
         score: BigNumber.from(950),
       };
       const newCreditTree = new PassportScoreTree([
-        newMinterCreditScore,
+        newBorrowerCreditScore,
         liquidatorCreditScore,
       ]);
       await immediatelyUpdateMerkleRoot(
@@ -1582,7 +1582,7 @@ describe('SapphireCore.liquidate()', () => {
         arc.liquidate(
           signers.scoredBorrower.address,
           stablecoin.address,
-          getScoreProof(newMinterCreditScore, newCreditTree),
+          getScoreProof(newBorrowerCreditScore, newCreditTree),
           undefined,
           signers.liquidator,
         ),
@@ -1602,7 +1602,7 @@ describe('SapphireCore.liquidate()', () => {
       await arc.liquidate(
         signers.scoredBorrower.address,
         stablecoin.address,
-        getScoreProof(newMinterCreditScore, newCreditTree),
+        getScoreProof(newBorrowerCreditScore, newCreditTree),
         undefined,
         signers.liquidator,
       );
@@ -1706,7 +1706,7 @@ describe('SapphireCore.liquidate()', () => {
       await arc.liquidate(
         signers.scoredBorrower.address,
         stablecoin.address,
-        getScoreProof(minterCreditScore, creditScoreTree),
+        getScoreProof(borrowerCreditScore, creditScoreTree),
         undefined,
         signers.liquidator,
       );
