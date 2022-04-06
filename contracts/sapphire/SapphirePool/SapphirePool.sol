@@ -7,6 +7,7 @@ import {SapphirePoolStorage} from "./SapphirePoolStorage.sol";
 import {SharedPoolStructs} from "./SharedPoolStructs.sol";
 
 import {SafeERC20} from "../../lib/SafeERC20.sol";
+import {ReentrancyGuard} from "../../lib/ReentrancyGuard.sol";
 import {Adminable} from "../../lib/Adminable.sol";
 import {Address} from "../../lib/Address.sol";
 import {Math} from "../../lib/Math.sol";
@@ -19,7 +20,13 @@ import {InitializableBaseERC20} from "../../token/InitializableBaseERC20.sol";
  * A portion of the interest made from the loans by the Cores is deposited into this contract, and 
  * shared among the lenders.
  */
-contract SapphirePool is Adminable, InitializableBaseERC20, ISapphirePool, SapphirePoolStorage {
+contract SapphirePool is 
+    Adminable, 
+    InitializableBaseERC20, 
+    ISapphirePool, 
+    ReentrancyGuard, 
+    SapphirePoolStorage 
+{
 
     /* ========== Libraries ========== */
 
@@ -217,6 +224,7 @@ contract SapphirePool is Adminable, InitializableBaseERC20, ISapphirePool, Sapph
         external
         override
         onlyCores
+        nonReentrant
     {
         uint256 amountOut = _borrow(
             _stablecoinAddress,
@@ -243,6 +251,7 @@ contract SapphirePool is Adminable, InitializableBaseERC20, ISapphirePool, Sapph
         external
         override
         onlyCores
+        nonReentrant
     {
         uint256 debtDecreaseAmt = _repay(
             _stablecoinAddress,
@@ -290,6 +299,7 @@ contract SapphirePool is Adminable, InitializableBaseERC20, ISapphirePool, Sapph
     )
         external
         override
+        nonReentrant
     {
         SharedPoolStructs.AssetUtilization storage utilization = _assetDepositUtilization[_token];
 
@@ -348,6 +358,7 @@ contract SapphirePool is Adminable, InitializableBaseERC20, ISapphirePool, Sapph
         external
         override
         checkKnownToken(_withdrawToken)
+        nonReentrant
     {
         (
             uint256 assetUtilizationReduceAmt,
