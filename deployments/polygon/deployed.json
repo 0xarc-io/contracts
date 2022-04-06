@@ -1,0 +1,22 @@
+[
+  {
+    "name": "SapphirePassportScores",
+    "source": "SapphirePassportScores",
+    "address": "0x714691B0254136ed03303c348eDb1252940da3E0",
+    "txn": "0xb39537b520c67b699eb9b1f39c5233df84f4d301582d4cb88fca01b582b8c286",
+    "network": "polygon",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "SapphirePassportScoresProxy",
+    "source": "ArcProxy",
+    "address": "0xec73bB9Ce38aFE712A4b9a820bc34A2ddf50e990",
+    "txn": "0x2518487bc2e50502730011a89ce5539cfd259542d1c36e60f7c6dcec17a33316",
+    "network": "polygon",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  }
+]
