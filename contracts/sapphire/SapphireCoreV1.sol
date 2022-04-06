@@ -9,6 +9,7 @@ import {Math} from "../lib/Math.sol";
 import {Adminable} from "../lib/Adminable.sol";
 import {Address} from "../lib/Address.sol";
 import {Bytes32} from "../lib/Bytes32.sol";
+import {ReentrancyGuard} from "../lib/ReentrancyGuard.sol";
 import {ISapphireOracle} from "../oracle/ISapphireOracle.sol";
 
 import {SapphireTypes} from "./SapphireTypes.sol";
@@ -18,7 +19,7 @@ import {ISapphireAssessor} from "./ISapphireAssessor.sol";
 import {ISapphirePool} from "./SapphirePool/ISapphirePool.sol";
 import {ISapphirePassportScores} from "./ISapphirePassportScores.sol";
 
-contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
+contract SapphireCoreV1 is Adminable, ReentrancyGuard, SapphireCoreStorage {
 
     /* ========== Structs ========== */
 
@@ -673,6 +674,7 @@ contract SapphireCoreV1 is Adminable, SapphireCoreStorage {
         SapphireTypes.ScoreProof[] memory _passportProofs
     )
         public
+        nonReentrant
     {
         require(
             !paused,
