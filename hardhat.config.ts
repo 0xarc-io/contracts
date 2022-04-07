@@ -27,20 +27,33 @@ export const params = {
   deploy_private_key: process.env.DEPLOY_PRIVATE_KEY || '',
   infura_key: process.env.INFURA_PROJECT_ID || '',
   etherscan_key: process.env.MAINNET_ETHERSCAN_KEY || '',
-  mumbai_etherscan_key: process.env.MUMBAI_ETHERSCAN_KEY || '',
+  polygon_mumbai_etherscan_key: process.env.POLYGON_MUMBAI_ETHERSCAN_KEY || '',
   mainnet_alchemy_url: process.env.MAINNET_ALCHEMY || '',
 };
 
 export function getNetworkUrl(network: string) {
-  let prefix = '';
-
-  if (network === 'mumbai' || network === 'polygon') {
-    prefix = 'polygon-';
-  } else if (network === 'mainnet') {
+  if (network === 'mainnet') {
     return params.mainnet_alchemy_url;
   }
 
-  return `https://${prefix}${network}.infura.io/v3/${process.env.INFURA_PROJECT_ID}`;
+  let prefix = '';
+
+  switch (network) {
+    case 'mumbai':
+      prefix = 'polygon-mumbai';
+      break;
+    case 'polygon':
+      prefix = 'polygon-mainnet';
+      break;
+    case 'mainnet':
+    case 'rinkeby':
+      prefix = network;
+      break;
+    default:
+      throw new Error(`Unsupported network: ${network}`);
+  }
+
+  return `https://${prefix}.infura.io/v3/${process.env.INFURA_PROJECT_ID}`;
 }
 
 const config: HardhatUserConfig = {
@@ -110,6 +123,13 @@ const config: HardhatUserConfig = {
         arcxDeployer: '0x9c767178528c8a205df63305ebda4bb6b147889b',
       },
     },
+    polygon: {
+      url: getNetworkUrl('polygon'),
+      accounts: [params.deploy_private_key],
+      users: {
+        arcxDeployer: '0x9c767178528c8a205df63305ebda4bb6b147889b',
+      },
+    },
     playnet: {
       url: getNetworkUrl('mainnet'),
       accounts: [params.deploy_private_key],
@@ -127,7 +147,8 @@ const config: HardhatUserConfig = {
   etherscan: {
     apiKey: {
       mainnet: params.etherscan_key,
-      polygonMumbai: params.mumbai_etherscan_key,
+      polygonMumbai: params.polygon_mumbai_etherscan_key,
+      polygon: params.polygon_mumbai_etherscan_key,
     },
   },
   // watcher: {
