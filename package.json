@@ -7,7 +7,7 @@
     "dist/src/*",
     "dist/arc-types/*",
     "dist/deployments/src/*",
-    "deployments/{mainnet,rinkeby,mumbai}/*.json"
+    "deployments/{mainnet,rinkeby,mumbai,polygon}/*.json"
   ],
   "author": "Kerman Kohli <kermankohli@gmail.com>",
   "license": "MIT",
