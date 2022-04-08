@@ -18,5 +18,75 @@
     "version": 1,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "SapphirePool",
+    "source": "SapphirePool",
+    "address": "0x579aD95e27f5b3b70E816f2Ff7D20152e0b6A91D",
+    "txn": "0x553b8e00b76c3e01570f85da5ff855568625bb1f3cb6e9becaeadbe0b86111e4",
+    "network": "polygon",
+    "version": 1,
+    "type": "borrowing",
+    "group": ""
+  },
+  {
+    "name": "SapphirePool",
+    "source": "ArcProxy",
+    "address": "0x59b8a21A0B0cE87E308082Af6fFC4205b5dC932C",
+    "txn": "0x52e5975a5a2657d5471c3f5b27fd85b72df1abc073919d5c1598d0be502c7ddc",
+    "network": "polygon",
+    "version": 1,
+    "type": "borrowing",
+    "group": ""
+  },
+  {
+    "name": "SapphireMapperLinear",
+    "source": "SapphireMapperLinear",
+    "address": "0xE04F7Aa7f84AFB284d9E76B876bb672A76Fcd0c1",
+    "txn": "0xdf95f6a353280e2e9b203e7bcd6be9499a767b3d7a4f3d9871f4da106cc41bf7",
+    "network": "polygon",
+    "version": 1,
+    "type": "borrowing",
+    "group": ""
+  },
+  {
+    "name": "SapphireAssessor",
+    "source": "SapphireAssessor",
+    "address": "0xFe95c7b19aC598Dc59d2205D8B75334dF4b2303d",
+    "txn": "0x31171c8d0c4bc9775e914f3f20b0aad92b3de57f6248fbc7d0c5c89564352a65",
+    "network": "polygon",
+    "version": 1,
+    "type": "borrowing",
+    "group": ""
+  },
+  {
+    "name": "SapphireCore",
+    "source": "SapphireCoreV1",
+    "address": "0x082924fAd140ffABc55e2f9A8c293219eDec075b",
+    "txn": "0xd1595955a3ff93db3e1767d1be752e3376b45f3496ab34fe2abe7569dbdc15f0",
+    "network": "polygon",
+    "version": 1,
+    "type": "borrowing",
+    "group": ""
+  },
+  {
+    "name": "SapphireCoreProxy",
+    "source": "ArcProxy",
+    "address": "0x05efe26f4a75EA4d183e8a7922494d60adfB27b3",
+    "txn": "0x3eae7364da2acca9cdf3510028cdd8fa59a50a6c692865b3194187f2eb3fc3a3",
+    "network": "polygon",
+    "version": 1,
+    "type": "borrowing",
+    "group": "WETH"
+  },
+  {
+    "name": "Oracle",
+    "source": "ChainLinkOracle",
+    "address": "0x35B02834d26e38b50dDe8B4a11925fadC20a1B6B",
+    "txn": "0xaf32a41eac80012bf21bd32ebe43cb4efd5181425b43bb1ca741a12541e5d0c7",
+    "network": "polygon",
+    "version": 1,
+    "type": "global",
+    "group": ""
   }
 ]
