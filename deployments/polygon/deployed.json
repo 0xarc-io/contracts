@@ -30,7 +30,7 @@
     "group": ""
   },
   {
-    "name": "SapphirePool",
+    "name": "SapphirePoolProxy",
     "source": "ArcProxy",
     "address": "0x59b8a21A0B0cE87E308082Af6fFC4205b5dC932C",
     "txn": "0x52e5975a5a2657d5471c3f5b27fd85b72df1abc073919d5c1598d0be502c7ddc",
@@ -80,10 +80,10 @@
     "group": "WETH"
   },
   {
-    "name": "Oracle",
-    "source": "ChainLinkOracle",
-    "address": "0x35B02834d26e38b50dDe8B4a11925fadC20a1B6B",
-    "txn": "0xaf32a41eac80012bf21bd32ebe43cb4efd5181425b43bb1ca741a12541e5d0c7",
+    "name": "ChainlinkOracleETH",
+    "source": "ChainlinkOracle",
+    "address": "0x45e3875E434043670f8760e5e27cF170BE3BAFdf",
+    "txn": "0xb815485866040c674593ef8f229c96d67b61cb8c421a43ca61e4cfe6a3bd0022",
     "network": "polygon",
     "version": 1,
     "type": "global",
