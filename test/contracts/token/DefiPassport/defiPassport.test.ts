@@ -531,7 +531,7 @@ describe('DefiPassport', () => {
     it('returns true if a skin is an ERC1155', async () => {
       const provider = new MockProvider({
         ganacheOptions: {
-          fork: process.env.GANACHE_FORK_URL,
+          fork: process.env.MAINNET_ALCHEMY,
           fork_block_number: 13089257,
         },
       });
