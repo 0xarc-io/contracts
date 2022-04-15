@@ -14,13 +14,16 @@ contract ChainLinkOracle is ISapphireOracle {
 
     AggregatorV3Interface public priceFeed;
 
-    uint256 public decimals;
+    uint256 public scalar;
 
     constructor(address _priceFeed) {
         priceFeed = AggregatorV3Interface(_priceFeed);
-        decimals = priceFeed.decimals();
+        scalar = 10 ** uint256(18 - priceFeed.decimals());
     }
 
+    /**
+     * @notice Fetches the timestamp and the current price of the asset, in 18 decimals
+     */
     function fetchCurrentPrice()
         external
         override
@@ -35,9 +38,8 @@ contract ChainLinkOracle is ISapphireOracle {
         );
 
         return (
-            uint256(price),
+            uint256(price) * scalar,
             timestamp
         );
     }
-
 }
