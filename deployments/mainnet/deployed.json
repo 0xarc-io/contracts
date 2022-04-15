@@ -847,5 +847,15 @@
     "version": 1,
     "type": "global",
     "group": "KermanRewards"
+  },
+  {
+    "name": "SapphirePassportScores",
+    "source": "SapphirePassportScores",
+    "address": "0x0F5e2C9137cc1e8d8700252eC26fF964c7f9Bf60",
+    "txn": "0xb6b2f180f0bb91c3fbbef12a5fd455da9374359edaf44bef38e143adf6090e00",
+    "network": "mainnet",
+    "version": 2,
+    "type": "global",
+    "group": ""
   }
 ]

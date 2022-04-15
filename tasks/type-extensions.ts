@@ -5,7 +5,8 @@ declare module 'hardhat/types/config' {
   type UserTypeConfig = {
     eoaOwner?: string;
     multisigOwner?: string;
-    arcxDeployer?: string
+    arcxDeployer?: string;
+    guardian?: string;
   };
 
   interface HttpNetworkUserConfig {
