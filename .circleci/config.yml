@@ -38,7 +38,7 @@ jobs:
           name: Test Contracts
           command: |
             circleci tests glob "test/**/*.test.ts" | circleci tests split --split-by=timings > /tmp/tests-to-run
-            MOCHA_FILE=~/mocha/test-results.xml yarn test:ci --file "$(sed ':a; N; $!ba; s/\n/,/g' /tmp/tests-to-run)"
+            MOCHA_FILE=/home/circleci/mocha/test-results.xml yarn test:ci --file "$(sed ':a; N; $!ba; s/\n/,/g' /tmp/tests-to-run)"
       - run:
           name: Prepare Release
           command: yarn release:local
