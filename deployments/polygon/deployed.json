@@ -80,10 +80,10 @@
     "group": "WETH"
   },
   {
-    "name": "Oracle",
-    "source": "ChainLinkOracle",
-    "address": "0x35B02834d26e38b50dDe8B4a11925fadC20a1B6B",
-    "txn": "0xaf32a41eac80012bf21bd32ebe43cb4efd5181425b43bb1ca741a12541e5d0c7",
+    "name": "ChainlinkOracleETH",
+    "source": "ChainlinkOracle",
+    "address": "0x45e3875E434043670f8760e5e27cF170BE3BAFdf",
+    "txn": "0xb815485866040c674593ef8f229c96d67b61cb8c421a43ca61e4cfe6a3bd0022",
     "network": "polygon",
     "version": 1,
     "type": "global",
