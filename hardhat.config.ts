@@ -121,6 +121,7 @@ const config: HardhatUserConfig = {
         eoaOwner: '0x62f31e08e279f3091d9755a09914df97554eae0b',
         multisigOwner: '0x859a95b2b50c1fc25560a2c6dad5b3d0ba34b6e9',
         arcxDeployer: '0x9c767178528c8a205df63305ebda4bb6b147889b',
+        guardian: '0xc434C28Da5940462213C0057660a7132337205c1',
       },
     },
     polygon: {
@@ -128,6 +129,8 @@ const config: HardhatUserConfig = {
       accounts: [params.deploy_private_key],
       users: {
         arcxDeployer: '0x9c767178528c8a205df63305ebda4bb6b147889b',
+        guardian: '0xC033F3488584F4c929b2D78326f0Fb84CbC7d525',
+        multisigOwner: '0xE4b3F2E082356f5430bd883A22186a6DDE36952D',
       },
     },
     playnet: {
