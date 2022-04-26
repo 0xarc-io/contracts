@@ -724,7 +724,7 @@ contract SapphirePool is
     }
 
     function _getWithdrawAmountsVars(
-        uint256 _amount,
+        uint256 _lpAmount,
         address _withdrawToken
     )
         private
@@ -736,7 +736,7 @@ contract SapphirePool is
         info.poolValue = getPoolValue();
         info.totalSupply = totalSupply();
 
-        info.withdrawAmt = _amount * info.poolValue / info.totalSupply;
+        info.withdrawAmt = _lpAmount * info.poolValue / info.totalSupply;
         info.scaledWithdrawAmt = _getScaledAmount(
             info.withdrawAmt,
             _decimals,
