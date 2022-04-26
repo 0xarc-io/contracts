@@ -690,7 +690,7 @@ contract SapphirePool is
             // The withdraw amount is bigger than the user's initial deposit. This happens when the
             // rewards claimable by the user are greater than the amount of tokens they have
             // deposited.
-            if (info.assetUtilization > info.userDeposit) {
+            if (info.scaledAssetUtilization > info.userDeposit) {
                 // There's more asset utilization than the user's initial deposit. Reduce it by
                 // the amount of the user's initial deposit.
                 return (
