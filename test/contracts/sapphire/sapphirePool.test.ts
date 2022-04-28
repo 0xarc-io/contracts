@@ -1264,5 +1264,34 @@ describe('SapphirePool', () => {
         initialStableUserBBalance,
       );
     });
+
+    it('Scenario 3: asset utilization is properly decreased when withdrawing more than deposited', async () => {
+      await pool.setDepositLimit(stablecoin.address, depositAmount.mul(2));
+
+      // Initial state (A 100, B 100)
+      await stablecoin.mintShare(userB.address, depositAmount); // User A already has 100
+
+      // A deposits 100
+      await pool.connect(userA).deposit(stablecoin.address, depositAmount);
+
+      // B deposits 100
+      await pool.connect(userB).deposit(stablecoin.address, depositAmount);
+
+      // 200 USDC rewards are added
+      await stablecoin.mintShare(pool.address, depositAmount.mul(2));
+
+      // Asset utilization should be 200
+      let assetUtilization = await pool.assetDepositUtilization(
+        stablecoin.address,
+      );
+      expect(assetUtilization.amountUsed).to.eq(depositAmount.mul(2));
+      // A withdraws all (including rewards) (should be $150)
+      await pool
+        .connect(userA)
+        .withdraw(scaledDepositAmount, stablecoin.address);
+      // Asset utilization should be 100
+      assetUtilization = await pool.assetDepositUtilization(stablecoin.address);
+      expect(assetUtilization.amountUsed).to.eq(depositAmount);
+    });
   });
 });
