@@ -12,6 +12,7 @@ import 'solidity-coverage';
 
 import '@nomiclabs/hardhat-waffle';
 import '@nomiclabs/hardhat-etherscan';
+import '@nomiclabs/hardhat-ethers'
 
 import './tasks/type-extensions';
 
