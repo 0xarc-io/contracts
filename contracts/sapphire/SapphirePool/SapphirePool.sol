@@ -38,8 +38,8 @@ contract SapphirePool is
     struct WithdrawAmountInfo {
         uint256 poolValue;
         uint256 totalSupply;
-        uint256 withdrawAmt;
-        uint256 scaledWithdrawAmt;
+        uint256 withdrawAmount;
+        uint256 scaledWithdrawAmount;
         uint256 userDeposit;
         uint256 assetUtilization;
         uint256 scaledAssetUtilization;
@@ -677,20 +677,20 @@ contract SapphirePool is
 
         if (info.userDeposit > 0) {
             // User didn't withdraw their initial deposit yet
-            if (info.userDeposit > info.withdrawAmt) {
+            if (info.userDeposit > info.scaledWithdrawAmount) {
                 // Reduce the user's deposit amount and the asset utilization
                 // by the amount withdrawn
                 return (
-                    info.scaledWithdrawAmt,
-                    info.withdrawAmt,
-                    info.scaledWithdrawAmt
+                    info.withdrawAmount,
+                    info.scaledWithdrawAmount,
+                    info.withdrawAmount
                 );
             }
 
             // The withdraw amount is bigger than the user's initial deposit. This happens when the
             // rewards claimable by the user are greater than the amount of tokens they have
             // deposited.
-            if (info.assetUtilization > info.userDeposit) {
+            if (info.scaledAssetUtilization > info.userDeposit) {
                 // There's more asset utilization than the user's initial deposit. Reduce it by
                 // the amount of the user's initial deposit.
                 return (
@@ -700,7 +700,7 @@ contract SapphirePool is
                         _tokenDecimals[_withdrawToken]
                     ),
                     info.userDeposit,
-                    info.scaledWithdrawAmt
+                    info.withdrawAmount
                 );
             }
 
@@ -710,7 +710,7 @@ contract SapphirePool is
             return (
                 info.assetUtilization,
                 info.userDeposit,
-                info.scaledWithdrawAmt
+                info.withdrawAmount
             );
         }
 
@@ -719,12 +719,12 @@ contract SapphirePool is
         return (
             0,
             0,
-            info.scaledWithdrawAmt
+            info.withdrawAmount
         );
     }
 
     function _getWithdrawAmountsVars(
-        uint256 _amount,
+        uint256 _lpAmount,
         address _withdrawToken
     )
         private
@@ -736,9 +736,9 @@ contract SapphirePool is
         info.poolValue = getPoolValue();
         info.totalSupply = totalSupply();
 
-        info.withdrawAmt = _amount * info.poolValue / info.totalSupply;
-        info.scaledWithdrawAmt = _getScaledAmount(
-            info.withdrawAmt,
+        info.scaledWithdrawAmount = _lpAmount * info.poolValue / info.totalSupply;
+        info.withdrawAmount = _getScaledAmount(
+            info.scaledWithdrawAmount,
             _decimals,
             _tokenDecimals[_withdrawToken]
         );
