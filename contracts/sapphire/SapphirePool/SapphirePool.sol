@@ -213,16 +213,6 @@ contract SapphirePool is
         emit DepositLimitSet(_tokenAddress, _limit);
     }
 
-    // TODO: to be removed
-    function resetBorrowUtilization(
-        address _user
-    )
-        external
-        onlyAdmin
-    {
-        _deposits[_user] = 0;
-    }
-
     /**
      * @notice Borrows the specified tokens from the pool. Available only to approved cores.
      */
