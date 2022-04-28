@@ -213,6 +213,16 @@ contract SapphirePool is
         emit DepositLimitSet(_tokenAddress, _limit);
     }
 
+    // TODO: to be removed
+    function resetBorrowUtilization(
+        address _user
+    )
+        external
+        onlyAdmin
+    {
+        _deposits[_user] = 0;
+    }
+
     /**
      * @notice Borrows the specified tokens from the pool. Available only to approved cores.
      */
@@ -363,7 +373,7 @@ contract SapphirePool is
         (
             uint256 assetUtilizationReduceAmt,
             uint256 userDepositReduceAmt,
-            uint256 scaledWithdrawAmt
+            uint256 withdrawAmount
         ) = _getWithdrawAmounts(_lpAmount, _withdrawToken);
 
         _assetDepositUtilization[_withdrawToken].amountUsed -= assetUtilizationReduceAmt;
@@ -374,14 +384,14 @@ contract SapphirePool is
         SafeERC20.safeTransfer(
             IERC20Metadata(_withdrawToken),
             msg.sender,
-            scaledWithdrawAmt
+            withdrawAmount
         );
 
         emit TokensWithdrawn(
             msg.sender,
             _withdrawToken,
             _lpAmount,
-            scaledWithdrawAmt
+            withdrawAmount
         );
     }
 
