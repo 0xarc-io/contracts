@@ -7,7 +7,6 @@ import {
   SapphireMapperLinearFactory,
   SapphirePassportScoresFactory,
   SapphirePoolFactory,
-  TestTokenFactory,
 } from '@src/typings';
 import { green, red, yellow } from 'chalk';
 import {
@@ -484,7 +483,7 @@ task('deploy-borrow-pool')
     );
   });
 
-task('repair-withdraw-bug').setAction(async (taskArgs, hre) => {
+task('repair-withdraw-bug').setAction(async (_taskArgs, hre) => {
   const { signer, networkConfig } = await loadDetails(hre);
 
   assert(signer.address === '0x9c767178528c8a205DF63305ebdA4BB6B147889b');
@@ -529,39 +528,6 @@ task('repair-withdraw-bug').setAction(async (taskArgs, hre) => {
   assert((await pool.assetDepositUtilization(usdcAddress)).amountUsed.eq(0));
   assert((await pool.deposits(signer.address)).eq(0));
 });
-
-function _deployTestCollateral(
-  networkConfig: NetworkParams,
-  collatName: string,
-  signer: SignerWithAddress,
-): Promise<string> {
-  const { network } = networkConfig;
-
-  if (network === 'mainnet') {
-    throw red(
-      `"collateral_address" was not set in the collateral config. Please set it and try again.`,
-    );
-  } else {
-    console.log(yellow(`Deploying test collateral...`));
-
-    // On a test net. Deploy test token
-    return deployContract(
-      {
-        name: 'CollateralToken',
-        source: 'TestToken',
-        data: new TestTokenFactory(signer).getDeployTransaction(
-          collatName,
-          collatName,
-          18,
-        ),
-        version: 1,
-        type: DeploymentType.global,
-        group: collatName,
-      },
-      networkConfig,
-    );
-  }
-}
 
 /**
  * Deploys the given oracle, or a mock oracle
