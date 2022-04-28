@@ -2,8 +2,11 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { BASE } from '@src/constants';
 import {
   ArcProxyFactory,
+  BaseERC20Factory,
   MockSapphirePool,
   MockSapphirePoolFactory,
+  SapphirePool,
+  SapphirePoolFactory,
   TestToken,
   TestTokenFactory,
 } from '@src/typings';
@@ -15,12 +18,17 @@ import {
   TRANSFER_FROM_FAILED,
 } from '@test/helpers/contractErrors';
 import { roundUpDiv } from '@test/helpers/roundUpOperations';
-import { DEFAULT_COLLATERAL_DECIMALS } from '@test/helpers/sapphireDefaults';
+import {
+  DEFAULT_COLLATERAL_DECIMALS,
+  DEFAULT_STABLECOIN_DECIMALS,
+} from '@test/helpers/sapphireDefaults';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
 import { BigNumber, BigNumberish, utils } from 'ethers';
 import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
+
+import hre from 'hardhat';
 
 describe('SapphirePool', () => {
   let pool: MockSapphirePool;
@@ -1292,6 +1300,167 @@ describe('SapphirePool', () => {
       // Asset utilization should be 100
       assetUtilization = await pool.assetDepositUtilization(stablecoin.address);
       expect(assetUtilization.amountUsed).to.eq(depositAmount);
+    });
+
+    it('Scenario 4: 2 users deposit, reward is added, and both exit', async () => {
+      // Initial state: (A 100k, B 1k)
+      const aDeposit = utils.parseUnits('100000', DEFAULT_STABLECOIN_DECIMALS);
+      const bDeposit = utils.parseUnits('1000', DEFAULT_STABLECOIN_DECIMALS);
+      await stablecoin.mintShare(userA.address, aDeposit);
+      await stablecoin.mintShare(userB.address, bDeposit);
+      await approve(aDeposit, stablecoin.address, pool.address, userA);
+      await approve(bDeposit, stablecoin.address, pool.address, userB);
+      await pool.setDepositLimit(
+        stablecoin.address,
+        utils.parseUnits('1000000', DEFAULT_STABLECOIN_DECIMALS),
+      );
+
+      // A deposits 100k
+      await pool.connect(userA).deposit(stablecoin.address, aDeposit);
+
+      // B deposits 1k
+      await pool.connect(userB).deposit(stablecoin.address, bDeposit);
+
+      // 6.06k rewards are added
+      await stablecoin.mintShare(
+        pool.address,
+        utils.parseUnits('6060', DEFAULT_STABLECOIN_DECIMALS),
+      );
+
+      // A withdraws all (100k + 6k)
+      await pool
+        .connect(userA)
+        .withdraw(await pool.balanceOf(userA.address), stablecoin.address);
+
+      // Can B withdraw 1$?
+      await expect(
+        pool
+          .connect(userB)
+          .withdraw(
+            utils.parseUnits('1', DEFAULT_STABLECOIN_DECIMALS),
+            stablecoin.address,
+          ),
+      ).to.not.be.reverted;
+    });
+  });
+
+  xdescribe('Upgrade test', () => {
+    const usdcAddress = '0x2791bca1f2de4661ed88a30c99a7a9449aa84174';
+    const poolProxyAddress = '0x59b8a21A0B0cE87E308082Af6fFC4205b5dC932C';
+    const deployerAddress = '0x9c767178528c8a205DF63305ebdA4BB6B147889b';
+    const otherLPAddress = '0xbb4153b55a59cc8bde72550b0cf16781b08ef7b0';
+    const usdcScalar = 10 ** 12;
+    const provider = hre.network.provider;
+
+    beforeEach(async () => {
+      await provider.request({
+        method: 'hardhat_impersonateAccount',
+        params: [deployerAddress],
+      });
+      await provider.request({
+        method: 'hardhat_impersonateAccount',
+        params: [otherLPAddress],
+      });
+    });
+
+    afterEach(async () => {
+      await provider.request({
+        method: 'hardhat_stopImpersonatingAccount',
+        params: [deployerAddress],
+      });
+      await provider.request({
+        method: 'hardhat_stopImpersonatingAccount',
+        params: [otherLPAddress],
+      });
+    });
+
+    async function getLpForUsdcAmount(
+      usdcAmount: BigNumber,
+      poolContract: SapphirePool,
+    ) {
+      const supply = await poolContract.totalSupply();
+      const poolValue = await poolContract.getPoolValue();
+      return roundUpDiv(
+        usdcAmount.mul(usdcScalar).mul(supply).div(BASE),
+        poolValue,
+      );
+    }
+
+    it('repairs pool, can withdraw what is available', async () => {
+      const deployer = await hre.ethers.getSigner(deployerAddress);
+      const poolDeployer = SapphirePoolFactory.connect(
+        poolProxyAddress,
+        deployer,
+      );
+      const usdcContract = BaseERC20Factory.connect(usdcAddress, deployer);
+
+      // Upgrade contract
+      const upgrade = await new SapphirePoolFactory(deployer).deploy();
+      await ArcProxyFactory.connect(poolProxyAddress, deployer).upgradeTo(
+        upgrade.address,
+      );
+
+      // deployer tries to withdraw the amount of deposit utilization + 1 and fails
+      const {
+        amountUsed: assetUtilization,
+      } = await poolDeployer.assetDepositUtilization(usdcAddress);
+      const depositUtilizationLpEquivalent = await getLpForUsdcAmount(
+        assetUtilization,
+        poolDeployer,
+      );
+      await expect(
+        poolDeployer.withdraw(
+          depositUtilizationLpEquivalent.add(utils.parseEther('1')),
+          usdcAddress,
+        ),
+      ).to.be.reverted;
+
+      // deployer withdraws exactly the deposit utilization, which should set the utilization to 0
+      console.log(
+        'magic number withdraw (lp equivalent of the asset utilization)',
+      );
+      const lpBalance = await poolDeployer.balanceOf(deployer.address);
+      console.log('lpBalance', lpBalance.toString());
+      await poolDeployer.withdraw(depositUtilizationLpEquivalent, usdcAddress);
+
+      expect(
+        (await poolDeployer.assetDepositUtilization(usdcAddress)).amountUsed,
+      ).to.eq(0);
+
+      // admin sets deployer's utilization to 0
+      await poolDeployer.resetBorrowUtilization(deployer.address);
+
+      // second LP exits
+      const otherLP = await hre.ethers.getSigner(otherLPAddress);
+      const otherLpBalance = await poolDeployer.balanceOf(otherLP.address);
+      await approve(
+        otherLpBalance,
+        poolDeployer.address,
+        poolDeployer.address,
+        otherLP,
+      );
+      await poolDeployer.connect(otherLP).withdraw(otherLpBalance, usdcAddress);
+
+      // deployer should now be able to withdraw all the available rest
+      console.log('deployer withdraws all');
+      const usdcBalance = await usdcContract.balanceOf(poolProxyAddress);
+      const lpToWithdraw = await getLpForUsdcAmount(usdcBalance, poolDeployer);
+      await approve(
+        lpToWithdraw,
+        poolDeployer.address,
+        poolDeployer.address,
+        deployer,
+      );
+      console.log('withdrawing lp amount:', lpToWithdraw.toString());
+      await poolDeployer.withdraw(lpToWithdraw, usdcAddress);
+
+      expect(await usdcContract.balanceOf(poolProxyAddress)).to.eq(0);
+
+      /**
+       * NOTE:
+       * As a side-effect of this fix, there is now an additional ~3k usdc that is not accounted
+       * in the deposit limit.
+       */
     });
   });
 });
