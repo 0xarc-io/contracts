@@ -153,7 +153,7 @@ export class SapphireArc {
     ),
     passportBorrowLimitProof: PassportScoreProof = getEmptyScoreProof(
       undefined,
-      utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
+      utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
     ),
     coreName: string = this.getCoreNames()[0],
     overrides: TransactionOverrides = {},
@@ -221,7 +221,7 @@ export class SapphireArc {
     ),
     passportBorrowLimitProof: PassportScoreProof = getEmptyScoreProof(
       undefined,
-      utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
+      utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
     ),
     coreName: string = this.getCoreNames()[0],
     caller: Signer = this.signer,
