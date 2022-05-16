@@ -363,7 +363,7 @@ contract SapphirePool is
         (
             uint256 assetUtilizationReduceAmt,
             uint256 userDepositReduceAmt,
-            uint256 scaledWithdrawAmt
+            uint256 withdrawAmount
         ) = _getWithdrawAmounts(_lpAmount, _withdrawToken);
 
         _assetDepositUtilization[_withdrawToken].amountUsed -= assetUtilizationReduceAmt;
@@ -374,14 +374,14 @@ contract SapphirePool is
         SafeERC20.safeTransfer(
             IERC20Metadata(_withdrawToken),
             msg.sender,
-            scaledWithdrawAmt
+            withdrawAmount
         );
 
         emit TokensWithdrawn(
             msg.sender,
             _withdrawToken,
             _lpAmount,
-            scaledWithdrawAmt
+            withdrawAmount
         );
     }
 

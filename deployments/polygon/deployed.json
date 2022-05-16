@@ -88,5 +88,15 @@
     "version": 1,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "SapphirePool",
+    "source": "SapphirePool",
+    "address": "0x8c5e77786913Ed4ba8032B818E89f0cf8df1D242",
+    "txn": "0xb6beca6c8f872c45b23a195959847370e3e303266d4a4b6ba7d6d6dfbe0e40da",
+    "network": "polygon",
+    "version": 2,
+    "type": "borrowing",
+    "group": ""
   }
 ]
