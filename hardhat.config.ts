@@ -12,6 +12,7 @@ import 'solidity-coverage';
 
 import '@nomiclabs/hardhat-waffle';
 import '@nomiclabs/hardhat-etherscan';
+import '@nomiclabs/hardhat-ethers';
 
 import './tasks/type-extensions';
 
@@ -77,6 +78,7 @@ const config: HardhatUserConfig = {
     hardhat: {},
     local: {
       url: 'http://127.0.0.1:8545',
+      accounts: [params.deploy_private_key],
       users: {
         eoaOwner: '0xAF36712cb4ebD3BD706E898F5703ce3Ca96E8982',
       },
