@@ -6,10 +6,19 @@ import {
   loadDetails,
   pruneDeployments,
 } from '../deployments/src';
-import { utils } from 'ethers';
+import { BigNumber, utils } from 'ethers';
 import { task } from 'hardhat/config';
-import { TestTokenFactory } from '@src/typings';
+import {
+  ChainLinkOracleFactory,
+  SapphireAssessorFactory,
+  SapphireCoreV1,
+  SapphireCoreV1Factory,
+  TestTokenFactory,
+} from '@src/typings';
 import { DeploymentType } from '../deployments/types';
+import { Filter, Log } from '@ethersproject/abstract-provider';
+import axios from 'axios';
+import { BASE } from '@src/constants';
 
 task('mint-tokens')
   .addParam('token', 'The address of the token to mint from')
@@ -95,3 +104,121 @@ task('deploy-test-erc20', 'Deploys an ERC20 test token with 18 decimals')
       constructorArguments: [name, symbol, 18],
     });
   });
+
+task('exec-liquidation').setAction(async (taskArgs, hre) => {
+  const { signer } = await loadDetails(hre);
+
+  const coreProxyAddress = '0x05efe26f4a75EA4d183e8a7922494d60adfB27b3';
+  const core = SapphireCoreV1Factory.connect(coreProxyAddress, signer);
+  const oracle = ChainLinkOracleFactory.connect(await core.oracle(), signer);
+  const assessor = SapphireAssessorFactory.connect(
+    await core.assessor(),
+    signer,
+  );
+
+  const contractCreationBlock = 26815547;
+  const currentPrice = (await oracle.fetchCurrentPrice())[0];
+  const maxCRatio = await core.highCollateralRatio();
+  const minCRatio = await core.lowCollateralRatio();
+  const maxScore = await assessor.maxScore();
+  const boundsDifference = maxCRatio.sub(minCRatio);
+
+  const borrowLogFilter: Filter = {
+    address: coreProxyAddress,
+    topics: core.filters.Borrowed(null, null, null, null, null, null).topics,
+    toBlock: 'latest',
+    fromBlock: contractCreationBlock,
+  };
+  const logs = await signer.provider.getLogs(borrowLogFilter);
+
+  const borrowers: string[] = getBorrowers(logs);
+
+  for (const addr of borrowers) {
+    const { assessedCRatio, isLiquidatable } = await checkLiquidatable(
+      addr,
+      maxCRatio,
+      boundsDifference,
+      maxScore,
+      currentPrice,
+      core,
+    );
+
+    if (isLiquidatable) {
+      console.log(
+        `User ${addr} can be liquidated! Their assessed c-ratio is ${utils.formatEther(
+          assessedCRatio,
+        )}`,
+      );
+    }
+  }
+});
+
+function getBorrowers(logs: Log[]): string[] {
+  const borrowersFromAllTxs = logs.map((log) =>
+    utils.hexStripZeros(log.topics[1]),
+  );
+  const uniqueBorrowers = borrowersFromAllTxs.filter(
+    (addr, index, self) => self.indexOf(addr) === index,
+  );
+
+  return uniqueBorrowers;
+}
+
+async function getUserCreditScore(addr: string): Promise<BigNumber> {
+  const res = await axios.get(`https://api.arcx.money/v1/scores`, {
+    params: {
+      account: addr,
+      protocol: 'arcx.credit',
+      format: 'simple',
+    },
+  });
+
+  return BigNumber.from(res.data.data[0].score);
+}
+
+async function checkLiquidatable(
+  addr: string,
+  maxCRatio: BigNumber,
+  boundsDifference: BigNumber,
+  maxScore: number,
+  currentPrice: BigNumber,
+  core: SapphireCoreV1,
+): Promise<{ assessedCRatio: BigNumber; isLiquidatable: boolean }> {
+  const creditScore = await getUserCreditScore(addr);
+
+  const assessedCRatio = maxCRatio.sub(
+    creditScore.mul(boundsDifference).div(maxScore),
+  );
+
+  const vault = await core.vaults(addr);
+  if (vault.normalizedBorrowedAmount.isZero()) {
+    return {
+      assessedCRatio: null,
+      isLiquidatable: false,
+    };
+  }
+
+  const currentCRatio = vault.collateralAmount
+    .mul(currentPrice)
+    .div(
+      vault.normalizedBorrowedAmount
+        .mul(await core.currentBorrowIndex())
+        .div(BASE),
+    );
+
+  const isCollateralized = currentCRatio.gt(assessedCRatio);
+
+  console.log(
+    `user ${addr} has an assessed c-ratio of ${utils.formatEther(
+      assessedCRatio,
+    )}. Current c-ratio: ${utils.formatEther(
+      currentCRatio,
+    )}. There is a gap of ${utils.formatEther(
+      isCollateralized
+        ? currentCRatio.sub(assessedCRatio)
+        : assessedCRatio.sub(currentCRatio),
+    )}`,
+  );
+
+  return { assessedCRatio, isLiquidatable: !isCollateralized };
+}
