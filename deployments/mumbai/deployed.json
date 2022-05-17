@@ -129,7 +129,7 @@
     "group": ""
   },
   {
-    "name": "SapphirePool",
+    "name": "SapphirePoolProxy",
     "source": "ArcProxy",
     "address": "0x417FBD7a478EFcca9E1a3F907562BEf22DB7fEE0",
     "txn": "0x048ca34844b49ade72f8445360b52e88c0958bce8b5ca0f3761322daea9cb331",
