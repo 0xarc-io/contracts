@@ -105,7 +105,7 @@ task('deploy-test-erc20', 'Deploys an ERC20 test token with 18 decimals')
     });
   });
 
-task('exec-liquidation').setAction(async (taskArgs, hre) => {
+task('print-liquidatable-users').setAction(async (taskArgs, hre) => {
   const { signer } = await loadDetails(hre);
 
   const coreProxyAddress = '0x05efe26f4a75EA4d183e8a7922494d60adfB27b3';
@@ -145,7 +145,7 @@ task('exec-liquidation').setAction(async (taskArgs, hre) => {
 
     if (isLiquidatable) {
       console.log(
-        `User ${addr} can be liquidated! Their assessed c-ratio is ${utils.formatEther(
+        `>>> User ${addr} can be liquidated! Their assessed c-ratio is ${utils.formatEther(
           assessedCRatio,
         )}`,
       );
