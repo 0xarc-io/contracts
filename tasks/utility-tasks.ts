@@ -9,6 +9,7 @@ import {
 import { BigNumber, utils } from 'ethers';
 import { task } from 'hardhat/config';
 import {
+  BaseERC20Factory,
   ChainLinkOracleFactory,
   SapphireAssessorFactory,
   SapphireCoreV1,
@@ -19,6 +20,7 @@ import { DeploymentType } from '../deployments/types';
 import { Filter, Log } from '@ethersproject/abstract-provider';
 import axios from 'axios';
 import { BASE } from '@src/constants';
+import { PassportScoreProof } from '@arc-types/sapphireCore';
 
 task('mint-tokens')
   .addParam('token', 'The address of the token to mint from')
@@ -105,7 +107,7 @@ task('deploy-test-erc20', 'Deploys an ERC20 test token with 18 decimals')
     });
   });
 
-task('print-liquidatable-users').setAction(async (taskArgs, hre) => {
+task('liquidate-borrowers').setAction(async (taskArgs, hre) => {
   const { signer } = await loadDetails(hre);
 
   const coreProxyAddress = '0x05efe26f4a75EA4d183e8a7922494d60adfB27b3';
@@ -134,7 +136,7 @@ task('print-liquidatable-users').setAction(async (taskArgs, hre) => {
   const borrowers: string[] = getBorrowers(logs);
 
   for (const addr of borrowers) {
-    const { assessedCRatio, isLiquidatable } = await checkLiquidatable(
+    const { assessedCRatio, isLiquidatable, proof } = await checkLiquidatable(
       addr,
       maxCRatio,
       boundsDifference,
@@ -147,8 +149,12 @@ task('print-liquidatable-users').setAction(async (taskArgs, hre) => {
       console.log(
         `>>> User ${addr} can be liquidated! Their assessed c-ratio is ${utils.formatEther(
           assessedCRatio,
-        )}`,
+        )}\nStarting liquidation...`,
       );
+
+      await liquidate(addr, core, proof);
+
+      console.log(green('>>> Liquidation complete!'));
     }
   }
 });
@@ -164,16 +170,16 @@ function getBorrowers(logs: Log[]): string[] {
   return uniqueBorrowers;
 }
 
-async function getUserCreditScore(addr: string): Promise<BigNumber> {
+async function getUserCreditScoreProof(addr: string) {
   const res = await axios.get(`https://api.arcx.money/v1/scores`, {
     params: {
       account: addr,
       protocol: 'arcx.credit',
-      format: 'simple',
+      format: 'proof',
     },
   });
 
-  return BigNumber.from(res.data.data[0].score);
+  return res.data.data[0] as PassportScoreProof;
 }
 
 async function checkLiquidatable(
@@ -183,9 +189,10 @@ async function checkLiquidatable(
   maxScore: number,
   currentPrice: BigNumber,
   core: SapphireCoreV1,
-): Promise<{ assessedCRatio: BigNumber; isLiquidatable: boolean }> {
-  const creditScore = await getUserCreditScore(addr);
+) {
+  const creditScoreProof = await getUserCreditScoreProof(addr);
 
+  const creditScore = BigNumber.from(creditScoreProof.score);
   const assessedCRatio = maxCRatio.sub(
     creditScore.mul(boundsDifference).div(maxScore),
   );
@@ -198,13 +205,11 @@ async function checkLiquidatable(
     };
   }
 
-  const currentCRatio = vault.collateralAmount
-    .mul(currentPrice)
-    .div(
-      vault.normalizedBorrowedAmount
-        .mul(await core.currentBorrowIndex())
-        .div(BASE),
-    );
+  const denormalizedBorrowAmt = vault.normalizedBorrowedAmount
+    .mul(await core.currentBorrowIndex())
+    .div(BASE);
+  const collateralValue = vault.collateralAmount.mul(currentPrice).div(BASE);
+  const currentCRatio = collateralValue.mul(BASE).div(denormalizedBorrowAmt);
 
   const isCollateralized = currentCRatio.gt(assessedCRatio);
 
@@ -220,5 +225,58 @@ async function checkLiquidatable(
     )}`,
   );
 
-  return { assessedCRatio, isLiquidatable: !isCollateralized };
+  if (!isCollateralized) {
+    console.log(`>>> vault ${addr} is subject to liquidation!`);
+    console.log(
+      `\t Collateral value: $${utils.formatEther(
+        collateralValue,
+      )} (${utils.formatEther(vault.collateralAmount)} ETH)`,
+    );
+    console.log(`\t Debt: $${utils.formatEther(denormalizedBorrowAmt)}`);
+  }
+
+  return {
+    assessedCRatio,
+    isLiquidatable: !isCollateralized,
+    proof: creditScoreProof,
+  };
+}
+
+async function liquidate(
+  addr: string,
+  core: SapphireCoreV1,
+  proof: PassportScoreProof,
+) {
+  const usdcAddress = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
+  const usdc = BaseERC20Factory.connect(usdcAddress, core.signer);
+  const usdcScalar = BigNumber.from(10 ** (18 - (await usdc.decimals())));
+  const borrowIndex = await core.currentBorrowIndex();
+
+  const preLiquidationVault = await core.vaults(addr);
+  const denormalizedBorrowAmt = preLiquidationVault.normalizedBorrowedAmount
+    .mul(borrowIndex)
+    .div(BASE);
+  console.log(`Before liquidation:`);
+  console.log(
+    `\t Collateral: ${utils.formatEther(
+      preLiquidationVault.collateralAmount,
+    )} ETH`,
+  );
+  console.log(`\t Debt: $${utils.formatEther(denormalizedBorrowAmt)}`);
+
+  await usdc.approve(core.address, denormalizedBorrowAmt.div(usdcScalar));
+  await core.liquidate(addr, usdcAddress, [proof]);
+
+  const postLiquidationVault = await core.vaults(addr);
+  console.log(`After liquidation:`);
+  console.log(
+    `\t Collateral: ${utils.formatEther(
+      postLiquidationVault.collateralAmount,
+    )} ETH`,
+  );
+  console.log(
+    `\t Debt: $${utils.formatEther(
+      postLiquidationVault.normalizedBorrowedAmount.mul(borrowIndex),
+    )}`,
+  );
 }
