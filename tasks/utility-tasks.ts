@@ -21,6 +21,7 @@ import { Filter, Log } from '@ethersproject/abstract-provider';
 import axios from 'axios';
 import { BASE } from '@src/constants';
 import { PassportScoreProof } from '@arc-types/sapphireCore';
+import { approve } from '@src/utils';
 
 task('mint-tokens')
   .addParam('token', 'The address of the token to mint from')
@@ -264,8 +265,15 @@ async function liquidate(
   );
   console.log(`\t Debt: $${utils.formatEther(denormalizedBorrowAmt)}`);
 
-  await usdc.approve(core.address, denormalizedBorrowAmt.div(usdcScalar));
-  await core.liquidate(addr, usdcAddress, [proof]);
+  await approve(
+    denormalizedBorrowAmt.add(BASE).div(usdcScalar), // +1 $ to account for ongoing interest
+    usdc.address,
+    core.address,
+    core.signer,
+  );
+  const tx = await core.liquidate(addr, usdcAddress, [proof]);
+  const receipt = await tx.wait();
+  console.log(green(`>>> Liquidation transaction: ${receipt.transactionHash}`));
 
   const postLiquidationVault = await core.vaults(addr);
   console.log(`After liquidation:`);
