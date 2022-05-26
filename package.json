@@ -98,6 +98,7 @@
     "@test": "test/"
   },
   "dependencies": {
+    "@aave/core-v3": "^1.13.1",
     "@openzeppelin/contracts": "^4.3.2",
     "ethers": "5.0.2",
     "uuid": "^8.3.2"
