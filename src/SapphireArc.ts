@@ -24,7 +24,7 @@ import {
   SapphireCoreV1Factory,
   SapphirePoolFactory,
 } from './typings';
-import { IOracleFactory } from './typings/IOracleFactory';
+import { ISapphireOracleFactory } from './typings/ISapphireOracleFactory';
 import { getEmptyScoreProof } from './utils/getScoreProof';
 
 export type SapphireCoreContracts = CoreContracts<SapphireCoreV1>;
@@ -44,7 +44,10 @@ export class SapphireArc {
 
       this.cores[key] = {
         core,
-        oracle: IOracleFactory.connect(await core.oracle(), this.signer),
+        oracle: ISapphireOracleFactory.connect(
+          await core.oracle(),
+          this.signer,
+        ),
         collateral: BaseERC20Factory.connect(
           await core.collateralAsset(),
           this.signer,
