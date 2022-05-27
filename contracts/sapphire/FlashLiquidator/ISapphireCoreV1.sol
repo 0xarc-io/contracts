@@ -12,4 +12,6 @@ interface ISapphireCoreV1 {
     ) external;
 
     function vaults(address _owner) external view returns (SapphireTypes.Vault memory);
+
+    function currentBorrowIndex() external view returns (uint256);
 }
