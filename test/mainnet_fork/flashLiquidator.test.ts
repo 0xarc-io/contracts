@@ -10,6 +10,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
 const SIGNER_ADDRESS = '0x9c767178528c8a205df63305ebda4bb6b147889b';
 const USER_TO_LIQUIDATE = '0xad7b45345afeebd6755b5799c1b991306e4e5a43';
+const USDC_WETH_UNISWAP_POOL = '0x45dda9cb7c25131df268515131f647d726f50608';
 const PROOF: PassportScoreProof = {
   account: '0xad7b45345afeebd6755b5799c1b991306e4e5a43',
   protocol:
@@ -32,6 +33,7 @@ describe('FlashLiquidator', () => {
   let flashLiquidator: FlashLiquidator;
   let arc: SapphireArc;
   let signer: SignerWithAddress;
+  let currentTimestamp: number;
 
   before(async () => {
     const provider = hre.network.provider;
@@ -52,10 +54,18 @@ describe('FlashLiquidator', () => {
       sapphireCore: coreProxyAddress,
     });
 
+    // If we don't set the next block timestamp, the fork will be broken
+    // because the next block will have the real current timestamp
+    // instead of the one of the fork
+    currentTimestamp = (
+      await arc.cores['sapphireCore'].core.currentTimestamp()
+    ).toNumber();
+    await hre.network.provider.send('evm_setNextBlockTimestamp', [
+      ++currentTimestamp,
+    ]);
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    flashLiquidator = await new FlashLiquidatorFactory(signer).deploy(
-      coreProxyAddress,
-    );
+    flashLiquidator = await new FlashLiquidatorFactory(signer).deploy();
   });
 
   it('liquidates user', async () => {
@@ -66,19 +76,23 @@ describe('FlashLiquidator', () => {
     );
 
     expect(isLiquidatable).to.be.true;
+    const coreContracts = arc.cores[arc.getCoreNames()[0]];
 
-    const repayAssetAddress = (
-      await arc.cores[arc.getCoreNames()[0]].pool.getDepositAssets()
-    )[0];
+    const repayAssetAddress = (await coreContracts.pool.getDepositAssets())[0];
     const repayAsset = BaseERC20Factory.connect(repayAssetAddress, signer);
 
     const preLiquidationBalance = await repayAsset.balanceOf(signer.address);
 
     // Run liquidation
+    await hre.network.provider.send('evm_setNextBlockTimestamp', [
+      ++currentTimestamp,
+    ]);
     await flashLiquidator.liquidate(
+      coreContracts.core.address,
       USER_TO_LIQUIDATE,
       repayAssetAddress,
       PROOF,
+      USDC_WETH_UNISWAP_POOL,
     );
 
     const postLiquidationBalance = await repayAsset.balanceOf(signer.address);
