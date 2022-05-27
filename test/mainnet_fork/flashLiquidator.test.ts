@@ -53,7 +53,9 @@ describe('FlashLiquidator', () => {
     });
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    flashLiquidator = await new FlashLiquidatorFactory(signer).deploy();
+    flashLiquidator = await new FlashLiquidatorFactory(signer).deploy(
+      coreProxyAddress,
+    );
   });
 
   it('liquidates user', async () => {

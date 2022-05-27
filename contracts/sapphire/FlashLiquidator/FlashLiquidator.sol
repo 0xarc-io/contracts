@@ -2,23 +2,23 @@
 
 pragma solidity ^0.8.4;
 
-import {IFlashLoanSimpleReceiver} from "@aave/core-v3/contracts/flashloan/interfaces/IFlashLoanSimpleReceiver.sol";
+import {FlashLoanSimpleReceiverBase} from "@aave/core-v3/contracts/flashloan/base/FlashLoanSimpleReceiverBase.sol";
 import {IPoolAddressesProvider} from "@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol";
-import {IPool} from "@aave/core-v3/contracts/interfaces/IPool.sol";
 
+import {Math} from "../../lib/Math.sol";
+import {IERC20Metadata} from "../../token/IERC20Metadata.sol";
 import {ISapphireCoreV1} from "./ISapphireCoreV1.sol";
 import {SapphireTypes} from "../SapphireTypes.sol";
 
-contract FlashLiquidator is IFlashLoanSimpleReceiver {
+import "hardhat/console.sol";
 
-    IPoolAddressesProvider public ADDRESSES_PROVIDER = 
-        IPoolAddressesProvider(0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb);
+contract FlashLiquidator is FlashLoanSimpleReceiverBase {
 
-    IPool public POOL = IPool(0x794a61358D6845594F94dc1DB02A252b5b4814aD);
-    
     ISapphireCoreV1 public core;
     
-    constructor(address _coreAddress) {
+    constructor(address _coreAddress)
+        FlashLoanSimpleReceiverBase(IPoolAddressesProvider(0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb))
+    {
         core = ISapphireCoreV1(_coreAddress);
     }
     
@@ -29,20 +29,30 @@ contract FlashLiquidator is IFlashLoanSimpleReceiver {
     )
         public
     {
-        // get user's vault
+        // get user's current debt
         SapphireTypes.Vault memory vault = core.vaults(_owner);
+        uint256 outstandingDebt = Math.roundUpMul(
+            vault.normalizedBorrowedAmount,
+            core.currentBorrowIndex()
+        );
+        uint8 assetDecimals = IERC20Metadata(_borrowAssetAddress).decimals();
+        uint256 precisionScalar = 10 ** (18 - uint256(assetDecimals));
+        uint256 outstandingDebtScaled = outstandingDebt / precisionScalar;
+            
 
         // get a flash loan of the amount of the current debt
-
-        // approve the loan to the vault
-
-        // liquidate position
-
-        // swap the collateral for the borrow asset address
-
-        // repay the loan
-
-        // transfer profit to sender
+        bytes memory params = abi.encode(
+            _owner,
+            _borrowAssetAddress,
+            _creditScoreProof
+        );
+        POOL.flashLoanSimple(
+            address(this), 
+            _borrowAssetAddress, 
+            outstandingDebtScaled, 
+            params, 
+            0
+        );
     }
 
     /**
@@ -60,6 +70,15 @@ contract FlashLiquidator is IFlashLoanSimpleReceiver {
         override
         returns (bool)
     {
-        revert("not implemented");
+        console.log("executing operation!");
+        // approve the loan to the vault
+
+        // liquidate position
+
+        // swap the collateral for the borrow asset address
+
+        // repay the loan
+
+        // transfer profit to sender
     }
 }
