@@ -5,12 +5,13 @@ import { BaseERC20Factory, FlashLiquidatorFactory } from '@src/typings';
 import { FlashLiquidator } from '@src/typings/FlashLiquidator';
 import { checkLiquidatable } from '../../tasks/utils/checkLiquidatable';
 import { expect } from 'chai';
-import hre from 'hardhat';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { utils, Wallet } from 'ethers';
+import { MockProvider } from 'ethereum-waffle';
 
-const SIGNER_ADDRESS = '0x9c767178528c8a205df63305ebda4bb6b147889b';
 const USER_TO_LIQUIDATE = '0xad7b45345afeebd6755b5799c1b991306e4e5a43';
-const USDC_WETH_UNISWAP_POOL = '0x45dda9cb7c25131df268515131f647d726f50608';
+const AAVE_POOL_ADDRESSES_PROVIDER =
+  '0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb';
+const UNIV3_ROUTER = '0xE592427A0AEce92De3Edee1F18E0157C05861564';
 const PROOF: PassportScoreProof = {
   account: '0xad7b45345afeebd6755b5799c1b991306e4e5a43',
   protocol:
@@ -30,20 +31,20 @@ const PROOF: PassportScoreProof = {
  * this liquidation: https://polygonscan.com/tx/0x855c5ce4a0f577dc10f918a0bcf736d60ad9d8ce8b9e906c29d5e6f1470fb07a
  */
 describe('FlashLiquidator', () => {
+  let provider: MockProvider;
   let flashLiquidator: FlashLiquidator;
   let arc: SapphireArc;
-  let signer: SignerWithAddress;
+  let signer: Wallet;
   let currentTimestamp: number;
 
   before(async () => {
-    const provider = hre.network.provider;
-
-    // Impersonate liquidator as the deployer
-    await provider.request({
-      method: 'hardhat_impersonateAccount',
-      params: [SIGNER_ADDRESS],
+    provider = new MockProvider({
+      ganacheOptions: {
+        fork: process.env.POLYGON_ALCHEMY,
+        fork_block_number: 28556222,
+      },
     });
-    signer = await hre.ethers.getSigner(SIGNER_ADDRESS);
+    signer = (await provider.getWallets())[0];
 
     const coreProxyAddress = loadContract({
       network: 'polygon',
@@ -60,15 +61,16 @@ describe('FlashLiquidator', () => {
     currentTimestamp = (
       await arc.cores['sapphireCore'].core.currentTimestamp()
     ).toNumber();
-    await hre.network.provider.send('evm_setNextBlockTimestamp', [
-      ++currentTimestamp,
-    ]);
+    await provider.send('evm_setTime', [++currentTimestamp * 1000]);
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    flashLiquidator = await new FlashLiquidatorFactory(signer).deploy();
+    flashLiquidator = await new FlashLiquidatorFactory(signer).deploy(
+      AAVE_POOL_ADDRESSES_PROVIDER,
+      UNIV3_ROUTER,
+    );
   });
 
   it('liquidates user', async () => {
+    console.log('a');
     const { isLiquidatable } = await checkLiquidatable(
       USER_TO_LIQUIDATE,
       arc,
@@ -83,26 +85,23 @@ describe('FlashLiquidator', () => {
 
     const preLiquidationBalance = await repayAsset.balanceOf(signer.address);
 
-    // Run liquidation
-    await hre.network.provider.send('evm_setNextBlockTimestamp', [
-      ++currentTimestamp,
-    ]);
+    // Run liquidation. Need to set the next timestamp or otherwise the oracle will report stale
+    // prices for this simulation
+    await provider.send('evm_setTime', [++currentTimestamp * 1000]);
     await flashLiquidator.liquidate(
       coreContracts.core.address,
       USER_TO_LIQUIDATE,
-      repayAssetAddress,
       PROOF,
-      USDC_WETH_UNISWAP_POOL,
     );
 
     const postLiquidationBalance = await repayAsset.balanceOf(signer.address);
+    const repayAssetDecimals = await repayAsset.decimals();
     expect(postLiquidationBalance).to.be.gt(preLiquidationBalance);
+    console.log(
+      `Flash loan executed for total profit of ${utils.formatUnits(
+        postLiquidationBalance.sub(preLiquidationBalance),
+        repayAssetDecimals,
+      )}`,
+    );
   });
-
-  after(() =>
-    hre.network.provider.request({
-      method: 'hardhat_stopImpersonatingAccount',
-      params: ['0x9c767178528c8a205df63305ebda4bb6b147889b'],
-    }),
-  );
 });
