@@ -45,8 +45,9 @@ async function checkLiquidatable(
     };
   }
 
+  const currentBorrowIndex = await core.currentBorrowIndex();
   const denormalizedBorrowAmt = vault.normalizedBorrowedAmount
-    .mul(await core.currentBorrowIndex())
+    .mul(currentBorrowIndex)
     .div(BASE);
   const collateralValue = vault.collateralAmount.mul(price).div(BASE);
   const currentCRatio = collateralValue.mul(BASE).div(denormalizedBorrowAmt);
