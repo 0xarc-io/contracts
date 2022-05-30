@@ -16,4 +16,6 @@ interface ISapphireCoreV1 {
     function currentBorrowIndex() external view returns (uint256);
 
     function collateralAsset() external view returns (address);
+
+    function borrowPool() external view returns (address);
 }
