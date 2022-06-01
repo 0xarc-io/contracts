@@ -8,20 +8,19 @@ import {
 } from '../deployments/src';
 import { BigNumber, utils } from 'ethers';
 import { task } from 'hardhat/config';
+import { DeploymentType } from '../deployments/types';
 import {
   BaseERC20Factory,
-  ChainLinkOracleFactory,
-  SapphireAssessorFactory,
   SapphireCoreV1,
   SapphireCoreV1Factory,
   TestTokenFactory,
 } from '@src/typings';
-import { DeploymentType } from '../deployments/types';
 import { Filter, Log } from '@ethersproject/abstract-provider';
-import axios from 'axios';
 import { BASE } from '@src/constants';
 import { PassportScoreProof } from '@arc-types/sapphireCore';
 import { approve } from '@src/utils';
+import { SapphireArc } from '@src/SapphireArc';
+import { checkLiquidatable } from './utils/checkLiquidatable';
 
 task('mint-tokens')
   .addParam('token', 'The address of the token to mint from')
@@ -110,21 +109,13 @@ task('deploy-test-erc20', 'Deploys an ERC20 test token with 18 decimals')
 
 task('liquidate-borrowers').setAction(async (taskArgs, hre) => {
   const { signer } = await loadDetails(hre);
-
+  const arc = SapphireArc.new(signer);
   const coreProxyAddress = '0x05efe26f4a75EA4d183e8a7922494d60adfB27b3';
+  await arc.addCores({ sapphireCore: coreProxyAddress });
+
   const core = SapphireCoreV1Factory.connect(coreProxyAddress, signer);
-  const oracle = ChainLinkOracleFactory.connect(await core.oracle(), signer);
-  const assessor = SapphireAssessorFactory.connect(
-    await core.assessor(),
-    signer,
-  );
 
   const contractCreationBlock = 26815547;
-  const currentPrice = (await oracle.fetchCurrentPrice())[0];
-  const maxCRatio = await core.highCollateralRatio();
-  const minCRatio = await core.lowCollateralRatio();
-  const maxScore = await assessor.maxScore();
-  const boundsDifference = maxCRatio.sub(minCRatio);
 
   const borrowLogFilter: Filter = {
     address: coreProxyAddress,
@@ -139,11 +130,7 @@ task('liquidate-borrowers').setAction(async (taskArgs, hre) => {
   for (const addr of borrowers) {
     const { assessedCRatio, isLiquidatable, proof } = await checkLiquidatable(
       addr,
-      maxCRatio,
-      boundsDifference,
-      maxScore,
-      currentPrice,
-      core,
+      arc,
     );
 
     if (isLiquidatable) {
@@ -169,78 +156,6 @@ function getBorrowers(logs: Log[]): string[] {
   );
 
   return uniqueBorrowers;
-}
-
-async function getUserCreditScoreProof(addr: string) {
-  const res = await axios.get(`https://api.arcx.money/v1/scores`, {
-    params: {
-      account: addr,
-      protocol: 'arcx.credit',
-      format: 'proof',
-    },
-  });
-
-  return res.data.data[0] as PassportScoreProof;
-}
-
-async function checkLiquidatable(
-  addr: string,
-  maxCRatio: BigNumber,
-  boundsDifference: BigNumber,
-  maxScore: number,
-  currentPrice: BigNumber,
-  core: SapphireCoreV1,
-) {
-  const creditScoreProof = await getUserCreditScoreProof(addr);
-
-  const creditScore = BigNumber.from(creditScoreProof.score);
-  const assessedCRatio = maxCRatio.sub(
-    creditScore.mul(boundsDifference).div(maxScore),
-  );
-
-  const vault = await core.vaults(addr);
-  if (vault.normalizedBorrowedAmount.isZero()) {
-    return {
-      assessedCRatio: null,
-      isLiquidatable: false,
-    };
-  }
-
-  const denormalizedBorrowAmt = vault.normalizedBorrowedAmount
-    .mul(await core.currentBorrowIndex())
-    .div(BASE);
-  const collateralValue = vault.collateralAmount.mul(currentPrice).div(BASE);
-  const currentCRatio = collateralValue.mul(BASE).div(denormalizedBorrowAmt);
-
-  const isCollateralized = currentCRatio.gt(assessedCRatio);
-
-  console.log(
-    `user ${addr} has an assessed c-ratio of ${utils.formatEther(
-      assessedCRatio,
-    )}. Current c-ratio: ${utils.formatEther(
-      currentCRatio,
-    )}. There is a gap of ${utils.formatEther(
-      isCollateralized
-        ? currentCRatio.sub(assessedCRatio)
-        : assessedCRatio.sub(currentCRatio),
-    )}`,
-  );
-
-  if (!isCollateralized) {
-    console.log(`>>> vault ${addr} is subject to liquidation!`);
-    console.log(
-      `\t Collateral value: $${utils.formatEther(
-        collateralValue,
-      )} (${utils.formatEther(vault.collateralAmount)} ETH)`,
-    );
-    console.log(`\t Debt: $${utils.formatEther(denormalizedBorrowAmt)}`);
-  }
-
-  return {
-    assessedCRatio,
-    isLiquidatable: !isCollateralized,
-    proof: creditScoreProof,
-  };
 }
 
 async function liquidate(
