@@ -44,8 +44,11 @@ export function getNetworkUrl(network: string) {
       prefix = 'polygon-mumbai';
       break;
     case 'polygon':
-      prefix = 'polygon-mainnet';
-      break;
+      if (!process.env.POLYGON_ALCHEMY) {
+        throw new Error(`POLYGON_ALCHEMY env var is not set`);
+      }
+
+      return process.env.POLYGON_ALCHEMY;
     case 'mainnet':
     case 'rinkeby':
       prefix = network;
