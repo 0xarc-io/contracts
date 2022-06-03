@@ -180,6 +180,7 @@ describe('Ownable contracts (polygon)', () => {
       'SapphireMapperLinear',
       'SapphireCore',
       'ChainlinkOracleETH',
+      'FlashLiquidator',
     ];
 
     const contractsInfo = polygonDeployments.filter(
