@@ -1,5 +1,6 @@
 import {
   ArcProxyFactory,
+  FlashLiquidatorFactory,
   MockSapphireOracleFactory,
   SapphireAssessorFactory,
   SapphireCoreV1,
@@ -15,25 +16,22 @@ import {
   loadContract,
   loadDetails,
   pruneDeployments,
-} from '../deployments/src';
+} from '../../deployments/src';
 import { task } from 'hardhat/config';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import _ from 'lodash';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import getUltimateOwner from './task-utils/getUltimateOwner';
+import getUltimateOwner from '../task-utils/getUltimateOwner';
 import { DEFAULT_MAX_CREDIT_SCORE } from '@test/helpers/sapphireDefaults';
 import { constants } from 'ethers';
-import { verifyContract } from './task-utils';
+import { verifyContract } from '../task-utils';
 import {
   CoreConfig,
   DeploymentType,
   NetworkParams,
-} from '../deployments/types';
+} from '../../deployments/types';
 import { TransactionRequest } from '@ethersproject/providers';
 import prompt from 'prompt';
-import { assert } from 'console';
-import { roundUpDiv } from '@test/helpers/roundUpOperations';
-import { BASE } from '@src/constants';
 
 task(
   'deploy-passport-scores',
@@ -483,51 +481,39 @@ task('deploy-borrow-pool')
     );
   });
 
-task('repair-withdraw-bug').setAction(async (_taskArgs, hre) => {
-  const { signer, networkConfig } = await loadDetails(hre);
+task('deploy-liquidator')
+  .addParam('aaveAddressProvider', 'Aave address provider')
+  .addParam('swapRouter', 'Uniswap V3 swap router')
+  .setAction(async (taskArgs, hre) => {
+    const { signer, networkConfig } = await loadDetails(hre);
+    const { aaveAddressProvider, swapRouter } = taskArgs;
 
-  assert(signer.address === '0x9c767178528c8a205DF63305ebdA4BB6B147889b');
+    const sapphireLiquidator = await deployContract(
+      {
+        name: 'FlashLiquidator',
+        source: 'FlashLiquidator',
+        data: new FlashLiquidatorFactory(signer).getDeployTransaction(
+          aaveAddressProvider,
+          swapRouter,
+        ),
+        version: 1,
+        type: DeploymentType.global,
+      },
+      networkConfig,
+    );
+    await verifyContract(
+      hre,
+      sapphireLiquidator,
+      aaveAddressProvider,
+      swapRouter,
+    );
 
-  // Deploy new contract
-  const upgradeAddress = await deployContract(
-    {
-      name: 'SapphirePool',
-      source: 'SapphirePool',
-      data: new SapphirePoolFactory(signer).getDeployTransaction(),
-      version: 2,
-      type: DeploymentType.borrowing,
-    },
-    networkConfig,
-  );
-
-  // Upgrade contract
-  const poolProxyAddress = '0x59b8a21A0B0cE87E308082Af6fFC4205b5dC932C';
-  const poolProxy = await ArcProxyFactory.connect(poolProxyAddress, signer);
-  const upgradeTx = await poolProxy.upgradeTo(upgradeAddress);
-  await upgradeTx.wait();
-
-  // Deployer withdraws exactly the deposit utilization to set utilization to 0
-  const pool = await SapphirePoolFactory.connect(poolProxyAddress, signer);
-  const usdcAddress = '0x2791bca1f2de4661ed88a30c99a7a9449aa84174';
-  const { amountUsed: assetUtilization } = await pool.assetDepositUtilization(
-    usdcAddress,
-  );
-  const supply = await pool.totalSupply();
-  const poolValue = await pool.getPoolValue();
-  const usdcScalar = 10 ** 12;
-  const depositUtilizationLpEquivalent = roundUpDiv(
-    assetUtilization.mul(usdcScalar).mul(supply).div(BASE),
-    poolValue,
-  );
-  await pool.withdraw(depositUtilizationLpEquivalent, usdcAddress);
-
-  // Set Deployer's utilization to 0
-  await pool.resetBorrowUtilization(signer.address);
-
-  // The utilization should be 0, and user's deposit should be 0
-  assert((await pool.assetDepositUtilization(usdcAddress)).amountUsed.eq(0));
-  assert((await pool.deposits(signer.address)).eq(0));
-});
+    console.log(
+      green(
+        `FlashLiquidator was successfully deployed at ${sapphireLiquidator}`,
+      ),
+    );
+  });
 
 /**
  * Deploys the given oracle, or a mock oracle
