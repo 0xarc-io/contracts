@@ -95,7 +95,8 @@
     "@utils": "src/utils/",
     "@typings": "src/typings/",
     "@arc-types": "arc-types/",
-    "@test": "test/"
+    "@test": "test/",
+    "@deployments": "deployments/"
   },
   "dependencies": {
     "@aave/core-v3": "^1.13.1",
