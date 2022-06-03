@@ -167,5 +167,15 @@
     "version": 1,
     "type": "borrowing",
     "group": ""
+  },
+  {
+    "name": "FlashLiquidator",
+    "source": "FlashLiquidator",
+    "address": "0xBcB5370a4d208714Af58774cA632365e0533A202",
+    "txn": "0x9a1e180a4de209204a6c67201642462c417c6c06272155825ee9b0fc69c3315e",
+    "network": "mumbai",
+    "version": 1,
+    "type": "global",
+    "group": ""
   }
 ]
