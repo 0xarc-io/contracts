@@ -102,8 +102,8 @@
   {
     "name": "FlashLiquidator",
     "source": "FlashLiquidator",
-    "address": "0x0B854F11f42B160115064adEE04d8004e8AaB101",
-    "txn": "0x9ec01861a0e163d1d038919fe75e1aef9b17e5e924c0e5c06a6c5c7eb778b65e",
+    "address": "0x6742765a665867B0C35b94f213aE8f627b40C6fa",
+    "txn": "0x8f3f534f8847daf26c2106460c885fe82e2f0bc85a439b713c7f81df57f8d99c",
     "network": "polygon",
     "version": 1,
     "type": "global",
