@@ -17,7 +17,7 @@ import {
   loadDetails,
   pruneDeployments,
 } from '../../deployments/src';
-import { task } from 'hardhat/config';
+import { task, types } from 'hardhat/config';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import _ from 'lodash';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
@@ -433,11 +433,18 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
   });
 
 task('deploy-borrow-pool')
-  .addParam('name', 'Sapphire pool ERC20 name')
-  .addParam('symbol', 'Sapphire pool ERC20 symbol')
+  .addOptionalParam('name', 'Sapphire pool ERC20 name')
+  .addOptionalParam('symbol', 'Sapphire pool ERC20 symbol')
+  .addOptionalParam(
+    'contractVersion',
+    'Implementation contract version',
+    1,
+    types.int,
+  )
+  .addFlag('implementationOnly', 'Only deploy the implementation contract')
   .setAction(async (taskArgs, hre) => {
     const { network, signer, networkConfig } = await loadDetails(hre);
-    const { name, symbol } = taskArgs;
+    const { name, symbol, contractVersion, implementationOnly } = taskArgs;
 
     await pruneDeployments(network, signer.provider);
 
@@ -446,12 +453,20 @@ task('deploy-borrow-pool')
         name: 'SapphirePool',
         source: 'SapphirePool',
         data: new SapphirePoolFactory(signer).getDeployTransaction(),
-        version: 1,
+        version: contractVersion,
         type: DeploymentType.borrowing,
       },
       networkConfig,
     );
     await verifyContract(hre, sapphirePoolImpl);
+
+    if (implementationOnly) {
+      return;
+    }
+
+    if (!name || !symbol) {
+      throw red(`You must specify a name and symbol for the pool`);
+    }
 
     const sapphirePoolProxy = await deployContract(
       {
