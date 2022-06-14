@@ -680,8 +680,14 @@ contract SapphirePool is
             if (info.userDeposit > info.scaledWithdrawAmount) {
                 // Reduce the user's deposit amount and the asset utilization
                 // by the amount withdrawn
+
+                // In the scenario where a new token was added and the previous one removed,
+                // it is possible for the asset utilization to be smaller than the withdraw amount.
+                // In that case, reduce reduce the asset utilization to 0.
                 return (
-                    info.withdrawAmount,
+                    info.assetUtilization < info.withdrawAmount 
+                        ? info.assetUtilization 
+                        : info.withdrawAmount,
                     info.scaledWithdrawAmount,
                     info.withdrawAmount
                 );
@@ -705,8 +711,8 @@ contract SapphirePool is
             }
 
             // The asset utilization is smaller or equal to the user's initial deposit.
-            // Set both to 0. The asset utilization can be smaller than the user's initial deposit
-            // in the scenario when the user deposited in one token, and withdraws in another.
+            // Set both to 0. This can happen when the user deposited in one token, and withdraws
+            // in another.
             return (
                 info.assetUtilization,
                 info.userDeposit,
