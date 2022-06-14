@@ -129,16 +129,6 @@
     "group": ""
   },
   {
-    "name": "SapphirePoolProxy",
-    "source": "ArcProxy",
-    "address": "0x417FBD7a478EFcca9E1a3F907562BEf22DB7fEE0",
-    "txn": "0x048ca34844b49ade72f8445360b52e88c0958bce8b5ca0f3761322daea9cb331",
-    "network": "mumbai",
-    "version": 1,
-    "type": "borrowing",
-    "group": ""
-  },
-  {
     "name": "SapphireCore",
     "source": "SapphireCoreV1",
     "address": "0xEE320bE30a5E26F5542464058ed4f21055426B12",
@@ -185,6 +175,16 @@
     "txn": "0x272aa42c79f0a9c53c20ef8ec3f3dfd3856054aeea3a7e70b3cfe77138f5fea0",
     "network": "mumbai",
     "version": 2,
+    "type": "borrowing",
+    "group": ""
+  },
+  {
+    "name": "SapphirePoolProxy",
+    "source": "ArcProxy",
+    "address": "0xef2ec6eB4ED8660774E4BfC42F12c9080c932FA9",
+    "txn": "0x0258e6ed63c48dba844093ad4a8a44604d062545bab3fd3c606843b8edfcda63",
+    "network": "mumbai",
+    "version": 1,
     "type": "borrowing",
     "group": ""
   }
