@@ -1344,7 +1344,7 @@ describe('SapphirePool', () => {
     });
   });
 
-  xdescribe('Upgrade test', () => {
+  xdescribe('Upgrade test (v1 -> v2)', () => {
     const usdcAddress = '0x2791bca1f2de4661ed88a30c99a7a9449aa84174';
     const poolProxyAddress = '0x59b8a21A0B0cE87E308082Af6fFC4205b5dC932C';
     const deployerAddress = '0x9c767178528c8a205DF63305ebdA4BB6B147889b';
