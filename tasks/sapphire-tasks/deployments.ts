@@ -470,7 +470,7 @@ task('deploy-borrow-pool')
 
     const sapphirePoolProxy = await deployContract(
       {
-        name: 'SapphirePool',
+        name: 'SapphirePoolProxy',
         source: 'ArcProxy',
         data: new ArcProxyFactory(signer).getDeployTransaction(
           sapphirePoolImpl,
@@ -481,6 +481,13 @@ task('deploy-borrow-pool')
         type: DeploymentType.borrowing,
       },
       networkConfig,
+    );
+    await verifyContract(
+      hre,
+      sapphirePoolProxy,
+      sapphirePoolImpl,
+      signer.address,
+      [],
     );
 
     console.log(green(`Sapphire pool deployed at ${sapphirePoolProxy}`));
