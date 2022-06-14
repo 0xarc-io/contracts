@@ -15,17 +15,17 @@ import {IERC20Metadata} from "../../token/IERC20Metadata.sol";
 import {InitializableBaseERC20} from "../../token/InitializableBaseERC20.sol";
 
 /**
- * @notice A pool of stablecoins where the public can deposit assets and borrow them through 
+ * @notice A pool of stablecoins where the public can deposit assets and borrow them through
  * SapphireCores
- * A portion of the interest made from the loans by the Cores is deposited into this contract, and 
+ * A portion of the interest made from the loans by the Cores is deposited into this contract, and
  * shared among the lenders.
  */
-contract SapphirePool is 
-    Adminable, 
-    InitializableBaseERC20, 
-    ISapphirePool, 
-    ReentrancyGuard, 
-    SapphirePoolStorage 
+contract SapphirePool is
+    Adminable,
+    InitializableBaseERC20,
+    ISapphirePool,
+    ReentrancyGuard,
+    SapphirePoolStorage
 {
 
     /* ========== Libraries ========== */
@@ -280,8 +280,8 @@ contract SapphirePool is
         stablesLent -= _debtDecreaseAmount;
 
         emit StablesLentDecreased(
-            msg.sender, 
-            _debtDecreaseAmount, 
+            msg.sender,
+            _debtDecreaseAmount,
             stablesLent
         );
     }
@@ -685,8 +685,8 @@ contract SapphirePool is
                 // it is possible for the asset utilization to be smaller than the withdraw amount.
                 // In that case, reduce reduce the asset utilization to 0.
                 return (
-                    info.assetUtilization < info.withdrawAmount 
-                        ? info.assetUtilization 
+                    info.assetUtilization < info.withdrawAmount
+                        ? info.assetUtilization
                         : info.withdrawAmount,
                     info.scaledWithdrawAmount,
                     info.withdrawAmount
