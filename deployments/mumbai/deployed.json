@@ -187,5 +187,15 @@
     "version": 1,
     "type": "borrowing",
     "group": ""
+  },
+  {
+    "name": "SapphirePool",
+    "source": "SapphirePool",
+    "address": "0xeD641CD94Cca81D1c75b42B1F110c6C4B36b3D63",
+    "txn": "0xa7307e7bddb88b68114ba9159a948810e7f5f1c6c6e010b05a6dce7f2fbae3d5",
+    "network": "mumbai",
+    "version": 3,
+    "type": "borrowing",
+    "group": ""
   }
 ]
