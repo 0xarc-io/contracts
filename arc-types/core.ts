@@ -1,11 +1,10 @@
-import { SapphireAssessor, SapphirePool } from '@src/typings';
-import { IERC20 } from '@src/typings/IERC20';
+import { BaseERC20, SapphireAssessor, SapphirePool } from '@src/typings';
 import { ISapphireOracle } from '@src/typings/ISapphireOracle';
 
 export type CoreContracts<T> = {
   core: T;
   oracle: ISapphireOracle;
-  collateral: IERC20;
+  collateral: BaseERC20;
   pool: SapphirePool;
   assessor: SapphireAssessor;
 };
