@@ -6,7 +6,6 @@ const collateralConfig: CollateralConfigMap = {
   WMATIC: {
     collateralAddress: '0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889',
     borrowPool: '0xb1fB649039F829Aa588bAc07411bb2D25A21E446',
-    mintLimit: utils.parseEther('500000'),
     oracle: {
       source: 'MockSapphireOracle',
       getDeployTx: (signer: Signer) =>
