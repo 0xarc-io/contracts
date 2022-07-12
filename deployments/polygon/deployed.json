@@ -118,5 +118,45 @@
     "version": 3,
     "type": "borrowing",
     "group": ""
+  },
+  {
+    "name": "SapphirePoolProxy",
+    "source": "ArcProxy",
+    "address": "0x1321f1f1aa541A56C31682c57b80ECfCCd9bB288",
+    "txn": "0x86d66869ef489ac79389c3e734b030ed89e836f8f18b6823e02e0348810400c7",
+    "network": "polygon",
+    "version": 1,
+    "type": "borrowing",
+    "group": "B"
+  },
+  {
+    "name": "SapphireCoreProxy",
+    "source": "ArcProxy",
+    "address": "0xE106dDE30B538a0F86146862d131FC6733C6EEe4",
+    "txn": "0xf8377dd7c5550090185fa42fb8d56de9aba499979a9b379abb89c04baf709a32",
+    "network": "polygon",
+    "version": 1,
+    "type": "borrowing",
+    "group": "WETH-B"
+  },
+  {
+    "name": "SapphirePoolProxy",
+    "source": "ArcProxy",
+    "address": "0x69b37541d1C00c949B530ccd3d23437188767160",
+    "txn": "0xcde13415a2351ae894ddc52058e3a9e55f12ecf77b2465147e32e1fdec6a7899",
+    "network": "polygon",
+    "version": 1,
+    "type": "borrowing",
+    "group": "C"
+  },
+  {
+    "name": "SapphireCoreProxy",
+    "source": "ArcProxy",
+    "address": "0x1990BAbB67C1d297Fde4b3e540e6a32148654F44",
+    "txn": "0x64fb169bc729185cb3f2bfbcff4d3b7ca796decda632f0caaef8be57f148174f",
+    "network": "polygon",
+    "version": 1,
+    "type": "borrowing",
+    "group": "WETH-C"
   }
 ]

@@ -792,12 +792,12 @@ task(
   'Prints the amount in wei to be created in the sablier stream',
 )
   .addParam('amount', 'Amount of ARCx to top up in ether')
+  .addParam('duration', 'Duration of the stream in seconds')
   .setAction(async (taskArgs) => {
-    const { amount } = taskArgs;
+    const { amount, duration } = taskArgs;
 
     const targetAmount = utils.parseEther(amount);
-    const streamDuration = 30 * 24 * 60 * 60;
-    const streamAmount = targetAmount.div(streamDuration).mul(streamDuration);
+    const streamAmount = targetAmount.div(duration).mul(duration);
 
     console.log(green(`${streamAmount} wei`));
   });
