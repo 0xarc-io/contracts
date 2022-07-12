@@ -35,12 +35,13 @@ export enum DeploymentType {
 export interface CoreConfig {
   collateralAddress: string;
   borrowPool: string;
-  mintLimit: BigNumberish;
-  oracle: {
-    source: string;
-    getDeployTx: (signer: Signer) => TransactionRequest;
-    constructorArguments: unknown[];
-  };
+  oracle:
+    | string
+    | {
+        source: string;
+        getDeployTx: (signer: Signer) => TransactionRequest;
+        constructorArguments: unknown[];
+      };
   borrowRatios: {
     highCRatio: BigNumberish;
     lowCRatio: BigNumberish;

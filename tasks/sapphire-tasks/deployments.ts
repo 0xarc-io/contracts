@@ -298,12 +298,10 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
 
     const { collateralAddress } = collatConfig;
 
-    const oracleAddress = await _deployOracle(
-      networkConfig,
-      signer,
-      hre,
-      collatConfig.oracle,
-    );
+    const oracleAddress =
+      typeof collatConfig.oracle === 'string'
+        ? collatConfig.oracle
+        : await _deployOracle(networkConfig, signer, hre, collatConfig.oracle);
 
     if (!oracleAddress) {
       throw red(`The oracle was not deployed!`);
@@ -362,10 +360,12 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
       }
 
       console.log(yellow(`Calling core.init() ...\n`));
+      // Setting interest rate setter as the deployer, to set it to the ultimate owner or prescribed interest setter later
+
       const tx = await core.init(
         collateralAddress,
         oracleAddress,
-        collatConfig.interestSettings.interestSetter || ultimateOwner,
+        signer.address,
         collatConfig.pauseOperator || ultimateOwner,
         assessorAddress,
         collatConfig.feeCollector || ultimateOwner,
@@ -430,6 +430,20 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
       await core.setInterestRate(collatConfig.interestSettings.interestRate);
       console.log(green(`Interest rate successfully set\n`));
     }
+
+    if (collatConfig.interestSettings.interestSetter !== signer.address) {
+      console.log(
+        yellow(
+          `Setting interest setter to ${
+            collatConfig.interestSettings.interestSetter || ultimateOwner
+          }\n`,
+        ),
+      );
+      await core.setInterestSetter(
+        collatConfig.interestSettings.interestSetter || ultimateOwner,
+      );
+      console.log(green(`Interest setter successfully set\n`));
+    }
   });
 
 task('deploy-borrow-pool')
@@ -441,10 +455,17 @@ task('deploy-borrow-pool')
     1,
     types.int,
   )
+  .addOptionalParam('group', 'Group name for the deployment registration')
   .addFlag('implementationOnly', 'Only deploy the implementation contract')
   .setAction(async (taskArgs, hre) => {
     const { network, signer, networkConfig } = await loadDetails(hre);
-    const { name, symbol, contractVersion, implementationOnly } = taskArgs;
+    const {
+      name,
+      symbol,
+      contractVersion,
+      implementationOnly,
+      group,
+    } = taskArgs;
 
     await pruneDeployments(network, signer.provider);
 
@@ -479,6 +500,7 @@ task('deploy-borrow-pool')
         ),
         version: 1,
         type: DeploymentType.borrowing,
+        group,
       },
       networkConfig,
     );
