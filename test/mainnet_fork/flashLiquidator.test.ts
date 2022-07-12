@@ -49,6 +49,7 @@ describe('FlashLiquidator', () => {
     const coreProxyAddress = loadContract({
       network: 'polygon',
       name: 'SapphireCoreProxy',
+      group: 'WETH',
     }).address;
     arc = SapphireArc.new(signer);
     await arc.addCores({
