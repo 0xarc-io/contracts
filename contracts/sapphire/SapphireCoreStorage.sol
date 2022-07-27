@@ -88,8 +88,10 @@ contract SapphireCoreStorageV1 {
     * @notice The actual amount of collateral provided to the protocol.
     *      This amount will be multiplied by the precision scalar if the token
     *      has less than 18 decimals precision.
+    *
+    * Proxy upgrade: restricting this variable as it was not used, and its calculation was incorrect
     */
-    uint256 public totalCollateral;
+    uint256 private totalCollateral;
 
     /**
      * @notice An account of the total amount being borrowed by all depositors. This includes
