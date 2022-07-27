@@ -158,5 +158,15 @@
     "version": 1,
     "type": "borrowing",
     "group": "WETH-C"
+  },
+  {
+    "name": "SapphireCore",
+    "source": "SapphireCoreV1",
+    "address": "0xcf0ADE6f5f6e08A337DB810D7e3344021524cF7B",
+    "txn": "0xee06ecfcb834f9e257f22dab227cc1de07edd092451d10d8f6fb1ee9f8fa6339",
+    "network": "polygon",
+    "version": 2,
+    "type": "borrowing",
+    "group": ""
   }
 ]

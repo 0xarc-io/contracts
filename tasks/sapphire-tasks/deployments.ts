@@ -223,9 +223,14 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
     'collateral',
     'The collateral name to register the core with',
   )
-  .addFlag('implementationonly', 'Deploy only the implementation contract')
+  .addOptionalParam('contractVersion', 'Implementation version')
+  .addFlag('implementationOnly', 'Deploy only the implementation contract')
   .setAction(async (taskArgs, hre) => {
-    const collatName = taskArgs.collateral;
+    const {
+      collateral: collatName,
+      contractVersion,
+      implementationOnly,
+    } = taskArgs;
 
     const {
       network,
@@ -241,7 +246,7 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
         name: 'SapphireCore',
         source: 'SapphireCoreV1',
         data: new SapphireCoreV1Factory(signer).getDeployTransaction(),
-        version: 1,
+        version: parseInt(contractVersion || '1'),
         type: DeploymentType.borrowing,
       },
       networkConfig,
@@ -251,7 +256,7 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
     );
     await verifyContract(hre, coreAddress);
 
-    if (taskArgs.implementationonly) return;
+    if (implementationOnly) return;
 
     if (!collatName) {
       throw red('You must specify the collateral name');
