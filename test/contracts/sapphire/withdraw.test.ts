@@ -272,33 +272,6 @@ describe('SapphireCore.withdraw()', () => {
     ).eq(COLLATERAL_AMOUNT);
   });
 
-  it('updates the totalCollateral amount after a withdraw', async () => {
-    expect(await arc.core().totalCollateral()).to.eq(0);
-
-    await setupBaseVault(
-      arc,
-      signers.scoredBorrower,
-      getScoreProof(scoredBorrowerBorrowLimitScore, creditScoreTree),
-      COLLATERAL_AMOUNT,
-      BORROW_AMOUNT,
-      getScoreProof(borrowerCreditScore, creditScoreTree),
-    );
-
-    expect(await arc.core().totalCollateral()).to.eq(COLLATERAL_AMOUNT);
-
-    const withdrawAmount = utils.parseUnits('100', DEFAULT_COLLATERAL_DECIMALS);
-    await arc.withdraw(
-      withdrawAmount,
-      undefined,
-      undefined,
-      signers.scoredBorrower,
-    );
-
-    expect(await arc.core().totalCollateral()).to.eq(
-      COLLATERAL_AMOUNT.sub(withdrawAmount),
-    );
-  });
-
   it('reverts if the resulting vault ends up below the minimum c-ratio', async () => {
     await setupBaseVault(
       arc,

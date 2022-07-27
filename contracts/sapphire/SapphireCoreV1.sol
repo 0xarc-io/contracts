@@ -916,8 +916,6 @@ contract SapphireCoreV1 is Adminable, ReentrancyGuard, SapphireCoreStorage {
 
         vault.collateralAmount = vault.collateralAmount + _amount;
 
-        totalCollateral = totalCollateral + _amount;
-
         // Execute transfer
         IERC20Metadata collateralAsset = IERC20Metadata(collateralAsset);
         SafeERC20.safeTransferFrom(
@@ -971,9 +969,6 @@ contract SapphireCoreV1 is Adminable, ReentrancyGuard, SapphireCoreStorage {
                 "SapphireCoreV1: the vault will become undercollateralized"
             );
         }
-
-        // Change total collateral amount
-        totalCollateral = totalCollateral - _amount;
 
         // Execute transfer
         IERC20Metadata collateralAsset = IERC20Metadata(collateralAsset);
