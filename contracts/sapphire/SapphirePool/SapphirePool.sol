@@ -139,11 +139,6 @@ contract SapphirePool is
             "SapphirePool: sum of the deposit limits exceeds sum of borrow limits"
         );
 
-        require(
-            sumOfCoreLimits + _limit > 0,
-            "SapphirePool: at least one asset must have a positive borrow limit"
-        );
-
         if (!isCoreKnown) {
             _knownCores.push(_coreAddress);
         }
@@ -535,12 +530,14 @@ contract SapphirePool is
         }
 
         _activeCores = new address[](validCoresCount);
+        uint8 currentIndex;
 
         for (uint8 i = 0; i < _knownCores.length; i++) {
             address coreAddress = _knownCores[i];
 
             if (_coreBorrowUtilization[coreAddress].limit > 0) {
-                _activeCores[i] = coreAddress;
+                _activeCores[currentIndex] = coreAddress;
+                currentIndex++;
             }
         }
 
@@ -675,15 +672,16 @@ contract SapphirePool is
 
         for (uint8 i = 0; i < _knownCores.length; i++) {
             address core = _knownCores[i];
+
+            if (core == _optionalCoreCheck) {
+                isCoreKnown = true;
+            }
+
             if (core == _excludeCore) {
                 continue;
             }
 
             sumOfCoreLimits += _coreBorrowUtilization[core].limit;
-
-            if (core == _optionalCoreCheck) {
-                isCoreKnown = true;
-            }
         }
 
         return (
