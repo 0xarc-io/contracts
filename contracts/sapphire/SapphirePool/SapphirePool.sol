@@ -515,6 +515,38 @@ contract SapphirePool is
         return _deposits[_userAddress];
     }
 
+    /**
+     * @notice Returns an array of core addresses that have a positive borrow limit
+     */
+    function getActiveCores()
+        external
+        view
+        override
+        returns (address[] memory _activeCores)
+    {
+        uint8 validCoresCount;
+        
+        for (uint8 i = 0; i < _knownCores.length; i++) {
+            address coreAddress = _knownCores[i];
+
+            if (_coreBorrowUtilization[coreAddress].limit > 0) {
+                validCoresCount++;
+            }
+        }
+
+        _activeCores = new address[](validCoresCount);
+
+        for (uint8 i = 0; i < _knownCores.length; i++) {
+            address coreAddress = _knownCores[i];
+
+            if (_coreBorrowUtilization[coreAddress].limit > 0) {
+                _activeCores[i] = coreAddress;
+            }
+        }
+
+        return _activeCores;
+    }
+
     /* ========== Private functions ========== */
 
     /**
