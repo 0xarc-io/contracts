@@ -24,10 +24,11 @@ import {
 } from '@test/helpers/sapphireDefaults';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
-import { BigNumber, BigNumberish, ethers, utils } from 'ethers';
-import { ITestContext } from '../context';
+import { BigNumber, BigNumberish, utils, providers } from 'ethers';
+import { generateContext, ITestContext } from '../context';
 
 import hre from 'hardhat';
+import { sapphireFixture } from '../fixtures';
 
 describe('SapphirePool', () => {
   let pool: MockSapphirePool;
@@ -52,29 +53,29 @@ describe('SapphirePool', () => {
     await approve(depositAmount, stablecoin.address, pool.address, admin);
   }
 
-  // before(async () => {
-  //   ctx = await generateContext(sapphireFixture);
-  //   admin = ctx.signers.admin;
-  //   depositor = ctx.signers.unauthorized;
-  //   stablecoin = ctx.contracts.stablecoin;
+  before(async () => {
+    ctx = await generateContext(sapphireFixture);
+    admin = ctx.signers.admin;
+    depositor = ctx.signers.unauthorized;
+    stablecoin = ctx.contracts.stablecoin;
 
-  //   const sapphirePoolImpl = await new MockSapphirePoolFactory(admin).deploy();
-  //   const proxy = await new ArcProxyFactory(admin).deploy(
-  //     sapphirePoolImpl.address,
-  //     admin.address,
-  //     [],
-  //   );
-  //   pool = MockSapphirePoolFactory.connect(proxy.address, admin);
+    const sapphirePoolImpl = await new MockSapphirePoolFactory(admin).deploy();
+    const proxy = await new ArcProxyFactory(admin).deploy(
+      sapphirePoolImpl.address,
+      admin.address,
+      [],
+    );
+    pool = MockSapphirePoolFactory.connect(proxy.address, admin);
 
-  //   await pool.init('Sapphire Pool', 'SAP');
+    await pool.init('Sapphire Pool', 'SAP');
 
-  //   const stablecoinDecimals = await stablecoin.decimals();
-  //   depositAmount = utils.parseUnits('100', stablecoinDecimals);
-  //   stablecoinScalar = 10 ** (18 - stablecoinDecimals);
-  //   scaledDepositAmount = depositAmount.mul(stablecoinScalar);
+    const stablecoinDecimals = await stablecoin.decimals();
+    depositAmount = utils.parseUnits('100', stablecoinDecimals);
+    stablecoinScalar = 10 ** (18 - stablecoinDecimals);
+    scaledDepositAmount = depositAmount.mul(stablecoinScalar);
 
-  //   await stablecoin.mintShare(depositor.address, depositAmount);
-  // });
+    await stablecoin.mintShare(depositor.address, depositAmount);
+  });
 
   addSnapshotBeforeRestoreAfterEach();
 
@@ -1478,20 +1479,18 @@ describe('SapphirePool', () => {
     });
   });
 
-  describe.only('Upgrade test (v2 -> v3)', () => {
+  xdescribe('Upgrade test (v3 -> v4)', () => {
     /**
      * Runs on a local mainnet polygon fork
      */
 
     const poolOwner = '0xc033f3488584f4c929b2d78326f0fb84cbc7d525';
-    const provider = new ethers.providers.JsonRpcProvider(
-      'http://localhost:8545',
-    );
+    const provider = new providers.JsonRpcProvider('http://localhost:8545');
     const coreAddress = '0x05efe26f4a75EA4d183e8a7922494d60adfB27b3';
     const proxyAddress = '0x59b8a21A0B0cE87E308082Af6fFC4205b5dC932C';
     const usdcAddress = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
 
-    let signer: ethers.providers.JsonRpcSigner;
+    let signer: providers.JsonRpcSigner;
 
     before(async () => {
       await provider.send('hardhat_impersonateAccount', [poolOwner]);
