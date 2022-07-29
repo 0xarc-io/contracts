@@ -169,6 +169,21 @@ describe('SapphirePool', () => {
         );
       });
 
+      it('removes the core from the active core array if its limit is set to 0', async () => {
+        await pool.setDepositLimit(stablecoin.address, depositAmount);
+
+        await pool.setCoreBorrowLimit(
+          ctx.contracts.sapphire.core.address,
+          scaledDepositAmount.div(3),
+        );
+
+        expect(await pool.getActiveCores()).to.have.lengthOf(1);
+
+        await pool.setCoreBorrowLimit(ctx.contracts.sapphire.core.address, 0);
+
+        expect(await pool.getActiveCores()).to.be.empty;
+      });
+
       it('reverts if setting limit to 0 and there are no other available borrowable assets', async () => {
         await pool.setDepositLimit(stablecoin.address, depositAmount);
 
@@ -1506,8 +1521,7 @@ describe('SapphirePool', () => {
       );
     });
 
-    xit('repairs pool: setting deposit limit to core does not duplicate amounts', async () => {
-      console.log('a');
+    it('repairs pool: setting deposit limit to core does not duplicate amounts', async () => {
       const poolProxy = ArcProxyFactory.connect(proxyAddress, signer);
       const poolImpl = await new SapphirePoolFactory(signer).deploy();
       await poolProxy.upgradeTo(poolImpl.address);
@@ -1520,16 +1534,24 @@ describe('SapphirePool', () => {
       activeCores = await pool.getActiveCores();
       expect(activeCores.length).eq(2);
 
+      // At this point in the fork there are two identical cores in the "active cores" array:
+      expect(activeCores[0].toString()).eq(activeCores[1].toString());
+
+      // Ensure that setting a core borrow limit to 0 removes it from the active cores array
+      await pool.setCoreBorrowLimit(coreAddress, 0);
+      activeCores = await pool.getActiveCores();
+      expect(activeCores.length).eq(0);
+
       // Ensure setting a deposit limit works
       await expect(
-        pool.setDepositLimit(usdcAddress, utils.parseUnits('50000', 6)),
+        pool.setDepositLimit(usdcAddress, utils.parseUnits('100000', 6)),
       ).to.not.be.reverted;
 
       // Ensure a newly added core is added to the known cores list
       const newCore = '0x69b37541d1C00c949B530ccd3d23437188767160';
-      await pool.setCoreBorrowLimit(newCore, utils.parseEther('10000'));
+      await pool.setCoreBorrowLimit(newCore, utils.parseEther('100000'));
       activeCores = await pool.getActiveCores();
-      expect(activeCores.length).eq(4);
+      expect(activeCores.length).eq(1);
       expect(activeCores).includes(newCore);
     });
   });
