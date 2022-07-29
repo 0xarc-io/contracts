@@ -24,9 +24,8 @@ import {
 } from '@test/helpers/sapphireDefaults';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
-import { BigNumber, BigNumberish, utils } from 'ethers';
-import { generateContext, ITestContext } from '../context';
-import { sapphireFixture } from '../fixtures';
+import { BigNumber, BigNumberish, ethers, utils } from 'ethers';
+import { ITestContext } from '../context';
 
 import hre from 'hardhat';
 
@@ -53,29 +52,29 @@ describe('SapphirePool', () => {
     await approve(depositAmount, stablecoin.address, pool.address, admin);
   }
 
-  before(async () => {
-    ctx = await generateContext(sapphireFixture);
-    admin = ctx.signers.admin;
-    depositor = ctx.signers.unauthorized;
-    stablecoin = ctx.contracts.stablecoin;
+  // before(async () => {
+  //   ctx = await generateContext(sapphireFixture);
+  //   admin = ctx.signers.admin;
+  //   depositor = ctx.signers.unauthorized;
+  //   stablecoin = ctx.contracts.stablecoin;
 
-    const sapphirePoolImpl = await new MockSapphirePoolFactory(admin).deploy();
-    const proxy = await new ArcProxyFactory(admin).deploy(
-      sapphirePoolImpl.address,
-      admin.address,
-      [],
-    );
-    pool = MockSapphirePoolFactory.connect(proxy.address, admin);
+  //   const sapphirePoolImpl = await new MockSapphirePoolFactory(admin).deploy();
+  //   const proxy = await new ArcProxyFactory(admin).deploy(
+  //     sapphirePoolImpl.address,
+  //     admin.address,
+  //     [],
+  //   );
+  //   pool = MockSapphirePoolFactory.connect(proxy.address, admin);
 
-    await pool.init('Sapphire Pool', 'SAP');
+  //   await pool.init('Sapphire Pool', 'SAP');
 
-    const stablecoinDecimals = await stablecoin.decimals();
-    depositAmount = utils.parseUnits('100', stablecoinDecimals);
-    stablecoinScalar = 10 ** (18 - stablecoinDecimals);
-    scaledDepositAmount = depositAmount.mul(stablecoinScalar);
+  //   const stablecoinDecimals = await stablecoin.decimals();
+  //   depositAmount = utils.parseUnits('100', stablecoinDecimals);
+  //   stablecoinScalar = 10 ** (18 - stablecoinDecimals);
+  //   scaledDepositAmount = depositAmount.mul(stablecoinScalar);
 
-    await stablecoin.mintShare(depositor.address, depositAmount);
-  });
+  //   await stablecoin.mintShare(depositor.address, depositAmount);
+  // });
 
   addSnapshotBeforeRestoreAfterEach();
 
@@ -1461,6 +1460,77 @@ describe('SapphirePool', () => {
        * As a side-effect of this fix, there is now an additional ~3k usdc that is not accounted
        * in the deposit limit.
        */
+    });
+  });
+
+  describe.only('Upgrade test (v2 -> v3)', () => {
+    /**
+     * Runs on a local mainnet polygon fork
+     */
+
+    const poolOwner = '0xc033f3488584f4c929b2d78326f0fb84cbc7d525';
+    const provider = new ethers.providers.JsonRpcProvider(
+      'http://localhost:8545',
+    );
+    const coreAddress = '0x05efe26f4a75EA4d183e8a7922494d60adfB27b3';
+    const proxyAddress = '0x59b8a21A0B0cE87E308082Af6fFC4205b5dC932C';
+    const usdcAddress = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
+
+    let signer: ethers.providers.JsonRpcSigner;
+
+    before(async () => {
+      await provider.send('hardhat_impersonateAccount', [poolOwner]);
+      await provider.send('hardhat_setBalance', [
+        poolOwner,
+        '0x3635C9ADC5DEA00000',
+      ]);
+
+      signer = provider.getSigner(poolOwner);
+    });
+
+    after(async () => {
+      await provider.send('hardhat_stopImpersonatingAccount', [poolOwner]);
+    });
+
+    it('replicates the bug: setting existing borrow limit duplicates the _knownCores variable', async () => {
+      /**
+       * This causes so that setting a smaller deposit limit of an asset would
+       * revert because the sum of the cores will be duplicated
+       */
+
+      const pool = SapphirePoolFactory.connect(proxyAddress, signer);
+      await expect(
+        pool.setDepositLimit(usdcAddress, utils.parseUnits('100000', 6)),
+      ).to.be.revertedWith(
+        'SapphirePool: sum of borrow limits exceeds sum of deposit limits',
+      );
+    });
+
+    xit('repairs pool: setting deposit limit to core does not duplicate amounts', async () => {
+      console.log('a');
+      const poolProxy = ArcProxyFactory.connect(proxyAddress, signer);
+      const poolImpl = await new SapphirePoolFactory(signer).deploy();
+      await poolProxy.upgradeTo(poolImpl.address);
+      const pool = SapphirePoolFactory.connect(proxyAddress, signer);
+
+      // Ensure the nr of active cores does not increase if adding a known core
+      let activeCores = await pool.getActiveCores();
+      expect(activeCores.length).eq(2);
+      await pool.setCoreBorrowLimit(coreAddress, utils.parseEther('40000'));
+      activeCores = await pool.getActiveCores();
+      expect(activeCores.length).eq(2);
+
+      // Ensure setting a deposit limit works
+      await expect(
+        pool.setDepositLimit(usdcAddress, utils.parseUnits('50000', 6)),
+      ).to.not.be.reverted;
+
+      // Ensure a newly added core is added to the known cores list
+      const newCore = '0x69b37541d1C00c949B530ccd3d23437188767160';
+      await pool.setCoreBorrowLimit(newCore, utils.parseEther('10000'));
+      activeCores = await pool.getActiveCores();
+      expect(activeCores.length).eq(4);
+      expect(activeCores).includes(newCore);
     });
   });
 });
