@@ -184,24 +184,6 @@ describe('SapphirePool', () => {
 
         expect(await pool.getActiveCores()).to.be.empty;
       });
-
-      it('reverts if setting limit to 0 and there are no other available borrowable assets', async () => {
-        await pool.setDepositLimit(stablecoin.address, depositAmount);
-
-        await pool.setCoreBorrowLimit(
-          ctx.contracts.sapphire.core.address,
-          1000,
-        );
-        await pool.setCoreBorrowLimit(admin.address, 1000);
-
-        await pool.setCoreBorrowLimit(ctx.contracts.sapphire.core.address, 0);
-
-        await expect(
-          pool.setCoreBorrowLimit(admin.address, 0),
-        ).to.be.revertedWith(
-          'SapphirePool: at least one asset must have a positive borrow limit',
-        );
-      });
     });
 
     describe('#setDepositLimit', () => {
