@@ -24,7 +24,7 @@ import {
 } from '@test/helpers/sapphireDefaults';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
-import { BigNumber, BigNumberish, utils, providers } from 'ethers';
+import { BigNumber, BigNumberish, utils, providers, Wallet } from 'ethers';
 import { generateContext, ITestContext } from '../context';
 
 import hre from 'hardhat';
@@ -594,6 +594,47 @@ describe('SapphirePool', () => {
         await expect(pool.decreaseStablesLent(scaledDepositAmount))
           .to.emit(pool, 'StablesLentDecreased')
           .withArgs(admin.address, scaledDepositAmount, 0);
+      });
+    });
+
+    describe('#removeActiveCore', () => {
+      let newCoreAddress: string;
+
+      beforeEach(async () => {
+        await pool.setDepositLimit(stablecoin.address, depositAmount);
+        await pool.setCoreBorrowLimit(
+          ctx.contracts.sapphire.core.address,
+          scaledDepositAmount.div(2),
+        );
+
+        // Add a new core for testing purposes
+        newCoreAddress = Wallet.createRandom().address;
+        await pool.setCoreBorrowLimit(
+          newCoreAddress,
+          scaledDepositAmount.div(2),
+        );
+
+        expect(await pool.getActiveCores()).to.have.lengthOf(2);
+      });
+
+      it('reverts if called by non-owner', async () => {
+        await expect(
+          pool
+            .connect(depositor)
+            .removeActiveCore(ctx.contracts.sapphire.core.address),
+        ).to.be.revertedWith(ADMINABLE_ERROR);
+      });
+
+      it('removes a core form the known cores array', async () => {
+        await pool.removeActiveCore(ctx.contracts.sapphire.core.address);
+
+        let activeCores = await pool.getActiveCores();
+        expect(activeCores).to.have.lengthOf(1);
+        expect(activeCores).to.include(newCoreAddress);
+
+        await pool.removeActiveCore(newCoreAddress);
+        activeCores = await pool.getActiveCores();
+        expect(activeCores).to.have.lengthOf(0);
       });
     });
   });

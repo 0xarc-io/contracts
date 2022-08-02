@@ -281,6 +281,24 @@ contract SapphirePool is
         );
     }
 
+    /**
+     * @notice Removes the given core from the list of the known cores. Can only be called by
+     * the admin. This function does not affect any limits. Use setCoreBorrowLimit for that instead.
+     */
+    function removeActiveCore(
+        address _coreAddress
+    )
+        external
+        onlyAdmin
+    {
+        for (uint8 i = 0; i < _knownCores.length; i++) {
+            if (_knownCores[i] == _coreAddress) {
+                _knownCores[i] = _knownCores[_knownCores.length - 1];
+                _knownCores.pop();
+            }
+        }
+    }
+
 
     /* ========== Public functions ========== */
 
