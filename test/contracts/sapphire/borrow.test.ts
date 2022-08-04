@@ -1,5 +1,5 @@
 import { BigNumber, utils } from 'ethers';
-import { SapphireTestArc } from '@src/SapphireTestArc';
+import { SapphireTestArc } from '@test/helpers/SapphireTestArc';
 import {
   addSnapshotBeforeRestoreAfterEach,
   immediatelyUpdateMerkleRoot,
@@ -22,15 +22,13 @@ import {
   DEFAULT_STABLE_COIN_PRECISION_SCALAR,
   DEFAULT_STABLECOIN_DECIMALS,
 } from '@test/helpers/sapphireDefaults';
-import {
-  CREDIT_PROOF_PROTOCOL,
-  BORROW_LIMIT_PROOF_PROTOCOL,
-} from '@src/constants';
+import { CREDIT_PROOF_PROTOCOL } from '@src/constants';
 import { getScoreProof, getEmptyScoreProof } from '@src/utils/getScoreProof';
 import { roundUpDiv, roundUpMul } from '@test/helpers/roundUpOperations';
 import { PassportScore, PassportScoreProof } from '@arc-types/sapphireTypes';
 import { PassportScoreTree } from '@src/MerkleTree';
 import { deployTestToken } from '../deployers';
+import { BORROW_LIMIT_PROOF_PROTOCOL } from '@test/constants';
 
 /**
  * This is the most crucial function of the system as it's how users actually borrow from a vault.

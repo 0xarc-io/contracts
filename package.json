@@ -6,28 +6,22 @@
   "files": [
     "dist/src/*",
     "dist/arc-types/*",
-    "dist/deployments/src/*",
-    "deployments/{mainnet,rinkeby,mumbai,polygon}/*.json"
+    "dist/deployments/*"
   ],
   "author": "Kerman Kohli <kermankohli@gmail.com>",
   "license": "MIT",
   "private": false,
   "scripts": {
-    "push-patch": "yarn ttsc && npm version patch && npm publish",
-    "push-minor": "yarn ttsc && npm version minor && npm publish",
-    "compile": "yarn hardhat compile",
-    "execute": "rm -rf dist && yarn ts-node publish/index.ts",
+    "build": "yarn hardhat compile",
     "start": "node scripts/watcher.js",
     "lint:sol": "solhint 'contracts/**/*.sol'",
-    "lint:ts": "eslint --config ./.eslintrc.yaml --ignore-path ./.eslintignore --ext .js,.ts,.tsx .",
+    "lint:ts": "eslint --config ./.eslintrc.yaml --ignore-path ./.eslintignore --ext .js,.ts .",
     "clean": "rm -rf build/compiled && rm -rf build/flattened && rm -rf src/typings && rm -rf dist && rm -rf artifacts && rm -rf cache",
-    "chain": "ganache-cli --networkId 50 --accounts 20 -l 19000000 -e 10000000000 -m 'concert load couple harbor equip island argue ramp clarify fence smart topic' -h 0.0.0.0",
-    "build": "yarn compile",
     "coverage": "yarn run build && yarn hardhat coverage --testfiles test/contracts/ --temp artifacts",
     "test": "yarn hardhat test",
     "test:ci": "npx mocha --reporter mocha-junit-reporter --require ts-node/register --require tsconfig-paths/register --require hardhat/register --exit",
-    "release:local": "rm -rf dist && ttsc && copyfiles -u 2 src/typings/*.d.ts dist/src/typings",
     "release": "yarn release:local && release-it",
+    "release:local": "rm -rf dist && ttsc && copyfiles -u 2 src/typings/*.d.ts dist/src/typings",
     "commit": "git add . && cz"
   },
   "devDependencies": {

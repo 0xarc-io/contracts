@@ -12,10 +12,7 @@ import {
   Signer,
   utils,
 } from 'ethers';
-import {
-  BORROW_LIMIT_PROOF_PROTOCOL,
-  CREDIT_PROOF_PROTOCOL,
-} from './constants';
+import { CREDIT_PROOF_PROTOCOL } from './constants';
 import {
   BaseERC20Factory,
   SapphireAssessorFactory,
@@ -85,10 +82,7 @@ export class SapphireArc {
       undefined,
       utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
     ),
-    creditLimitScore: PassportScoreProof = getEmptyScoreProof(
-      undefined,
-      utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
-    ),
+    creditLimitScore: PassportScoreProof = getEmptyScoreProof(),
     coreName: string = this.getCoreNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
@@ -154,10 +148,7 @@ export class SapphireArc {
       undefined,
       utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
     ),
-    passportBorrowLimitProof: PassportScoreProof = getEmptyScoreProof(
-      undefined,
-      utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
-    ),
+    passportBorrowLimitProof: PassportScoreProof = getEmptyScoreProof(),
     coreName: string = this.getCoreNames()[0],
     overrides: TransactionOverrides = {},
   ) {
@@ -222,10 +213,7 @@ export class SapphireArc {
       undefined,
       utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
     ),
-    passportBorrowLimitProof: PassportScoreProof = getEmptyScoreProof(
-      undefined,
-      utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
-    ),
+    passportBorrowLimitProof: PassportScoreProof = getEmptyScoreProof(),
     coreName: string = this.getCoreNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},
@@ -248,10 +236,7 @@ export class SapphireArc {
       undefined,
       utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
     ),
-    borrowLimitProof: PassportScoreProof = getEmptyScoreProof(
-      undefined,
-      utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
-    ),
+    borrowLimitProof: PassportScoreProof = getEmptyScoreProof(),
     coreName: string = this.getCoreNames()[0],
     caller: Signer = this.signer,
     overrides: TransactionOverrides = {},

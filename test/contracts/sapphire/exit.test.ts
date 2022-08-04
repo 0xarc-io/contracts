@@ -1,16 +1,13 @@
-import { TestingSigners } from '@test/types/testTypes';
+import { TestingSigners } from '@test/testTypes';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { approve } from '@src/utils/approve';
-import { SapphireTestArc } from '@src/SapphireTestArc';
+import { SapphireTestArc } from '@test/helpers/SapphireTestArc';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import {
   DEFAULT_COLLATERAL_DECIMALS,
   DEFAULT_STABLE_COIN_PRECISION_SCALAR,
 } from '@test/helpers/sapphireDefaults';
-import {
-  CREDIT_PROOF_PROTOCOL,
-  BORROW_LIMIT_PROOF_PROTOCOL,
-} from '@src/constants';
+import { CREDIT_PROOF_PROTOCOL } from '@src/constants';
 import { setupBaseVault } from '@test/helpers/setupBaseVault';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import { expect } from 'chai';
@@ -22,6 +19,7 @@ import { roundUpMul } from '@test/helpers/roundUpOperations';
 import { PassportScore } from '@arc-types/sapphireTypes';
 import { PassportScoreTree } from '@src/MerkleTree';
 import { TestToken } from '@src/typings';
+import { BORROW_LIMIT_PROOF_PROTOCOL } from '@test/constants';
 
 const COLLATERAL_AMOUNT = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS);
 const SCALED_BORROW_AMOUNT = utils.parseEther('500');

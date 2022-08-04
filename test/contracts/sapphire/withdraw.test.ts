@@ -1,9 +1,9 @@
 import { PassportScore } from '@arc-types/sapphireTypes';
-import { TestingSigners } from '@test/types/testTypes';
+import { TestingSigners } from '@test/testTypes';
 import { BigNumber } from '@ethersproject/bignumber';
 import { BASE } from '@src/constants';
 import { PassportScoreTree } from '@src/MerkleTree';
-import { SapphireTestArc } from '@src/SapphireTestArc';
+import { SapphireTestArc } from '@test/helpers/SapphireTestArc';
 import { SapphireAssessor, TestTokenFactory } from '@src/typings';
 import { getScoreProof } from '@src/utils/getScoreProof';
 import {
@@ -13,10 +13,7 @@ import {
   DEFAULT_PRICE,
   DEFAULT_STABLE_COIN_PRECISION_SCALAR,
 } from '@test/helpers/sapphireDefaults';
-import {
-  CREDIT_PROOF_PROTOCOL,
-  BORROW_LIMIT_PROOF_PROTOCOL,
-} from '@src/constants';
+import { CREDIT_PROOF_PROTOCOL } from '@src/constants';
 import { setupBaseVault } from '@test/helpers/setupBaseVault';
 import {
   addSnapshotBeforeRestoreAfterEach,
@@ -27,6 +24,7 @@ import { constants, utils } from 'ethers';
 import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
+import { BORROW_LIMIT_PROOF_PROTOCOL } from '@test/constants';
 
 const COLLATERAL_AMOUNT = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS);
 const SCALED_BORROW_AMOUNT = utils.parseEther('200');
