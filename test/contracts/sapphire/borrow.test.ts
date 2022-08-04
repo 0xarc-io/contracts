@@ -516,7 +516,10 @@ describe('SapphireCore.borrow()', () => {
       BORROW_AMOUNT,
       stablecoin.address,
       undefined,
-      undefined,
+      getEmptyScoreProof(
+        undefined,
+        utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
+      ),
       undefined,
       scoredBorrower,
     );
@@ -526,7 +529,10 @@ describe('SapphireCore.borrow()', () => {
         utils.parseUnits('0.01', DEFAULT_STABLECOIN_DECIMALS),
         stablecoin.address,
         undefined,
-        undefined,
+        getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
+        ),
         undefined,
         scoredBorrower,
       ),
@@ -541,7 +547,10 @@ describe('SapphireCore.borrow()', () => {
         BORROW_AMOUNT,
         stablecoin.address,
         undefined,
-        undefined,
+        getEmptyScoreProof(
+          undefined,
+          utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
+        ),
         undefined,
         scoredBorrower,
       ),

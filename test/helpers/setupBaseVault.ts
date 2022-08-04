@@ -9,6 +9,7 @@ import { CREDIT_PROOF_PROTOCOL } from '@src/constants';
 import { BigNumberish, utils } from 'ethers';
 import { PassportScoreProof } from '@arc-types/sapphireTypes';
 import { getEmptyScoreProof } from '@src/utils';
+import { BORROW_LIMIT_PROOF_PROTOCOL } from '@test/constants';
 
 /**
  * Setup base **Sapphire** vault with 1000 collateral and 200 debt for a c-ratio of
@@ -38,7 +39,11 @@ export async function setupBaseVault(
         undefined,
         utils.formatBytes32String(CREDIT_PROOF_PROTOCOL),
       ),
-    borrowLimitProof,
+    borrowLimitProof ||
+      getEmptyScoreProof(
+        undefined,
+        utils.formatBytes32String(BORROW_LIMIT_PROOF_PROTOCOL),
+      ),
     coreName,
     caller,
   );
