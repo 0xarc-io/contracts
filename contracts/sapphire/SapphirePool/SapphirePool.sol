@@ -139,11 +139,6 @@ contract SapphirePool is
             "SapphirePool: sum of the deposit limits exceeds sum of borrow limits"
         );
 
-        require(
-            sumOfCoreLimits + _limit > 0,
-            "SapphirePool: at least one asset must have a positive borrow limit"
-        );
-
         if (!isCoreKnown) {
             _knownCores.push(_coreAddress);
         }
@@ -284,6 +279,24 @@ contract SapphirePool is
             _debtDecreaseAmount,
             stablesLent
         );
+    }
+
+    /**
+     * @notice Removes the given core from the list of the known cores. Can only be called by
+     * the admin. This function does not affect any limits. Use setCoreBorrowLimit for that instead.
+     */
+    function removeActiveCore(
+        address _coreAddress
+    )
+        external
+        onlyAdmin
+    {
+        for (uint8 i = 0; i < _knownCores.length; i++) {
+            if (_knownCores[i] == _coreAddress) {
+                _knownCores[i] = _knownCores[_knownCores.length - 1];
+                _knownCores.pop();
+            }
+        }
     }
 
 
@@ -515,6 +528,40 @@ contract SapphirePool is
         return _deposits[_userAddress];
     }
 
+    /**
+     * @notice Returns an array of core addresses that have a positive borrow limit
+     */
+    function getActiveCores()
+        external
+        view
+        override
+        returns (address[] memory _activeCores)
+    {
+        uint8 validCoresCount;
+        
+        for (uint8 i = 0; i < _knownCores.length; i++) {
+            address coreAddress = _knownCores[i];
+
+            if (_coreBorrowUtilization[coreAddress].limit > 0) {
+                validCoresCount++;
+            }
+        }
+
+        _activeCores = new address[](validCoresCount);
+        uint8 currentIndex;
+
+        for (uint8 i = 0; i < _knownCores.length; i++) {
+            address coreAddress = _knownCores[i];
+
+            if (_coreBorrowUtilization[coreAddress].limit > 0) {
+                _activeCores[currentIndex] = coreAddress;
+                currentIndex++;
+            }
+        }
+
+        return _activeCores;
+    }
+
     /* ========== Private functions ========== */
 
     /**
@@ -643,15 +690,16 @@ contract SapphirePool is
 
         for (uint8 i = 0; i < _knownCores.length; i++) {
             address core = _knownCores[i];
+
+            if (core == _optionalCoreCheck) {
+                isCoreKnown = true;
+            }
+
             if (core == _excludeCore) {
                 continue;
             }
 
             sumOfCoreLimits += _coreBorrowUtilization[core].limit;
-
-            if (core == _optionalCoreCheck) {
-                isCoreKnown = true;
-            }
         }
 
         return (
