@@ -46,5 +46,7 @@ interface ISapphirePool {
 
     function getDepositAssets() external view returns (address[] memory);
 
+    function getActiveCores() external view returns (address[] memory);
+
     function getPoolValue() external view returns (uint256);
 }
