@@ -6,15 +6,13 @@ import {
   EarlyPassportSkinFactory,
 } from '@src/typings';
 import { green, red, yellow } from 'chalk';
-import {
-  pruneDeployments,
-  loadDetails,
-  deployContract,
-  loadContract,
-} from '../deployments/src';
+import { loadContract } from '../deployments/src';
 import { task } from 'hardhat/config';
 import { DeploymentType } from '../deployments/types';
-import { verifyContract } from './task-utils';
+import { loadHardhatDetails } from './utils/loadHardhatDetails';
+import { pruneDeployments } from './utils/pruneDeployments';
+import { verifyContract } from './utils/verifyContract';
+import { deployAndSaveContract } from './utils/deployAndSaveContract';
 
 task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
   .addOptionalParam('name', 'Name of the defi passport NFT')
@@ -38,11 +36,11 @@ task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
       throw Error(`--name and/or --symbol missing`);
     }
 
-    const { network, signer, networkConfig } = await loadDetails(hre);
+    const { network, signer, networkConfig } = await loadHardhatDetails(hre);
 
     await pruneDeployments(network, signer.provider);
 
-    const defiPassportImpl = await deployContract(
+    const defiPassportImpl = await deployAndSaveContract(
       {
         name: 'DefiPassport',
         source: 'DefiPassport',
@@ -59,7 +57,7 @@ task('deploy-defi-passport', 'Deploy the Defi Passport NFT contract')
       return;
     }
 
-    const defiPassportProxy = await deployContract(
+    const defiPassportProxy = await deployAndSaveContract(
       {
         name: 'DefiPassportProxy',
         source: 'ArcProxy',
@@ -122,11 +120,11 @@ task(
   .addParam('baseuri', 'The base URI of the tokens')
   .setAction(async (taskArgs, hre) => {
     const { name, symbol, baseuri } = taskArgs;
-    const { network, signer, networkConfig } = await loadDetails(hre);
+    const { network, signer, networkConfig } = await loadHardhatDetails(hre);
 
     await pruneDeployments(network, signer.provider);
 
-    const defaultPassportSkinNft = await deployContract(
+    const defaultPassportSkinNft = await deployAndSaveContract(
       {
         name: 'DefaultPassportSkin',
         source: 'DefaultPassportSkin',
@@ -178,11 +176,11 @@ task(
   'deploy-defi-passport-skin',
   'Deploy the Defi Passport Skin ERC721 contract',
 ).setAction(async (_taskArgs, hre) => {
-  const { network, signer, networkConfig } = await loadDetails(hre);
+  const { network, signer, networkConfig } = await loadHardhatDetails(hre);
 
   await pruneDeployments(network, signer.provider);
 
-  const defiPassportSkinAddress = await deployContract(
+  const defiPassportSkinAddress = await deployAndSaveContract(
     {
       name: 'DefiPassportSkin',
       source: 'DefiPassportSkin',
@@ -204,7 +202,7 @@ task(
   .addParam('passport', 'Address of the defi passport')
   .setAction(async (taskArgs, hre) => {
     const { passport } = taskArgs;
-    const { signer, network } = await loadDetails(hre);
+    const { signer, network } = await loadHardhatDetails(hre);
 
     const defiPassport = DefiPassportFactory.connect(passport, signer);
 
@@ -497,14 +495,14 @@ task(
 
 task('deploy-early-skin', 'Deploys the EarlyPassportSkin NFT').setAction(
   async (_taskArgs, hre) => {
-    const { network, signer, networkConfig } = await loadDetails(hre);
+    const { network, signer, networkConfig } = await loadHardhatDetails(hre);
 
     const defiPassportAddress = loadContract({
       network,
       name: 'DefiPassportProxy',
     }).address;
 
-    const earlyPassportAddr = await deployContract(
+    const earlyPassportAddr = await deployAndSaveContract(
       {
         name: 'EarlyPassportSkin',
         source: 'EarlyPassportSkin',

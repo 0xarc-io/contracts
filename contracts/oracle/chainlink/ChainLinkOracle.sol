@@ -2,7 +2,6 @@
 
 pragma solidity 0.8.4;
 
-import {Decimal} from "../../lib/Decimal.sol";
 import {SafeMath} from "../../lib/SafeMath.sol";
 
 import {ISapphireOracle} from "../ISapphireOracle.sol";

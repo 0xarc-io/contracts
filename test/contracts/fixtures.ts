@@ -16,7 +16,7 @@ import {
 
 import { Signer } from 'ethers';
 import { ITestContext, ITestContextArgs } from './context';
-import { SapphireTestArc } from '@src/SapphireTestArc';
+import { SapphireTestArc } from '@test/helpers/SapphireTestArc';
 import {
   DEFAULT_COLLATERAL_DECIMALS,
   DEFAULT_HIGH_C_RATIO,
