@@ -8,7 +8,7 @@ import {
   addSnapshotBeforeRestoreAfterEach,
   immediatelyUpdateMerkleRoot,
 } from '@test/helpers/testingUtils';
-import { TestingSigners } from '@arc-types/testing';
+import { TestingSigners } from '@test/types/testTypes';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import {
   MockSapphirePassportScores,
@@ -30,7 +30,7 @@ import {
   CREDIT_PROOF_PROTOCOL,
   BORROW_LIMIT_PROOF_PROTOCOL,
 } from '@src/constants';
-import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
+import { PassportScore, PassportScoreProof } from '@arc-types/sapphireTypes';
 import { PassportScoreTree } from '@src/MerkleTree';
 import { roundUpMul } from '@test/helpers/roundUpOperations';
 

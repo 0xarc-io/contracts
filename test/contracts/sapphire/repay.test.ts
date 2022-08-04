@@ -1,5 +1,5 @@
-import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
-import { TestingSigners } from '@arc-types/testing';
+import { PassportScore, PassportScoreProof } from '@arc-types/sapphireTypes';
+import { TestingSigners } from '@test/types/testTypes';
 import { BigNumber } from '@ethersproject/bignumber';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { PassportScoreTree } from '@src/MerkleTree';

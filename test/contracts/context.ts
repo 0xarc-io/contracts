@@ -1,7 +1,7 @@
 import 'module-alias/register';
 
 import { ethers } from 'hardhat';
-import { Contracts, TestingSigners, SDKs } from '@arc-types/testing';
+import { Contracts, TestingSigners, SDKs } from '@test/types/testTypes';
 import { EVM } from '@test/helpers/EVM';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { BigNumberish } from '@ethersproject/bignumber';

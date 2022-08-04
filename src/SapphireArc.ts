@@ -1,11 +1,10 @@
-import { CoreContracts } from '@arc-types/core';
-import { TransactionOverrides } from '@arc-types/ethereum';
+import { TransactionOverrides } from '@arc-types/transactionOverrides';
 import {
   Action,
   Operation,
   PassportScoreProof,
   Vault,
-} from '@arc-types/sapphireCore';
+} from '@arc-types/sapphireTypes';
 import {
   BigNumber,
   constants,
@@ -26,6 +25,7 @@ import {
 } from './typings';
 import { ISapphireOracleFactory } from './typings/ISapphireOracleFactory';
 import { getEmptyScoreProof } from './utils/getScoreProof';
+import { CoreContracts } from '@arc-types/coreContracts';
 
 export type SapphireCoreContracts = CoreContracts<SapphireCoreV1>;
 

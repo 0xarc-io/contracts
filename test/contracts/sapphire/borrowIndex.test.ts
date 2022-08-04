@@ -5,8 +5,8 @@
  * at the "Borrow index" tab
  */
 
-import { PassportScore } from '@arc-types/sapphireCore';
-import { TestingSigners } from '@arc-types/testing';
+import { PassportScore } from '@arc-types/sapphireTypes';
+import { TestingSigners } from '@test/types/testTypes';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { approve } from '@src/utils/approve';
 import { BASE, ONE_YEAR_IN_SECONDS } from '@src/constants';

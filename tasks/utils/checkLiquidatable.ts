@@ -1,4 +1,4 @@
-import { PassportScoreProof } from '@arc-types/sapphireCore';
+import { PassportScoreProof } from '@arc-types/sapphireTypes';
 import { SapphireArc } from '@src/SapphireArc';
 import axios from 'axios';
 import { BigNumber, utils } from 'ethers';

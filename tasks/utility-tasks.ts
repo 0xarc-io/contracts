@@ -17,10 +17,10 @@ import {
 } from '@src/typings';
 import { Filter, Log } from '@ethersproject/abstract-provider';
 import { BASE } from '@src/constants';
-import { PassportScoreProof } from '@arc-types/sapphireCore';
 import { approve } from '@src/utils';
 import { SapphireArc } from '@src/SapphireArc';
 import { checkLiquidatable } from './utils/checkLiquidatable';
+import { PassportScoreProof } from '@arc-types/sapphireTypes';
 
 task('mint-tokens')
   .addParam('token', 'The address of the token to mint from')
