@@ -33,6 +33,7 @@
     "deployments/**/*",
     "tasks/**/*",
     "test/**/*",
+    "scripts/**/*",
     "hardhat.config.ts"
   ],
   "exclude": ["node_modules"]
