@@ -1,4 +1,4 @@
-import { PassportScoreProof } from '@arc-types/sapphireCore';
+import { PassportScoreProof } from '@arc-types/sapphireTypes';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { PassportScoreTree } from '@src/MerkleTree';
 import {

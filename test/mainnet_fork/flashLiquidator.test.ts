@@ -1,4 +1,4 @@
-import { PassportScoreProof } from '@arc-types/sapphireCore';
+import { PassportScoreProof } from '@arc-types/sapphireTypes';
 import { loadContract } from '../../deployments/src';
 import { SapphireArc } from '@src/SapphireArc';
 import { BaseERC20Factory, FlashLiquidatorFactory } from '@src/typings';

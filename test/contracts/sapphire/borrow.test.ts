@@ -28,7 +28,7 @@ import {
 } from '@src/constants';
 import { getScoreProof, getEmptyScoreProof } from '@src/utils/getScoreProof';
 import { roundUpDiv, roundUpMul } from '@test/helpers/roundUpOperations';
-import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
+import { PassportScore, PassportScoreProof } from '@arc-types/sapphireTypes';
 import { PassportScoreTree } from '@src/MerkleTree';
 import { deployTestToken } from '../deployers';
 

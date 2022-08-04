@@ -1,8 +1,8 @@
 import { Signer } from 'ethers';
 import { BaseERC20Factory } from '../typings/BaseERC20Factory';
 
-import { TransactionOverrides } from '../../arc-types/ethereum';
 import { BigNumberish } from '@ethersproject/bignumber';
+import { TransactionOverrides } from '@arc-types/transactionOverrides';
 
 export class Token {
   static async approve(

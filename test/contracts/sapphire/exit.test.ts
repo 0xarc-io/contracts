@@ -1,4 +1,4 @@
-import { TestingSigners } from '@arc-types/testing';
+import { TestingSigners } from '@test/types/testTypes';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { approve } from '@src/utils/approve';
 import { SapphireTestArc } from '@src/SapphireTestArc';
@@ -19,7 +19,7 @@ import { generateContext, ITestContext } from '../context';
 import { sapphireFixture } from '../fixtures';
 import { setupSapphire } from '../setup';
 import { roundUpMul } from '@test/helpers/roundUpOperations';
-import { PassportScore } from '@arc-types/sapphireCore';
+import { PassportScore } from '@arc-types/sapphireTypes';
 import { PassportScoreTree } from '@src/MerkleTree';
 import { TestToken } from '@src/typings';
 

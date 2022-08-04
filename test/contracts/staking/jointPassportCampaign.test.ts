@@ -22,7 +22,7 @@ import { setupSapphire } from '../setup';
 import _ from 'lodash';
 import { BASE } from '@src/constants';
 import { ethers } from 'hardhat';
-import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
+import { PassportScore, PassportScoreProof } from '@arc-types/sapphireTypes';
 import { PassportScoreTree } from '@src/MerkleTree';
 import { CREDIT_PROOF_PROTOCOL } from '@src/constants';
 

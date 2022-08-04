@@ -1,5 +1,5 @@
-import { PassportScore } from '@arc-types/sapphireCore';
-import { TestingSigners } from '@arc-types/testing';
+import { PassportScore } from '@arc-types/sapphireTypes';
+import { TestingSigners } from '@test/types/testTypes';
 import { BigNumber } from '@ethersproject/bignumber';
 import { BASE } from '@src/constants';
 import { PassportScoreTree } from '@src/MerkleTree';

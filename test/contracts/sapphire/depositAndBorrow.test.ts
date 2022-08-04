@@ -25,10 +25,10 @@ import {
   PassportScore,
   PassportScoreProof,
   Vault,
-} from '@arc-types/sapphireCore';
+} from '@arc-types/sapphireTypes';
 import { PassportScoreTree } from '@src/MerkleTree';
 import { TestToken } from '@src/typings';
-import { TransactionOverrides } from '@arc-types/ethereum';
+import { TransactionOverrides } from '@arc-types/transactionOverrides';
 
 chai.use(solidity);
 
