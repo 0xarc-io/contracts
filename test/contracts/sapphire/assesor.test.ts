@@ -1,9 +1,6 @@
-import { PassportScore } from '@arc-types/sapphireCore';
+import { PassportScore } from '@arc-types/sapphireTypes';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import {
-  CREDIT_PROOF_PROTOCOL,
-  BORROW_LIMIT_PROOF_PROTOCOL,
-} from '@src/constants';
+import { CREDIT_PROOF_PROTOCOL } from '@src/constants';
 import { PassportScoreTree } from '@src/MerkleTree';
 import {
   SapphireMapperLinear,
@@ -14,6 +11,7 @@ import {
 } from '@src/typings';
 import { MockSapphirePassportScores } from '@src/typings/MockSapphirePassportScores';
 import { getScoreProof } from '@src/utils';
+import { BORROW_LIMIT_PROOF_PROTOCOL } from '@test/constants';
 import { DEFAULT_MAX_CREDIT_SCORE } from '@test/helpers/sapphireDefaults';
 import { expect } from 'chai';
 import { BigNumber, constants, utils } from 'ethers';

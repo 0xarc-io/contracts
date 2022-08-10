@@ -28,7 +28,7 @@ export const params = {
   deploy_private_key: process.env.DEPLOY_PRIVATE_KEY || '',
   infura_key: process.env.INFURA_PROJECT_ID || '',
   etherscan_key: process.env.MAINNET_ETHERSCAN_KEY || '',
-  polygon_mumbai_etherscan_key: process.env.POLYGON_MUMBAI_ETHERSCAN_KEY || '',
+  polygon_mumbai_etherscan_key: process.env.MUMBAI_ETHERSCAN_KEY || '',
   mainnet_alchemy_url: process.env.MAINNET_ALCHEMY || '',
 };
 
@@ -108,24 +108,6 @@ const config: HardhatUserConfig = {
         eoaOwner: '0xa8C01EfD74A206Bb2d769b6b3a5759508c83F20C',
       },
     },
-    fuji: {
-      url: 'https://api.avax-test.network/ext/bc/C/rpc',
-      chainId: 43113,
-      accounts: [params.testnet_private_key],
-      users: {
-        eoaOwner: '0xa8C01EfD74A206Bb2d769b6b3a5759508c83F20C',
-      },
-    },
-    avalanche: {
-      url: 'https://api.avax.network/ext/bc/C/rpc',
-      chainId: 43114,
-      accounts: [params.deploy_private_key],
-      users: {
-        eoaOwner: '0x62f31e08e279f3091d9755a09914df97554eae0b',
-        multisigOwner: '0x859a95b2b50c1fc25560a2c6dad5b3d0ba34b6e9',
-        arcxDeployer: '0x9c767178528c8a205df63305ebda4bb6b147889b',
-      },
-    },
     mainnet: {
       url: getNetworkUrl('mainnet'),
       accounts: [params.deploy_private_key],
@@ -143,15 +125,6 @@ const config: HardhatUserConfig = {
         arcxDeployer: '0x9c767178528c8a205df63305ebda4bb6b147889b',
         guardian: '0xC033F3488584F4c929b2D78326f0Fb84CbC7d525',
         multisigOwner: '0xE4b3F2E082356f5430bd883A22186a6DDE36952D',
-      },
-    },
-    playnet: {
-      url: getNetworkUrl('mainnet'),
-      accounts: [params.deploy_private_key],
-      gasPrice: 119 * 10 ** 9,
-      users: {
-        eoaOwner: '0x9c767178528c8a205DF63305ebdA4BB6B147889b',
-        multisigOwner: '0xFe1AaAAEc2cFd70E89037F489d4eB362a169631e',
       },
     },
   },

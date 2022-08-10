@@ -1,7 +1,7 @@
-import { PassportScore } from '@arc-types/sapphireCore';
+import { PassportScore } from '@arc-types/sapphireTypes';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { PassportScoreTree } from '@src/MerkleTree';
-import { SapphireTestArc } from '@src/SapphireTestArc';
+import { SapphireTestArc } from '@test/helpers/SapphireTestArc';
 import { TestToken, TestTokenFactory } from '@src/typings';
 import { getScoreProof, getEmptyScoreProof } from '@src/utils/getScoreProof';
 import { DEFAULT_COLLATERAL_DECIMALS } from '@test/helpers/sapphireDefaults';

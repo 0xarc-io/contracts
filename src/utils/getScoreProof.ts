@@ -1,4 +1,4 @@
-import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
+import { PassportScore, PassportScoreProof } from '@arc-types/sapphireTypes';
 import { PassportScoreTree } from '@src/MerkleTree';
 import { constants, BigNumber, utils } from 'ethers';
 

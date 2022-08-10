@@ -1,4 +1,4 @@
-import { PassportScore } from '@arc-types/sapphireCore';
+import { PassportScore } from '@arc-types/sapphireTypes';
 import { utils } from 'ethers';
 import MerkleTree from './MerkleTree';
 
@@ -41,14 +41,13 @@ export class PassportScoreTree {
    * Ensure an account does not have multiple scores for the same protocol
    */
   private ensureUniqueAccounts(passportScores: PassportScore[]) {
-    const uniqueMap = {}
+    const uniqueMap = {};
 
-    for(const score of passportScores) {
+    for (const score of passportScores) {
       const key = `${score.account}-${score.protocol}`;
-      if(!uniqueMap[key]) {
-       
-        uniqueMap[key] = key // Value never used
-      }else {
+      if (!uniqueMap[key]) {
+        uniqueMap[key] = key; // Value never used
+      } else {
         throw Error(
           `There are more than 1 score for the protocol ${utils.parseBytes32String(
             score.protocol,

@@ -2,8 +2,6 @@
 
 pragma solidity ^0.8.4;
 
-import {IOracle} from "../oracle/IOracle.sol";
-
 import {SapphireCoreV1} from "../sapphire/SapphireCoreV1.sol";
 import {MockTimestamp} from "./MockTimestamp.sol";
 

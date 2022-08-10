@@ -34,7 +34,6 @@
     "tasks/**/*",
     "test/**/*",
     "scripts/**/*",
-    "arc-types/augmentations.d.ts",
     "hardhat.config.ts"
   ],
   "exclude": ["node_modules"]
