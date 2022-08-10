@@ -1,25 +1,12 @@
 import { red } from 'chalk';
 import path from 'path';
 
-export const networks = [
-  'local',
-  'rinkeby',
-  'mainnet',
-  'playnet',
-  'mumbai',
-  'polygon',
-  'fuji',
-  'avalanche',
-];
-export const deploymentTestNetworks = ['mainnet' /*'playnet'*/];
+export const networks = ['local', 'rinkeby', 'mainnet', 'mumbai', 'polygon'];
 
 export const constants = {
   BUILD_FOLDER: 'build',
   CONTRACTS_FOLDER: 'contracts',
   COLLATERAL_CONFIG_FILENAME: 'collateral-config.ts',
-  SAVINGS_CONFIG_FILENAME: 'savings-config.json',
-  STAKING_CONFIG_FILENAME: 'staking-config.ts',
-  SUBGRAPH_CONFIG_FILENAME: 'subgraph-config.json',
   DEPLOYMENT_FILENAME: 'deployed.json',
 };
 

@@ -1,4 +1,4 @@
-import { SapphireTestArc } from '@src/SapphireTestArc';
+import { SapphireTestArc } from '@test/helpers/SapphireTestArc';
 import { BigNumber, constants, utils } from 'ethers';
 import 'module-alias/register';
 import { generateContext, ITestContext } from '../context';
@@ -8,7 +8,7 @@ import {
   addSnapshotBeforeRestoreAfterEach,
   immediatelyUpdateMerkleRoot,
 } from '@test/helpers/testingUtils';
-import { TestingSigners } from '@arc-types/testing';
+import { TestingSigners } from '@test/testTypes';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import {
   MockSapphirePassportScores,
@@ -26,13 +26,11 @@ import {
   DEFAULT_STABLECOIN_DECIMALS,
   DEFAULT_STABLE_COIN_PRECISION_SCALAR,
 } from '@test/helpers/sapphireDefaults';
-import {
-  CREDIT_PROOF_PROTOCOL,
-  BORROW_LIMIT_PROOF_PROTOCOL,
-} from '@src/constants';
-import { PassportScore, PassportScoreProof } from '@arc-types/sapphireCore';
+import { CREDIT_PROOF_PROTOCOL } from '@src/constants';
+import { PassportScore, PassportScoreProof } from '@arc-types/sapphireTypes';
 import { PassportScoreTree } from '@src/MerkleTree';
 import { roundUpMul } from '@test/helpers/roundUpOperations';
+import { BORROW_LIMIT_PROOF_PROTOCOL } from '@test/constants';
 
 chai.use(solidity);
 

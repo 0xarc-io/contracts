@@ -5,22 +5,16 @@
  * at the "Borrow index" tab
  */
 
-import { PassportScore } from '@arc-types/sapphireCore';
-import { TestingSigners } from '@arc-types/testing';
+import { PassportScore } from '@arc-types/sapphireTypes';
+import { TestingSigners } from '@test/testTypes';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { approve } from '@src/utils/approve';
 import { BASE, ONE_YEAR_IN_SECONDS } from '@src/constants';
 import { PassportScoreTree } from '@src/MerkleTree';
-import { SapphireTestArc } from '@src/SapphireTestArc';
+import { SapphireTestArc } from '@test/helpers/SapphireTestArc';
 import { getEmptyScoreProof, getScoreProof } from '@src/utils/getScoreProof';
-import {
-  DEFAULT_COLLATERAL_DECIMALS,
-  DEFAULT_STABLE_COIN_PRECISION_SCALAR,
-} from '@test/helpers/sapphireDefaults';
-import {
-  CREDIT_PROOF_PROTOCOL,
-  BORROW_LIMIT_PROOF_PROTOCOL,
-} from '@src/constants';
+import { DEFAULT_COLLATERAL_DECIMALS } from '@test/helpers/sapphireDefaults';
+import { CREDIT_PROOF_PROTOCOL } from '@src/constants';
 import {
   mintApprovedCollateral,
   setupBaseVault,
@@ -34,6 +28,7 @@ import { setupSapphire } from '../setup';
 import { roundUpDiv, roundUpMul } from '@test/helpers/roundUpOperations';
 import { TestToken } from '@src/typings';
 import { deployTestToken } from '../deployers';
+import { BORROW_LIMIT_PROOF_PROTOCOL } from '@test/constants';
 
 const COLLATERAL_AMOUNT = utils.parseUnits('1000', DEFAULT_COLLATERAL_DECIMALS);
 const BORROW_AMOUNT = utils.parseEther('500');

@@ -3,9 +3,6 @@ import { ethers } from 'hardhat';
 
 import { TestTokenFactory } from '@src/typings/TestTokenFactory';
 import { ArcProxyFactory } from '@src/typings/ArcProxyFactory';
-import { AddressAccrual } from '@src/typings/AddressAccrual';
-import { TokenStakingAccrual } from '@src/typings/TokenStakingAccrual';
-import { MockOracle } from '@src/typings/MockOracle';
 import {
   MockSapphireCoreV1Factory,
   MockSapphirePassportScoresFactory,
@@ -14,12 +11,6 @@ import {
 import { MerkleDistributor } from '@src/typings/MerkleDistributor';
 import { MockSapphireOracle } from '@src/typings/MockSapphireOracle';
 import { DefiPassportFactory } from '@src/typings/DefiPassportFactory';
-
-export async function deployMockOracle(deployer: Signer) {
-  const Contract = await ethers.getContractFactory('MockOracle', deployer);
-  const mockOracle = await Contract.deploy();
-  return mockOracle as MockOracle;
-}
 
 export async function deployMockSapphireOracle(deployer: Signer) {
   const Contract = await ethers.getContractFactory(
@@ -56,28 +47,6 @@ export async function deployArcProxy(
     data,
   );
   return arcProxy;
-}
-
-export async function deployAddressAccrual(
-  deployer: Signer,
-  rewardToken: string,
-) {
-  const Contract = await ethers.getContractFactory('AddressAccrual', deployer);
-  const addressAccrual = await Contract.deploy(rewardToken);
-  return addressAccrual as AddressAccrual;
-}
-
-export async function deployTokenStakingAccrual(
-  deployer: Signer,
-  stakingToken: string,
-  rewardToken: string,
-) {
-  const Contract = await ethers.getContractFactory(
-    'TokenStakingAccrual',
-    deployer,
-  );
-  const tokenStakingAccrual = await Contract.deploy(stakingToken, rewardToken);
-  return tokenStakingAccrual as TokenStakingAccrual;
 }
 
 export async function deployMerkleDistributor(

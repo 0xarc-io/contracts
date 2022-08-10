@@ -1,7 +1,5 @@
 // // Buidler automatically injects the waffle version into chai
-import { MockSapphirePassportScores, TestTokenFactory } from '@src/typings';
-import { asyncForEach, Token } from '@src/utils';
-import { BigNumberish, Signer } from 'ethers';
+import { MockSapphirePassportScores } from '@src/typings';
 import { ethers } from 'hardhat';
 import { EVM } from './EVM';
 
@@ -21,19 +19,6 @@ export const addSnapshotBeforeRestoreAfterEach = () => {
     await evm.evmRevert();
   });
 };
-
-export async function setStartingBalances(
-  collateral: string,
-  core: string,
-  signers: Signer[],
-  balance: BigNumberish,
-) {
-  await asyncForEach(signers, async (signer) => {
-    const testToken = new TestTokenFactory(signer).attach(collateral);
-    await testToken.mintShare(await signer.getAddress(), balance);
-    await Token.approve(collateral, signer, core, balance);
-  });
-}
 
 export async function immediatelyUpdateMerkleRoot(
   creditScoreContract: MockSapphirePassportScores,

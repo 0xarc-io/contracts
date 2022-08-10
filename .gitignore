@@ -26,3 +26,5 @@ output/
 
 # Output of the get-waitlist-applicants task
 applicants.csv
+
+deployments/local/

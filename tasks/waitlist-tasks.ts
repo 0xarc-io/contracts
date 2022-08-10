@@ -3,17 +3,15 @@ import { DefiPassportFactory, WaitlistBatchFactory } from '@src/typings';
 import { PassportWaitlistFactory } from '@src/typings/PassportWaitlistFactory';
 import { utils, BigNumber } from 'ethers';
 import { task } from 'hardhat/config';
-import {
-  deployContract,
-  loadDetails,
-  pruneDeployments,
-  loadContract,
-} from '../deployments/src';
-import { verifyContract } from './task-utils';
+import { loadContract } from '../deployments/src';
 import { id } from '@ethersproject/hash';
 import { createArrayCsvWriter } from 'csv-writer';
 import { green, yellow } from 'chalk';
 import { formatEther } from '@ethersproject/units';
+import { loadHardhatDetails } from './utils/loadHardhatDetails';
+import { pruneDeployments } from './utils/pruneDeployments';
+import { verifyContract } from './utils/verifyContract';
+import { deployAndSaveContract } from './utils/deployAndSaveContract';
 
 task('deploy-waitlist-batch', 'Deploy the WaitlistBatch contract')
   .addParam('currency', 'The address of the deposit currency')
@@ -22,12 +20,12 @@ task('deploy-waitlist-batch', 'Deploy the WaitlistBatch contract')
     'Duration in seconds that has to be elapsed after a batch is approved, for users to recover their funds',
   )
   .setAction(async (taskArgs, hre) => {
-    const { network, signer, networkConfig } = await loadDetails(hre);
+    const { network, signer, networkConfig } = await loadHardhatDetails(hre);
     const { currency, depositduration } = taskArgs;
 
     await pruneDeployments(network, signer.provider);
 
-    const waitlistAddress = await deployContract(
+    const waitlistAddress = await deployAndSaveContract(
       {
         name: 'WaitlistBatch',
         source: 'WaitlistBatch',
@@ -52,14 +50,14 @@ task('deploy-passport-waitlist', 'Deploy the PassportWaitlist contract')
     'Address of wallet that receives the payments',
   )
   .setAction(async (taskArgs, hre) => {
-    const { network, signer, networkConfig } = await loadDetails(hre);
+    const { network, signer, networkConfig } = await loadHardhatDetails(hre);
     const { currency, amount, paymentreceiver: paymentReceiver } = taskArgs;
 
     const amountInEther = utils.parseEther(amount);
 
     await pruneDeployments(network, signer.provider);
 
-    const passportWaitlistAddy = await deployContract(
+    const passportWaitlistAddy = await deployAndSaveContract(
       {
         name: 'PassportWaitlist',
         source: 'PassportWaitlist',
@@ -87,7 +85,7 @@ task(
   'get-waitlist-applicants',
   'Gets all the applicants from the WaitlistBatch contract and saves them to applicants.csv in the format used by multisender.app',
 ).setAction(async (_taskArgs, hre) => {
-  const { network, signer } = await loadDetails(hre);
+  const { network, signer } = await loadHardhatDetails(hre);
   const csvFileName = 'applicants.csv';
   const csvWriter = createArrayCsvWriter({
     path: csvFileName,

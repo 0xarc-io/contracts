@@ -1,4 +1,4 @@
-import { SapphireTestArc } from '@src/SapphireTestArc';
+import { SapphireTestArc } from '@test/helpers/SapphireTestArc';
 import { addSnapshotBeforeRestoreAfterEach } from '@test/helpers/testingUtils';
 import chai, { expect } from 'chai';
 import { BigNumber, constants, Signer, utils } from 'ethers';
@@ -13,10 +13,7 @@ import {
   DEFAULT_STABLECOIN_DECIMALS,
   DEFAULT_STABLE_COIN_PRECISION_SCALAR,
 } from '@test/helpers/sapphireDefaults';
-import {
-  CREDIT_PROOF_PROTOCOL,
-  BORROW_LIMIT_PROOF_PROTOCOL,
-} from '@src/constants';
+import { CREDIT_PROOF_PROTOCOL } from '@src/constants';
 import { mintApprovedCollateral } from '@test/helpers/setupBaseVault';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { BASE } from '@src/constants';
@@ -25,10 +22,11 @@ import {
   PassportScore,
   PassportScoreProof,
   Vault,
-} from '@arc-types/sapphireCore';
+} from '@arc-types/sapphireTypes';
 import { PassportScoreTree } from '@src/MerkleTree';
 import { TestToken } from '@src/typings';
-import { TransactionOverrides } from '@arc-types/ethereum';
+import { TransactionOverrides } from '@arc-types/transactionOverrides';
+import { BORROW_LIMIT_PROOF_PROTOCOL } from '@test/constants';
 
 chai.use(solidity);
 
