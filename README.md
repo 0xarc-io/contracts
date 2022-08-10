@@ -3,7 +3,7 @@
 
 # ARCx Contracts 
 
-ARCx Credit is a decentralized liquidity market on Polygon that offers the safest and most capital-efficient borrowing experience in DeFi through the use of the DeFi Credit Score. Unlike traditional borrowing protocols, ARCx Credit rewards Borrowers who demonstrate effective risk management practices by granting them progressively higher maximum loan-to-value (LTV) ratios on their loans. The primary objective for ARCx Credit is to profitably improve capital efficiency in DeFi lending markets through measuring and rewarding responsible borrowing behavior. [Click here to read the official docs.](https://wiki.arcx.money/welcome/arcx-credit-introduction)
+ARCx Credit is a decentralized liquidity market that offers the safest and most capital-efficient borrowing experience in DeFi through the use of the DeFi Credit Score. Unlike traditional borrowing protocols, ARCx Credit rewards Borrowers who demonstrate effective risk management practices by granting them progressively higher maximum loan-to-value (LTV) ratios on their loans. The primary objective for ARCx Credit is to profitably improve capital efficiency in DeFi lending markets through measuring and rewarding responsible borrowing behavior. [Click here to read the official docs.](https://wiki.arcx.money/welcome/arcx-credit-introduction)
 
 ## Architecture
 
