@@ -107,6 +107,6 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
-  "description": "Contracts for the Synthetic Asset Game",
+  "description": "ARCx Credit Contracts",
   "repository": "git@github.com:arcxio/contracts.git"
 }
