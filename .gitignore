@@ -28,3 +28,4 @@ output/
 applicants.csv
 
 deployments/local/
+report.*
