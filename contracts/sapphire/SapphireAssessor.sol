@@ -95,12 +95,10 @@ contract SapphireAssessor is Ownable, ISapphireAssessor, PassportScoreVerifiable
             "SapphireAssessor: The lower bound must be smaller than the upper bound"
         );
 
-        bool isProofPassed = _scoreProof.merkleProof.length > 0;
-
         // If the proof is passed, use the score from the score proof since at this point
         // the proof should be verified if the score is > 0
         uint256 result = mapper.map(
-            isProofPassed ? _scoreProof.score : 0,
+            _scoreProof.score,
             maxScore,
             _lowerBound,
             _upperBound

@@ -12,6 +12,7 @@ import { CREDIT_PROOF_PROTOCOL } from '@src/constants';
 import {
   addSnapshotBeforeRestoreAfterEach,
   advanceEpoch,
+  immediatelyUpdateMerkleRoot,
 } from '@test/helpers/testingUtils';
 import chai, { expect } from 'chai';
 import { solidity } from 'ethereum-waffle';
@@ -414,6 +415,26 @@ describe('SapphireCreditScore', () => {
         await passportScores
           .connect(unauthorized)
           .verify(getScoreProof(passportScore1, tree)),
+      ).to.be.true;
+    });
+
+    it('should verify a single leaf', async () => {
+      const singleLeafTree = new PassportScoreTree([passportScore1]);
+
+      await immediatelyUpdateMerkleRoot(
+        passportScores.connect(merkleRootUpdater),
+        singleLeafTree.getHexRoot(),
+      );
+
+      console.log('proof', getScoreProof(passportScore1, singleLeafTree));
+
+      expect(
+        await passportScores.verify({
+          account: passportScore1.account,
+          protocol: passportScore1.protocol,
+          score: passportScore1.score,
+          merkleProof: [],
+        }),
       ).to.be.true;
     });
 
