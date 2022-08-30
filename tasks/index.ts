@@ -2,7 +2,6 @@ import 'module-alias/register';
 
 export * from './global-tasks';
 export * from './oracle-tasks';
-export * from './waitlist-tasks';
 export * from './utility-tasks';
 export * from './passport-tasks';
 
