@@ -1,7 +1,14 @@
 import { red } from 'chalk';
 import path from 'path';
 
-export const networks = ['local', 'rinkeby', 'mainnet', 'mumbai', 'polygon'];
+export const networks = [
+  'local',
+  'rinkeby',
+  'mainnet',
+  'mumbai',
+  'polygon',
+  'goerli',
+];
 
 export const constants = {
   BUILD_FOLDER: 'build',

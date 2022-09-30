@@ -51,6 +51,7 @@ export function getNetworkUrl(network: string) {
       return process.env.POLYGON_ALCHEMY;
     case 'mainnet':
     case 'rinkeby':
+    case 'goerli':
       prefix = network;
       break;
     default:
@@ -101,8 +102,8 @@ const config: HardhatUserConfig = {
         eoaOwner: '0xa8C01EfD74A206Bb2d769b6b3a5759508c83F20C',
       },
     },
-    mumbai: {
-      url: getNetworkUrl('mumbai'),
+    goerli: {
+      url: getNetworkUrl('goerli'),
       accounts: [params.testnet_private_key],
       users: {
         eoaOwner: '0xa8C01EfD74A206Bb2d769b6b3a5759508c83F20C',
