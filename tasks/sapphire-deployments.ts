@@ -25,24 +25,24 @@ import {
 } from '../deployments/types';
 import { TransactionRequest } from '@ethersproject/providers';
 import prompt from 'prompt';
-import { pruneDeployments } from 'tasks/utils/pruneDeployments';
-import { verifyContract } from 'tasks/utils/verifyContract';
-import { deployAndSaveContract } from 'tasks/utils/deployAndSaveContract';
-import { loadHardhatDetails } from 'tasks/utils/loadHardhatDetails';
+import { pruneDeployments } from './utils/pruneDeployments';
+import { verifyContract } from './utils/verifyContract';
+import { deployAndSaveContract } from './utils/deployAndSaveContract';
+import { loadHardhatDetails } from './utils/loadHardhatDetails';
 
 task(
   'deploy-passport-scores',
   'Deploy the SapphirePassportScores with zero hash as the root',
 )
-  .addOptionalParam('rootupdater', 'The merkle root updater')
-  .addOptionalParam('pauseoperator', 'The pause operator')
+  .addOptionalParam('rootUpdater', 'The merkle root updater')
+  .addOptionalParam('pauseOperator', 'The pause operator')
   .addOptionalParam('initialEpoch', 'The initial epoch number')
-  .addFlag('implementationonly', 'Deploy only the implementation contract')
+  .addFlag('implementationOnly', 'Deploy only the implementation contract')
   .setAction(async (taskArgs, hre) => {
     const {
-      rootupdater: rootUpdater,
-      pauseoperator: pauseOperator,
-      implementationonly: implementationOnly,
+      rootUpdater,
+      pauseOperator,
+      implementationOnly,
       initialEpoch,
     } = taskArgs;
     const {
