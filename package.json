@@ -1,8 +1,8 @@
 {
   "name": "@arcxgame/contracts",
   "version": "5.2.0",
-  "main": "dist/src/index.js",
-  "typings": "dist/src/index.d.ts",
+  "main": "src/index.js",
+  "typings": "src/index.d.ts",
   "files": [
     "src/*",
     "arc-types/*",
