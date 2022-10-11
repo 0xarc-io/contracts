@@ -21,7 +21,7 @@
     "test": "yarn hardhat test",
     "test:ci": "npx mocha --reporter mocha-junit-reporter --require ts-node/register --require tsconfig-paths/register --require hardhat/register --exit",
     "release": "yarn release:local && release-it",
-    "release:local": "rm -rf dist && ttsc && copyfiles -u 2 src/typings/*.d.ts dist/src/typings && cp package.json dist",
+    "release:local": "rm -rf dist && ttsc && copyfiles -u 2 src/typings/*.d.ts dist/src/typings && copyfiles deployments/**/*.json dist && cp package.json dist",
     "commit": "git add . && cz"
   },
   "devDependencies": {
