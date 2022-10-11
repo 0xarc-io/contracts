@@ -1,0 +1,7 @@
+{
+  "branches": [
+    "master",
+    "develop"
+  ],
+  "pkgRoot": "dist"
+}
