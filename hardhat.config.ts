@@ -138,18 +138,9 @@ const config: HardhatUserConfig = {
       mainnet: params.etherscan_key,
       polygonMumbai: params.polygon_mumbai_etherscan_key,
       polygon: params.polygon_mumbai_etherscan_key,
+      goerli: params.etherscan_key,
     },
   },
-  // watcher: {
-  //   compilation: {
-  //     tasks: ["compile"],
-  //     files: ["./contracts"],
-  //     verbose: true,
-  //   },
-  //   ci: {
-  //     tasks: ["clean", { command: "compile", params: { quiet: true } }, { command: "test", params: { noCompile: true, testFiles: ["./.ts"] } } ],
-  //   }
-  // },
 };
 
 export default config;
