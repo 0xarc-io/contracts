@@ -18,5 +18,35 @@
     "version": 1,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "DefaultPassportSkin",
+    "source": "DefaultPassportSkin",
+    "address": "0xa09AD20Adf13175A7BedB6Af95cbC4d38d87D524",
+    "txn": "0xb1fdeec4a3a0235451270ef42d99684f0371b10cf3546a63f303a1f076f948a6",
+    "network": "goerli",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "DefiPassport",
+    "source": "DefiPassport",
+    "address": "0x6fd5f8042C01AB3Ab7a8a861F6088cDD6852090f",
+    "txn": "0x67ea413163aec2c406e7a8c48719812c25784b9ed8bf4605a3c7e5faa3e609fe",
+    "network": "goerli",
+    "version": 1,
+    "type": "global",
+    "group": "DefiPassport"
+  },
+  {
+    "name": "DefiPassportProxy",
+    "source": "ArcProxy",
+    "address": "0xaDd602eEe9E9aE4179699F650db873ff3b3cD772",
+    "txn": "0xf92316dc6165a2b7a17c25ece8a28b238aaf90078b2266f3aca085ee53b7e84e",
+    "network": "goerli",
+    "version": 1,
+    "type": "global",
+    "group": "DefiPassport"
   }
 ]
