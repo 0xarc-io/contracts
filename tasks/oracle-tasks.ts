@@ -23,7 +23,7 @@ task('deploy-chainlink-oracle')
         name: 'ChainlinkOracle' + name,
         source: 'ChainlinkOracle',
         data: new ChainLinkOracleFactory(signer).getDeployTransaction(
-          taskArgs.pricefeed,
+          pricefeed,
         ),
         version: 1,
         type: DeploymentType.global,
