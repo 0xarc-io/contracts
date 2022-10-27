@@ -17,7 +17,7 @@ import _ from 'lodash';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import getUltimateOwner from './utils/getUltimateOwner';
 import { DEFAULT_MAX_CREDIT_SCORE } from '@test/helpers/sapphireDefaults';
-import { constants } from 'ethers';
+import { constants, utils } from 'ethers';
 import {
   CoreConfig,
   DeploymentType,
@@ -172,7 +172,7 @@ task('deploy-assessor', 'Deploy the Sapphire Assessor').setAction(
     const passportScoresAddress = loadContract({
       network,
       type: DeploymentType.global,
-      name: 'SapphirePassportScores',
+      name: 'SapphirePassportScoresProxy',
     }).address;
 
     if (!passportScoresAddress) {
@@ -446,6 +446,18 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
       );
       console.log(green(`Interest setter successfully set\n`));
     }
+
+    if (collatConfig.creditLimitProofProtocol) {
+      const existingLimitProtocol = await core.getProofProtocol(1);
+      if (existingLimitProtocol !== collatConfig.creditLimitProofProtocol) {
+        console.log(yellow('Setting credit limit proof protocol...'));
+        await core.setProofProtocols([
+          utils.formatBytes32String('arcx.credit'),
+          utils.formatBytes32String(collatConfig.creditLimitProofProtocol),
+        ]);
+        console.log(green('Credit limit proof protocol set successfully\n'));
+      }
+    }
   });
 
 task('deploy-borrow-pool')
@@ -457,7 +469,10 @@ task('deploy-borrow-pool')
     1,
     types.int,
   )
-  .addOptionalParam('group', 'Group name for the deployment registration')
+  .addOptionalParam(
+    'group',
+    'Group name for the deployment registration (A, B, C)',
+  )
   .addFlag('implementationOnly', 'Only deploy the implementation contract')
   .setAction(async (taskArgs, hre) => {
     const { network, signer, networkConfig } = await loadHardhatDetails(hre);
