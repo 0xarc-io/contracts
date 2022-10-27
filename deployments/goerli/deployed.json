@@ -128,5 +128,15 @@
     "version": 1,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "Test DAI",
+    "source": "TestToken",
+    "address": "0xBB6D1746302BdeEAaE79d67AF0A5FE382552A576",
+    "txn": "0xed16b6fa52d42a02737e557d8dd057d326202849146f03927ec62cc58b7afd40",
+    "network": "goerli",
+    "version": 1,
+    "type": "global",
+    "group": ""
   }
 ]
