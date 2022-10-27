@@ -63,6 +63,7 @@ export interface CoreConfig {
   };
   pauseOperator?: string;
   feeCollector?: string;
+  creditLimitProofProtocol?: string;
 }
 
 export interface CollateralConfigMap {
