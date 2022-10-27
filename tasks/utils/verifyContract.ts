@@ -1,8 +1,8 @@
 import { green, yellow } from 'chalk';
-import { HardhatRuntimeEnvironment, Network } from 'hardhat/types';
+import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import axios from 'axios';
 
-const ETHERSCAN_APY_SUPPORTED_NETWORKS = [
+const ETHERSCAN_APYI_SUPPORTED_NETWORKS = [
   'mainnet',
   'rinkeby',
   'polygon',
@@ -14,13 +14,13 @@ export async function verifyContract(
   contractAddress: string,
   ...contractArgs: unknown[]
 ) {
-  if (await isVerified(contractAddress, hre.network)) {
+  if (await isVerified(hre, contractAddress)) {
     console.log(yellow('Contract already verified'));
     return;
   }
 
   const { network } = hre.hardhatArguments;
-  if (!ETHERSCAN_APY_SUPPORTED_NETWORKS.includes(network)) {
+  if (!ETHERSCAN_APYI_SUPPORTED_NETWORKS.includes(network)) {
     console.log(
       yellow(
         `Unable to verify contract ${contractAddress}: network ${network} is not supported on the hardhat etherscan verify plugin`,
@@ -49,17 +49,38 @@ export async function verifyContract(
   console.log(green(`Contract verified successfully`));
 }
 
-async function isVerified(address: string, network: Network): Promise<boolean> {
-  const supportedNetworks = ['mumbai'];
+async function isVerified(
+  hre: HardhatRuntimeEnvironment,
+  address: string,
+): Promise<boolean> {
+  const networkName = hre.network.name;
+  let baseUrl = '';
 
-  if (!supportedNetworks.includes(network.name)) {
+  switch (networkName) {
+    case 'mumbai':
+      baseUrl = 'https://api-testnet.polygonscan.com/api';
+      break;
+    case 'polygon':
+      baseUrl = 'https://api.polygonscan.com/api';
+      break;
+    case 'mainnet':
+      baseUrl = 'https://api.etherscan.io/api';
+      break;
+    case 'goerli':
+      baseUrl = 'https://api-goerli.etherscan.io/api';
+      break;
+    default:
+      return false;
+  }
+
+  const apiKey = hre.config.etherscan.apiKey[networkName];
+  if (!apiKey) {
+    console.error('No etherscan api key found for network', networkName);
     return false;
   }
 
-  const baseUrl = 'https://api-testnet.polygonscan.com/api';
-
   const res = await axios.get(
-    `${baseUrl}?module=contract&action=getabi&address=${address}&apiKey=${process.env.ETHERSCAN_KEY}`,
+    `${baseUrl}?module=contract&action=getabi&address=${address}&apiKey=${apiKey}`,
   );
 
   return res.data.status === '1';
