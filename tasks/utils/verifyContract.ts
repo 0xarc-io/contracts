@@ -4,7 +4,7 @@ import axios from 'axios';
 
 const ETHERSCAN_APYI_SUPPORTED_NETWORKS = [
   'mainnet',
-  'rinkeby',
+  'goerli',
   'polygon',
   'mumbai',
 ];
