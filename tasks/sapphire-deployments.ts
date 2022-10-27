@@ -433,7 +433,10 @@ task('deploy-sapphire', 'Deploy a Sapphire core')
       console.log(green(`Interest rate successfully set\n`));
     }
 
-    if (collatConfig.interestSettings.interestSetter !== signer.address) {
+    if (
+      collatConfig.interestSettings.interestSetter &&
+      collatConfig.interestSettings.interestSetter !== signer.address
+    ) {
       console.log(
         yellow(
           `Setting interest setter to ${
