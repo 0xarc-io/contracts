@@ -68,7 +68,7 @@ contract ArcxRedemption is Ownable {
         );
 
         // Calculate how much USDC to give using exchange rate
-        uint256 usdcToReturn = (_amount * exchangeRate) / 10 ** 12;
+        uint256 usdcToReturn = (_amount * exchangeRate) / (10 ** 18) / (10 ** 12);
 
         // Send USDC to user
         usdcToken.transfer(
