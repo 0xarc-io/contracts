@@ -19,7 +19,7 @@ contract ArcxRedemption is Ownable {
     uint256 public cutoffDate;
 
     event Redemption(
-        address _redeemer,
+        address indexed _redeemer,
         uint256 _arcxGiven, 
         uint256 _usdcReturned
     );
@@ -61,7 +61,7 @@ contract ArcxRedemption is Ownable {
         );
 
         // Transfer ARCx from user to contract
-        arcxToken.transferFrom(
+        arcxToken.safeTransferFrom(
             msg.sender,
             address(this),
             _amount
@@ -71,7 +71,7 @@ contract ArcxRedemption is Ownable {
         uint256 usdcToReturn = (_amount * exchangeRate) / (10 ** 18) / (10 ** 12);
 
         // Send USDC to user
-        usdcToken.transfer(
+        usdcToken.safeTransfer(
             msg.sender,
             usdcToReturn
         );
@@ -99,7 +99,7 @@ contract ArcxRedemption is Ownable {
         onlyOwner
     {
         // Send the specified token to the destination
-        IERC20(_token).transfer(
+        IERC20(_token).safeTransfer(
             _destination,
             _amount
         );
