@@ -967,5 +967,15 @@
     "version": 1,
     "type": "borrowing",
     "group": "WETH-C"
+  },
+  {
+    "name": "ArcxRedemption",
+    "source": "ArcxRedemption",
+    "address": "0x22F7145754ad116C406c0d5C6fA029f63537AE18",
+    "txn": "0x1bd906b7afd3b3e88571d224f31c8c69a9c3b8f464b945f403bcbb217a89d2ce",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global",
+    "group": ""
   }
 ]
