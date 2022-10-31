@@ -30,8 +30,8 @@ describe('ArcxRedemption', () => {
     cutoffDate = BigNumber.from(10);
     exchangeRate = utils.parseEther('0.5');
 
-    usdcToken = await new TestTokenFactory(owner).deploy("TES", "TEST", 6);
-    arcxToken = await new TestTokenFactory(owner).deploy("TEST", "TEST", 18);
+    usdcToken = await new TestTokenFactory(owner).deploy("USDC", "USDC", 6);
+    arcxToken = await new TestTokenFactory(owner).deploy("ARCX", "ARCX", 18);
 
     redemption = await new MockArcxRedemptionFactory(owner).deploy(
         usdcToken.address,
@@ -72,7 +72,7 @@ describe('ArcxRedemption', () => {
 
     it("should not be able to redeem past the redemption date", async () => {
         await redemption.setCurrentTimestamp(cutoffDate.add(1)); 
-        await expect(redemption.redeem(ARCX_AMOUNT)).to.reverted;
+        await expect(redemption.redeem(ARCX_AMOUNT)).to.revertedWith("The cut off date to redeem has already passed");
     });
 
     it("should be able to redeem successfully", async () => {
