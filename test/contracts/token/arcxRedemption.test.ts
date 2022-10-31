@@ -7,8 +7,8 @@ import { expect } from 'chai';
 import { BigNumber, utils } from 'ethers';
 import { ethers } from 'hardhat';
 
-const ARCX_AMOUNT = BigNumber.from(10).pow(18).mul(100)
-const USDC_AMOUNT = BigNumber.from(10).pow(6).mul(55)
+const ARCX_AMOUNT = (BigNumber.from(10).pow(18)).mul(100);
+const USDC_AMOUNT = (BigNumber.from(10).pow(6)).mul(100);
 
 describe('ArcxRedemption', () => {
   let owner: SignerWithAddress;
@@ -43,11 +43,11 @@ describe('ArcxRedemption', () => {
     await redemption.setCurrentTimestamp(cutoffDate);
 
     await arcxToken.mintShare(user.address, ARCX_AMOUNT);
-    await arcxToken.approve(redemption.address, ARCX_AMOUNT);
-
     await usdcToken.mintShare(redemption.address, USDC_AMOUNT);
 
     redemption = new MockArcxRedemptionFactory(user).attach(redemption.address);
+    
+    await new TestTokenFactory(user).attach(arcxToken.address).approve(redemption.address, ARCX_AMOUNT);
 
   });
 
@@ -67,19 +67,22 @@ describe('ArcxRedemption', () => {
   describe("#redeem", function () {
 
     it("should not be able to redeem without enough ARCx", async () => {
-        await expect(await redemption.redeem(ARCX_AMOUNT.add(1))).to.reverted;
+      await expect(redemption.redeem(ARCX_AMOUNT.add(1))).to.reverted;
     });
 
     it("should not be able to redeem past the redemption date", async () => {
-        await redemption.setCurrentTimestamp(cutoffDate.sub(1)); 
-        await expect(await redemption.redeem(ARCX_AMOUNT)).to.reverted;
+        await redemption.setCurrentTimestamp(cutoffDate.add(1)); 
+        await expect(redemption.redeem(ARCX_AMOUNT)).to.reverted;
     });
 
     it("should be able to redeem successfully", async () => {
         await redemption.redeem(ARCX_AMOUNT)
 
-        expect(await usdcToken.balanceOf(redemption.address)).to.eq(BigNumber.from(5))
-        expect(await arcxToken.balanceOf(redemption.address)).to.eq(ARCX_AMOUNT)
+        const contractUsdcBalance = await usdcToken.balanceOf(redemption.address);
+        const contractArcxBalance = await arcxToken.balanceOf(redemption.address);
+
+        expect(contractUsdcBalance).to.eq(USDC_AMOUNT.div(2));
+        expect(contractArcxBalance).to.eq(ARCX_AMOUNT);
     });
 
   });
@@ -87,13 +90,25 @@ describe('ArcxRedemption', () => {
   describe("#withdraw", function () {
 
     it("should not be able to withdraw as a non-owner", async () => {
-        expect(await redemption.withdraw(usdcToken.address, ARCX_AMOUNT, user.address));
+      await expect(redemption.withdraw(usdcToken.address, ARCX_AMOUNT, user.address)).to.be.reverted;
     });
 
     it("should be able to withdraw as the owner", async () => {
         const ownerRedemption =  new MockArcxRedemptionFactory(owner).attach(redemption.address);
-        await ownerRedemption.withdraw(usdcToken.address, USDC_AMOUNT, user.address);
-        expect(await usdcToken.balanceOf(owner.address)).to.eq(USDC_AMOUNT);
+
+        expect(await usdcToken.balanceOf(user.address)).to.eq(BigNumber.from(0));
+        expect(await arcxToken.balanceOf(user.address)).to.eq(ARCX_AMOUNT);
+
+        await redemption.redeem(ARCX_AMOUNT)
+
+        expect(await usdcToken.balanceOf(redemption.address)).to.eq(USDC_AMOUNT.div(2));
+        expect(await arcxToken.balanceOf(redemption.address)).to.eq(ARCX_AMOUNT);
+        
+        await ownerRedemption.withdraw(usdcToken.address, USDC_AMOUNT.div(2), user.address);
+        await ownerRedemption.withdraw(arcxToken.address, ARCX_AMOUNT, user.address);
+
+        expect(await usdcToken.balanceOf(user.address)).to.eq(USDC_AMOUNT);
+        expect(await arcxToken.balanceOf(user.address)).to.eq(ARCX_AMOUNT);
     });
 
   });
