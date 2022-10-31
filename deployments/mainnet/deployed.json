@@ -857,5 +857,115 @@
     "version": 2,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "SapphirePool",
+    "source": "SapphirePool",
+    "address": "0x693C54Ccd3B50A00993345bC009E20C5691a0FdF",
+    "txn": "0x4de61a23d3513df674119994190a1de8ddaa60dda1f94076c8cbdc7f93a1c800",
+    "network": "mainnet",
+    "version": 1,
+    "type": "borrowing",
+    "group": ""
+  },
+  {
+    "name": "SapphirePoolProxy",
+    "source": "ArcProxy",
+    "address": "0x3acd681eBB2b71422d6359Ded59EaC71a1f613d7",
+    "txn": "0x30ec1990617f06b75382825485373bbbe46825644baa7c0baaf494580995be76",
+    "network": "mainnet",
+    "version": 1,
+    "type": "borrowing",
+    "group": "A"
+  },
+  {
+    "name": "SapphireCore",
+    "source": "SapphireCoreV1",
+    "address": "0xA3f75b659045D2c39E7D8a2dcb741bc20dB23074",
+    "txn": "0x982efb76c325c3cdab25ddd5f02d35b6197c2a6302b9d3f5a7cd09673c699bdc",
+    "network": "mainnet",
+    "version": 1,
+    "type": "borrowing",
+    "group": ""
+  },
+  {
+    "name": "SapphireCoreProxy",
+    "source": "ArcProxy",
+    "address": "0xFea2Ee696C15732747b57ff7f5032A397908B312",
+    "txn": "0xdb229f3a485085aae5eafabd110a2e1743a194cff1cf5b1cfb1295ce92b3aa93",
+    "network": "mainnet",
+    "version": 1,
+    "type": "borrowing",
+    "group": "WETH-A"
+  },
+  {
+    "name": "Oracle",
+    "source": "ChainLinkOracle",
+    "address": "0xb45608C38291971f0B790e6B0e5D64033eA61F53",
+    "txn": "0x0a396ebacb15985b858ae8ab113b2a2ee989076ad2a47f0df58c50db25b283fe",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "SapphireMapperLinear",
+    "source": "SapphireMapperLinear",
+    "address": "0xED88f726BAF1aEF8Ff01Ff7fC96B60eaDDd2270e",
+    "txn": "0x79a0bc444e0dc6c68a241024cfe5605ce865f720f505d5f2a668059eaab97f00",
+    "network": "mainnet",
+    "version": 1,
+    "type": "borrowing",
+    "group": ""
+  },
+  {
+    "name": "SapphireAssessor",
+    "source": "SapphireAssessor",
+    "address": "0x6ccA7B4461Daf16687A2177Ccbe307AAEB75218c",
+    "txn": "0xf06d5fff5b0fcd2d1d3d61eee61212930b5c1bef82a76bc3e07318002ef86a9c",
+    "network": "mainnet",
+    "version": 1,
+    "type": "borrowing",
+    "group": ""
+  },
+  {
+    "name": "SapphirePoolProxy",
+    "source": "ArcProxy",
+    "address": "0x3B094f5fE47998d43f3D55f7F5f455098de2f3C8",
+    "txn": "0x30507adf9969aebe9087b7ffff7e0cb14d41f908e4b3dcf9db5081ac959b6ac6",
+    "network": "mainnet",
+    "version": 1,
+    "type": "borrowing",
+    "group": "B"
+  },
+  {
+    "name": "SapphireCoreProxy",
+    "source": "ArcProxy",
+    "address": "0x09103209C62811229cD7DaE2E295f320beDD20Bc",
+    "txn": "0xc1980cb8d1b4e4a44e7ed76ff0f6ed762f5971872884613187f5b222ba6ae8a8",
+    "network": "mainnet",
+    "version": 1,
+    "type": "borrowing",
+    "group": "WETH-B"
+  },
+  {
+    "name": "SapphirePoolProxy",
+    "source": "ArcProxy",
+    "address": "0xD9c4d6e97e4A2cFCc5b569AB857E75C25F58c385",
+    "txn": "0x734fb53d86e5825e75fdb1f2a0c98773b42230649b5c0bddfab390a1cd90fbf5",
+    "network": "mainnet",
+    "version": 1,
+    "type": "borrowing",
+    "group": "C"
+  },
+  {
+    "name": "SapphireCoreProxy",
+    "source": "ArcProxy",
+    "address": "0x0BD82cc66200a483bD2dc63011240B749E4D8983",
+    "txn": "0x34231a2a8f6bee1edc44762a2be4e4ad83b27dc7809d2ae160189e224b73ddda",
+    "network": "mainnet",
+    "version": 1,
+    "type": "borrowing",
+    "group": "WETH-C"
   }
 ]

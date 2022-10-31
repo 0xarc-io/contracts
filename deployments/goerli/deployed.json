@@ -48,5 +48,95 @@
     "version": 1,
     "type": "global",
     "group": "DefiPassport"
+  },
+  {
+    "name": "Test WETH",
+    "source": "TestToken",
+    "address": "0x8572246B238f286C455525232e6a73468fCdEFe9",
+    "txn": "0xb1569c403e1b7b0f31f394da604a0fd91e537b0785bd35b4ff927c9fb307e984",
+    "network": "goerli",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "SapphireMapperLinear",
+    "source": "SapphireMapperLinear",
+    "address": "0xC164A1741A3DeAc8eAFa15B09eBEA5FeC22d30c3",
+    "txn": "0xc573ea25c2f897897754e6b7c1507fc50994abc55b20337606ebe9924811b205",
+    "network": "goerli",
+    "version": 1,
+    "type": "borrowing",
+    "group": ""
+  },
+  {
+    "name": "SapphireAssessor",
+    "source": "SapphireAssessor",
+    "address": "0x090f08FB28aB622DDbF41A7054a83352Ac1CA498",
+    "txn": "0xe4742c1466271d271a58b6a80ef076c044c21590bd7ef9a498239d67f9ebca69",
+    "network": "goerli",
+    "version": 1,
+    "type": "borrowing",
+    "group": ""
+  },
+  {
+    "name": "SapphirePool",
+    "source": "SapphirePool",
+    "address": "0x8B071Df039396148D7c80c9eE4b4d7853B49b920",
+    "txn": "0xe3bb18367b318e1e7a7e41d86a6323b8198e37ff12521f3fbc629a1194b4d0ec",
+    "network": "goerli",
+    "version": 1,
+    "type": "borrowing",
+    "group": ""
+  },
+  {
+    "name": "SapphirePoolProxy",
+    "source": "ArcProxy",
+    "address": "0xFbD34A5f9Fe89bD0d76bD317457fe5BAcD1320a7",
+    "txn": "0x563bbf139a365d9475c76c12e3e30fc354e32064fb4e6733535837d71746d029",
+    "network": "goerli",
+    "version": 1,
+    "type": "borrowing",
+    "group": ""
+  },
+  {
+    "name": "SapphireCore",
+    "source": "SapphireCoreV1",
+    "address": "0x3Fc8f3C41B795cA9AF05780ECd678d34903337Dc",
+    "txn": "0x2045993f5589408cc14af2ba6529fc8344d3848e5ca6e37294c5058dc069b57a",
+    "network": "goerli",
+    "version": 1,
+    "type": "borrowing",
+    "group": ""
+  },
+  {
+    "name": "SapphireCoreProxy",
+    "source": "ArcProxy",
+    "address": "0x03CdDc9C7FAD4B6848d6741B0EF381470bc675cD",
+    "txn": "0x6a1e3cf808730a7d9774031cb7a172ead8b217764e9a0c078312159e1642f435",
+    "network": "goerli",
+    "version": 1,
+    "type": "borrowing",
+    "group": "WETH"
+  },
+  {
+    "name": "Oracle",
+    "source": "MockSapphireOracle",
+    "address": "0xe5C298e5f0Cd4DCEc8e10ca29c71d1F0258ba704",
+    "txn": "0xbc2ca9cae0773fb4db3a356ed820877d4311f156a5c3d90bbe6116ce88f69e2a",
+    "network": "goerli",
+    "version": 1,
+    "type": "global",
+    "group": ""
+  },
+  {
+    "name": "Test DAI",
+    "source": "TestToken",
+    "address": "0xBB6D1746302BdeEAaE79d67AF0A5FE382552A576",
+    "txn": "0xed16b6fa52d42a02737e557d8dd057d326202849146f03927ec62cc58b7afd40",
+    "network": "goerli",
+    "version": 1,
+    "type": "global",
+    "group": ""
   }
 ]

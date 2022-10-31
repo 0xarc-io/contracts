@@ -37,7 +37,7 @@
     "network": "polygon",
     "version": 1,
     "type": "borrowing",
-    "group": ""
+    "group": "A"
   },
   {
     "name": "SapphireMapperLinear",

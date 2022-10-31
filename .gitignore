@@ -29,3 +29,5 @@ applicants.csv
 
 deployments/local/
 report.*
+
+scripts/custom-script.ts

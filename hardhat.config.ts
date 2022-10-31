@@ -26,7 +26,6 @@ require('dotenv').config({ path: '.env' }).parsed;
 export const params = {
   testnet_private_key: process.env.TESTNET_DEPLOY_PRIVATE_KEY || '',
   deploy_private_key: process.env.DEPLOY_PRIVATE_KEY || '',
-  infura_key: process.env.INFURA_PROJECT_ID || '',
   etherscan_key: process.env.MAINNET_ETHERSCAN_KEY || '',
   polygon_mumbai_etherscan_key: process.env.MUMBAI_ETHERSCAN_KEY || '',
   mainnet_alchemy_url: process.env.MAINNET_ALCHEMY || '',
@@ -37,28 +36,7 @@ export function getNetworkUrl(network: string) {
     return params.mainnet_alchemy_url;
   }
 
-  let prefix = '';
-
-  switch (network) {
-    case 'mumbai':
-      prefix = 'polygon-mumbai';
-      break;
-    case 'polygon':
-      if (!process.env.POLYGON_ALCHEMY) {
-        throw new Error(`POLYGON_ALCHEMY env var is not set`);
-      }
-
-      return process.env.POLYGON_ALCHEMY;
-    case 'mainnet':
-    case 'rinkeby':
-    case 'goerli':
-      prefix = network;
-      break;
-    default:
-      throw new Error(`Unsupported network: ${network}`);
-  }
-
-  return `https://${prefix}.infura.io/v3/${process.env.INFURA_PROJECT_ID}`;
+  return process.env[`${network.toUpperCase()}_ALCHEMY`];
 }
 
 const config: HardhatUserConfig = {
@@ -89,18 +67,6 @@ const config: HardhatUserConfig = {
     hardhat: {},
     local: {
       url: 'http://127.0.0.1:8545',
-      accounts: [params.deploy_private_key],
-      users: {
-        eoaOwner: '0xAF36712cb4ebD3BD706E898F5703ce3Ca96E8982',
-      },
-    },
-    rinkeby: {
-      url: getNetworkUrl('rinkeby'),
-      accounts: [params.testnet_private_key],
-      gasPrice: 2 * 10 ** 9,
-      users: {
-        eoaOwner: '0xa8C01EfD74A206Bb2d769b6b3a5759508c83F20C',
-      },
     },
     goerli: {
       url: getNetworkUrl('goerli'),
