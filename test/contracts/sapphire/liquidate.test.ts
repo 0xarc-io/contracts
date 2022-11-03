@@ -816,7 +816,7 @@ describe('SapphireCore.liquidate()', () => {
           undefined,
           signers.liquidator,
         ),
-      ).to.be.revertedWith('SapphirePool: unknown token');
+      ).to.be.revertedWith('SapphireCoreV1: not an approved asset');
     });
 
     it('reverts if proof is not passed and effective epoch is ≥ current epoch', async () => {
