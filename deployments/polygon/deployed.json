@@ -60,16 +60,6 @@
     "group": ""
   },
   {
-    "name": "SapphireCore",
-    "source": "SapphireCoreV1",
-    "address": "0x082924fAd140ffABc55e2f9A8c293219eDec075b",
-    "txn": "0xd1595955a3ff93db3e1767d1be752e3376b45f3496ab34fe2abe7569dbdc15f0",
-    "network": "polygon",
-    "version": 1,
-    "type": "borrowing",
-    "group": ""
-  },
-  {
     "name": "SapphireCoreProxy",
     "source": "ArcProxy",
     "address": "0x05efe26f4a75EA4d183e8a7922494d60adfB27b3",
@@ -77,7 +67,7 @@
     "network": "polygon",
     "version": 1,
     "type": "borrowing",
-    "group": "WETH"
+    "group": "WETH-A"
   },
   {
     "name": "ChainlinkOracleETH",
@@ -165,7 +155,7 @@
     "address": "0xcf0ADE6f5f6e08A337DB810D7e3344021524cF7B",
     "txn": "0xee06ecfcb834f9e257f22dab227cc1de07edd092451d10d8f6fb1ee9f8fa6339",
     "network": "polygon",
-    "version": 2,
+    "version": 1,
     "type": "borrowing",
     "group": ""
   },
