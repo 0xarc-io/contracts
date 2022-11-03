@@ -204,7 +204,7 @@ describe('SapphireCore.exit()', () => {
         undefined,
         signers.scoredBorrower,
       ),
-    ).to.be.revertedWith('SapphirePool: unknown token');
+    ).to.be.revertedWith('SapphireCoreV1: not an approved asset');
   });
 
   it('repays all the debt + accrued interest and returns collateral to the user', async () => {

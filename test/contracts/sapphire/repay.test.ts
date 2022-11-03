@@ -495,6 +495,6 @@ describe('SapphireCore.repay()', () => {
 
     await expect(
       repay(BORROW_AMOUNT, signers.scoredBorrower, testDai),
-    ).to.be.revertedWith('SapphirePool: unknown token');
+    ).to.be.revertedWith('SapphireCoreV1: not an approved asset');
   });
 });

@@ -1112,6 +1112,13 @@ contract SapphireCoreV1 is Adminable, ReentrancyGuard, SapphireCoreStorage {
         private
         cacheAssetDecimals(_borrowAssetAddress)
     {
+        require (
+            ISapphirePool(borrowPool)
+                .assetDepositUtilization(_borrowAssetAddress)
+                .limit > 0,
+            "SapphireCoreV1: not an approved asset"
+        );
+        
         // Get the user's vault
         SapphireTypes.Vault storage vault = vaults[_owner];
 
@@ -1136,45 +1143,48 @@ contract SapphireCoreV1 is Adminable, ReentrancyGuard, SapphireCoreStorage {
         uint256 _principalPaidScaled;
         uint256 _stablesLentDecreaseAmt;
 
-        // Calculate new vault's borrowed amount
-        uint256 _newNormalizedBorrowAmount = _normalizeBorrowAmount(
-            (actualVaultBorrowAmountScaled - _amountScaled) * precisionScalars[_borrowAssetAddress],
-            true
-        );
+        // Avoid stack too deep
+        {
+            // Calculate new vault's borrowed amount
+            uint256 _newNormalizedBorrowAmount = _normalizeBorrowAmount(
+                (actualVaultBorrowAmountScaled - _amountScaled) * precisionScalars[_borrowAssetAddress],
+                true
+            );
 
-        // Update principal
-        if(_amountScaled > _interestScaled) {
-            _poolFeesScaled = Math.roundUpMul(_interestScaled, poolInterestFee);
-            _feeCollectorFeesScaled = _interestScaled - _poolFeesScaled;
+            // Update principal
+            if(_amountScaled > _interestScaled) {
+                _poolFeesScaled = Math.roundUpMul(_interestScaled, poolInterestFee);
+                _feeCollectorFeesScaled = _interestScaled - _poolFeesScaled;
 
-            // User repays the entire interest and some (or all) principal
-            _principalPaidScaled = _amountScaled - _interestScaled;
-            vault.principal = vault.principal -
-                _principalPaidScaled * precisionScalars[_borrowAssetAddress];
-        } else {
-            // Only interest is paid
-            _poolFeesScaled = Math.roundUpMul(_amountScaled, poolInterestFee);
-            _feeCollectorFeesScaled = _amountScaled - _poolFeesScaled;
-        }
-
-        // Update vault's borrowed amounts and clean debt if requested
-        if (_isLiquidation) {
-            normalizedTotalBorrowed -= vault.normalizedBorrowedAmount;
-            _stablesLentDecreaseAmt = (actualVaultBorrowAmountScaled - _amountScaled) *
-                precisionScalars[_borrowAssetAddress];
-
-            // Can only decrease by the amount borrowed
-            if (_stablesLentDecreaseAmt > vault.principal) {
-                _stablesLentDecreaseAmt = vault.principal;
+                // User repays the entire interest and some (or all) principal
+                _principalPaidScaled = _amountScaled - _interestScaled;
+                vault.principal = vault.principal -
+                    _principalPaidScaled * precisionScalars[_borrowAssetAddress];
+            } else {
+                // Only interest is paid
+                _poolFeesScaled = Math.roundUpMul(_amountScaled, poolInterestFee);
+                _feeCollectorFeesScaled = _amountScaled - _poolFeesScaled;
             }
 
-            vault.principal = 0;
-            vault.normalizedBorrowedAmount = 0;
-        } else {
-            normalizedTotalBorrowed = normalizedTotalBorrowed -
-                vault.normalizedBorrowedAmount +
-                _newNormalizedBorrowAmount;
-            vault.normalizedBorrowedAmount = _newNormalizedBorrowAmount;
+            // Update vault's borrowed amounts and clean debt if requested
+            if (_isLiquidation) {
+                normalizedTotalBorrowed -= vault.normalizedBorrowedAmount;
+                _stablesLentDecreaseAmt = (actualVaultBorrowAmountScaled - _amountScaled) *
+                    precisionScalars[_borrowAssetAddress];
+
+                // Can only decrease by the amount borrowed
+                if (_stablesLentDecreaseAmt > vault.principal) {
+                    _stablesLentDecreaseAmt = vault.principal;
+                }
+
+                vault.principal = 0;
+                vault.normalizedBorrowedAmount = 0;
+            } else {
+                normalizedTotalBorrowed = normalizedTotalBorrowed -
+                    vault.normalizedBorrowedAmount +
+                    _newNormalizedBorrowAmount;
+                vault.normalizedBorrowedAmount = _newNormalizedBorrowAmount;
+            }
         }
 
         // Transfer fees to pool and fee collector (if any)
