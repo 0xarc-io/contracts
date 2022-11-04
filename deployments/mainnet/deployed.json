@@ -977,5 +977,15 @@
     "version": 1,
     "type": "global",
     "group": ""
+  },
+  {
+    "name": "SapphireCore",
+    "source": "SapphireCoreV1",
+    "address": "0xBA2801C27e44c9cBAa52cAD95B993b9a6040f2C8",
+    "txn": "0xfa72056169d64337be5b3c5a753b645697e8b34781067abd5f3f830ad340123d",
+    "network": "mainnet",
+    "version": 2,
+    "type": "borrowing",
+    "group": ""
   }
 ]

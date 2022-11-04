@@ -168,5 +168,15 @@
     "version": 4,
     "type": "borrowing",
     "group": ""
+  },
+  {
+    "name": "SapphireCore",
+    "source": "SapphireCoreV1",
+    "address": "0xFa4D575aF8A4C881974ABb64729E8D6B464E17C7",
+    "txn": "0xc5750e456afec2ad4c6c47c8badf5ecfa0add2eeccdcd2f600f175468ac7a8a2",
+    "network": "polygon",
+    "version": 2,
+    "type": "borrowing",
+    "group": ""
   }
 ]
