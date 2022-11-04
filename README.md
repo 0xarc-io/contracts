@@ -28,7 +28,7 @@ This is experimental, beta software and is provided on an "as is" and "as availa
 
 **The contracts have not yet been audited, but one is on its way**.
 
-We currently have an active bug bounty that can be viewed here (TODO). If you have found any critical bug please let us know through the bug bounty program.
+We currently have an active bug bounty with Immunefi that can be viewed [here](https://immunefi.com/bounty/arcx/). If you have found any critical bug please let us know through the bug bounty program.
 
 
 
