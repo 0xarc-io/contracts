@@ -987,5 +987,15 @@
     "version": 2,
     "type": "borrowing",
     "group": ""
+  },
+  {
+    "name": "FlashLiquidator",
+    "source": "FlashLiquidatorAaveV2",
+    "address": "0x01A7829ED334302328840DB15dA56525a7F677E9",
+    "txn": "0x6c4999af96dacb5539dd8b76141149b9e317eae87c888aadf27487c76fea5365",
+    "network": "mainnet",
+    "version": 1,
+    "type": "global",
+    "group": ""
   }
 ]

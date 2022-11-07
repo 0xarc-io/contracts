@@ -1,5 +1,6 @@
 import {
   ArcProxyFactory,
+  FlashLiquidatorAaveV2Factory,
   FlashLiquidatorAaveV3Factory,
   MockSapphireOracleFactory,
   SapphireAssessorFactory,
@@ -553,11 +554,23 @@ task('deploy-liquidator')
     const { signer, networkConfig } = await loadHardhatDetails(hre);
     const { aaveAddressProvider, swapRouter, profitReceiver } = taskArgs;
 
+    let factory: FlashLiquidatorAaveV2Factory | FlashLiquidatorAaveV3Factory;
+    let source: string;
+    if (networkConfig.network === 'mainnet') {
+      factory = new FlashLiquidatorAaveV2Factory(signer);
+      source = 'FlashLiquidatorAaveV2';
+    } else if (networkConfig.network === 'polygon') {
+      factory = new FlashLiquidatorAaveV3Factory(signer);
+      source = 'FlashLiquidatorAaveV3';
+    } else {
+      throw new Error(`Network ${networkConfig.network} not supported`);
+    }
+
     const sapphireLiquidator = await deployAndSaveContract(
       {
         name: 'FlashLiquidator',
-        source: 'FlashLiquidatorAaveV3',
-        data: new FlashLiquidatorAaveV3Factory(signer).getDeployTransaction(
+        source,
+        data: factory.getDeployTransaction(
           aaveAddressProvider,
           swapRouter,
           profitReceiver,
