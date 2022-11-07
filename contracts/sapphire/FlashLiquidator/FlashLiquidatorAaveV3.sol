@@ -8,6 +8,7 @@ import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Po
 import {ISwapRouter} from "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 
 import {Math} from "../../lib/Math.sol";
+import {Ownable} from "../../lib/Ownable.sol";
 import {SafeERC20} from "../../lib/SafeERC20.sol";
 import {IERC20Metadata} from "../../token/IERC20Metadata.sol";
 import {ISapphireCoreV1} from "./ISapphireCoreV1.sol";
@@ -15,34 +16,39 @@ import {ISapphirePool} from "../SapphirePool/ISapphirePool.sol";
 import {SapphireTypes} from "../SapphireTypes.sol";
 
 /**
- * @title FlashLiquidator
+ * @title FlashLiquidatorAaveV3
  * @author ARCx
  * @notice A basic flash loan based contracts that is used to liquidate borrowers of SapphireCoreV1
  * contracts. It takes a flash loan to repay the user's debt, swaps the collateral to the
  * repaid stablecoin, transfers the profit to the caller of the liquidate function, then repays
  * the flash loan debt.
  */
-contract FlashLiquidator is FlashLoanSimpleReceiverBase {
+contract FlashLiquidatorAaveV3 is FlashLoanSimpleReceiverBase, Ownable {
+
+    event ProfitReceiverSet(address indexed profitReceiver);
+
+    address public profitReceiver;
 
     struct LiquidationVariables {
         address vaultOwner;
         SapphireTypes.ScoreProof[] proofs;
         ISapphireCoreV1 core;
         address collateralAsset;
-        address profitReceiver;
     }
 
     ISwapRouter public immutable swapRouter;
 
     constructor(
         IPoolAddressesProvider _provider,
-        ISwapRouter _router
-    ) 
+        ISwapRouter _router,
+        address _profitReceiver
+    )
         FlashLoanSimpleReceiverBase(_provider)
-    { 
+    {
         swapRouter = _router;
+        profitReceiver = _profitReceiver;
     }
-    
+
     function liquidate(
         address _core,
         address _owner,
@@ -68,16 +74,15 @@ contract FlashLiquidator is FlashLoanSimpleReceiverBase {
 
         // get a flash loan of the amount of the current debt
         bytes memory params = abi.encode(
-            msg.sender,
             _core,
             _owner,
             _creditScoreProof
         );
         POOL.flashLoanSimple(
-            address(this), 
-            address(repayAsset), 
-            outstandingDebtScaled, 
-            params, 
+            address(this),
+            address(repayAsset),
+            outstandingDebtScaled,
+            params,
             0
         );
     }
@@ -91,7 +96,7 @@ contract FlashLiquidator is FlashLoanSimpleReceiverBase {
         address asset,
         uint256 amount,
         uint256 premium,
-        address initiator, // solhint-disable-line no-unused-vars
+        address initiator,
         bytes calldata params
     )
         external
@@ -99,20 +104,20 @@ contract FlashLiquidator is FlashLoanSimpleReceiverBase {
         returns (bool)
     {
         LiquidationVariables memory liquidationVars = _getVariablesForLiquidation(params);
-        
+
         _executeLiquidation(
-            liquidationVars, 
-            asset, 
+            liquidationVars,
+            asset,
             amount
         );
-        
+
         _swapCollateralForStables(liquidationVars.collateralAsset, asset);
 
         // transfer profit to sender
         uint256 loanRepaymentAmount = amount + premium;
         SafeERC20.safeTransfer(
             IERC20Metadata(asset),
-            liquidationVars.profitReceiver,
+            profitReceiver,
             IERC20Metadata(asset).balanceOf(address(this)) - loanRepaymentAmount
         );
 
@@ -124,6 +129,15 @@ contract FlashLiquidator is FlashLoanSimpleReceiverBase {
         );
 
         return true;
+    }
+
+    function setProfitReceiver(address _profitReceiver)
+        external
+        onlyOwner
+    {
+        profitReceiver = _profitReceiver;
+
+        emit ProfitReceiverSet(_profitReceiver);
     }
 
     function _executeLiquidation(
@@ -156,12 +170,10 @@ contract FlashLiquidator is FlashLoanSimpleReceiverBase {
         returns (LiquidationVariables memory)
     {
         (
-            address profitReceiver,
             address coreAddress,
             address vaultOwner,
             SapphireTypes.ScoreProof memory creditScoreProof
         ) = abi.decode(_params, (
-            address,
             address,
             address,
             SapphireTypes.ScoreProof
@@ -175,8 +187,7 @@ contract FlashLiquidator is FlashLoanSimpleReceiverBase {
             vaultOwner,
             proofs,
             core,
-            core.collateralAsset(),
-            profitReceiver
+            core.collateralAsset()
         );
     }
 
@@ -187,7 +198,7 @@ contract FlashLiquidator is FlashLoanSimpleReceiverBase {
         internal
     {
         uint256 collateralBalance = IERC20Metadata(_collateralAsset).balanceOf(address(this));
-        
+
         ISwapRouter.ExactInputSingleParams memory params =
             ISwapRouter.ExactInputSingleParams({
                 tokenIn: _collateralAsset,
@@ -206,6 +217,6 @@ contract FlashLiquidator is FlashLoanSimpleReceiverBase {
             collateralBalance
         );
 
-        swapRouter.exactInputSingle(params);        
+        swapRouter.exactInputSingle(params);
     }
 }

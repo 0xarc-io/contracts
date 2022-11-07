@@ -90,16 +90,6 @@
     "group": ""
   },
   {
-    "name": "FlashLiquidator",
-    "source": "FlashLiquidator",
-    "address": "0x6742765a665867B0C35b94f213aE8f627b40C6fa",
-    "txn": "0x8f3f534f8847daf26c2106460c885fe82e2f0bc85a439b713c7f81df57f8d99c",
-    "network": "polygon",
-    "version": 1,
-    "type": "global",
-    "group": ""
-  },
-  {
     "name": "SapphirePool",
     "source": "SapphirePool",
     "address": "0x3f9f099C67A829308920563980BF0CDff818B37C",
@@ -177,6 +167,16 @@
     "network": "polygon",
     "version": 2,
     "type": "borrowing",
+    "group": ""
+  },
+  {
+    "name": "FlashLiquidator",
+    "source": "FlashLiquidatorAaveV3",
+    "address": "0x4C0BA28974B206076eA043D93F06a99c93D9F702",
+    "txn": "0x0e551c275b51b9b23ea4879ed5ffb0470ee100fac91c029914fba7707d6eb11f",
+    "network": "polygon",
+    "version": 1,
+    "type": "global",
     "group": ""
   }
 ]

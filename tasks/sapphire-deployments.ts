@@ -1,6 +1,6 @@
 import {
   ArcProxyFactory,
-  FlashLiquidatorFactory,
+  FlashLiquidatorAaveV3Factory,
   MockSapphireOracleFactory,
   SapphireAssessorFactory,
   SapphireCoreV1,
@@ -548,17 +548,19 @@ task('deploy-borrow-pool')
 task('deploy-liquidator')
   .addParam('aaveAddressProvider', 'Aave address provider')
   .addParam('swapRouter', 'Uniswap V3 swap router')
+  .addParam('profitReceiver', 'Profit receiver')
   .setAction(async (taskArgs, hre) => {
     const { signer, networkConfig } = await loadHardhatDetails(hre);
-    const { aaveAddressProvider, swapRouter } = taskArgs;
+    const { aaveAddressProvider, swapRouter, profitReceiver } = taskArgs;
 
     const sapphireLiquidator = await deployAndSaveContract(
       {
         name: 'FlashLiquidator',
-        source: 'FlashLiquidator',
-        data: new FlashLiquidatorFactory(signer).getDeployTransaction(
+        source: 'FlashLiquidatorAaveV3',
+        data: new FlashLiquidatorAaveV3Factory(signer).getDeployTransaction(
           aaveAddressProvider,
           swapRouter,
+          profitReceiver,
         ),
         version: 1,
         type: DeploymentType.global,
@@ -570,6 +572,7 @@ task('deploy-liquidator')
       sapphireLiquidator,
       aaveAddressProvider,
       swapRouter,
+      profitReceiver,
     );
 
     console.log(
