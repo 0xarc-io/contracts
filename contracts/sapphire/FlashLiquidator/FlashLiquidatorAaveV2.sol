@@ -20,8 +20,7 @@ import {SapphireTypes} from "../SapphireTypes.sol";
  * @author ARCx
  * @notice A basic flash loan based contracts that is used to liquidate borrowers of SapphireCoreV1
  * contracts. It takes a flash loan to repay the user's debt, swaps the collateral to the
- * repaid stablecoin, transfers the profit to the caller of the liquidate function, then repays
- * the flash loan debt.
+ * repaid stablecoin, transfers the profit to the profit receiver set on the contract.
  */
 contract FlashLiquidatorAaveV2 is FlashLoanReceiverBase, Ownable {
 
@@ -126,7 +125,7 @@ contract FlashLiquidatorAaveV2 is FlashLoanReceiverBase, Ownable {
 
         _swapCollateralForStables(liquidationVars.collateralAsset, asset);
 
-        // transfer profit to sender
+        // transfer profit to the profit receiver
         uint256 loanRepaymentAmount = amount + premium;
         SafeERC20.safeTransfer(
             IERC20Metadata(asset),
