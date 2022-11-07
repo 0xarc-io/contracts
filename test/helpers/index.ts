@@ -9,3 +9,4 @@ export * from './sapphireDefaults';
 export * from './SapphireTestArc';
 export * from './setupBaseVault';
 export * from './testingUtils';
+export * from './setAccountBalance';
