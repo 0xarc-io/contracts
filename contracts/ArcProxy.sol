@@ -71,13 +71,6 @@ contract ArcProxy {
 
         _setImplementation(_logic);
 
-        if (_data.length > 0) {
-            /* solhint-disable-next-line */
-            (bool success,) = _logic.delegatecall(_data);
-            /* solhint-disable-next-line */
-            require(success);
-        }
-
         assert(
             ADMIN_SLOT == bytes32(
                 uint256(keccak256("eip1967.proxy.admin")) - 1
@@ -85,6 +78,13 @@ contract ArcProxy {
         );
 
         _setAdmin(admin_);
+
+        if (_data.length > 0) {
+            /* solhint-disable-next-line */
+            (bool success,) = _logic.delegatecall(_data);
+            /* solhint-disable-next-line */
+            require(success);
+        }
     }
 
     /**
