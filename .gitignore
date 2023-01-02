@@ -31,3 +31,4 @@ deployments/local/
 report.*
 
 scripts/custom-script.ts
+.git/
